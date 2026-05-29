@@ -2,7 +2,7 @@ package es.caib.comanda.configuracio.persist.entity;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -26,7 +26,7 @@ import java.util.Set;
 @Getter
 @Setter
 @NoArgsConstructor
-public class EntornAppEntity extends BaseAuditableEntity<EntornApp> {
+public class EntornAppEntity extends BaseAuditableLongPkEntity<EntornApp> {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(

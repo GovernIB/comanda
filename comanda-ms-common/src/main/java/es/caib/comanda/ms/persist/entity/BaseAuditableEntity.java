@@ -1,6 +1,6 @@
 package es.caib.comanda.ms.persist.entity;
 
-import lombok.AccessLevel;
+import es.caib.comanda.ms.logic.intf.model.Resource;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedBy;
@@ -8,9 +8,11 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.springframework.lang.Nullable;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.EntityListeners;
+import javax.persistence.MappedSuperclass;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -24,11 +26,9 @@ import java.time.LocalDateTime;
 @Setter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public abstract class BaseAuditableEntity<R> implements AuditableEntity, ResourceEntity<R, Long> {
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private @Nullable Long id;
+public abstract class BaseAuditableEntity<R extends Resource<?>, PK extends Serializable>
+		extends BaseResourceEntity<R, PK>
+		implements AuditableEntity {
 
 	@CreatedBy
 	@Column(name = "created_by", length = 64, nullable = false)
@@ -42,20 +42,6 @@ public abstract class BaseAuditableEntity<R> implements AuditableEntity, Resourc
 	@LastModifiedDate
 	@Column(name = "lastmod_date")
 	private LocalDateTime lastModifiedDate;
-	@Version
-	@Getter(AccessLevel.NONE)
-	@Column(name = "v")
-	private long v;
-
-	@Override
-	public Long getId() {
-		return id;
-	}
-
-	@Override
-	public boolean isNew() {
-		return null == getId();
-	}
 
 	@Override
 	public void updateCreated(

@@ -10,7 +10,8 @@ import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeMode;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PresetPeriode;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.logic.intf.model.Resource;
+import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -67,7 +68,7 @@ import java.util.List;
         uniqueConstraints = {
                 @UniqueConstraint(name = BaseConfig.DB_PREFIX + "widget_titol_uk", columnNames = { "titol", "APP_ID"})
         })
-public abstract class EstadisticaWidgetEntity<R> extends BaseAuditableEntity<R> {
+public abstract class EstadisticaWidgetEntity<R extends Resource<?>> extends BaseAuditableLongPkEntity<R> {
 
     @Column(name = "titol", length = 64, nullable = false)
     protected String titol;

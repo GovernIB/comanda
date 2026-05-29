@@ -18,10 +18,11 @@
 // S'ha afegit el mètode GET a ENTITY_ALTERING_METHODS per a que aquest mètode inclogui properties a la resposta
 package org.springframework.hateoas.mediatype.hal.forms;
 
+import es.caib.comanda.ms.back.util.HalFormsUtil;
+import es.caib.comanda.ms.back.util.ResourceServiceLocator;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
 import es.caib.comanda.ms.logic.intf.model.FileReference;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
-import es.caib.comanda.ms.logic.intf.util.HalFormsUtil;
 import es.caib.comanda.ms.logic.intf.util.TypeUtil;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.hateoas.AffordanceModel.InputPayloadMetadata;
@@ -35,8 +36,10 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
 
@@ -47,7 +50,6 @@ import static org.springframework.http.HttpMethod.*;
  *
  * @author Oliver Drotbohm
  * @since 1.3
- * @soundtrack The Chicks - March March (Gaslighter)
  */
 public class CustomHalFormsPropertyFactory {
 
@@ -55,6 +57,7 @@ public class CustomHalFormsPropertyFactory {
 
 	private final HalFormsConfiguration configuration;
 	private final MessageResolver resolver;
+	private final ResourceServiceLocator resourceServiceLocator;
 
 	/**
 	 * Creates a new {@link CustomHalFormsPropertyFactory} for the given {@link HalFormsConfiguration} and
@@ -63,13 +66,17 @@ public class CustomHalFormsPropertyFactory {
 	 * @param configuration must not be {@literal null}.
 	 * @param resolver must not be {@literal null}.
 	 */
-	public CustomHalFormsPropertyFactory(HalFormsConfiguration configuration, MessageResolver resolver) {
+	public CustomHalFormsPropertyFactory(
+			HalFormsConfiguration configuration,
+			MessageResolver resolver,
+			ResourceServiceLocator resourceServiceLocator) {
 
 		Assert.notNull(configuration, "HalFormsConfiguration must not be null!");
 		Assert.notNull(resolver, "MessageResolver must not be null!");
 
 		this.configuration = configuration;
 		this.resolver = resolver;
+		this.resourceServiceLocator = resourceServiceLocator;
 	}
 
 	/**
@@ -103,7 +110,7 @@ public class CustomHalFormsPropertyFactory {
 					inputType = "search";
 				} else if (boolean.class.isAssignableFrom(resolvedType) || Boolean.class.isAssignableFrom(resolvedType)) {
 					inputType = "checkbox";
-				} else if (Date.class.isAssignableFrom(resolvedType)) {
+				} else if (Date.class.isAssignableFrom(resolvedType) || OffsetDateTime.class.isAssignableFrom(resolvedType)) {
 					inputType = "datetime-local";
 				} else if (Duration.class.isAssignableFrom(resolvedType)) {
 					inputType = null;
@@ -116,6 +123,8 @@ public class CustomHalFormsPropertyFactory {
 					if (multipleType != null && (ResourceReference.class.isAssignableFrom(multipleType) || multipleType.isEnum())) {
 						inputType = "search";
 					}
+				} else if (String.class.isAssignableFrom(resolvedType)) {
+					inputType = "text";
 				}
 			}
 
@@ -147,7 +156,9 @@ public class CustomHalFormsPropertyFactory {
 
 			HalFormsOptions options = optionsFactory.getOptions(payload, metadata);
 
-			Map<String, Object> values = HalFormsUtil.getNewResourceValues(payload.getType());
+			Map<String, Object> values = HalFormsUtil.getNewResourceValues(
+					(Class<? extends Serializable>)payload.getType(),
+					resourceServiceLocator);
 
 			HalFormsProperty property = new HalFormsProperty()
 				.withName(metadata.getName())

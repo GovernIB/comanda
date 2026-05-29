@@ -4,7 +4,7 @@ import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -35,7 +35,7 @@ import javax.persistence.Table;
 @Getter
 @Setter
 @NoArgsConstructor
-public class DashboardItemEntity extends BaseAuditableEntity<DashboardItem> {
+public class DashboardItemEntity extends BaseAuditableLongPkEntity<DashboardItem> {
 
     @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(

@@ -2,7 +2,7 @@ package es.caib.comanda.estadistica.persist.entity.paleta;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.Paleta;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,7 +13,7 @@ import java.util.List;
 @Getter
 @Setter
 @Table(name = BaseConfig.DB_PREFIX + "est_color_palette")
-public class PaletaEntity extends BaseAuditableEntity<Paleta> {
+public class PaletaEntity extends BaseAuditableLongPkEntity<Paleta> {
 
     @Column(name = "nom", nullable = false, length = 128)
     private String nom;

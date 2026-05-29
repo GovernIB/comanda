@@ -116,7 +116,7 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 	}
 
     @Override
-    protected List<AppEntity> reorderFindLinesWithParent(Serializable parentId) {
+    protected List<AppEntity> reorderFindLinesWithParentAndSorted(Serializable parentId) {
         return appRepository.findAllByOrderByOrdreAsc();
     }
 

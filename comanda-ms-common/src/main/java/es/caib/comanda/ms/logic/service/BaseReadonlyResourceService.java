@@ -94,6 +94,18 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * <p>Internament, el mètode segueix aquestes passes:
+	 * <ol>
+	 *   <li>Crida al mètode beforeGetOne.</li>
+	 *   <li>Consulta l'entitat de base de dades.</li>
+	 *   <li>Crida al mètode beforeConversion.</li>
+	 *   <li>Converteix l'entitat en el recurs.</li>
+	 *   <li>Crida al mètode afterConversion.</li>
+	 *   <li>Aplica les perspectives al recurs.</li>
+	 * </ol>
+	 */
 	@Override
 	@Transactional(readOnly = true)
 	public R getOne(
@@ -111,6 +123,18 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		return response;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * <p>Internament, el mètode aplica els filtres i les perspectives en aquest ordre:
+	 * <ol>
+	 *   <li>Crida al mètode beforeFind.</li>
+	 *   <li>Fa la consulta a la base de dades amb els filtres i paginació especificats.</li>
+	 *   <li>Crida al mètode beforeConversion.</li>
+	 *   <li>Converteix la llista d'entitats en recursos.</li>
+	 *   <li>Crida al mètode afterConversion.</li>
+	 *   <li>Aplica les perspectives a cada recurs.</li>
+	 * </ol>
+	 */
 	@Override
 	@Transactional(readOnly = true)
 	public Page<R> findPage(
@@ -140,26 +164,34 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 				namedQueries,
 				pageable);
 		long elapsedDatabase = System.currentTimeMillis() - t0;
+		t0 = System.currentTimeMillis();
 		beforeConversion(resultat.getContent());
 		Page<R> response = new PageImpl<>(
 				entitiesToResources(resultat.getContent()),
 				pageable,
 				resultat.getTotalElements());
 		afterConversion(resultat.getContent(), response.getContent());
+		long elapsedConversion = System.currentTimeMillis() - t0;
+		long elapsedPerspectives = 0;
 		if (perspectives != null) {
+			t0 = System.currentTimeMillis();
 			applyPerspectives(
 					resultat.getContent(),
 					response.getContent(),
 					perspectives);
+			elapsedPerspectives = System.currentTimeMillis() - t0;
 		}
-		long elapsedConversion = System.currentTimeMillis() - t0;
 		log.debug(
-				"Query elapsed time (database={}ms, conversion={}ms)",
+				"Query elapsed time (database={}ms, conversion={}ms, perspectives={}ms)",
 				elapsedDatabase,
-				elapsedConversion);
+				elapsedConversion,
+				elapsedPerspectives);
 		return response;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	@Transactional(readOnly = true)
 	public DownloadableFile export(
@@ -175,7 +207,8 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		log.debug(
 				"Querying entities for export with filter and pagination (" +
 						"quickFilter={}, filter={}, namedQueries={}, " +
-						"perspectives={}, pageable={}, fieldNamesAndLabels={}, fileType={})",
+						"perspectives={}, pageable={}, fieldNamesAndLabels={}, " +
+						"fileType={})",
 				quickFilter,
 				filter,
 				Arrays.toString(namedQueries),
@@ -216,6 +249,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		return exportFile;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	@Transactional(readOnly = true)
 	public DownloadableFile fieldDownload(
@@ -238,6 +274,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	@Transactional(readOnly = true)
 	public List<es.caib.comanda.ms.logic.intf.model.ResourceArtifact> artifactFindAll(ResourceArtifactType type) {
@@ -288,6 +327,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		return artifacts;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	@Transactional(readOnly = true)
 	public es.caib.comanda.ms.logic.intf.model.ResourceArtifact artifactGetOne(
@@ -342,6 +384,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		throw new ArtifactNotFoundException(getResourceClass(), type, code);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	@Transactional(readOnly = true)
 	public <P extends Serializable> Map<String, Object> artifactOnChange(
@@ -391,6 +436,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	@Transactional(readOnly = true)
 	public List<FieldOption> artifactFieldEnumOptions(
@@ -417,6 +465,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	@Transactional(readOnly = true)
 	public <P extends Serializable> List<?> artifactReportGenerateData(
@@ -449,6 +500,9 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	@Transactional(readOnly = true)
 	public DownloadableFile artifactReportGenerateFile(
@@ -710,39 +764,129 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		}
 	}
 
+	/**
+	 * Retorna una expressió Spring Filter que s'aplica a totes les consultes d'aquest recurs a la base de dades.
+	 *
+	 * @param currentSpringFilter
+	 *            el filtre actual
+	 * @param namedQueries
+	 *            la llista de namedQueries de la petició
+	 * @return l'expressió Spring Filter (si es retorna null no s'aplicarà cap expressió addicional)
+	 */
 	protected String additionalSpringFilter(
 			String currentSpringFilter,
 			String[] namedQueries) {
 		return null;
 	}
 
+	/**
+	 * Retorna una specification que s'aplica a totes les consultes d'aquest recurs a la base de dades.
+	 *
+	 * @param namedQueries
+	 *            la llista de namedQueries de la petició
+	 * @return la specification (si es retorna null no s'aplicarà cap specification)
+	 */
 	protected Specification<E> additionalSpecification(String[] namedQueries) {
 		return null;
 	}
 
-	protected String namedFilterToSpringFilter(String name) {
-		return null;
-	}
-	protected <P> Specification<P> namedFilterToSpecification(String name) {
+	/**
+	 * Converteix una namedQuery a una expressió Spring Filter.
+	 *
+	 * @param namedQuery
+	 *            la namedQuery a convertir
+	 * @return l'expressió Spring Filter (si es retorna null no s'aplicarà cap expressió addicional)
+	 */
+	protected String namedQueryToSpringFilter(String namedQuery) {
 		return null;
 	}
 
+	/**
+	 * Converteix una namedQuery a una specification.
+	 *
+	 * @param namedQuery
+	 *            la namedQuery a convertir
+	 * @return la specification (si es retorna null no s'aplicarà cap specification)
+	 * @param <P> el tipus de la specification
+	 */
+	protected <P> Specification<P> namedQueryToSpecification(String namedQuery) {
+		return null;
+	}
+
+	/**
+	 * Modifica l'specification abans d'executar la consulta de base de dades.
+	 *
+	 * @param specification
+	 *            la specification a processar
+	 * @return la specification processada
+	 * @param <P> el tipus de la specification
+	 */
 	protected <P> Specification<P> processSpecification(Specification<P> specification) {
 		return specification;
 	}
 
+	/**
+	 * Modifica l'ordenació abans d'aplicar-la a la consulta de base de dades.
+	 *
+	 * @param sort
+	 *            l'ordenació a processar
+	 * @return l'ordenació a processada
+	 */
 	protected Sort processSort(Sort sort) {
 		return sort;
 	}
 
+	/**
+	 * Mètode que s'executa abans de consultar un recurs pel seu identificador.
+	 *
+	 * @param perspectives
+	 *            la llista de perspectives a aplicar a la consulta
+	 */
 	protected void beforeGetOne(String[] perspectives) {}
+
+	/**
+	 * Mètode que s'executa abans de consultar múltiples recursos.
+	 *
+	 * @param quickFilter
+	 *            filtre ràpid en format text (pot ser {@code null})
+	 * @param springFilter
+	 *            consulta en format Spring Filter (pot ser {@code null})
+	 * @param namedQueries
+	 *            llista de noms de consultes a aplicar (pot ser {@code null})
+	 * @param pageable
+	 *            paràmetres de paginació i ordenació (no pot ser {@code null})
+	 */
 	protected void beforeFind(
 			String quickFilter,
 			String springFilter,
 			String[] namedQueries,
 			Pageable pageable) {}
+
+	/**
+	 * Mètode que s'executa abans de convertir l'entitat en recurs.
+	 *
+	 * @param entity
+	 *            la informació de l'entitat
+	 */
 	protected void beforeConversion(E entity) {}
+
+	/**
+	 * Mètode que s'executa després de convertir l'entitat en recurs.
+	 *
+	 * @param entity
+	 *            la informació de l'entitat
+	 * @param resource
+	 *            la informació del recurs
+	 */
 	protected void afterConversion(E entity, R resource) {}
+
+	/**
+	 * Mètode que s'executa abans de convertir múltiples entitats en recursos.
+	 * Si no es sobreescriu aquest mètode es cridarà a beforeConversion amb cada entitat.
+	 *
+	 * @param entities
+	 *            la llista d'entitats
+	 */
 	protected void beforeConversion(List<E> entities) {
 		if (entities != null) {
 			for (E entity: entities) {
@@ -750,6 +894,16 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 			}
 		}
 	}
+
+	/**
+	 * Mètode que s'executa després de convertir múltiples entitats en recursos.
+	 * Si no es sobreescriu aquest mètode es cridarà a afterConversion amb cada entitat-recurs.
+	 *
+	 * @param entities
+	 *            la llista d'entitats
+	 * @param resources
+	 *            la llista de recursos
+	 */
 	protected void afterConversion(List<E> entities, List<R> resources) {
 		if (resources != null) {
 			for (int i = 0; i < resources.size(); i++) {
@@ -916,7 +1070,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 	protected <P> Specification<P> toFindProcessedSpecification(
 			String quickFilter,
 			String filter,
-			String[] namedFilters) {
+			String[] namedQueries) {
 		Specification<P> processedSpecification = getSpringFilterSpecification(
 				buildSpringFilterForQuickFilter(
 						getResourceClass(),
@@ -928,18 +1082,18 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		processedSpecification = appendSpecificationWithAnd(
 				processedSpecification,
 				getSpringFilterSpecification(
-						additionalSpringFilter(filter, namedFilters)));
+						additionalSpringFilter(filter, namedQueries)));
 		processedSpecification = appendSpecificationWithAnd(
 				processedSpecification,
-				(Specification<P>)additionalSpecification(namedFilters));
-		if (namedFilters != null) {
-			for (String namedFilter: namedFilters) {
+				(Specification<P>)additionalSpecification(namedQueries));
+		if (namedQueries != null) {
+			for (String namedQuery: namedQueries) {
 				Specification<P> namedSpecification;
-				String namedSpringFilter = namedFilterToSpringFilter(namedFilter);
+				String namedSpringFilter = namedQueryToSpringFilter(namedQuery);
 				if (namedSpringFilter != null) {
 					namedSpecification = getSpringFilterSpecification(namedSpringFilter);
 				} else {
-					namedSpecification = namedFilterToSpecification(namedFilter);
+					namedSpecification = namedQueryToSpecification(namedQuery);
 				}
 				processedSpecification = appendSpecificationWithAnd(
 						processedSpecification,
@@ -1453,7 +1607,7 @@ public abstract class BaseReadonlyResourceService<R extends Resource<ID>, ID ext
 		 * Retorna l'arxiu associat.
 		 *
 		 * @param entity
-		 *            l'entitat amb els valors previs a la modificació.
+		 *            l'entitat de base de dades.
 		 * @param fieldName
 		 *            el nom del camp de l'entitat.
 		 * @param out

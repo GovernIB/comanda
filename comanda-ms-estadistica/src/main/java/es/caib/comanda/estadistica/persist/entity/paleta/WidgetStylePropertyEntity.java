@@ -5,7 +5,7 @@ import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteRole;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleProperty;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleValueType;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,7 +28,7 @@ import javax.persistence.UniqueConstraint;
         uniqueConstraints = {
                 @UniqueConstraint(name = BaseConfig.DB_PREFIX + "est_wstprop_name_uk", columnNames = { "template_id", "scope", "property_name" })
         })
-public class WidgetStylePropertyEntity extends BaseAuditableEntity<WidgetStyleProperty> {
+public class WidgetStylePropertyEntity extends BaseAuditableLongPkEntity<WidgetStyleProperty> {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(

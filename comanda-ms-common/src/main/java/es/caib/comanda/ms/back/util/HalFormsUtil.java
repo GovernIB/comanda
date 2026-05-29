@@ -1,14 +1,14 @@
-package es.caib.comanda.ms.logic.intf.util;
+package es.caib.comanda.ms.back.util;
 
 import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
 import es.caib.comanda.ms.logic.intf.exception.ComponentNotFoundException;
-import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
-import es.caib.comanda.ms.logic.intf.service.ResourceServiceLocator;
 import org.springframework.util.ReflectionUtils;
 
+import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,18 +19,37 @@ import java.util.Map;
  */
 public class HalFormsUtil {
 
-	public static Map<String, Object> getNewResourceValues(Class<?> resourceClass) throws ResourceNotCreatedException {
+	/**
+	 * Crea una nova instància d'un recurs.
+	 * <p>
+	 * El resourceClass pot ser un recurs gestionat per l'aplicació o una classe de formulari associada a algun
+	 * artefacte. Si és un recurs gestionat es crea la nova instància utilitzant el mètode newResourceInstance del
+	 * servei associat al recurs. Si no és un recurs es crea la instància utilitzant el constructor per defecte.
+	 *
+	 * @param resourceClass
+	 *            Classe del recurs (ha d'estendre de Serializable).
+	 * @param resourceServiceLocator
+	 *            Instància de ResourceServiceLocator per a cercar si hi ha algun service associat a resourceClass.
+	 * @return un map amb els camps de la nova instància i els seus valors.
+	 */
+	public static Map<String, Object> getNewResourceValues(
+			Class<? extends Serializable> resourceClass,
+			ResourceServiceLocator resourceServiceLocator) {
 		Map<String, Object> values = new HashMap<>();
-		ResourceServiceLocator resourceServiceLocator = ResourceServiceLocator.getInstance();
 		if (resourceServiceLocator != null) {
 			try {
-				MutableResourceService<?, ?> mutableResourceService = ResourceServiceLocator.getInstance().
+				MutableResourceService<?, ?> mutableResourceService = resourceServiceLocator.
 						getMutableEntityResourceServiceForResourceClass(resourceClass);
 				Object newInstance = mutableResourceService.newResourceInstance();
 				if (newInstance != null) {
 					values.putAll(toMap(newInstance));
 				}
-			} catch (ComponentNotFoundException ignored) {}
+			} catch (ComponentNotFoundException ex) {
+				try {
+					values.putAll(toMap(resourceClass.getDeclaredConstructor().newInstance()));
+				} catch (InstantiationException | NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
+				}
+			}
 		}
 		return values;
 	}

@@ -5,7 +5,7 @@ import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTaula
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -64,7 +64,7 @@ import javax.persistence.Table;
 @Getter
 @Setter
 @NoArgsConstructor
-public class IndicadorTaulaEntity extends BaseAuditableEntity<IndicadorTaula> {
+public class IndicadorTaulaEntity extends BaseAuditableLongPkEntity<IndicadorTaula> {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(

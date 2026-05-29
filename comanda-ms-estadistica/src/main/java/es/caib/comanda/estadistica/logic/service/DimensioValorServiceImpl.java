@@ -46,7 +46,7 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
     private final EstadisticaClientHelper estadisticaClientHelper;
 
     @Override
-    protected Specification<DimensioValorEntity> namedFilterToSpecification(String name) {
+    protected Specification<DimensioValorEntity> namedQueryToSpecification(String name) {
         if (name != null && name.startsWith(DimensioValor.NAMED_FILTER_BY_APP_GROUP_BY_VALOR)) {
             List<Long> idsEntornApp = null;
             String[] parts = name.split(":", 2);

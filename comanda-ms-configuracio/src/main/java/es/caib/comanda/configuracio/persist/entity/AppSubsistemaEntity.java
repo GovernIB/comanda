@@ -2,7 +2,7 @@ package es.caib.comanda.configuracio.persist.entity;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.intf.model.AppSubsistema;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -22,7 +22,7 @@ import javax.persistence.*;
 @Getter
 @Setter
 @NoArgsConstructor
-public class AppSubsistemaEntity extends BaseAuditableEntity<AppSubsistema> {
+public class AppSubsistemaEntity extends BaseAuditableLongPkEntity<AppSubsistema> {
 
 	@Column(name = "codi", length = 100, nullable = false)
 	private String codi;

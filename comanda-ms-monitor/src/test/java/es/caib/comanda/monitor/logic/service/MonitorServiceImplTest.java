@@ -211,7 +211,7 @@ public class MonitorServiceImplTest {
         }
 
         // Act
-        String result = monitorService.namedFilterToSpringFilter(namedFilter);
+        String result = monitorService.namedQueryToSpringFilter(namedFilter);
 
         // Assert
         assertThat(result).as(descripcion).isEqualTo(springFilterEsperat);
@@ -271,7 +271,7 @@ public class MonitorServiceImplTest {
         String namedFilter = Monitor.FILTER_BY_APP_NAMEDFILTER;
 
         // Act & Assert
-        assertThatThrownBy(() -> monitorService.namedFilterToSpringFilter(namedFilter))
+        assertThatThrownBy(() -> monitorService.namedQueryToSpringFilter(namedFilter))
             .isInstanceOf(ArrayIndexOutOfBoundsException.class)
             .as("Ha de llançar excepció quan el filtre no conté appId després de ':'");
     }
@@ -283,7 +283,7 @@ public class MonitorServiceImplTest {
         String namedFilter = Monitor.FILTER_BY_APP_NAMEDFILTER + ":test";
 
         // Act & Assert
-        assertThatThrownBy(() -> monitorService.namedFilterToSpringFilter(namedFilter))
+        assertThatThrownBy(() -> monitorService.namedQueryToSpringFilter(namedFilter))
             .isInstanceOf(NumberFormatException.class)
             .as("Ha de llançar excepció quan el filtre conté un valor no numeric després de ':'");
     }

@@ -18,7 +18,7 @@ import es.caib.comanda.ms.logic.intf.permission.ResourcePermissions;
 import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
 import es.caib.comanda.ms.logic.intf.service.ReadonlyResourceService;
 import es.caib.comanda.ms.logic.intf.service.ResourceApiService;
-import es.caib.comanda.ms.logic.intf.service.ResourceServiceLocator;
+import es.caib.comanda.ms.back.util.ResourceServiceLocator;
 import es.caib.comanda.ms.logic.intf.util.JsonUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;

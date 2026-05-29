@@ -1,6 +1,6 @@
 package es.caib.comanda.ms.logic.service;
 
-import es.caib.comanda.ms.logic.helper.PermissionHelper;
+import es.caib.comanda.ms.logic.helper.BasePermissionHelper;
 import es.caib.comanda.ms.logic.intf.model.Resource;
 import es.caib.comanda.ms.logic.intf.permission.ResourcePermissions;
 import es.caib.comanda.ms.logic.intf.service.ResourceApiService;
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 /**
  * Implementació del servei de l'API REST.
- * 
+ *
  * @author Límit Tecnologies
  */
 @Slf4j
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 public class ResourceApiServiceImpl implements ResourceApiService {
 
 	@Autowired
-	private PermissionHelper permissionHelper;
+	private BasePermissionHelper permissionHelper;
 
 	private final Set<Class<? extends Resource<?>>> registeredResources = new HashSet<>();
 
@@ -46,19 +46,19 @@ public class ResourceApiServiceImpl implements ResourceApiService {
 		boolean isReadGranted = permissionHelper.checkResourcePermission(
 				resourceId,
 				resourceClass.getName(),
-				(BasePermission)BasePermission.READ);
+				new BasePermission[] { (BasePermission)BasePermission.READ });
 		boolean isWriteGranted = permissionHelper.checkResourcePermission(
 				resourceId,
 				resourceClass.getName(),
-				(BasePermission)BasePermission.WRITE);
+				new BasePermission[] { (BasePermission)BasePermission.WRITE });
 		boolean isCreateGranted = permissionHelper.checkResourcePermission(
 				resourceId,
 				resourceClass.getName(),
-				(BasePermission)BasePermission.CREATE);
+				new BasePermission[] { (BasePermission)BasePermission.CREATE });
 		boolean isDeleteGranted = permissionHelper.checkResourcePermission(
 				resourceId,
 				resourceClass.getName(),
-				(BasePermission)BasePermission.DELETE);
+				new BasePermission[] { (BasePermission)BasePermission.DELETE });
 		return new ResourcePermissions(
 				isReadGranted,
 				isWriteGranted,

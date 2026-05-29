@@ -2,7 +2,7 @@ package es.caib.comanda.configuracio.persist.entity;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.intf.model.AppContext;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -32,7 +32,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class AppContextEntity extends BaseAuditableEntity<AppContext> {
+public class AppContextEntity extends BaseAuditableLongPkEntity<AppContext> {
 
 	@Column(name = "codi", length = 100, unique = true, nullable = false)
 	private String codi;

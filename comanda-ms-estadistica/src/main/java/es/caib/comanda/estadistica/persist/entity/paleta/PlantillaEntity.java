@@ -2,7 +2,7 @@ package es.caib.comanda.estadistica.persist.entity.paleta;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.Plantilla;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,7 +13,7 @@ import java.util.List;
 @Getter
 @Setter
 @Table(name = BaseConfig.DB_PREFIX + "est_dashboard_style_template")
-public class PlantillaEntity extends BaseAuditableEntity<Plantilla> {
+public class PlantillaEntity extends BaseAuditableLongPkEntity<Plantilla> {
 
     @Column(name = "nom", nullable = false, length = 128)
     private String nom;

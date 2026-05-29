@@ -3,7 +3,7 @@ package es.caib.comanda.alarmes.persist.entity;
 import es.caib.comanda.alarmes.logic.intf.model.Alarma;
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaEstat;
 import es.caib.comanda.base.config.BaseConfig;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-public class AlarmaEntity extends BaseAuditableEntity<Alarma> {
+public class AlarmaEntity extends BaseAuditableLongPkEntity<Alarma> {
 
 	@Column(name = "entorn_app_id", nullable = false)
 	private Long entornAppId;

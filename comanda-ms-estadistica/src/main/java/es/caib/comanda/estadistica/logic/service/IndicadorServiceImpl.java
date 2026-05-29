@@ -43,7 +43,7 @@ public class IndicadorServiceImpl extends BaseMutableResourceService<Indicador, 
     private final EstadisticaClientHelper estadisticaClientHelper;
 
 	@Override
-	protected Specification<IndicadorEntity> namedFilterToSpecification(String name) {
+	protected Specification<IndicadorEntity> namedQueryToSpecification(String name) {
 		if (name != null && name.startsWith(Indicador.NAMED_FILTER_BY_APP_GROUP_BY_NOM)) {
             List<Long> idsEntornApp = null;
             String[] parts = name.split(":", 2);

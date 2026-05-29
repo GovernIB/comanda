@@ -15,7 +15,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Helper per a la comprovació de permisos.
@@ -37,15 +40,15 @@ public abstract class BasePermissionHelper {
 	 *            l'id del recurs (pot ser null).
 	 * @param targetType
 	 *            la classe del recurs.
-	 * @param permission
-	 *            el permís a comprovar (si és null voldrà dir que es comprovarà qualsevol permís).
+	 * @param permissions
+	 *            la llista de permisos a comprovar (si és null voldrà dir que es comprovarà qualsevol permís).
 	 * @return true si l'usuari actual te accés al recurs o false en cas contrari.
 	 */
 	public boolean checkResourcePermission(
 			Authentication auth,
 			@Nullable Serializable targetId,
 			String targetType,
-			@Nullable BasePermission permission) {
+			@Nullable BasePermission[] permissions) {
 		try {
 			Class<?> targetTypeClass = Class.forName(targetType);
 			ResourceConfig resourceConfig = targetTypeClass.getAnnotation(ResourceConfig.class);
@@ -53,11 +56,12 @@ public abstract class BasePermissionHelper {
 				if (resourceConfig.accessConstraints().length > 0) {
 					return checkAccessConstraints(
 							auth,
+							targetId,
 							targetTypeClass,
 							null,
 							null,
 							resourceConfig.accessConstraints(),
-							permission);
+							permissions);
 				} else {
 					// Els recursos sense restriccions d'accés tenen l'accés permès per defecte
 					return true;
@@ -79,20 +83,20 @@ public abstract class BasePermissionHelper {
 	 *            l'id del recurs (pot ser null).
 	 * @param targetType
 	 *            la classe del recurs.
-	 * @param permission
-	 *            el permís a comprovar (si és null voldrà dir que es comprovarà qualsevol permís).
+	 * @param permissions
+	 *            la llista de permisos a comprovar (si és null voldrà dir que es comprovarà qualsevol permís).
 	 * @return true si l'usuari actual te accés al recurs o false en cas contrari.
 	 */
 	public boolean checkResourcePermission(
 			@Nullable Serializable targetId,
 			String targetType,
-			@Nullable BasePermission permission) {
+			@Nullable BasePermission[] permissions) {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		return checkResourcePermission(
 				auth,
 				targetId,
 				targetType,
-				permission);
+				permissions);
 	}
 
 	/**
@@ -121,6 +125,7 @@ public abstract class BasePermissionHelper {
 				if (artifact.accessConstraints().length > 0) {
 					return checkAccessConstraints(
 							auth,
+							null,
 							resourceClass,
 							type,
 							code,
@@ -128,12 +133,16 @@ public abstract class BasePermissionHelper {
 							null);
 				} else {
 					// Els artefactes sense restriccions d'accés comproven l'accés al recurs
-					Permission permission = ResourceArtifactType.ACTION.equals(type) ? BasePermission.WRITE : BasePermission.READ;
+					BasePermission[] permissions = new BasePermission[] {
+							(BasePermission)(ResourceArtifactType.ACTION.equals(type) ?
+									BasePermission.WRITE :
+									BasePermission.READ)
+					};
 					return checkResourcePermission(
 							auth,
 							null,
 							resourceClass.getName(),
-							(BasePermission)permission);
+							permissions);
 				}
 			}
 		}
@@ -143,11 +152,12 @@ public abstract class BasePermissionHelper {
 
 	protected boolean checkAccessConstraints(
 			Authentication auth,
+			Serializable resourceId,
 			Class<?> resourceClass,
 			ResourceArtifactType type,
 			String code,
 			ResourceAccessConstraint[] accessConstraints,
-			BasePermission permission) {
+			BasePermission[] permissions) {
 		ResourceAccessConstraint allowedAccessConstraint = Arrays.stream(accessConstraints).
 				filter(ac -> {
 					boolean accessContraintGranted = false;
@@ -161,9 +171,10 @@ public abstract class BasePermissionHelper {
 						if (type == null) {
 							accessContraintGranted = checkCustomResourceAccessConstraint(
 									auth,
+									resourceId,
 									resourceClass,
 									ac,
-									permission);
+									permissions);
 						} else {
 							accessContraintGranted = checkCustomResourceArtifactAccessConstraint(
 									auth,
@@ -174,7 +185,7 @@ public abstract class BasePermissionHelper {
 						}
 					}
 					if (accessContraintGranted) {
-						return permission == null || isPermissionGranted(permission, ac.grantedPermissions());
+						return permissions == null || isAnyPermissionGranted(permissions, ac.grantedPermissions());
 					} else {
 						return false;
 					}
@@ -190,20 +201,22 @@ public abstract class BasePermissionHelper {
 		return firstUserRole != null;
 	}
 
-	protected boolean isPermissionGranted(
-			BasePermission permission,
-			PermissionEnum[] accessConstraintGrantedPermissions) {
-		PermissionEnum firstPermissionGranted = Arrays.stream(accessConstraintGrantedPermissions).
-				filter(p -> permission.equals(PermissionEnum.toPermission(p))).
-				findFirst().orElse(null);
-		return firstPermissionGranted != null;
+	protected boolean isAnyPermissionGranted(
+			Permission[] permissions, // Els permisos a comprovar
+			PermissionEnum[] accessConstraintGrantedPermissions) { // La llista de permisos atorgats
+		List<Permission> grantedPermissions = Arrays.stream(accessConstraintGrantedPermissions).
+				map(PermissionEnum::toPermission).collect(Collectors.toList());
+		return !Collections.disjoint(
+				Arrays.asList(permissions),
+				grantedPermissions);
 	}
 
 	protected abstract boolean checkCustomResourceAccessConstraint(
 			Authentication auth,
+			Serializable resourceId,
 			Class<?> resourceClass,
 			ResourceAccessConstraint resourceAccessConstraint,
-			BasePermission permission);
+			BasePermission[] permissions);
 
 	protected abstract boolean checkCustomResourceArtifactAccessConstraint(
 			Authentication auth,

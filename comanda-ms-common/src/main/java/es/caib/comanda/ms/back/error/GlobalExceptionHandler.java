@@ -27,7 +27,7 @@ import java.util.Objects;
 
 /**
  * Tractament global de les excepcions en els controladors.
- * 
+ *
  * @author Límit Tecnologies
  */
 @Slf4j
@@ -91,7 +91,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 				Field constraintNameField = ex.getCause().getClass().getDeclaredField("constraintName");
 				constraintNameField.setAccessible(true);
 				constraintName = (String)constraintNameField.get(ex.getCause());
-			} catch (NoSuchFieldException | SecurityException | IllegalAccessException | IllegalArgumentException e) {
+			} catch (NoSuchFieldException | SecurityException | IllegalAccessException | IllegalArgumentException ignored) {
 			}
 			String errorMessage;
 			if (constraintName != null) {
@@ -189,10 +189,34 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 				null);
 	}
 
-	@ExceptionHandler(RuntimeException.class)
+	@ExceptionHandler(ReportGenerationException.class)
+	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	public ResponseEntity<Object> handleReportGenerationException(
+			ReportGenerationException ex,
+			WebRequest request) {
+		return buildErrorResponse(
+				ex,
+				ex.getErrorMessage(),
+				HttpStatus.INTERNAL_SERVER_ERROR,
+				request);
+	}
+
+	@ExceptionHandler(ActionExecutionException.class)
+	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	public ResponseEntity<Object> handleActionExecutionException(
+			ActionExecutionException ex,
+			WebRequest request) {
+		return buildErrorResponse(
+				ex,
+				ex.getErrorMessage(),
+				HttpStatus.INTERNAL_SERVER_ERROR,
+				request);
+	}
+
+	@ExceptionHandler(Exception.class)
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	public ResponseEntity<Object> handleAllUncaughtException(
-			RuntimeException ex,
+			Exception ex,
 			WebRequest request) {
 		log.error("Uncaught exception", ex);
 		return buildErrorResponse(

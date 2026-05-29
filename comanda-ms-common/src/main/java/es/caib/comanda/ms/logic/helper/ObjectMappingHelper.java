@@ -1,7 +1,9 @@
 package es.caib.comanda.ms.logic.helper;
 
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
 import es.caib.comanda.ms.logic.intf.exception.ObjectMappingException;
+import es.caib.comanda.ms.logic.intf.model.FileReference;
 import es.caib.comanda.ms.logic.intf.model.Resource;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.util.TypeUtil;
@@ -83,16 +85,39 @@ public class ObjectMappingHelper {
 					ReflectionUtils.makeAccessible(sourceField);
 					Field targetField = ReflectionUtils.findField(target.getClass(), sourceField.getName());
 					if (targetField != null) {
-						if (isSimpleType(sourceField.getType())) {
-							setFieldValue(
-									target,
-									targetField,
-									sourceField.get(source));
+						if (targetField.getType().isPrimitive() && sourceField.get(source) == null) {
+							if (targetField.getType() == boolean.class) {
+								targetField.setBoolean(target, false);
+							} else if (targetField.getType() == int.class) {
+								targetField.setInt(target, 0);
+							} else if (targetField.getType() == long.class) {
+								targetField.setLong(target, 0L);
+							} else if (targetField.getType() == double.class) {
+								targetField.setDouble(target, 0.0);
+							} else if (targetField.getType() == float.class) {
+								targetField.setFloat(target, 0f);
+							} else if (targetField.getType() == short.class) {
+								targetField.setShort(target, (short)0);
+							} else if (targetField.getType() == byte.class) {
+								targetField.setByte(target, (byte)0);
+							}
+						} else if (isSimpleType(sourceField.getType())) {
+							boolean isFileReferenceMapping =
+									(sourceField.getType().equals(byte[].class) && targetField.getType().equals(FileReference.class)) ||
+											(targetField.getType().equals(byte[].class) && sourceField.getType().equals(FileReference.class));
+							if (!isFileReferenceMapping) {
+								setFieldValue(
+										target,
+										targetField,
+										sourceField.get(source));
+							}
 						} else if (ResourceEntity.class.isAssignableFrom(sourceField.getType()) && ResourceReference.class.isAssignableFrom(targetField.getType())) {
 							ResourceEntity<?, ?> entity = (ResourceEntity<?, ?>)sourceField.get(source);
 							ResourceReference<?, ?> resourceReference = null;
 							if (entity != null) {
-								resourceReference = toResourceReference(entity);
+								resourceReference = ResourceReference.toResourceReference(
+										(Serializable)entity.getId(),
+										getResourceEntityDescription(entity, targetField));
 							}
 							setFieldValue(
 									target,
@@ -182,54 +207,48 @@ public class ObjectMappingHelper {
 		return null;
 	}
 
-	private ResourceReference<?, ?> toResourceReference(
-			ResourceEntity<?, ?> entity) {
-		return ResourceReference.toResourceReference(
-				(Serializable)entity.getId(),
-				//entity.getEntityDescription());
-				getResourceEntityDescription(entity));
-	}
-
-	private String getResourceEntityDescription(ResourceEntity<?, ?> persistable) {
+	private String getResourceEntityDescription(
+			ResourceEntity<?, ?> entity,
+			Field targetField) {
+		String descriptionFieldName = null;
 		Class<? extends Resource<?>> resourceClass = TypeUtil.getArgumentClassFromGenericSuperclass(
-				persistable.getClass(),
+				entity.getClass(),
 				ResourceEntity.class,
 				0);
-		String descriptionFieldName = getResourceDescriptionFieldName(resourceClass);
+		ResourceField resourceField = targetField.getAnnotation(ResourceField.class);
+		if (resourceField != null && !resourceField.descriptionField().isEmpty()) {
+			descriptionFieldName = resourceField.descriptionField();
+		} else {
+			ResourceConfig resourceConfig = resourceClass.getAnnotation(ResourceConfig.class);
+			if (resourceConfig != null) {
+				String descriptionField = resourceConfig.descriptionField();
+				if (!descriptionField.isEmpty()) {
+					descriptionFieldName = descriptionField;
+				} else {
+					log.warn(
+							"Couldn't find description field for resource class {}: ResourceConfig.descriptionField not configured",
+							resourceClass.getName());
+				}
+			} else {
+				log.warn(
+						"Couldn't find description field for resource class {}: ResourceConfig annotation not found",
+						resourceClass.getName());
+			}
+		}
 		if (descriptionFieldName != null) {
 			try {
 				return (String)getFieldValue(
-						persistable,
+						entity,
 						descriptionFieldName);
 			} catch (Exception ex) {
 				log.warn(
 						"Couldn't find description field {} in entity class {}",
 						descriptionFieldName,
-						persistable.getClass().getName(),
+						entity.getClass().getName(),
 						ex);
 			}
 		}
-		return resourceClass.getSimpleName() + " (id=" + persistable.getId() + ")";
-	}
-
-	private String getResourceDescriptionFieldName(Class<? extends Resource<?>> resourceClass) {
-		ResourceConfig resourceConfig = resourceClass.getAnnotation(ResourceConfig.class);
-		if (resourceConfig != null) {
-			String descriptionField = resourceConfig.descriptionField();
-			if (!descriptionField.isEmpty()) {
-				return descriptionField;
-			} else {
-				log.warn(
-						"Couldn't find description field for resource class {}: ResourceConfig.descriptionField not configured",
-						resourceClass.getName());
-				return null;
-			}
-		} else {
-			log.warn(
-					"Couldn't find description field for resource class {}: ResourceConfig annotation not found",
-					resourceClass.getName());
-			return null;
-		}
+		return resourceClass.getSimpleName() + " (id=" + entity.getId() + ")";
 	}
 
 	private boolean isSimpleType(Class<?> type) {
@@ -263,16 +282,24 @@ public class ObjectMappingHelper {
 			Object object,
 			Field field,
 			Object value) {
-		String setMethodName = methodNameFromFieldName(field.getName(), "set");
-		Method method = ReflectionUtils.findMethod(object.getClass(), setMethodName, field.getType());
-		if (method != null) {
-			ReflectionUtils.invokeMethod(method, object, value);
-		} else {
-			ReflectionUtils.makeAccessible(field);
-			ReflectionUtils.setField(
-					field,
-					object,
-					value);
+		try {
+			String setMethodName = methodNameFromFieldName(field.getName(), "set");
+			Method method = ReflectionUtils.findMethod(object.getClass(), setMethodName, field.getType());
+			if (method != null) {
+				ReflectionUtils.invokeMethod(method, object, value);
+			} else {
+				ReflectionUtils.makeAccessible(field);
+				ReflectionUtils.setField(
+						field,
+						object,
+						value);
+			}
+		} catch (IllegalArgumentException ex) {
+			log.warn("Couldn't set field value (targetClass={}, fieldName={}, valueType={})",
+					object.getClass().getName(),
+					field.getName(),
+					value != null ? value.getClass().getName() : "<null>",
+					ex);
 		}
 	}
 

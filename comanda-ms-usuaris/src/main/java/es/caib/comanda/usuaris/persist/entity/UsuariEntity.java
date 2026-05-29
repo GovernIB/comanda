@@ -3,7 +3,7 @@ package es.caib.comanda.usuaris.persist.entity;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.usuaris.logic.intf.model.MenuEstilEnum;
 import es.caib.comanda.usuaris.logic.intf.model.TemaAplicacioEnum;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import es.caib.comanda.usuaris.logic.intf.model.LanguageEnum;
 import es.caib.comanda.usuaris.logic.intf.model.NumOfElementsPerPageENum;
 import es.caib.comanda.usuaris.logic.intf.model.Usuari;
@@ -30,7 +30,7 @@ import javax.persistence.UniqueConstraint;
 @Getter
 @Setter
 @NoArgsConstructor
-public class UsuariEntity extends BaseAuditableEntity<Usuari> {
+public class UsuariEntity extends BaseAuditableLongPkEntity<Usuari> {
 
     @NaturalId
     @Column(name = "codi", length = 64, nullable = false)

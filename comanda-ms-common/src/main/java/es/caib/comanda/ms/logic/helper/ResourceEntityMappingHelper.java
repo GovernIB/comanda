@@ -93,11 +93,10 @@ public class ResourceEntityMappingHelper {
 			Map<String, Persistable<?>> referencedEntities) {
 		Set<String> ignoredFieldNames = new HashSet<>();
 		addResourceConfigIgnoredFields(resource.getClass(), ignoredFieldNames);
-		// Actualitza els camps de l'entitat que son de tipus Persistable o byte[]
+		// Actualitza els camps de l'entitat que son de tipus Persistable, FileReference o Collection
 		ReflectionUtils.doWithFields(entity.getClass(), field -> {
-			// Es modifica el valor de cada camp de l'entitat que és de tipus de Persistable
-			// amb la referencia especificada al resource.
 			if (Persistable.class.isAssignableFrom(field.getType()) && referencedEntities != null) {
+				// Es modifica el valor dels camps de tipus de Persistable amb la referencia especificada al resource.
 				Persistable<?> referencedEntity = referencedEntities.get(field.getName());
 				String setMethodName = "set" + TypeUtil.getMethodSuffixFromField(field);
 				Method setMethod = ReflectionUtils.findMethod(
@@ -111,9 +110,12 @@ public class ResourceEntityMappingHelper {
 							referencedEntity);
 				}
 				ignoredFieldNames.add(field.getName());
-			}
-			if (FileReference.class.isAssignableFrom(field.getType())) {
+			} else if (FileReference.class.isAssignableFrom(field.getType())) {
+				// Es modifica el valor dels camps de tipus de FileReference amb el contingut de l'arxiu.
 				setFileReferenceFieldValue(field, entity);
+				ignoredFieldNames.add(field.getName());
+			} else if (Collection.class.isAssignableFrom(field.getType())) {
+				// Ignora els camps de tipus Collection.
 				ignoredFieldNames.add(field.getName());
 			}
 		});

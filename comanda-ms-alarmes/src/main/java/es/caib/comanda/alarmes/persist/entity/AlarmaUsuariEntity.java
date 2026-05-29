@@ -2,7 +2,6 @@ package es.caib.comanda.alarmes.persist.entity;
 
 import es.caib.comanda.alarmes.logic.intf.model.*;
 import es.caib.comanda.base.config.BaseConfig;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import es.caib.comanda.ms.persist.entity.BaseEntity;
 import lombok.Builder;
 import lombok.Getter;

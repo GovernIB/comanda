@@ -3,10 +3,13 @@ package es.caib.comanda.ms.back.controller;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import es.caib.comanda.ms.logic.intf.exception.*;
+import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.exception.ArtifactNotFoundException;
+import es.caib.comanda.ms.logic.intf.exception.ComponentNotFoundException;
 import es.caib.comanda.ms.logic.intf.model.*;
 import es.caib.comanda.ms.logic.intf.permission.ResourcePermissions;
 import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
+import es.caib.comanda.ms.logic.intf.service.PermissionEvaluatorService;
 import es.caib.comanda.ms.logic.intf.util.HttpRequestUtil;
 import es.caib.comanda.ms.logic.intf.util.JsonUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,7 +19,6 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.CollectionModel;
@@ -25,14 +27,16 @@ import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.hateoas.mediatype.Affordances;
 import org.springframework.hateoas.mediatype.ConfigurableAffordance;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.SmartValidator;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
@@ -46,6 +50,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -62,7 +67,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
  * @param <ID>
  *            el tipus de la clau primària del recurs. Aquest tipus ha
  *            d'implementar la interfície Serializable.
- * 
+ *
  * @author Límit Tecnologies
  */
 @Slf4j
@@ -72,21 +77,22 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 
 	@Autowired
 	protected SmartValidator validator;
+	@Autowired
+	protected PermissionEvaluatorService permissionEvaluatorService;
 
 	@Override
 	@PostMapping
-	@Operation(summary = "Crea un nou recurs")
-	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('CREATE'))")
+	@Operation(operationId = "create", summary = "Crea un nou recurs")
+	@PreAuthorize("!this.forbiddenCreateLogic() and (this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('CREATE')))")
 	public ResponseEntity<EntityModel<R>> create(
 			@RequestBody
-			@Validated({ Resource.OnCreate.class, Default.class })
 			final R resource,
 			BindingResult bindingResult) throws MethodArgumentNotValidException {
 		log.debug("Creant recurs (resource={})", resource);
 		validateResource(
 				resource,
-				bindingResult,
 				0,
+				bindingResult,
 				Resource.OnCreate.class,
 				Default.class);
 		R created = getMutableResourceService().create(
@@ -102,17 +108,20 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 						buildSingleResourceLinks(
 								created.getId(),
 								null,
-								true,
+								null,
 								null,
 								resourceApiService.permissionsCurrentUser(
 										getResourceClass(),
-										created.getId())).toArray(new Link[0])));
+										created.getId()),
+								true,
+								true,
+								true).toArray(new Link[0])));
 	}
 
 	@Override
 	@PutMapping(value = "/{id}")
-	@Operation(summary = "Modifica tots els camps d'un recurs")
-	@PreAuthorize("this.isPublic() or hasPermission(#id, this.getResourceClass().getName(), this.getOperation('UPDATE'))")
+	@Operation(operationId = "update", summary = "Modifica un recurs existent")
+	@PreAuthorize("!this.forbiddenUpdateLogic() and (this.isPublic() or hasPermission(#id, this.getResourceClass().getName(), this.getOperation('UPDATE')))")
 	public ResponseEntity<EntityModel<R>> update(
 			@PathVariable
 			@Parameter(description = "Identificador del recurs")
@@ -124,8 +133,8 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 		updateResourceIdAndPk(id, resource);
 		validateResource(
 				resource,
-				bindingResult,
 				1,
+				bindingResult,
 				Resource.OnUpdate.class,
 				Default.class);
 		R updated = getMutableResourceService().update(
@@ -138,17 +147,20 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 						buildSingleResourceLinks(
 								updated.getId(),
 								null,
-								true,
+								null,
 								null,
 								resourceApiService.permissionsCurrentUser(
 										getResourceClass(),
-										id)).toArray(new Link[0])));
+										id),
+								true,
+								true,
+								true).toArray(new Link[0])));
 	}
 
 	@Override
 	@PatchMapping(value = "/{id}")
-	@Operation(summary = "Modifica parcialment un recurs")
-	@PreAuthorize("this.isPublic() or hasPermission(#id, this.getResourceClass().getName(), this.getOperation('PATCH'))")
+	@Operation(operationId = "patch", summary = "Modifica parcialment un recurs existent")
+	@PreAuthorize("!this.forbiddenPatchLogic() and (this.isPublic() or hasPermission(#id, this.getResourceClass().getName(), this.getOperation('PATCH')))")
 	public ResponseEntity<EntityModel<R>> patch(
 			@PathVariable
 			@Parameter(description = "Identificador del recurs")
@@ -157,37 +169,30 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 			final JsonNode jsonNode,
 			BindingResult bindingResult) throws JsonProcessingException, MethodArgumentNotValidException {
 		log.debug("Modificant parcialment el recurs (id={}, jsonNode={})", id, jsonNode);
-		R resource = getMutableResourceService().getOne(id, null);
-		fillResourceWithFieldsMap(
-				resource,
-				JsonUtil.getInstance().fromJsonToMap(jsonNode, getResourceClass()));
-		validateResource(
-				resource,
-				bindingResult,
-				1,
-				Resource.OnUpdate.class,
-				Default.class);
-		R updated = getMutableResourceService().update(
+		R updated = internalPatch(
 				id,
-				resource,
-				getAnswersFromHeaderOrRequest(null));
+				jsonNode,
+				bindingResult.getObjectName());
 		return ResponseEntity.ok(
 				toEntityModel(
 						updated,
 						buildSingleResourceLinks(
 								updated.getId(),
 								null,
-								true,
+								null,
 								null,
 								resourceApiService.permissionsCurrentUser(
 										getResourceClass(),
-										id)).toArray(new Link[0])));
+										id),
+								true,
+								true,
+								true).toArray(new Link[0])));
 	}
 
 	@Override
 	@DeleteMapping(value = "/{id}")
-	@Operation(summary = "Esborra un recurs")
-	@PreAuthorize("this.isPublic() or hasPermission(#id, this.getResourceClass().getName(), this.getOperation('DELETE'))")
+	@Operation(operationId = "delete", summary = "Esborra un recurs")
+	@PreAuthorize("!this.forbiddenDeleteLogic() and (this.isPublic() or hasPermission(#id, this.getResourceClass().getName(), this.getOperation('DELETE')))")
 	public ResponseEntity<?> delete(
 			@PathVariable
 			@Parameter(description = "Identificador del recurs")
@@ -201,8 +206,8 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 
 	@Override
 	@PatchMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-	@Operation(summary = "Processa els canvis en els camps del recurs")
-	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('ONCHANGE'))")
+	@Operation(operationId = "onChange", summary = "Processa els canvis en els camps del recurs")
+	@PreAuthorize("!this.forbiddenOnChangeLogic() and (this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('ONCHANGE')))")
 	public ResponseEntity<String> onChange(
 			@RequestBody @Valid
 			final OnChangeEvent<ID> onChangeEvent) throws JsonProcessingException {
@@ -226,10 +231,77 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 	}
 
 	@Override
+	@PostMapping(value = "/bulk")
+	@Operation(operationId = "bulk", summary = "Accions sobre múltiples recursos")
+	public ResponseEntity<BulkResponse<ID>> bulk(
+			@Valid
+			@RequestBody
+			final BulkRequest<ID> bulkRequest) {
+		List<BulkResponse.BulkResponseItem<ID>> responseItems = Arrays.stream(bulkRequest.getIds()).map(id -> {
+			try {
+				boolean bulkActionAllowed;
+				Serializable actionResult = null;
+				if (bulkRequest.getType() == BulkRequest.BulkActionType.DELETE) {
+					boolean hasDeletePermission = permissionEvaluatorService.hasPermission(
+							SecurityContextHolder.getContext().getAuthentication(),
+							id,
+							getResourceClass().getName(),
+							PermissionEvaluatorService.RestApiOperation.DELETE);
+					bulkActionAllowed = !forbiddenDeleteLogic() && (isPublic() || hasDeletePermission);
+					if (bulkActionAllowed) {
+						getMutableResourceService().delete(id, null);
+					}
+				} else if (bulkRequest.getType() == BulkRequest.BulkActionType.ACTION) {
+					boolean hasActionPermission = permissionEvaluatorService.hasPermission(
+							SecurityContextHolder.getContext().getAuthentication(),
+							id,
+							getResourceClass().getName(),
+							PermissionEvaluatorService.RestApiOperation.ACTION);
+					bulkActionAllowed = !forbiddenArtifactLogic() && (isPublic() || hasActionPermission);
+					if (bulkActionAllowed) {
+						actionResult = internalActionExec(
+								id,
+								bulkRequest.getActionCode(),
+								bulkRequest.getParams(),
+								null);
+					}
+				} else {
+					boolean hasPatchPermission = permissionEvaluatorService.hasPermission(
+							SecurityContextHolder.getContext().getAuthentication(),
+							id,
+							getResourceClass().getName(),
+							PermissionEvaluatorService.RestApiOperation.PATCH);
+					bulkActionAllowed = !forbiddenPatchLogic() && (isPublic() || hasPatchPermission);
+					if (bulkActionAllowed) {
+						internalPatch(id, bulkRequest.getParams(), "resource");
+					}
+				}
+				return new BulkResponse.BulkResponseItem<>(
+						id,
+						actionResult,
+						!bulkActionAllowed,
+						bulkActionAllowed ? null : bulkRequest.getType().name() + " not allowed");
+			} catch (Exception ex) {
+				return new BulkResponse.BulkResponseItem<>(
+						id,
+						null,
+						true,
+						ex.getMessage());
+			}
+		}).collect(Collectors.toList());
+		long errorCount = responseItems.stream().filter(BulkResponse.BulkResponseItem::isError).count();
+		return ResponseEntity.ok(
+				new BulkResponse<>(
+						responseItems.size() - errorCount,
+						errorCount,
+						responseItems.toArray(BulkResponse.BulkResponseItem[]::new)));
+	}
+
+	@Override
 	@GetMapping(value = "/fields/{fieldName}/options")
-	@Operation(summary = "Consulta paginada de les opcions disponibles per a emplenar un camp de tipus ResourceReference")
-	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('OPTIONS'))")
-	public <RR extends Resource<?>> ResponseEntity<PagedModel<EntityModel<RR>>> fieldOptionsFind(
+	@Operation(operationId = "fieldOptionsFind", summary = "Consulta paginada de les opcions disponibles per a emplenar un camp de tipus ResourceReference")
+	@PreAuthorize("!this.forbiddenFieldsLogic() and (this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('OPTIONS')))")
+	public <RR extends Resource<RID>, RID extends Serializable> ResponseEntity<PagedModel<EntityModel<RR>>> fieldOptionsFind(
 			@PathVariable
 			@Parameter(description = "Nom del camp")
 			final String fieldName,
@@ -281,8 +353,8 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 
 	@Override
 	@GetMapping(value = "/fields/{fieldName}/options/{id}")
-	@Operation(summary = "Consulta d'una de les opcions disponibles per a emplenar un camp de tipus ResourceReference")
-	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('OPTIONS'))")
+	@Operation(operationId = "fieldOptionsGetOne", summary = "Consulta d'una de les opcions disponibles per a emplenar un camp de tipus ResourceReference")
+	@PreAuthorize("!this.forbiddenFieldsLogic() and (this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('OPTIONS')))")
 	public <RR extends Resource<RID>, RID extends Serializable> ResponseEntity<EntityModel<RR>> fieldOptionsGetOne(
 			@PathVariable
 			@Parameter(description = "Nom del camp")
@@ -312,8 +384,8 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 
 	@Override
 	@GetMapping(value = "/fields/{fieldName}/enumOptions")
-	@Operation(summary = "Consulta les opcions disponibles per a emplenar un camp enumerat")
-	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('OPTIONS'))")
+	@Operation(operationId = "fieldEnumOptionsFind", summary = "Consulta les opcions disponibles per a emplenar un camp enumerat")
+	@PreAuthorize("!this.forbiddenFieldsLogic() and (this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('OPTIONS')))")
 	public ResponseEntity<CollectionModel<EntityModel<FieldOption>>> fieldEnumOptionsFind(
 			@PathVariable
 			@Parameter(description = "Nom del camp")
@@ -339,8 +411,8 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 
 	@Override
 	@GetMapping(value = "/fields/{fieldName}/enumOptions/{value}")
-	@Operation(summary = "Consulta una de les opcions disponibles per a emplenar un camp enumerat")
-	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('OPTIONS'))")
+	@Operation(operationId = "fieldEnumOptionsGetOne", summary = "Consulta una de les opcions disponibles per a emplenar un camp enumerat")
+	@PreAuthorize("!this.forbiddenFieldsLogic() and (this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('OPTIONS')))")
 	public ResponseEntity<EntityModel<FieldOption>> fieldEnumOptionsGetOne(
 			@PathVariable
 			@Parameter(description = "Nom del camp")
@@ -370,8 +442,8 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 
 	@Override
 	@PostMapping("/artifacts/action/{code}")
-	@Operation(summary = "Execució d'una acció associada a un recurs")
-	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('ACTION'))")
+	@Operation(operationId = "artifactActionExec", summary = "Execució d'una acció associada a un recurs")
+	@PreAuthorize("!this.forbiddenArtifactLogic() and (this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('ACTION')))")
 	public ResponseEntity<?> artifactActionExec(
 			@PathVariable
 			@Parameter(description = "Codi de l'acció")
@@ -379,14 +451,14 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 			@RequestBody(required = false)
 			final JsonNode params,
 			BindingResult bindingResult) throws ArtifactNotFoundException, JsonProcessingException, MethodArgumentNotValidException {
-		return artifactActionExec(null, code, params, bindingResult);
+		return artifactActionExecId(null, code, params, bindingResult);
 	}
 
 	@Override
 	@PostMapping("/{id}/artifacts/action/{code}")
-	@Operation(summary = "Execució d'una acció associada a un recurs amb id")
-	@PreAuthorize("this.isPublic() or hasPermission(#id, this.getResourceClass().getName(), this.getOperation('ACTION'))")
-	public ResponseEntity<?> artifactActionExec(
+	@Operation(operationId = "artifactActionExecId", summary = "Execució d'una acció associada a un recurs amb id")
+	@PreAuthorize("!this.forbiddenArtifactLogic() and (this.isPublic() or hasPermission(#id, this.getResourceClass().getName(), this.getOperation('ACTION')))")
+	public ResponseEntity<?> artifactActionExecId(
 			@PathVariable(required = false)
 			@Parameter(description = "Identificador del recurs")
 			final ID id,
@@ -400,20 +472,19 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 				id,
 				code,
 				params);
-		Class<?> formClass = getArtifactFormClass(ResourceArtifactType.ACTION, code);
-		Serializable paramsObject = getArtifactParamsAsObjectWithFormClass(
-				formClass,
+		Serializable result = internalActionExec(
+				id,
+				code,
 				params,
 				bindingResult);
-		Serializable result = getMutableResourceService().artifactActionExec(id, code, paramsObject);
 		return ResponseEntity.ok(result);
 	}
 
 	@Override
 	@GetMapping(value = "/artifacts/action/{code}/fields/{fieldName}/options")
-	@Operation(summary = "Consulta paginada de les opcions disponibles per a emplenar un camp de tipus ResourceReference que pertany al formulari de l'acció")
-	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('ACTION'))")
-	public <RR extends Resource<?>> ResponseEntity<PagedModel<EntityModel<RR>>> artifactActionFieldOptionsFind(
+	@Operation(operationId = "artifactActionFieldOptionsFind", summary = "Consulta paginada de les opcions disponibles per a emplenar un camp de tipus ResourceReference que pertany al formulari de l'acció")
+	@PreAuthorize("!this.forbiddenArtifactLogic() and (this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('ACTION')))")
+	public <RR extends Resource<RID>, RID extends Serializable> ResponseEntity<PagedModel<EntityModel<RR>>> artifactActionFieldOptionsFind(
 			@PathVariable
 			@Parameter(description = "Codi de l'informe")
 			final String code,
@@ -471,8 +542,8 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 
 	@Override
 	@GetMapping(value = "/artifacts/action/{code}/fields/{fieldName}/options/{id}")
-	@Operation(summary = "Consulta d'una de les opcions disponibles per a emplenar un camp de tipus ResourceReference que pertany al formulari de l'acció")
-	@PreAuthorize("this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('ACTION'))")
+	@Operation(operationId = "artifactActionFieldOptionsGetOne", summary = "Consulta d'una de les opcions disponibles per a emplenar un camp de tipus ResourceReference que pertany al formulari de l'acció")
+	@PreAuthorize("!this.forbiddenArtifactLogic() and (this.isPublic() or hasPermission(null, this.getResourceClass().getName(), this.getOperation('ACTION')))")
 	public <RR extends Resource<RID>, RID extends Serializable> ResponseEntity<EntityModel<RR>> artifactActionFieldOptionsGetOne(
 			@PathVariable
 			@Parameter(description = "Codi de l'informe")
@@ -518,15 +589,21 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 	protected List<Link> buildSingleResourceLinks(
 			Serializable id,
 			String[] perspective,
-			boolean withDownloadLink,
 			Link singleResourceSelfLink,
-			ResourcePermissions resourcePermissions) {
+			List<ResourceArtifact> artifactsAll,
+			ResourcePermissions resourcePermissions,
+			boolean withDownloadLink,
+			boolean withEditLinksInputAndOutput,
+			boolean withArtifactLinks) {
 		List<Link> links = super.buildSingleResourceLinks(
 				id,
 				perspective,
-				withDownloadLink,
 				singleResourceSelfLink,
-				resourcePermissions);
+				artifactsAll,
+				resourcePermissions,
+				withDownloadLink,
+				withEditLinksInputAndOutput,
+				withArtifactLinks);
 		Link selfLink = links.stream().
 				filter(l -> l.getRel().value().equals("self")).
 				findFirst().orElse(null);
@@ -534,13 +611,20 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 			if (resourcePermissions.isWriteGranted()) {
 				ConfigurableAffordance affordance = Affordances.of(selfLink).
 						afford(FAKE_DEFAULT_TEMPLATE_HTTP_METHOD).
-						withName("default").
-						andAfford(HttpMethod.PUT).
-						withInputAndOutput(getResourceClass()).
-						withName("update").
-						andAfford(HttpMethod.PATCH).
-						withInputAndOutput(getResourceClass()).
-						withName("patch");
+						withName("default");
+				if (withEditLinksInputAndOutput) {
+					affordance = affordance.andAfford(HttpMethod.PUT).
+							withInputAndOutput(getResourceClass()).
+							withName("update")
+							.andAfford(HttpMethod.PATCH).
+							withInputAndOutput(getResourceClass()).
+							withName("patch");
+				} else {
+					affordance = affordance.andAfford(HttpMethod.PUT).
+							withName("update")
+							.andAfford(HttpMethod.PATCH).
+							withName("patch");
+				}
 				if (resourcePermissions.isDeleteGranted()) {
 					affordance = affordance.
 							andAfford(HttpMethod.DELETE).
@@ -598,32 +682,44 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 					null,
 					null,
 					null));
-			if (resourcePermissions.isCreateGranted() && resourcePermissions.isWriteGranted()) {
-				links.set(
-						links.indexOf(selfLink),
-						Affordances.of(selfLink).
+			boolean canCreate = resourcePermissions.isCreateGranted();
+			boolean canWrite = resourcePermissions.isWriteGranted();
+			boolean canDelete = resourcePermissions.isDeleteGranted();
+			Affordances affordances = Affordances.of(selfLink);
+			ConfigurableAffordance configurable = null;
+			if (canCreate) {
+				configurable = addAffordance(
+						configurable,
+						affordances,
+						HttpMethod.POST,
+						a -> a.
+								withInputAndOutput(getResourceClass()).
+								withName("create"));
+			}
+			if (canCreate || canWrite) {
+				configurable = addAffordance(
+						configurable,
+						affordances,
+						HttpMethod.PATCH,
+						a -> a.
+								withInput(OnChangeEvent.class).
+								withOutput(getResourceClass()).
+								withName("onChange"));
+			}
+			links.set(
+					links.indexOf(selfLink),
+					(configurable != null ? configurable : affordances).toLink());
+			if (canWrite || canDelete) {
+				Link bulkLink = WebMvcLinkBuilder.
+						linkTo(WebMvcLinkBuilder.methodOn(getClass()).bulk(null)).
+						withRel("bulk").
+						withType(HttpMethod.POST.name());
+				links.add(
+						Affordances.of(bulkLink).
 								afford(HttpMethod.POST).
-								withInputAndOutput(getResourceClass()).
-								withName("create").
-								andAfford(HttpMethod.PATCH).
-								withInputAndOutput(getResourceClass()).
-								withName("onChange").
-								toLink());
-			} else if (resourcePermissions.isCreateGranted()) {
-				links.set(
-						links.indexOf(selfLink),
-						Affordances.of(selfLink).
-								afford(HttpMethod.POST).
-								withInputAndOutput(getResourceClass()).
-								withName("create").
-								toLink());
-			} else if (resourcePermissions.isWriteGranted()) {
-				links.set(
-						links.indexOf(selfLink),
-						Affordances.of(selfLink).
-								afford(HttpMethod.PATCH).
-								withInputAndOutput(getResourceClass()).
-								withName("onChange").
+								withInput(BulkRequest.class).
+								withOutput(BulkResponse.class).
+								withName("bulk").
 								toLink());
 			}
 		}
@@ -631,10 +727,12 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 	}
 
 	@Override
-	protected List<Link> buildSingleResourceArtifactLinks(Serializable id) {
-		List<Link> superLinks = super.buildSingleResourceArtifactLinks(id);
-		List<ResourceArtifact> artifacts = getReadonlyResourceService().artifactFindAll(null);
-		List<Link> links = artifacts.stream().
+	protected List<Link> buildSingleResourceArtifactLinks(Serializable id, List<ResourceArtifact> artifactsAll) {
+		List<Link> superLinks = super.buildSingleResourceArtifactLinks(id, artifactsAll);
+		List<ResourceArtifact> thisArtifactsAll = artifactsAll != null ?
+				artifactsAll :
+				getReadonlyResourceService().artifactFindAll(null);
+		List<Link> links = thisArtifactsAll.stream().
 				filter(a -> a.getType() == ResourceArtifactType.ACTION && a.getRequiresId() != null && a.getRequiresId()).
 				map(a -> buildActionLinkWithAffordances(a, id)).
 				collect(Collectors.toList());
@@ -661,28 +759,13 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 		return links.toArray(new Link[0]);
 	}
 
-	protected <T extends Resource<?>> void validateResource(
-			T resource,
-			BindingResult bindingResult,
-			int paramIndex,
-			Object... validationHints) throws MethodArgumentNotValidException {
-		Object[] finalValidationHints = validationHints;
-		if (validationHints == null || validationHints.length == 0) {
-			finalValidationHints = new Object[] { Default.class };
-		} else {
-			finalValidationHints = validationHints;
-		}
-		validator.validate(
-				resource,
-				bindingResult,
-				finalValidationHints);
-		if (bindingResult.hasErrors()) {
-			throw new MethodArgumentNotValidException(
-					new MethodParameter(
-							new Object() {}.getClass().getEnclosingMethod(),
-							paramIndex),
-					bindingResult);
-		}
+	protected ConfigurableAffordance addAffordance(
+			ConfigurableAffordance current,
+			Affordances base,
+			HttpMethod method,
+			Function<ConfigurableAffordance, ConfigurableAffordance> configurer) {
+		ConfigurableAffordance next = (current == null) ? base.afford(method) : current.andAfford(method);
+		return configurer.apply(next);
 	}
 
 	protected void fillResourceWithFieldsMap(
@@ -716,11 +799,44 @@ public abstract class BaseMutableResourceController<R extends Resource<? extends
 		}
 	}
 
+	private R internalPatch(
+			ID id,
+			JsonNode jsonNode,
+			String objectName) throws JsonProcessingException, MethodArgumentNotValidException {
+		R resource = getMutableResourceService().getOne(id, null);
+		fillResourceWithFieldsMap(
+				resource,
+				JsonUtil.getInstance().fromJsonToMap(jsonNode, getResourceClass()));
+		validateResource(
+				resource,
+				1,
+				new BeanPropertyBindingResult(resource, objectName),
+				Resource.OnUpdate.class,
+				Default.class);
+		return getMutableResourceService().update(
+				id,
+				resource,
+				getAnswersFromHeaderOrRequest(null));
+	}
+
+	private Serializable internalActionExec(
+			ID id,
+			String code,
+			JsonNode params,
+			BindingResult bindingResult) throws JsonProcessingException, MethodArgumentNotValidException {
+		Class<?> formClass = getArtifactFormClass(ResourceArtifactType.ACTION, code);
+		Serializable paramsObject = getArtifactParamsAsObjectWithFormClass(
+				formClass,
+				params,
+				bindingResult);
+		return getMutableResourceService().artifactActionExec(id, code, paramsObject);
+	}
+
 	@SneakyThrows
 	private Link buildActionLink(ResourceArtifact artifact, Serializable id) {
 		String rel = "exec_" + artifact.getCode();
 		if (artifact.getRequiresId() != null && artifact.getRequiresId()) {
-			return linkTo(methodOn(getClass()).artifactActionExec(id, artifact.getCode(), null, null)).withRel(rel);
+			return linkTo(methodOn(getClass()).artifactActionExecId(id, artifact.getCode(), null, null)).withRel(rel);
 		} else {
 			return linkTo(methodOn(getClass()).artifactActionExec(artifact.getCode(), null, null)).withRel(rel);
 		}

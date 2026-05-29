@@ -28,6 +28,7 @@ public class BaseConfig {
 	public static final String API_PATH = "/api";
 	public static final String PING_PATH = "/ping";
 	public static final String AUTH_TOKEN_PATH = "/authToken";
+	public static final String AUTH_ROLES_PATH = "/authRoles";
 	public static final String SYSENV_PATH = "/sysenv";
 	public static final String MANIFEST_PATH = "/manifest";
 	public static final String API_SALUT_V1 = "/salut/v1";
@@ -35,10 +36,6 @@ public class BaseConfig {
 	public static final String DEFAULT_LOCALE = "ca";
 
 	public static final String PROP_FILES = PROPERTY_PREFIX + "fitxers";
-	public static final String PROP_DEFAULT_AUDITOR = PROPERTY_PREFIX + "default.auditor";
-	public static final String PROP_HTTP_HEADER_ANSWERS = PROPERTY_PREFIX + "http.header.answers";
-	public static final String PROP_PERSIST_CONTAINER_TRANSACTIONS_DISABLED = PROPERTY_PREFIX + "persist.container-transactions-disabled";
-	public static final String PROP_PERSIST_TRANSACTION_MANAGER_ENABLED = PROPERTY_PREFIX + "persist.transaction-manager.enabled";
 	public static final String PROP_SCHEDULER_LEADER = PROPERTY_PREFIX + "scheduler.leader";
 	public static final String PROP_SCHEDULER_BACK = PROPERTY_PREFIX + "scheduler.back";
 	public static final String PROP_SCHEDULER_ALARMES_CRON = PROPERTY_PREFIX + "scheduler.alarmes.cron";

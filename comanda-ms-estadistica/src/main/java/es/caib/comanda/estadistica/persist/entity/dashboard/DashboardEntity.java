@@ -3,7 +3,7 @@ package es.caib.comanda.estadistica.persist.entity.dashboard;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -32,7 +32,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class DashboardEntity extends BaseAuditableEntity<Dashboard> {
+public class DashboardEntity extends BaseAuditableLongPkEntity<Dashboard> {
 
     @Column(name = "titol", length = 64, nullable = false)
     private String titol;

@@ -84,7 +84,7 @@ public class EntornServiceImpl extends BaseMutableResourceService<Entorn, Long, 
     }
 
     @Override
-    protected List<EntornEntity> reorderFindLinesWithParent(Serializable parentId) {
+    protected List<EntornEntity> reorderFindLinesWithParentAndSorted(Serializable parentId) {
         return entornRepository.findAllByOrderByOrdreAsc();
     }
 

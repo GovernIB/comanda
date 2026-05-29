@@ -2,7 +2,7 @@ package es.caib.comanda.configuracio.persist.entity;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.intf.model.App;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import es.caib.comanda.ms.persist.entity.ReorderableEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,7 +24,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class AppEntity extends BaseAuditableEntity<App> implements ReorderableEntity<Long> {
+public class AppEntity extends BaseAuditableLongPkEntity<App> implements ReorderableEntity<Long> {
 
 	@Column(name = "codi", length = 16, nullable = false)
 	private String codi;

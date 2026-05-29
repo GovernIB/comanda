@@ -1,7 +1,7 @@
 package es.caib.comanda.permisos.persist.entity;
 
 import es.caib.comanda.base.config.BaseConfig;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import es.caib.comanda.permisos.logic.intf.model.Permis;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,7 +22,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class PermisEntity extends BaseAuditableEntity<Permis> {
+public class PermisEntity extends BaseAuditableLongPkEntity<Permis> {
 
     @Column(name = "entorn_app_id", nullable = false)
     private Long entornAppId;

@@ -1,37 +1,33 @@
 package es.caib.comanda.ms.back.config;
 
-import es.caib.comanda.ms.logic.intf.service.PermissionEvaluatorService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
-import org.springframework.security.config.annotation.method.configuration.GlobalMethodSecurityConfiguration;
 
 /**
  * Configuració de la seguretat a nivell de mètode.
- * 
+ *
  * @author Límit Tecnologies
  */
 @Configuration
+@RequiredArgsConstructor
 @DependsOn({ "permissionEvaluatorService" })
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
-public class MethodSecurityConfig extends GlobalMethodSecurityConfiguration {
+public class MethodSecurityConfig {
 
 	public static final String DEFAULT_ROLE_PREFIX = "";
 
-	@Autowired
-	private ApplicationContext applicationContext;
-	@Autowired
-	private PermissionEvaluatorService permissionEvaluatorService;
+	private final PermissionEvaluator permissionEvaluator;
 
-	@Override
-	protected MethodSecurityExpressionHandler createExpressionHandler() {
+	@Bean
+	public MethodSecurityExpressionHandler methodSecurityExpressionHandler() {
 		DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
-		expressionHandler.setApplicationContext(applicationContext);
-		expressionHandler.setPermissionEvaluator(permissionEvaluatorService);
+		expressionHandler.setPermissionEvaluator(permissionEvaluator);
 		expressionHandler.setDefaultRolePrefix(DEFAULT_ROLE_PREFIX);
 		return expressionHandler;
 	}

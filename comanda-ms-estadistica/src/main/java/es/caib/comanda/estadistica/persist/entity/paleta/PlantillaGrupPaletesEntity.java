@@ -3,7 +3,7 @@ package es.caib.comanda.estadistica.persist.entity.paleta;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.DashboardTemplatePaletteGroup;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -26,7 +26,7 @@ import javax.persistence.UniqueConstraint;
         uniqueConstraints = {
                 @UniqueConstraint(name = BaseConfig.DB_PREFIX + "est_tpalgrp_type_uk", columnNames = { "template_id", "group_type" })
         })
-public class PlantillaGrupPaletesEntity extends BaseAuditableEntity<DashboardTemplatePaletteGroup> {
+public class PlantillaGrupPaletesEntity extends BaseAuditableLongPkEntity<DashboardTemplatePaletteGroup> {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(

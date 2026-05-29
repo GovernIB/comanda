@@ -25,11 +25,11 @@ public class FilterSpecification<T> extends com.turkraft.springfilter.boot.Filte
 
 	@Override
 	public Predicate toPredicate(
-		Root<T> root,
-		CriteriaQuery<?> query,
-		CriteriaBuilder criteriaBuilder) {
+			Root<T> root,
+			CriteriaQuery<?> query,
+			CriteriaBuilder criteriaBuilder) {
 		Predicate predicate;
-		Map<String, Join<?, ?>> j = getJoins() != null ? getJoins() : new HashMap<>();
+		Map<String, Join<?, ?>> j = getJoins() != null ? getJoins() : new HashMap<String, Join<?, ?>>();
 		String input = getInput();
 		if (input != null) {
 			predicate = !input.trim().isEmpty() ? (Predicate)ExpressionGenerator.run(
@@ -40,13 +40,13 @@ public class FilterSpecification<T> extends com.turkraft.springfilter.boot.Filte
 				j,
 				getPayload()) : null;
 		} else {
-			predicate = (Predicate) ExpressionGenerator.run(
-				getFilter(),
-				root,
-				query,
-				criteriaBuilder,
-				j,
-				getPayload());
+			predicate = (Predicate)ExpressionGenerator.run(
+					getFilter(),
+					root,
+					query,
+					criteriaBuilder,
+					j,
+					getPayload());
 		}
 		return predicate;
 	}

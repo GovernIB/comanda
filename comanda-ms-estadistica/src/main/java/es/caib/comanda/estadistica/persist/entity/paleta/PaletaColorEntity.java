@@ -2,7 +2,7 @@ package es.caib.comanda.estadistica.persist.entity.paleta;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletaColor;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -23,7 +23,7 @@ import javax.persistence.UniqueConstraint;
         uniqueConstraints = {
                 @UniqueConstraint(name = BaseConfig.DB_PREFIX + "est_cpalcol_pos_uk", columnNames = { "palette_id", "posicio" })
         })
-public class PaletaColorEntity extends BaseAuditableEntity<PaletaColor> {
+public class PaletaColorEntity extends BaseAuditableLongPkEntity<PaletaColor> {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(

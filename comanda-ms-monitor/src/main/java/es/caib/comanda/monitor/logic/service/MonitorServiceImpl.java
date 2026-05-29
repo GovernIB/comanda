@@ -31,7 +31,7 @@ public class MonitorServiceImpl extends BaseMutableResourceService<Monitor, Long
     }
 
     @Override
-    protected String namedFilterToSpringFilter(String name) {
+    protected String namedQueryToSpringFilter(String name) {
         if (Objects.nonNull(name) && name.startsWith(Monitor.FILTER_BY_APP_NAMEDFILTER)){
             long appId = Long.parseLong(name.split(":")[1]);
             return springFilterEntornAppIdInIdsList(monitorClientHelper.findEntornAppIdsByAppId(appId));

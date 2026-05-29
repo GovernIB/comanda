@@ -3,7 +3,7 @@ package es.caib.comanda.avisos.persist.entity;
 import es.caib.comanda.avisos.logic.intf.model.Avis;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.model.v1.avis.AvisTipus;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -25,7 +25,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @FieldNameConstants
-public class AvisEntity extends BaseAuditableEntity<Avis> {
+public class AvisEntity extends BaseAuditableLongPkEntity<Avis> {
 
     @Column(name = "entorn_app_id", nullable = false)
     private Long entornAppId;

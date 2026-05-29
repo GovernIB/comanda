@@ -15,7 +15,10 @@ import org.springframework.lang.Nullable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ReflectionUtils;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -47,6 +50,24 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		return newClassInstance(getResourceClass());
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * <p>Internament, el mètode segueix aquestes passes:
+	 * <ol>
+	 *   <li>Crida al mètode completeResource.</li>
+	 *   <li>Converteix el recurs en una entitat de persistència.</li>
+	 *   <li>Crida al mètode beforeCreateEntity.</li>
+	 *   <li>Modifica l'entitat amb la informació del recurs.</li>
+	 *   <li>Crida al mètode beforeCreateSave.</li>
+	 *   <li>Configura l'ordre de l'entitat (si és reordenable).</li>
+	 *   <li>Desa els canvis del recurs a la base de dades.</li>
+	 *   <li>Desa els fitxers associats a algun dels camps del recurs.</li>
+	 *   <li>Crida al mètode afterCreateSave.</li>
+	 *   <li>Converteix l'entitat en un recurs fent un detach just abans i un merge just després.</li>
+	 *   <li>Crida al mètode afterConversion.</li>
+	 *   <li>Crida al mètode afterCreate.</li>
+	 * </ol>
+	 */
 	@Override
 	@Transactional
 	public R create(
@@ -66,7 +87,7 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 				entity,
 				null,
 				null,
-				true,
+				null,
 				false);
 		E saved = entitySaveFlushAndRefresh(entity);
 		fieldFilesSave(resource, saved);
@@ -74,6 +95,24 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		return entityDetachConvertAndMerge(saved, answers, true);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * <p>Internament, el mètode segueix aquestes passes:
+	 * <ol>
+	 *   <li>Crida al mètode completeResource.</li>
+	 *   <li>Consulta l'entitat a modificar a la base de dades.</li>
+	 *   <li>Crida al mètode beforeUpdateEntity.</li>
+	 *   <li>Modifica l'entitat amb la informació del recurs.</li>
+	 *   <li>Crida al mètode beforeUpdateSave.</li>
+	 *   <li>Desa els canvis del recurs a la base de dades.</li>
+	 *   <li>Configura l'ordre de l'entitat (si és reordenable).</li>
+	 *   <li>Desa els fitxers associats a algun dels camps del recurs.</li>
+	 *   <li>Crida al mètode afterUpdateSave.</li>
+	 *   <li>Converteix l'entitat en un recurs fent un detach just abans i un merge just després.</li>
+	 *   <li>Crida al mètode afterConversion.</li>
+	 *   <li>Crida al mètode afterUpdate.</li>
+	 * </ol>
+	 */
 	@Override
 	@Transactional
 	public R update(
@@ -83,8 +122,9 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		log.debug("Updating resource (id={}, resource={})", id, resource);
 		completeResource(resource);
 		E entity = getEntity(id);
+		Long reorderPreviousSequence = reorderGetPreviousSequence(entity);
+		Long reorderNewSequence = reorderGetNewSequence(resource);
 		ID reorderPreviousParentId = reorderGetParentId(entity);
-		Long reorderResourceSequence = reorderGetSequenceFromResourceOrEntity(resource, entity);
 		beforeUpdateEntity(entity, resource, answers);
 		Map<String, Persistable<?>> referencedEntities = resourceReferenceToEntityHelper.getReferencedEntitiesForResource(
 				resource,
@@ -94,15 +134,28 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		E saved = entitySaveFlushAndRefresh(entity);
 		boolean anyOrderChanged = reorderIfReorderable(
 				saved,
-				reorderResourceSequence,
+				reorderPreviousSequence,
+				reorderNewSequence,
 				reorderPreviousParentId,
-				true,
 				false);
 		fieldFilesSave(resource, saved);
 		afterUpdateSave(saved, resource, answers, anyOrderChanged);
 		return entityDetachConvertAndMerge(saved, answers, false);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * <p>Internament, el mètode segueix aquestes passes:
+	 * <ol>
+	 *   <li>Consulta l'entitat a esborrar a la base de dades.</li>
+	 *   <li>Crida al mètode beforeDelete.</li>
+	 *   <li>Esborra l'entitat a la base de dades.</li>
+	 *   <li>Configura l'ordre de les demés entitats (si és reordenable).</li>
+	 *   <li>Esborra els fitxers associats a algun dels camps del recurs.</li>
+	 *   <li>Fa un flush del repository.</li>
+	 *   <li>Crida al mètode afterDelete.</li>
+	 * </ol>
+	 */
 	@Override
 	@Transactional
 	public void delete(
@@ -116,13 +169,16 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 				entity,
 				null,
 				null,
-				true,
+				null,
 				true);
 		fieldFilesDelete(entity);
 		entityRepositoryFlush();
 		afterDelete(entity, answers);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	@Transactional(readOnly = true)
 	public Map<String, Object> onChange(
@@ -147,6 +203,9 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 				answers);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	@Transactional
 	public <P extends Serializable> Serializable artifactActionExec(
@@ -159,6 +218,12 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 			E entity = null;
 			if (id != null) {
 				entity = getEntity(id);
+			} else if (artifactRequiresId(ResourceArtifactType.ACTION, code)) {
+				throw new ActionExecutionException(
+						getResourceClass(),
+						null,
+						code,
+						"This action requires id");
 			}
 			try {
 				return executor.exec(code, entity, params);
@@ -179,6 +244,9 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	@Transactional(readOnly = true)
 	public List<FieldOption> fieldEnumOptions(
@@ -197,6 +265,9 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	@Transactional(readOnly = true)
 	public List<ResourceArtifact> artifactFindAll(ResourceArtifactType type) {
@@ -219,6 +290,9 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		return artifacts;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	@Transactional(readOnly = true)
 	public ResourceArtifact artifactGetOne(ResourceArtifactType type, String code) throws ArtifactNotFoundException {
@@ -242,6 +316,35 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		return super.artifactGetOne(type, code);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	@Transactional(readOnly = true)
+	public DownloadableFile fieldDownload(
+			ID id,
+			String fieldName,
+			OutputStream out) throws ResourceNotFoundException, ResourceFieldNotFoundException, FieldArtifactNotFoundException, IOException {
+		Field field = ReflectionUtils.findField(getResourceClass(), fieldName);
+		if (field != null) {
+			FieldFileManager<E> fieldFileManager = fieldFileManagerMap.get(fieldName);
+			if (fieldFileManager != null) {
+				FileReference fileReference = fieldFileManager.read(
+						getEntity(id),
+						fieldName);
+				out.write(fileReference.getContent());
+				return new DownloadableFile(
+						fileReference.getName(),
+						fileReference.getContentType(),
+						null);
+			} else {
+				return super.fieldDownload(id, fieldName, out);
+			}
+		} else {
+			throw new ResourceFieldNotFoundException(getResourceClass(), fieldName);
+		}
+	}
+
 	protected ID getPkFromResource(R resource) {
 		if (resource.getId() == null) {
 			return null;
@@ -256,16 +359,138 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		return resource;
 	}
 
+	/**
+	 * Permet completar la informació del recurs abans de crear-lo / modificar-lo.
+	 *
+	 * @param resource
+	 *            el recurs a completar
+	 */
 	protected void completeResource(R resource) {}
+
+	/**
+	 * Permet canviar l'entitat abans de la seva creació.
+	 *
+	 * @param entity
+	 *            la informació de l'entitat
+	 * @param resource
+	 *            la informació del recurs
+	 * @param answers
+	 *            respostes a les preguntes formulades en el front
+	 * @throws ResourceNotCreatedException
+	 *            si es vol interrompre la creació de l'entitat
+	 */
 	protected void beforeCreateEntity(E entity, R resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotCreatedException {}
+
+	/**
+	 * Mètode que s'executa abans de crear el recurs a la base de dades.
+	 *
+	 * @param entity
+	 *            la informació de l'entitat
+	 * @param resource
+	 *            la informació del recurs
+	 * @param answers
+	 *            respostes a les preguntes formulades en el front
+	 * @throws ResourceNotCreatedException
+	 *            si es vol interrompre la creació de l'entitat
+	 */
 	protected void beforeCreateSave(E entity, R resource, Map<String, AnswerRequiredException.AnswerValue> answers) {}
+
+	/**
+	 * Mètode que s'executa després de crear el recurs a la base de dades.
+	 *
+	 * @param entity
+	 *            la informació de l'entitat
+	 * @param resource
+	 *            la informació del recurs
+	 * @param answers
+	 *            respostes a les preguntes formulades en el front
+	 * @param anyOrderChanged
+	 *            indica si la creació d'aquesta entitat s'ha canviat l'ordre a algun recurs
+	 */
 	protected void afterCreateSave(E entity, R resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {}
+
+	/**
+	 * Mètode que s'executa després de crear el recurs a base de dades i just abans de finalitzar el mètode de creació.
+	 *
+	 * @param entity
+	 *            la informació de l'entitat
+	 * @param resource
+	 *            la informació del recurs
+	 * @param answers
+	 *            respostes a les preguntes formulades en el front
+	 */
 	protected void afterCreate(E entity, R resource, Map<String, AnswerRequiredException.AnswerValue> answers) {}
+
+	/**
+	 * Mètode que s'executa abans de fer cap modificació al recurs.
+	 *
+	 * @param entity
+	 *            la informació de l'entitat
+	 * @param resource
+	 *            la informació del recurs
+	 * @param answers
+	 *            respostes a les preguntes formulades en el front
+	 * @throws ResourceNotUpdatedException
+	 *            si es vol interrompre la modificació de l'entitat
+	 */
 	protected void beforeUpdateEntity(E entity, R resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {}
+
+	/**
+	 * Mètode que s'executa abans de modificar el recurs a la base de dades.
+	 *
+	 * @param entity
+	 *            la informació de l'entitat
+	 * @param resource
+	 *            la informació del recurs
+	 * @param answers
+	 *            respostes a les preguntes formulades en el front
+	 */
 	protected void beforeUpdateSave(E entity, R resource, Map<String, AnswerRequiredException.AnswerValue> answers) {}
+
+	/**
+	 * Mètode que s'executa després de modificar el recurs a la base de dades.
+	 *
+	 * @param entity
+	 *            la informació de l'entitat
+	 * @param resource
+	 *            la informació del recurs
+	 * @param answers
+	 *            respostes a les preguntes formulades en el front
+	 */
 	protected void afterUpdateSave(E entity, R resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {}
+
+	/**
+	 * Mètode que s'executa després de modificar el recurs a base de dades i just abans de finalitzar el mètode de modificació.
+	 *
+	 * @param entity
+	 *            la informació de l'entitat
+	 * @param resource
+	 *            la informació del recurs
+	 * @param answers
+	 *            respostes a les preguntes formulades en el front
+	 */
 	protected void afterUpdate(E entity, R resource, Map<String, AnswerRequiredException.AnswerValue> answers) {}
+
+	/**
+	 * Mètode que s'executa just abans d'esborrar l'entitat a la base de dades.
+	 *
+	 * @param entity
+	 *            la informació de l'entitat
+	 * @param answers
+	 *            respostes a les preguntes formulades en el front
+	 * @throws ResourceNotDeletedException
+	 *            si es vol interrompre l'esborrat de l'entitat
+	 */
 	protected void beforeDelete(E entity, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotDeletedException {}
+
+	/**
+	 * Mètode que s'executa just després d'esborrar l'entitat a la base de dades.
+	 *
+	 * @param entity
+	 *            la informació de l'entitat
+	 * @param answers
+	 *            respostes a les preguntes formulades en el front
+	 */
 	protected void afterDelete(E entity, Map<String, AnswerRequiredException.AnswerValue> answers) {}
 
 	@Override
@@ -353,7 +578,6 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		return pk;
 	}
 
-
 	protected E resourceToEntity(
 			R resource,
 			ID pk,
@@ -372,21 +596,25 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		resourceEntityMappingHelper.updateEntityWithResource(entity, resource, referencedEntities);
 	}
 
-	protected List<E> reorderFindLinesWithParent(Serializable parentId) {
+	protected List<E> reorderFindLinesWithParentAndSorted(Serializable parentId) {
 		return Collections.emptyList();
 	}
 	protected Integer reorderGetIncrement() {
 		return null;
 	}
-	protected Long reorderGetSequenceFromResourceOrEntity(R resource, E entity) {
+	protected Long reorderGetPreviousSequence(E entity) {
+		if (entity instanceof ReorderableEntity<?>) {
+			ReorderableEntity<ID> reorderableEntity = (ReorderableEntity<ID>)entity;
+			return reorderableEntity.getOrder();
+		} else {
+			return null;
+		}
+	}
+	protected Long reorderGetNewSequence(R resource) {
 		Long sequence = null;
 		ResourceConfig resourceConfig = resource.getClass().getAnnotation(ResourceConfig.class);
 		if (resourceConfig != null && !resourceConfig.orderField().isEmpty()) {
 			sequence = TypeUtil.getFieldOrGetterValue(resourceConfig.orderField(), resource, Long.class);
-		}
-		if (sequence == null && entity instanceof ReorderableEntity<?>) {
-			ReorderableEntity<ID> reorderableEntity = (ReorderableEntity<ID>)entity;
-			sequence = reorderableEntity.getOrder();
 		}
 		return sequence;
 	}
@@ -404,30 +632,35 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 		reorderableEntity.setOrder(nextValue);
 		return nextValue;
 	}
-	private long reorderGetNextSequence(long index) {
-		Integer increment = reorderGetIncrement();
-		return index * (increment != null ? increment : 1);
-	}
 	protected boolean reorderIfReorderable(
 			E entity,
-			Long sequenceForEntity,
+			Long previousSequence,
+			Long newSequence,
 			ID previousParentId,
-			boolean sameSequenceInsertBefore,
 			boolean isDelete) {
 		boolean anyOrderChanged = false;
 		if (entity instanceof ReorderableEntity<?>) {
 			ReorderableEntity<ID> reorderableEntity = (ReorderableEntity<ID>)entity;
 			boolean parentIdChanged = !Objects.equals(reorderableEntity.getOrderParentId(), previousParentId);
-			log.debug("\tReordenant entitat {} amb la seqüència {} (previousParentId={})",
-					entity,
-					sequenceForEntity,
-					previousParentId);
+			if (!isDelete) {
+				log.debug("\tReordenant entitat {} {} cap a la seqüència {} (previousParentId={})",
+						entity,
+						previousSequence != null ? "amb seqüència actual " + previousSequence : "<new>",
+						newSequence,
+						previousParentId);
+			} else {
+				log.debug("\tReordenant entitat {} eliminada", entity);
+			}
+			boolean goingUp = (previousSequence != null ? previousSequence : 0) > (newSequence != null ? newSequence : 0);
+			if (parentIdChanged) {
+				goingUp = true;
+			}
+			Long reorderSequence = (newSequence == null && !parentIdChanged) ? previousSequence : newSequence;
 			boolean anyOrderChanged1 = reorderWithParentId(
 					reorderableEntity,
-					sequenceForEntity,
+					reorderSequence,
 					reorderableEntity.getOrderParentId(),
-					parentIdChanged,
-					sameSequenceInsertBefore,
+					goingUp,
 					isDelete);
 			if (anyOrderChanged1) anyOrderChanged = true;
 			if (parentIdChanged) {
@@ -435,7 +668,6 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 						null,
 						null,
 						previousParentId,
-						false,
 						false,
 						false);
 				if (anyOrderChanged2) anyOrderChanged = true;
@@ -445,13 +677,12 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 	}
 	protected boolean reorderWithParentId(
 			@Nullable ReorderableEntity<ID> reorderableEntity,
-			@Nullable Long sequenceForEntity,
+			@Nullable Long newSequence,
 			@Nullable ID parentId,
-			boolean parentIdChanged,
 			boolean sameSequenceInsertBefore,
 			boolean isDelete) {
 		boolean anyOrderChanged = false;
-		List<E> linesToReorder = reorderFindLinesWithParent(parentId);
+		List<E> linesToReorder = reorderFindLinesWithParentAndSorted(parentId);
 		log.debug("\tConsulta d'entitats a reordenar (pareId={}): {} entitats trobades",
 				parentId,
 				linesToReorder.size());
@@ -461,23 +692,14 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 			ReorderableEntity<ID> line = (ReorderableEntity<ID>)value;
 			if (!line.equals(reorderableEntity)) {
 				Long currentSequence = line.getOrder();
-				boolean insertHere = !parentIdChanged && sequenceForEntity != null && (sameSequenceInsertBefore ?
-						currentSequence != null && currentSequence.compareTo(sequenceForEntity) >= 0 :
-						currentSequence != null && currentSequence.compareTo(sequenceForEntity) > 0);
+				boolean insertHere = newSequence != null && (sameSequenceInsertBefore ?
+						currentSequence != null && currentSequence.compareTo(newSequence) >= 0 :
+						currentSequence != null && currentSequence.compareTo(newSequence) > 0);
 				if (!inserted && insertHere) {
-					boolean lineHandled = false;
-					if (reorderGetNextSequence(index) < sequenceForEntity) {
-						long seqLine = reorderSetNextSequence(line, index++);
-						log.debug("\tConfigurant ordre de l'entitat {}: {} (abans {})", line, seqLine, currentSequence);
-						lineHandled = true;
-					}
 					long sequence = reorderSetNextSequence(reorderableEntity, index++);
 					log.debug("\tInsertant entitat {} amb ordre {}", reorderableEntity, sequence);
 					inserted = true;
 					anyOrderChanged = true;
-					if (lineHandled) {
-						continue;
-					}
 				}
 				long sequence = reorderSetNextSequence(line, index++);
 				log.debug("\tConfigurant ordre de l'entitat {}: {} (abans {})", line, sequence, currentSequence);
@@ -689,4 +911,3 @@ public abstract class BaseMutableResourceService<R extends Resource<ID>, ID exte
 	}
 
 }
-

@@ -19,6 +19,7 @@ import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.query.criteria.internal.path.PluralAttributePath;
 import org.hibernate.query.criteria.internal.path.SingularAttributePath;
 import org.springframework.core.GenericTypeResolver;
+import org.springframework.core.ResolvableType;
 import org.springframework.data.domain.Persistable;
 import org.springframework.util.ReflectionUtils;
 
@@ -50,21 +51,21 @@ public class ExpressionGenerator extends com.turkraft.springfilter.parser.genera
 	}
 
 	protected ExpressionGenerator(
-		Root<?> root,
-		CriteriaQuery<?> criteriaQuery,
-		CriteriaBuilder criteriaBuilder,
-		Map<String, Join<?, ?>> joins,
-		Object payload) {
+			Root<?> root,
+			CriteriaQuery<?> criteriaQuery,
+			CriteriaBuilder criteriaBuilder,
+			Map<String, Join<?, ?>> joins,
+			Object payload) {
 		super(root, criteriaQuery, criteriaBuilder, joins, payload);
 	}
 
 	public static Expression<?> run(
-		Filter filter,
-		Root<?> root,
-		CriteriaQuery<?> criteriaQuery,
-		CriteriaBuilder criteriaBuilder,
-		Map<String, Join<?, ?>> joins,
-		Object payload) {
+			Filter filter,
+			Root<?> root,
+			CriteriaQuery<?> criteriaQuery,
+			CriteriaBuilder criteriaBuilder,
+			Map<String, Join<?, ?>> joins,
+			Object payload) {
 		Objects.requireNonNull(filter);
 		Objects.requireNonNull(root);
 		Objects.requireNonNull(criteriaQuery);
@@ -86,18 +87,18 @@ public class ExpressionGenerator extends com.turkraft.springfilter.parser.genera
 	@Override
 	public Expression<?> visitField(FieldContext ctx) {
 		return getDatabasePath(
-			getRoot(),
-			getJoins(),
-			getPayload(),
-			ctx.getText(),
-			ExpressionGeneratorParameters.FILTERING_AUTHORIZATION);
+				getRoot(),
+				getJoins(),
+				getPayload(),
+				ctx.getText(),
+				ExpressionGeneratorParameters.FILTERING_AUTHORIZATION);
 	}
 
 	@Override
 	public Expression<?> visitInput(InputContext ctx) {
 		Field expectedInputTypesField = ReflectionUtils.findField(
-			com.turkraft.springfilter.parser.generator.expression.ExpressionGenerator.class,
-			"expectedInputTypes");
+				com.turkraft.springfilter.parser.generator.expression.ExpressionGenerator.class,
+				"expectedInputTypes");
 		ReflectionUtils.makeAccessible(expectedInputTypesField);
 		@SuppressWarnings("unchecked")
 		ParseTreeProperty<Class<?>> expectedInputTypes = (ParseTreeProperty<Class<?>>)ReflectionUtils.getField(expectedInputTypesField, this);
@@ -108,21 +109,21 @@ public class ExpressionGenerator extends com.turkraft.springfilter.parser.genera
 		if (inputContextIsOrEndsWithId(ctx)) {
 			if (isInputTypeCompositePk(expectedInputType)) {
 				Object value = CompositePkUtil.getInstance().getCompositePkFromSerializedId(
-					StringConverter.cleanStringInput(ctx.getText()),
-					getPkPathType(
-						ctx,
-						getRoot(),
-						getJoins(),
-						getPayload()));
+						StringConverter.cleanStringInput(ctx.getText()),
+						getPkPathType(
+								ctx,
+								getRoot(),
+								getJoins(),
+								getPayload()));
 				return getCriteriaBuilder().literal(value);
 			} else {
 				Object value = StringConverter.convert(
-					StringConverter.cleanStringInput(ctx.getText()),
-					getPkPathType(
-						ctx,
-						getRoot(),
-						getJoins(),
-						getPayload()));
+						StringConverter.cleanStringInput(ctx.getText()),
+						getPkPathType(
+								ctx,
+								getRoot(),
+								getJoins(),
+								getPayload()));
 				return getCriteriaBuilder().literal(value);
 			}
 		} else {
@@ -142,12 +143,12 @@ public class ExpressionGenerator extends com.turkraft.springfilter.parser.genera
 		Subquery<Integer> subquery = getCriteriaQuery().subquery(Integer.class);
 		Root<?> subroot = subquery.correlate(getRoot());
 		Expression<?> predicate = ExpressionGenerator.run(
-			ctx.arguments.get(0),
-			subroot,
-			getCriteriaQuery(),
-			getCriteriaBuilder(),
-			new HashMap<String, Join<?, ?>>(),
-			null);
+				ctx.arguments.get(0),
+				subroot,
+				getCriteriaQuery(),
+				getCriteriaBuilder(),
+				new HashMap<String, Join<?, ?>>(),
+				null);
 		if (!Boolean.class.isAssignableFrom(predicate.getJavaType())) {
 			throw new BadFilterFunctionUsageException("The function '" + ctx.ID().getText() + "' needs a predicate as its argument");
 		}
@@ -157,17 +158,17 @@ public class ExpressionGenerator extends com.turkraft.springfilter.parser.genera
 	}
 
 	private static Path<?> getDatabasePath(
-		Root<?> root,
-		Map<String, Join<?, ?>> joins,
-		Object payload,
-		String fieldPath,
-		BiFunction<Path<?>, Object, Boolean> authorizer) {
+			Root<?> root,
+			Map<String, Join<?, ?>> joins,
+			Object payload,
+			String fieldPath,
+			BiFunction<Path<?>, Object, Boolean> authorizer) {
 		/*if (!fieldPath.contains(".")) {
 			return authorize(authorizer, getPathFromEntityOrEmbeddedResource(root, fieldPath), payload, fieldPath);
 		}*/
 		if (!FilterUtils.isHibernateCoreDependencyPresent()) {
 			throw new UnsupportedOperationException(
-				"The Hibernate Core dependency should be added in order to filter nested fields");
+					"The Hibernate Core dependency should be added in order to filter nested fields");
 		}
 		Path<?> path = root;
 		From<?, ?> from = root;
@@ -183,8 +184,8 @@ public class ExpressionGenerator extends com.turkraft.springfilter.parser.genera
 			}
 			authorize(authorizer, path, payload, chain);
 			JoinType joinType = path instanceof PluralAttributePath ? JoinType.INNER
-				: (path instanceof SingularAttributePath && ((SingularAttributePath<?>) path).getAttribute().getPersistentAttributeType() != PersistentAttributeType.BASIC
-				? JoinType.LEFT : null);
+					: (path instanceof SingularAttributePath && ((SingularAttributePath<?>) path).getAttribute().getPersistentAttributeType() != PersistentAttributeType.BASIC
+					? JoinType.LEFT : null);
 			if (joinType != null && hasJoinColumnsOrFormulasAnnotation(from, field)) {
 				// Per a evitar errors amb les joins dels camps de l'entity
 				// amb l'anotació JoinColumnsOrFormulas forçam el tipus de
@@ -202,28 +203,40 @@ public class ExpressionGenerator extends com.turkraft.springfilter.parser.genera
 	}
 
 	private static Class<?> getPkPathType(
-		InputContext ctx,
-		Root<?> root,
-		Map<String, Join<?, ?>> joins,
-		Object payload) {
+			InputContext ctx,
+			Root<?> root,
+			Map<String, Join<?, ?>> joins,
+			Object payload) {
 		String path = ctx.getParent().getChild(0).getText();
-		Expression<?> databasePath;
+		Class<?> pathJavaType;
 		if ("id".equals(path)) {
-			databasePath = root;
+			pathJavaType = root.getJavaType();
 		} else {
-			databasePath = getDatabasePath(
-				root,
-				joins,
-				payload,
-				path.substring(0, path.length() - ".id".length()),
-				ExpressionGeneratorParameters.FILTERING_AUTHORIZATION);
+			Expression<?> databasePath = getDatabasePath(
+					root,
+					joins,
+					payload,
+					path.substring(0, path.length() - ".id".length()),
+					ExpressionGeneratorParameters.FILTERING_AUTHORIZATION);
+			pathJavaType = databasePath.getJavaType();
+			if (Collection.class.isAssignableFrom(pathJavaType)) {
+				String fieldName = path.substring(0, path.length() - ".id".length());
+				Field collectionField = Objects.requireNonNull(ReflectionUtils.findField(root.getJavaType(), fieldName));
+				pathJavaType = ResolvableType.forField(collectionField).getGeneric(0).resolve();
+			}
 		}
-		return GenericTypeResolver.resolveTypeArguments(databasePath.getJavaType(), Persistable.class)[0];
+		if (Persistable.class.isAssignableFrom(Objects.requireNonNull(pathJavaType))) {
+			return Objects.requireNonNull(GenericTypeResolver.resolveTypeArguments(
+					pathJavaType,
+					Persistable.class))[0];
+		} else {
+			throw new InternalFilterException("Couldn't determine type for pk path " + path);
+		}
 	}
 
 	private static Object processInputValue(
-		InputContext ctx,
-		Object value) {
+			InputContext ctx,
+			Object value) {
 		if (value instanceof Date) {
 			InfixOperation op = InfixOperation.from(((InfixContext)ctx.getParent()).operator.getType());
 			if (op == InfixOperation.GREATER_THAN || op == InfixOperation.GREATER_THAN_OR_EQUAL) {
@@ -251,10 +264,10 @@ public class ExpressionGenerator extends com.turkraft.springfilter.parser.genera
 	}
 
 	private static Path<?> authorize(
-		BiFunction<Path<?>, Object, Boolean> authorizer,
-		Path<?> path,
-		Object payload,
-		String fieldPath) {
+			BiFunction<Path<?>, Object, Boolean> authorizer,
+			Path<?> path,
+			Object payload,
+			String fieldPath) {
 		if (authorizer != null) {
 			if (!Boolean.TRUE.equals(authorizer.apply(path, payload))) {
 				throw new UnauthorizedFilterPathException(path, fieldPath);
@@ -264,14 +277,14 @@ public class ExpressionGenerator extends com.turkraft.springfilter.parser.genera
 	}
 
 	private static Path<?> getPathFromEntityOrEmbeddedResource(
-		Path<?> basePath,
-		String fieldPath) {
+			Path<?> basePath,
+			String fieldPath) {
 		return basePath.get(fieldPath);
 	}
 
 	private static boolean hasJoinColumnsOrFormulasAnnotation(
-		From<?, ?> from,
-		String fieldPath) {
+			From<?, ?> from,
+			String fieldPath) {
 		Field field = ReflectionUtils.findField(from.getJavaType(), fieldPath);
 		if (field != null) {
 			return field.getAnnotation(JoinColumnsOrFormulas.class) != null;

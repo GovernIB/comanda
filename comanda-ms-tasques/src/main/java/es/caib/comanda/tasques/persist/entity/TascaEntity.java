@@ -3,7 +3,7 @@ package es.caib.comanda.tasques.persist.entity;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.model.v1.tasca.Prioritat;
 import es.caib.comanda.model.v1.tasca.TascaEstat;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import es.caib.comanda.tasques.logic.intf.model.Tasca;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,7 +24,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class TascaEntity extends BaseAuditableEntity<Tasca> {
+public class TascaEntity extends BaseAuditableLongPkEntity<Tasca> {
 
     @Column(name = "entorn_app_id", nullable = false)
     private Long entornAppId;

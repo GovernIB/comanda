@@ -6,6 +6,8 @@ import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
+import java.io.Serializable;
+
 /**
  * Mètodes per a la comprovació de permisos.
  *
@@ -17,9 +19,10 @@ public class PermissionHelper extends BasePermissionHelper {
     @Override
     protected boolean checkCustomResourceAccessConstraint(
             Authentication auth,
+            Serializable resourceId,
             Class<?> resourceClass,
             ResourceAccessConstraint resourceAccessConstraint,
-            BasePermission permission) {
+            BasePermission[] permissions) {
         return false;
     }
 

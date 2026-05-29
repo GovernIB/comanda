@@ -2,7 +2,7 @@ package es.caib.comanda.alarmes.persist.entity;
 
 import es.caib.comanda.alarmes.logic.intf.model.*;
 import es.caib.comanda.base.config.BaseConfig;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,7 +21,7 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @NoArgsConstructor
-public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> {
+public class AlarmaConfigEntity extends BaseAuditableLongPkEntity<AlarmaConfig> {
 
 	@Column(name = "entorn_app_id", nullable = false)
 	private Long entornAppId;

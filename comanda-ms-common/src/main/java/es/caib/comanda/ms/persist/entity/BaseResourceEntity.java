@@ -1,6 +1,5 @@
 package es.caib.comanda.ms.persist.entity;
 
-
 import es.caib.comanda.ms.logic.intf.model.Resource;
 import lombok.Getter;
 import lombok.Setter;

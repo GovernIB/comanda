@@ -24,7 +24,7 @@ public class CustomValidationValidator implements ConstraintValidator<CustomVali
 
 	@Override
 	public boolean isValid(Object target, ConstraintValidatorContext context) {
-		ValidatorAndValid<?> validatorAndValid = validate(target);
+		ValidatorAndValid<?> validatorAndValid = validate(target, context);
 		if (customValidation.targetFields().length > 0) {
 			for (String fieldName: customValidation.targetFields()) {
 				addFieldConstraintViolation(
@@ -38,7 +38,7 @@ public class CustomValidationValidator implements ConstraintValidator<CustomVali
 	}
 
 	@SneakyThrows
-	private <T> ValidatorAndValid<T> validate(T target) {
+	private <T> ValidatorAndValid<T> validate(T target, ConstraintValidatorContext context) {
 		CustomValidator<T> validator;
 		if (customValidation.springBean()) {
 			validator = CustomValidatorLocator.getInstance().getCustomValidatorWithClass(
@@ -49,15 +49,15 @@ public class CustomValidationValidator implements ConstraintValidator<CustomVali
 		}
 		return new ValidatorAndValid<>(
 				validator,
-				validator.validate(target));
+				validator.validate(target, context));
 	}
 
 	private void addFieldConstraintViolation(
 			ConstraintValidatorContext context,
 			String fieldName,
 			CustomValidator<?> validator) {
-		String validatorMessage = validator.getMessage();
-		String message = validatorMessage != null ? validatorMessage : customValidation.message();
+		String fieldMessage = validator.getFieldMessage();
+		String message = fieldMessage != null ? fieldMessage : customValidation.message();
 		if (message.startsWith("{") && message.endsWith("}")) {
 			message = I18nUtil.getInstance().getI18nMessage(
 					message.substring(1, message.length() - 1).trim());

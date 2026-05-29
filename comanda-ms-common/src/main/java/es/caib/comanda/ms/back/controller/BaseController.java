@@ -20,6 +20,31 @@ public abstract class BaseController {
 		return false;
 	}
 
+	public boolean forbiddenCreateLogic() {
+		return false;
+	}
+	public boolean forbiddenUpdateLogic() {
+		return false;
+	}
+	public boolean forbiddenPatchLogic() {
+		return false;
+	}
+	public boolean forbiddenDeleteLogic() {
+		return false;
+	}
+	public boolean forbiddenExportLogic() {
+		return false;
+	}
+	public boolean forbiddenOnChangeLogic() {
+		return false;
+	}
+	public boolean forbiddenArtifactLogic() {
+		return false;
+	}
+	public boolean forbiddenFieldsLogic() {
+		return false;
+	}
+
 	public PermissionEvaluatorService.RestApiOperation getOperation(String operationName) {
 		return operationName != null ? PermissionEvaluatorService.RestApiOperation.valueOf(operationName) : null;
 	}

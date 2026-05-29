@@ -1,6 +1,6 @@
 package es.caib.comanda.ms.persist.config;
 
-import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.base.config.PropertyConfig;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +24,7 @@ import java.util.Map;
 
 /**
  * Configuració dels components de persistència.
- * 
+ *
  * @author Límit Tecnologies
  */
 @Slf4j
@@ -32,7 +32,7 @@ public abstract class BasePersistenceConfig {
 
 	@Value("${spring.jpa.hibernate.ddl-auto:#{null}}")
 	private String hibernateDdlAuto;
-	@Value("${" + BaseConfig.PROP_PERSIST_CONTAINER_TRANSACTIONS_DISABLED + ":false}")
+	@Value("${" + PropertyConfig.PROP_PERSIST_CONTAINER_TRANSACTIONS_DISABLED + ":false}")
 	private boolean containerTransactionsDisabled;
 
 	@Bean
@@ -114,7 +114,7 @@ public abstract class BasePersistenceConfig {
 
 	@Bean
 	@Primary
-	@ConditionalOnProperty(value = BaseConfig.PROP_PERSIST_TRANSACTION_MANAGER_ENABLED, havingValue = "true", matchIfMissing = true)
+	@ConditionalOnProperty(value = PropertyConfig.PROP_PERSIST_TRANSACTION_MANAGER_ENABLED, havingValue = "true", matchIfMissing = true)
 	public TransactionManager mainTransactionManager(EntityManagerFactoryBuilder builder) {
 		log.debug("Creating main TransactionManager...");
 		PlatformTransactionManager transactionManager;

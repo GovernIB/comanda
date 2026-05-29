@@ -4,7 +4,6 @@ import es.caib.comanda.ms.logic.intf.permission.ExtendedPermission;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.domain.*;
@@ -19,7 +18,7 @@ import java.util.List;
 
 /**
  * Configuració de les ACLs de Spring Security.
- * 
+ *
  * @author Límit Tecnologies
  */
 public abstract class BaseAclConfig {
@@ -31,19 +30,6 @@ public abstract class BaseAclConfig {
 
 	@Autowired
 	private DataSource dataSource;
-
-	@Bean
-	public AclCache aclCache(CacheManager springCacheManager) {
-		return new SpringCacheBasedAclCache(
-				new ConcurrentMapCache(getAclCacheName()),
-				permissionGrantingStrategy(),
-				aclAuthorizationStrategy());
-	}
-
-	@Bean
-	public PermissionGrantingStrategy permissionGrantingStrategy() {
-		return new DefaultPermissionGrantingStrategy(new ConsoleAuditLogger());
-	}
 
 	@Bean
 	public AclAuthorizationStrategy aclAuthorizationStrategy() {
@@ -61,8 +47,11 @@ public abstract class BaseAclConfig {
 	}
 
 	@Bean
-	public PermissionFactory permissionFactory() {
-		return new ExtendedPermissionFactory();
+	public AclCache aclCache(CacheManager springCacheManager) {
+		return new SpringCacheBasedAclCache(
+				springCacheManager.getCache(getAclCacheName()),
+				new DefaultPermissionGrantingStrategy(new ConsoleAuditLogger()),
+				aclAuthorizationStrategy());
 	}
 
 	@Bean
@@ -88,7 +77,7 @@ public abstract class BaseAclConfig {
 				+ "left join " + tableClass + " on " + tableClass + ".id = " +  tableOid + ".object_id_class   "
 				+ "left join " + tableEntry + " on " +  tableOid + ".id = " +  tableEntry + ".acl_object_identity "
 				+ "left join " + tableSid + " on " + tableEntry + ".sid = " + tableSid + ".id  " + "where ( ";
-		lookupStrategy.setPermissionFactory(permissionFactory());
+		lookupStrategy.setPermissionFactory(new ExtendedPermissionFactory());
 		lookupStrategy.setAclClassIdSupported(CLASS_ID_SUPPORTED);
 		lookupStrategy.setSelectClause(CLASS_ID_SUPPORTED ? selectClause + selectIdClause + fromClause : selectClause + fromClause);
 		lookupStrategy.setLookupPrimaryKeysWhereClause("(" +  tableOid + ".id = ?)");
@@ -106,8 +95,8 @@ public abstract class BaseAclConfig {
 		String tableEntry = getDbTablePrefix() + "acl_entry";
 		mutableAclService.setAclClassIdSupported(CLASS_ID_SUPPORTED);
 		if (hibernateDialect.toLowerCase().contains("oracle") && isOracleSequenceLegacy()) {
-			mutableAclService.setClassIdentityQuery("select " + tableClass.toUpperCase() + "_sq.currval from dual");
-			mutableAclService.setSidIdentityQuery("select " + tableSid.toUpperCase() + "_sq.currval from dual");
+			mutableAclService.setClassIdentityQuery("select " + tableClass.toUpperCase() + getTableSequenceSuffix() + ".currval from dual");
+			mutableAclService.setSidIdentityQuery("select " + tableSid.toUpperCase() + getTableSequenceSuffix() + ".currval from dual");
 		} else if (hibernateDialect.toLowerCase().contains("oracle") && !isOracleSequenceLegacy()) {
 			mutableAclService.setClassIdentityQuery("select current_value('" + tableClass.toUpperCase() + "') from dual");
 			mutableAclService.setSidIdentityQuery("select current_value('" + tableSid.toUpperCase() + "') from dual");
@@ -188,6 +177,18 @@ public abstract class BaseAclConfig {
 
 	protected abstract String getDbTablePrefix();
 
+	protected String getTableSequenceSuffix() {
+		return "_sq";
+	}
+
+	protected String getAclCacheName() {
+		return "aclCache";
+	}
+
+	protected boolean isOracleSequenceLegacy() {
+		return false;
+	}
+
 	protected BaseMutableAclService createMutableAclServiceInstance(
 			DataSource dataSource,
 			CacheManager cacheManager) {
@@ -199,14 +200,6 @@ public abstract class BaseAclConfig {
 				dataSource,
 				lookupStrategy(cacheManager),
 				aclCache(cacheManager));
-	}
-
-	protected String getAclCacheName() {
-		return "aclCache";
-	}
-
-	protected boolean isOracleSequenceLegacy() {
-		return false;
 	}
 
 	public static class BaseMutableAclService extends JdbcMutableAclService {

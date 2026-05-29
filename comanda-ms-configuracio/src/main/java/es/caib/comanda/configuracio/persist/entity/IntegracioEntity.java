@@ -2,7 +2,7 @@ package es.caib.comanda.configuracio.persist.entity;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.intf.model.Integracio;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -26,7 +26,7 @@ import javax.persistence.UniqueConstraint;
 @Getter
 @Setter
 @NoArgsConstructor
-public class IntegracioEntity extends BaseAuditableEntity<Integracio> {
+public class IntegracioEntity extends BaseAuditableLongPkEntity<Integracio> {
 
 	@Column(name = "codi", length = 100, unique = true, nullable = false)
 	private String codi;

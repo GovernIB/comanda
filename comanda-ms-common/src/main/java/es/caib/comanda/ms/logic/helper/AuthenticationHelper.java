@@ -32,6 +32,11 @@ public class AuthenticationHelper {
 		return auth.getName();
 	}
 
+	/**
+	 * Retorna la llista de rols de l'usuari actual.
+	 *
+	 * @return la llista de rols.
+	 */
 	public String[] getCurrentUserRoles() {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		return auth.getAuthorities().stream().

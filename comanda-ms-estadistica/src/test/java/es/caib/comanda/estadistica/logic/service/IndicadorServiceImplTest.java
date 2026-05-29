@@ -32,7 +32,7 @@ class IndicadorServiceImplTest {
     @Test
     @DisplayName("namedFilterToSpecification retorna null per a filtres desconeguts")
     void namedFilterToSpecification_quanFiltreDesconegut_retornaNull() {
-        assertThat(indicadorService.namedFilterToSpecification("desconegut")).isNull();
+        assertThat(indicadorService.namedQueryToSpecification("desconegut")).isNull();
     }
 
     @Test
@@ -44,7 +44,7 @@ class IndicadorServiceImplTest {
         when(estadisticaClientHelper.getEntornAppsIdByAppId(1L)).thenReturn(ids);
 
         // Act
-        Specification<IndicadorEntity> spec = indicadorService.namedFilterToSpecification(filterName);
+        Specification<IndicadorEntity> spec = indicadorService.namedQueryToSpecification(filterName);
 
         // Assert
         assertThat(spec).isNotNull();

@@ -14,11 +14,11 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface ResourceField {
 
-	public String type() default "";
-	public boolean enumType() default false;
-	public String descriptionField() default "";
-	public boolean onChangeActive() default false;
-	public String springFilter() default "";
-	public String[] namedQueries() default {};
+	String type() default "";
+	boolean enumType() default false;
+	String descriptionField() default "";
+	boolean onChangeActive() default false;
+	String springFilter() default "";
+	String[] namedQueries() default {};
 
 }

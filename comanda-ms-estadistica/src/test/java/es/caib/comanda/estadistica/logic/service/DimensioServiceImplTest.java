@@ -35,7 +35,7 @@ class DimensioServiceImplTest {
     @DisplayName("namedFilterToSpecification retorna null per a filtres desconeguts")
     void namedFilterToSpecification_quanFiltreDesconegut_retornaNull() {
         // Act
-        Specification<DimensioEntity> spec = dimensioService.namedFilterToSpecification("desconegut");
+        Specification<DimensioEntity> spec = dimensioService.namedQueryToSpecification("desconegut");
 
         // Assert
         assertThat(spec).isNull();
@@ -50,7 +50,7 @@ class DimensioServiceImplTest {
         when(estadisticaClientHelper.getEntornAppsIdByAppId(1L)).thenReturn(ids);
 
         // Act
-        Specification<DimensioEntity> spec = dimensioService.namedFilterToSpecification(filterName);
+        Specification<DimensioEntity> spec = dimensioService.namedQueryToSpecification(filterName);
 
         // Assert
         assertThat(spec).isNotNull();
@@ -65,7 +65,7 @@ class DimensioServiceImplTest {
         when(estadisticaClientHelper.getEntornAppsIdByAppId(1L)).thenReturn(Collections.emptyList());
 
         // Act
-        Specification<DimensioEntity> spec = dimensioService.namedFilterToSpecification(filterName);
+        Specification<DimensioEntity> spec = dimensioService.namedQueryToSpecification(filterName);
 
         // Assert
         assertThat(spec).isNotNull();
@@ -79,7 +79,7 @@ class DimensioServiceImplTest {
         String filterName = Dimensio.NAMED_FILTER_BY_APP_GROUP_BY_NOM + ":";
 
         // Act
-        Specification<DimensioEntity> spec = dimensioService.namedFilterToSpecification(filterName);
+        Specification<DimensioEntity> spec = dimensioService.namedQueryToSpecification(filterName);
 
         // Assert
         assertThat(spec).isNotNull();

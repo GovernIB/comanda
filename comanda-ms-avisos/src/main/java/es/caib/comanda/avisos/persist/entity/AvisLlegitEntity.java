@@ -2,7 +2,7 @@ package es.caib.comanda.avisos.persist.entity;
 
 import es.caib.comanda.avisos.logic.intf.model.AvisLlegit;
 import es.caib.comanda.base.config.BaseConfig;
-import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,7 +17,7 @@ import javax.persistence.*;
 @Setter
 @NoArgsConstructor
 @FieldNameConstants
-public class AvisLlegitEntity extends BaseAuditableEntity<AvisLlegit> {
+public class AvisLlegitEntity extends BaseAuditableLongPkEntity<AvisLlegit> {
 
     @Column(name = "usuari", length = 255, nullable = false)
     private String usuari;

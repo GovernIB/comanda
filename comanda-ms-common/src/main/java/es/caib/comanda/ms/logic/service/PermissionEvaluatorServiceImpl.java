@@ -1,6 +1,6 @@
 package es.caib.comanda.ms.logic.service;
 
-import es.caib.comanda.ms.logic.helper.PermissionHelper;
+import es.caib.comanda.ms.logic.helper.BasePermissionHelper;
 import es.caib.comanda.ms.logic.intf.exception.UnknownPermissionException;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.service.PermissionEvaluatorService;
@@ -15,10 +15,12 @@ import org.springframework.stereotype.Service;
 import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Implementació del servei d'avaluació de permisos.
- * 
+ *
  * @author Límit Tecnologies
  */
 @Slf4j
@@ -26,7 +28,7 @@ import java.util.Optional;
 public class PermissionEvaluatorServiceImpl implements PermissionEvaluatorService {
 
 	@Autowired
-	private PermissionHelper permissionHelper;
+	private BasePermissionHelper permissionHelper;
 
 	@Override
 	public boolean hasPermission(
@@ -71,7 +73,7 @@ public class PermissionEvaluatorServiceImpl implements PermissionEvaluatorServic
 		boolean isReportPermission = isArtifactReportPermission(permission);
 		if (isActionPermission || isReportPermission) {
 			// Si s'està verificant el permís d'un artefacte crida el mètode a posta pels artefactes
-			String code = getArtifactCodeFromHttpRequest();
+			String code = getArtifactCodeFromHttpRequest(isActionPermission ? "action" : "report");
 			if (code != null) {
 				try {
 					return permissionHelper.checkResourceArtifactPermission(
@@ -89,7 +91,7 @@ public class PermissionEvaluatorServiceImpl implements PermissionEvaluatorServic
 					authentication,
 					targetId,
 					targetType,
-					toBasePermission(permission));
+					toBasePermissions(permission));
 		}
 	}
 
@@ -108,7 +110,7 @@ public class PermissionEvaluatorServiceImpl implements PermissionEvaluatorServic
 		return false;
 	}
 
-	private BasePermission toBasePermission(Object objectPermission) {
+	private BasePermission[] toBasePermissions(Object objectPermission) {
 		if (objectPermission instanceof RestApiOperation) {
 			RestApiOperation restapiOperation = (RestApiOperation)objectPermission;
 			switch (restapiOperation) {
@@ -118,35 +120,45 @@ public class PermissionEvaluatorServiceImpl implements PermissionEvaluatorServic
 				case ARTIFACT:
 				case REPORT:
 				case FIELDDOWNLOAD:
-					return (BasePermission)BasePermission.READ;
+					return new BasePermission[] { (BasePermission)BasePermission.READ };
 				case UPDATE:
 				case PATCH:
+				case ACTION:
+					return new BasePermission[] { (BasePermission)BasePermission.WRITE };
 				case ONCHANGE:
 				case OPTIONS:
-				case ACTION:
-					return (BasePermission)BasePermission.WRITE;
+					return new BasePermission[] { (BasePermission)BasePermission.CREATE, (BasePermission)BasePermission.WRITE };
 				case CREATE:
-					return (BasePermission)BasePermission.CREATE;
+					return new BasePermission[] { (BasePermission)BasePermission.CREATE };
 				case DELETE:
-					return (BasePermission)BasePermission.DELETE;
+					return new BasePermission[] { (BasePermission)BasePermission.DELETE };
 			}
 		}
 		throw new UnknownPermissionException(objectPermission);
 	}
 
-	private String getArtifactCodeFromHttpRequest() {
+	private String getArtifactCodeFromHttpRequest(String urlPart) {
+		String code = null;
 		Optional<HttpServletRequest> request = HttpRequestUtil.getCurrentHttpRequest();
 		if (request.isPresent()) {
 			String requestUri = request.get().getRequestURI();
-			if (requestUri.endsWith("/")) {
-				requestUri = requestUri.substring(0, requestUri.length() - 1);
-			}
-			int lastSlashIndex = requestUri.lastIndexOf('/');
-			if (lastSlashIndex >= 0) {
-				return requestUri.substring(lastSlashIndex + 1);
+			// Primer mira si el codi de l'informe és a "action/CODE" o "report/CODE"
+			Pattern pattern = Pattern.compile("/" + urlPart + "/([^/]+)/");
+			Matcher matcher = pattern.matcher(requestUri);
+			if (matcher.find()) {
+				code = matcher.group(1);
+			} else {
+				// Si no hi és mira si és al final de tot
+				if (requestUri.endsWith("/")) {
+					requestUri = requestUri.substring(0, requestUri.length() - 1);
+				}
+				int lastSlashIndex = requestUri.lastIndexOf('/');
+				if (lastSlashIndex >= 0) {
+					return requestUri.substring(lastSlashIndex + 1);
+				}
 			}
 		}
-		return null;
+		return code;
 	}
 
 }

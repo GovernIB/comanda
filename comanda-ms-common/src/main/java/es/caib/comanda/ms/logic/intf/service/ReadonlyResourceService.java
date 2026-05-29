@@ -22,34 +22,34 @@ import java.util.Map;
 public interface ReadonlyResourceService<R extends Resource<? extends Serializable>, ID extends Serializable> {
 
 	/**
-	 * Consulta un recurs donada la seva identificació.
+	 * Retorna el recurs amb l'identificador especificat.
 	 *
 	 * @param id
-	 *            clau primària del recurs.
+	 *            l'identificador del recurs
 	 * @param perspectives
-	 *            llista de perspectives a aplicar.
-	 * @return el recurs amb la identificació especificada.
+	 *            les perspectives a aplicar (pot ser {@code null})
+	 * @return el recurs corresponent a l'identificador
 	 * @throws ResourceNotFoundException
-	 *             si no s'ha trobat el recurs especificat.
+	 *             si no existeix cap recurs amb aquest identificador
 	 */
 	R getOne(
 			ID id,
 			String[] perspectives) throws ResourceNotFoundException;
 
 	/**
-	 * Consulta paginada de recursos.
+	 * Retorna una pàgina de recursos segons els filtres i la paginació especificats.
 	 *
 	 * @param quickFilter
-	 *            filtre ràpid en format text.
+	 *            filtre ràpid en format text (pot ser {@code null})
 	 * @param filter
-	 *            consulta en format Spring Filter.
+	 *            consulta en format Spring Filter (pot ser {@code null})
 	 * @param namedQueries
-	 *            llista de noms de consultes a aplicar.
+	 *            llista de noms de consultes a aplicar (pot ser {@code null})
 	 * @param perspectives
-	 *            llista de perspectives a aplicar.
+	 *            llista de perspectives a aplicar (pot ser {@code null})
 	 * @param pageable
-	 *            paràmetres de paginació i ordenació.
-	 * @return la llista de recursos.
+	 *            paràmetres de paginació i ordenació (no pot ser {@code null})
+	 * @return la pàgina amb els resultats de la consulta
 	 */
 	Page<R> findPage(
 			String quickFilter,
@@ -59,25 +59,25 @@ public interface ReadonlyResourceService<R extends Resource<? extends Serializab
 			Pageable pageable);
 
 	/**
-	 * Exportació de recursos.
+	 * Exporta recursos.
 	 *
 	 * @param quickFilter
-	 *            filtre ràpid en format text.
+	 *            filtre ràpid en format text (pot ser {@code null})
 	 * @param filter
-	 *            consulta en format Spring Filter.
+	 *            consulta en format Spring Filter (pot ser {@code null})
 	 * @param namedQueries
-	 *            llista de noms de consultes a aplicar.
+	 *            llista de noms de consultes a aplicar (pot ser {@code null})
 	 * @param perspectives
-	 *            llista de perspectives a aplicar.
+	 *            llista de perspectives a aplicar (pot ser {@code null})
 	 * @param pageable
-	 *            paràmetres de paginació i ordenació.
+	 *            paràmetres de paginació i ordenació (no pot ser {@code null})
 	 * @param fields
-	 *            camps a exportar.
+	 *            llista de camps a exportar (no pot ser {@code null})
 	 * @param fileType
-	 *            tipus de fitxer que s'ha de generar.
+	 *            tipus de fitxer que s'ha de generar (no pot ser {@code null})
 	 * @param out
-	 *            stream a on posar el fitxer generat.
-	 * @return la llista de recursos.
+	 *            stream a on posar el fitxer generat (no pot ser {@code null})
+	 * @return el fitxer amb l'exportació
 	 */
 	DownloadableFile export(
 			String quickFilter,
@@ -90,23 +90,23 @@ public interface ReadonlyResourceService<R extends Resource<? extends Serializab
 			OutputStream out);
 
 	/**
-	 * Descàrrega del fitxer associat a un camp del recurs.
+	 * Descarrega el fitxer associat a un camp del recurs.
 	 *
 	 * @param id
-	 *            clau primària del recurs.
+	 *            l'identificador del recurs (no pot ser {@code null})
 	 * @param fieldName
-	 *            nom del camp del recurs.
+	 *            el camp del recurs (no pot ser {@code null})
 	 * @param out
-	 *            stream a on posar el fitxer generat.
-	 * @return el fitxer associat al camp.
+	 *            stream a on posar el fitxer generat (no pot ser {@code null})
+	 * @return el fitxer associat al camp
 	 * @throws ResourceNotFoundException
-	 *             si no s'ha trobat el recurs especificat.
+	 *            si no s'ha trobat el recurs especificat
 	 * @throws ResourceFieldNotFoundException
-	 *            si no es troba el camp del recurs.
+	 *            si no es troba el camp del recurs
 	 * @throws FieldArtifactNotFoundException
-	 *            si el camp no té cap artefacte de descàrrega associat.
+	 *            si el camp no té cap artefacte de descàrrega associat
 	 * @throws IOException
-	 *             si es produeix algun error de E/S al descarregar l'arxiu.
+	 *            si es produeix algun error de E/S al descarregar l'arxiu
 	 */
 	DownloadableFile fieldDownload(
 			ID id,
@@ -114,11 +114,11 @@ public interface ReadonlyResourceService<R extends Resource<? extends Serializab
 			OutputStream out) throws ResourceNotFoundException, ResourceFieldNotFoundException, FieldArtifactNotFoundException, IOException;
 
 	/**
-	 * Retorna la llista d'artefactes del tipus especificat als quals l'usuari te accés.
+	 * Retorna la llista d'artefactes als quals l'usuari te accés.
 	 *
 	 * @param type
-	 *            el tipus d'artefacte que es vol consultar (si és null es retornen tots els tipus).
-	 * @return la llista dels artefactes permesos.
+	 *            el tipus d'artefacte que es vol consultar (si és null es retornen tots els tipus)
+	 * @return la llista dels artefactes permesos
 	 */
 	List<ResourceArtifact> artifactFindAll(ResourceArtifactType type);
 
@@ -126,46 +126,45 @@ public interface ReadonlyResourceService<R extends Resource<? extends Serializab
 	 * Retorna l'artefacte amb el tipus i codi especificat.
 	 *
 	 * @param type
-	 *            el tipus de l'artefacte.
+	 *            el tipus de l'artefacte
 	 * @param code
-	 *            el codi de l'artefacte.
+	 *            el codi de l'artefacte
 	 * @return l'artefacte.
 	 * @throws ArtifactNotFoundException
-	 *             si no es troba l'artefacte amb el tipus i el codi especificat.
+	 *            si no es troba l'artefacte amb el tipus i el codi especificat
 	 */
 	ResourceArtifact artifactGetOne(ResourceArtifactType type, String code) throws ArtifactNotFoundException;
 
 	/**
-	 * Processament en el backend dels canvis en els camps del formulari associats
-	 * a un artefacte.
+	 * Processa els canvis en els camps del formulari associat a un artefacte.
 	 *
 	 * @param type
-	 *            el tipus de l'artefacte.
+	 *            el tipus de l'artefacte
 	 * @param code
-	 *            el codi de l'artefacte.
+	 *            el codi de l'artefacte
 	 * @param id
-	 *            la clau primària del recurs sobre el que s'executa l'artefacte (pot ser null).
+	 *            la clau primària del recurs sobre el que s'executa l'artefacte (pot ser {@code null} si l'artefacte no està associat a un recurs determinat)
 	 * @param previous
-	 *            informació del recurs abans del canvi.
+	 *            informació del recurs abans del canvi (pot ser {@code null})
 	 * @param fieldName
-	 *            nom del camp que s'ha canviat.
+	 *            nom del camp que s'ha canviat (pot ser {@code null})
 	 * @param fieldValue
-	 *            el valor del camp que s'ha canviat.
+	 *            el valor del camp que s'ha canviat (pot ser {@code null})
 	 * @param answers
-	 *            respostes a les preguntes formulades en el front.
-	 * @return un map amb els canvis resultants de processar la petició.
-	 * @param <P> la classe del formulari associat a l'artefacte.
+	 *            respostes a les preguntes formulades en el front (pot ser {@code null})
+	 * @return un map amb els canvis resultants de processar la petició
+	 * @param <P> la classe del formulari associat a l'artefacte
 	 * @throws ArtifactNotFoundException
-	 *             si no es troba l'artefacte amb el tipus i el codi especificat.
+	 *             si no es troba l'artefacte amb el tipus i el codi especificat
 	 * @throws ResourceFieldNotFoundException
-	 *            si no es troba el camp especificat.
+	 *            si no es troba el camp especificat
 	 * @throws AnswerRequiredException
-	 *            si es requereix alguna resposta addicional de l'usuari.
+	 *            si es requereix alguna resposta addicional de l'usuari
 	 */
 	<P extends Serializable> Map<String, Object> artifactOnChange(
 			ResourceArtifactType type,
 			String code,
-            ID id,
+			ID id,
 			P previous,
 			String fieldName,
 			Object fieldValue,
@@ -175,14 +174,14 @@ public interface ReadonlyResourceService<R extends Resource<? extends Serializab
 	 * Consulta les opcions disponibles per a un camp de tipus enumerat d'un artefacte.
 	 *
 	 * @param type
-	 *            el tipus de l'artefacte.
+	 *            el tipus de l'artefacte
 	 * @param code
-	 *            el codi de l'artefacte.
+	 *            el codi de l'artefacte
 	 * @param fieldName
-	 *            nom del camp del recurs.
+	 *            nom del camp del recurs
 	 * @param requestParameterMap
-	 *            paràmetres de la petició.
-	 * @return la llista d'opcions disponibles.
+	 *            paràmetres de la petició
+	 * @return la llista d'opcions disponibles
 	 */
 	List<FieldOption> artifactFieldEnumOptions(
 			ResourceArtifactType type,
@@ -194,17 +193,17 @@ public interface ReadonlyResourceService<R extends Resource<? extends Serializab
 	 * Genera les dades de l'informe.
 	 *
 	 * @param id
-	 *            clau primària del recurs (pot ser null si l'informe no es genera sobre un recurs determinat).
+	 *            clau primària del recurs (pot ser {@code null} si l'informe no es genera sobre un recurs determinat)
 	 * @param code
-	 *            el codi de l'informe.
+	 *            el codi de l'informe
 	 * @param params
-	 *            els paràmetres necessaris per a generar l'informe.
-	 * @return les dades de l'informe.
-	 * @param <P> el tipus dels paràmetres.
+	 *            els paràmetres necessaris per a generar l'informe
+	 * @return les dades de l'informe
+	 * @param <P> el tipus dels paràmetres
 	 * @throws ArtifactNotFoundException
-	 *             si no es troba l'informe amb el codi especificat.
+	 *             si no es troba l'informe amb el codi especificat
 	 * @throws ReportGenerationException
-	 *             si es produeix algun error generant l'informe.
+	 *             si es produeix algun error generant l'informe
 	 */
 	<P extends Serializable> List<?> artifactReportGenerateData(
 			ID id,
@@ -215,18 +214,18 @@ public interface ReadonlyResourceService<R extends Resource<? extends Serializab
 	 * Genera el fitxer de l'informe.
 	 *
 	 * @param code
-	 *            el codi de l'informe.
+	 *            el codi de l'informe
 	 * @param data
-	 *            les dades de l'informe.
+	 *            les dades de l'informe
 	 * @param fileType
-	 *            tipus de fitxer que s'ha de generar.
+	 *            tipus de fitxer que s'ha de generar
 	 * @param out
-	 *            stream a on posar el fitxer generat.
-	 * @return el fitxer de l'informe en el format especificat.
+	 *            stream a on posar el fitxer generat
+	 * @return el fitxer de l'informe en el format especificat
 	 * @throws ArtifactNotFoundException
-	 *             si no es troba l'informe amb el codi especificat.
+	 *             si no es troba l'informe amb el codi especificat
 	 * @throws ReportGenerationException
-	 *             si es produeix algun error generant el fitxer.
+	 *             si es produeix algun error generant el fitxer
 	 */
 	DownloadableFile artifactReportGenerateFile(
 			String code,
