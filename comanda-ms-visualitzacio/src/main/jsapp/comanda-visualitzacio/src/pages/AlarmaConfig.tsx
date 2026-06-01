@@ -30,6 +30,7 @@ import {
     MuiFormProps,
     useFilterApiRef,
     MuiDataGridProps,
+    useFormContext,
 } from 'reactlib';
 import { Box, Button, Icon, IconButton } from '@mui/material';
 import { useIsUserAdmin, useUserContext } from '../components/UserContext';
@@ -43,6 +44,7 @@ import {
     gridRowSelector,
 } from '@mui/x-data-grid-pro';
 import useReordering from '../hooks/reordering.tsx';
+import { SalutEstatEnum } from '../types/salut.model.tsx';
 
 type RuleScope = 'APLICACIO' | 'SUBSISTEMA' | 'INTEGRACIO' | 'SISTEMA';
 type RuleMetric = 'ESTAT' | 'LATENCIA' | 'CARREGA_MITJANA_SISTEMA' | 'MEMORIA_DISPONIBLE' | 'ESPAI_DISC_LLIURE';
@@ -58,7 +60,22 @@ type RuleCondition = {
     valorsText?: string[];
 };
 
-const STATUS_OPTIONS = ['UP', 'WARN', 'DEGRADED', 'DOWN', 'MAINTENANCE', 'UNKNOWN', 'ERROR'];
+const STATUS_OPTIONS: `${SalutEstatEnum}`[] = ['UP', 'WARN', 'DEGRADED', 'DOWN', 'MAINTENANCE', 'UNKNOWN', 'ERROR'];
+
+const useStatusOptionsTranslation = () => {
+    const { t } = useTranslation();
+    return (status: `${SalutEstatEnum}`) => {
+        switch (status) {
+            case 'UP': return t($ => $.enum.appEstat.UP.title);
+            case 'WARN': return t($ => $.enum.appEstat.WARN.title);
+            case 'DEGRADED': return t($ => $.enum.appEstat.DEGRADED.title);
+            case 'DOWN': return t($ => $.enum.appEstat.DOWN.title);
+            case 'MAINTENANCE': return t($ => $.enum.appEstat.MAINTENANCE.title);
+            case 'UNKNOWN': return t($ => $.enum.appEstat.UNKNOWN.title);
+            case 'ERROR': return t($ => $.enum.appEstat.ERROR.title);
+        }
+    };
+};
 
 const defaultCondition = (): RuleCondition => ({
     ambit: 'APLICACIO',
@@ -83,6 +100,22 @@ const comparatorOptions = (metric: RuleMetric): RuleComparator[] =>
     metric === 'ESTAT'
         ? ['EN', 'IGUAL', 'DIFERENT']
         : ['MAJOR', 'MAJOR_IGUAL', 'MENOR', 'MENOR_IGUAL', 'IGUAL', 'DIFERENT'];
+
+const useComparatorOptionsTranslation = () => {
+    const { t } = useTranslation();
+    return (comparator: string) => {
+        switch (comparator) {
+            case 'MAJOR': return t($ => $.page.alarmaConfig.condicio.comparatorOptions.major);
+            case 'MAJOR_IGUAL': return t($ => $.page.alarmaConfig.condicio.comparatorOptions.majorIgual);
+            case 'MENOR': return t($ => $.page.alarmaConfig.condicio.comparatorOptions.menor);
+            case 'MENOR_IGUAL': return t($ => $.page.alarmaConfig.condicio.comparatorOptions.menorIgual);
+            case 'IGUAL': return t($ => $.page.alarmaConfig.condicio.comparatorOptions.igual);
+            case 'DIFERENT': return t($ => $.page.alarmaConfig.condicio.comparatorOptions.diferent);
+            case 'EN': return t($ => $.page.alarmaConfig.condicio.comparatorOptions.en);
+            default: return comparator;
+        }
+    };
+};
 
 const buildRulePayload = (operator: RuleOperator, conditions: RuleCondition[]) => ({
     tipusNode: 'GRUP',
@@ -152,88 +185,23 @@ export const EntornAppSelector : React.FC<any> = (props) => {
     </MuiFilter> : <Skeleton height={'100%'}/>;
 }
 
-export const AlarmaConfigForm: React.FC<{
-    entornAppId?: number | string;
-    dialogMode?: boolean;
-    dialogModeOnGoBack?: () => void;
-    id?: number | string,
-}> = ({ id: idProp, entornAppId: entornAppIdProp, dialogMode, dialogModeOnGoBack }) => {
+const AlarmaConfigReglaField: React.FC<{
+    subsystemOptions: { codi: string, description: string }[];
+    integrationOptions: { codi: string, description: string }[];
+}> = ({ subsystemOptions, integrationOptions }) => {
     const { t } = useTranslation();
-    const { t: tLib } = useBaseAppContext();
-    const { id: idFromPath } = useParams();
-    const id = idProp ?? idFromPath;
-    const formApiRef = useFormApiRef();
-    const { isReady: entornAppApiReady, getOne: getEntornApp } = useResourceApiService('entornApp');
-    const [entornAppId, setEntornAppId] = React.useState<any>();
-    const [validationErrors, setValidationErrors] = React.useState<any>();
-    const [periodeShow, setPeriodeShow] = React.useState<boolean>();
-    const [ruleOperator, setRuleOperator] = React.useState<RuleOperator>('AND');
-    const [conditions, setConditions] = React.useState<RuleCondition[]>([defaultCondition()]);
-    const [ruleEditorInitialized, setRuleEditorInitialized] = React.useState(false);
-    const [entornAppDetail, setEntornAppDetail] = React.useState<any>();
-    const isCurrentUserAdmin = useIsUserAdmin();
-    const handleDataChange = (data: any) => {
-        setEntornAppId(data?.entornAppId);
-        if (periodeShow === undefined) {
-            const ps = data?.periodeValor != null || data?.periodeUnitat != null;
-            setPeriodeShow(ps);
-        }
-        if (!ruleEditorInitialized) {
-            const parsed = parseRulePayload(data?.regla);
-            setRuleOperator(parsed.operator);
-            setConditions(parsed.conditions);
-            setRuleEditorInitialized(true);
-        }
-    }
-    const handleValidationErrorsChange = (_id: any, validationErrors?: any[]) => {
-        const entornAppValidationError = validationErrors?.find(e => e.field === 'entornAppId');
-        setValidationErrors(entornAppValidationError ? [{
-            field: 'entornApp',
-            code: entornAppValidationError.code,
-            message: entornAppValidationError.message,
-        }] : null);
-    }
-    const handleEntornAppChange = (entornApp: any) => {
-        formApiRef.current.setFieldValue('entornAppId', entornApp?.id);
-    }
-    const handlePeriodeShowChange = (event: any) => {
-        const newValue = event.target.checked;
-        setPeriodeShow(newValue);
-        if (!newValue) {
-            formApiRef.current?.setFieldValue('periodeValor', null);
-            formApiRef.current?.setFieldValue('periodeUnitat', null);
-        }
-    }
+    const tStatusOption = useStatusOptionsTranslation();
+    const tComparatorOption = useComparatorOptionsTranslation();
+    const { data, apiRef } = useFormContext();
+    const parsed = React.useMemo(() => parseRulePayload(data?.regla), [data?.regla]);
+    const { operator: ruleOperator, conditions } = parsed;
+
     const syncRuleToForm = React.useCallback((nextOperator: RuleOperator, nextConditions: RuleCondition[]) => {
-        formApiRef.current?.setFieldValue('regla', buildRulePayload(nextOperator, nextConditions));
-        // formApiRef.current?.setFieldValue('tipus', null);
-        formApiRef.current?.setFieldValue('condicio', null);
-        formApiRef.current?.setFieldValue('valor', null);
-    }, []);
-
-    React.useEffect(() => {
-        syncRuleToForm(ruleOperator, conditions);
-    }, [conditions, ruleOperator, syncRuleToForm]);
-
-    React.useEffect(() => {
-        if (!entornAppApiReady || !entornAppId) {
-            setEntornAppDetail(undefined);
-            return;
-        }
-        getEntornApp(entornAppId).then(setEntornAppDetail);
-    }, [entornAppApiReady, entornAppId, getEntornApp]);
-
-    const subsystemOptions = React.useMemo(
-        () => (entornAppDetail?.subsistemes ?? []).map((item: any) => item?.subsistema?.codi ?? item?.codi).filter(Boolean),
-        [entornAppDetail]
-    );
-    const integrationOptions = React.useMemo(
-        () => (entornAppDetail?.integracions ?? []).map((item: any) => item?.integracio?.codi ?? item?.codi).filter(Boolean),
-        [entornAppDetail]
-    );
+        apiRef.current?.setFieldValue('regla', buildRulePayload(nextOperator, nextConditions));
+    }, [apiRef]);
 
     const updateCondition = (index: number, patch: Partial<RuleCondition>) => {
-        setConditions(prev => prev.map((condition, currentIndex) => {
+        const nextConditions = conditions.map((condition, currentIndex) => {
             if (currentIndex !== index) return condition;
             const next = { ...condition, ...patch };
             if (patch.ambit && patch.ambit !== condition.ambit) {
@@ -258,11 +226,241 @@ export const AlarmaConfigForm: React.FC<{
                 }
             }
             return next;
-        }));
+        });
+        syncRuleToForm(ruleOperator, nextConditions);
     };
 
-    const addCondition = () => setConditions(prev => [...prev, defaultCondition()]);
-    const removeCondition = (index: number) => setConditions(prev => prev.filter((_, currentIndex) => currentIndex !== index));
+    const addCondition = () => syncRuleToForm(ruleOperator, [...conditions, defaultCondition()]);
+    const removeCondition = (index: number) => syncRuleToForm(ruleOperator, conditions.filter((_, currentIndex) => currentIndex !== index));
+    // const setRuleOperator = (operator: RuleOperator) => syncRuleToForm(operator, conditions);
+
+    return (
+        <Card variant="outlined">
+            <CardHeader
+                title={t($ => $.page.alarmaConfig.condicio.title)}
+                subheader={t($ => $.page.alarmaConfig.condicio.subtitle)}
+                slotProps={{
+                    title: { variant: 'h6' },
+                    subheader: { variant: 'subtitle2', sx: { color: 'text.secondary' } }
+                }}
+                sx={{ mb: -2 }} />
+            <CardContent>
+                <Grid container spacing={1}>
+                    {/*<Grid size={12}>*/}
+                    {/*    <TextField*/}
+                    {/*        select*/}
+                    {/*        fullWidth*/}
+                    {/*        size="small"*/}
+                    {/*        label={t($ => $.page.alarmaConfig.condicio.operator)}*/}
+                    {/*        value={ruleOperator}*/}
+                    {/*        onChange={event => setRuleOperator(event.target.value as RuleOperator)}*/}
+                    {/*    >*/}
+                    {/*        <MenuItem value="AND">AND</MenuItem>*/}
+                    {/*        <MenuItem value="OR">OR</MenuItem>*/}
+                    {/*    </TextField>*/}
+                    {/*</Grid>*/}
+                    {conditions.map((condition, index) => {
+                        const metrics = scopeMetricOptions(condition.ambit);
+                        const comparators = comparatorOptions(condition.metrica);
+                        const codeOptions = condition.ambit === 'SUBSISTEMA' ? subsystemOptions : integrationOptions;
+                        const useCodeSelect = (condition.ambit === 'SUBSISTEMA' || condition.ambit === 'INTEGRACIO') && codeOptions.length > 0;
+                        return (
+                            <React.Fragment key={index}>
+                                {index > 0 && <Grid size={12}><Divider /></Grid>}
+                                <Grid size={{ xs: 12, md: 3 }}>
+                                    <TextField
+                                        select
+                                        fullWidth
+                                        size="small"
+                                        label={t($ => $.page.alarmaConfig.condicio.scope)}
+                                        value={condition.ambit}
+                                        onChange={event => updateCondition(index, { ambit: event.target.value as RuleScope })}
+                                    >
+                                        <MenuItem value="APLICACIO">{t($ => $.page.alarmaConfig.condicio.scopeOptions.aplicacio)}</MenuItem>
+                                        <MenuItem value="SUBSISTEMA">{t($ => $.page.alarmaConfig.condicio.scopeOptions.subsistema)}</MenuItem>
+                                        <MenuItem value="INTEGRACIO">{t($ => $.page.alarmaConfig.condicio.scopeOptions.integracio)}</MenuItem>
+                                        <MenuItem value="SISTEMA">{t($ => $.page.alarmaConfig.condicio.scopeOptions.sistema)}</MenuItem>
+                                    </TextField>
+                                </Grid>
+                                {(condition.ambit === 'SUBSISTEMA' || condition.ambit === 'INTEGRACIO') && (
+                                    <Grid size={{ xs: 12, md: 3 }}>
+                                        <TextField
+                                            select={useCodeSelect}
+                                            fullWidth
+                                            size="small"
+                                            label={t($ => $.page.alarmaConfig.condicio.code)}
+                                            value={condition.codiObjecte ?? ''}
+                                            onChange={event => updateCondition(index, { codiObjecte: event.target.value })}
+                                        >
+                                            {useCodeSelect && codeOptions.map((option) => (
+                                                <MenuItem key={option.codi} value={option.codi}>{option.description}</MenuItem>
+                                            ))}
+                                        </TextField>
+                                    </Grid>
+                                )}
+                                <Grid size={{ xs: 12, md: 3 }}>
+                                    <TextField
+                                        select
+                                        fullWidth
+                                        size="small"
+                                        label={t($ => $.page.alarmaConfig.condicio.metric)}
+                                        value={condition.metrica}
+                                        onChange={event => updateCondition(index, { metrica: event.target.value as RuleMetric })}
+                                    >
+                                        {metrics.map(metric => (
+                                            <MenuItem key={metric} value={metric}>
+                                                {metric === 'ESTAT' ? t($ => $.page.alarmaConfig.condicio.metricOptions.estat) :
+                                                    metric === 'LATENCIA' ? t($ => $.page.alarmaConfig.condicio.metricOptions.latencia) :
+                                                        metric === 'CARREGA_MITJANA_SISTEMA' ? t($ => $.page.alarmaConfig.condicio.metricOptions.carregaMitjanaSistema) :
+                                                            metric === 'MEMORIA_DISPONIBLE' ? t($ => $.page.alarmaConfig.condicio.metricOptions.memoriaDisponible) :
+                                                                t($ => $.page.alarmaConfig.condicio.metricOptions.espaiDiscLliure)}
+                                            </MenuItem>
+                                        ))}
+                                    </TextField>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 3 }}>
+                                    <TextField
+                                        select
+                                        fullWidth
+                                        size="small"
+                                        label={t($ => $.page.alarmaConfig.condicio.comparator)}
+                                        value={condition.comparador}
+                                        onChange={event => updateCondition(index, { comparador: event.target.value as RuleComparator })}
+                                    >
+                                        {comparators.map(comparator => (
+                                            <MenuItem key={comparator} value={comparator}>
+                                                {tComparatorOption(comparator)}
+                                            </MenuItem>
+                                        ))}
+                                    </TextField>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: condition.metrica === 'ESTAT' ? 10 : 11 }}>
+                                    {condition.metrica === 'ESTAT' ? (
+                                        <TextField
+                                            select
+                                            fullWidth
+                                            size="small"
+                                            SelectProps={{ multiple: true }}
+                                            label={t($ => $.page.alarmaConfig.condicio.value)}
+                                            value={condition.valorsText ?? []}
+                                            onChange={event => updateCondition(index, { valorsText: event.target.value as unknown as string[] })}
+                                        >
+                                            {STATUS_OPTIONS.map(status => (
+                                                <MenuItem key={status} value={status}>
+                                                    {tStatusOption(status)}
+                                                </MenuItem>
+                                            ))}
+                                        </TextField>
+                                    ) : (
+                                        <TextField
+                                            fullWidth
+                                            size="small"
+                                            type="number"
+                                            label={condition.metrica === 'LATENCIA' ? t($ => $.page.alarmaConfig.condicio.valueMs) : t($ => $.page.alarmaConfig.condicio.value)}
+                                            value={condition.valorNumeric ?? ''}
+                                            onChange={event => updateCondition(index, { valorNumeric: event.target.value })}
+                                        />
+                                    )}
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 1 }}>
+                                    <Button
+                                        color="error"
+                                        onClick={() => removeCondition(index)}
+                                        disabled={conditions.length === 1}
+                                        fullWidth
+                                        sx={{ height: '100%' }}
+                                    >
+                                        <Icon>delete</Icon>
+                                    </Button>
+                                </Grid>
+                            </React.Fragment>
+                        );
+                    })}
+                    <Grid size={12}>
+                        <Button startIcon={<Icon>add</Icon>} onClick={addCondition}>
+                            {t($ => $.page.alarmaConfig.condicio.add)}
+                        </Button>
+                    </Grid>
+                </Grid>
+            </CardContent>
+        </Card>
+    );
+};
+
+
+export const AlarmaConfigForm: React.FC<{
+    entornAppId?: number | string;
+    dialogMode?: boolean;
+    dialogModeOnGoBack?: () => void;
+    id?: number | string,
+}> = ({ id: idProp, entornAppId: entornAppIdProp, dialogMode, dialogModeOnGoBack }) => {
+    const { t } = useTranslation();
+    const { t: tLib } = useBaseAppContext();
+    const { id: idFromPath } = useParams();
+    const id = idProp ?? idFromPath;
+    const formApiRef = useFormApiRef();
+    const { isReady: entornAppApiReady, getOne: getEntornApp } = useResourceApiService('entornApp');
+    const [entornAppId, setEntornAppId] = React.useState<any>();
+    const [validationErrors, setValidationErrors] = React.useState<any>();
+    const [periodeShow, setPeriodeShow] = React.useState<boolean>();
+    const [entornAppDetail, setEntornAppDetail] = React.useState<any>();
+    const isCurrentUserAdmin = useIsUserAdmin();
+    const handleDataChange = (data: any) => {
+        setEntornAppId(data?.entornAppId);
+        if (periodeShow === undefined) {
+            const ps = data?.periodeValor != null || data?.periodeUnitat != null;
+            setPeriodeShow(ps);
+        }
+    }
+    const handleValidationErrorsChange = (_id: any, validationErrors?: any[]) => {
+        const entornAppValidationError = validationErrors?.find(e => e.field === 'entornAppId');
+        setValidationErrors(entornAppValidationError ? [{
+            field: 'entornApp',
+            code: entornAppValidationError.code,
+            message: entornAppValidationError.message,
+        }] : null);
+    }
+    const handleEntornAppChange = (entornApp: any) => {
+        formApiRef.current.setFieldValue('entornAppId', entornApp?.id);
+    }
+    const handlePeriodeShowChange = (event: any) => {
+        const newValue = event.target.checked;
+        setPeriodeShow(newValue);
+        if (!newValue) {
+            formApiRef.current?.setFieldValue('periodeValor', null);
+            formApiRef.current?.setFieldValue('periodeUnitat', null);
+        }
+    }
+
+    React.useEffect(() => {
+        if (!entornAppApiReady || !entornAppId) {
+            setEntornAppDetail(undefined);
+            return;
+        }
+        getEntornApp(entornAppId).then(setEntornAppDetail);
+    }, [entornAppApiReady, entornAppId, getEntornApp]);
+
+    const subsystemOptions: { codi: string, description: string }[] = React.useMemo(
+        () => (entornAppDetail?.subsistemes ?? [])
+            .filter((item: any) => item?.actiu)
+            .map((item: any) => ({
+                codi: item?.codi,
+                description: item?.nom,
+            }))
+            .filter(Boolean),
+        [entornAppDetail]
+    );
+    const integrationOptions: { codi: string; description: string }[] = React.useMemo(
+        () =>
+            (entornAppDetail?.integracions ?? [])
+                .filter((item: any) => item?.activa)
+                .map((item: any) => ({
+                    codi: item?.codi,
+                    description: item?.integracio?.description,
+                }))
+                .filter(Boolean),
+        [entornAppDetail]
+    );
 
     // const {goBack} = useBaseAppContext();
     // const afterDelete = () => {
@@ -354,151 +552,7 @@ export const AlarmaConfigForm: React.FC<{
                         />
                     </Grid>
                     <Grid size={12}>
-                        <Card variant="outlined">
-                            <CardHeader
-                                title={t($ => $.page.alarmaConfig.condicio.title)}
-                                subheader={t($ => $.page.alarmaConfig.condicio.subtitle)}
-                                slotProps={{
-                                    title: { variant: 'h6' },
-                                    subheader: { variant: 'subtitle2', sx: { color: 'text.secondary' } }
-                                }}
-                                sx={{ mb: -2 }} />
-                            <CardContent>
-                                <Grid container spacing={1}>
-                                    <Grid size={12}>
-                                        <TextField
-                                            select
-                                            fullWidth
-                                            size="small"
-                                            label="Lògica entre condicions"
-                                            value={ruleOperator}
-                                            onChange={event => setRuleOperator(event.target.value as RuleOperator)}
-                                        >
-                                            <MenuItem value="AND">AND</MenuItem>
-                                            <MenuItem value="OR">OR</MenuItem>
-                                        </TextField>
-                                    </Grid>
-                                    {conditions.map((condition, index) => {
-                                        const metrics = scopeMetricOptions(condition.ambit);
-                                        const comparators = comparatorOptions(condition.metrica);
-                                        const codeOptions = condition.ambit === 'SUBSISTEMA' ? subsystemOptions : integrationOptions;
-                                        const useCodeSelect = (condition.ambit === 'SUBSISTEMA' || condition.ambit === 'INTEGRACIO') && codeOptions.length > 0;
-                                        return (
-                                            <React.Fragment key={index}>
-                                                {index > 0 && <Grid size={12}><Divider /></Grid>}
-                                                <Grid size={{ xs: 12, md: 3 }}>
-                                                    <TextField
-                                                        select
-                                                        fullWidth
-                                                        size="small"
-                                                        label="Tipus"
-                                                        value={condition.ambit}
-                                                        onChange={event => updateCondition(index, { ambit: event.target.value as RuleScope })}
-                                                    >
-                                                        <MenuItem value="APLICACIO">Aplicació</MenuItem>
-                                                        <MenuItem value="SUBSISTEMA">Subsistema</MenuItem>
-                                                        <MenuItem value="INTEGRACIO">Integració</MenuItem>
-                                                        <MenuItem value="SISTEMA">Sistema</MenuItem>
-                                                    </TextField>
-                                                </Grid>
-                                                {(condition.ambit === 'SUBSISTEMA' || condition.ambit === 'INTEGRACIO') && (
-                                                    <Grid size={{ xs: 12, md: 3 }}>
-                                                        <TextField
-                                                            select={useCodeSelect}
-                                                            fullWidth
-                                                            size="small"
-                                                            label="Codi"
-                                                            value={condition.codiObjecte ?? ''}
-                                                            onChange={event => updateCondition(index, { codiObjecte: event.target.value })}
-                                                        >
-                                                            {useCodeSelect && codeOptions.map((option: string) => (
-                                                                <MenuItem key={option} value={option}>{option}</MenuItem>
-                                                            ))}
-                                                        </TextField>
-                                                    </Grid>
-                                                )}
-                                                <Grid size={{ xs: 12, md: 3 }}>
-                                                    <TextField
-                                                        select
-                                                        fullWidth
-                                                        size="small"
-                                                        label="Mètrica"
-                                                        value={condition.metrica}
-                                                        onChange={event => updateCondition(index, { metrica: event.target.value as RuleMetric })}
-                                                    >
-                                                        {metrics.map(metric => (
-                                                            <MenuItem key={metric} value={metric}>
-                                                                {metric === 'ESTAT' ? 'Estat' :
-                                                                    metric === 'LATENCIA' ? 'Latència' :
-                                                                    metric === 'CARREGA_MITJANA_SISTEMA' ? 'Càrrega mitjana del sistema' :
-                                                                    metric === 'MEMORIA_DISPONIBLE' ? 'Memòria disponible (MB)' :
-                                                                    'Espai de disc lliure (MB)'}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </TextField>
-                                                </Grid>
-                                                <Grid size={{ xs: 12, md: 3 }}>
-                                                    <TextField
-                                                        select
-                                                        fullWidth
-                                                        size="small"
-                                                        label="Comparador"
-                                                        value={condition.comparador}
-                                                        onChange={event => updateCondition(index, { comparador: event.target.value as RuleComparator })}
-                                                    >
-                                                        {comparators.map(comparator => (
-                                                            <MenuItem key={comparator} value={comparator}>{comparator}</MenuItem>
-                                                        ))}
-                                                    </TextField>
-                                                </Grid>
-                                                <Grid size={{ xs: 12, md: condition.metrica === 'ESTAT' ? 10 : 11 }}>
-                                                    {condition.metrica === 'ESTAT' ? (
-                                                        <TextField
-                                                            select
-                                                            fullWidth
-                                                            size="small"
-                                                            SelectProps={{ multiple: true }}
-                                                            label="Estat"
-                                                            value={condition.valorsText ?? []}
-                                                            onChange={event => updateCondition(index, { valorsText: event.target.value as unknown as string[] })}
-                                                        >
-                                                            {STATUS_OPTIONS.map(status => (
-                                                                <MenuItem key={status} value={status}>{status}</MenuItem>
-                                                            ))}
-                                                        </TextField>
-                                                    ) : (
-                                                        <TextField
-                                                            fullWidth
-                                                            size="small"
-                                                            type="number"
-                                                            label={condition.metrica === 'LATENCIA' ? 'Valor (ms)' : 'Valor'}
-                                                            value={condition.valorNumeric ?? ''}
-                                                            onChange={event => updateCondition(index, { valorNumeric: event.target.value })}
-                                                        />
-                                                    )}
-                                                </Grid>
-                                                <Grid size={{ xs: 12, md: 1 }}>
-                                                    <Button
-                                                        color="error"
-                                                        onClick={() => removeCondition(index)}
-                                                        disabled={conditions.length === 1}
-                                                        fullWidth
-                                                        sx={{ height: '100%' }}
-                                                    >
-                                                        <Icon>delete</Icon>
-                                                    </Button>
-                                                </Grid>
-                                            </React.Fragment>
-                                        );
-                                    })}
-                                    <Grid size={12}>
-                                        <Button startIcon={<Icon>add</Icon>} onClick={addCondition}>
-                                            Afegir condició
-                                        </Button>
-                                    </Grid>
-                                </Grid>
-                            </CardContent>
-                        </Card>
+                        <AlarmaConfigReglaField subsystemOptions={subsystemOptions} integrationOptions={integrationOptions} />
                     </Grid>
                     <Grid size={12}>
                         <FormField name="missatge" />

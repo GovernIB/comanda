@@ -10,8 +10,20 @@ const mocks = vi.hoisted(() => ({
     messageDialogShowMock: vi.fn(),
     temporalMessageShowMock: vi.fn(),
     refreshMock: vi.fn(),
-    tMock: vi.fn((selector: any) =>
-        selector({
+    tMock: vi.fn((selector: any) => {
+        if (typeof selector !== 'function') return selector;
+        return selector({
+            enum: {
+                appEstat: {
+                    UP: { title: 'Activa' },
+                    WARN: { title: 'Avís' },
+                    DEGRADED: { title: 'Degradada' },
+                    DOWN: { title: 'Caiguda' },
+                    MAINTENANCE: { title: 'Manteniment' },
+                    UNKNOWN: { title: 'Desconegut' },
+                    ERROR: { title: 'Error' },
+                },
+            },
             components: {
                 clear: 'Netejar',
             },
@@ -23,6 +35,36 @@ const mocks = vi.hoisted(() => ({
                     condicio: {
                         title: 'Condició',
                         subtitle: 'Condició de dispar',
+                        add: 'Afegir condició',
+                        scope: 'Àmbit',
+                        scopeOptions: {
+                            aplicacio: 'Aplicació',
+                            subsistema: 'Subsistema',
+                            integracio: 'Integració',
+                            sistema: 'Sistema',
+                        },
+                        code: 'Codi',
+                        metric: 'Mètrica',
+                        metricOptions: {
+                            estat: 'Estat',
+                            latencia: 'Latència',
+                            carregaMitjanaSistema: 'Càrrega mitjana del sistema',
+                            memoriaDisponible: 'Memòria disponible',
+                            espaiDiscLliure: 'Espai de disc lliure',
+                        },
+                        comparator: 'Comparador',
+                        comparatorOptions: {
+                            major: 'Major',
+                            majorIgual: 'Major o igual',
+                            menor: 'Menor',
+                            menorIgual: 'Menor o igual',
+                            igual: 'Igual',
+                            diferent: 'Diferent',
+                            en: 'En',
+                        },
+                        value: 'Valor',
+                        valueMs: 'Valor (ms)',
+                        operator: 'Lògica entre condicions',
                     },
                     periode: {
                         switch: 'Configurar període',
@@ -37,8 +79,8 @@ const mocks = vi.hoisted(() => ({
                     },
                 },
             },
-        })
-    ),
+        });
+    }),
     tLibMock: vi.fn((key: string) => {
         const values: Record<string, string> = {
             'datacommon.delete.label': 'Eliminar',
@@ -124,6 +166,17 @@ vi.mock('reactlib', async (importOriginal) => {
                 tipus: 'APP_LATENCIA',
                 periodeValor: 5,
                 periodeUnitat: 'MINUTS',
+                regla: {
+                    tipusNode: 'GRUP',
+                    operador: 'AND',
+                    fills: [{
+                        tipusNode: 'CONDICIO',
+                        ambit: 'APLICACIO',
+                        metrica: 'ESTAT',
+                        comparador: 'EN',
+                        valorsText: ['DOWN']
+                    }]
+                }
             });
             onValidationErrorsChange?.(null, [
                 { field: 'entornAppId', code: 'NotNull', message: 'Obligatori' },
@@ -164,6 +217,26 @@ vi.mock('reactlib', async (importOriginal) => {
     FormField: ({ name, disabled }: { name: string; disabled?: boolean }) => (
         <div data-testid={`field-${name}`}>{`${name}:${String(disabled ?? false)}`}</div>
     ),
+    useFormContext: () => ({
+        data: {
+            regla: {
+                tipusNode: 'GRUP',
+                operador: 'AND',
+                fills: [{
+                    tipusNode: 'CONDICIO',
+                    ambit: 'APLICACIO',
+                    metrica: 'ESTAT',
+                    comparador: 'EN',
+                    valorsText: ['DOWN']
+                }]
+            }
+        },
+        apiRef: {
+            current: {
+                setFieldValue: mocks.setFieldValueMock,
+            }
+        }
+    }),
     useFormApiRef: () => ({
         current: {
             setFieldValue: mocks.setFieldValueMock,
@@ -181,6 +254,7 @@ vi.mock('reactlib', async (importOriginal) => {
             isReady: true,
             artifactAction: mocks.artifactActionMock,
             getOne: mocks.getOneAlarmaConfigMock,
+            find: vi.fn().mockResolvedValue({ rows: [] }),
         };
     },
     useBaseAppContext: () => ({
@@ -189,11 +263,13 @@ vi.mock('reactlib', async (importOriginal) => {
         t: mocks.tLibMock,
     }),
     useConfirmDialogButtons: () => <button>Confirmar</button>,
+    useCloseDialogButtons: () => <button>Tancar</button>,
     useMuiDataGridApiRef: () => ({
         current: {
             refresh: mocks.refreshMock,
         },
     }),
+    useMuiDataGridProps: (props: any) => props,
     useFilterApiRef: () => ({
         current: {
             clear: vi.fn(),
@@ -265,7 +341,6 @@ describe('AlarmaConfigForm', () => {
             expect(screen.getByRole('heading', { name: 'Editar configuració' })).toBeInTheDocument();
             expect(screen.getByText('Condició')).toBeInTheDocument();
             expect(screen.getByText('Període')).toBeInTheDocument();
-            expect(screen.getByRole('combobox', { name: "Lògica entre condicions" })).toBeInTheDocument();
             expect(screen.getByText('Afegir condició')).toBeInTheDocument();
             expect(screen.getByTestId('field-periodeValor')).toBeInTheDocument();
             expect(screen.getByTestId('field-admin')).toHaveTextContent('admin:false');
