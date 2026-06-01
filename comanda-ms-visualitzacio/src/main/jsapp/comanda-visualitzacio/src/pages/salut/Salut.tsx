@@ -1,4 +1,4 @@
-import { Activity, FunctionComponent, useCallback, useEffect, useState } from 'react';
+import { Activity, FunctionComponent, useCallback, useEffect, useRef, useState } from 'react';
 import { SalutModel } from '../../types/salut.model';
 import { springFilterBuilder, useResourceApiService } from 'reactlib';
 import dayjs from 'dayjs';
@@ -220,7 +220,9 @@ const useSalutData = ({
         loading: boolean;
         error?: unknown;
     }>({ groups: [], initialized: false, loading: false });
-    // TODO Considerar implementar bloqueig o cancelar peticions antigues si se fa una nova
+    const requestSequence = useRef<number>(0);
+    const filterDataApp = filterData?.app;
+    const filterDataEntorn = filterData?.entorn;
     const request = useCallback(async () => {
         if (!ready) {
             console.error('APIs not ready');
@@ -228,12 +230,13 @@ const useSalutData = ({
         }
 
         setSalutData(prevState => ({ ...prevState, loading: true, error: undefined }));
+        const sequence = ++requestSequence.current;
 
         try {
             const dataReferencia = dayjs().format(ISO_DATE_FORMAT);
             const agrupacio = agrupacioFromMinutes(dataRangeMinutes);
-            const appsIds = filterData?.app?.map(({id}) => (id))
-            const entornsIds = filterData?.entorn?.map(({id}) => (id))
+            const appsIds = filterDataApp?.map(({id}) => (id))
+            const entornsIds = filterDataEntorn?.map(({id}) => (id))
 
             const [
                 activeEntornAppsResponse,
@@ -278,6 +281,7 @@ const useSalutData = ({
                 entornAppIdList: activeEntornAppsResponse.rows.map(({ id }) => id),
             };
 
+            if (sequence !== requestSequence.current) return;
             const [estatsResponse, salutLastItemsResponse] = await Promise.all([
                 salutApiReport(null, { code: 'estats', data: reportData }),
                 salutApiReport(null, {
@@ -309,6 +313,8 @@ const useSalutData = ({
                 entornsResponse?.rows as EntornModel[]
             );
 
+            if (sequence !== requestSequence.current) return;
+
             setSalutData({
                 lastRefresh: new Date(),
                 apps,
@@ -328,6 +334,8 @@ const useSalutData = ({
                 loading: false,
             });
         } catch (e) {
+            if (sequence !== requestSequence.current) return;
+
             // TODO Mostrar error en la UI
             setSalutData({
                 lastRefresh: new Date(),
@@ -343,8 +351,8 @@ const useSalutData = ({
         dataRangeMinutes,
         entornAppFind,
         entornFind,
-        filterData?.app,
-        filterData?.entorn,
+        filterDataApp,
+        filterDataEntorn,
         groupBy,
         ready,
         salutApiReport,
