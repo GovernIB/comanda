@@ -227,7 +227,7 @@ public class AlarmaComprovacioHelper {
 				} else if (alarmaConfig.getPeriodeUnitat() == AlarmaConfigPeriodeUnitat.HORES) {
 					activar = duration.getSeconds() / 3600 > alarmaConfig.getPeriodeValor().intValue();
 				} else if (alarmaConfig.getPeriodeUnitat() == AlarmaConfigPeriodeUnitat.DIES) {
-					activar = duration.getSeconds() / 3600 * 24 > alarmaConfig.getPeriodeValor().intValue();
+					activar = duration.getSeconds() / (3600 * 24) > alarmaConfig.getPeriodeValor().intValue();
 				}
 				if (activar) {
 					alarmaAnteriorNoFinalitzada.setEstat(AlarmaEstat.ACTIVA);
