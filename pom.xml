@@ -4,11 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>es.caib.comanda</groupId>
 	<artifactId>comanda</artifactId>
-	<version>0.1.2</version>
+	<version>0.1.3</version>
 	<packaging>pom</packaging>
 	<properties>
 		<!-- Versió de l'aplicació COMANDA -->
-		<comanda.version>0.1.2</comanda.version>
+		<comanda.version>0.1.3</comanda.version>
 		<!-- Versió de les APIs (versionat independent) -->
 		<comanda.api.version>1.0.0</comanda.api.version>
 

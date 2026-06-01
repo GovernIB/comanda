@@ -5,10 +5,10 @@
 	<parent>
 		<groupId>es.caib.comanda</groupId>
 		<artifactId>comanda</artifactId>
-		<version>0.1.2</version>
+		<version>0.1.3</version>
 	</parent>
 	<artifactId>comanda-discovery</artifactId>
-	<version>0.1.2</version>
+	<version>0.1.3</version>
 	<packaging>jar</packaging>
 	<description>comanda-discovery</description>
 	<properties>
