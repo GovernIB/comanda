@@ -30,8 +30,8 @@ const mocks = vi.hoisted(() => ({
                         subtitle: 'Límit temporal',
                     },
                     filter: {
-                        showOnlyOwnEnabled: 'Només meves',
-                        showOnlyOwnDisabled: 'Totes les configuracions',
+                        showOnlyOwnEnabled: 'Mostrar només les meves alarmes',
+                        showOnlyOwnDisabled: 'Mostra només les alarmes d\'administrador',
                         more: 'Més filtres',
                         entornApp: "Entorn d'aplicació",
                     },
@@ -77,12 +77,14 @@ vi.mock('reactlib', async (importOriginal) => {
         title,
         filter,
         toolbarAdditionalRow,
+        toolbarElementsWithPositions,
         rowAdditionalActions,
         columns,
     }: {
         title: string;
         filter?: string;
         toolbarAdditionalRow?: React.ReactNode;
+        toolbarElementsWithPositions?: Array<{ element: React.ReactNode; position: string }>;
         rowAdditionalActions?: Array<{ label: string; onClick?: (id: unknown) => void }>;
         columns?: MuiDataGridColDef[];
     }) => (
@@ -90,6 +92,11 @@ vi.mock('reactlib', async (importOriginal) => {
             <h2>{title}</h2>
             <div data-testid="filter-value">{filter ?? ''}</div>
             {toolbarAdditionalRow}
+            {toolbarElementsWithPositions?.map((item, index) => (
+                <div key={index} data-testid={`toolbar-element-${index}`}>
+                    {item.element}
+                </div>
+            ))}
             {columns?.map((col: any, index: number) => (
                 <div key={index} data-testid={`column-${col.field}`}>
                     {col.field}
@@ -303,14 +310,15 @@ describe('AlarmaConfig', () => {
     });
 
     it('AlarmaConfig_quanEsRenderitza_mostraElGridIElFiltreInicialDeLusuari', async () => {
-        // Comprova que la pàgina arrenca filtrant per l'usuari actual i mostra el toggle de només meves.
+        // Comprova que la pàgina arrenca filtrant per l'usuari actual i mostra el toggle de Mostrar només les meves alarmes.
         render(<AlarmaConfig />);
 
         await waitFor(() => {
             expect(screen.getByRole('heading', { name: 'Configuració d alarmes' })).toBeInTheDocument();
+            expect(
+                screen.getByTitle("Mostrar només les meves alarmes")
+            ).toBeInTheDocument();
         });
-
-        expect(screen.getByTitle('Només meves')).toBeInTheDocument();
     });
 
     it('AlarmaConfig_quanEsPremElToggle_canviaElFiltreIQuanSElimina_refrescaElGrid', async () => {
@@ -318,12 +326,12 @@ describe('AlarmaConfig', () => {
         render(<AlarmaConfig />);
 
         await waitFor(() => {
-            expect(screen.getByTitle('Només meves')).toBeInTheDocument();
+            expect(screen.getByTitle('Mostrar només les meves alarmes')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByTitle('Només meves'));
+        fireEvent.click(screen.getByTitle('Mostrar només les meves alarmes'));
         expect(screen.getByTestId('filter-value')).not.toHaveTextContent('');
-        expect(screen.getByTitle('Totes les configuracions')).toBeInTheDocument();
+        expect(screen.getByTitle('Mostra només les alarmes d\'administrador')).toBeInTheDocument();
 
         fireEvent.click(screen.getByRole('button', { name: 'Eliminar' }));
 
@@ -342,37 +350,19 @@ describe('AlarmaConfig', () => {
             expect(screen.queryByTestId('column-tipusUsuariAlarma')).not.toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByTitle('Només meves'));
+        fireEvent.click(screen.getByTitle('Mostrar només les meves alarmes'));
 
         await waitFor(() => {
             expect(screen.getByTestId('column-tipusUsuariAlarma')).toBeInTheDocument();
         });
     });
 
-    it('AlarmaConfig_quanEsRenderitza_mostraElGridIElFiltreInicialDeLusuari', async () => {
-        render(<AlarmaConfig />);
-        await waitFor(() => {
-            expect(screen.getByTitle('Només meves')).toBeInTheDocument(); // ✅ Título inicial correcto
-        });
-    });
-
     it('AlarmaConfig_quanEsPremElToggle_canviaElFiltreIQuanSElimina_refrescaElGrid', async () => {
         render(<AlarmaConfig />);
         await waitFor(() => {
-            expect(screen.getByTitle('Només meves')).toBeInTheDocument();
+            expect(screen.getByTitle('Mostrar només les meves alarmes')).toBeInTheDocument();
         });
-        fireEvent.click(screen.getByTitle('Només meves'));
-        expect(screen.getByTitle('Totes les configuracions')).toBeInTheDocument(); // ✅ Título cambia
-    });
-
-    it('AlarmaConfig_quanEsDesactivaElFiltreDeNomésMeva_mostraLaColumnaDeTipusUsuari', async () => {
-        render(<AlarmaConfig />);
-        await waitFor(() => {
-            expect(screen.queryByTestId('column-tipusUsuariAlarma')).not.toBeInTheDocument();
-        });
-        fireEvent.click(screen.getByTitle('Només meves'));
-        await waitFor(() => {
-            expect(screen.getByTestId('column-tipusUsuariAlarma')).toBeInTheDocument(); // ✅ Columna aparece
-        });
+        fireEvent.click(screen.getByTitle('Mostrar només les meves alarmes'));
+        expect(screen.getByTitle("Mostra només les alarmes d'administrador")).toBeInTheDocument(); // ✅ Título cambia
     });
 });

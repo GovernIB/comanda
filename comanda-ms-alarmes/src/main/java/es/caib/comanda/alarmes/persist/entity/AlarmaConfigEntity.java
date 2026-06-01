@@ -3,6 +3,7 @@ package es.caib.comanda.alarmes.persist.entity;
 import es.caib.comanda.alarmes.logic.intf.model.*;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.ReorderableEntity;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,7 +22,7 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @NoArgsConstructor
-public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> {
+public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> implements ReorderableEntity<Long> {
 
 	@Column(name = "entorn_app_id", nullable = false)
 	private Long entornAppId;
@@ -49,6 +50,8 @@ public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> {
 	private BigDecimal periodeValor;
     @Column(name = "notificacio_finalitzada")
     private boolean notificacioFinalitzada = true;
+	@Column(name = "ordre")
+	private Long ordre;
 
 	@Builder
 	public AlarmaConfigEntity(AlarmaConfig alarmaConfig) {
@@ -62,4 +65,22 @@ public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> {
 		this.notificacioFinalitzada = alarmaConfig.isNotificacioFinalitzada();
 	}
 
+	// El parentId fa referència al mateix AlarmaConfigEntity per a poder
+	// recuperar la row actual al mètode reorderFindLinesWithParent
+	@Override
+	public Long getOrderParentId() {
+		// S'assumeix que no s'usarà la reordenació per canviar de entornApp, ja que baseboot fa una
+		// comprovació de parentIdChanged que no quedarà reflectida aquí si es canvia l'entornApp.
+		return getId();
+	}
+
+	@Override
+	public Long getOrder() {
+		return ordre;
+	}
+
+	@Override
+	public void setOrder(Long order) {
+		this.ordre = order;
+	}
 }

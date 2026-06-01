@@ -30,8 +30,10 @@ import java.math.BigDecimal;
 @Setter
 @NoArgsConstructor
 @ResourceConfig(
-        descriptionField = "nom",
-        mappingIgnoredFields = { "regla", "resumRegla" },
+        descriptionField = AlarmaConfig.Fields.nom,
+        mappingIgnoredFields = { AlarmaConfig.Fields.regla, AlarmaConfig.Fields.resumRegla },
+		orderField = AlarmaConfig.Fields.ordre,
+		defaultSortFields = { @ResourceConfig.ResourceSort(field = AlarmaConfig.Fields.entornAppId), @ResourceConfig.ResourceSort(field = AlarmaConfig.Fields.ordre) },
 		accessConstraints = {
 				@ResourceAccessConstraint(
 						type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,
@@ -48,6 +50,7 @@ import java.math.BigDecimal;
                 @ResourceArtifact(type = ResourceArtifactType.FILTER, code = AlarmaConfig.ALARMA_CONFIG_FILTER, formClass = AlarmaConfig.AlarmaConfigFilter.class)
 		}
 )
+@FieldNameConstants
 public class AlarmaConfig extends BaseResource<Long> {
 
 	public final static String ALARMA_CONFIG_DELETE_ACTION = "delete_alarmaConfig";
@@ -60,6 +63,7 @@ public class AlarmaConfig extends BaseResource<Long> {
 	@NotNull
 	@Size(max = 1024)
 	private String missatge;
+	private Long ordre;
     private AlarmaConfigRegla regla;
 	private AlarmaConfigPeriodeUnitat periodeUnitat;
     @Digits(integer = 15, fraction = 4)

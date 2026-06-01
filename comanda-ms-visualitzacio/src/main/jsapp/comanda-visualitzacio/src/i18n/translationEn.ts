@@ -493,6 +493,7 @@ const translationEn: translationResourcesType = {
             create: "Create alarm configuration",
             update: "Edit alarm configuration",
             nomHelperText: "When an alarm email notification is sent, the name is used to identify the alarm in the email subject.",
+            filterWarning: "Cannot reorder alarms when filters are applied",
             condicio: {
                 title: "Condition",
                 subtitle: "Condition that must be met to trigger the alarm",
@@ -504,7 +505,7 @@ const translationEn: translationResourcesType = {
             },
             filter: {
                 showOnlyOwnEnabled: "Show only my alarms",
-                showOnlyOwnDisabled: "Show all alarms",
+                showOnlyOwnDisabled: "Show only alarms from administrators",
                 more: "More fields",
                 entornApp: "Application environment",
             },

@@ -493,6 +493,7 @@ const translationCa = {
             create: "Crear configuració d'alarma",
             update: "Modificar configuració d'alarma",
             nomHelperText: "En fer-se una notificació per correu de l'alarma, el nom s'usa per a indicar l'alarma a l'assumpte del correu.",
+            filterWarning: "No es pot reordenar les alarmes quan hi ha filtres aplicats",
             condicio: {
                 title: "Condició",
                 subtitle: "Condició que s'ha de complir per a generar l'alarma",
@@ -504,7 +505,7 @@ const translationCa = {
             },
             filter: {
                 showOnlyOwnEnabled: "Mostrar només les meves alarmes",
-                showOnlyOwnDisabled: "Mostra totes les alarmes",
+                showOnlyOwnDisabled: "Mostra només les alarmes d'administrador",
                 more: "Més camps",
                 entornApp: "Entorn d'aplicació",
             },

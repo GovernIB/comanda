@@ -493,6 +493,7 @@ const translationEs: translationResourcesType = {
             create: "Crear configuración de alarma",
             update: "Modificar configuración de alarma",
             nomHelperText: "Al realizarse una notificación por correo de la alarma, el nombre se utiliza para indicar la alarma en el asunto del correo.",
+            filterWarning: "No es posible reordenar las alarmas cuando hay filtros aplicados",
             condicio: {
                 title: "Condición",
                 subtitle: "Condición que se debe cumplir para generar la alarma",
@@ -504,7 +505,7 @@ const translationEs: translationResourcesType = {
             },
             filter: {
                 showOnlyOwnEnabled: "Mostrar solo mis alarmas",
-                showOnlyOwnDisabled: "Mostrar todas las alarmas",
+                showOnlyOwnDisabled: "Mostrar solo alarmas de administradores",
                 more: "Más campos",
                 entornApp: "Entorno de aplicación",
             },

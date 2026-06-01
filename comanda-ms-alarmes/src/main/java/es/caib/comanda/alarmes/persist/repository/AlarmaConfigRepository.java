@@ -12,4 +12,6 @@ import java.util.List;
  */
 public interface AlarmaConfigRepository extends BaseRepository<AlarmaConfigEntity, Long> {
     List<AlarmaConfigEntity> findAllByEsborratFalse();
+	List<AlarmaConfigEntity> findByEntornAppIdAndEsborratFalseAndAdminTrueOrderByOrdre(Long entornAppId);
+	List<AlarmaConfigEntity> findByEntornAppIdAndEsborratFalseAndAdminFalseAndCreatedByOrderByOrdre(Long entornAppId, String createdBy);
 }

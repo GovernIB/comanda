@@ -38,13 +38,14 @@ const useReordering = (resourceName: string) => {
         rowReordering: true,
         onRowOrderChange,
     };
+    const loadingElement = React.useMemo(() => (ongoingRequests.length ? (
+        <CircularProgress sx={{ ml: 1 }} size="1.5rem" />
+    ) : (
+        <></>
+    )), [ongoingRequests]);
     return {
         dataGridProps,
-        loadingElement: ongoingRequests.length ? (
-            <CircularProgress sx={{ ml: 1 }} size="1.5rem" />
-        ) : (
-            <></>
-        ),
+        loadingElement,
     };
 };
 

@@ -7,6 +7,7 @@ import es.caib.comanda.alarmes.logic.intf.service.AlarmaConfigService;
 import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventPublisher;
 import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventTypes;
 import es.caib.comanda.alarmes.persist.entity.AlarmaConfigEntity;
+import es.caib.comanda.alarmes.persist.repository.AlarmaConfigRepository;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
@@ -15,6 +16,7 @@ import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
+import es.caib.comanda.ms.logic.intf.util.ThreadLocalUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -41,6 +44,7 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
     private static final int RULE_VERSION = 1;
 
     private final AuthenticationHelper authenticationHelper;
+    private final AlarmaConfigRepository alarmaConfigRepository;
     private final AlarmaRepository alarmaRepository;
     private final ComandaSseEventPublisher comandaSseEventPublisher;
     private final ObjectMapper objectMapper;
@@ -198,4 +202,36 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
         }
     }
 
+	@Override
+	protected void beforeCreateSave(AlarmaConfigEntity entity, AlarmaConfig resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
+		ThreadLocalUtil.setAttribute(ThreadLocalUtil.REORDER_ADDITIONAL_PROPS_KEY, entity);
+	}
+
+	// L'ordenació és individual de cada usuari i entornApp,
+	// menys quan no es tracta d'una alarma d'administrador, en aquell cas
+	// l'ordenació és individual de cada entornApp però global per a tots els administradors.
+	@Override
+	protected List<AlarmaConfigEntity> reorderFindLinesWithParent(Serializable selfIdSerializable) {
+		AlarmaConfigEntity currentRow;
+		if (selfIdSerializable != null) {
+			// El parentId fa referència al mateix AlarmaConfigEntity per a poder
+			// recuperar la row actual al mètode reorderFindLinesWithParent
+			Long selfId = (Long) selfIdSerializable;
+			currentRow = alarmaConfigRepository.findById(selfId).orElseThrow();
+		} else {
+			// Al fer una creació, el selfId no s'ha emplenat encara i es recupera la row actual a través del ThreadLocal
+			currentRow = ThreadLocalUtil.getAttribute(ThreadLocalUtil.REORDER_ADDITIONAL_PROPS_KEY, AlarmaConfigEntity.class);
+		}
+
+		if (currentRow.isAdmin()) {
+			return alarmaConfigRepository.findByEntornAppIdAndEsborratFalseAndAdminTrueOrderByOrdre(
+				currentRow.getEntornAppId()
+			);
+		} else {
+			return alarmaConfigRepository.findByEntornAppIdAndEsborratFalseAndAdminFalseAndCreatedByOrderByOrdre(
+				currentRow.getEntornAppId(),
+				currentRow.getCreatedBy()
+			);
+		}
+	}
 }
