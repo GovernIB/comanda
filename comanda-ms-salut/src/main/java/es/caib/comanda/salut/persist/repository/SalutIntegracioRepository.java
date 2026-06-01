@@ -17,7 +17,7 @@ import java.util.List;
  */
 public interface SalutIntegracioRepository extends BaseRepository<SalutIntegracioEntity, Long> {
 
-	List<SalutIntegracioEntity> findBySalut(SalutEntity salut);
+	List<SalutIntegracioEntity> findBySalutOrderByCodiAsc(SalutEntity salut);
 
     @Modifying
     @Query("DELETE FROM SalutIntegracioEntity s WHERE s.salut.id IN :salutIds")

@@ -330,7 +330,7 @@ class SalutServiceImplTest {
                 .integracions(List.of(appIntegracio))
                 .build();
 
-        when(salutIntegracioRepository.findBySalut(entity)).thenReturn(List.of(integracioEntity));
+        when(salutIntegracioRepository.findBySalutOrderByCodiAsc(entity)).thenReturn(List.of(integracioEntity));
         when(salutClientHelper.entornAppFindById(33L)).thenReturn(entornApp);
         when(objectMappingHelper.newInstanceMap(integracioEntity, SalutIntegracio.class, "salut")).thenReturn(integracio);
 

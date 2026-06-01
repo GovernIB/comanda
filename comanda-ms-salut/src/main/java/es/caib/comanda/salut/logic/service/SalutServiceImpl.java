@@ -133,7 +133,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		@Override
 		public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
 			EntornApp entornAppForEntity = salutClientHelper.entornAppFindById(entity.getEntornAppId());
-			List<SalutIntegracioEntity> salutIntegracions = salutIntegracioRepository.findBySalut(entity);
+			List<SalutIntegracioEntity> salutIntegracions = salutIntegracioRepository.findBySalutOrderByCodiAsc(entity);
 			resource.setIntegracions(
 				salutIntegracions.stream().
 					map(i -> objectMappingHelper.newInstanceMap(
@@ -159,7 +159,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		@Override
 		public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
 			EntornApp entornAppForEntity = salutClientHelper.entornAppFindById(entity.getEntornAppId());
-			List<SalutSubsistemaEntity> salutSubsistemes = salutSubsistemaRepository.findBySalut(entity);
+			List<SalutSubsistemaEntity> salutSubsistemes = salutSubsistemaRepository.findBySalutOrderByCodiAsc(entity);
 			resource.setSubsistemes(
 				salutSubsistemes.stream().
 					map(s -> objectMappingHelper.newInstanceMap(
