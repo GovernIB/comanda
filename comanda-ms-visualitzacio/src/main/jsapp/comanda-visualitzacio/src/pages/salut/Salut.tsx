@@ -374,6 +374,7 @@ const Salut: FunctionComponent = () => {
         additionalFilter,
     });
     const appInfoData = useAppInfoData(id, dataRangeMinutes);
+    const salutInitialLoading = !salutData.initialized;
 
     const [nextRefresh, setNextRefresh] = useState<Date>();
     const updateNextRefresh = () => {
@@ -452,6 +453,7 @@ const Salut: FunctionComponent = () => {
                         agrupacio={salutData.agrupacio}
                         springFilter={additionalFilter}
                         grupsDates={salutData.grupsDates}
+                        loading={salutInitialLoading}
                         {...salutLlistatState}
                     />
                 </Box>
