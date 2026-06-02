@@ -163,7 +163,7 @@ public class AppInfo   {
   
   @ApiModelProperty(example = "Temurin-17.0.9", value = "Versió de JDK amb la qual s'executa l'aplicació")
   @JsonProperty("jdkVersion")
-   @Size(min=0,max=10)public String getJdkVersion() {
+   @Size(min=0,max=32)public String getJdkVersion() {
     return jdkVersion;
   }
 
