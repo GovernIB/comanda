@@ -17,3 +17,15 @@ databaseChangeLog:
             columns:
               - column:
                   name: ordre
+  - changeSet:
+      id: alarmes-change-114-001
+      author: limit
+      comment: Afegir camp aturar_avaluacio_posteriors a la taula alarma_config
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}alarma_config
+            columns:
+              - column:
+                  name: aturar_avaluacio_posteriors
+                  type: BOOLEAN
+                  defaultValueBoolean: false

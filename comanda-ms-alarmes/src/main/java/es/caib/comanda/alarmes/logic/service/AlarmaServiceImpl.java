@@ -8,6 +8,7 @@ import es.caib.comanda.alarmes.logic.intf.model.Alarma;
 import es.caib.comanda.alarmes.logic.intf.model.Alarma.AlarmaReduidaResource;
 import es.caib.comanda.alarmes.logic.intf.model.AlarmaEstat;
 import es.caib.comanda.alarmes.logic.intf.service.AlarmaService;
+import es.caib.comanda.alarmes.persist.entity.AlarmaConfigEntity;
 import es.caib.comanda.alarmes.persist.entity.AlarmaEntity;
 import es.caib.comanda.alarmes.persist.repository.AlarmaConfigRepository;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
@@ -85,9 +86,34 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 			return;
 		}
 		log.debug("Iniciant comprovació d'alarmes...");
-		long activadesCount = alarmaConfigRepository.findAllByEsborratFalse().stream()
-				.filter(alarmaComprovacioHelper::comprovar)
-				.count();
+		List<AlarmaConfigEntity> alarms = alarmaConfigRepository.findAllByEsborratFalse();
+		Map<GroupKey, List<AlarmaConfigEntity>> alarmaConfigGroups =
+			alarms.stream()
+				.collect(Collectors.groupingBy(alarmConfig ->
+					alarmConfig.isAdmin()
+						? new GroupKey(
+						true,
+						alarmConfig.getEntornAppId(),
+						null)
+						: new GroupKey(
+						false,
+						alarmConfig.getEntornAppId(),
+						alarmConfig.getCreatedBy())
+				));
+		log.debug("{} grups d'alarmes generats", alarmaConfigGroups.size());
+		long activadesCount = 0;
+		for (Map.Entry<GroupKey, List<AlarmaConfigEntity>> entry : alarmaConfigGroups.entrySet()) {
+			for (AlarmaConfigEntity alarmaConfig : entry.getValue()) {
+				boolean alarmaActivada = alarmaComprovacioHelper.comprovar(alarmaConfig);
+				if (!alarmaActivada) continue;
+
+				activadesCount++;
+				if (alarmaConfig.isAturarAvaluacioPosteriors()) {
+					log.debug("L'alarma {} s'ha activat i ha aturat l'execució del grup {}", alarmaConfig.getId(), entry.getKey());
+					break;
+				}
+			}
+		}
 		log.debug("...comprovació d'alarmes finalitzada ({} alarmes activades)", activadesCount);
 	}
 
@@ -277,6 +303,13 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
         public void onChange(Serializable id, Serializable previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Serializable target) {
         }
     }
+
+	@lombok.Value
+	private static class GroupKey {
+		boolean isAdmin;
+		Long entornAppId;
+		String createdBy;
+	}
 
 	private boolean isLeader() {
 		// TODO: Implementar per microserveis

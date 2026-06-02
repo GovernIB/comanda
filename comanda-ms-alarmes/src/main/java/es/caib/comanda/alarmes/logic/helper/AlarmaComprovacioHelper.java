@@ -66,8 +66,7 @@ public class AlarmaComprovacioHelper {
 
 		boolean condicioAlarma = evaluateAlarmCondition(alarmaConfig, salut);
 		if (condicioAlarma) {
-			processarCondicioAfirmativa(alarmaConfig);
-			return true;
+			return processarCondicioAfirmativa(alarmaConfig);
 		}
 
 		processarCondicioNegativa(alarmaConfig);
@@ -197,7 +196,7 @@ public class AlarmaComprovacioHelper {
 	 *
 	 * @param alarmaConfig Entitat de configuració de l'alarma
 	 */
-	private void processarCondicioAfirmativa(AlarmaConfigEntity alarmaConfig) {
+	private boolean processarCondicioAfirmativa(AlarmaConfigEntity alarmaConfig) {
 		clearRecoveryTracking(alarmaConfig);
 		Optional<AlarmaEntity> optionalAlarmaAnteriorNoFinalitzada = alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(alarmaConfig);
 		AlarmaEntity alarmaActivada = null;
@@ -213,7 +212,7 @@ public class AlarmaComprovacioHelper {
 						alarmaConfig.getId(),
 						alarmaConfig.getNom(),
 						alarmaConfig.isAdmin() ? "[ADMIN]" : alarmaConfig.getCreatedBy());
-				return;
+				return false;
 			}
 			AlarmaEntity alarmaAnteriorNoFinalitzada = optionalAlarmaAnteriorNoFinalitzada.get();
 
@@ -252,7 +251,7 @@ public class AlarmaComprovacioHelper {
 					// TODO Refactoritzar per a unificar els events publishAlarmaMailEvent del mètode
 					publishAlarmaMailEvent(alarmaActivada, AlarmaMailEventType.ACTIVACIO);
 				}
-				return;
+				return true;
 			}
 
 			Alarma alarma = new Alarma();
@@ -274,7 +273,9 @@ public class AlarmaComprovacioHelper {
 
 		if (alarmaActivada != null) {
 			publishAlarmaMailEvent(alarmaActivada, AlarmaMailEventType.ACTIVACIO);
+			return true;
 		}
+		return false;
 	}
 
 	/**

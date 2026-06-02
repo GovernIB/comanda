@@ -52,6 +52,8 @@ public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> implem
     private boolean notificacioFinalitzada = true;
 	@Column(name = "ordre")
 	private Long ordre;
+	@Column(name = "aturar_avaluacio_posteriors")
+	private boolean aturarAvaluacioPosteriors = false;
 
 	@Builder
 	public AlarmaConfigEntity(AlarmaConfig alarmaConfig) {
@@ -63,6 +65,7 @@ public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> implem
 		this.admin = alarmaConfig.isAdmin();
 		this.correuGeneric = alarmaConfig.isCorreuGeneric();
 		this.notificacioFinalitzada = alarmaConfig.isNotificacioFinalitzada();
+		this.aturarAvaluacioPosteriors = alarmaConfig.isAturarAvaluacioPosteriors();
 	}
 
 	// El parentId fa referència al mateix AlarmaConfigEntity per a poder

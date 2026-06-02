@@ -586,6 +586,9 @@ export const AlarmaConfigForm: React.FC<{
                     <Grid size={12}>
                         <FormField name="missatge" />
                     </Grid>
+                    <Grid size={12}>
+                        <FormField name="aturarAvaluacioPosteriors" />
+                    </Grid>
                     {isCurrentUserAdmin && (<AlarmaConfigAdminAndCorreuGenericCheckbox disabled={!!id}/>)}
                     <Grid size={6}>
                         <FormField name="notificacioFinalitzada" />
@@ -910,6 +913,10 @@ const AlarmaConfig: React.FC<{
                       flex: 1,
                   }
                 : null,
+            {
+                field: 'aturarAvaluacioPosteriors',
+                flex: 0.5,
+            },
             {
                 field: 'resumRegla',
                 flex: 3,
