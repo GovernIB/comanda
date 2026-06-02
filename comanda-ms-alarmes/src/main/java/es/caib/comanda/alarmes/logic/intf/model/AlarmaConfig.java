@@ -81,7 +81,7 @@ public class AlarmaConfig extends BaseResource<Long> {
     public AlarmaTipusUsuari getTipusUsuariAlarma() {
         return admin
                 ? (correuGeneric ? AlarmaTipusUsuari.ADMINISTRADOR_GENERIC : AlarmaTipusUsuari.ADMINISTRADOR)
-                : (correuGeneric ? AlarmaTipusUsuari.USUARI_GENERIC        : AlarmaTipusUsuari.USUARI);
+                : (AlarmaTipusUsuari.USUARI);
     }
 
     @Getter

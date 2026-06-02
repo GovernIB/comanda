@@ -149,7 +149,7 @@ const parseRulePayload = (regla: any): { operator: RuleOperator; conditions: Rul
 };
 
 export const EntornAppSelector : React.FC<any> = (props) => {
-    const { id, onEntornAppChange, validationErrors } = props;
+    const { id, onEntornAppChange, validationErrors, disabled } = props;
     const formApiRef = useFormApiRef();
     const { isReady: apiIsReady, getOne: apiGetOne } = useResourceApiService('entornApp');
     const [entornApp, setEntornApp] = React.useState<any>();
@@ -174,6 +174,8 @@ export const EntornAppSelector : React.FC<any> = (props) => {
         formApiRef={formApiRef}>
             <FormField
             name="entornApp"
+            disabled={disabled}
+            readOnly={disabled}
             filter={springFilterBuilder.and(
                 springFilterBuilder.eq('activa', true),
                 springFilterBuilder.eq('app.activa', true),
@@ -183,6 +185,32 @@ export const EntornAppSelector : React.FC<any> = (props) => {
                 flex: 1,
             }]} />
     </MuiFilter> : <Skeleton height={'100%'}/>;
+}
+
+interface AlarmaConfigAdminAndCorreuGenericCheckboxProps {
+    disabled: boolean;
+}
+
+const AlarmaConfigAdminAndCorreuGenericCheckbox: React.FC<AlarmaConfigAdminAndCorreuGenericCheckboxProps> = (props) => {
+    const { data, apiRef } = useFormContext();
+    const {disabled} = props;
+    const adminHandleChange = (value: any) =>  {
+        if (!value) {
+            apiRef.current?.setFieldValue("correuGeneric", false);
+        }
+    };
+    const correuGenericHandleChange = (value: any) =>  {
+        if (value) {
+            apiRef.current?.setFieldValue("admin", true);
+        }
+    };
+    return (<>
+    <Grid size={6}>
+        <FormField name="admin" disabled={disabled} onChange={adminHandleChange}/>
+    </Grid>
+    <Grid size={6}>
+        <FormField name="correuGeneric" disabled={disabled && !data?.admin} onChange={correuGenericHandleChange}/>
+    </Grid></>);
 }
 
 const AlarmaConfigReglaField: React.FC<{
@@ -542,6 +570,7 @@ export const AlarmaConfigForm: React.FC<{
                                 id={entornAppId}
                                 onEntornAppChange={handleEntornAppChange}
                                 validationErrors={validationErrors}
+                                disabled={!!id}
                             />
                         </Grid>
                     }
@@ -557,19 +586,10 @@ export const AlarmaConfigForm: React.FC<{
                     <Grid size={12}>
                         <FormField name="missatge" />
                     </Grid>
+                    {isCurrentUserAdmin && (<AlarmaConfigAdminAndCorreuGenericCheckbox disabled={!!id}/>)}
                     <Grid size={6}>
                         <FormField name="notificacioFinalitzada" />
                     </Grid>
-                    {isCurrentUserAdmin && (
-                        <>
-                            <Grid size={6}>
-                                <FormField name="correuGeneric" />
-                            </Grid>
-                            <Grid size={6}>
-                                <FormField name="admin" />
-                            </Grid>
-                        </>
-                    )}
                     <Grid size={6}>
                         <FormControlLabel
                             control={<Checkbox size="small" checked={periodeShow ?? false} onChange={handlePeriodeShowChange}/>}

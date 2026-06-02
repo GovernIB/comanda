@@ -69,6 +69,9 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
             throw new ResourceNotCreatedException(resource.getClass(), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.AlarmaConfigServiceImpl.beforeCreateEntity.not.admin"));
         }
         applyRuleConfiguration(entity, resource);
+        if (!resource.isAdmin() && resource.isCorreuGeneric()) {
+            resource.setCorreuGeneric(false);
+        }
     }
 
     @Override
@@ -77,6 +80,7 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
             throw new ResourceNotUpdatedException(getResourceClass(), String.valueOf(entity.getId()), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.AlarmaConfigServiceImpl.beforeUpdateEntity.not.admin"));
         }
         applyRuleConfiguration(entity, resource);
+        logicBeforeUpdateEntityAlarmaConfig(entity, resource);
     }
 
     @Override
@@ -93,6 +97,15 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
         resource.setRegla(regla);
         entity.setRuleVersion(regla != null ? RULE_VERSION : null);
         entity.setRuleJson(writeRule(regla));
+    }
+
+    /** Evita que alguns atributs canviï de valor, sense ús d'anotació. Perquè des del frontal es limitaran les opcions de forma més visual. **/
+    private void logicBeforeUpdateEntityAlarmaConfig (AlarmaConfigEntity entity, AlarmaConfig resource) {
+        resource.setEntornAppId(entity.getEntornAppId());
+        resource.setAdmin(entity.isAdmin());
+        if (!entity.isAdmin() && resource.isCorreuGeneric()) {
+            throw new ResourceNotUpdatedException(getResourceClass(), String.valueOf(entity.getId()), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.AlarmaConfigServiceImpl.beforeUpdateEntity.correuGeneric.not.admin"));
+        }
     }
 
     public AlarmaConfigRegla readRule(AlarmaConfigEntity entity) {

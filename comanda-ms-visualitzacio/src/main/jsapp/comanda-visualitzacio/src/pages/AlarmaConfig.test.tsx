@@ -343,7 +343,7 @@ describe('AlarmaConfigForm', () => {
             expect(screen.getByText('Període')).toBeInTheDocument();
             expect(screen.getByText('Afegir condició')).toBeInTheDocument();
             expect(screen.getByTestId('field-periodeValor')).toBeInTheDocument();
-            expect(screen.getByTestId('field-admin')).toHaveTextContent('admin:false');
+            expect(screen.getByTestId('field-admin')).toHaveTextContent('admin:true');
         });
     });
 
@@ -438,6 +438,6 @@ describe('AlarmaConfig', () => {
             expect(screen.getByTitle('Mostrar només les meves alarmes')).toBeInTheDocument();
         });
         fireEvent.click(screen.getByTitle('Mostrar només les meves alarmes'));
-        expect(screen.getByTitle("Mostra només les alarmes d'administrador")).toBeInTheDocument(); // ✅ Título cambia
+        expect(screen.getByTitle("Mostra només les alarmes d'administrador")).toBeInTheDocument();
     });
 });
