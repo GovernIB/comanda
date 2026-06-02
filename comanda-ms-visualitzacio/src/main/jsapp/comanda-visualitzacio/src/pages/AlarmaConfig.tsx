@@ -253,6 +253,11 @@ const AlarmaConfigReglaField: React.FC<{
                     next.valorsText = [];
                 }
             }
+            if (patch.comparador && patch.comparador !== condition.comparador) {
+                if (condition.metrica === 'ESTAT' && patch.comparador !== 'EN') {
+                    next.valorsText = [condition.valorsText?.[0] ?? 'DOWN'];
+                }
+            }
             return next;
         });
         syncRuleToForm(ruleOperator, nextConditions);
@@ -371,7 +376,21 @@ const AlarmaConfigReglaField: React.FC<{
                                             SelectProps={{ multiple: true }}
                                             label={t($ => $.page.alarmaConfig.condicio.value)}
                                             value={condition.valorsText ?? []}
-                                            onChange={event => updateCondition(index, { valorsText: event.target.value as unknown as string[] })}
+                                            onChange={event => {
+                                                const eventTargetValue = event.target
+                                                    .value as unknown as string[];
+                                                // Find the estat in the new value that is not present on the previous data
+                                                const previousEstats = condition.valorsText ?? [];
+                                                const newEstat = eventTargetValue.find(estat => !previousEstats.includes(estat));
+                                                const newEstatArrayWrapper = newEstat ? [newEstat] : [];
+                                                const valorsText =
+                                                    condition.comparador !== 'EN'
+                                                        ? newEstatArrayWrapper
+                                                        : eventTargetValue;
+                                                updateCondition(index, {
+                                                    valorsText,
+                                                });
+                                            }}
                                         >
                                             {STATUS_OPTIONS.map(status => (
                                                 <MenuItem key={status} value={status}>
