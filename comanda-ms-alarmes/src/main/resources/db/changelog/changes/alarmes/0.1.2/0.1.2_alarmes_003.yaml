@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: alarmes-change-115-001
+      author: limit
+      comment: Afegir camp ordre a la taula alarma_config
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}alarma_config
+            columns:
+              - column:
+                  name: ordre
+                  type: BIGINT
+                  remarks: Camp que indica l'ordre de les alarmes
+        - createIndex:
+            indexName: ${db_prefix}alarma_config_ordre
+            tableName: ${db_prefix}alarma_config
+            columns:
+              - column:
+                  name: ordre
