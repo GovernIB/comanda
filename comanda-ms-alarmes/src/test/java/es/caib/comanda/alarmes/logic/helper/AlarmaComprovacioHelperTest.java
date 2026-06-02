@@ -493,7 +493,7 @@ class AlarmaComprovacioHelperTest {
 
         // Assert
         assertThat(alarmaEsborrany.getEstat()).isEqualTo(AlarmaEstat.ACTIVA);
-        verify(alarmaMailEventPublisher, never()).publish(any(), any()); // No s'assigna a alarmaActivada, només es canvia l'estat
+        verify(alarmaMailEventPublisher, times(1)).publish(any(), any());
     }
 
     @Test

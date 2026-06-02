@@ -249,6 +249,8 @@ public class AlarmaComprovacioHelper {
 					optionalAlarmaAnteriorNoFinalitzada.get().setDataActivacio(LocalDateTime.now());
 					alarmaActivada = optionalAlarmaAnteriorNoFinalitzada.get();
                     publishActiveAlarmsChangedEvent();
+					// TODO Refactoritzar per a unificar els events publishAlarmaMailEvent del mètode
+					publishAlarmaMailEvent(alarmaActivada, AlarmaMailEventType.ACTIVACIO);
 				}
 				return;
 			}
