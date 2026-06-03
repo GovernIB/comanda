@@ -223,6 +223,7 @@ const useSalutData = ({
     const requestSequence = useRef<number>(0);
     const filterDataApp = filterData?.app;
     const filterDataEntorn = filterData?.entorn;
+    const filterDataEstatsSalut = filterData?.estatsSalut;
     const request = useCallback(async () => {
         if (!ready) {
             console.error('APIs not ready');
@@ -237,6 +238,44 @@ const useSalutData = ({
             const agrupacio = agrupacioFromMinutes(dataRangeMinutes);
             const appsIds = filterDataApp?.map(({id}) => (id))
             const entornsIds = filterDataEntorn?.map(({id}) => (id))
+            const hasEstatFilter = filterDataEstatsSalut && filterDataEstatsSalut.length > 0;
+            let entornAppIdsWithSalut;
+
+            if (hasEstatFilter) {
+                const salutLastItemsResponse = await salutApiReport(null, {
+                    code: 'salut_last',
+                    data: additionalFilter ?? '',
+                });
+
+                const salutLastItems = (salutLastItemsResponse as SalutModel[])
+                    .filter(item => {
+                        if (!filterDataEstatsSalut || filterDataEstatsSalut.length === 0) {
+                            return true; //Sols filtrar si hi ha filtre d'estat
+                        }
+                        //Incluirem sols el que tengun l'estat a filtrar
+                        return filterDataEstatsSalut.includes(item?.appEstat);
+                    })
+                    .map(item => new SalutModel(item));
+
+                entornAppIdsWithSalut = hasEstatFilter ?
+                    salutLastItems.map(item => item.entornAppId).filter((id, index, self) => self.indexOf(id) === index) :
+                    null;
+
+                if (hasEstatFilter && entornAppIdsWithSalut!.length === 0) {//Si no hi ha salut, no retornarem res
+                    setSalutData({
+                        lastRefresh: new Date(),
+                        apps: [],
+                        entorns: [],
+                        groups: [],
+                        grupsDates: [],
+                        agrupacio,
+                        error: undefined,
+                        initialized: true,
+                        loading: false,
+                    });
+                    return;
+                }
+            }
 
             const [
                 activeEntornAppsResponse,
@@ -251,6 +290,7 @@ const useSalutData = ({
                         springFilterBuilder.eq('app.activa', true),
                         springFilterBuilder.inn('app.id', appsIds),
                         springFilterBuilder.inn('entorn.id', entornsIds),
+                        entornAppIdsWithSalut ? springFilterBuilder.inn('id', entornAppIdsWithSalut) : null,
                     ),
                 }),
                 appFind({
@@ -353,6 +393,7 @@ const useSalutData = ({
         entornFind,
         filterDataApp,
         filterDataEntorn,
+        filterDataEstatsSalut,
         groupBy,
         ready,
         salutApiReport,
