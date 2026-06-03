@@ -225,25 +225,34 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
 	// l'ordenació és individual de cada entornApp però global per a tots els administradors.
 	@Override
 	protected List<AlarmaConfigEntity> reorderFindLinesWithParent(Serializable selfIdSerializable) {
-		AlarmaConfigEntity currentRow;
+        boolean isCurrentRowAdmin;
+        Long currentRowEntornAppId;
+        String currentRowCreatedBy;
+
 		if (selfIdSerializable != null) {
 			// El parentId fa referència al mateix AlarmaConfigEntity per a poder
 			// recuperar la row actual al mètode reorderFindLinesWithParent
 			Long selfId = (Long) selfIdSerializable;
-			currentRow = alarmaConfigRepository.findById(selfId).orElseThrow();
+            AlarmaConfigEntity currentRow = alarmaConfigRepository.findById(selfId).orElseThrow();
+			isCurrentRowAdmin = currentRow.isAdmin();
+            currentRowEntornAppId = currentRow.getEntornAppId();
+            currentRowCreatedBy = currentRow.getCreatedBy();
 		} else {
 			// Al fer una creació, el selfId no s'ha emplenat encara i es recupera la row actual a través del ThreadLocal
-			currentRow = ThreadLocalUtil.getAttribute(ThreadLocalUtil.REORDER_ADDITIONAL_PROPS_KEY, AlarmaConfigEntity.class);
-		}
+            AlarmaConfigEntity currentRow = ThreadLocalUtil.getAttribute(ThreadLocalUtil.REORDER_ADDITIONAL_PROPS_KEY, AlarmaConfigEntity.class);
+			isCurrentRowAdmin = currentRow.isAdmin();
+            currentRowEntornAppId = currentRow.getEntornAppId();
+            currentRowCreatedBy = authenticationHelper.getCurrentUserName();
+        }
 
-		if (currentRow.isAdmin()) {
+		if (isCurrentRowAdmin) {
 			return alarmaConfigRepository.findByEntornAppIdAndEsborratFalseAndAdminTrueOrderByOrdre(
-				currentRow.getEntornAppId()
+				currentRowEntornAppId
 			);
 		} else {
 			return alarmaConfigRepository.findByEntornAppIdAndEsborratFalseAndAdminFalseAndCreatedByOrderByOrdre(
-				currentRow.getEntornAppId(),
-				currentRow.getCreatedBy()
+				currentRowEntornAppId,
+				currentRowCreatedBy
 			);
 		}
 	}
