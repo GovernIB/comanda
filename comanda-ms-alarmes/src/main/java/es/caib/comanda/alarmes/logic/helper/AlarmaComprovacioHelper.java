@@ -69,8 +69,7 @@ public class AlarmaComprovacioHelper {
 			return processarCondicioAfirmativa(alarmaConfig);
 		}
 
-		processarCondicioNegativa(alarmaConfig);
-		return false;
+		return processarCondicioNegativa(alarmaConfig);
 	}
 
 	private boolean evaluateAlarmCondition(AlarmaConfigEntity alarmaConfig, Salut salut) {
@@ -195,6 +194,8 @@ public class AlarmaComprovacioHelper {
 	 * de correus per a alarmes segons el seu estat i condicions definides.
 	 *
 	 * @param alarmaConfig Entitat de configuració de l'alarma
+	 *
+	 * @return true si s'ha activat l'alarma, false en cas contrari.
 	 */
 	private boolean processarCondicioAfirmativa(AlarmaConfigEntity alarmaConfig) {
 		clearRecoveryTracking(alarmaConfig);
@@ -286,12 +287,14 @@ public class AlarmaComprovacioHelper {
 	 *
 	 * @param alarmaConfig Entitat de configuració de l'alarma. Conté la informació
 	 * necessària per identificar i operar sobre les alarmes associades.
+	 *
+	 * @return true si no s'ha desactivat l'alarma a causa de RECOVERY_STABILITY_SECONDS, false en cas contrari.
 	 */
-	private void processarCondicioNegativa(AlarmaConfigEntity alarmaConfig) {
+	private boolean processarCondicioNegativa(AlarmaConfigEntity alarmaConfig) {
 		Optional<AlarmaEntity> optionalAlarmaAnteriorNoFinalitzada = alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(alarmaConfig);
 		if (optionalAlarmaAnteriorNoFinalitzada.isEmpty()) {
 			clearRecoveryTracking(alarmaConfig);
-			return;
+			return false;
 		}
 		AlarmaEntity alarmaAnteriorNoFinalitzada = optionalAlarmaAnteriorNoFinalitzada.get();
 
@@ -307,7 +310,7 @@ public class AlarmaComprovacioHelper {
 						alarmaConfig.getId(),
 						stableSince,
 						recoveryStabilitySeconds);
-				return;
+				return true;
 			}
 			alarmaAnteriorNoFinalitzada.setDataFinalitzacio(now);
 			clearRecoveryTracking(alarmaConfig);
@@ -316,6 +319,7 @@ public class AlarmaComprovacioHelper {
                 publishAlarmaMailEvent(alarmaAnteriorNoFinalitzada, AlarmaMailEventType.RECUPERACIO);
             }
 		}
+		return false;
 	}
 
 	private void processarCondicioIndeterminada(AlarmaConfigEntity alarmaConfig, Salut salut) {
