@@ -190,8 +190,9 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
         } else if (regla.getMetrica() == AlarmaConfigReglaMetrica.ESPAI_DISC_LLIURE) {
             metric = "disc lliure";
         }
-        if (regla.getComparador() == AlarmaConfigReglaComparador.EN) {
-            return subject + " " + metric + " en " + String.join(", ", regla.getValorsText());
+        if (regla.getMetrica() == AlarmaConfigReglaMetrica.ESTAT) {
+            String comparador = regla.getComparador() == null ? "" : regla.getComparador().name();
+            return subject + " " + metric + " " + comparador + " " + String.join(", ", regla.getValorsText());
         }
         BigDecimal valor = regla.getValorNumeric();
         return subject + " " + metric + " " + regla.getComparador() + " " + (valor != null ? valor.toPlainString() : "");
