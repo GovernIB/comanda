@@ -35,6 +35,7 @@ import javax.persistence.criteria.Root;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -103,7 +104,10 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 		log.debug("{} grups d'alarmes generats", alarmaConfigGroups.size());
 		long activadesCount = 0;
 		for (Map.Entry<GroupKey, List<AlarmaConfigEntity>> entry : alarmaConfigGroups.entrySet()) {
-			for (AlarmaConfigEntity alarmaConfig : entry.getValue()) {
+			List<AlarmaConfigEntity> sortedAlarms = entry.getValue().stream()
+					.sorted(Comparator.comparing(AlarmaConfigEntity::getOrdre, Comparator.nullsLast(Comparator.naturalOrder())))
+					.collect(Collectors.toList());
+			for (AlarmaConfigEntity alarmaConfig : sortedAlarms) {
 				boolean alarmaActivada = alarmaComprovacioHelper.comprovar(alarmaConfig);
 				if (!alarmaActivada) continue;
 

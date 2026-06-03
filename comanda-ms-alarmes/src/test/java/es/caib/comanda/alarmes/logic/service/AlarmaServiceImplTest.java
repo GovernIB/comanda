@@ -36,6 +36,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.mockito.InOrder;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -525,6 +526,37 @@ class AlarmaServiceImplTest {
         assertThat(result.get(0).getEntornAppId()).isEqualTo(101L);
         assertThat(result.get(1).getId()).isEqualTo(2L);
         assertThat(result.get(1).getEntornAppId()).isEqualTo(202L);
+    }
+
+    @Test
+    @DisplayName("comprovacioScheduledTask: les alarmes d'un grup es processen per ordre")
+    void comprovacioScheduledTask_processaAlarmesPerOrdre() {
+        // Arrange
+        ReflectionTestUtils.setField(alarmaService, "schedulerLeader", true);
+        ReflectionTestUtils.setField(alarmaService, "schedulerBack", true);
+
+        AlarmaConfigEntity config1 = new AlarmaConfigEntity();
+        config1.setId(1L);
+        config1.setEntornAppId(101L);
+        config1.setAdmin(true);
+        config1.setOrdre(2L);
+
+        AlarmaConfigEntity config2 = new AlarmaConfigEntity();
+        config2.setId(2L);
+        config2.setEntornAppId(101L);
+        config2.setAdmin(true);
+        config2.setOrdre(1L);
+
+        when(alarmaConfigRepository.findAllByEsborratFalse()).thenReturn(Arrays.asList(config1, config2));
+        when(alarmaComprovacioHelper.comprovar(any())).thenReturn(true);
+
+        // Act
+        alarmaService.comprovacioScheduledTask();
+
+        // Assert
+        InOrder inOrder = inOrder(alarmaComprovacioHelper);
+        inOrder.verify(alarmaComprovacioHelper).comprovar(config2); // Ordre 1
+        inOrder.verify(alarmaComprovacioHelper).comprovar(config1); // Ordre 2
     }
 
     private AlarmaEntity crearAlarmaEntity(AlarmaEstat estat, boolean isAdmin, String createdBy) {
