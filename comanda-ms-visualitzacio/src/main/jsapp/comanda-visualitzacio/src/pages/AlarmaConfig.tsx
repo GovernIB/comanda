@@ -131,19 +131,20 @@ const buildRulePayload = (operator: RuleOperator, conditions: RuleCondition[]) =
     })),
 });
 
+// Aquest mètode no pot aplicar valors per defecte. Això causa que el frontal mostri uns valors que no s'enviaran al backend
 const parseRulePayload = (regla: any): { operator: RuleOperator; conditions: RuleCondition[] } => {
     if (!regla?.fills?.length) {
-        return { operator: 'AND', conditions: [defaultCondition()] };
+        return { operator: 'AND', conditions: [] };
     }
     return {
         operator: regla.operador === 'OR' ? 'OR' : 'AND',
         conditions: regla.fills.map((fill: any) => ({
-            ambit: fill.ambit ?? 'APLICACIO',
+            ambit: fill.ambit,
             codiObjecte: fill.codiObjecte,
-            metrica: fill.metrica ?? 'ESTAT',
-            comparador: fill.comparador ?? (fill.metrica === 'ESTAT' ? 'EN' : 'MAJOR'),
+            metrica: fill.metrica,
+            comparador: fill.comparador,
             valorNumeric: fill.valorNumeric != null ? String(fill.valorNumeric) : '',
-            valorsText: Array.isArray(fill.valorsText) && fill.valorsText.length > 0 ? fill.valorsText : ['DOWN'],
+            valorsText: Array.isArray(fill.valorsText) && fill.valorsText.length > 0 ? fill.valorsText : [],
         })),
     };
 };
