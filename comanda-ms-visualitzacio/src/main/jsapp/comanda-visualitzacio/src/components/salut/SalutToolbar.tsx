@@ -82,7 +82,7 @@ const getInitialGrouping = () => {
 };
 
 export const getIdList = (a: any[] = []) => {
-    return a?.map((uo: any) => uo.id) ?? [];
+    return a?.map?.((uo: any) => uo.id) ?? [];
 };
 
 
