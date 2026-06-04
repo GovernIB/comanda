@@ -55,12 +55,12 @@ public class EntornServiceImpl extends BaseMutableResourceService<Entorn, Long, 
             return null;
         }
 
-        Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP);
-        Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP);
+        Set<String> appPermissionIds = getAllowedIds(ResourceType.APP);
+        Set<String> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP);
 	    Set<EntornPermissionQueryProjection> allEntornApps = entornAppRepository.findAllEntornPermissionQueryProjection();
         Set<Long> allowedEntornIds = allEntornApps.stream()
-                .filter(entornApp -> appPermissionIds.contains(entornApp.getAppId())
-                        || entornAppPermissionIds.contains(entornApp.getEntornAppId()))
+                .filter(entornApp -> appPermissionIds.contains(entornApp.getAppId().toString())
+                        || entornAppPermissionIds.contains(entornApp.getEntornAppId().toString()))
                 .map(EntornPermissionQueryProjection::getEntornId)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
@@ -73,14 +73,20 @@ public class EntornServiceImpl extends BaseMutableResourceService<Entorn, Long, 
                 .collect(Collectors.joining(" or "));
     }
 
-    private Set<Serializable> getAllowedIds(ResourceType resourceType) {
-        return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
-                resourceType,
-                Collections.singletonList(PermissionEnum.READ),
-                authenticationHelper.getCurrentUserName(),
-                Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
-                httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
-                .orElse(Collections.emptySet());
+    private Set<String> getAllowedIds(ResourceType resourceType) {
+        Set<Serializable> idsWithAnyPermission = aclServiceClient.findIdsWithAnyPermission(
+            resourceType,
+            Collections.singletonList(PermissionEnum.READ),
+            authenticationHelper.getCurrentUserName(),
+            Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
+            httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody();
+        if (idsWithAnyPermission == null) {
+            return Collections.emptySet();
+        }
+        return idsWithAnyPermission
+            .stream()
+            .map(id -> (String) id)
+            .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     @Override
