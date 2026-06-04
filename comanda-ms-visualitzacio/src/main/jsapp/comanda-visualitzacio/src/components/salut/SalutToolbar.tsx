@@ -524,9 +524,9 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = React.memo((props) => {
     const { tTitle } = useSalutEstatTranslation();
     const computedSubtitle = React.useMemo(() => {
         if (subtitle != null) return subtitle;
-        const apps = filterData?.app?.map(a => a.description).join(", ");
-        const entorns = filterData?.entorn?.map(e => e.description).join(", ");
-        const estats = filterData?.estatsSalut?.map(estat => tTitle(estat)).join(", ");
+        const apps = filterData?.app?.map?.(a => a.description).join(", ");
+        const entorns = filterData?.entorn?.map?.(e => e.description).join(", ");
+        const estats = filterData?.estatsSalut?.map?.(estat => tTitle(estat)).join(", ");
         const parts = [apps, entorns, estats].filter(Boolean);
         if (parts.length === 0) {
             return t($ => $.page.salut.senseFiltres);
