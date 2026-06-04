@@ -7,7 +7,7 @@ import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.configuracio.logic.intf.model.Entorn;
 import es.caib.comanda.configuracio.logic.intf.service.EntornService;
 import es.caib.comanda.configuracio.persist.entity.EntornEntity;
-import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
+import es.caib.comanda.configuracio.persist.projection.EntornPermissionQueryProjection;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornRepository;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
@@ -57,11 +57,11 @@ public class EntornServiceImpl extends BaseMutableResourceService<Entorn, Long, 
 
         Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP);
         Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP);
-        List<EntornAppEntity> activeEntornApps = entornAppRepository.findByActivaTrueAndAppActivaTrue();
-        Set<Long> allowedEntornIds = activeEntornApps.stream()
-                .filter(entornApp -> appPermissionIds.contains(entornApp.getApp().getId())
-                        || entornAppPermissionIds.contains(entornApp.getId()))
-                .map(entornApp -> entornApp.getEntorn().getId())
+	    Set<EntornPermissionQueryProjection> allEntornApps = entornAppRepository.findAllEntornPermissionQueryProjection();
+        Set<Long> allowedEntornIds = allEntornApps.stream()
+                .filter(entornApp -> appPermissionIds.contains(entornApp.getAppId())
+                        || entornAppPermissionIds.contains(entornApp.getEntornAppId()))
+                .map(EntornPermissionQueryProjection::getEntornId)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
         if (allowedEntornIds.isEmpty()) {
