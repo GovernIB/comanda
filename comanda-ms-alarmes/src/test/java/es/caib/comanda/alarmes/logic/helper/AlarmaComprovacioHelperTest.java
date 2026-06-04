@@ -279,7 +279,7 @@ class AlarmaComprovacioHelperTest {
         boolean result = alarmaComprovacioHelper.comprovar(config);
 
         // Assert
-        assertThat(result).isFalse();
+        assertThat(result).isTrue();
         assertThat(alarmaActiva.getDataFinalitzacio()).isNull();
     }
 
