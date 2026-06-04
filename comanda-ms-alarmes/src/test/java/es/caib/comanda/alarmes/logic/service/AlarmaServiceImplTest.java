@@ -36,6 +36,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.mockito.InOrder;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -100,6 +101,135 @@ class AlarmaServiceImplTest {
 
         // Assert
         verifyNoInteractions(alarmaConfigRepository);
+    }
+
+    @Test
+    @DisplayName("comprovacioScheduledTask: alarma amb aturarAvaluacioPosteriors=true atura l'execució del grup")
+    void comprovacioScheduledTask_quanAlarmaAtura_noContinuaGrup() {
+        // Arrange
+        ReflectionTestUtils.setField(alarmaService, "schedulerLeader", true);
+        ReflectionTestUtils.setField(alarmaService, "schedulerBack", true);
+
+        AlarmaConfigEntity config1 = new AlarmaConfigEntity();
+        config1.setId(1L);
+        config1.setEntornAppId(101L);
+        config1.setAdmin(true);
+        config1.setAturarAvaluacioPosteriors(true);
+
+        AlarmaConfigEntity config2 = new AlarmaConfigEntity();
+        config2.setId(2L);
+        config2.setEntornAppId(101L);
+        config2.setAdmin(true);
+
+        when(alarmaConfigRepository.findAllByEsborratFalse()).thenReturn(Arrays.asList(config1, config2));
+        when(alarmaComprovacioHelper.comprovar(config1)).thenReturn(true);
+        // config2 no s'hauria de comprovar
+
+        // Act
+        alarmaService.comprovacioScheduledTask();
+
+        // Assert
+        verify(alarmaComprovacioHelper).comprovar(config1);
+        verify(alarmaComprovacioHelper, never()).comprovar(config2);
+    }
+
+    @Test
+    @DisplayName("comprovacioScheduledTask: alarma amb aturarAvaluacioPosteriors=false no atura l'execució del grup")
+    void comprovacioScheduledTask_quanAlarmaNoAtura_continuaGrup() {
+        // Arrange
+        ReflectionTestUtils.setField(alarmaService, "schedulerLeader", true);
+        ReflectionTestUtils.setField(alarmaService, "schedulerBack", true);
+
+        AlarmaConfigEntity config1 = new AlarmaConfigEntity();
+        config1.setId(1L);
+        config1.setEntornAppId(101L);
+        config1.setAdmin(true);
+        config1.setAturarAvaluacioPosteriors(false);
+
+        AlarmaConfigEntity config2 = new AlarmaConfigEntity();
+        config2.setId(2L);
+        config2.setEntornAppId(101L);
+        config2.setAdmin(true);
+
+        when(alarmaConfigRepository.findAllByEsborratFalse()).thenReturn(Arrays.asList(config1, config2));
+        when(alarmaComprovacioHelper.comprovar(config1)).thenReturn(true);
+        when(alarmaComprovacioHelper.comprovar(config2)).thenReturn(true);
+
+        // Act
+        alarmaService.comprovacioScheduledTask();
+
+        // Assert
+        verify(alarmaComprovacioHelper).comprovar(config1);
+        verify(alarmaComprovacioHelper).comprovar(config2);
+    }
+
+    @Test
+    @DisplayName("comprovacioScheduledTask: aturar un grup no afecta a altres grups")
+    void comprovacioScheduledTask_quanAturaGrup_noAfectaAltresGrups() {
+        // Arrange
+        ReflectionTestUtils.setField(alarmaService, "schedulerLeader", true);
+        ReflectionTestUtils.setField(alarmaService, "schedulerBack", true);
+
+        // Grup 1 (Admin, Entorn 101)
+        AlarmaConfigEntity config1G1 = new AlarmaConfigEntity();
+        config1G1.setId(1L);
+        config1G1.setEntornAppId(101L);
+        config1G1.setAdmin(true);
+        config1G1.setAturarAvaluacioPosteriors(true);
+
+        AlarmaConfigEntity config2G1 = new AlarmaConfigEntity();
+        config2G1.setId(2L);
+        config2G1.setEntornAppId(101L);
+        config2G1.setAdmin(true);
+
+        // Grup 2 (Admin, Entorn 102)
+        AlarmaConfigEntity config1G2 = new AlarmaConfigEntity();
+        config1G2.setId(3L);
+        config1G2.setEntornAppId(102L);
+        config1G2.setAdmin(true);
+
+        when(alarmaConfigRepository.findAllByEsborratFalse()).thenReturn(Arrays.asList(config1G1, config2G1, config1G2));
+        when(alarmaComprovacioHelper.comprovar(config1G1)).thenReturn(true);
+        // config2G1 no s'hauria de comprovar
+        when(alarmaComprovacioHelper.comprovar(config1G2)).thenReturn(true);
+
+        // Act
+        alarmaService.comprovacioScheduledTask();
+
+        // Assert
+        verify(alarmaComprovacioHelper).comprovar(config1G1);
+        verify(alarmaComprovacioHelper, never()).comprovar(config2G1);
+        verify(alarmaComprovacioHelper).comprovar(config1G2);
+    }
+
+    @Test
+    @DisplayName("comprovacioScheduledTask: alarma no activada no atura el grup encara que tingui aturarAvaluacioPosteriors=true")
+    void comprovacioScheduledTask_quanAlarmaNoActivada_noAturaGrup() {
+        // Arrange
+        ReflectionTestUtils.setField(alarmaService, "schedulerLeader", true);
+        ReflectionTestUtils.setField(alarmaService, "schedulerBack", true);
+
+        AlarmaConfigEntity config1 = new AlarmaConfigEntity();
+        config1.setId(1L);
+        config1.setEntornAppId(101L);
+        config1.setAdmin(true);
+        config1.setAturarAvaluacioPosteriors(true);
+
+        AlarmaConfigEntity config2 = new AlarmaConfigEntity();
+        config2.setId(2L);
+        config2.setEntornAppId(101L);
+        config2.setAdmin(true);
+
+        when(alarmaConfigRepository.findAllByEsborratFalse()).thenReturn(Arrays.asList(config1, config2));
+        when(alarmaComprovacioHelper.comprovar(config1)).thenReturn(false);
+        when(alarmaComprovacioHelper.comprovar(config2)).thenReturn(true);
+
+        // Act
+        alarmaService.comprovacioScheduledTask();
+
+        // Assert
+        verify(alarmaComprovacioHelper).comprovar(config1);
+        verify(alarmaComprovacioHelper).comprovar(config2);
     }
 
     @Test
@@ -396,6 +526,37 @@ class AlarmaServiceImplTest {
         assertThat(result.get(0).getEntornAppId()).isEqualTo(101L);
         assertThat(result.get(1).getId()).isEqualTo(2L);
         assertThat(result.get(1).getEntornAppId()).isEqualTo(202L);
+    }
+
+    @Test
+    @DisplayName("comprovacioScheduledTask: les alarmes d'un grup es processen per ordre")
+    void comprovacioScheduledTask_processaAlarmesPerOrdre() {
+        // Arrange
+        ReflectionTestUtils.setField(alarmaService, "schedulerLeader", true);
+        ReflectionTestUtils.setField(alarmaService, "schedulerBack", true);
+
+        AlarmaConfigEntity config1 = new AlarmaConfigEntity();
+        config1.setId(1L);
+        config1.setEntornAppId(101L);
+        config1.setAdmin(true);
+        config1.setOrdre(2L);
+
+        AlarmaConfigEntity config2 = new AlarmaConfigEntity();
+        config2.setId(2L);
+        config2.setEntornAppId(101L);
+        config2.setAdmin(true);
+        config2.setOrdre(1L);
+
+        when(alarmaConfigRepository.findAllByEsborratFalse()).thenReturn(Arrays.asList(config1, config2));
+        when(alarmaComprovacioHelper.comprovar(any())).thenReturn(true);
+
+        // Act
+        alarmaService.comprovacioScheduledTask();
+
+        // Assert
+        InOrder inOrder = inOrder(alarmaComprovacioHelper);
+        inOrder.verify(alarmaComprovacioHelper).comprovar(config2); // Ordre 1
+        inOrder.verify(alarmaComprovacioHelper).comprovar(config1); // Ordre 2
     }
 
     private AlarmaEntity crearAlarmaEntity(AlarmaEstat estat, boolean isAdmin, String createdBy) {

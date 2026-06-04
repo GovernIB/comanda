@@ -106,8 +106,11 @@ vi.mock('./salutState.ts', () => ({
 }));
 
 vi.mock('../../components/salut/SalutPrincipalWidgets', () => ({
-    SalutLlistat: ({ salutGroups }: { salutGroups: unknown[] }) => (
-        <div>{`SalutLlistat ${salutGroups.length}`}</div>
+    SalutLlistat: ({ salutGroups, loading }: { salutGroups: unknown[]; loading?: boolean }) => (
+        <div>
+            <span>{`SalutLlistat ${salutGroups.length}`}</span>
+            <span>{`loading:${String(Boolean(loading))}`}</span>
+        </div>
     ),
 }));
 
@@ -245,6 +248,17 @@ describe('Salut', () => {
         expect(screen.getByTestId('salut-toolbar')).toHaveTextContent('Salut');
         expect(mocks.useDisableMarginsMock).toHaveBeenCalled();
         expect(mocks.useIntervalMock).toHaveBeenCalled();
+    });
+
+    it('Salut_quanCarregaInicialment_activaElSkeletonDelLlistat', async () => {
+        // Verifica que la vista general passa l'estat de càrrega inicial al llistat per mostrar placeholders.
+        mocks.findEntornAppMock.mockReturnValue(new Promise(() => undefined));
+
+        render(<Salut />);
+
+        await waitFor(() => {
+            expect(screen.getByText('loading:true')).toBeInTheDocument();
+        });
     });
 
     it('Salut_quanHiHaRutaDapp_mostraLaVistaDeDetallIAjustaLaToolbar', async () => {

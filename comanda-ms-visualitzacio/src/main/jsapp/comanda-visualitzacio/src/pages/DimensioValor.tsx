@@ -95,7 +95,7 @@ const DimensioValor: React.FC = () => {
         // { field: 'valorAgrupacio', flex: 2 },
     ];
 
-    const staticFilter = React.useMemo(() => springFilterBuilder.eq('dimensio.id', id), [id]);
+    const fixedFilter = React.useMemo(() => springFilterBuilder.eq('dimensio.id', id), [id]);
 
     const toolbarElementsWithPositions = React.useMemo(() => {
         const backButtonDisabled = !anyHistoryEntryExist();
@@ -132,7 +132,7 @@ const DimensioValor: React.FC = () => {
                 toolbarAdditionalRow={filterElement}
                 toolbarElementsWithPositions={toolbarElementsWithPositions}
                 toolbarHideCreate
-                fixedFilter={staticFilter}
+                fixedFilter={fixedFilter}
                 filter={filter}
                 popupEditActive={false}
                 rowHideDeleteButton={gestorReadOnly}

@@ -226,7 +226,7 @@ public class AppServiceImplTest {
                 eq("anna"),
                 eq(List.of("COM_USER")),
                 eq("Bearer test"))).thenReturn(org.springframework.http.ResponseEntity.ok(Set.of(11L)));
-        when(entornAppRepository.findAllById(Set.of(11L))).thenReturn(List.of(permittedEntornApp));
+        when(entornAppRepository.findAppIdsByEntornAppIds(Set.of(11L))).thenReturn(Set.of(2L));
 
         String result = appService.exposedAdditionalSpringFilter();
 
@@ -274,7 +274,7 @@ public class AppServiceImplTest {
                 eq("anna"),
                 eq(List.of("COM_USER")),
                 eq("Bearer test"))).thenReturn(org.springframework.http.ResponseEntity.ok(Set.of(11L)));
-        when(entornAppRepository.findAllById(Set.of(11L))).thenReturn(List.of(permittedEntornApp));
+        when(entornAppRepository.findAppIdsByEntornAppIds(Set.of(11L))).thenReturn(Set.of(2L));
 
         String result = appService.exposedAdditionalSpringFilter();
 

@@ -106,6 +106,22 @@ class AlarmaConfigServiceImplTest {
         verify(alarmaRepository).finalizeByAlarmaConfig(eq(entity), any(LocalDateTime.class));
     }
 
+    @Test
+    @DisplayName("logicBeforeUpdateEntityAlarmaConfig: manté entornAppId original")
+    void logicBeforeUpdateEntityAlarmaConfig_manteEntornAppId() {
+        // Arrange
+        AlarmaConfigEntity entity = new AlarmaConfigEntity();
+        entity.setEntornAppId(100L);
+        AlarmaConfig resource = new AlarmaConfig();
+        resource.setEntornAppId(999L);
+
+        // Act
+        alarmaConfigService.beforeUpdateEntity(entity, resource, null);
+
+        // Assert
+        assertThat(resource.getEntornAppId()).isEqualTo(100L);
+    }
+
     @ParameterizedTest
     @MethodSource("proporcionarCasosPermisosCreate")
     @DisplayName("beforeCreateEntity: matriz de permisos")

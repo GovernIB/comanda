@@ -66,12 +66,10 @@ public class AlarmaComprovacioHelper {
 
 		boolean condicioAlarma = evaluateAlarmCondition(alarmaConfig, salut);
 		if (condicioAlarma) {
-			processarCondicioAfirmativa(alarmaConfig);
-			return true;
+			return processarCondicioAfirmativa(alarmaConfig);
 		}
 
-		processarCondicioNegativa(alarmaConfig);
-		return false;
+		return processarCondicioNegativa(alarmaConfig);
 	}
 
 	private boolean evaluateAlarmCondition(AlarmaConfigEntity alarmaConfig, Salut salut) {
@@ -196,8 +194,10 @@ public class AlarmaComprovacioHelper {
 	 * de correus per a alarmes segons el seu estat i condicions definides.
 	 *
 	 * @param alarmaConfig Entitat de configuració de l'alarma
+	 *
+	 * @return true si s'ha activat l'alarma, false en cas contrari.
 	 */
-	private void processarCondicioAfirmativa(AlarmaConfigEntity alarmaConfig) {
+	private boolean processarCondicioAfirmativa(AlarmaConfigEntity alarmaConfig) {
 		clearRecoveryTracking(alarmaConfig);
 		Optional<AlarmaEntity> optionalAlarmaAnteriorNoFinalitzada = alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(alarmaConfig);
 		AlarmaEntity alarmaActivada = null;
@@ -213,7 +213,7 @@ public class AlarmaComprovacioHelper {
 						alarmaConfig.getId(),
 						alarmaConfig.getNom(),
 						alarmaConfig.isAdmin() ? "[ADMIN]" : alarmaConfig.getCreatedBy());
-				return;
+				return false;
 			}
 			AlarmaEntity alarmaAnteriorNoFinalitzada = optionalAlarmaAnteriorNoFinalitzada.get();
 
@@ -227,7 +227,7 @@ public class AlarmaComprovacioHelper {
 				} else if (alarmaConfig.getPeriodeUnitat() == AlarmaConfigPeriodeUnitat.HORES) {
 					activar = duration.getSeconds() / 3600 > alarmaConfig.getPeriodeValor().intValue();
 				} else if (alarmaConfig.getPeriodeUnitat() == AlarmaConfigPeriodeUnitat.DIES) {
-					activar = duration.getSeconds() / 3600 * 24 > alarmaConfig.getPeriodeValor().intValue();
+					activar = duration.getSeconds() / (3600 * 24) > alarmaConfig.getPeriodeValor().intValue();
 				}
 				if (activar) {
 					alarmaAnteriorNoFinalitzada.setEstat(AlarmaEstat.ACTIVA);
@@ -249,8 +249,10 @@ public class AlarmaComprovacioHelper {
 					optionalAlarmaAnteriorNoFinalitzada.get().setDataActivacio(LocalDateTime.now());
 					alarmaActivada = optionalAlarmaAnteriorNoFinalitzada.get();
                     publishActiveAlarmsChangedEvent();
+					// TODO Refactoritzar per a unificar els events publishAlarmaMailEvent del mètode
+					publishAlarmaMailEvent(alarmaActivada, AlarmaMailEventType.ACTIVACIO);
 				}
-				return;
+				return true;
 			}
 
 			Alarma alarma = new Alarma();
@@ -272,7 +274,9 @@ public class AlarmaComprovacioHelper {
 
 		if (alarmaActivada != null) {
 			publishAlarmaMailEvent(alarmaActivada, AlarmaMailEventType.ACTIVACIO);
+			return true;
 		}
+		return false;
 	}
 
 	/**
@@ -283,12 +287,14 @@ public class AlarmaComprovacioHelper {
 	 *
 	 * @param alarmaConfig Entitat de configuració de l'alarma. Conté la informació
 	 * necessària per identificar i operar sobre les alarmes associades.
+	 *
+	 * @return true si no s'ha desactivat l'alarma a causa de RECOVERY_STABILITY_SECONDS, false en cas contrari.
 	 */
-	private void processarCondicioNegativa(AlarmaConfigEntity alarmaConfig) {
+	private boolean processarCondicioNegativa(AlarmaConfigEntity alarmaConfig) {
 		Optional<AlarmaEntity> optionalAlarmaAnteriorNoFinalitzada = alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(alarmaConfig);
 		if (optionalAlarmaAnteriorNoFinalitzada.isEmpty()) {
 			clearRecoveryTracking(alarmaConfig);
-			return;
+			return false;
 		}
 		AlarmaEntity alarmaAnteriorNoFinalitzada = optionalAlarmaAnteriorNoFinalitzada.get();
 
@@ -304,7 +310,7 @@ public class AlarmaComprovacioHelper {
 						alarmaConfig.getId(),
 						stableSince,
 						recoveryStabilitySeconds);
-				return;
+				return true;
 			}
 			alarmaAnteriorNoFinalitzada.setDataFinalitzacio(now);
 			clearRecoveryTracking(alarmaConfig);
@@ -313,6 +319,7 @@ public class AlarmaComprovacioHelper {
                 publishAlarmaMailEvent(alarmaAnteriorNoFinalitzada, AlarmaMailEventType.RECUPERACIO);
             }
 		}
+		return false;
 	}
 
 	private void processarCondicioIndeterminada(AlarmaConfigEntity alarmaConfig, Salut salut) {

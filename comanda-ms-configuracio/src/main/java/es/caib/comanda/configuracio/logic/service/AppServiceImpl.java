@@ -91,11 +91,10 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 				.collect(Collectors.toSet());
 		Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP);
 		if (!entornAppPermissionIds.isEmpty()) {
-			entornAppRepository.findAllById(
-					entornAppPermissionIds.stream()
-							.map(id -> Long.valueOf(String.valueOf(id)))
-							.collect(Collectors.toSet()))
-					.forEach(entornApp -> allowedAppIds.add(entornApp.getApp().getId()));
+			Set<Long> entornAppPermissionIdsSet = entornAppPermissionIds.stream()
+					.map(id -> Long.valueOf(String.valueOf(id)))
+					.collect(Collectors.toSet());
+			allowedAppIds.addAll(entornAppRepository.findAppIdsByEntornAppIds(entornAppPermissionIdsSet));
 		}
 		if (allowedAppIds.isEmpty()) {
 			return "id:0";

@@ -66,6 +66,15 @@ class AlarmaComprovacioHelperTest {
         config.setMissatge("Missatge d'alarma");
         lenient().when(parametresHelper.getParametreEnter("es.caib.comanda.alarma.salut.freshness.seconds", 120)).thenReturn(120);
         lenient().when(parametresHelper.getParametreEnter("es.caib.comanda.alarma.recovery.stability.seconds", 180)).thenReturn(180);
+        lenient().when(alarmaRepository.save(any(AlarmaEntity.class)))
+            .thenAnswer(invocation -> {
+                AlarmaEntity entity = invocation.getArgument(0);
+                if (entity.getId() == null) {
+                    entity.setId(123L);
+                }
+                return entity;
+            });
+
     }
 
     private void mockRule(AlarmaConfigRegla regla) {
@@ -270,7 +279,7 @@ class AlarmaComprovacioHelperTest {
         boolean result = alarmaComprovacioHelper.comprovar(config);
 
         // Assert
-        assertThat(result).isFalse();
+        assertThat(result).isTrue();
         assertThat(alarmaActiva.getDataFinalitzacio()).isNull();
     }
 
@@ -493,7 +502,7 @@ class AlarmaComprovacioHelperTest {
 
         // Assert
         assertThat(alarmaEsborrany.getEstat()).isEqualTo(AlarmaEstat.ACTIVA);
-        verify(alarmaMailEventPublisher, never()).publish(any(), any()); // No s'assigna a alarmaActivada, només es canvia l'estat
+        verify(alarmaMailEventPublisher, times(1)).publish(any(), any());
     }
 
     @Test

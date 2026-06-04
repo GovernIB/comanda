@@ -62,7 +62,7 @@ describe('useAclPermissionManager', () => {
             title: 'Widget principal',
             dataGridComponentProps: expect.objectContaining({
                 title: 'Permisos',
-                staticFilter: "resourceType:'widget' and resourceId:25",
+                fixedFilter: "resourceType:'widget' and resourceId:25",
                 formAdditionalData: expect.any(Function),
                 popupEditFormDialogResourceTitle: 'Permís del recurs',
                 rowHideDeleteButton: false,

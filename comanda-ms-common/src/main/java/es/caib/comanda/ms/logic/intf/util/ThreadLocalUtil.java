@@ -13,6 +13,7 @@ public class ThreadLocalUtil {
 
 	public static final String SESSION_KEY = "BB_SESSION";
 	public static final String HIBERNATE_INTERCEPTOR_PROPS_KEY = "BB_HIBERNATE_INTERCEPTOR_PROPS";
+	public static final String REORDER_ADDITIONAL_PROPS_KEY = "BB_REORDER_ADDITIONAL_PROPS";
 
 	private static final ThreadLocal<Map<String, Object>> threadLocal = new ThreadLocal<>();
 
