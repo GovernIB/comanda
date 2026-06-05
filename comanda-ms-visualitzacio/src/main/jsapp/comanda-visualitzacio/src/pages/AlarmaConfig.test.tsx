@@ -423,12 +423,14 @@ describe('AlarmaConfig', () => {
 
         await waitFor(() => {
             expect(screen.queryByTestId('column-tipusUsuariAlarma')).not.toBeInTheDocument();
+            expect(screen.queryByTestId('column-createdByFullName')).not.toBeInTheDocument();
         });
 
         fireEvent.click(screen.getByTitle('Mostrar només les meves alarmes'));
 
         await waitFor(() => {
             expect(screen.getByTestId('column-tipusUsuariAlarma')).toBeInTheDocument();
+            expect(screen.getByTestId('column-createdByFullName')).toBeInTheDocument();
         });
     });
 

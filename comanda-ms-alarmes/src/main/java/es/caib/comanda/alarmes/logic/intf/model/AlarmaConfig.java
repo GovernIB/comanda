@@ -5,7 +5,7 @@ import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
-import es.caib.comanda.ms.logic.intf.model.BaseResource;
+import es.caib.comanda.ms.logic.intf.model.BaseAuditableResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.AllArgsConstructor;
@@ -47,14 +47,16 @@ import java.math.BigDecimal;
 		},
 		artifacts = {
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = AlarmaConfig.ALARMA_CONFIG_DELETE_ACTION, requiresId = true),
-                @ResourceArtifact(type = ResourceArtifactType.FILTER, code = AlarmaConfig.ALARMA_CONFIG_FILTER, formClass = AlarmaConfig.AlarmaConfigFilter.class)
-		}
+                @ResourceArtifact(type = ResourceArtifactType.FILTER, code = AlarmaConfig.ALARMA_CONFIG_FILTER, formClass = AlarmaConfig.AlarmaConfigFilter.class),
+                @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = AlarmaConfig.PERSPECTIVE_AUDIT_CODE),
+        }
 )
 @FieldNameConstants
-public class AlarmaConfig extends BaseResource<Long> {
+public class AlarmaConfig extends BaseAuditableResource<Long> {
 
 	public final static String ALARMA_CONFIG_DELETE_ACTION = "delete_alarmaConfig";
     public final static String ALARMA_CONFIG_FILTER = "alarmaConfig_filter";
+    public final static String PERSPECTIVE_AUDIT_CODE = "auditoria";
 
 	@NotNull
 	private Long entornAppId;

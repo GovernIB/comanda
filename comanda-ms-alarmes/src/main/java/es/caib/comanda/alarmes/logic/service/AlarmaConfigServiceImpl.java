@@ -2,6 +2,7 @@ package es.caib.comanda.alarmes.logic.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import es.caib.comanda.alarmes.logic.helper.UserInformationHelper;
 import es.caib.comanda.alarmes.logic.intf.model.*;
 import es.caib.comanda.alarmes.logic.intf.service.AlarmaConfigService;
 import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventPublisher;
@@ -10,11 +11,9 @@ import es.caib.comanda.alarmes.persist.entity.AlarmaConfigEntity;
 import es.caib.comanda.alarmes.persist.repository.AlarmaConfigRepository;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.client.model.Usuari;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
-import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
-import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
-import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
-import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
+import es.caib.comanda.ms.logic.intf.exception.*;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.intf.util.ThreadLocalUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
@@ -48,10 +47,12 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
     private final AlarmaRepository alarmaRepository;
     private final ComandaSseEventPublisher comandaSseEventPublisher;
     private final ObjectMapper objectMapper;
+    private final UserInformationHelper userInformationHelper;
 
     @PostConstruct
     public void init() {
         register(AlarmaConfig.ALARMA_CONFIG_DELETE_ACTION, new DeleteAlarmaConfigAction());
+        register(AlarmaConfig.PERSPECTIVE_AUDIT_CODE, new AuditoriaPerspectiveApplicator());
     }
 
     @Override
@@ -220,6 +221,22 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
 	protected void beforeCreateSave(AlarmaConfigEntity entity, AlarmaConfig resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
 		ThreadLocalUtil.setAttribute(ThreadLocalUtil.REORDER_ADDITIONAL_PROPS_KEY, entity);
 	}
+
+    private class AuditoriaPerspectiveApplicator implements PerspectiveApplicator<AlarmaConfigEntity, AlarmaConfig> {
+        @Override
+        public void applySingle(String code, AlarmaConfigEntity entity, AlarmaConfig resource) throws PerspectiveApplicationException {
+            if (entity.getCreatedBy()!=null) {
+                Usuari usuari = userInformationHelper.usuariFindByUsername(entity.getCreatedBy());
+                if (usuari!=null) {
+                    resource.setCreatedByFullName(usuari.getNom() + " (" + usuari.getCodi() + ")");
+                }
+            }
+            if (entity.getLastModifiedBy()!=null) {
+                Usuari usuari = userInformationHelper.usuariFindByUsername(entity.getLastModifiedBy());
+                resource.setLastModifiedByFullName(usuari.getNom() + " (" + usuari.getCodi() + ")");
+            }
+        }
+    }
 
 	// L'ordenació és individual de cada usuari i entornApp,
 	// menys quan no es tracta d'una alarma d'administrador, en aquell cas

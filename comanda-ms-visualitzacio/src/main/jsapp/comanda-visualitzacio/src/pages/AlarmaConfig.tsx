@@ -45,6 +45,7 @@ import {
 } from '@mui/x-data-grid-pro';
 import useReordering from '../hooks/reordering.tsx';
 import { SalutEstatEnum } from '../types/salut.model.tsx';
+import {useMemo} from "react";
 
 type RuleScope = 'APLICACIO' | 'SUBSISTEMA' | 'INTEGRACIO' | 'SISTEMA';
 type RuleMetric = 'ESTAT' | 'LATENCIA' | 'CARREGA_MITJANA_SISTEMA' | 'MEMORIA_DISPONIBLE' | 'ESPAI_DISC_LLIURE';
@@ -948,11 +949,17 @@ const AlarmaConfig: React.FC<{
                 field: 'tipusUsuariAlarma',
                 flex: 1,
                 sortable: false,
+            },
+            {
+                field: 'createdByFullName',
+                flex: 1,
             });
         }
 
         return baseColumns.filter(notNull);
     }, [entornApps, disableTreeData, adminView]);
+
+    const perspectives = useMemo(() => adminView ?['auditoria'] :[], [adminView])
 
     const toolbarElementsWithPositions = React.useMemo(() => {
         return [
@@ -1047,6 +1054,7 @@ const AlarmaConfig: React.FC<{
                 datagridApiRef={gridApiRef}
                 title={t($ => $.page.alarmaConfig.title)}
                 resourceName="alarmaConfig"
+                perspectives={perspectives}
                 columns={columns}
                 toolbarType="upper"
                 rowAdditionalActions={actions}
