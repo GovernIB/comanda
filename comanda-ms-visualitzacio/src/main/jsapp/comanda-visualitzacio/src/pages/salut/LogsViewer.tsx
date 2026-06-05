@@ -1,6 +1,6 @@
 import { dateFormatLocale, useCloseDialogButtons, useResourceApiService } from 'reactlib';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Button, ToggleButton, Tooltip, Typography } from '@mui/material';
+import {Box, Button, FormControlLabel, Switch, ToggleButton, Tooltip, Typography} from '@mui/material';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import WrapTextIcon from '@mui/icons-material/WrapText';
 import VerticalAlignBottomIcon from '@mui/icons-material/VerticalAlignBottom';
@@ -452,6 +452,21 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
 
     const [softWrap, setSoftWrap] = useState(false);
     const [scrollToBottom, setScrollToBottom] = useState(true);
+    const [autoRegresh, setAutoRegresh] = useState(false);
+
+    useEffect(() => {
+        let intervalId: ReturnType<typeof setInterval> | null = null;
+
+        if (autoRegresh) {
+            intervalId = setInterval(refreshPreview, 10000);
+        }
+        return () => {
+            if (intervalId) {
+                clearInterval(intervalId);
+                console.log("Intervalo destruido");
+            }
+        };
+    }, [autoRegresh, refreshPreview]);
 
     return (
         <Box
@@ -519,7 +534,7 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
                     {selected && (
                         <>
                             <Tooltip title={t($ => $.page.salut.logs.refresh)}>
-                                <IconButton loading={isRefreshLoading} onClick={() => refreshPreview()}>
+                                <IconButton loading={isRefreshLoading} onClick={() => refreshPreview()} disabled={autoRegresh}>
                                     <RefreshIcon />
                                 </IconButton>
                             </Tooltip>
@@ -530,6 +545,12 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
                                 >
                                     <DownloadIcon />
                                 </IconButton>
+                            </Tooltip>
+                            <Tooltip title={t($ => $.page.salut.logs.autoRefresh)}>
+                                <FormControlLabel control={<Switch
+                                    checked={autoRegresh}
+                                    onChange={(_event:any, checked:boolean) => setAutoRegresh(checked)}
+                                />} label={t($ => $.page.salut.logs.autoRefresh)} />
                             </Tooltip>
                         </>
                     )}

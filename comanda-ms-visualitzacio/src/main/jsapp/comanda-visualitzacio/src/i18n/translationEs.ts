@@ -336,6 +336,7 @@ const translationEs: translationResourcesType = {
                 preview: "Previsualizar",
                 download: "Descargar",
                 refresh: "Refrescar",
+                autoRefresh: "Actualización automática",
                 noSelected: "Seleccionar un archivo",
                 noPreview: "No hay previsualización",
                 softWrap: "Ajustar texto",

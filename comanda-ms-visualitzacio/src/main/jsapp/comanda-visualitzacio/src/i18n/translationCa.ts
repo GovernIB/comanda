@@ -336,6 +336,7 @@ const translationCa = {
                 preview: "Previsualitzar",
                 download: "Descarregar",
                 refresh: "Refrescar",
+                autoRefresh: "Refresc automàtic",
                 noSelected: "Seleccionar un fitxer",
                 noPreview: "No hi ha previsualització",
                 softWrap: "Ajustar text",
