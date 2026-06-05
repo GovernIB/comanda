@@ -67,37 +67,6 @@ UPDATE com_est_dashboard_titol
 SET tipus_titol = 'TIPUS_1'
 WHERE tipus_titol IS NULL;
 
--- Migracio base dels camps escalars de les plantilles antigues com_plantilla quan existeixen
-INSERT INTO com_est_dashboard_style_template (
-    id, nom, mostrar_vora, ample_vora, mida_font_titol, mida_font_descripcio,
-    icona, mida_font_valor, mida_font_unitats, mida_font_canvi_percentual,
-    mostrar_reticula, bar_stacked, bar_horizontal, line_show_points, area,
-    line_smooth, line_width, outer_radius, pie_donut, inner_radius,
-    pie_show_labels, label_size, gauge_min, gauge_max, gauge_rangs,
-    heatmap_min_value, heatmap_max_value, mostrar_capcalera,
-    mostrar_alternancia, mostrar_vora_taula, ample_vora_taula,
-    mostrar_separador_horitzontal, ample_separador_horitzontal,
-    mostrar_separador_vertical, ample_separador_vertical,
-    created_by, created_date, v
-)
-SELECT
-    p.id, p.nom, p.mostrar_vora, p.ample_vora, p.mida_font_titol, p.mida_font_descripcio,
-    p.icona, p.mida_font_valor, p.mida_font_unitats, p.mida_font_canvi_percentual,
-    p.mostrar_reticula, p.bar_stacked, p.bar_horizontal, p.line_show_points, p.area,
-    p.line_smooth, p.line_width, p.outer_radius, p.pie_donut, p.inner_radius,
-    p.pie_show_labels, p.label_size, p.gauge_min, p.gauge_max, p.gauge_rangs,
-    p.heatmap_min_value, p.heatmap_max_value, p.mostrar_capcalera,
-    p.mostrar_alternancia, p.mostrar_vora_taula, p.ample_vora_taula,
-    p.mostrar_separador_horitzontal, p.ample_separador_horitzontal,
-    p.mostrar_separador_vertical, p.ample_separador_vertical,
-    'liquibase', CURRENT_TIMESTAMP, 0
-FROM com_plantilla p
-WHERE NOT EXISTS (
-    SELECT 1
-    FROM com_est_dashboard_style_template t
-    WHERE t.id = p.id
-);
-
 -- Changeset db/changelog/changes/est/0.1.2/0.1.2_est_001.yaml::est-dashboard-style-009::limit
 -- Crear plantilles i paletes inicials per als grups de tema de dashboard
 INSERT INTO com_est_dashboard_style_template (id, nom, created_by, created_date, v) VALUES (930001, 'Blau', 'liquibase', CURRENT_TIMESTAMP, 0);INSERT INTO com_est_dashboard_style_template (id, nom, created_by, created_date, v) VALUES (930002, 'Blau verd', 'liquibase', CURRENT_TIMESTAMP, 0);
