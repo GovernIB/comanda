@@ -46,3 +46,5 @@ build/
 /doc/testing/serve-test-reports.sh
 /doc/testing/sync-test-reports.sh
 /comanda-ms-visualitzacio/src/main/jsapp/comanda-visualitzacio/test-reports/
+/CLAUDE.md
+/.claude
