@@ -1,0 +1,8 @@
+-- Grant permissions
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_avis_llegit TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_est_color_palette TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_est_color_palette_color TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_est_dashboard_style_template TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_est_dashboard_template_palette_group TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_est_widget_style_property TO WWW_COMANDA;
+GRANT SELECT, UPDATE, INSERT, DELETE ON com_salut_hist TO WWW_COMANDA;
