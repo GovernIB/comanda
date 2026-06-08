@@ -23,7 +23,7 @@ export const useMessage = () => {
     const [severity, setSeverity] = React.useState<TemporalMessageSeverity>();
     const [additionalComponents, setAdditionalComponents] = React.useState<React.ReactElement[] | undefined>();
     const [autoHideDuration, setAutoHideDuration] = React.useState<number | undefined>(undefined);
-    const show = (
+    const show = React.useCallback((
         title: string | null,
         message: string,
         severity?: TemporalMessageSeverity,
@@ -34,8 +34,8 @@ export const useMessage = () => {
         setAdditionalComponents(additionalComponents);
         setOpen(true);
         setAutoHideDuration(undefined)
-    }
-    const showTemporal = (
+    }, []);
+    const showTemporal = React.useCallback((
         title: string | null,
         message: string,
         severity?: TemporalMessageSeverity,
@@ -47,7 +47,7 @@ export const useMessage = () => {
         setAdditionalComponents(additionalComponents);
         setOpen(true);
         setAutoHideDuration(autoHideDuration ?? TEMPORALMSG_DURATION_DEFAULT)
-    }
+    }, []);
     const component = <Message
         open={open}
         setOpen={setOpen}

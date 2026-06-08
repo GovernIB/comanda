@@ -64,4 +64,23 @@ describe('useMessage', () => {
         expect(screen.getByText('Temporal')).toBeInTheDocument();
         expect(screen.getByText('Adjunt')).toBeInTheDocument();
     });
+
+    it('useMessage_shouldMemoizeFunctionsAndComponent', () => {
+        const { result, rerender } = renderHook(() => useMessage());
+
+        const initialShow = result.current.show;
+        const initialShowTemporal = result.current.showTemporal;
+
+        rerender();
+
+        expect(result.current.show).toBe(initialShow);
+        expect(result.current.showTemporal).toBe(initialShowTemporal);
+
+        act(() => {
+            result.current.show('New Title', 'New Message');
+        });
+
+        expect(result.current.show).toBe(initialShow);
+        expect(result.current.showTemporal).toBe(initialShowTemporal);
+    });
 });
