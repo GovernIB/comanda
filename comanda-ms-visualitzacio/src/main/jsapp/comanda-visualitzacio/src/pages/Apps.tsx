@@ -192,8 +192,7 @@ const AppEntornForm: React.FC = () => {
     );
 };
 
-const AppsEntorns: React.FC<any> = (props:any) => {
-    const { appNom } = props
+const AppsEntorns: React.FC<{ appNom?: string }> = ({ appNom }) => {
     const { t } = useTranslation();
     const { id: appId } = useParams();
     const columns = [
