@@ -192,7 +192,8 @@ const AppEntornForm: React.FC = () => {
     );
 };
 
-const AppsEntorns: React.FC = () => {
+const AppsEntorns: React.FC<any> = (props:any) => {
+    const { appNom } = props
     const { t } = useTranslation();
     const { id: appId } = useParams();
     const columns = [
@@ -264,7 +265,7 @@ const AppsEntorns: React.FC = () => {
                 paginationActive
                 popupEditActive
                 popupEditFormContent={<AppEntornForm />}
-                popupEditFormDialogResourceTitle={t($ => $.page.appsEntorns.resourceTitle)}
+                popupEditFormDialogResourceTitle={t($ => $.page.appsEntorns.resourceTitle)+` (${appNom})`}
                 formAdditionalData={{
                     app: { id: appId },
                 }}
@@ -340,7 +341,7 @@ export const AppForm: React.FC = () => {
                 <MuiFormTabContent
                     index={1}
                 >
-                    <AppsEntorns />
+                    <AppsEntorns appNom={appNom} />
                 </MuiFormTabContent>
             </MuiFormTabs>
         </MuiForm>
