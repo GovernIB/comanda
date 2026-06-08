@@ -44,7 +44,8 @@
         "react-number-format": "^5.4.4",
         "react-router-dom": "^7.9.4",
         "react-window": "^1.8.11",
-        "url-template": "^3.1.1"
+        "url-template": "^3.1.1",
+        "zod": "^4.4.3"
     },
     "devDependencies": {
         "@eslint/js": "^9.36.0",
@@ -62,6 +63,7 @@
         "@vitest/coverage-v8": "^3.2.4",
         "@vitest/ui": "^3.2.4",
         "eslint": "^9.36.0",
+        "eslint-plugin-import-zod": "^1.2.1",
         "eslint-plugin-react-hooks": "^7.0.1",
         "eslint-plugin-react-refresh": "^0.4.22",
         "globals": "^16.4.0",
