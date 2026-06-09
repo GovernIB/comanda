@@ -1,0 +1,455 @@
+databaseChangeLog:
+  - changeSet:
+      id: con-change-0.1.2.002-1
+      author: limit
+      comment: Afegir paràmetres LDAP de PluginsIB UserInformation a la taula de paràmetres
+      changes:
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "PluginsIB"
+              - column:
+                  name: SUBGRUP
+                  value: "UserInformation"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.pluginsib.userinformation.ldap.security_authentication"
+              - column:
+                  name: NOM
+                  value: "Autenticació LDAP"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Mecanisme d'autenticació utilitzat per connectar amb el servidor LDAP."
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "PluginsIB"
+              - column:
+                  name: SUBGRUP
+                  value: "UserInformation"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.pluginsib.userinformation.ldap.prefix_role_match_memberof"
+              - column:
+                  name: NOM
+                  value: "Prefix de rol per a memberOf"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Prefix emprat per identificar els rols dins l'atribut memberOf de LDAP."
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "PluginsIB"
+              - column:
+                  name: SUBGRUP
+                  value: "UserInformation"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.pluginsib.userinformation.ldap.attribute.memberof"
+              - column:
+                  name: NOM
+                  value: "Atribut de pertinença a grups"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Nom de l'atribut LDAP que indica els grups o rols als quals pertany l'usuari."
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "PluginsIB"
+              - column:
+                  name: SUBGRUP
+                  value: "UserInformation"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.pluginsib.userinformation.ldap.attribute.department"
+              - column:
+                  name: NOM
+                  value: "Atribut del departament"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Nom de l'atribut LDAP que conté el departament de l'usuari."
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "PluginsIB"
+              - column:
+                  name: SUBGRUP
+                  value: "UserInformation"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.pluginsib.userinformation.ldap.attribute.telephone"
+              - column:
+                  name: NOM
+                  value: "Atribut del telèfon"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Nom de l'atribut LDAP que conté el número de telèfon de l'usuari."
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "PluginsIB"
+              - column:
+                  name: SUBGRUP
+                  value: "UserInformation"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.pluginsib.userinformation.ldap.attribute.surname2"
+              - column:
+                  name: NOM
+                  value: "Atribut del segon llinatge"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Nom de l'atribut LDAP que conté el segon llinatge de l'usuari."
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "PluginsIB"
+              - column:
+                  name: SUBGRUP
+                  value: "UserInformation"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.pluginsib.userinformation.ldap.attribute.surname1"
+              - column:
+                  name: NOM
+                  value: "Atribut del primer llinatge"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Nom de l'atribut LDAP que conté el primer llinatge de l'usuari."
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "PluginsIB"
+              - column:
+                  name: SUBGRUP
+                  value: "UserInformation"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.pluginsib.userinformation.ldap.attribute.surname"
+              - column:
+                  name: NOM
+                  value: "Atribut dels llinatges"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Nom de l'atribut LDAP que conté els llinatges de l'usuari."
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "PluginsIB"
+              - column:
+                  name: SUBGRUP
+                  value: "UserInformation"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.pluginsib.userinformation.ldap.attribute.name"
+              - column:
+                  name: NOM
+                  value: "Atribut del nom"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Nom de l'atribut LDAP que conté el nom de l'usuari."
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "PluginsIB"
+              - column:
+                  name: SUBGRUP
+                  value: "UserInformation"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.pluginsib.userinformation.ldap.attribute.administration_id"
+              - column:
+                  name: NOM
+                  value: "Atribut de l'identificador administratiu"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Nom de l'atribut LDAP que conté l'identificador administratiu de l'usuari."
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "PluginsIB"
+              - column:
+                  name: SUBGRUP
+                  value: "UserInformation"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.pluginsib.userinformation.ldap.attribute.mail"
+              - column:
+                  name: NOM
+                  value: "Atribut del correu electrònic"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Nom de l'atribut LDAP que conté l'adreça de correu electrònic de l'usuari."
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "PluginsIB"
+              - column:
+                  name: SUBGRUP
+                  value: "UserInformation"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.pluginsib.userinformation.ldap.attribute.username"
+              - column:
+                  name: NOM
+                  value: "Atribut del nom d'usuari"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Nom de l'atribut LDAP que conté el nom d'usuari o identificador d'accés."
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "PluginsIB"
+              - column:
+                  name: SUBGRUP
+                  value: "UserInformation"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.pluginsib.userinformation.ldap.host_url"
+              - column:
+                  name: NOM
+                  value: "URL del servidor LDAP"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Adreça URL del servidor LDAP utilitzat per obtenir la informació dels usuaris."
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "PluginsIB"
+              - column:
+                  name: SUBGRUP
+                  value: "UserInformation"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.pluginsib.userinformation.ldap.security_principal"
+              - column:
+                  name: NOM
+                  value: "Usuari de connexió LDAP"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Identificador de l'usuari emprat per establir la connexió amb el servidor LDAP."
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "PluginsIB"
+              - column:
+                  name: SUBGRUP
+                  value: "UserInformation"
+              - column:
+                  name: TIPUS
+                  value: "PASSWORD"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.pluginsib.userinformation.ldap.security_credentials"
+              - column:
+                  name: NOM
+                  value: "Contrasenya de connexió LDAP"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Credencial o contrasenya de l'usuari emprat per connectar amb el servidor LDAP."
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "PluginsIB"
+              - column:
+                  name: SUBGRUP
+                  value: "UserInformation"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.pluginsib.userinformation.ldap.suffix_role_match_memberof"
+              - column:
+                  name: NOM
+                  value: "Sufix de rol per a memberOf"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Sufix emprat per identificar els rols dins l'atribut memberOf de LDAP."
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "PluginsIB"
+              - column:
+                  name: SUBGRUP
+                  value: "UserInformation"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.pluginsib.userinformation.ldap.users_context_dn"
+              - column:
+                  name: NOM
+                  value: "DN del context d'usuaris"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Nom distingit base dins LDAP on es cercaran els usuaris."
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "PluginsIB"
+              - column:
+                  name: SUBGRUP
+                  value: "UserInformation"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.pluginsib.userinformation.ldap.search_scope"
+              - column:
+                  name: NOM
+                  value: "Àmbit de cerca LDAP"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Àmbit de cerca utilitzat per localitzar usuaris dins el directori LDAP."
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
