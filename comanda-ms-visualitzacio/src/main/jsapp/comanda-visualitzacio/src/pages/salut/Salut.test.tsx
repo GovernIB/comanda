@@ -6,7 +6,6 @@ const mocks = vi.hoisted(() => ({
     useParamsMock: vi.fn(),
     refreshSalutMock: vi.fn(),
     refreshAppInfoMock: vi.fn(),
-    useDisableMarginsMock: vi.fn(),
     useIntervalMock: vi.fn(),
     tMock: vi.fn((selector: any) =>
         selector({
@@ -130,10 +129,6 @@ vi.mock('../../components/PageTitle', () => ({
     default: ({ title }: { title: string }) => <h1>{title}</h1>,
 }));
 
-vi.mock('../../hooks/useDisableMargins', () => ({
-    default: () => mocks.useDisableMarginsMock(),
-}));
-
 vi.mock('../../hooks/useInterval', () => ({
     default: (args: unknown) => mocks.useIntervalMock(args),
 }));
@@ -246,7 +241,6 @@ describe('Salut', () => {
 
         expect(screen.getByRole('heading', { name: 'Salut' })).toBeInTheDocument();
         expect(screen.getByTestId('salut-toolbar')).toHaveTextContent('Salut');
-        expect(mocks.useDisableMarginsMock).toHaveBeenCalled();
         expect(mocks.useIntervalMock).toHaveBeenCalled();
     });
 

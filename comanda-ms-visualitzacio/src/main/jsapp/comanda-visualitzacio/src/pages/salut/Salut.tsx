@@ -23,7 +23,6 @@ import { filterNumericObjectKeys } from '../../util/objectUtils.ts';
 import { SalutField } from '../../components/salut/SalutChipTooltip';
 import { useAppInfoData } from './dataFetching';
 import { Box } from '@mui/material';
-import useDisableMargins from '../../hooks/useDisableMargins';
 import PageTitle from '../../components/PageTitle';
 
 // es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem
@@ -409,7 +408,6 @@ const useSalutData = ({
 };
 
 const Salut: FunctionComponent = () => {
-    useDisableMargins();
     const { id } = useParams();
     const { t } = useTranslation();
     const toolbarState = useSalutToolbarState();

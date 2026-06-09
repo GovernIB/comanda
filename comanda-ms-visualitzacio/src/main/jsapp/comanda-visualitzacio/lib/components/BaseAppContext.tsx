@@ -39,8 +39,14 @@ export type BaseAppContextType = {
     code: string;
     getFormFieldComponent: (type?: string) => React.FC<FormFieldCustomProps> | undefined;
     getDetailFieldComponent: (type?: string) => React.FC<DetailFieldCustomProps> | undefined;
+    /**
+     * @deprecated L'aplicació té configurat marginsDisabled=true al <MuiBaseApp /> [Canvi específic per a COMANDA]
+     */
     setMarginsDisabled: (marginsDisabled: boolean) => void;
     contentExpandsToAvailableHeight: boolean;
+    /**
+     * @deprecated L'aplicació té configurat fixedContentExpandsToAvailableHeightEnabled=true al <MuiBaseApp /> [Canvi específic per a COMANDA]
+     */
     setContentExpandsToAvailableHeight: (expand: boolean) => void;
     getLinkComponent: () => any;
     goBack: (fallback?: string) => void;
