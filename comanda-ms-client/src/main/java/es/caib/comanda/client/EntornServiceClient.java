@@ -1,6 +1,7 @@
 package es.caib.comanda.client;
 
 import es.caib.comanda.client.model.Entorn;
+import feign.FeignException;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
@@ -21,7 +22,7 @@ public interface EntornServiceClient {
 	EntityModel<Entorn> getOne(
 			@PathVariable("id") final Long id,
 			@RequestParam("perspective") final String[] perspectives,
-			@RequestHeader("Authorization") final String authorizationHeader);
+			@RequestHeader("Authorization") final String authorizationHeader) throws FeignException.NotFound;
 
 	@GetMapping
 	PagedModel<EntityModel<Entorn>> find(

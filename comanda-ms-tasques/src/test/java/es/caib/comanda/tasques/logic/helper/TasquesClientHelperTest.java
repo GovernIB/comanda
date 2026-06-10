@@ -186,6 +186,15 @@ class TasquesClientHelperTest {
         assertThat(result).isNull();
     }
 
+	@Test
+	void appById_quanNotFound_retornaNull() {
+		when(appServiceClient.getOne(1L, null, AUTH_HEADER)).thenThrow(FeignException.NotFound.class);
+
+		App result = helper.appById(1L);
+
+		assertThat(result).isNull();
+	}
+
     @Test
     void entornById_quanTroba_laRetorna() {
         when(entornServiceClient.getOne(1L, null, AUTH_HEADER)).thenReturn(EntityModel.of(entorn));
@@ -203,4 +212,13 @@ class TasquesClientHelperTest {
 
         assertThat(result).isNull();
     }
+
+	@Test
+	void entornById_quanNotFound_retornaNull() {
+		when(entornServiceClient.getOne(1L, null, AUTH_HEADER)).thenThrow(FeignException.NotFound.class);
+
+		Entorn result = helper.entornById(1L);
+
+		assertThat(result).isNull();
+	}
 }

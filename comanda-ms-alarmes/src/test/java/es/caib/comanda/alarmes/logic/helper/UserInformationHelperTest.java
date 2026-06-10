@@ -71,4 +71,19 @@ class UserInformationHelperTest {
         // Assert
         assertThat(result).isNull();
     }
+
+	@Test
+	@DisplayName("Retorna null quan el client llança NotFound")
+	void usuariFindByUsername_quanLlanzaNotFound_retornaNull() {
+		// Arrange
+		when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
+		when(usuariServiceClient.getOneByCodiInternal(anyString(), anyString()))
+				.thenThrow(feign.FeignException.NotFound.class);
+
+		// Act
+		Usuari result = userInformationHelper.usuariFindByUsername(USERNAME);
+
+		// Assert
+		assertThat(result).isNull();
+	}
 }

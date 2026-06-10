@@ -1,6 +1,7 @@
 package es.caib.comanda.client;
 
 import es.caib.comanda.client.model.Usuari;
+import feign.FeignException;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
@@ -21,12 +22,12 @@ public interface UsuariServiceClient {
 	EntityModel<Usuari> getOne(
 			@PathVariable("id") final Long id,
 			@RequestParam("perspective") final String[] perspectives,
-			@RequestHeader("Authorization") final String authorizationHeader);
+			@RequestHeader("Authorization") final String authorizationHeader) throws FeignException.NotFound;
 
 	@GetMapping(value = "/internal/by-codi/{codi}")
 	EntityModel<Usuari> getOneByCodiInternal(
 			@PathVariable("codi") final String codi,
-			@RequestHeader("Authorization") final String authorizationHeader);
+			@RequestHeader("Authorization") final String authorizationHeader) throws FeignException.NotFound;
 
 	@GetMapping
 	PagedModel<EntityModel<Usuari>> find(

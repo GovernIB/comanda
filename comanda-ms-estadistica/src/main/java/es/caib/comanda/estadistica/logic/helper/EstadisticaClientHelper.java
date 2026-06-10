@@ -10,6 +10,7 @@ import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.monitor.Monitor;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -37,33 +38,41 @@ public class EstadisticaClientHelper {
     // Client App
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = APP_CACHE, key = "#appId?.toString()")
-    public App appFindById(Long appId) {
-        EntityModel<App> app = appServiceClient.getOne(
-                appId,
-                null,
-                httpAuthorizationHeaderHelper.getAuthorizationHeader());
-        if (app != null) {
-            return app.getContent();
-        }
-        return null;
-    }
+	@Cacheable(value = APP_CACHE, key = "#appId?.toString()")
+	public App appFindById(Long appId) {
+		try {
+			EntityModel<App> app = appServiceClient.getOne(
+					appId,
+					null,
+					httpAuthorizationHeaderHelper.getAuthorizationHeader());
+			if (app != null) {
+				return app.getContent();
+			}
+		} catch (FeignException.NotFound e) {
+			return null;
+		}
+		return null;
+	}
 
 
     // Client EntornApp
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = ENTORN_APP_CACHE, key = "#entornAppId?.toString()")
-    public EntornApp entornAppFindById(Long entornAppId) {
-        EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
-                entornAppId,
-                null,
-                httpAuthorizationHeaderHelper.getAuthorizationHeader());
-        if (entornApp != null) {
-            return entornApp.getContent();
-        }
-        return null;
-    }
+	@Cacheable(value = ENTORN_APP_CACHE, key = "#entornAppId?.toString()")
+	public EntornApp entornAppFindById(Long entornAppId) {
+		try {
+			EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
+					entornAppId,
+					null,
+					httpAuthorizationHeaderHelper.getAuthorizationHeader());
+			if (entornApp != null) {
+				return entornApp.getContent();
+			}
+		} catch (FeignException.NotFound e) {
+			return null;
+		}
+		return null;
+	}
 
     public EntornApp entornAppFindByAppAndEntorn(Long appId, Long entornId) {
         PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
@@ -129,17 +138,21 @@ public class EstadisticaClientHelper {
     // Client Entorn
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = ENTORN_CACHE, key = "#entornId?.toString()")
-    public Entorn entornById(Long entornId) {
-        EntityModel<Entorn> entorn = entornServiceClient.getOne(
-                entornId,
-                null,
-                httpAuthorizationHeaderHelper.getAuthorizationHeader());
-        if (entorn != null) {
-            return entorn.getContent();
-        }
-        return null;
-    }
+	@Cacheable(value = ENTORN_CACHE, key = "#entornId?.toString()")
+	public Entorn entornById(Long entornId) {
+		try {
+			EntityModel<Entorn> entorn = entornServiceClient.getOne(
+					entornId,
+					null,
+					httpAuthorizationHeaderHelper.getAuthorizationHeader());
+			if (entorn != null) {
+				return entorn.getContent();
+			}
+		} catch (FeignException.NotFound e) {
+			return null;
+		}
+		return null;
+	}
 
 
     // Client Monitor
