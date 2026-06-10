@@ -51,11 +51,13 @@ import java.util.List;
 				)
 		},
 		artifacts = {
+                @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = App.PERSPECTIVE_ENTORN_APPS),
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = App.APP_EXPORT, requiresId = true),
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = App.APP_IMPORT, formClass = App.AppImportForm.class)
 		})
 public class App extends BaseResource<Long> {
 
+    public static final String PERSPECTIVE_ENTORN_APPS = "ENTORN_APPS";
 	public final static String APP_EXPORT = "app_export";
 	public final static String APP_IMPORT = "app_import";
 

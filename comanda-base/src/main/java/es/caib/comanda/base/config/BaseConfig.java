@@ -90,6 +90,7 @@ public class BaseConfig {
 
     // Propietats de CONFIGURACIO
     public static final String PROP_CONFIG_PREFIX = PROPERTY_PREFIX + "config.";
+    public static final String PROP_CONFIG_ENTORN_APP_HIST_RETENCIO_DIES = PROP_CONFIG_PREFIX + "entorn.app.hist.retencio.dies";
 
     // Propietats de SALUT
     public static final String PROP_SALUT_PREFIX = PROPERTY_PREFIX + "salut.";

@@ -1,0 +1,87 @@
+databaseChangeLog:
+  - changeSet:
+      id: entorn-app-hist-1
+      author: Limit
+      comment: Crear taula d'històric de canvis externs d'entorn d'aplicació
+      changes:
+        - createTable:
+            tableName: ${db_prefix}entorn_app_hist
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: ${db_prefix}entornapphist_pk
+                    nullable: false
+              - column:
+                  name: entorn_app_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: versio
+                  type: VARCHAR(10 ${varcharUnit})
+                  constraints:
+                    nullable: false
+              - column:
+                  name: revisio
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: canvi_versio
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+              - column:
+                  name: data
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: ${db_prefix}entorn_app_hist
+            baseColumnNames: entorn_app_id
+            referencedTableName: ${db_prefix}entorn_app
+            referencedColumnNames: id
+            constraintName: ${db_prefix}entorn_app_hist_fk
+            onDelete: CASCADE
+        - createIndex:
+            tableName: ${db_prefix}entorn_app_hist
+            indexName: ${db_prefix}entornapphist_dat_i
+            columns:
+              - column:
+                  name: data
+  - changeSet:
+      id: entorn-app-hist-2
+      author: Limit
+      comment: Afegir paràmetre de retenció de l'històric d'entorn aplicació de configuració
+      changes:
+        - insert:
+            tableName: COM_PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "Configuracio"
+              - column:
+                  name: SUBGRUP
+                  value: "Històric"
+              - column:
+                  name: TIPUS
+                  value: "NUMERIC"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.entorn.app.hist.retencio.dies"
+              - column:
+                  name: NOM
+                  value: "Dies de retenció de l'històric de versions d'entorn aplicació"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Nombre de dies que s'ha de conservar l'històric de canvis de versions d'entorn aplicació per entorn d'aplicació abans d'eliminar-lo automàticament."
+              - column:
+                  name: VALOR
+                  value: "30"
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 1

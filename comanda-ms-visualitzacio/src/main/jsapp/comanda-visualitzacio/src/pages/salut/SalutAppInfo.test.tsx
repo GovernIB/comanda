@@ -18,6 +18,7 @@ const translations = {
                 integracions: 'Integracions',
                 historic: 'Històric',
                 historicEstat: "Històric d'estat",
+                historicVersions: 'Històric de versions',
                 logs: 'Logs',
             },
             info: {
@@ -118,6 +119,15 @@ const translations = {
                 title: 'Memòria',
                 espaiMeoria: 'Memòria emprada: {{disp}} / {{total}}',
                 espaiDisc: 'Disc emprat: {{disp}} / {{total}}',
+            },
+            historicVersions: {
+                title: 'Històric de versions',
+                noInfo: 'Sense canvis de versions',
+                column: {
+                    data: 'Data',
+                    versio: 'Versió',
+                    revisio: 'Revisió',
+                },
             },
         },
         enum: {
@@ -276,6 +286,22 @@ const createAppInfoData = (overrides: Record<string, unknown> = {}) => ({
         revisioSimplificat: 'abc123',
         jdkVersion: '17',
         logsUrl: 'http://logs',
+        entornAppHistorics: [
+        {
+            id: 1,
+            data: '2026-03-13T09:00:00',
+            versio: '1.0.0',
+            revisio: 'abc123def456789',
+            canviVersio: true,
+        },
+        {
+            id: 2,
+            data: '2026-03-12T08:00:00',
+            versio: '0.9.0',
+            revisio: 'xyz987uvw654321',
+            canviVersio: false,
+        },
+    ],
     },
     estats: {
         7: [{ data: '2026-03-13T10:00:00', totalUp: 3 }],
@@ -820,5 +846,49 @@ describe('SalutAppInfo', () => {
 
         expect(screen.queryByText('Subsistema UP')).not.toBeInTheDocument();
         expect(screen.getByText('Subsistema WARN')).toBeInTheDocument();
+    });
+
+    it('SalutAppInfo_quanObreHistoricVersions_mostraLaTaulaAmbVersionsIRevisions', () => {
+        render(<SalutAppInfo ready appInfoData={createAppInfoData() as any} />);
+
+        fireEvent.click(screen.getByRole('tab', { name: /Històric de versions/i }));
+
+        expect(screen.getByRole('tab', { name: /Històric de versions/i })).toHaveAttribute('aria-selected', 'true');
+        expect(screen.getByText('format:2026-03-13T09:00:00')).toBeInTheDocument();
+        expect(screen.getByText('1.0.0')).toBeInTheDocument();
+        expect(screen.getByText('abc123d...')).toBeInTheDocument();
+        expect(screen.getByText('format:2026-03-12T08:00:00')).toBeInTheDocument();
+        expect(screen.getByText('0.9.0')).toBeInTheDocument();
+        expect(screen.getByText('xyz987u...')).toBeInTheDocument();
+    });
+
+    it('SalutAppInfo_quanNoHiHaHistoricVersions_mostraElMissatgeBuit', () => {
+        render(
+            <SalutAppInfo
+                ready
+                appInfoData={createAppInfoData({
+                    entornApp: {
+                        ...createAppInfoData().entornApp,
+                        entornAppHistorics: [],
+                    },
+                }) as any}
+            />
+        );
+
+        fireEvent.click(screen.getByRole('tab', { name: /Històric de versions/i }));
+
+        expect(screen.getByText('Sense canvis de versions')).toBeInTheDocument();
+    });
+
+    it('SalutAppInfo_quanLaVersioHaCanviat_mostraElChipEnVerd', () => {
+        render(<SalutAppInfo ready appInfoData={createAppInfoData() as any} />);
+
+        fireEvent.click(screen.getByRole('tab', { name: /Històric de versions/i }));
+
+        const successChip = screen.getByText('1.0.0').closest('.MuiChip-colorSuccess');
+        expect(successChip).toBeInTheDocument();
+
+        const secondaryChip = screen.getByText('0.9.0').closest('.MuiChip-colorSecondary');
+        expect(secondaryChip).toBeInTheDocument();
     });
 });

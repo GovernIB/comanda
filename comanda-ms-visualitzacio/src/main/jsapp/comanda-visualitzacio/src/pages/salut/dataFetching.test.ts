@@ -38,7 +38,12 @@ describe('useAppInfoData', () => {
     beforeEach(() => {
         mocks.useIsUserAdminMock.mockReturnValue(false);
         mocks.agrupacioFromMinutesMock.mockReturnValue('HORA');
-        mocks.entornAppGetOneMock.mockResolvedValue({ id: 77, nom: 'App prova' });
+        mocks.entornAppGetOneMock.mockResolvedValue({ 
+            id: 77, 
+            nom: 'App prova',
+            defaultLogs: ['app.log'],
+            entornAppHistorics: []
+        });
         mocks.entornAppActionMock.mockResolvedValue({ id: 77 });
         mocks.salutReportMock.mockImplementation((_unused: unknown, request: { code: string }) => {
             if (request.code === 'grups_dates') {
@@ -96,11 +101,19 @@ describe('useAppInfoData', () => {
         });
 
         expect(result.current.ready).toBe(true);
-        expect(result.current.entornApp).toEqual({ id: 77, nom: 'App prova' });
+        expect(result.current.entornApp).toEqual({ 
+            id: 77, 
+            nom: 'App prova',
+            defaultLogs: ['app.log'],
+            entornAppHistorics: []
+        });
         expect(result.current.agrupacio).toBe('HORA');
         expect(result.current.grupsDates).toEqual(['2026-03-12', '2026-03-13']);
         expect(result.current.estats).toEqual({ 77: [{ data: '2026-03-13', upPercent: 80 }] });
         expect(result.current.latencies).toEqual([{ data: '2026-03-13', latenciaMitja: 120 }]);
+        expect(mocks.entornAppGetOneMock).toHaveBeenCalledWith(77, {
+            perspectives: ['default_logs', 'historics_versions'],
+        });
         expect(mocks.salutFindMock).toHaveBeenCalledWith(
             expect.objectContaining({
                 perspectives: [
@@ -117,28 +130,23 @@ describe('useAppInfoData', () => {
         );
     });
 
-    it('useAppInfoData_quanLusuariEsAdmin_demanaTambeLaPerspectivaDhistoric', async () => {
-        mocks.useIsUserAdminMock.mockReturnValue(true);
+    it('useAppInfoData_sempreDemanaPerspectivesDeLogsIHistoric', async () => {
+        mocks.useIsUserAdminMock.mockReturnValue(false);
+        const { result: resultNoAdmin } = renderHook(() => useAppInfoData(77, 60));
+        await waitFor(() => expect(resultNoAdmin.current.loading).toBe(false));
 
-        const { result } = renderHook(() => useAppInfoData(77, 60));
-
-        await waitFor(() => {
-            expect(result.current.loading).toBe(false);
+        expect(mocks.entornAppGetOneMock).toHaveBeenCalledWith(77, {
+            perspectives: ['default_logs', 'historics_versions'],
         });
 
-        expect(mocks.salutFindMock).toHaveBeenCalledWith(
-            expect.objectContaining({
-                perspectives: [
-                    'SAL_INTEGRACIONS',
-                    'SAL_SUBSISTEMES',
-                    'SAL_CONTEXTS',
-                    'SAL_MISSATGES',
-                    'SAL_DETALLS',
-                    'SAL_HISTORICS',
-                    'SAL_ULTIM_ESTAT_OPERATIU_INFO',
-                ],
-            })
-        );
+        vi.clearAllMocks();
+        mocks.useIsUserAdminMock.mockReturnValue(true);
+        const { result: resultAdmin } = renderHook(() => useAppInfoData(77, 60));
+        await waitFor(() => expect(resultAdmin.current.loading).toBe(false));
+
+        expect(mocks.entornAppGetOneMock).toHaveBeenCalledWith(77, {
+            perspectives: ['default_logs', 'historics_versions'],
+        });
     });
 
     it('useAppInfoData_quanHiHaError_guardaleSErrorIAturaLaCarrega', async () => {

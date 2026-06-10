@@ -47,7 +47,7 @@ import { SalutField } from '../../components/salut/SalutChipTooltip.tsx';
 import { ItemStateChip } from '../../components/salut/SalutItemStateChip.tsx';
 import { Alert, Checkbox, FormControl, InputLabel, LinearProgress, ListItemText, MenuItem, OutlinedInput, Select, SelectChangeEvent, Tooltip } from '@mui/material';
 import { SalutData } from './Salut.tsx';
-import { AppDataState, DefaultLogsPerspective, SalutInformeLatenciaItem } from './dataFetching';
+import { AppDataState, DefaultLogsPerspective, EntornAppHistPerspective, SalutInformeLatenciaItem, truncateHashRevisio } from './dataFetching';
 import { SalutErrorBoundaryFallback } from '../../components/salut/SalutErrorBoundaryFallback';
 import { EntornAppModel } from '../../types/app.model';
 import SalutChip from '../../components/salut/SalutChip';
@@ -1189,6 +1189,80 @@ const TabHistoricEstat: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) =
     );
 };
 
+const TabHistoricVersions: React.FC<{
+    entornApp: (EntornAppModel & EntornAppHistPerspective) | null;
+    dataLoaded: boolean;
+}> = ({ entornApp }) => {
+    const { t } = useTranslation();
+    
+    if (entornApp == null) {
+        return (
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: '100%',
+                }}
+            >
+                <CircularProgress size={100} />
+            </Box>
+        );
+    }
+
+    const historicsVersions = entornApp.entornAppHistorics ?? [];
+
+    return (
+        <Card variant="outlined">
+            <CardContent>
+                <Typography gutterBottom variant="h5" component="div">
+                    {t($ => $.page.salut.historicVersions.title)}
+                </Typography>
+                {historicsVersions.length === 0 ? (
+                    <Typography>{t($ => $.page.salut.historicVersions.noInfo)}</Typography>
+                ) : (
+                    <Table size="small">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>{t($ => $.page.salut.historicVersions.column.data)}</TableCell>
+                                <TableCell>{t($ => $.page.salut.historicVersions.column.versio)}</TableCell>
+                                <TableCell>{t($ => $.page.salut.historicVersions.column.revisio)}</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {historicsVersions.map(historic => (
+                                <TableRow key={historic.id ?? `${historic.data}-${historic.versio}-${historic.revisio}`}>
+                                    <TableCell>{dateFormatLocale(historic.data, true)}</TableCell>
+                                    <TableCell>
+                                        {historic.versio != null && (
+                                            <Chip 
+                                                label={historic.versio} 
+                                                color={historic.canviVersio ? 'success' : 'secondary'}
+                                            />
+                                        )}
+                                    </TableCell>
+                                    <TableCell>
+                                        {historic.revisio != null && (
+                                            <Tooltip title={historic.revisio} arrow placement="top">
+                                                <Chip
+                                                    label={truncateHashRevisio(historic.revisio)}
+                                                    size="small"
+                                                    sx={{ bgcolor: 'info.light', color: 'info.contrastText', }}
+                                                />
+                                            </Tooltip>
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                )}
+            </CardContent>
+        </Card>
+    );
+};
+
 const TabLogs = ({ entornApp }: { entornApp: (EntornAppModel & DefaultLogsPerspective) | null }) => {
     if (entornApp == null)
         return (
@@ -1358,6 +1432,11 @@ const SalutAppInfo: React.FC<{
             icon: <Icon>history_toggle_off</Icon>,
         },
         {
+            id: 'historicVersions',
+            label: t($ => $.page.salut.tabs.historicVersions),
+            icon: <Icon>update</Icon>,
+        },
+        {
             id: 'logs',
             label: t($ => $.page.salut.tabs.logs),
             icon: <Icon>notes</Icon>,
@@ -1464,6 +1543,12 @@ const SalutAppInfo: React.FC<{
                         childrenTabComponent={TabHistoricEstat}
                         childrenTabOtherProps={{}}
                         overflowingContent
+                    />
+                )}
+                {selectedTab === 'historicVersions' && (
+                    <TabHistoricVersions 
+                        entornApp={entornApp as (EntornAppModel & EntornAppHistPerspective) | null} 
+                        dataLoaded={dataLoaded} 
                     />
                 )}
                 {selectedTab === 'logs' && <TabLogs entornApp={entornApp} />}

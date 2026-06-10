@@ -55,6 +55,9 @@ public class AppInfoHelperTest {
     private ManualRepository manualRepository;
 
     @Mock
+    private EntornAppHistRepository entornAppHistRepository;
+
+    @Mock
     private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
 
     @Mock
@@ -91,7 +94,7 @@ public class AppInfoHelperTest {
     @BeforeEach
     void setUp() {
         // Instantiate real helpers with mocked repositories
-	    appInfoEntornAppHelper = spy(new AppInfoEntornAppHelper(entornAppRepository));
+	    appInfoEntornAppHelper = spy(new AppInfoEntornAppHelper(entornAppRepository, entornAppHistRepository));
 	    appInfoIntegracionsHelper = spy(new AppInfoIntegracionsHelper(entornAppRepository, appIntegracioRepository, integracioRepository));
 	    appInfoSubsistemesHelper = spy(new AppInfoSubsistemesHelper(entornAppRepository, subsistemaRepository));
 	    appInfoContextsHelper = spy(new AppInfoContextsHelper(entornAppRepository, contextRepository, manualRepository));

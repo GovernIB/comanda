@@ -73,6 +73,7 @@ import java.util.List;
                 @ResourceArtifact(type = ResourceArtifactType.FILTER, code = EntornApp.OPTIONAL_ENTORN_APP_FILTER, formClass = EntornApp.OptionalEntornAppFilter.class),
 				@ResourceArtifact(type = ResourceArtifactType.FILTER, code = EntornApp.SALUT_ENTORN_APP_FILTER, formClass = EntornApp.SalutEntornAppFilter.class),
 				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = EntornApp.PERSPECTIVE_DEFAULT_LOGS),
+                @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = EntornApp.PERSPECTIVE_HISTORICS_VERSIONS),
 		}
 )
 @EntornAppExists
@@ -89,6 +90,7 @@ public class EntornApp extends BaseResource<Long> {
 	public final static String REPORT_DESCARREGAR_LOG = "descarregar_log";
 	public final static String REPORT_PREVISUALITZAR_LOG = "previsualitzar_log";
 	public final static String PERSPECTIVE_DEFAULT_LOGS = "default_logs";
+    public static final String PERSPECTIVE_HISTORICS_VERSIONS = "historics_versions";
 
 	@NotNull
 	@Transient
@@ -123,7 +125,11 @@ public class EntornApp extends BaseResource<Long> {
 	private String logsUrl;
 
 	// Camps calculats de logs
+    @Transient
 	private String[] defaultLogs;
+    // Camps calculats de entornAppHist
+    @Transient
+    private List<EntornAppHist> entornAppHistorics;
 
 	// Informació de salut
 	@URL

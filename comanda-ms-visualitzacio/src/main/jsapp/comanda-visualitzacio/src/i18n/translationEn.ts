@@ -197,6 +197,7 @@ const translationEn: translationResourcesType = {
                 subsistemes: "Subsystems",
                 historic: "Historic",
                 historicEstat: "State history",
+                historicVersions: "Version history",
                 logs: "Logs",
             },
             info: {
@@ -331,6 +332,15 @@ const translationEn: translationResourcesType = {
             },
             estats: {
                 title: "States",
+            },
+            historicVersions: {
+                title: "History of versions and revisions",
+                noInfo: "No version history information available.",
+                column: {
+                    data: "Date",
+                    versio: "Version",
+                    revisio: "Revisión",
+                },
             },
             logs: {
                 preview: "Preview",

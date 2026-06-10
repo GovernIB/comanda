@@ -9,14 +9,8 @@ import es.caib.comanda.configuracio.logic.intf.model.*;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.EntornAppPingAction;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.PingUrlResponse;
 import es.caib.comanda.configuracio.logic.intf.service.EntornAppService;
-import es.caib.comanda.configuracio.persist.entity.AppContextEntity;
-import es.caib.comanda.configuracio.persist.entity.AppIntegracioEntity;
-import es.caib.comanda.configuracio.persist.entity.AppSubsistemaEntity;
-import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
-import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
-import es.caib.comanda.configuracio.persist.repository.ContextRepository;
-import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
-import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
+import es.caib.comanda.configuracio.persist.entity.*;
+import es.caib.comanda.configuracio.persist.repository.*;
 import es.caib.comanda.model.v1.log.FitxerContingut;
 import es.caib.comanda.model.v1.log.FitxerInfo;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
@@ -87,6 +81,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     private final SubsistemaRepository subsistemaRepository;
     private final ContextRepository contextRepository;
     private final EntornAppRepository entornAppRepository;
+    private final EntornAppHistRepository entornAppHistRepository;
     private final AppInfoHelper appInfoHelper;
     private final CacheHelper cacheHelper;
     private final ConfiguracioSchedulerService schedulerService;
@@ -107,6 +102,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         register(EntornApp.ENTORN_APP_TOOGLE_ACTIVA, new EntornAppServiceImpl.ToogleActiva(resourceEntityMappingHelper));
         register(EntornApp.ENTORN_APP_REFRESH_INFO, new EntornAppServiceImpl.RefreshInfo(resourceEntityMappingHelper));
         register(EntornApp.PERSPECTIVE_DEFAULT_LOGS, new DefaultLogsPerspectiveApplicator());
+        register(EntornApp.PERSPECTIVE_HISTORICS_VERSIONS, new HitoricVersionsPerspectiveApplicator());
     }
 
 	@Override
@@ -488,6 +484,19 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             String appName = entity.getApp() != null ? entity.getApp().getNom() : "";
             String[] defaultLogs = {"es.caib." + appName.toLowerCase() + ".log", "server.log"};
             resource.setDefaultLogs(defaultLogs);
+        }
+    }
+
+    public class HitoricVersionsPerspectiveApplicator implements PerspectiveApplicator<EntornAppEntity, EntornApp> {
+        @Override
+        public void applySingle(String code, EntornAppEntity entity, EntornApp resource) throws PerspectiveApplicationException {
+            List<EntornAppHistEntity> entornAppHistEntities = entornAppHistRepository.findByEntornAppOrderByDataDesc(entity);
+            resource.setEntornAppHistorics(
+                    entornAppHistEntities.stream()
+                            .map(s -> objectMappingHelper.newInstanceMap(
+                                    s,
+                                    EntornAppHist.class))
+                            .collect(Collectors.toList()));
         }
     }
 

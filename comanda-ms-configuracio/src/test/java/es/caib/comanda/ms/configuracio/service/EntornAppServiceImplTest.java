@@ -14,11 +14,8 @@ import es.caib.comanda.configuracio.logic.intf.model.ExpectedResponseTypeEnum;
 import es.caib.comanda.configuracio.logic.service.ConfiguracioSchedulerService;
 import es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl;
 import es.caib.comanda.configuracio.persist.entity.*;
+import es.caib.comanda.configuracio.persist.repository.*;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
-import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
-import es.caib.comanda.configuracio.persist.repository.ContextRepository;
-import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
-import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
 import es.caib.comanda.model.v1.log.FitxerInfo;
 import es.caib.comanda.model.v1.salut.AppInfo;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
@@ -65,6 +62,7 @@ public class EntornAppServiceImplTest {
                                           SubsistemaRepository subsistemaRepository,
                                           ContextRepository contextRepository,
                                           EntornAppRepository entornAppRepository,
+                                          EntornAppHistRepository entornAppHistRepository,
                                           AppInfoHelper appInfoHelper,
                                           CacheHelper cacheHeper,
                                           ConfiguracioSchedulerService schedulerService,
@@ -75,7 +73,7 @@ public class EntornAppServiceImplTest {
                                           Validator validator,
                                           ResourceEntityMappingHelper resourceEntityMappingHelper,
                                           ApplicationEventPublisher eventPublisher) {
-            super(appIntegracioRepository, subsistemaRepository, contextRepository, entornAppRepository, appInfoHelper,
+            super(appIntegracioRepository, subsistemaRepository, contextRepository, entornAppRepository, entornAppHistRepository, appInfoHelper,
                     cacheHeper, schedulerService, authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient,
                     restTemplate, validator, resourceEntityMappingHelper, eventPublisher);
         }
@@ -111,6 +109,9 @@ public class EntornAppServiceImplTest {
 
     @Mock
     private EntornAppRepository entornAppRepository;
+
+    @Mock
+    private EntornAppHistRepository entornAppHistRepository;
 
     @Mock
     private AppInfoHelper appInfoHelper;
@@ -171,6 +172,7 @@ public class EntornAppServiceImplTest {
             subsistemaRepository,
             contextRepository,
             entornAppRepository,
+            entornAppHistRepository,
             appInfoHelper,
             cacheHelper,
             schedulerService,

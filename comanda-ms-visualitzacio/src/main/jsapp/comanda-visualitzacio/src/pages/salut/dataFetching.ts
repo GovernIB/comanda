@@ -7,12 +7,32 @@ import { agrupacioFromMinutes } from '../../components/salut/SalutToolbar';
 import { SalutModel } from '../../types/salut.model';
 import { EntornAppModel } from '../../types/app.model';
 import { useIsUserAdmin } from '../../components/UserContext.ts';
+import { IBaseEntity } from '../../types/base-entity.model.ts';
 
 // es.caib.comanda.configuracio.logic.intf.model.EntornApp#PERSPECTIVE_DEFAULT_LOGS
 const PERSPECTIVE_DEFAULT_LOGS_NAME = 'default_logs';
 export type DefaultLogsPerspective = {
     defaultLogs: string[];
 }
+
+// es.caib.comanda.configuracio.logic.intf.model.EntornApp#PERSPECTIVE_HISTORICS_VERSIONS
+const PERSPECTIVE_HISTORICS_VERSIONS = 'historics_versions';
+export type EntornAppHistPerspective = {
+    entornAppHistorics: ISalutHistVersion[];
+}
+
+export interface ISalutHistVersion extends IBaseEntity {
+    entornAppId: number;
+    data: string;
+    versio: string;
+    revisio: string;
+    canviVersio: boolean;
+}
+
+export const truncateHashRevisio = (hash: string | null | undefined, length = 7) => {
+    if (!hash) return '';
+    return hash.length > length ? `${hash.slice(0, length)}...` : hash;
+};
 
 // es.caib.comanda.salut.logic.intf.model.SalutInformeLatenciaItem
 export type SalutInformeLatenciaItem = {
@@ -22,7 +42,7 @@ export type SalutInformeLatenciaItem = {
 export interface AppDataState {
     loading: boolean | null; // Null indica que no se ha hecho ninguna petición aún
     refreshInfoLoading: boolean;
-    entornApp: (EntornAppModel & DefaultLogsPerspective) | null;
+    entornApp: (EntornAppModel & DefaultLogsPerspective & EntornAppHistPerspective) | null;
     estats: Record<string, any> | null;
     latencies: SalutInformeLatenciaItem[] | null;
     salutCurrentApp: SalutModel | null;
@@ -70,7 +90,7 @@ export const useAppInfoData = (id: any, dataRangeMinutes: number) => {
             }));
             try {
                 const entornApp = await entornAppGetOne(id, {
-                    perspectives: [PERSPECTIVE_DEFAULT_LOGS_NAME],
+                    perspectives: [PERSPECTIVE_DEFAULT_LOGS_NAME, PERSPECTIVE_HISTORICS_VERSIONS],
                 });
                 const entornAppId = entornApp.id;
                 const dataReferencia = dayjs().format(ISO_DATE_FORMAT);

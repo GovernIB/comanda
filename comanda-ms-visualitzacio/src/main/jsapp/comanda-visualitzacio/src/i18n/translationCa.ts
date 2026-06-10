@@ -197,6 +197,7 @@ const translationCa = {
                 subsistemes: "Subsistemes",
                 historic: "Històric",
                 historicEstat: "Històric d'estat",
+                historicVersions: "Històric versions",
                 logs: "Logs",
             },
             info: {
@@ -331,6 +332,15 @@ const translationCa = {
             },
             estats: {
                 title: "Estats",
+            },
+            historicVersions: {
+                title: "Històric de versions i revisions",
+                noInfo: "No hi ha informació d'historial de versions disponible",
+                column: {
+                    data: "Data",
+                    versio: "Versió",
+                    revisio: "Revisió",
+                },
             },
             logs: {
                 preview: "Previsualitzar",
