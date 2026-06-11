@@ -325,7 +325,7 @@ const translationEn: translationResourcesType = {
                 },
             },
             memoria: {
-                title: "System Memory",
+                title: "System resources",
                 espaiMeoria: "Available memory: <strong>{{disp}}</strong> of <strong>{{total}}</strong>",
                 espaiDisc: "Available disk space: <strong>{{disp}}</strong> of <strong>{{total}}</strong>",
             },
