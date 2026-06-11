@@ -429,24 +429,26 @@ public class AlarmaComprovacioHelper {
 		if (parsedMeasure == null) {
 			return null;
 		}
-		String unit = parsedMeasure.unit();
+		String unit = parsedMeasure.unit() != null ? parsedMeasure.unit().toUpperCase() : "";
 		BigDecimal value = parsedMeasure.value();
-		if (unit == null || unit.isBlank() || "MB".equals(unit)) {
-			return value;
+		switch (unit) {
+
+			case "GB":
+			case "GIB":
+				return value.multiply(BigDecimal.valueOf(1024));
+			case "TB":
+			case "TIB":
+				return value.multiply(BigDecimal.valueOf(1024 * 1024L));
+			case "KB":
+			case "KIB":
+				return value.divide(BigDecimal.valueOf(1024), BigDecimal.ROUND_HALF_UP);
+			case "B":
+				return value.divide(BigDecimal.valueOf(1024 * 1024L), BigDecimal.ROUND_HALF_UP);
+			case "MB":
+			case "MIB":
+			default:
+				return value;
 		}
-		if ("GB".equals(unit)) {
-			return value.multiply(BigDecimal.valueOf(1024));
-		}
-		if ("TB".equals(unit)) {
-			return value.multiply(BigDecimal.valueOf(1024 * 1024L));
-		}
-		if ("KB".equals(unit)) {
-			return value.divide(BigDecimal.valueOf(1024), BigDecimal.ROUND_HALF_UP);
-		}
-		if ("B".equals(unit)) {
-			return value.divide(BigDecimal.valueOf(1024 * 1024L), BigDecimal.ROUND_HALF_UP);
-		}
-		return value;
 	}
 
 	private ParsedMeasure parseMeasure(String raw) {

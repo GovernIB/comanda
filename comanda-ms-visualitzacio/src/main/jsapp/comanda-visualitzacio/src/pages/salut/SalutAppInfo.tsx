@@ -849,20 +849,39 @@ const Missatges: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp 
 //     );
 // };
 
-function convertirAMegas(valor:string|undefined) {
-    if (!valor) return 0;
-
-    const texto = valor.replace(',', '.').toUpperCase();
-
-    if (texto.includes('GB')) {
-        return parseFloat(texto) * 1024;
+function parseStorageSizeToMB(value?: string): number {
+    if (!value) {
+        return 0;
     }
 
-    if (texto.includes('MB')) {
-        return parseFloat(texto);
+    const text = value.replace(",", ".").trim().toUpperCase();
+    const amount = parseFloat(text);
+
+    if (!Number.isFinite(amount)) {
+        return 0;
     }
 
-    return 0;
+    const unit = text.replace(/^[\d.\s]+/, "");
+
+    switch (unit) {
+        case "TB":
+        case "TIB":
+            return amount * 1024 * 1024
+        case "GB":
+        case "GIB":
+            return amount * 1024;
+        case "MB":
+        case "MIB":
+        case "":
+            return amount;
+        case "KB":
+        case "KIB":
+            return amount / 1024;
+        case "B":
+            return amount / (1024 * 1024);
+        default:
+            return 0;
+    }
 }
 
 const MeoriaInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
@@ -870,11 +889,11 @@ const MeoriaInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp
 
     const memoriaTotal = salutCurrentApp.detalls?.find((detall) => detall.codi === 'MET')?.valor
     const memoriaDisponible = salutCurrentApp.detalls?.find((detall) => detall.codi === 'MED')?.valor
-    const memoriaEmprada = 100 - convertirAMegas(memoriaDisponible) * 100 / convertirAMegas(memoriaTotal);
+    const memoriaEmprada = 100 - parseStorageSizeToMB(memoriaDisponible) * 100 / parseStorageSizeToMB(memoriaTotal);
 
     const discTotal = salutCurrentApp.detalls?.find((detall) => detall.codi === 'EDT')?.valor
     const discDisponible = salutCurrentApp.detalls?.find((detall) => detall.codi === 'EDL')?.valor
-    const discEmprada = 100 - convertirAMegas(discDisponible) * 100 / convertirAMegas(discTotal);
+    const discEmprada = 100 - parseStorageSizeToMB(discDisponible) * 100 / parseStorageSizeToMB(discTotal);
 
     return <Card variant="outlined">
         <CardHeader title={t($ => $.page.salut.memoria.title)} />
