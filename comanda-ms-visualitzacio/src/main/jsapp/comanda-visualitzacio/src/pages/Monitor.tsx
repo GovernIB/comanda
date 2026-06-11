@@ -2,7 +2,6 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
 import {
-    GridPage,
     MuiDataGrid,
     MuiFilter,
     FormField,
@@ -12,7 +11,9 @@ import {
     useFilterApiRef,
     springFilterBuilder as builder,
     useFormApiRef,
+    MuiDataGridColDef,
 } from 'reactlib';
+import { GridRenderCellParams } from '@mui/x-data-grid';
 import { ContentDetail } from '../components/ContentDetail';
 import { StacktraceBlock } from '../components/RickTextDetail';
 import { Tabs, Tab, Chip, Box, Icon, IconButton } from '@mui/material';
@@ -84,7 +85,11 @@ const EstatBadge: React.FC<{ value: string, children?: string, }> = ({ value, ch
   return <Chip label={label} color={color} size="small" />;
 };
 
-const MonitorDetails: React.FC<any> = (props) => {
+type MonitorDetailsProps = {
+    data: any;
+};
+
+const MonitorDetails: React.FC<MonitorDetailsProps> = (props) => {
     const { data } = props;
     const { t } = useTranslation();
     const { t: tStringKey } = useTranslationStringKey();
@@ -244,33 +249,36 @@ const Monitors: React.FC = () => {
     const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
         setSelectedModule(newValue);
     };
-    const columns = [
-        { field: 'data', flex: 1, },
-        { field: 'operacio', flex: 2, },
-        { field: 'tipus', flex: 1, },
-        {
-            field: 'url',
-            flex: 2,
-            headerName: selectedModule === 'ALARMES'
-                ? t($ => $.page.monitors.column.mailAddress)
-                : 'URL',
-        },
-        { field: 'modul', flex: 1, },
-        { field: 'tempsResposta', flex: 1, },
-        {
-            field: 'estat',
-            flex: 0.5,
-            renderCell: (params: any) => <EstatBadge value={params.value}>{params.formattedValue}</EstatBadge>
-        },
-    ];
-    const columnsMonitor = React.useMemo(() => {
+    const columns: MuiDataGridColDef[] = React.useMemo(() => {
+        const  baseColumns = [
+            { field: 'data', flex: 1 },
+            { field: 'operacio', flex: 2 },
+            { field: 'tipus', flex: 1 },
+            {
+                field: 'url',
+                flex: 2,
+                headerName:
+                    selectedModule === 'ALARMES'
+                        ? t($ => $.page.monitors.column.mailAddress)
+                        : 'URL',
+            },
+            { field: 'modul', flex: 1 },
+            { field: 'tempsResposta', flex: 1 },
+            {
+                field: 'estat',
+                flex: 0.5,
+                renderCell: (params: GridRenderCellParams) => (
+                    <EstatBadge value={params.value}>{params.formattedValue}</EstatBadge>
+                ),
+            },
+        ];
         if (selectedModule === 'TASCA' || selectedModule === 'AVIS') {
-            return columns.filter(col => col.field !== 'url');
+            return baseColumns.filter(col => col.field !== 'url');
         }
-        return columns;
-    }, [selectedModule]);
+        return baseColumns;
+    }, [selectedModule, t]);
     return (
-        <GridPage>
+        <>
             <PageTitle title={t($ => $.page.monitors.title)} />
             <MuiDataGrid
                 title={t($ => $.page.monitors.title)}
@@ -281,17 +289,17 @@ const Monitors: React.FC = () => {
                     <TabMonitor selectedModule={selectedModule} handleTabChange={handleTabChange} /> </>
                 }
                 resourceName="monitor"
-                columns={columnsMonitor}
+                columns={columns}
                 perspectives={dataGridPerspectives}
                 toolbarType="upper"
                 paginationActive
                 readOnly
-                onRowClick={(params: any) => showDetail(params.row)}
+                onRowClick={(params) => showDetail(params.row)}
                 fixedFilter={`modul:'${selectedModule}'`}
                 namedQueries={namedQueries}
             />
             {detailDialogComponent}
-        </GridPage>
+        </>
     );
 }
 
