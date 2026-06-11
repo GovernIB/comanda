@@ -511,8 +511,8 @@ const translationCa = {
                     estat: "Estat",
                     latencia: "Latència",
                     carregaMitjanaSistema: "Càrrega mitjana del sistema",
-                    memoriaDisponible: "Memòria disponible",
-                    espaiDiscLliure: "Espai de disc lliure",
+                    memoriaDisponible: "Memòria disponible (MB)",
+                    espaiDiscLliure: "Espai de disc lliure (MB)",
                 },
                 comparator: "Comparador",
                 comparatorOptions: {

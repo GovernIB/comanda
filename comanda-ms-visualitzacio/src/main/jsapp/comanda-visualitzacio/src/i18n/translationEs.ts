@@ -511,8 +511,8 @@ const translationEs: translationResourcesType = {
                     estat: "Estado",
                     latencia: "Latencia",
                     carregaMitjanaSistema: "Carga media del sistema",
-                    memoriaDisponible: "Memoria disponible",
-                    espaiDiscLliure: "Espacio de disco libre",
+                    memoriaDisponible: "Memoria disponible (MB)",
+                    espaiDiscLliure: "Espacio de disco libre (MB)",
                 },
                 comparator: "Comparador",
                 comparatorOptions: {
