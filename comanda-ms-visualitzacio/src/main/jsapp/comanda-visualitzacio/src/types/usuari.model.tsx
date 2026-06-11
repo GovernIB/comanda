@@ -20,6 +20,7 @@ export interface IUsuari extends IBaseEntity {
     rols: string[] | undefined;
     alarmaMail: boolean | undefined;
     alarmaMailAgrupar: boolean | undefined;
+    alarma:string | undefined;
 
     numElementsPagina: typeof NUM_ELEMENT_PAGE_OPTIONS[number];
 }
@@ -39,6 +40,7 @@ export class UsuariModel extends BaseEntity implements Required<IUsuari> {
     static readonly NUM_ELEMENTS_PAGINA: keyof UsuariModel = "numElementsPagina";
     static readonly ALARMA_MAIL: keyof UsuariModel = "alarmaMail";
     static readonly ALARMA_MAIL_AGRUPAT: keyof UsuariModel = "alarmaMailAgrupar";
+    static readonly ALARMA: keyof UsuariModel = "alarma";
 
     codi: string;
     nom: string;
@@ -52,6 +54,7 @@ export class UsuariModel extends BaseEntity implements Required<IUsuari> {
     numElementsPagina: typeof NUM_ELEMENT_PAGE_OPTIONS[number];
     alarmaMail: boolean | undefined;
     alarmaMailAgrupar: boolean | undefined;
+    alarma: string | undefined;
 
     constructor(usuari: IUsuari) {
         super(usuari);
@@ -99,6 +102,7 @@ export function isIUsuari(obj: unknown): obj is IUsuari {
         (u.rols === undefined || (Array.isArray(u.rols) && u.rols.every(r => typeof r === 'string'))) &&
         (u.alarmaMail === undefined || typeof u.alarmaMail === 'boolean') &&
         (u.alarmaMailAgrupar === undefined || typeof u.alarmaMailAgrupar === 'boolean') &&
+        (u.alarma === undefined || typeof u.alarma === 'string') &&
         isNumElementPageOption(u.numElementsPagina)
     );
 }

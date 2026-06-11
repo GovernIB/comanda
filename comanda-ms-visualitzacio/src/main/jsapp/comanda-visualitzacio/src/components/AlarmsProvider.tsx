@@ -5,7 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { useSseContext } from './SseProvider.tsx';
 import { useResourceApiService } from 'reactlib';
 import { useMessage } from './MessageShow.tsx';
-import {useDefaultAudio} from "./Audio.tsx";
+import {useAudio} from "./Audio.tsx";
+import {useUserContext} from "./UserContext.ts";
 
 const SEGONS_REFRESC = 30;
 const ACTIVE_ALARMS_CHANGED_EVENT_TYPE = 'alarm.active.changed';
@@ -16,7 +17,8 @@ const AlarmsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =
     const { isReady: apiIsReady, artifactReport: report } = useResourceApiService('alarma');
     const { showTemporal: showMessage, component: messageComponent } = useMessage();
     const [alarms, setAlarms] = useState<AlarmType[] | null>(null);
-    const { play } = useDefaultAudio();
+    const { user } = useUserContext()
+    const { play } = useAudio(user?.alarma || "LA");
 
     const applyAlarms = useEffectEvent((response: AlarmType[]) => {
         const newAlarms = response.filter(alarm => !alarms?.some(a => a.id === alarm.id));

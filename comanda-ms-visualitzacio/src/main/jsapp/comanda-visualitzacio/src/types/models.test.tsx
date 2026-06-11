@@ -88,6 +88,7 @@ describe('Models', () => {
             alarmaMail: true,
             alarmaMailAgrupar: false,
             numElementsPagina: NUM_ELEMENT_PAGE_OPTIONS[1],
+            alarma: undefined,
         });
 
         expect(app.nom).toBe('Aplicació');

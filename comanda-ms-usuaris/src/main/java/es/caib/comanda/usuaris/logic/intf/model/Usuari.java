@@ -55,4 +55,5 @@ public class Usuari extends BaseResource<Long> {
     /************************************************ CONFIGURACIÓN GENÉRICA ******************************************/
     @NotNull
     private NumOfElementsPerPageENum numElementsPagina;
+    private AlarmaSoundEnum alarma;
 }

@@ -15,8 +15,10 @@ import RecentActors from '@mui/icons-material/RecentActors';
 import Tag from '@mui/icons-material/Tag';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
+import IconButton from "@mui/material/IconButton";
 import { MenuEstil, TemaAplicacio, UsuariModel } from '../types/usuari.model.tsx';
 import { useUserContext } from './UserContext';
+import { playAudio } from "./Audio.tsx";
 
 const selectorLabelSx = {
     display: 'block',
@@ -125,6 +127,8 @@ export const EstilMenuSelector: React.FC = () => {
 const UserProfileForm = () => {
     const { t } = useTranslation();
     const { data } = useFormContext();
+    console.log("alarma", data?.alarma)
+    // const { play } = useAudio(data?.alarma);
 
     return <Grid container spacing={1} sx={{ px: 1, }}>
         <Grid size={{ xs: 12 }}>
@@ -217,6 +221,18 @@ const UserProfileForm = () => {
                 componentProps={{ slotProps: { input: { endAdornment: (
                     <InputAdornment position="end" sx={{ mr: 2 }}>
                         <Language/>
+                    </InputAdornment>
+                ), }, } }}
+            />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
+            <FormField
+                name={UsuariModel.ALARMA}
+                componentProps={{ slotProps: { input: { endAdornment: (
+                    <InputAdornment position="end" sx={{ mr: 2 }}>
+                        <IconButton onClick={() => playAudio(data?.alarma)}>
+                            <Icon>music_note</Icon>
+                        </IconButton>
                     </InputAdornment>
                 ), }, } }}
             />
