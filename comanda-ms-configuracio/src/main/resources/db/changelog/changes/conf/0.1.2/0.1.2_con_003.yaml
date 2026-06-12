@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: con-change-0.1.2.003-1
+      author: limit
+      comment: Afegir paràmetre del domini per defecte de correu electrònic si l'usuari no té cap adreça de correu electrònic
+      changes:
+        - insert:
+            tableName: COM_PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "Alarmes"
+              - column:
+                  name: SUBGRUP
+                  value: "Correu"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.alarma.mail.default.domain"
+              - column:
+                  name: NOM
+                  value: "Domini per defecte per al correu autogenerat d'usuari"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Domini per defecte per al correu autogenerat de l'usuari si no s'ha configurat cap adreça al perfil de l'usuari."
+              - column:
+                  name: VALOR
+                  value: "caib.es"
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 1
