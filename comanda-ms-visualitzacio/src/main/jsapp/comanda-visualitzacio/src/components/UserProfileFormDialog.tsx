@@ -1,7 +1,14 @@
 import React from 'react';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
-import { Icon, InputAdornment, ToggleButton, ToggleButtonGroup, Divider } from '@mui/material';
+import {
+    Icon,
+    InputAdornment,
+    ToggleButton,
+    ToggleButtonGroup,
+    Divider,
+    Alert,
+} from '@mui/material';
 import ListItemText from '@mui/material/ListItemText';
 import { FormField, MuiFormDialog, useBaseAppContext, type DialogButton, useFormContext } from 'reactlib';
 import { DataFormDialogApi } from '../../lib/components/mui/datacommon/DataFormDialog.tsx';
@@ -196,6 +203,11 @@ const UserProfileForm = () => {
         <Grid size={{ xs: 12, sm: 6, md: 3, lg: 4 }}>
             <FormField name={UsuariModel.ALARMA_MAIL_AGRUPAT} disabled={!data[UsuariModel.ALARMA_MAIL]} />
         </Grid>
+        {!data[UsuariModel.EMAIL] && !data[UsuariModel.EMAIL_ALTERNATIU] && (
+            <Grid size={{ xs: 12 }}>
+                <Alert severity="info">{t($ => $.menu.user.options.profile.form.noEmail)}</Alert>
+            </Grid>
+        )}
         <Grid size={{ xs: 12 }}>
             <Divider sx={{ my: 2 }}>
                 {t($ => $.menu.user.options.profile.form.genericConfig)}

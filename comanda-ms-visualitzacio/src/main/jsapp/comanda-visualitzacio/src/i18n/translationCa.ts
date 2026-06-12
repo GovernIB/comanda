@@ -114,6 +114,7 @@ const translationCa = {
                         genericConfig: "Configuració genèrica",
                         applicationTheme: "Tema de l'aplicació",
                         menuTheme: "Tema del menú",
+                        noEmail: "L'usuari no té cap adreça de correu electrònic assignada. S'usarà un correu autogenerat per a l'enviament de correus.",
                     },
                     tema: {
                         clar: "Clar",
