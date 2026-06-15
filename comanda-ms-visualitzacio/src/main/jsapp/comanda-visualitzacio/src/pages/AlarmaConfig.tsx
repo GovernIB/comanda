@@ -46,6 +46,8 @@ import {
 import useReordering from '../hooks/reordering.tsx';
 import { SalutEstatEnum } from '../types/salut.model.tsx';
 import {useMemo} from "react";
+import { IntegracionsSubsistemesContextsPerspective, PERSPECTIVE_ENTORN_APP_INTEGRACIONS_SUBSISTEMES_CONTEXTS } from './salut/dataFetching.ts';
+import { EntornAppModel } from '../types/app.model.tsx';
 import PageTitle from "../components/PageTitle.tsx";
 
 type RuleScope = 'APLICACIO' | 'SUBSISTEMA' | 'INTEGRACIO' | 'SISTEMA';
@@ -453,7 +455,7 @@ export const AlarmaConfigForm: React.FC<{
     const [entornAppId, setEntornAppId] = React.useState<any>();
     const [validationErrors, setValidationErrors] = React.useState<any>();
     const [periodeShow, setPeriodeShow] = React.useState<boolean>();
-    const [entornAppDetail, setEntornAppDetail] = React.useState<any>();
+    const [entornAppDetail, setEntornAppDetail] = React.useState<EntornAppModel & IntegracionsSubsistemesContextsPerspective>();
     const isCurrentUserAdmin = useIsUserAdmin();
     const handleDataChange = (data: any) => {
         setEntornAppId(data?.entornAppId);
@@ -487,7 +489,7 @@ export const AlarmaConfigForm: React.FC<{
             setEntornAppDetail(undefined);
             return;
         }
-        getEntornApp(entornAppId).then(setEntornAppDetail);
+        getEntornApp(entornAppId, {perspectives: [PERSPECTIVE_ENTORN_APP_INTEGRACIONS_SUBSISTEMES_CONTEXTS]}).then(setEntornAppDetail);
     }, [entornAppApiReady, entornAppId, getEntornApp]);
 
     const subsystemOptions: { codi: string, description: string }[] = React.useMemo(

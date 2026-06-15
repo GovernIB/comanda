@@ -90,6 +90,28 @@ export const useAppEntries = () => {
         icon: 'warning',
         resourceName: 'avis',
     }
+    const menuVersions = {
+        id: 'versions',
+        title: t($ => $.menu.versions),
+        description: t($ => $.menu.versionsDescription),
+        icon: 'format_list_numbered_rtl',
+        children: [
+            {
+                id: 'versionsEntorn',
+                title: t($ => $.menu.versionsEntorn),
+                to: '/versionsEntorn',
+                icon: 'format_list_numbered_rtl',
+                resourceName: 'entornApp',
+            },
+            {
+                id: 'entornAppHist',
+                title: t($ => $.menu.entornAppHist),
+                to: '/entornAppHist',
+                icon: 'update',
+                resourceName: 'entornAppHist',
+            },
+        ]
+    };
     const menuMonitoritzacio = {
         id: 'monitoritzacio',
         title: t($ => $.menu.monitoritzacio),
@@ -146,13 +168,6 @@ export const useAppEntries = () => {
                 to: '/entorn',
                 icon: 'layers',
                 resourceName: 'entorn',
-            },
-            {
-                id: 'versionsEntorn',
-                title: t($ => $.menu.versionsEntorn),
-                to: '/versionsEntorn',
-                icon: 'format_list_numbered_rtl',
-                resourceName: 'entornApp',
             },
             menuAlarmaConfig,
             {
@@ -225,6 +240,7 @@ export const useAppEntries = () => {
         statsEnabled ? menuEstadistiques : null,
         menuTasca,
         menuAvis,
+        menuVersions,
         menuMonitoritzacio,
         menuConfiguracio,
     ].filter(notNull);
