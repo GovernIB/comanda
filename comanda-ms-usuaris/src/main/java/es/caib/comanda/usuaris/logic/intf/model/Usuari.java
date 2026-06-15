@@ -13,6 +13,7 @@ import lombok.experimental.FieldNameConstants;
 import javax.persistence.Column;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -47,6 +48,7 @@ public class Usuari extends BaseResource<Long> {
     @NotNull
     private MenuEstilEnum estilMenu;
     private String[] rols;
+	private LocalDateTime darreraConnexio = LocalDateTime.now();
 
     @ResourceField(onChangeActive = true)
     private boolean alarmaMail;
