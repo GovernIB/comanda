@@ -1,3 +1,2 @@
 -- Afegir paràmetre del domini per defecte de correu electrònic si l'usuari no té cap adreça de correu electrònic
 INSERT INTO COM_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, DESCRIPCIO, VALOR, EDITABLE) VALUES ('Alarmes', 'Correu', 'TEXT', 'es.caib.comanda.alarma.mail.default.domain', 'Domini per defecte per al correu autogenerat d''usuari', 'Domini per defecte per al correu autogenerat de l''usuari si no s''ha configurat cap adreça al perfil de l''usuari.', 'caib.es', 1);
-m_PARAMETRE (GRUP, SUBGRUP, TIPUS, CODI, NOM, DESCRIPCIO, EDITABLE) VALUES ('PluginsIB', 'UserInformation', 'TEXT', 'es.caib.comanda.pluginsib.userinformation.ldap.search_scope', 'Àmbit de cerca LDAP', 'Àmbit de cerca utilitzat per localitzar usuaris dins el directori LDAP.', 0);
