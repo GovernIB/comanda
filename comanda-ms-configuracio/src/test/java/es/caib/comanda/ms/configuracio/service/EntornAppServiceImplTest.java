@@ -39,7 +39,6 @@ import org.springframework.web.client.RestTemplate;
 import javax.validation.ConstraintViolation;
 import javax.validation.Path;
 import javax.validation.Validator;
-import java.time.LocalDateTime;
 import java.util.*;
 
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
