@@ -1092,6 +1092,7 @@ const translationEn: translationResourcesType = {
         copiarContingut: "Copy content",
         copiarContingutTitle: "Copy the content",
         copiarContingutSuccess: "Content copied to clipboard",
+        copiarContingutError: "Action not supported by the browser",
         permisos: {
             title: "Permissions",
             resourceTitle: "permission"

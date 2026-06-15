@@ -1092,6 +1092,7 @@ const translationEs: translationResourcesType = {
         copiarContingut: "Copiar contenido",
         copiarContingutTitle: "Copiar el contenido",
         copiarContingutSuccess: "Contenido copiado al portapapeles",
+        copiarContingutError: "Acción no soportada por el navegador",
         permisos: {
             title: "Permisos",
             resourceTitle: "permiso"

@@ -46,6 +46,7 @@ import {
 import useReordering from '../hooks/reordering.tsx';
 import { SalutEstatEnum } from '../types/salut.model.tsx';
 import {useMemo} from "react";
+import PageTitle from "../components/PageTitle.tsx";
 
 type RuleScope = 'APLICACIO' | 'SUBSISTEMA' | 'INTEGRACIO' | 'SISTEMA';
 type RuleMetric = 'ESTAT' | 'LATENCIA' | 'CARREGA_MITJANA_SISTEMA' | 'MEMORIA_DISPONIBLE' | 'ESPAI_DISC_LLIURE';
@@ -543,7 +544,8 @@ export const AlarmaConfigForm: React.FC<{
 
     return (
         <>
-            {dialogMode && (
+            {dialogMode && (<>
+                <PageTitle title={id ? t($ => $.page.alarmaConfig.update) : t($ => $.page.alarmaConfig.create)} />
                 <Toolbar
                     title={id ? t($ => $.page.alarmaConfig.update) : t($ => $.page.alarmaConfig.create)}
                     elementsWithPositions={[
@@ -570,7 +572,7 @@ export const AlarmaConfigForm: React.FC<{
                         mb: 2,
                     }}
                 />
-            )}
+            </>)}
             <MuiForm
                 id={id}
                 title={id ? t($ => $.page.alarmaConfig.update) : t($ => $.page.alarmaConfig.create)}
@@ -1049,6 +1051,7 @@ const AlarmaConfig: React.FC<{
 
     return (
         <GridPage>
+            <PageTitle title={t(($) => $.page.alarma.snackbar.title)} />
             <MuiDataGrid
                 apiRef={apiRef}
                 datagridApiRef={gridApiRef}

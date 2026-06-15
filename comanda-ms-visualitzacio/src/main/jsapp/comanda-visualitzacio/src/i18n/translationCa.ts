@@ -1092,6 +1092,7 @@ const translationCa = {
         copiarContingut: "Copiar contingut",
         copiarContingutTitle: "Copiar el contingut",
         copiarContingutSuccess: "Contingut copiar al portapapers",
+        copiarContingutError: "Acció no suportada pel navegador",
         permisos: {
             title: "Permisos",
             resourceTitle: "permís"

@@ -10,9 +10,12 @@ type StacktraceBlockProps = {
 export const StacktraceBlock: React.FC<StacktraceBlockProps> = ({ title, value }) => {
     const { t } = useTranslation();
     const [copied, setCopied] = React.useState(false);
+    const suportedAction = window.isSecureContext;
     const handleCopy = async () => {
         if (value) {
-            await navigator.clipboard.writeText(value);
+            if (suportedAction) {
+                navigator.clipboard.writeText(value)
+            }
             setCopied(true);
         }
     };
@@ -52,10 +55,10 @@ export const StacktraceBlock: React.FC<StacktraceBlockProps> = ({ title, value }
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} >
                 <Alert
                     onClose={handleClose}
-                    severity="info"
+                    severity={suportedAction ?"info" :"error"}
                     variant="filled"
                     sx={{ width: '100%' }} >
-                    {t($ => $.components.copiarContingutSuccess)}
+                    {suportedAction ?t($ => $.components.copiarContingutSuccess) :t($ => $.components.copiarContingutError)}
                 </Alert>
             </Snackbar>
         </>
