@@ -135,7 +135,7 @@ class CacheServiceImplTest {
             // Assert
             assertThat(result).isNotNull();
             assertThat(result.getContent()).hasSize(2);
-            verify(cacheHelper, times(2)).getCacheNames();
+            verify(cacheHelper, times(1)).getCacheNames();
 
         }
     }
