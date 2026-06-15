@@ -119,7 +119,6 @@ const LoggedInUserButton: React.FC<AuthButtonProps> = (props) => {
     apiRef.current = {
         close: handleMenuClose,
     };
-    // console.log("userAdditionalInfo", userAdditionalInfo)
     return (
         <AuthButtonContext.Provider value={{ apiRef }}>
             <IconBadge icon={badgeIcon}>
