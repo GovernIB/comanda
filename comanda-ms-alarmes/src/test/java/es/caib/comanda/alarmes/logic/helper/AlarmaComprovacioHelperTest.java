@@ -938,6 +938,156 @@ class AlarmaComprovacioHelperTest {
         assertThat(alarmaComprovacioHelper.comprovar(config)).isTrue();
     }
 
+	@Test
+	@DisplayName("L'activació d'una nova alarma agafa la data de la Salut")
+	void comprovar_quanNovaAlarma_dataActivacioEsLaDeLaSalut() {
+		// Arrange
+		mockRule(AlarmaConfigRegla.builder()
+			.tipusNode(AlarmaConfigReglaTipusNode.CONDICIO)
+			.ambit(AlarmaConfigReglaAmbit.APLICACIO)
+			.metrica(AlarmaConfigReglaMetrica.ESTAT)
+			.comparador(AlarmaConfigReglaComparador.EN)
+			.valorsText(Collections.singletonList("DOWN"))
+			.build());
+		LocalDateTime dataSalut = LocalDateTime.now().minusMinutes(1);
+		PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(Salut.builder()
+			.appEstat(EstatSalutEnum.DOWN.name())
+			.data(dataSalut)
+			.build());
+
+		when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
+		when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
+			.thenReturn(pagedModel);
+		when(alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(config))
+			.thenReturn(Optional.empty());
+
+		// Act
+		alarmaComprovacioHelper.comprovar(config);
+
+		// Assert
+		verify(alarmaRepository).save(argThat(entity ->
+			entity.getEstat() == AlarmaEstat.ACTIVA &&
+				dataSalut.equals(entity.getDataActivacio())
+		));
+	}
+
+	@Test
+	@DisplayName("L'activació d'un esborrany agafa la data de la Salut")
+	void comprovar_quanActivaEsborrany_dataActivacioEsLaDeLaSalut() {
+		// Arrange
+		mockRule(AlarmaConfigRegla.builder()
+			.tipusNode(AlarmaConfigReglaTipusNode.CONDICIO)
+			.ambit(AlarmaConfigReglaAmbit.APLICACIO)
+			.metrica(AlarmaConfigReglaMetrica.ESTAT)
+			.comparador(AlarmaConfigReglaComparador.EN)
+			.valorsText(Collections.singletonList("DOWN"))
+			.build());
+		config.setPeriodeValor(new BigDecimal(1));
+		config.setPeriodeUnitat(AlarmaConfigPeriodeUnitat.MINUTS);
+
+		LocalDateTime dataSalut = LocalDateTime.now().minusMinutes(1);
+		PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(Salut.builder()
+			.appEstat(EstatSalutEnum.DOWN.name())
+			.data(dataSalut)
+			.build());
+
+		when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
+		when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
+			.thenReturn(pagedModel);
+
+		AlarmaEntity alarmaEsborrany = new AlarmaEntity();
+		alarmaEsborrany.setEstat(AlarmaEstat.ESBORRANY);
+		alarmaEsborrany.setAlarmaConfig(config);
+		alarmaEsborrany.setCreatedDate(LocalDateTime.now().minusMinutes(2));
+
+		when(alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(config))
+			.thenReturn(Optional.of(alarmaEsborrany));
+
+		// Act
+		alarmaComprovacioHelper.comprovar(config);
+
+		// Assert
+		assertThat(alarmaEsborrany.getEstat()).isEqualTo(AlarmaEstat.ACTIVA);
+		assertThat(alarmaEsborrany.getDataActivacio()).isEqualTo(dataSalut);
+	}
+
+	@Test
+	@DisplayName("L'activació d'un esborrany quan es canvia a sense període agafa la data de la Salut")
+	void comprovar_quanCanviaASensePeriodeIActivaEsborrany_dataActivacioEsLaDeLaSalut() {
+		// Arrange
+		mockRule(AlarmaConfigRegla.builder()
+			.tipusNode(AlarmaConfigReglaTipusNode.CONDICIO)
+			.ambit(AlarmaConfigReglaAmbit.APLICACIO)
+			.metrica(AlarmaConfigReglaMetrica.ESTAT)
+			.comparador(AlarmaConfigReglaComparador.EN)
+			.valorsText(Collections.singletonList("DOWN"))
+			.build());
+		config.setPeriodeValor(null); // Sense període
+
+		LocalDateTime dataSalut = LocalDateTime.now().minusMinutes(1);
+		PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(Salut.builder()
+			.appEstat(EstatSalutEnum.DOWN.name())
+			.data(dataSalut)
+			.build());
+
+		when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
+		when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
+			.thenReturn(pagedModel);
+
+		AlarmaEntity alarmaEsborrany = new AlarmaEntity();
+		alarmaEsborrany.setEstat(AlarmaEstat.ESBORRANY);
+		alarmaEsborrany.setAlarmaConfig(config);
+
+		when(alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(config))
+			.thenReturn(Optional.of(alarmaEsborrany));
+
+		// Act
+		alarmaComprovacioHelper.comprovar(config);
+
+		// Assert
+		assertThat(alarmaEsborrany.getEstat()).isEqualTo(AlarmaEstat.ACTIVA);
+		assertThat(alarmaEsborrany.getDataActivacio()).isEqualTo(dataSalut);
+		verify(alarmaMailEventPublisher).publish(alarmaEsborrany, AlarmaMailEventType.ACTIVACIO);
+	}
+
+	@Test
+	@DisplayName("La finalització d'una alarma agafa la data de la Salut")
+	void comprovar_quanFinalitzaAlarma_dataFinalitzacioEsLaDeLaSalut() {
+		// Arrange
+		mockRule(AlarmaConfigRegla.builder()
+			.tipusNode(AlarmaConfigReglaTipusNode.CONDICIO)
+			.ambit(AlarmaConfigReglaAmbit.APLICACIO)
+			.metrica(AlarmaConfigReglaMetrica.ESTAT)
+			.comparador(AlarmaConfigReglaComparador.EN)
+			.valorsText(Collections.singletonList("DOWN"))
+			.build());
+		// Forcem que la recuperació sigui estable immediatament
+		when(parametresHelper.getParametreEnter("es.caib.comanda.alarma.recovery.stability.seconds", 180)).thenReturn(0);
+
+		LocalDateTime dataSalut = LocalDateTime.now().minusSeconds(10);
+		PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(Salut.builder()
+			.appEstat(EstatSalutEnum.UP.name())
+			.data(dataSalut)
+			.build());
+
+		when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
+		when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
+			.thenReturn(pagedModel);
+
+		AlarmaEntity alarmaActiva = new AlarmaEntity();
+		alarmaActiva.setEstat(AlarmaEstat.ACTIVA);
+		alarmaActiva.setDataActivacio(LocalDateTime.now().minusHours(1));
+
+		when(alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(config))
+			.thenReturn(Optional.of(alarmaActiva));
+
+		// Act
+		alarmaComprovacioHelper.comprovar(config);
+
+		// Assert
+		assertThat(alarmaActiva.getDataFinalitzacio()).isEqualTo(dataSalut);
+	}
+
     private Salut.SalutBuilder freshSalut() {
         return Salut.builder().data(LocalDateTime.now());
     }

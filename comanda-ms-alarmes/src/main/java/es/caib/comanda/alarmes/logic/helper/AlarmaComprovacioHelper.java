@@ -66,10 +66,10 @@ public class AlarmaComprovacioHelper {
 
 		boolean condicioAlarma = evaluateAlarmCondition(alarmaConfig, salut);
 		if (condicioAlarma) {
-			return processarCondicioAfirmativa(alarmaConfig);
+			return processarCondicioAfirmativa(alarmaConfig, salut);
 		}
 
-		return processarCondicioNegativa(alarmaConfig);
+		return processarCondicioNegativa(alarmaConfig, salut);
 	}
 
 	private boolean evaluateAlarmCondition(AlarmaConfigEntity alarmaConfig, Salut salut) {
@@ -197,7 +197,7 @@ public class AlarmaComprovacioHelper {
 	 *
 	 * @return true si s'ha activat l'alarma, false en cas contrari.
 	 */
-	private boolean processarCondicioAfirmativa(AlarmaConfigEntity alarmaConfig) {
+	private boolean processarCondicioAfirmativa(AlarmaConfigEntity alarmaConfig, Salut salut) {
 		clearRecoveryTracking(alarmaConfig);
 		Optional<AlarmaEntity> optionalAlarmaAnteriorNoFinalitzada = alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(alarmaConfig);
 		AlarmaEntity alarmaActivada = null;
@@ -231,7 +231,7 @@ public class AlarmaComprovacioHelper {
 				}
 				if (activar) {
 					alarmaAnteriorNoFinalitzada.setEstat(AlarmaEstat.ACTIVA);
-					alarmaAnteriorNoFinalitzada.setDataActivacio(LocalDateTime.now());
+					alarmaAnteriorNoFinalitzada.setDataActivacio(salut.getData());
 					alarmaActivada = alarmaAnteriorNoFinalitzada;
                     publishActiveAlarmsChangedEvent();
 					log.debug("Alarma de tipus esborrany activada (configId={}, configNom={}, destinatari={}",
@@ -246,7 +246,7 @@ public class AlarmaComprovacioHelper {
 				// pendents d'activar-se poden activar-se sempre que la condició segueixi activa.
 				if (optionalAlarmaAnteriorNoFinalitzada.get().getEstat() == AlarmaEstat.ESBORRANY) {
 					optionalAlarmaAnteriorNoFinalitzada.get().setEstat(AlarmaEstat.ACTIVA);
-					optionalAlarmaAnteriorNoFinalitzada.get().setDataActivacio(LocalDateTime.now());
+					optionalAlarmaAnteriorNoFinalitzada.get().setDataActivacio(salut.getData());
 					alarmaActivada = optionalAlarmaAnteriorNoFinalitzada.get();
                     publishActiveAlarmsChangedEvent();
 					// TODO Refactoritzar per a unificar els events publishAlarmaMailEvent del mètode
@@ -259,7 +259,7 @@ public class AlarmaComprovacioHelper {
 			alarma.setEntornAppId(alarmaConfig.getEntornAppId());
 			alarma.setEstat(AlarmaEstat.ACTIVA);
 			alarma.setMissatge(alarmaConfig.getMissatge());
-			alarma.setDataActivacio(LocalDateTime.now());
+			alarma.setDataActivacio(salut.getData());
 			alarmaActivada = alarmaRepository.save(
 					AlarmaEntity.builder().
 							alarma(alarma).
@@ -290,7 +290,7 @@ public class AlarmaComprovacioHelper {
 	 *
 	 * @return true si no s'ha desactivat l'alarma a causa de RECOVERY_STABILITY_SECONDS, false en cas contrari.
 	 */
-	private boolean processarCondicioNegativa(AlarmaConfigEntity alarmaConfig) {
+	private boolean processarCondicioNegativa(AlarmaConfigEntity alarmaConfig, Salut salut) {
 		Optional<AlarmaEntity> optionalAlarmaAnteriorNoFinalitzada = alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(alarmaConfig);
 		if (optionalAlarmaAnteriorNoFinalitzada.isEmpty()) {
 			clearRecoveryTracking(alarmaConfig);
@@ -312,7 +312,7 @@ public class AlarmaComprovacioHelper {
 						recoveryStabilitySeconds);
 				return true;
 			}
-			alarmaAnteriorNoFinalitzada.setDataFinalitzacio(now);
+			alarmaAnteriorNoFinalitzada.setDataFinalitzacio(salut.getData());
 			clearRecoveryTracking(alarmaConfig);
             publishActiveAlarmsChangedEvent();
             if (alarmaConfig.isNotificacioFinalitzada()) {
