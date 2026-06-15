@@ -91,7 +91,10 @@ const translationCa = {
         configuracioDescription: "Opcions de d'administració de l'aplicació.",
         app: "Aplicacions",
         entorn: "Entorns",
+        versions: "Versionat",
+        versionsDescription: "Versionat d'entorns d'aplicacions",
         versionsEntorn: "Versions per entorn",
+        entornAppHist: "Històric d'entorn d'aplicació",
         alarmaConfig: "Alarmes",
         alarmaConfigConsultor: "Configurar alarmes",
         integracio: "Integracions",
@@ -640,6 +643,13 @@ const translationCa = {
         },
         versionsEntorns: {
             title: "Versions per entorn",
+        },
+        entornAppHist: {
+            title: "Històric d'entorn d'aplicació",
+            versioRevisio: "Versió/Revisió",
+            filter: {
+                more: "Més camps",
+            },
         },
         integracions: {
             title: "Integracions",

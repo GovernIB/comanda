@@ -29,6 +29,7 @@ const mocks = vi.hoisted(() => ({
                     { rel: 'app' },
                     { rel: 'entorn' },
                     { rel: 'entornApp' },
+                    { rel: 'entornAppHist' },
                     { rel: 'integracio' },
                     { rel: 'dimensio' },
                     { rel: 'indicador' },
@@ -47,6 +48,10 @@ const mocks = vi.hoisted(() => ({
                 estadistiques: 'Estadístiques',
                 tasca: 'Tasca',
                 avis: 'Avisos',
+                versions: 'Versions',
+                versionsDescription: 'Descripció versions',
+                versionsEntorn: 'Versions entorn',
+                entornAppHist: 'Historial versions',
                 monitoritzacio: 'Monitorització',
                 monitoritzacioDescription: 'Descripció monitorització',
                 monitor: 'Monitor',
@@ -56,7 +61,6 @@ const mocks = vi.hoisted(() => ({
                 configuracioDescription: 'Descripció configuració',
                 app: 'Apps',
                 entorn: 'Entorns',
-                versionsEntorn: 'Versions',
                 alarmaConfig: 'Alarmes',
                 integracio: 'Integracions',
                 dimensio: 'Dimensions',
@@ -178,17 +182,17 @@ describe('App', () => {
         expect(props.appbarBackgroundColor).toBe('#fff');
         expect(props.availableLanguages).toEqual(['ca', 'es']);
         expect(props.headerMenuEntries).toBeUndefined();
-        expect(props.menuEntries).toHaveLength(6);
+        expect(props.menuEntries).toHaveLength(7);
         expect(props.menuAppearance).toBe('theme');
         expect(props.defaultMuiComponentProps.dataGrid.paginationModel).toEqual({
             page: 0,
             pageSize: 20,
         });
-        expect(props.menuEntries[5].children.some((entry: { id: string }) => entry.id === 'estadisticaWidget')).toBe(true);
-        expect(props.menuEntries[5].children.some((entry: { id: string }) => entry.id === 'plantilla')).toBe(true);
-        expect(props.menuEntries[5].children.some((entry: { id: string }) => entry.id === 'parametre')).toBe(true);
-        expect(props.menuEntries[4].description).toBe('Descripció monitorització');
-        expect(props.menuEntries[5].description).toBe('Descripció configuració');
+        expect(props.menuEntries[6].children.some((entry: { id: string }) => entry.id === 'estadisticaWidget')).toBe(true);
+        expect(props.menuEntries[6].children.some((entry: { id: string }) => entry.id === 'plantilla')).toBe(true);
+        expect(props.menuEntries[6].children.some((entry: { id: string }) => entry.id === 'parametre')).toBe(true);
+        expect(props.menuEntries[5].description).toBe('Descripció monitorització');
+        expect(props.menuEntries[6].description).toBe('Descripció configuració');
     });
 
     it('App_quanLusuariNoTeRolsFuncionals_mostraElMenuLateralLimitat', async () => {
@@ -216,7 +220,7 @@ describe('App', () => {
         const props = mocks.baseAppPropsMock.mock.calls[0]?.[0];
 
         expect(props.headerMenuEntries).toBeUndefined();
-        expect(props.menuEntries).toHaveLength(6);
+        expect(props.menuEntries).toHaveLength(7);
     });
 
     it('App_quanLusuariNoEstaLlest_noMostraElMenuSuperior', () => {
@@ -271,9 +275,9 @@ describe('App', () => {
         render(<App />);
 
         const props = mocks.baseAppPropsMock.mock.calls[0]?.[0];
-        const configuracioChildren = props.menuEntries[5].children;
+        const configuracioChildren = props.menuEntries[6].children;
 
-        expect(props.menuEntries).toHaveLength(6);
+        expect(props.menuEntries).toHaveLength(7);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'estadisticaWidget')).toBe(false);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'plantilla')).toBe(false);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'parametre')).toBe(false);
@@ -299,12 +303,13 @@ describe('App', () => {
         render(<App />);
 
         const props = mocks.baseAppPropsMock.mock.calls[0]?.[0];
-        const configuracioChildren = props.menuEntries[4].children;
+        const configuracioChildren = props.menuEntries[5].children;
 
         expect(props.menuEntries.map((entry: { id: string }) => entry.id)).toEqual([
             'salut',
             'tasca',
             'avis',
+            'versions',
             'monitoritzacio',
             'configuracio',
         ]);
@@ -381,5 +386,18 @@ describe('App', () => {
         const props = mocks.baseAppPropsMock.mock.calls[0]?.[0];
 
         expect(props.menuAppearance).toBe('footer');
+    });
+
+    it('App_quanLusuariEsAdmin_inclouElMenuVersionsAmbElsSubmenus', () => {
+        render(<App />);
+
+        const props = mocks.baseAppPropsMock.mock.calls[0]?.[0];
+        const menuVersions = props.menuEntries.find((entry: { id: string }) => entry.id === 'versions');
+
+        expect(menuVersions).toBeDefined();
+        expect(menuVersions.description).toBe('Descripció versions');
+        expect(menuVersions.children).toHaveLength(2);
+        expect(menuVersions.children.some((entry: { id: string }) => entry.id === 'versionsEntorn')).toBe(true);
+        expect(menuVersions.children.some((entry: { id: string }) => entry.id === 'entornAppHist')).toBe(true);
     });
 });

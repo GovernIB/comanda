@@ -14,10 +14,6 @@ export interface IEntornAppModel extends IBaseEntity {
     integracioCount?: number;
     subsistemaCount?: number;
 
-    integracions?   : IAppIntegracio[];
-    subsistemes?    : IAppSubsistema[];
-    contexts?       : IAppContext[];
-
     estadisticaInfoUrl? : string | null
     estadisticaUrl?     : string | null
     estadisticaCron?    : string | null
@@ -98,10 +94,6 @@ export class EntornAppModel extends BaseEntity implements Partial<IEntornAppMode
 
     integracioCount?: number;
     subsistemaCount?: number;
-
-    integracions?   : IAppIntegracio[];
-    subsistemes?    : IAppSubsistema[];
-    contexts?       : IAppContext[];
 
     estadisticaInfoUrl? : string | null;
     estadisticaUrl?     : string | null;

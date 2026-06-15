@@ -91,7 +91,10 @@ const translationEs: translationResourcesType = {
         configuracioDescription: "Opciones de administración de la aplicación.",
         app: "Aplicaciones",
         entorn: "Entornos",
+        versions: "Versionado",
+        versionsDescription: "Versionado de entornos de aplicaciones",
         versionsEntorn: "Versiones por entorno",
+        entornAppHist: "Histórico de entorno de aplicación",
         alarmaConfig: "Alarmas",
         alarmaConfigConsultor: "Configurar alarmas",
         integracio: "Integraciones",
@@ -640,6 +643,13 @@ const translationEs: translationResourcesType = {
         },
         versionsEntorns: {
             title: "Versiones por entorno",
+        },
+        entornAppHist: {
+            title: "Histórico de entorno de aplicación",
+            versioRevisio: "Versión/Revisión",
+            filter: {
+                more: "Más campos",
+            },
         },
         integracions: {
             title: "Integraciones",

@@ -7,20 +7,14 @@ import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
-import es.caib.comanda.configuracio.logic.intf.model.AppIntegracio;
-import es.caib.comanda.configuracio.logic.intf.model.AppSubsistema;
-import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
-import es.caib.comanda.configuracio.logic.intf.model.ExpectedResponseTypeEnum;
+import es.caib.comanda.configuracio.logic.intf.model.*;
 import es.caib.comanda.configuracio.logic.service.ConfiguracioSchedulerService;
 import es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl;
 import es.caib.comanda.configuracio.persist.entity.*;
 import es.caib.comanda.configuracio.persist.repository.*;
-import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
+import es.caib.comanda.ms.logic.helper.*;
 import es.caib.comanda.model.v1.log.FitxerInfo;
 import es.caib.comanda.model.v1.salut.AppInfo;
-import es.caib.comanda.ms.logic.helper.CacheHelper;
-import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
-import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -153,6 +147,8 @@ public class EntornAppServiceImplTest {
     private I18nUtil i18nUtil;
     @Mock
     private ApplicationContext applicationContext;
+    @Mock
+    private ObjectMappingHelper objectMappingHelper;
 
     private TestableEntornAppServiceImpl entornAppService;
 
@@ -184,6 +180,7 @@ public class EntornAppServiceImplTest {
             resourceEntityMappingHelper,
             eventPublisher
         );
+        ReflectionTestUtils.setField(entornAppService, "objectMappingHelper", objectMappingHelper);
         
         // Setup test data
         AppEntity appEntity = new AppEntity();
@@ -244,12 +241,21 @@ public class EntornAppServiceImplTest {
 
     @Test
     void testAfterConversion() {
+        entornAppService.afterConversion(entornAppEntity, entornAppResource);
+
+        assertNotNull(entornAppResource.getEntornAppDescription());
+    }
+
+    @Test
+    void testIntegracionsSubsistemesContextsPerspectiveApplicator() {
         // Mock repository calls
         when(integracioRepository.findByEntornApp(entornAppEntity)).thenReturn(integracions);
         when(subsistemaRepository.findByEntornApp(entornAppEntity)).thenReturn(subsistemes);
-        
+
         // Call the method to test
-        entornAppService.afterConversion(entornAppEntity, entornAppResource);
+        EntornAppServiceImpl.IntegracionsSubsistemesContextsPerspectiveApplicator applicator =
+                entornAppService.new IntegracionsSubsistemesContextsPerspectiveApplicator();
+        applicator.applySingle(EntornApp.PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS, entornAppEntity, entornAppResource);
         
         // Verify that the repositories were called
         verify(integracioRepository).findByEntornApp(entornAppEntity);
@@ -260,7 +266,6 @@ public class EntornAppServiceImplTest {
         assertEquals(1, entornAppResource.getIntegracions().size());
         AppIntegracio appIntegracio = entornAppResource.getIntegracions().get(0);
         assertEquals("INT1", appIntegracio.getCodi());
-//        assertEquals("Integracio 1", appIntegracio.getNom());
         assertTrue(appIntegracio.isActiva());
         
         assertNotNull(entornAppResource.getSubsistemes());
@@ -783,5 +788,62 @@ public class EntornAppServiceImplTest {
                 new String[]{"es.caib..log", "server.log"},
                 resource.getDefaultLogs()
         );
+    }
+
+    @Test
+    @DisplayName("HitoricVersionsPerspectiveApplicator: crida al repo i mapeja resultats")
+    void hitoricVersionsPerspectiveApplicator_aplicaHistoric_cridaRepoIMapeja() {
+        // Given
+        EntornAppHistEntity hist1 = new EntornAppHistEntity();
+        hist1.setId(1L);
+        hist1.setVersio("1.0.0");
+        hist1.setRevisio("rev-a");
+        hist1.setCanviVersio(true);
+        EntornAppHistEntity hist2 = new EntornAppHistEntity();
+        hist2.setId(2L);
+        hist2.setVersio("1.1.0");
+        hist2.setRevisio("rev-b");
+        hist2.setCanviVersio(false);
+        List<EntornAppHistEntity> historics = Arrays.asList(hist1, hist2);
+        when(entornAppHistRepository.findByEntornAppOrderByDataDesc(entornAppEntity)).thenReturn(historics);
+        EntornAppHist resource1 = new EntornAppHist();
+        resource1.setId(1L);
+        EntornAppHist resource2 = new EntornAppHist();
+        resource2.setId(2L);
+        when(objectMappingHelper.newInstanceMap(eq(hist1), eq(EntornAppHist.class))).thenReturn(resource1);
+        when(objectMappingHelper.newInstanceMap(eq(hist2), eq(EntornAppHist.class))).thenReturn(resource2);
+        EntornApp resource = new EntornApp();
+
+        // When
+        EntornAppServiceImpl.HitoricVersionsPerspectiveApplicator applicator =
+                entornAppService.new HitoricVersionsPerspectiveApplicator();
+        applicator.applySingle(EntornApp.PERSPECTIVE_HISTORICS_VERSIONS, entornAppEntity, resource);
+
+        // Then
+        verify(entornAppHistRepository).findByEntornAppOrderByDataDesc(entornAppEntity);
+        verify(objectMappingHelper, times(2)).newInstanceMap(any(EntornAppHistEntity.class), eq(EntornAppHist.class));
+        assertNotNull(resource.getEntornAppHistorics());
+        assertEquals(2, resource.getEntornAppHistorics().size());
+    }
+
+    @Test
+    @DisplayName("HitoricVersionsPerspectiveApplicator: quan no hi ha dades, retorna llista buida")
+    void hitoricVersionsPerspectiveApplicator_senseDades_retornaLlistaBuida() {
+        // Given
+        when(entornAppHistRepository.findByEntornAppOrderByDataDesc(entornAppEntity))
+                .thenReturn(Collections.emptyList());
+
+        EntornApp resource = new EntornApp();
+        EntornAppServiceImpl.HitoricVersionsPerspectiveApplicator applicator =
+                entornAppService.new HitoricVersionsPerspectiveApplicator();
+
+        // When
+        applicator.applySingle(EntornApp.PERSPECTIVE_HISTORICS_VERSIONS, entornAppEntity, resource);
+
+        // Then
+        verify(entornAppHistRepository).findByEntornAppOrderByDataDesc(entornAppEntity);
+        assertNotNull(resource.getEntornAppHistorics());
+        assertTrue(resource.getEntornAppHistorics().isEmpty());
+        verifyNoInteractions(objectMappingHelper);
     }
 }

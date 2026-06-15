@@ -76,10 +76,10 @@ public class AppInfoEntornAppHelper {
      */
     private void registrarHistoric(EntornAppEntity entornApp, String versio, String revisio, boolean canviVersio) {
         EntornAppHistEntity historic = new EntornAppHistEntity();
-        historic.setEntornApp(entornApp);  // JPA gestiona la FK automáticamente
+        historic.setEntornApp(entornApp);
         historic.setVersio(versio);
         historic.setRevisio(revisio);
-        historic.setCanviVersio(canviVersio);  // true SOLO si cambió la versión
+        historic.setCanviVersio(canviVersio);
         historic.setData(LocalDateTime.now());
 
         entornAppHistRepository.save(historic);

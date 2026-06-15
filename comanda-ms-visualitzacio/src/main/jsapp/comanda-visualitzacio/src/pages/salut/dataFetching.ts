@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import { ISO_DATE_FORMAT } from '../../util/dateUtils';
 import { agrupacioFromMinutes } from '../../components/salut/SalutToolbar';
 import { SalutModel } from '../../types/salut.model';
-import { EntornAppModel } from '../../types/app.model';
+import { EntornAppModel, IAppContext, IAppIntegracio, IAppSubsistema } from '../../types/app.model';
 import { useIsUserAdmin } from '../../components/UserContext.ts';
 import { IBaseEntity } from '../../types/base-entity.model.ts';
 
@@ -19,6 +19,14 @@ export type DefaultLogsPerspective = {
 const PERSPECTIVE_HISTORICS_VERSIONS = 'historics_versions';
 export type EntornAppHistPerspective = {
     entornAppHistorics: ISalutHistVersion[];
+}
+
+// es.caib.comanda.configuracio.logic.intf.model.EntornApp#PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS
+export const PERSPECTIVE_ENTORN_APP_INTEGRACIONS_SUBSISTEMES_CONTEXTS = 'integracions_subsistemes_contexts';
+export type IntegracionsSubsistemesContextsPerspective = {
+    integracions?   : IAppIntegracio[];
+    subsistemes?    : IAppSubsistema[];
+    contexts?       : IAppContext[];
 }
 
 export interface ISalutHistVersion extends IBaseEntity {
@@ -42,7 +50,7 @@ export type SalutInformeLatenciaItem = {
 export interface AppDataState {
     loading: boolean | null; // Null indica que no se ha hecho ninguna petición aún
     refreshInfoLoading: boolean;
-    entornApp: (EntornAppModel & DefaultLogsPerspective & EntornAppHistPerspective) | null;
+    entornApp: (EntornAppModel & DefaultLogsPerspective & EntornAppHistPerspective & IntegracionsSubsistemesContextsPerspective) | null;
     estats: Record<string, any> | null;
     latencies: SalutInformeLatenciaItem[] | null;
     salutCurrentApp: SalutModel | null;
