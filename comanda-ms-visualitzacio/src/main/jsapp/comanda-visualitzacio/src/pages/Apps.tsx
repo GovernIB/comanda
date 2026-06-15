@@ -6,7 +6,6 @@ import {
     FormField,
     FormPage,
     FormTabsValue,
-    GridPage,
     MuiActionReportButton,
     MuiDataGrid,
     MuiDataGridColDef,
@@ -40,6 +39,7 @@ import notNull from '../util/arrayUtils.ts';
 import { useIsUserAdmin } from '../components/UserContext.ts';
 import { getErrorMessage } from '../util/exceptionUtils.ts';
 import * as z from 'zod';
+import { AppType } from '../models/app.schema';
 
 const PingUrlActionResponse = z.object({
     success: z.boolean(),
@@ -463,12 +463,12 @@ const Apps: React.FC = () => {
         {
             label: t($ => $.components.permisos.title),
             icon: 'lock',
-            onClick: (id: any, row: any) => appPermissionShow(id, row.nom),
+            onClick: (id: AppType['id'], row: AppType) => appPermissionShow(id, row.nom),
         },
         gestorReadOnly ? {
             label: t($ => $.components.details),
             icon: 'info',
-            onClick: (id: any) => navigate(`form/${id}`),
+            onClick: (id: AppType['id']) => navigate(`form/${id}`),
         } : null,
         {
             label: t($ => $.page.apps.action.export),
@@ -501,7 +501,7 @@ const Apps: React.FC = () => {
         },
     ];
     return (
-        <GridPage>
+        <>
             <PageTitle title={t($ => $.page.apps.title)} />
             <MuiDataGrid
                 apiRef={gridApiRef}
@@ -520,7 +520,7 @@ const Apps: React.FC = () => {
                 {...(!gestorReadOnly ? dataGridProps : {})}
             />
             {appPermissionComponent}
-        </GridPage>
+        </>
     );
 };
 
