@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 
 export const ISO_DATE_FORMAT = 'YYYY-MM-DDTHH:mm:ss';
 
-export const formatDate = (date: string, format: string = 'DD/MM/YYYY HH:mm:ss'): string | null => {
+export const formatDate = (date?: string, format: string = 'DD/MM/YYYY HH:mm:ss'): string | null => {
     return date ? dayjs(date).format(format) : null;
 };
 
