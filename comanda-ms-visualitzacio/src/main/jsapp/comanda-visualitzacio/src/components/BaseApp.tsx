@@ -31,6 +31,8 @@ import 'dayjs/locale/es';
 import { Theme, useTheme } from '@mui/material/styles';
 import { ROLE_ADMIN } from './UserProvider.tsx';
 import ComandaFooter, { comandaFooterHeight } from './ComandaFooter.tsx';
+import ListItemText from "@mui/material/ListItemText";
+import {formatDate} from "../util/dateUtils.ts";
 
 export type MenuEntryWithResource = MenuEntry & {
     resourceName?: string;
@@ -244,6 +246,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
             console.warn('[BACK] No s\'ha pogut tornar enrere, ni s\'ha especificat una ruta alternativa ni existeix una entrada prèvia a l\'historial de navegació');
         }
     }
+    console.log("user", user)
     const showAlarms = indexState?.links?.has('alarma');
     const baseAppElement = <MuiBaseApp
         code={code}
@@ -267,6 +270,10 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
             <RoleSelector key="roleSelector" />
         ]}
         headerAuthBadgeIcon={currentRole === ROLE_ADMIN ? 'settings' : undefined}
+        headerAuthUserAdditionalInfo={<ListItemText
+            primary={user?.nom}
+            secondary={<>{user?.codi}<br/>{formatDate(user?.darreraConnexio)}</>}
+        />}
         footer={<ComandaFooter />}
         footerHeight={comandaFooterHeight}
         persistentLanguage

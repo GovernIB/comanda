@@ -55,6 +55,7 @@ export class UsuariModel extends BaseEntity implements Required<IUsuari> {
     alarmaMail: boolean | undefined;
     alarmaMailAgrupar: boolean | undefined;
     alarma: string | undefined;
+    darreraConnexio: string | undefined;
 
     constructor(usuari: IUsuari) {
         super(usuari);
