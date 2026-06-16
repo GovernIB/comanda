@@ -64,8 +64,8 @@ class AlarmaComprovacioHelperTest {
         config.setEntornAppId(10L);
         config.setNom("Test Config");
         config.setMissatge("Missatge d'alarma");
-        lenient().when(parametresHelper.getParametreEnter("es.caib.comanda.alarma.salut.freshness.seconds", 120)).thenReturn(120);
-        lenient().when(parametresHelper.getParametreEnter("es.caib.comanda.alarma.recovery.stability.seconds", 180)).thenReturn(180);
+        lenient().when(parametresHelper.getParametreEnter(eq("es.caib.comanda.alarma.salut.freshness.seconds"), any())).thenReturn(120);
+        lenient().when(parametresHelper.getParametreEnter(eq("es.caib.comanda.alarma.recovery.stability.seconds"), any())).thenReturn(180);
         lenient().when(alarmaRepository.save(any(AlarmaEntity.class)))
             .thenAnswer(invocation -> {
                 AlarmaEntity entity = invocation.getArgument(0);
@@ -271,6 +271,7 @@ class AlarmaComprovacioHelperTest {
         alarmaActiva.setAlarmaConfig(config);
         alarmaActiva.setDataActivacio(LocalDateTime.now().minusHours(1));
         alarmaActiva.setEstat(AlarmaEstat.ACTIVA);
+        alarmaActiva.setDataIniciRecuperacio(LocalDateTime.now().minusSeconds(10));
 
         when(alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(config))
                 .thenReturn(Optional.of(alarmaActiva));
@@ -281,6 +282,7 @@ class AlarmaComprovacioHelperTest {
         // Assert
         assertThat(result).isTrue();
         assertThat(alarmaActiva.getDataFinalitzacio()).isNull();
+        assertThat(alarmaActiva.getDataIniciRecuperacio()).isNotNull();
     }
 
     @Test
@@ -293,7 +295,7 @@ class AlarmaComprovacioHelperTest {
                 .comparador(AlarmaConfigReglaComparador.EN)
                 .valorsText(Collections.singletonList("DOWN"))
                 .build());
-        when(parametresHelper.getParametreEnter("es.caib.comanda.alarma.recovery.stability.seconds", 180)).thenReturn(1);
+        when(parametresHelper.getParametreEnter(eq("es.caib.comanda.alarma.recovery.stability.seconds"), any())).thenReturn(1);
         PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(freshSalut().appEstat(EstatSalutEnum.UP.name()).build());
 
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
@@ -305,17 +307,16 @@ class AlarmaComprovacioHelperTest {
         alarmaActiva.setAlarmaConfig(config);
         alarmaActiva.setDataActivacio(LocalDateTime.now().minusHours(1));
         alarmaActiva.setEstat(AlarmaEstat.ACTIVA);
+        alarmaActiva.setDataIniciRecuperacio(LocalDateTime.now().minusSeconds(2));
 
         when(alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(config))
                 .thenReturn(Optional.of(alarmaActiva));
-
-        alarmaComprovacioHelper.comprovar(config);
-        sleepSilently(1100);
 
         boolean result = alarmaComprovacioHelper.comprovar(config);
 
         assertThat(result).isFalse();
         assertThat(alarmaActiva.getDataFinalitzacio()).isNotNull();
+        assertThat(alarmaActiva.getDataIniciRecuperacio()).isNull();
     }
 
     @Test
@@ -1051,8 +1052,8 @@ class AlarmaComprovacioHelperTest {
 	}
 
 	@Test
-	@DisplayName("La finalització d'una alarma agafa la data de la Salut")
-	void comprovar_quanFinalitzaAlarma_dataFinalitzacioEsLaDeLaSalut() {
+	@DisplayName("La finalització d'una alarma agafa la data d'inici de la recuperació")
+	void comprovar_quanFinalitzaAlarma_dataFinalitzacioEsLaDeIniciRecuperacio() {
 		// Arrange
 		mockRule(AlarmaConfigRegla.builder()
 			.tipusNode(AlarmaConfigReglaTipusNode.CONDICIO)
@@ -1062,7 +1063,7 @@ class AlarmaComprovacioHelperTest {
 			.valorsText(Collections.singletonList("DOWN"))
 			.build());
 		// Forcem que la recuperació sigui estable immediatament
-		when(parametresHelper.getParametreEnter("es.caib.comanda.alarma.recovery.stability.seconds", 180)).thenReturn(0);
+		when(parametresHelper.getParametreEnter(eq("es.caib.comanda.alarma.recovery.stability.seconds"), any())).thenReturn(0);
 
 		LocalDateTime dataSalut = LocalDateTime.now().minusSeconds(10);
 		PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(Salut.builder()
@@ -1077,6 +1078,8 @@ class AlarmaComprovacioHelperTest {
 		AlarmaEntity alarmaActiva = new AlarmaEntity();
 		alarmaActiva.setEstat(AlarmaEstat.ACTIVA);
 		alarmaActiva.setDataActivacio(LocalDateTime.now().minusHours(1));
+		LocalDateTime dataIniciRecuperacio = LocalDateTime.now().minusSeconds(5);
+		alarmaActiva.setDataIniciRecuperacio(dataIniciRecuperacio);
 
 		when(alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(config))
 			.thenReturn(Optional.of(alarmaActiva));
@@ -1085,7 +1088,7 @@ class AlarmaComprovacioHelperTest {
 		alarmaComprovacioHelper.comprovar(config);
 
 		// Assert
-		assertThat(alarmaActiva.getDataFinalitzacio()).isEqualTo(dataSalut);
+		assertThat(alarmaActiva.getDataFinalitzacio()).isEqualTo(dataIniciRecuperacio);
 	}
 
     private Salut.SalutBuilder freshSalut() {

@@ -55,7 +55,6 @@ public class AlarmaComprovacioHelper {
     private final ComandaSseEventPublisher comandaSseEventPublisher;
 	private final ParametresHelper parametresHelper;
 	private final ObjectMapper objectMapper;
-	private final Map<Long, LocalDateTime> recoveryStableSinceByConfigId = new ConcurrentHashMap<>();
 
 	public boolean comprovar(AlarmaConfigEntity alarmaConfig) {
 		Salut salut = findSalutLast(alarmaConfig.getEntornAppId());
@@ -198,8 +197,8 @@ public class AlarmaComprovacioHelper {
 	 * @return true si s'ha activat l'alarma, false en cas contrari.
 	 */
 	private boolean processarCondicioAfirmativa(AlarmaConfigEntity alarmaConfig, Salut salut) {
-		clearRecoveryTracking(alarmaConfig);
 		Optional<AlarmaEntity> optionalAlarmaAnteriorNoFinalitzada = alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(alarmaConfig);
+		clearRecoveryTracking(optionalAlarmaAnteriorNoFinalitzada.orElse(null));
 		AlarmaEntity alarmaActivada = null;
 
 		if (hasAlarmaConfigPeriodes(alarmaConfig)) {
@@ -293,17 +292,18 @@ public class AlarmaComprovacioHelper {
 	private boolean processarCondicioNegativa(AlarmaConfigEntity alarmaConfig, Salut salut) {
 		Optional<AlarmaEntity> optionalAlarmaAnteriorNoFinalitzada = alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(alarmaConfig);
 		if (optionalAlarmaAnteriorNoFinalitzada.isEmpty()) {
-			clearRecoveryTracking(alarmaConfig);
 			return false;
 		}
 		AlarmaEntity alarmaAnteriorNoFinalitzada = optionalAlarmaAnteriorNoFinalitzada.get();
 
 		if (alarmaAnteriorNoFinalitzada.getEstat() == AlarmaEstat.ESBORRANY) {
-			clearRecoveryTracking(alarmaConfig);
 			alarmaRepository.delete(alarmaAnteriorNoFinalitzada);
 		} else {
 			LocalDateTime now = LocalDateTime.now();
-			LocalDateTime stableSince = recoveryStableSinceByConfigId.computeIfAbsent(alarmaConfig.getId(), ignored -> now);
+			if (alarmaAnteriorNoFinalitzada.getDataIniciRecuperacio() == null) {
+				alarmaAnteriorNoFinalitzada.setDataIniciRecuperacio(salut.getData());
+			}
+			LocalDateTime stableSince = alarmaAnteriorNoFinalitzada.getDataIniciRecuperacio();
 			long recoveryStabilitySeconds = getRecoveryStabilitySeconds();
 			if (Duration.between(stableSince, now).getSeconds() < recoveryStabilitySeconds) {
 				log.debug("Recuperació detectada però encara no estable (configId={}, estableDesDe={}, estabilitzacioSegons={})",
@@ -312,8 +312,8 @@ public class AlarmaComprovacioHelper {
 						recoveryStabilitySeconds);
 				return true;
 			}
-			alarmaAnteriorNoFinalitzada.setDataFinalitzacio(salut.getData());
-			clearRecoveryTracking(alarmaConfig);
+			alarmaAnteriorNoFinalitzada.setDataFinalitzacio(stableSince);
+			clearRecoveryTracking(alarmaAnteriorNoFinalitzada);
             publishActiveAlarmsChangedEvent();
             if (alarmaConfig.isNotificacioFinalitzada()) {
                 publishAlarmaMailEvent(alarmaAnteriorNoFinalitzada, AlarmaMailEventType.RECUPERACIO);
@@ -323,7 +323,8 @@ public class AlarmaComprovacioHelper {
 	}
 
 	private void processarCondicioIndeterminada(AlarmaConfigEntity alarmaConfig, Salut salut) {
-		clearRecoveryTracking(alarmaConfig);
+		Optional<AlarmaEntity> optionalAlarmaAnteriorNoFinalitzada = alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(alarmaConfig);
+		clearRecoveryTracking(optionalAlarmaAnteriorNoFinalitzada.orElse(null));
 		if (salut == null) {
 			log.debug("No es modifica l'alarma perquè no hi ha dades de salut recents per l'entornApp {}", alarmaConfig.getEntornAppId());
 			return;
@@ -368,9 +369,9 @@ public class AlarmaComprovacioHelper {
 				(int) DEFAULT_RECOVERY_STABILITY_SECONDS);
 	}
 
-	private void clearRecoveryTracking(AlarmaConfigEntity alarmaConfig) {
-		if (alarmaConfig != null && alarmaConfig.getId() != null) {
-			recoveryStableSinceByConfigId.remove(alarmaConfig.getId());
+	private void clearRecoveryTracking(AlarmaEntity alarmaEntity) {
+		if (alarmaEntity != null && alarmaEntity.getDataIniciRecuperacio() != null) {
+			alarmaEntity.setDataIniciRecuperacio(null);
 		}
 	}
 
