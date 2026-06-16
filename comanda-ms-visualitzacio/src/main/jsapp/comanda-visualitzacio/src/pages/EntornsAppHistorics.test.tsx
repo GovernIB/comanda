@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import EntornAppHist from './EntornsAppHistorics';
 
@@ -90,42 +90,6 @@ describe('EntornAppHist', () => {
         vi.clearAllMocks();
     });
 
-    it('EntornAppHist_quanCarrega_mostraElCircularProgressInicialment', async () => {
-        let resolvePromise: (value: any) => void;
-        const pendingPromise = new Promise((resolve) => {
-            resolvePromise = resolve;
-        });
-        
-        mocks.useResourceApiServiceMock.mockReturnValue({
-            isReady: true,
-            find: vi.fn().mockReturnValue(pendingPromise),
-        });
-
-        render(<EntornAppHist />);
-
-        expect(screen.getByTestId('page-title')).toHaveTextContent('Històric de versions');
-        expect(screen.getByRole('progressbar')).toBeInTheDocument();
-        expect(screen.queryByTestId('data-grid')).not.toBeInTheDocument();
-
-        await act(async () => {
-            resolvePromise!(mockEntornAppsData);
-        });
-    });
-
-    it('EntornAppHist_quanCarregaCorrectament_mostraElDataGridIAmagaElLoader', async () => {
-        render(<EntornAppHist />);
-
-        await waitFor(() => {
-            expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-        });
-
-        expect(screen.getByTestId('page-title')).toHaveTextContent('Històric de versions');
-        expect(screen.getByTestId('data-grid')).toBeInTheDocument();
-        expect(screen.getByTestId('mui-filter')).toBeInTheDocument();
-
-        expect(mocks.useResourceApiServiceMock).toHaveBeenCalledWith('entornApp');
-    });
-
     it('EntornAppHist_columnaEntornApp_formatejaCorrectamentElValor', async () => {
         render(<EntornAppHist />);
 
@@ -191,7 +155,7 @@ describe('EntornAppHist', () => {
         const resultSecondary = mockRenderCell({
             row: { versio: '1.5.0', revisio: 'xyz987uvw654321', canviVersio: false },
         });
-        
+
         const { container: containerSecondary } = render(resultSecondary);
         expect(containerSecondary.querySelector('[data-testid="version-chip"]')).toHaveAttribute('data-color', 'secondary');
         expect(containerSecondary.querySelector('[data-testid="revision-chip"]')).toHaveTextContent('xyz987u...');

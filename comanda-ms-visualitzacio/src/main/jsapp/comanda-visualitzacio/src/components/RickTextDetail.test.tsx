@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
                 copiarContingutTitle: 'Copiar contingut',
                 copiarContingut: 'Copiar',
                 copiarContingutSuccess: 'Contingut copiat',
+                copiarContingutError: 'Error al copiar',
             },
         })
     ),
@@ -48,8 +49,9 @@ describe('StacktraceBlock', () => {
         ).toBeInTheDocument();
     });
 
-    it('StacktraceBlock_quanEsPremCopiar_copiaElTextIMostraElSnackbar', async () => {
-        // Verifica que el botó copia el contingut i obre el missatge de confirmació.
+    it('StacktraceBlock_quanEsPremCopiar_copiaElTextIMostraElSnackbar_quanEsSuportat', async () => {
+        // Verifica que el botó copia el contingut i obre el missatge de confirmació quan isSecureContext és cert.
+        vi.stubGlobal('isSecureContext', true);
         mocks.writeTextMock.mockResolvedValue(undefined);
         render(<StacktraceBlock title="Stacktrace" value="Error greu" />);
 
@@ -59,5 +61,18 @@ describe('StacktraceBlock', () => {
             expect(mocks.writeTextMock).toHaveBeenCalledWith('Error greu');
         });
         expect(screen.getByText('Contingut copiat')).toBeInTheDocument();
+    });
+
+    it('StacktraceBlock_quanEsPremCopiar_mostraError_quanNoEsSuportat', async () => {
+        // Verifica que el botó mostra error i NO copia quan isSecureContext és fals.
+        vi.stubGlobal('isSecureContext', false);
+        render(<StacktraceBlock title="Stacktrace" value="Error greu" />);
+
+        fireEvent.click(screen.getByRole('button', { name: /Copiar/i }));
+
+        await waitFor(() => {
+            expect(screen.getByText('Error al copiar')).toBeInTheDocument();
+        });
+        expect(mocks.writeTextMock).not.toHaveBeenCalled();
     });
 });

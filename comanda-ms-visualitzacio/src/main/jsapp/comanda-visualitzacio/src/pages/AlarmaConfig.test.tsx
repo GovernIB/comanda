@@ -28,6 +28,11 @@ const mocks = vi.hoisted(() => ({
                 clear: 'Netejar',
             },
             page: {
+                alarma: {
+                    snackbar: {
+                        title: 'Alarmes',
+                    },
+                },
                 alarmaConfig: {
                     title: 'Configuració d alarmes',
                     update: 'Editar configuració',
@@ -276,6 +281,10 @@ vi.mock('reactlib', async (importOriginal) => {
         },
     }),
 }});
+
+vi.mock('../components/PageTitle.tsx', () => ({
+    default: ({ title }: { title: string }) => <div data-testid="page-title">{title}</div>,
+}));
 
 vi.mock('../components/UserContext', () => ({
     useIsUserAdmin: () => true,
