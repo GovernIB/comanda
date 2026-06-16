@@ -228,7 +228,7 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
                         paddingLeft: shrink ? '40px' : 24 + 16 * level + (level > 0 ? 8 : 0) + 'px',
                     }}>
                     {iconComponent}
-                    <ListItemText primary={primary} sx={itemTextSx} />
+                    {!shrink && <ListItemText primary={primary} sx={itemTextSx} />}
                     {expandedIconComponent}
                 </ListItemButton>
             )}
