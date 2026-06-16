@@ -87,10 +87,11 @@ const EstatBadge: React.FC<{ value: string, children?: string, }> = ({ value, ch
 
 type MonitorDetailsProps = {
     data: any;
+    selectedModule: string;
 };
 
 const MonitorDetails: React.FC<MonitorDetailsProps> = (props) => {
-    const { data } = props;
+    const { data, selectedModule } = props;
     const { t } = useTranslation();
     const { t: tStringKey } = useTranslationStringKey();
     const elementsDetail = [
@@ -107,6 +108,7 @@ const MonitorDetails: React.FC<MonitorDetailsProps> = (props) => {
             contentValue: <EstatBadge value={data?.estat} />,
         },
         { label: t($ => $.page.monitors.detail.codiUsuari), value: data?.codiUsuari },
+        { label: t($ => $.page.monitors.column.mailAddress), value: selectedModule === 'ALARMES' ? data?.url : undefined },
         { label: t($ => $.page.monitors.detail.errorDescripcio), value: data?.errorDescripcio },
         { label: t($ => $.page.monitors.detail.excepcioMessage), value: data?.excepcioMessage },
         {
@@ -226,11 +228,12 @@ const dataGridPerspectives = ['ENTORN_APP'];
 const Monitors: React.FC = () => {
     const { t } = useTranslation();
     const closeDialogButton = useCloseDialogButtons();
+    const [selectedModule, setSelectedModule] = React.useState<string>('SALUT');
     const [detailDialogShow, detailDialogComponent] = useMuiContentDialog(closeDialogButton);
     const showDetail = (data: any) => {
         detailDialogShow(
             t($ => $.page.monitors.detail.title),
-            <MonitorDetails data={data} />,
+            <MonitorDetails data={data} selectedModule={selectedModule} />,
             closeDialogButton,
             { maxWidth: 'lg', fullWidth: true, }
         );
@@ -245,7 +248,6 @@ const Monitors: React.FC = () => {
     }, [filterAppId, filterEntornId]);
     const handleFilterAppChange = (appId: number | undefined) => setFilterAppId(appId);
     const handleFilterEntornChange = (entornId: number | undefined) => setFilterEntornId(entornId);
-    const [selectedModule, setSelectedModule] = React.useState<string>('SALUT');
     const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
         setSelectedModule(newValue);
     };

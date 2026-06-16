@@ -1,7 +1,7 @@
 package es.caib.comanda.back;
 
 import es.caib.comanda.ms.back.intf.HandlerInterceptorWithPath;
-import es.caib.comanda.usuaris.logic.intf.service.UsuariService;
+import es.caib.comanda.usuaris.logic.helper.UsuarisAuthHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 @RequiredArgsConstructor
 public class CurrentUserHandlerInterceptor implements HandlerInterceptorWithPath {
 
-	private final UsuariService usuariService;
+	private final UsuarisAuthHelper usuarisAuthHelper;
 
 	@Override
 	public boolean preHandle(
@@ -24,7 +24,7 @@ public class CurrentUserHandlerInterceptor implements HandlerInterceptorWithPath
 			Object handler) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		if (authentication != null && authentication.isAuthenticated() && !(authentication instanceof AnonymousAuthenticationToken)) {
-			usuariService.refreshCurrentUser();
+			usuarisAuthHelper.refreshCurrentUser();
 		}
 		return true;
 	}

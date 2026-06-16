@@ -81,6 +81,19 @@ class AvisClientHelperTest {
         assertThat(result).isNull();
     }
 
+	@Test
+	@DisplayName("entornAppFindById ha de retornar null si es llança FeignException.NotFound")
+	void entornAppFindById_quanNotFound_retornaNull() {
+		// Arrange
+		when(entornAppServiceClient.getOne(eq(1L), any(), eq(AUTH_HEADER))).thenThrow(FeignException.NotFound.class);
+
+		// Act
+		EntornApp result = avisClientHelper.entornAppFindById(1L);
+
+		// Assert
+		assertThat(result).isNull();
+	}
+
     @Test
     @DisplayName("entornAppFindByEntornCodiAndAppCodi ha de retornar el primer element si el client troba resultats")
     void entornAppFindByEntornCodiAndAppCodi_quanTrobaEntitat_laRetorna() {
@@ -124,6 +137,19 @@ class AvisClientHelperTest {
         assertThat(result).isNotNull();
     }
 
+	@Test
+	@DisplayName("appById ha de retornar null si es llança FeignException.NotFound")
+	void appById_quanNotFound_retornaNull() {
+		// Arrange
+		when(appServiceClient.getOne(eq(1L), any(), eq(AUTH_HEADER))).thenThrow(FeignException.NotFound.class);
+
+		// Act
+		App result = avisClientHelper.appById(1L);
+
+		// Assert
+		assertThat(result).isNull();
+	}
+
     @Test
     @DisplayName("entornById ha de retornar l'entorn si el client el troba")
     void entornById_quanTroba_laRetorna() {
@@ -136,5 +162,18 @@ class AvisClientHelperTest {
 
         // Assert
         assertThat(result).isNotNull();
+    }
+
+    @Test
+    @DisplayName("entornById ha de retornar null si es llança FeignException.NotFound")
+    void entornById_quanNotFound_retornaNull() {
+        // Arrange
+        when(entornServiceClient.getOne(eq(1L), any(), eq(AUTH_HEADER))).thenThrow(FeignException.NotFound.class);
+
+        // Act
+        Entorn result = avisClientHelper.entornById(1L);
+
+        // Assert
+        assertThat(result).isNull();
     }
 }

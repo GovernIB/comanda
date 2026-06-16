@@ -18,6 +18,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -26,8 +29,12 @@ import org.springframework.hateoas.PagedModel;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
@@ -265,7 +272,7 @@ class AlarmaComprovacioHelperTest {
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
                 .thenReturn(pagedModel);
-        
+
         AlarmaEntity alarmaActiva = new AlarmaEntity();
         alarmaActiva.setId(100L);
         alarmaActiva.setAlarmaConfig(config);
@@ -335,7 +342,7 @@ class AlarmaComprovacioHelperTest {
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
                 .thenReturn(pagedModel);
-        
+
         AlarmaEntity alarmaEsborrany = new AlarmaEntity();
         alarmaEsborrany.setEstat(AlarmaEstat.ESBORRANY);
 
@@ -392,7 +399,7 @@ class AlarmaComprovacioHelperTest {
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
                 .thenReturn(pagedModel);
-        
+
         AlarmaEntity alarmaOberta = new AlarmaEntity();
         alarmaOberta.setEstat(AlarmaEstat.ACTIVA);
         when(alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(config))
@@ -526,7 +533,7 @@ class AlarmaComprovacioHelperTest {
                 .thenReturn(pagedModel);
         when(alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(config))
                 .thenReturn(Optional.empty());
-        
+
         AlarmaEntity novaAlarma = new AlarmaEntity();
         novaAlarma.setEstat(AlarmaEstat.ACTIVA);
         novaAlarma.setAlarmaConfig(config);
@@ -659,7 +666,7 @@ class AlarmaComprovacioHelperTest {
                 .comparador(AlarmaConfigReglaComparador.MAJOR)
                 .valorNumeric(new BigDecimal(1000))
                 .build();
-        
+
         mockRule(AlarmaConfigRegla.builder()
                 .tipusNode(AlarmaConfigReglaTipusNode.GRUP)
                 .operador(AlarmaConfigReglaOperador.AND)
@@ -702,7 +709,7 @@ class AlarmaComprovacioHelperTest {
                 .comparador(AlarmaConfigReglaComparador.MAJOR)
                 .valorNumeric(new BigDecimal(1000))
                 .build();
-        
+
         mockRule(AlarmaConfigRegla.builder()
                 .tipusNode(AlarmaConfigReglaTipusNode.GRUP)
                 .operador(AlarmaConfigReglaOperador.OR)
@@ -893,7 +900,7 @@ class AlarmaComprovacioHelperTest {
         Salut salutKB = freshSalut().detalls(Collections.singletonList(
                 SalutDetall.builder().codi("MED").valor("0,5 KB").build()
         )).build();
-        
+
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
                 .thenReturn(pagedModelFor(salutKB));
@@ -909,7 +916,7 @@ class AlarmaComprovacioHelperTest {
         )).build();
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
                 .thenReturn(pagedModelFor(salutB));
-        
+
         // 1048576 B = 1 MB. Condició: MENOR que 1 MB. Result: false.
         boolean resultB = alarmaComprovacioHelper.comprovar(config);
         assertThat(resultB).as("Check B").isFalse();
@@ -1089,6 +1096,82 @@ class AlarmaComprovacioHelperTest {
 
 		// Assert
 		assertThat(alarmaActiva.getDataFinalitzacio()).isEqualTo(dataIniciRecuperacio);
+	}
+
+	@ParameterizedTest(name = "valor=\"{0}\", comparador={1}, llindar={2}, resultat={3}")
+	@MethodSource("memoriaDisponibleCases")
+	@DisplayName("Comprova MEMORIA_DISPONIBLE amb diferents unitats i comparadors")
+	void comprovar_quanMemoriaDisponible_retornaCorrectament(
+		String valorSalut,
+		AlarmaConfigReglaComparador comparador,
+		BigDecimal valorNumeric,
+		boolean expectedResult
+	) {
+		lenient().when(httpAuthorizationHeaderHelper.getAuthorizationHeader())
+			.thenReturn(AUTH_HEADER);
+
+		lenient().when(alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(any()))
+			.thenReturn(Optional.empty());
+
+		mockRule(AlarmaConfigRegla.builder()
+			.tipusNode(AlarmaConfigReglaTipusNode.CONDICIO)
+			.ambit(AlarmaConfigReglaAmbit.SISTEMA)
+			.metrica(AlarmaConfigReglaMetrica.MEMORIA_DISPONIBLE)
+			.comparador(comparador)
+			.valorNumeric(valorNumeric)
+			.build());
+
+		Salut salut = freshSalut().detalls(Collections.singletonList(
+			SalutDetall.builder()
+				.codi("MED")
+				.valor(valorSalut)
+				.build()
+		)).build();
+
+		lenient().when(salutServiceClient.find(
+				any(),
+				anyString(),
+				any(),
+				any(),
+				anyString(),
+				anyInt(),
+				any(),
+				anyString()))
+			.thenReturn(pagedModelFor(salut));
+
+		assertThat(alarmaComprovacioHelper.comprovar(config))
+			.isEqualTo(expectedResult);
+	}
+
+	private static Stream<Arguments> memoriaDisponibleCases() {
+		List<Object[]> baseCases = new ArrayList<>();
+		List<Arguments> cases = new ArrayList<>();
+
+		// Comparacions
+		baseCases.add(new Object[]{"4096 K", AlarmaConfigReglaComparador.MENOR, BigDecimal.TEN, true});
+		baseCases.add(new Object[]{"4096 K", AlarmaConfigReglaComparador.MENOR, BigDecimal.ONE, false});
+		baseCases.add(new Object[]{"2 M", AlarmaConfigReglaComparador.MAJOR, BigDecimal.ONE, true});
+		baseCases.add(new Object[]{"2 T", AlarmaConfigReglaComparador.MAJOR, BigDecimal.ONE, true});
+		baseCases.add(new Object[]{"1 G", AlarmaConfigReglaComparador.MAJOR, new BigDecimal(2048), false});
+		baseCases.add(new Object[]{"1024 M", AlarmaConfigReglaComparador.IGUAL, new BigDecimal(1024), true});
+		baseCases.add(new Object[]{"1 G", AlarmaConfigReglaComparador.IGUAL, new BigDecimal(1024), true});
+		baseCases.add(new Object[]{"1 T", AlarmaConfigReglaComparador.IGUAL, new BigDecimal(1024), false});
+		// Conversió d'unitats
+		baseCases.add(new Object[]{"1 K", AlarmaConfigReglaComparador.IGUAL, new BigDecimal(1), false}); // KB s'arrodoneix a la unitat nativa (MB)
+		baseCases.add(new Object[]{"600 K", AlarmaConfigReglaComparador.IGUAL, new BigDecimal(1), true}); // KB s'arrodoneix a la unitat nativa (MB)
+		baseCases.add(new Object[]{"1 M", AlarmaConfigReglaComparador.IGUAL, new BigDecimal(1), true});
+		baseCases.add(new Object[]{"1 G", AlarmaConfigReglaComparador.IGUAL, new BigDecimal(1024), true});
+		baseCases.add(new Object[]{"1 T", AlarmaConfigReglaComparador.IGUAL, new BigDecimal(1024*1024), true});
+
+		// Add base cases as decimal scale
+		cases.addAll(baseCases.stream()
+			.map(baseCase -> Arguments.of(baseCase[0] + "B", baseCase[1], baseCase[2], baseCase[3]))
+			.collect(Collectors.toList()));
+		// Add base cases as binary scale
+		cases.addAll(baseCases.stream()
+			.map(baseCase -> Arguments.of(baseCase[0] + "iB", baseCase[1], baseCase[2], baseCase[3]))
+			.collect(Collectors.toList()));
+        return cases.stream();
 	}
 
     private Salut.SalutBuilder freshSalut() {
