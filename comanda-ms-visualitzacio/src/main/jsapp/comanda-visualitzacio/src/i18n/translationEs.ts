@@ -572,6 +572,11 @@ const translationEs: translationResourcesType = {
                 reactivate: {
                     label: "Marcar como no leída",
                 },
+                clearMultiple: {
+                    label: "¿Marcar {{count}} alarmas como leídas?",
+                    label_one: "¿Marcar la alarma como leída?",
+                    label_other: "¿Marcar {{count}} alarmas como leídas?",
+                },
             },
             filter: {
                 showOnlyActiveEnabled: "Mostrando sólo alarmas sin leer (clic para incluir leídas)",

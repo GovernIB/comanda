@@ -784,8 +784,8 @@ public class EntornAppServiceImplTest {
     }
 
     @Test
-    @DisplayName("HitoricVersionsPerspectiveApplicator: crida al repo i mapeja resultats")
-    void hitoricVersionsPerspectiveApplicator_aplicaHistoric_cridaRepoIMapeja() {
+    @DisplayName("HistoricVersionsPerspectiveApplicator: crida al repo i mapeja resultats")
+    void historicVersionsPerspectiveApplicator_aplicaHistoric_cridaRepoIMapeja() {
         // Given
         EntornAppHistEntity hist1 = new EntornAppHistEntity();
         hist1.setId(1L);
@@ -808,8 +808,8 @@ public class EntornAppServiceImplTest {
         EntornApp resource = new EntornApp();
 
         // When
-        EntornAppServiceImpl.HitoricVersionsPerspectiveApplicator applicator =
-                entornAppService.new HitoricVersionsPerspectiveApplicator();
+        EntornAppServiceImpl.HistoricVersionsPerspectiveApplicator applicator =
+                entornAppService.new HistoricVersionsPerspectiveApplicator();
         applicator.applySingle(EntornApp.PERSPECTIVE_HISTORICS_VERSIONS, entornAppEntity, resource);
 
         // Then
@@ -820,15 +820,15 @@ public class EntornAppServiceImplTest {
     }
 
     @Test
-    @DisplayName("HitoricVersionsPerspectiveApplicator: quan no hi ha dades, retorna llista buida")
-    void hitoricVersionsPerspectiveApplicator_senseDades_retornaLlistaBuida() {
+    @DisplayName("HistoricVersionsPerspectiveApplicator: quan no hi ha dades, retorna llista buida")
+    void historicVersionsPerspectiveApplicator_senseDades_retornaLlistaBuida() {
         // Given
         when(entornAppHistRepository.findByEntornAppOrderByDataDesc(entornAppEntity))
                 .thenReturn(Collections.emptyList());
 
         EntornApp resource = new EntornApp();
-        EntornAppServiceImpl.HitoricVersionsPerspectiveApplicator applicator =
-                entornAppService.new HitoricVersionsPerspectiveApplicator();
+        EntornAppServiceImpl.HistoricVersionsPerspectiveApplicator applicator =
+                entornAppService.new HistoricVersionsPerspectiveApplicator();
 
         // When
         applicator.applySingle(EntornApp.PERSPECTIVE_HISTORICS_VERSIONS, entornAppEntity, resource);

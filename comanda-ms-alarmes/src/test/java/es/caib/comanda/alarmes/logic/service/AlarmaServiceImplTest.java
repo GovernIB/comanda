@@ -1,6 +1,7 @@
 package es.caib.comanda.alarmes.logic.service;
 
 import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventPublisher;
+import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventTypes;
 import es.caib.comanda.alarmes.logic.helper.AlarmaComprovacioHelper;
 import es.caib.comanda.alarmes.logic.helper.AlarmaMailHelper;
 import es.caib.comanda.alarmes.logic.intf.model.Alarma;
@@ -34,6 +35,7 @@ import javax.persistence.criteria.Root;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.mockito.InOrder;
@@ -310,6 +312,90 @@ class AlarmaServiceImplTest {
         assertThatThrownBy(() -> executor.exec(Alarma.ESBORRAR_ACTION, entity, null))
                 .isInstanceOf(ActionExecutionException.class)
                 .hasMessageContaining("L'alarma ha d'estar sense llegir");
+    }
+
+    @Test
+    @DisplayName("EsborrarMultipleActionExecutor: marca múltiples alarmes com ESBORRADA")
+    void esborrarMultipleActionExecutor_quanIdsValids_marcaComEsborrada() {
+        // Arrange
+        AlarmaEntity alarma1 = crearAlarmaEntity(AlarmaEstat.ACTIVA, false, CURRENT_USER);
+        alarma1.setId(1L);
+        AlarmaEntity alarma2 = crearAlarmaEntity(AlarmaEstat.ACTIVA, false, CURRENT_USER);
+        alarma2.setId(2L);
+
+        Alarma.EsborrarActionParams params = new Alarma.EsborrarActionParams();
+        params.setIds(Arrays.asList(1L, 2L));
+
+        when(alarmaRepository.findAllById(Arrays.asList(1L, 2L)))
+                .thenReturn(Arrays.asList(alarma1, alarma2));
+        when(authenticationHelper.getCurrentUserName()).thenReturn(CURRENT_USER);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+
+        AlarmaServiceImpl.EsborrarMultipleActionExecutor executor =
+                alarmaService.new EsborrarMultipleActionExecutor();
+
+        // Act
+        executor.exec(Alarma.ESBORRAR_MULTIPLE_ACTION, null, params);
+
+        // Assert
+        assertThat(alarma1.getEstat()).isEqualTo(AlarmaEstat.ESBORRADA);
+        assertThat(alarma1.getDataEsborrat()).isNotNull();
+        assertThat(alarma2.getEstat()).isEqualTo(AlarmaEstat.ESBORRADA);
+        assertThat(alarma2.getDataEsborrat()).isNotNull();
+        verify(comandaSseEventPublisher).publish(ComandaSseEventTypes.ACTIVE_ALARMS_CHANGED);
+    }
+
+    @Test
+    @DisplayName("EsborrarMultipleActionExecutor: llança excepció si la llista d'IDs és buida")
+    void esborrarMultipleActionExecutor_quanIdsBuits_llancaExcepcio() {
+        // Arrange
+        Alarma.EsborrarActionParams params = new Alarma.EsborrarActionParams();
+        params.setIds(Collections.emptyList());
+
+        AlarmaServiceImpl.EsborrarMultipleActionExecutor executor =
+                alarmaService.new EsborrarMultipleActionExecutor();
+
+        // Act & Assert
+        assertThatThrownBy(() -> executor.exec(Alarma.ESBORRAR_MULTIPLE_ACTION, null, params))
+                .isInstanceOf(ActionExecutionException.class)
+                .hasMessageContaining("No hi ha elements que processar");
+    }
+
+    @Test
+    @DisplayName("EsborrarMultipleActionExecutor: llança excepció si params és null")
+    void esborrarMultipleActionExecutor_quanParamsNull_llancaExcepcio() {
+        // Arrange
+        AlarmaServiceImpl.EsborrarMultipleActionExecutor executor =
+                alarmaService.new EsborrarMultipleActionExecutor();
+
+        // Act & Assert
+        assertThatThrownBy(() -> executor.exec(Alarma.ESBORRAR_MULTIPLE_ACTION, null, null))
+                .isInstanceOf(ActionExecutionException.class)
+                .hasMessageContaining("No hi ha elements que processar");
+    }
+
+    @Test
+    @DisplayName("EsborrarMultipleActionExecutor: llança excepció si usuari no té permisos")
+    void esborrarMultipleActionExecutor_quanSensePermisos_llancaExcepcio() {
+        // Arrange: alarma admin creada per un altre usuari
+        AlarmaEntity alarma = crearAlarmaEntity(AlarmaEstat.ACTIVA, true, "altre_usuari");
+        alarma.setId(1L);
+
+        Alarma.EsborrarActionParams params = new Alarma.EsborrarActionParams();
+        params.setIds(Collections.singletonList(1L));
+
+        when(alarmaRepository.findAllById(Collections.singletonList(1L)))
+                .thenReturn(Collections.singletonList(alarma));
+        when(authenticationHelper.getCurrentUserName()).thenReturn(CURRENT_USER);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false); // ← No admin
+
+        AlarmaServiceImpl.EsborrarMultipleActionExecutor executor =
+                alarmaService.new EsborrarMultipleActionExecutor();
+
+        // Act & Assert
+        assertThatThrownBy(() -> executor.exec(Alarma.ESBORRAR_MULTIPLE_ACTION, null, params))
+                .isInstanceOf(ActionExecutionException.class)
+                .hasMessageContaining("Sense permisos per executar l'acció");
     }
 
     @Test

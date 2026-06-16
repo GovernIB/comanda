@@ -102,7 +102,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         register(EntornApp.ENTORN_APP_TOOGLE_ACTIVA, new EntornAppServiceImpl.ToogleActiva(resourceEntityMappingHelper));
         register(EntornApp.ENTORN_APP_REFRESH_INFO, new EntornAppServiceImpl.RefreshInfo(resourceEntityMappingHelper));
         register(EntornApp.PERSPECTIVE_DEFAULT_LOGS, new DefaultLogsPerspectiveApplicator());
-        register(EntornApp.PERSPECTIVE_HISTORICS_VERSIONS, new HitoricVersionsPerspectiveApplicator());
+        register(EntornApp.PERSPECTIVE_HISTORICS_VERSIONS, new HistoricVersionsPerspectiveApplicator());
         register(EntornApp.PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS, new IntegracionsSubsistemesContextsPerspectiveApplicator());
     }
 
@@ -486,7 +486,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         }
     }
 
-    public class HitoricVersionsPerspectiveApplicator implements PerspectiveApplicator<EntornAppEntity, EntornApp> {
+    public class HistoricVersionsPerspectiveApplicator implements PerspectiveApplicator<EntornAppEntity, EntornApp> {
         @Override
         public void applySingle(String code, EntornAppEntity entity, EntornApp resource) throws PerspectiveApplicationException {
             List<EntornAppHistEntity> entornAppHistEntities = entornAppHistRepository.findByEntornAppOrderByDataDesc(entity);

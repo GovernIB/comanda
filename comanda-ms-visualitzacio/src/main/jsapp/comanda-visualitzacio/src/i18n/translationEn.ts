@@ -572,6 +572,11 @@ const translationEn: translationResourcesType = {
                 reactivate: {
                     label: "Mark as unread",
                 },
+                clearMultiple: {
+                    label: "Mark {{count}} alarms as read?",
+                    label_one: "Mark alarm as read?",
+                    label_other: "Mark {{count}} alarms as read?",
+                },
             },
             filter: {
                 showOnlyActiveEnabled: "Showing only unread alarms (click to include read ones)",

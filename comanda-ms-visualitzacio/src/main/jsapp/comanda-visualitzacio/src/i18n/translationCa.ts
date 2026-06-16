@@ -572,6 +572,11 @@ const translationCa = {
                 reactivate: {
                     label: "Marcar com a no llegida",
                 },
+                clearMultiple: {
+                    label: "Marcar {{count}} alarmes com a llegides?",
+                    label_one: "Marcar l'alarma com a llegida?",
+                    label_other: "Marcar {{count}} alarmes com a llegides?",
+                },
             },
             filter: {
                 showOnlyActiveEnabled: "Mostrant només alarmes sense llegir (clic per incloure llegides)",
