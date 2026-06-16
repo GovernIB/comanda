@@ -50,7 +50,7 @@ export type SalutInformeLatenciaItem = {
 export interface AppDataState {
     loading: boolean | null; // Null indica que no se ha hecho ninguna petición aún
     refreshInfoLoading: boolean;
-    entornApp: (EntornAppModel & DefaultLogsPerspective & EntornAppHistPerspective & IntegracionsSubsistemesContextsPerspective) | null;
+    entornApp: (EntornAppModel & DefaultLogsPerspective & EntornAppHistPerspective) | null;
     estats: Record<string, any> | null;
     latencies: SalutInformeLatenciaItem[] | null;
     salutCurrentApp: SalutModel | null;

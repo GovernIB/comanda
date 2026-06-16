@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
-import { Box, Chip, CircularProgress, Icon, IconButton, Stack, Tooltip } from '@mui/material';
+import { Box, Chip, Icon, IconButton, Stack, Tooltip } from '@mui/material';
 import {
-    GridPage,
     MuiDataGrid,
     MuiFilter,
     FormField,
@@ -11,7 +10,7 @@ import {
     useFormApiRef,
     springFilterBuilder as builder,
     dateFormatLocale,
-    useResourceApiService,
+    MuiDataGridColDef,
 } from 'reactlib';
 import PageTitle from '../components/PageTitle.tsx';
 import { truncateHashRevisio } from './salut/dataFetching.ts';
@@ -106,46 +105,11 @@ const EntornAppHistFilter: React.FC<EntornAppHistFilterProps> = ({ onSpringFilte
 const EntornAppHist: React.FC = () => {
     const { t } = useTranslation();
     const [filter, setFilter] = React.useState<string | undefined>();
-    const { isReady: apiIsReadyEntornApp, find: apiFindEntornApp } = useResourceApiService('entornApp');
-    const [entornApps, setEntornApps] = React.useState<any[]>();
-
-    React.useEffect(() => {
-        if (apiIsReadyEntornApp) {
-            apiFindEntornApp({ unpaged: true }).then(response => {
-                setEntornApps(response.rows);
-            });
-        }
-    }, [apiIsReadyEntornApp]);
-
-    if (!entornApps) {
-        return (
-            <GridPage>
-                <PageTitle title={t($ => $.page.entornAppHist.title)} />
-                <Box
-                    sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        height: '400px',
-                    }}
-                >
-                    <CircularProgress size={80} />
-                </Box>
-            </GridPage>
-        );
-    }
-
-    const columns = [
+    const columns: MuiDataGridColDef[] = React.useMemo(() => ([
         {
             field: 'entornApp',
             flex: 1.5,
             minWidth: 150,
-            valueFormatter: (value?: any) => {
-                if (value?.id == null) return '';
-                const entornApp = entornApps.find(ea => ea.id === value?.id);
-                return entornApp?.entornAppDescription ?? '';
-            },
         },
         {
             field: 'data',
@@ -159,11 +123,11 @@ const EntornAppHist: React.FC = () => {
             headerName: t($ => $.page.entornAppHist.versioRevisio),
             sortable: false,
             minWidth: 165,
-            renderCell: (param: any) => (
-                    <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap">
-                        <>{param?.row?.versio != null && (
-                            <Chip label={param?.row?.versio} color={param?.row?.canviVersio ? 'success' : 'secondary'} />
-                        )}
+            renderCell: (param) => (
+                <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap">
+                    <>{param?.row?.versio != null && (
+                        <Chip label={param?.row?.versio} color={param?.row?.canviVersio ? 'success' : 'secondary'} />
+                    )}
                         {param?.row?.revisio != null && (
                             <Tooltip title={param?.row?.revisio} arrow placement="top">
                                 <Chip
@@ -173,13 +137,13 @@ const EntornAppHist: React.FC = () => {
                                 />
                             </Tooltip>
                         )}</>
-                    </Stack>
-                )
+                </Stack>
+            )
         },
-    ];
+    ]), [t]);
 
     return (
-        <GridPage>
+        <>
             <PageTitle title={t($ => $.page.entornAppHist.title)} />
             <MuiDataGrid
                 title={t($ => $.page.entornAppHist.title)}
@@ -193,7 +157,7 @@ const EntornAppHist: React.FC = () => {
                 paginationActive
                 readOnly
             />
-        </GridPage>
+        </>
     );
 };
 
