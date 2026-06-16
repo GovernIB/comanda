@@ -29,11 +29,15 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldNameConstants
 @ResourceConfig(
-        descriptionField = "valor",
-        quickFilterFields = { "valor" },
+        quickFilterFields = {
+            EntornAppHist.Fields.versio,
+            EntornAppHist.Fields.revisio,
+            EntornAppHist.Fields.entornApp + "." + EntornApp.Fields.entornAppDescription
+        },
         defaultSortFields = {
-                @ResourceConfig.ResourceSort(field = "data", direction= Sort.Direction.DESC),
+                @ResourceConfig.ResourceSort(field = EntornAppHist.Fields.data, direction= Sort.Direction.DESC),
         },
         accessConstraints = {
                 @ResourceAccessConstraint(
@@ -61,7 +65,6 @@ public class EntornAppHist extends BaseResource<Long> {
 
     @NotNull
     @Transient
-    @ResourceField(descriptionField = "id")
     protected ResourceReference<EntornApp, Long> entornApp;
 
     @Getter

@@ -152,13 +152,6 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     }
 
     @Override
-    protected void afterConversion(EntornAppEntity entity, EntornApp resource) {
-        resource.setEntornAppDescription((resource.getApp() != null ? resource.getApp().getDescription() : "")
-                + " - "
-                + (resource.getEntorn() != null ? resource.getEntorn().getDescription() : ""));
-    }
-
-    @Override
     protected void afterCreateSave(EntornAppEntity entity, EntornApp resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
         super.afterCreateSave(entity, resource, answers, anyOrderChanged);
     }

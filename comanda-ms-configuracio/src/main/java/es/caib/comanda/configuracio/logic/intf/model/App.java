@@ -29,11 +29,12 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@FieldNameConstants
 @ResourceConfig(
-		quickFilterFields = { "codi", "nom" },
-		descriptionField = "nom",
-        defaultSortFields = { @ResourceSort(field = "ordre") },
-        orderField = "ordre",
+		quickFilterFields = { App.Fields.codi, App.Fields.nom },
+		descriptionField = App.Fields.nom,
+        defaultSortFields = { @ResourceSort(field = App.Fields.ordre) },
+        orderField = App.Fields.ordre,
 		accessConstraints = {
 				@ResourceAccessConstraint(
 						type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,

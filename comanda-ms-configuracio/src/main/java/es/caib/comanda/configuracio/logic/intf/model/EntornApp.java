@@ -40,11 +40,15 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @ResourceConfig(
-		descriptionField = "entornAppDescription",
-		quickFilterFields = { "entorn.codi", "entorn.nom", "app.codi", "app.nom" },
+		descriptionField = EntornApp.Fields.entornAppDescription,
+		quickFilterFields = {
+			EntornApp.Fields.entorn+"."+Entorn.Fields.codi,
+			EntornApp.Fields.app+"."+App.Fields.codi,
+			EntornApp.Fields.entornAppDescription
+		},
         defaultSortFields = {
-                @ResourceSort(field = "app.ordre"),
-                @ResourceSort(field = "entorn.ordre")
+                @ResourceSort(field = EntornApp.Fields.app+"."+App.Fields.ordre),
+                @ResourceSort(field = EntornApp.Fields.entorn+"."+Entorn.Fields.ordre)
         },
 		accessConstraints = {
 				@ResourceAccessConstraint(

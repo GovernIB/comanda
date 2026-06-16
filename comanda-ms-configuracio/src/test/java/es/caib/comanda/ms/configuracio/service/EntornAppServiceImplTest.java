@@ -240,13 +240,6 @@ public class EntornAppServiceImplTest {
     }
 
     @Test
-    void testAfterConversion() {
-        entornAppService.afterConversion(entornAppEntity, entornAppResource);
-
-        assertNotNull(entornAppResource.getEntornAppDescription());
-    }
-
-    @Test
     void testIntegracionsSubsistemesContextsPerspectiveApplicator() {
         // Mock repository calls
         when(integracioRepository.findByEntornApp(entornAppEntity)).thenReturn(integracions);
