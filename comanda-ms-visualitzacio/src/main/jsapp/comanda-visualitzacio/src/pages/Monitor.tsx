@@ -81,7 +81,7 @@ const EstatBadge: React.FC<{ value: string, children?: string, }> = ({ value, ch
   };
   const color = colorMap[value] ?? 'default';
   const label = children ?? translateEnumValue(value, estatTranslationMap, t);
-  return <Chip label={label} color={color} size="small" />;
+  return <Chip label={label} color={color} title={label} size="small" />;
 };
 
 const MonitorDetails: React.FC<any> = (props) => {
@@ -245,10 +245,12 @@ const Monitors: React.FC = () => {
     const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
         setSelectedModule(newValue);
     };
-    const columns = [
-        { field: 'data', flex: 1, },
-        { field: 'operacio', flex: 2, },
-        { field: 'tipus', flex: 1, },
+    const baseColumns = React.useMemo(() => [
+        { field: 'app', flex: 1, sortable: false, valueFormatter: (value?: any) => value?.description },
+        { field: 'entorn', flex: 1.5, sortable: false, valueFormatter: (value?: any) => value?.description },
+        { field: 'data', flex: 1, minWidth: 150 },
+        { field: 'operacio', flex: 2 },
+        { field: 'tipus', flex: 1 },
         {
             field: 'url',
             flex: 2,
@@ -256,20 +258,27 @@ const Monitors: React.FC = () => {
                 ? t($ => $.page.monitors.column.mailAddress)
                 : 'URL',
         },
-        { field: 'modul', flex: 1, },
-        { field: 'tempsResposta', flex: 1, },
+        { field: 'modul', flex: 1 },
+        { field: 'tempsResposta', flex: 1.4 },
         {
             field: 'estat',
-            flex: 0.5,
+            flex: 1,
             renderCell: (params: any) => <EstatBadge value={params.value}>{params.formattedValue}</EstatBadge>
         },
-    ];
+    ], [selectedModule, t]);
     const columnsMonitor = React.useMemo(() => {
-        if (selectedModule === 'TASCA' || selectedModule === 'AVIS') {
-            return columns.filter(col => col.field !== 'url');
+        let filteredColumns = [...baseColumns];
+        if (filterAppId) {
+            filteredColumns = filteredColumns.filter(col => col.field !== 'app');
         }
-        return columns;
-    }, [selectedModule]);
+        if (filterEntornId) {
+            filteredColumns = filteredColumns.filter(col => col.field !== 'entorn');
+        }
+        if (selectedModule === 'TASCA' || selectedModule === 'AVIS') {
+            filteredColumns = filteredColumns.filter(col => col.field !== 'url');
+        }
+        return filteredColumns;
+    }, [selectedModule, filterAppId, filterEntornId, baseColumns]);
     return (
         <GridPage>
             <PageTitle title={t($ => $.page.monitors.title)} />
