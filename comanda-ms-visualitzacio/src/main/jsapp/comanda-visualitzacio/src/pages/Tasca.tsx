@@ -254,8 +254,8 @@ const TascaFilter = (props: { onEntornAppFilterDataChange: (data: any) => void, 
     };
     const moreFilterInitialData = {};
     const netejar = () => {
-        appEntornFilterApiRef?.current?.clear(appEntornFilterInitialData);
-        moreFilterApiRef?.current?.clear(moreFilterInitialData);
+        appEntornFilterApiRef?.current?.clear();
+        moreFilterApiRef?.current?.clear();
     }
 
 

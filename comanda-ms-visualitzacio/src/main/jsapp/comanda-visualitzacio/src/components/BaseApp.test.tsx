@@ -27,6 +27,11 @@ vi.mock('reactlib', () => ({
     },
     useResourceApiContext: () => mocks.useResourceApiContextMock(),
     useBaseAppContext: () => mocks.useBaseAppContextMock(),
+    useMuiFormDialogApiRef: () => ({
+        current: {
+            show: vi.fn(),
+        },
+    }),
 }));
 
 vi.mock('./UserContext', () => ({

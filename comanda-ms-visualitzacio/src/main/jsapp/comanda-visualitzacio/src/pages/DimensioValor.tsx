@@ -6,14 +6,12 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
 import {
-    GridPage,
     MuiDataGrid,
     MuiDataGridColDef,
     springFilterBuilder,
     FormField,
     MuiFilter,
     useFilterApiRef,
-    useFormApiRef,
     useResourceApiService,
     useBaseAppContext,
 } from 'reactlib';
@@ -37,7 +35,6 @@ import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
 const DimensioValorFilter: React.FC<{ onSpringFilterChange: (f?: string) => void } > = ({ onSpringFilterChange }) => {
     const { t } = useTranslation();
     const filterApiRef = useFilterApiRef();
-    const formApiRef = useFormApiRef();
 
     const netejar = () => {
         filterApiRef?.current?.clear();
@@ -48,7 +45,6 @@ const DimensioValorFilter: React.FC<{ onSpringFilterChange: (f?: string) => void
             apiRef={filterApiRef}
             resourceName="dimensioValor"
             code="dimensioValorFilter"
-            formApiRef={formApiRef}
             commonFieldComponentProps={{ size: 'small' }}
             onSpringFilterChange={onSpringFilterChange}
             springFilterBuilder={(data) => {
@@ -120,7 +116,7 @@ const DimensioValor: React.FC = () => {
     const gridTitle = `Valors dimensió ${dimensionName ?? ''}`;
 
     return (
-        <GridPage>
+        <>
             <PageTitle title={gridTitle} />
             <MuiDataGrid
                 title={gridTitle}
@@ -138,7 +134,7 @@ const DimensioValor: React.FC = () => {
                 rowHideDeleteButton={gestorReadOnly}
                 // popupEditFormContent={<DimensioValorForm />}
             />
-        </GridPage>
+        </>
     );
 };
 

@@ -175,7 +175,7 @@ describe('UserProfileFormDialog', () => {
             data: { alarmaMail: true, temaAplicacio: 'SISTEMA', estilMenu: 'TEMA' },
             apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
         });
-        const dialogApiRef = { current: undefined };
+        const dialogApiRef = { current: null };
 
         render(<UserProfileFormDialog dialogApiRef={dialogApiRef} />);
 
@@ -208,7 +208,7 @@ describe('UserProfileFormDialog', () => {
             data: { alarmaMail: true, temaAplicacio: 'SISTEMA', estilMenu: 'TEMA' },
             apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
         });
-        const dialogApiRef = { current: undefined };
+        const dialogApiRef = { current: null };
 
         render(<UserProfileFormDialog dialogApiRef={dialogApiRef} />);
 
@@ -241,7 +241,7 @@ describe('UserProfileFormDialog', () => {
             },
             apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
         });
-        const dialogApiRef = { current: undefined };
+        const dialogApiRef = { current: null };
 
         render(<UserProfileFormDialog dialogApiRef={dialogApiRef} />);
 

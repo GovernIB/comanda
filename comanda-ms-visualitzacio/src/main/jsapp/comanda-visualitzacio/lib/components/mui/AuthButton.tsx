@@ -17,7 +17,6 @@ import { useAuthContext } from '../AuthContext';
 
 type AuthButtonProps = {
     badgeIcon?: string;
-    userAdditionalInfo?: React.ReactElement;
     additionalComponents?: React.ReactElement | React.ReactElement[];
 };
 
@@ -99,7 +98,7 @@ const LoginButton: React.FC = () => {
 };
 
 const LoggedInUserButton: React.FC<AuthButtonProps> = (props) => {
-    const { badgeIcon, userAdditionalInfo, additionalComponents } = props;
+    const { badgeIcon, additionalComponents } = props;
     const { t } = useBaseAppContext();
     const apiRef = React.useRef<AuthButtonApi>(undefined);
     const buttonRef = React.useRef<HTMLButtonElement>(null);
@@ -153,11 +152,10 @@ const LoggedInUserButton: React.FC<AuthButtonProps> = (props) => {
                     <ListItemAvatar>
                         <UserAvatar />
                     </ListItemAvatar>
-                    {userAdditionalInfo ??
                     <ListItemText
                         primary={tokenParsed?.name}
                         secondary={tokenParsed?.preferred_username}
-                    />}
+                    />
                 </MenuItem>
                 <Divider />
                 {additionalComponents}
@@ -174,13 +172,13 @@ const LoggedInUserButton: React.FC<AuthButtonProps> = (props) => {
 };
 
 const AuthButton: React.FC<AuthButtonProps> = (props) => {
-    const { badgeIcon, userAdditionalInfo, additionalComponents } = props;
+    const { badgeIcon, additionalComponents } = props;
     const { isReady, isAuthenticated } = useAuthContext();
     return isReady ? (
         !isAuthenticated ? (
             <LoginButton />
         ) : (
-            <LoggedInUserButton badgeIcon={badgeIcon} userAdditionalInfo={userAdditionalInfo} additionalComponents={additionalComponents} />
+            <LoggedInUserButton badgeIcon={badgeIcon} additionalComponents={additionalComponents} />
         )
     ) : null;
 };

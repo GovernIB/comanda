@@ -262,7 +262,7 @@ const UserProfileForm = () => {
 export const UserProfileFormDialog = ({
     dialogApiRef,
 }: {
-    dialogApiRef: React.RefObject<DataFormDialogApi | undefined>;
+    dialogApiRef: React.RefObject<DataFormDialogApi | null>;
 }) => {
     const { t } = useTranslation();
     const { t: tBase } = useBaseAppContext();

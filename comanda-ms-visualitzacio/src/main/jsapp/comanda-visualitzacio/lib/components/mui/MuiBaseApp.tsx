@@ -40,7 +40,6 @@ export type MuiBaseAppProps = Omit<BaseAppProps, 'contentComponentSlots'> & {
     headerAdditionalComponents?: React.ReactElement | React.ReactElement[];
     headerAdditionalAuthComponents?: React.ReactElement | React.ReactElement[];
     headerAuthBadgeIcon?: string;
-    headerAuthUserAdditionalInfo?: React.ReactElement;
     offline?: React.ReactElement;
     footer?: React.ReactElement;
     footerHeight?: number;
@@ -135,7 +134,15 @@ const MuiComponentsConfigurer: React.FC = () => {
         return messageDialogShow(
             title ?? 'Atenció',
             question,
-            getAnswerRequiredButtons(trueFalseAnswerRequired, availableAnswers)
+            getAnswerRequiredButtons(trueFalseAnswerRequired, availableAnswers),
+            {
+                slotProps: {
+                    paper: {
+                        sx: { minWidth: 400 },
+                    },
+                },
+            },
+            true
         );
     };
     React.useEffect(() => {
@@ -159,7 +166,7 @@ const useMenu = (
     menuOnTitleClose: (() => void) | undefined,
     menuWidth: number | undefined,
     menuFooterHeight: number | undefined,
-    menuPanelWidth: number | undefined,
+    menuPanelWidth: number | undefined
 ) => {
     const { shrink, iconClicked, buttonComponent: menuButton } = useToolbarMenuIcon();
     const menuComponent =
@@ -198,7 +205,6 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
         headerAdditionalComponents,
         headerAdditionalAuthComponents,
         headerAuthBadgeIcon,
-        headerAuthUserAdditionalInfo,
         offline,
         footer,
         footerHeight,
@@ -220,7 +226,7 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
         menuOnTitleClose,
         menuWidth,
         footerHeight,
-        menuPanelWidth,
+        menuPanelWidth
     );
     const appbarComponent =
         headerTitle != null ? (
@@ -236,7 +242,6 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
                 backgroundColor={headerAppbarBackgroundColor}
                 backgroundImg={headerAppbarBackgroundImg}
                 authBadgeIcon={headerAuthBadgeIcon}
-                authAdditionalInfo={headerAuthUserAdditionalInfo}
             />
         ) : undefined;
     const offlineComponent = offline ?? <OfflineMessage />;

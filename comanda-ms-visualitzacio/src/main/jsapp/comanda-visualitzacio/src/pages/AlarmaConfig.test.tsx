@@ -199,18 +199,18 @@ vi.mock('reactlib', async (importOriginal) => {
         onDataChange,
         onSpringFilterChange,
         springFilterBuilder: springFilterBuilderProp,
-        formApiRef,
+        apiRef,
     }: {
         children: React.ReactNode;
         onDataChange?: (data: any) => void;
         onSpringFilterChange?: (springFilter?: string) => void,
         springFilterBuilder?: (data: any) => string;
-        formApiRef?: { current: { setFieldValue: (field: string, value: any) => void } };
+        apiRef?: { current: { setFieldValue: (field: string, value: any) => void } };
     }) => {
         const data = { entornApp: { id: 9 } };
         React.useEffect(() => {
             onDataChange?.(data);
-            formApiRef?.current?.setFieldValue?.('entornApp', { id: 7, description: 'Entorn 7' });
+            apiRef?.current?.setFieldValue?.('entornApp', { id: 7, description: 'Entorn 7' });
         }, []);
         React.useEffect(() => {
             const filter = springFilterBuilderProp?.(data);
@@ -245,6 +245,7 @@ vi.mock('reactlib', async (importOriginal) => {
     useFormApiRef: () => ({
         current: {
             setFieldValue: mocks.setFieldValueMock,
+            save: vi.fn(),
         },
     }),
     useResourceApiService: (resource: string) => {
@@ -278,6 +279,7 @@ vi.mock('reactlib', async (importOriginal) => {
     useFilterApiRef: () => ({
         current: {
             clear: vi.fn(),
+            setFieldValue: mocks.setFieldValueMock,
         },
     }),
 }});

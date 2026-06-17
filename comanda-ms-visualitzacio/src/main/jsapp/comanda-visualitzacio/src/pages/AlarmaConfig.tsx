@@ -155,7 +155,7 @@ const parseRulePayload = (regla: any): { operator: RuleOperator; conditions: Rul
 
 export const EntornAppSelector : React.FC<any> = (props) => {
     const { id, onEntornAppChange, validationErrors, disabled } = props;
-    const formApiRef = useFormApiRef();
+    const filterApiRef = useFilterApiRef();
     const { isReady: apiIsReady, getOne: apiGetOne } = useResourceApiService('entornApp');
     const [entornApp, setEntornApp] = React.useState<any>();
     React.useEffect(() => {
@@ -163,7 +163,7 @@ export const EntornAppSelector : React.FC<any> = (props) => {
             apiGetOne(id).then(value => {
                 const entornApp = { id: value.id, description: value.entornAppDescription };
                 setEntornApp(entornApp)
-                formApiRef.current.setFieldValue('entornApp', entornApp);
+                filterApiRef.current?.setFieldValue('entornApp', entornApp);
             });
         }
     }, [apiIsReady, id]);
@@ -176,7 +176,8 @@ export const EntornAppSelector : React.FC<any> = (props) => {
         initialData={{ entornApp: entornApp }}
         springFilterBuilder={() => ''}
         onDataChange={data => onEntornAppChange(data?.entornApp)}
-        formApiRef={formApiRef}>
+        apiRef={filterApiRef}
+        >
             <FormField
             name="entornApp"
             disabled={disabled}
@@ -473,7 +474,7 @@ export const AlarmaConfigForm: React.FC<{
         }] : null);
     }
     const handleEntornAppChange = (entornApp: any) => {
-        formApiRef.current.setFieldValue('entornAppId', entornApp?.id);
+        formApiRef.current?.setFieldValue('entornAppId', entornApp?.id);
     }
     const handlePeriodeShowChange = (event: any) => {
         const newValue = event.target.checked;
@@ -700,7 +701,6 @@ const AlarmaConfigFilter = (props: AlarmaConfigFilterProps) => {
     const isCurrentUserAdmin = useIsUserAdmin();
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const filterApiRef = useFilterApiRef();
-    const formApiRef = useFormApiRef();
     const netejar = () => {
         filterApiRef.current?.clear();
     };
@@ -715,7 +715,6 @@ const AlarmaConfigFilter = (props: AlarmaConfigFilterProps) => {
             resourceName="alarmaConfig"
             code="alarmaConfig_filter"
             detached
-            formApiRef={formApiRef}
             commonFieldComponentProps={{ size: 'small' }}
             onSpringFilterChange={onSpringFilterChange}
             springFilterBuilder={data => {

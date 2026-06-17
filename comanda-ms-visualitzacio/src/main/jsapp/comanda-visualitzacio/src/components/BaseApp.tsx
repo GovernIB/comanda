@@ -17,8 +17,8 @@ import {
     MuiBaseApp,
     useBaseAppContext,
     useResourceApiContext,
+    useMuiFormDialogApiRef,
 } from 'reactlib';
-import { DataFormDialogApi } from '../../lib/components/mui/datacommon/DataFormDialog';
 import Alarms, { AlarmsDialog } from './Alarms';
 import SystemTimeDisplay from './SystemTimeDisplay';
 import { useUserContext } from './UserContext';
@@ -31,8 +31,6 @@ import 'dayjs/locale/es';
 import { Theme, useTheme } from '@mui/material/styles';
 import { ROLE_ADMIN } from './UserProvider.tsx';
 import ComandaFooter, { comandaFooterHeight } from './ComandaFooter.tsx';
-import ListItemText from "@mui/material/ListItemText";
-import {formatDate} from "../util/dateUtils.ts";
 
 export type MenuEntryWithResource = MenuEntry & {
     resourceName?: string;
@@ -227,7 +225,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
     const theme = useTheme();
     const baseAppMenuEntries = menuEntries;
     const { user, currentRole } = useUserContext();
-    const userDialogApiRef = React.useRef<DataFormDialogApi | undefined>(undefined);
+    const userDialogApiRef = useMuiFormDialogApiRef();
     const [alarmsDialogOpen, setAlarmsDialogOpen] = React.useState(false);
     const { indexState } = useResourceApiContext();
     const {
@@ -269,10 +267,6 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
             <RoleSelector key="roleSelector" />
         ]}
         headerAuthBadgeIcon={currentRole === ROLE_ADMIN ? 'settings' : undefined}
-        headerAuthUserAdditionalInfo={<ListItemText
-            primary={user?.nom}
-            secondary={<>{user?.codi}<br/>{formatDate(user?.darreraConnexio)}</>}
-        />}
         footer={<ComandaFooter />}
         footerHeight={comandaFooterHeight}
         persistentLanguage

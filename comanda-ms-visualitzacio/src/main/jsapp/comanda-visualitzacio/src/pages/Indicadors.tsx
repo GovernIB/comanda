@@ -6,14 +6,12 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
 import {
-    GridPage,
     MuiDataGrid,
     MuiDataGridColDef,
     springFilterBuilder,
     MuiFilter,
     FormField,
     useFilterApiRef,
-    useFormApiRef,
     useResourceApiService,
     useFormContext
 } from 'reactlib';
@@ -27,7 +25,6 @@ const IndicadorsFilter = (props: any) => {
     const { t } = useTranslation();
     const { isReady: entornAppApiIsReady, find: entornAppGetAll } = useResourceApiService('entornApp');
     const filterApiRef = useFilterApiRef();
-    const formApiRef = useFormApiRef();
     const [entornApp, setEntornApp] = useState<any[] | null>([]);
 
     // Al obrir la pàgina carreguem el llistat de EntornApp actius
@@ -53,7 +50,6 @@ const IndicadorsFilter = (props: any) => {
             apiRef={filterApiRef}
             resourceName="indicador"
             code="indicadorFilter"
-            formApiRef={formApiRef}
             commonFieldComponentProps={{ size: 'small' }}
             onSpringFilterChange={onSpringFilterChange}
             springFilterBuilder={data => {
@@ -150,7 +146,7 @@ const Indicadors: React.FC = () => {
     };
 
     return (
-        <GridPage>
+        <>
             <PageTitle title={t($ => $.page.indicadors.title)} />
             <MuiDataGrid
                 title={t($ => $.page.indicadors.title)}
@@ -166,7 +162,7 @@ const Indicadors: React.FC = () => {
                 rowHideDeleteButton={gestorReadOnly}
                 popupEditFormContent={<IndicadorForm />}
             />
-        </GridPage>
+        </>
     );
 };
 

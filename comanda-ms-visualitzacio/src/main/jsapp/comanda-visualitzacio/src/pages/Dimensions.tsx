@@ -6,14 +6,12 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
 import {
-    GridPage,
     MuiDataGrid,
     MuiDataGridColDef,
     springFilterBuilder,
     MuiFilter,
     FormField,
     useFilterApiRef,
-    useFormApiRef,
     useResourceApiService
 } from 'reactlib';
 import PageTitle from '../components/PageTitle.tsx';
@@ -24,7 +22,6 @@ const DimensionsFilter = (props: DimensionsFilterProps) => {
     const { t } = useTranslation();
     const { isReady: entornAppApiIsReady, find: entornAppGetAll } = useResourceApiService('entornApp');
     const filterApiRef = useFilterApiRef();
-    const formApiRef = useFormApiRef();
     type EntornAppItem = { id: string | number; entornAppDescription?: string };
     const [entornApp, setEntornApp] = useState<EntornAppItem[] | null>([]);
 
@@ -53,7 +50,6 @@ const DimensionsFilter = (props: DimensionsFilterProps) => {
             // de manera que no s'hagi de fer la petició manualment del llistat de entornApp
             resourceName="dimensio"
             code="dimensioFilter"
-            formApiRef={formApiRef}
             commonFieldComponentProps={{ size: 'small' }}
             onSpringFilterChange={onSpringFilterChange}
             springFilterBuilder={data => {
@@ -117,7 +113,7 @@ const Dimensions: React.FC = () => {
     const filterElement = <DimensionsFilter onSpringFilterChange={setFilter}/>;
 
     return (
-        <GridPage>
+        <>
             <PageTitle title={t($ => $.page.dimensions.title)} />
             <MuiDataGrid
                 title={t($ => $.page.dimensions.title)}
@@ -135,7 +131,7 @@ const Dimensions: React.FC = () => {
                 }]}
                 readOnly
             />
-        </GridPage>
+        </>
     );
 };
 

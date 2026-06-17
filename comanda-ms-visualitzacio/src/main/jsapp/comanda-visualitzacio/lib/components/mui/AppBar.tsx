@@ -19,7 +19,6 @@ type AppBarProps = {
     backgroundColor?: string;
     backgroundImg?: string;
     authBadgeIcon?: string;
-    authAdditionalInfo?: React.ReactElement;
 };
 
 export const AppBar: React.FC<AppBarProps> = (props) => {
@@ -35,12 +34,11 @@ export const AppBar: React.FC<AppBarProps> = (props) => {
         backgroundColor,
         backgroundImg,
         authBadgeIcon,
-        authAdditionalInfo,
     } = props;
     const authContext = useOptionalAuthContext();
     const authButton =
         authContext != null ? (
-            <AuthButton badgeIcon={authBadgeIcon} userAdditionalInfo={authAdditionalInfo} additionalComponents={additionalAuthComponents} />
+            <AuthButton badgeIcon={authBadgeIcon} additionalComponents={additionalAuthComponents} />
         ) : null;
     const backgroundStyle = backgroundColor
         ? toolbarBackgroundStyle(backgroundColor, backgroundImg)

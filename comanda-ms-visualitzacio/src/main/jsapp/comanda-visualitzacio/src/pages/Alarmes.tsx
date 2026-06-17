@@ -56,7 +56,7 @@ const Alarmes: React.FC<{ filterBy?: { entornAppId?: number | string }; }> = ({ 
         exec: execEsborrar,
     } = useMuiActionReportLogic(
         'alarma', 'ALARMA_ESBORRAR', undefined, undefined, undefined, undefined,
-        undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined,
         null, undefined, () => gridApiRef.current?.refresh()
     );
     const {
@@ -65,7 +65,7 @@ const Alarmes: React.FC<{ filterBy?: { entornAppId?: number | string }; }> = ({ 
         exec: execReactivar,
     } = useMuiActionReportLogic(
         'alarma', 'ALARMA_REACTIVAR', undefined, undefined, undefined, undefined,
-        undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined,
         null, undefined, () => gridApiRef.current?.refresh()
     );
     const handleClearSelectionSuccess = useCallback(() => {

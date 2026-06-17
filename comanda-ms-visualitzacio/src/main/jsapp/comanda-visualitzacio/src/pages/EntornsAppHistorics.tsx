@@ -7,7 +7,6 @@ import {
     MuiFilter,
     FormField,
     useFilterApiRef,
-    useFormApiRef,
     springFilterBuilder as builder,
     dateFormatLocale,
     MuiDataGridColDef,
@@ -23,7 +22,6 @@ const EntornAppHistFilter: React.FC<EntornAppHistFilterProps> = ({ onSpringFilte
     const { t } = useTranslation();
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const filterApiRef = useFilterApiRef();
-    const formApiRef = useFormApiRef();
 
     const netejar = () => {
         filterApiRef.current?.clear();
@@ -44,7 +42,6 @@ const EntornAppHistFilter: React.FC<EntornAppHistFilterProps> = ({ onSpringFilte
     return (
         <MuiFilter
             apiRef={filterApiRef}
-            formApiRef={formApiRef}
             resourceName="entornAppHist"
             code="entornAppHist_filter"
             detached

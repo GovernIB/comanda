@@ -10,7 +10,6 @@ import {
     useCloseDialogButtons,
     useFilterApiRef,
     springFilterBuilder as builder,
-    useFormApiRef,
     MuiDataGridColDef,
 } from 'reactlib';
 import { GridRenderCellParams } from '@mui/x-data-grid';
@@ -133,7 +132,6 @@ const MonitorFilter: React.FC<MonitorFilterProps> = ({ onAppChange, onEntornChan
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const entornAppFilterApiRef = useFilterApiRef();
     const monitorFilterApiRef = useFilterApiRef();
-    const monitorFormApiRef = useFormApiRef();
     const clear = () => {
         entornAppFilterApiRef.current?.clear();
         monitorFilterApiRef.current?.clear();
@@ -145,8 +143,8 @@ const MonitorFilter: React.FC<MonitorFilterProps> = ({ onAppChange, onEntornChan
     const entornAppSpringFilterBuilder = (data: any): string => {
         const appId = data?.app?.id;
         const entornId = data?.entorn?.id;
-        monitorFormApiRef.current?.setFieldValue('appId', appId);
-        monitorFormApiRef.current?.setFieldValue('entornId', entornId);
+        monitorFilterApiRef.current?.setFieldValue('appId', appId);
+        monitorFilterApiRef.current?.setFieldValue('entornId', entornId);
         onAppChange?.(appId);
         onEntornChange?.(entornId);
         return '';
@@ -206,7 +204,6 @@ const MonitorFilter: React.FC<MonitorFilterProps> = ({ onAppChange, onEntornChan
             code="FILTER"
             springFilterBuilder={monitorSpringFilterBuilder}
             apiRef={monitorFilterApiRef}
-            formApiRef={monitorFormApiRef}
             commonFieldComponentProps={{ size: 'small' }}
             componentProps={{
                 sx: { mb: 1, display: moreFields ? 'block' : 'none' }

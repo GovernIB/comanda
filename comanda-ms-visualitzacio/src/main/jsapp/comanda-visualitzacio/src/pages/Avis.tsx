@@ -210,8 +210,8 @@ const AvisFilter = (props: { onEntornAppFilterDataChange: (data: any) => void, o
         noLlegit: true,
     };
     const netejar = () => {
-        appEntornFilterApiRef?.current?.clear(appEntornFilterInitialData);
-        moreFilterApiRef?.current?.clear(moreFilterInitialData);
+        appEntornFilterApiRef?.current?.clear();
+        moreFilterApiRef?.current?.clear();
     }
 
 
