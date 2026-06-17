@@ -44,24 +44,23 @@ vi.mock('react-i18next', () => ({
 }));
 
 vi.mock('../../lib/components/mui/datagrid/DataGridContext', () => ({
-    useDataGridContext: vi.fn(() => ({
-        selection: { ids: new Set<string>() },
-        apiRef: { current: { refresh: vi.fn() } },
-    })),
     DEFAULT_ROW_SELECTION: { ids: new Set<string>() },
 }));
-import { useDataGridContext } from '../../lib/components/mui/datagrid/DataGridContext';
 
 vi.mock('reactlib', () => ({
     GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    useMuiDataGridContext: vi.fn(() => ({
+        selection: { ids: new Set<string>() },
+        apiRef: { current: { refresh: vi.fn() } },
+    })),
     useMuiDataGridApiRef: () => ({ current: { refresh: mocks.refreshMock } }),
     springFilterBuilder: {
         and: (...filters: string[]) => filters.filter(f => !!f).join(' AND '),
     },
-    MuiActionReportButton: ({ 
-        action, 
-        selectedCount, 
-        disabled, 
+    MuiActionReportButton: ({
+        action,
+        selectedCount,
+        disabled,
         buttonComponentProps,
         formDialogContent,
     }: any) => {
@@ -137,6 +136,8 @@ vi.mock('reactlib', () => ({
     ),
 }));
 
+import { useMuiDataGridContext } from 'reactlib';
+
 vi.mock('@mui/x-data-grid-pro', () => ({
     useGridApiRef: () => ({ current: { setRowSelectionModel: vi.fn() } }),
 }));
@@ -191,7 +192,7 @@ describe('Alarmes', () => {
     });
 
     it('Alarmes_btnEsborrarMultiple_shabilitaQuanHiHaSeleccio', () => {
-        (useDataGridContext as any).mockReturnValue({
+        (useMuiDataGridContext as any).mockReturnValue({
             selection: { ids: new Set(['id-1', 'id-2']) },
             apiRef: { current: { refresh: mocks.refreshMock } },
         });
@@ -206,11 +207,11 @@ describe('Alarmes', () => {
     });
 
     it('Alarmes_btnEsborrarMultiple_noCridaOnSuccessSiNoHaySeleccion', () => {
-        (useDataGridContext as any).mockReturnValue({
+        (useMuiDataGridContext as any).mockReturnValue({
             selection: { ids: new Set() },
             apiRef: { current: { refresh: mocks.refreshMock } },
         });
-        
+
         render(<Alarmes />);
         const btnMultiple = screen.getByTestId('btn-esborrar-multiple');
 

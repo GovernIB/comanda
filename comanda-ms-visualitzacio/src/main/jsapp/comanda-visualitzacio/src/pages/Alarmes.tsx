@@ -3,16 +3,17 @@ import React, { useMemo, useCallback } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import {
     MuiDataGrid,
+    useMuiDataGridContext,
     useMuiDataGridApiRef,
     useMuiActionReportLogic,
     springFilterBuilder,
     MuiActionReportButton,
 } from 'reactlib';
-import { DEFAULT_ROW_SELECTION, useDataGridContext } from '../../lib/components/mui/datagrid/DataGridContext';
+import { DEFAULT_ROW_SELECTION } from '../../lib/components/mui/datagrid/DataGridContext';
 import { useGridApiRef } from '@mui/x-data-grid-pro';
 
-const AlarmaEsborrarMultipleActionButton = React.memo(({ onSuccess }: { onSuccess?: () => void }) => {
-    const { selection, apiRef } = useDataGridContext();
+const AlarmaEsborrarMultipleActionButton = ({ onSuccess }: { onSuccess?: () => void }) => {
+    const { selection, apiRef } = useMuiDataGridContext();
     const selectedIds = useMemo(
         () => Array.from(selection?.ids ?? []),
         [selection?.ids]
@@ -42,7 +43,7 @@ const AlarmaEsborrarMultipleActionButton = React.memo(({ onSuccess }: { onSucces
             formDialogContent={actionForm}
         />
     );
-});
+};
 
 const Alarmes: React.FC<{ filterBy?: { entornAppId?: number | string }; }> = ({ filterBy }) => {
     const { t } = useTranslation();
@@ -131,10 +132,10 @@ const Alarmes: React.FC<{ filterBy?: { entornAppId?: number | string }; }> = ({ 
         [t]
     );
 
-    const filter = useMemo(() => springFilterBuilder.and(
+    const filter = springFilterBuilder.and(
         showOnlyActive ? "estat:'ACTIVA'" : "estat in('ACTIVA', 'ESBORRADA')",
         filterBy?.entornAppId ? `entornAppId:${filterBy.entornAppId}` : "",
-    ), [showOnlyActive, filterBy?.entornAppId]);
+    );
 
     return (<>{actionEsborrarInitialized && actionReactivarInitialized && <>
                 <MuiDataGrid
