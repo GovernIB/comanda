@@ -453,6 +453,34 @@ class AlarmaMailHelperTest {
                 eq("[COMANDA] Alarma finalitzada: Test Alarma"), anyString());
     }
 
+	@Test
+	@DisplayName("No envia correu d'alarma si l'usuari és el de httpauth o stats")
+	void sendAlarmaUser_quanUsuariAuth_noEnvia() throws MessagingException, UnsupportedEncodingException {
+		// Arrange
+		ReflectionTestUtils.setField(alarmaMailHelper, "httpAuthUsername", "httpuser");
+		ReflectionTestUtils.setField(alarmaMailHelper, "statsAuthUsername", "statsuser");
+
+		config.setAdmin(false);
+		Usuari usuariHttp = Usuari.builder().codi("httpuser").alarmaMail(true).build();
+		Usuari usuariStats = Usuari.builder().codi("statsuser").alarmaMail(true).build();
+
+		// Act & Assert para httpuser
+		when(userInformationHelper.usuariFindByUsername("httpuser")).thenReturn(usuariHttp);
+		config.setCreatedBy("httpuser");
+		alarmaMailHelper.sendAlarmaUser(alarma, AlarmaMailEventType.ACTIVACIO);
+		verify(mailHelper, never()).sendSimple(anyString(), anyString(), eq("httpuser"), anyString(), anyString(), anyString());
+
+		// Act & Assert para statsuser
+		when(userInformationHelper.usuariFindByUsername("statsuser")).thenReturn(usuariStats);
+		config.setCreatedBy("statsuser");
+		alarmaMailHelper.sendAlarmaUser(alarma, AlarmaMailEventType.ACTIVACIO);
+		verify(mailHelper, never()).sendSimple(anyString(), anyString(), eq("statsuser"), anyString(), anyString(), anyString());
+
+		// Cleanup
+		ReflectionTestUtils.setField(alarmaMailHelper, "httpAuthUsername", null);
+		ReflectionTestUtils.setField(alarmaMailHelper, "statsAuthUsername", null);
+	}
+
     @Test
     @DisplayName("Envia alarmes agrupades incloent finalitzades")
     void sendAlarmesAgrupades_ambFinalitzades_enviamentOk() throws MessagingException, UnsupportedEncodingException {
