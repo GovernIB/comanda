@@ -15,6 +15,7 @@ import java.util.Optional;
 @Mapper(componentModel = "spring", uses = { TasquesClientHelper.class })
 public interface TascaMapper {
 
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "dataInici", expression = "java(tasca.getDataInici() != null ? tasca.getDataInici().toLocalDateTime() : null)")
     @Mapping(target = "dataFi", expression = "java(tasca.getDataFi() != null ? tasca.getDataFi().toLocalDateTime() : null)")
     @Mapping(target = "dataCaducitat", expression = "java(tasca.getDataCaducitat() != null ? tasca.getDataCaducitat().toLocalDateTime() : null)")
@@ -24,6 +25,7 @@ public interface TascaMapper {
     @Mapping(target = "appId", ignore = true)
     Tasca toTasca(TasquesClientHelper tasquesClientHelper, es.caib.comanda.model.v1.tasca.Tasca tasca);
 
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "dataInici", expression = "java(tasca.getDataInici() != null ? tasca.getDataInici().toLocalDateTime() : null)")
     @Mapping(target = "dataFi", expression = "java(tasca.getDataFi() != null ? tasca.getDataFi().toLocalDateTime() : null)")
     @Mapping(target = "dataCaducitat", expression = "java(tasca.getDataCaducitat() != null ? tasca.getDataCaducitat().toLocalDateTime() : null)")

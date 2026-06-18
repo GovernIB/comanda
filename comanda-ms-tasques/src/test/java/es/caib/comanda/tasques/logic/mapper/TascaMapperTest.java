@@ -56,6 +56,7 @@ class TascaMapperTest {
 
         Tasca result = mapper.toTasca(tasquesClientHelper, tascaBroker);
 
+        assertThat(result.getId()).isNull();
         assertThat(result.getEntornAppId()).isEqualTo(100L);
         assertThat(result.getEntornId()).isEqualTo(20L);
         assertThat(result.getAppId()).isEqualTo(10L);
@@ -98,6 +99,41 @@ class TascaMapperTest {
         assertThat(entity.getUsuarisAmbPermis()).containsExactly("usr2");
         assertThat(entity.getGrupsAmbPermis()).containsExactly("GRUP2");
     }
+
+	@Test
+	void toTasca_ambEntornApp_noSobrecarregaId() {
+		EntornApp entornApp = new EntornApp();
+		entornApp.setId(100L);
+		entornApp.setEntorn(EntornRef.builder().id(20L).build());
+		entornApp.setApp(AppRef.builder().id(10L).build());
+
+		es.caib.comanda.model.v1.tasca.Tasca tascaBroker = new es.caib.comanda.model.v1.tasca.Tasca();
+		tascaBroker.setIdentificador("ID1");
+
+		Tasca result = mapper.toTasca(tascaBroker, entornApp);
+
+		assertThat(result.getId()).isNull();
+		assertThat(result.getEntornAppId()).isEqualTo(100L);
+	}
+
+	@Test
+	void toTasca_ambHelper_noSobrecarregaId() {
+		EntornApp entornApp = new EntornApp();
+		entornApp.setId(100L);
+		entornApp.setEntorn(EntornRef.builder().id(20L).build());
+		entornApp.setApp(AppRef.builder().id(10L).build());
+		TasquesClientHelper tasquesClientHelper = new TasquesClientHelperStub(Optional.of(entornApp));
+
+		es.caib.comanda.model.v1.tasca.Tasca tascaBroker = new es.caib.comanda.model.v1.tasca.Tasca();
+		tascaBroker.setEntornCodi("ENT");
+		tascaBroker.setAppCodi("APP");
+		tascaBroker.setIdentificador("ID1");
+
+		Tasca result = mapper.toTasca(tasquesClientHelper, tascaBroker);
+
+		assertThat(result.getId()).isNull();
+		assertThat(result.getEntornAppId()).isEqualTo(100L);
+	}
 
     @Test
     void updateTasca_quanModelValid_actualitzaCampsSenseModificarClaus() throws MalformedURLException {
