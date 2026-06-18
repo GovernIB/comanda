@@ -57,6 +57,9 @@ public class MonitorServiceImpl extends BaseMutableResourceService<Monitor, Long
         private MonitorClientHelper monitorClientHelper;
         @Override
         public void applySingle(String code, MonitorEntity entity, Monitor resource) throws PerspectiveApplicationException {
+            if (entity.getEntornAppId() == null) {
+                return;
+            }
             EntornApp entornApp = monitorClientHelper.entornAppFindById(entity.getEntornAppId());
             if (entornApp != null) {
                 resource.setApp(entornApp.getApp());
