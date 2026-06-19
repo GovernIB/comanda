@@ -29,6 +29,7 @@ import org.springframework.hateoas.PagedModel;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -1191,4 +1192,37 @@ class AlarmaComprovacioHelperTest {
             throw new AssertionError("Interrupció inesperada durant el test", ex);
         }
     }
+
+    @ParameterizedTest(name = "desde={0}, fins={1}, horaActual={2} → esperat={3}")
+    @MethodSource("periodeInactiuCases")
+    @DisplayName("isAlarmaPeriodeInactiu: diferents combinacions de franges horàries")
+    void isAlarmaPeriodeInactiu_casosParametritzats(
+            LocalTime inactiuDesde,
+            LocalTime inactiuFins,
+            LocalTime horaActual,
+            boolean expectedResult
+    ) {
+        // Arrange && Act
+        boolean result = alarmaComprovacioHelper.estaDinsFranjaHoraria(inactiuDesde, inactiuFins, horaActual);
+        // Assert
+        assertThat(result).isEqualTo(expectedResult);
+    }
+
+    private static Stream<Arguments> periodeInactiuCases() {
+        return Stream.of(
+                Arguments.of(LocalTime.of(9, 0), LocalTime.of(18, 0), LocalTime.of(12, 0), true),
+                Arguments.of(LocalTime.of(9, 0), LocalTime.of(18, 0), LocalTime.of(8, 0), false),
+                Arguments.of(LocalTime.of(9, 0), LocalTime.of(18, 0), LocalTime.of(19, 0), false),
+                Arguments.of(LocalTime.of(9, 0), LocalTime.of(18, 0), LocalTime.of(9, 0), true),
+                Arguments.of(LocalTime.of(22, 0), LocalTime.of(3, 0), LocalTime.of(23, 0), true),
+                Arguments.of(LocalTime.of(22, 0), LocalTime.of(3, 0), LocalTime.of(1, 0), true),
+                Arguments.of(LocalTime.of(22, 0), LocalTime.of(3, 0), LocalTime.of(10, 0), false),
+                Arguments.of(LocalTime.of(22, 0), LocalTime.of(3, 0), LocalTime.of(22, 0), true),
+                Arguments.of(null, LocalTime.of(3, 0), LocalTime.of(0, 0), true),
+                Arguments.of(LocalTime.of(22, 0), null, LocalTime.of(23, 0), true),
+                Arguments.of(LocalTime.of(10, 0), LocalTime.of(10, 0), LocalTime.of(10, 0), true),
+                Arguments.of(LocalTime.of(10, 0), LocalTime.of(10, 0), LocalTime.of(10, 1), false)
+        );
+    }
+
 }

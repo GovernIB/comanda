@@ -548,6 +548,11 @@ const translationEn: translationResourcesType = {
                 subtitle: "Time period during which the condition must be met to trigger the alarm",
                 switch: "With activation period"
             },
+            periodeInactiu: {
+                title: "Inactive period",
+                subtitle: "Period of time during which the alarm status is not checked, leaving it in its current state.",
+                switch: "With inactive period"
+            },
             filter: {
                 showOnlyOwnEnabled: "Show only my alarms",
                 showOnlyOwnDisabled: "Show only alarms from administrators",

@@ -11,6 +11,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
+import java.time.LocalTime;
 
 /**
  * Entitat de base de dades que emmagatzema la configuració d'una alarma.
@@ -54,6 +55,10 @@ public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> implem
 	private Long ordre;
 	@Column(name = "aturar_avaluacio_posteriors")
 	private boolean aturarAvaluacioPosteriors = false;
+    @Column(name = "inactiu_desde")
+    private LocalTime inactiuDesde;
+    @Column(name = "inactiu_fins")
+    private LocalTime inactiuFins;
 
 	@Builder
 	public AlarmaConfigEntity(AlarmaConfig alarmaConfig) {

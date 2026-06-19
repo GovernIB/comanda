@@ -20,6 +20,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalTime;
 
 /**
  * Informació de configuració d'una alarma.
@@ -76,6 +77,8 @@ public class AlarmaConfig extends BaseAuditableResource<Long> {
 	private boolean correuGeneric;
     private boolean notificacioFinalitzada = true;
 	private boolean aturarAvaluacioPosteriors = false;
+    private LocalTime inactiuDesde;
+    private LocalTime inactiuFins;
     @Transient
     private String resumRegla;
     @Transient

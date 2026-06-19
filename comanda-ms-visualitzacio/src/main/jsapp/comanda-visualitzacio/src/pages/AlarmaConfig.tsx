@@ -5,7 +5,6 @@ import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 import CardContent from '@mui/material/CardContent';
-import Checkbox from '@mui/material/Checkbox';
 import Skeleton from '@mui/material/Skeleton';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import TextField from '@mui/material/TextField';
@@ -32,7 +31,7 @@ import {
     MuiDataGridProps,
     useFormContext,
 } from 'reactlib';
-import { Box, Button, Icon, IconButton } from '@mui/material';
+import { Box, Button, Icon, IconButton, Switch } from '@mui/material';
 import { useIsUserAdmin, useUserContext } from '../components/UserContext';
 import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
 import notNull from '../util/arrayUtils';
@@ -456,6 +455,7 @@ export const AlarmaConfigForm: React.FC<{
     const [entornAppId, setEntornAppId] = React.useState<any>();
     const [validationErrors, setValidationErrors] = React.useState<any>();
     const [periodeShow, setPeriodeShow] = React.useState<boolean>();
+    const [periodeInactiuShow, setPeriodeInactiuShow] = React.useState<boolean>();
     const [entornAppDetail, setEntornAppDetail] = React.useState<EntornAppModel & IntegracionsSubsistemesContextsPerspective>();
     const isCurrentUserAdmin = useIsUserAdmin();
     const handleDataChange = (data: any) => {
@@ -463,6 +463,10 @@ export const AlarmaConfigForm: React.FC<{
         if (periodeShow === undefined) {
             const ps = data?.periodeValor != null || data?.periodeUnitat != null;
             setPeriodeShow(ps);
+        }
+        if (periodeInactiuShow === undefined) {
+            const ps = data?.inactiuDesde != null || data?.inactiuFins != null;
+            setPeriodeInactiuShow(ps);
         }
     }
     const handleValidationErrorsChange = (_id: any, validationErrors?: any[]) => {
@@ -482,6 +486,14 @@ export const AlarmaConfigForm: React.FC<{
         if (!newValue) {
             formApiRef.current?.setFieldValue('periodeValor', null);
             formApiRef.current?.setFieldValue('periodeUnitat', null);
+        }
+    }
+    const handlePeriodeInactiuShowChange = (event: any) => {
+        const newValue = event.target.checked;
+        setPeriodeInactiuShow(newValue);
+        if (!newValue) {
+            formApiRef.current?.setFieldValue('inactiuDesde', null);
+            formApiRef.current?.setFieldValue('inactiuFins', null);
         }
     }
 
@@ -571,9 +583,7 @@ export const AlarmaConfigForm: React.FC<{
                         },
                     ]}
                     upperToolbar
-                    sx={{
-                        mb: 2,
-                    }}
+                    sx={{ mb: 2, }}
                 />
             </>)}
             <MuiForm
@@ -589,7 +599,7 @@ export const AlarmaConfigForm: React.FC<{
                 onValidationErrorsChange={handleValidationErrorsChange}
                 {...dialogModeProps}
             >
-                <Grid container spacing={2}>
+                <Grid container spacing={2} sx={{ pb: 6 }}>
                     {!dialogMode &&
                         <Grid size={3}>
                             <EntornAppSelector
@@ -612,16 +622,16 @@ export const AlarmaConfigForm: React.FC<{
                     <Grid size={12}>
                         <FormField name="missatge" />
                     </Grid>
-                    <Grid size={12}>
+                    <Grid size={6}>
                         <FormField name="aturarAvaluacioPosteriors" />
                     </Grid>
-                    {isCurrentUserAdmin && (<AlarmaConfigAdminAndCorreuGenericCheckbox disabled={!!id}/>)}
                     <Grid size={6}>
                         <FormField name="notificacioFinalitzada" />
                     </Grid>
+                    {isCurrentUserAdmin && (<AlarmaConfigAdminAndCorreuGenericCheckbox disabled={!!id}/>)}
                     <Grid size={6}>
                         <FormControlLabel
-                            control={<Checkbox size="small" checked={periodeShow ?? false} onChange={handlePeriodeShowChange}/>}
+                            control={<Switch size="small" checked={periodeShow ?? false} onChange={handlePeriodeShowChange}/>}
                             label={t($ => $.page.alarmaConfig.periode.switch)}
                             sx={{ ml: 1 }} />
                     </Grid>
@@ -642,6 +652,34 @@ export const AlarmaConfigForm: React.FC<{
                                     </Grid>
                                     <Grid size={9}>
                                         <FormField name="periodeUnitat" />
+                                    </Grid>
+                                </Grid>
+                            </CardContent>
+                        </Card>
+                    </Grid>}
+                    <Grid size={6}>
+                        <FormControlLabel
+                            control={<Switch size="small" checked={periodeInactiuShow ?? false} onChange={handlePeriodeInactiuShowChange}/>}
+                            label={t($ => $.page.alarmaConfig.periodeInactiu.switch)}
+                            sx={{ ml: 1 }} />
+                    </Grid>
+                    {periodeInactiuShow && <Grid size={12}>
+                        <Card variant="outlined">
+                            <CardHeader
+                                title={t($ => $.page.alarmaConfig.periodeInactiu.title)}
+                                subheader={t($ => $.page.alarmaConfig.periodeInactiu.subtitle)}
+                                slotProps={{
+                                    title: { variant: 'h6' },
+                                    subheader: { variant: 'subtitle2', sx: { color: 'text.secondary' } }
+                                }}
+                                sx={{ mb: -2 }} />
+                            <CardContent>
+                                <Grid container spacing={1}>
+                                    <Grid size={6}>
+                                        <FormField name="inactiuDesde" />
+                                    </Grid>
+                                    <Grid size={6}>
+                                        <FormField name="inactiuFins" />
                                     </Grid>
                                 </Grid>
                             </CardContent>

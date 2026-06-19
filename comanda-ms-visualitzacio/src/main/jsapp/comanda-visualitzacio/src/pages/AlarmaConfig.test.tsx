@@ -76,6 +76,11 @@ const mocks = vi.hoisted(() => ({
                         title: 'Període',
                         subtitle: 'Límit temporal',
                     },
+                    periodeInactiu: {
+                        switch: 'Configurar període inactiu',
+                        title: 'Període inactiu',
+                        subtitle: 'Interval sense activitat',
+                    },
                     filter: {
                         showOnlyOwnEnabled: 'Mostrar només les meves alarmes',
                         showOnlyOwnDisabled: 'Mostra només les alarmes d\'administrador',
@@ -171,6 +176,9 @@ vi.mock('reactlib', async (importOriginal) => {
                 tipus: 'APP_LATENCIA',
                 periodeValor: 5,
                 periodeUnitat: 'MINUTS',
+                inactiuDesde: '01:00:00',
+                inactiuFins: '03:00:00',
+                admin: false,
                 regla: {
                     tipusNode: 'GRUP',
                     operador: 'AND',
@@ -374,13 +382,50 @@ describe('AlarmaConfigForm', () => {
             expect(screen.getByRole('heading', { name: 'Editar configuració' })).toBeInTheDocument();
         });
 
-        const periodeToggle = screen.getByLabelText(/Configurar període/);
+        const periodeToggle = screen.getByLabelText(/Configurar període(?!.*inactiu)/);
         expect(periodeToggle).toBeChecked();
         fireEvent.click(periodeToggle);
 
         expect(mocks.setFieldValueMock).toHaveBeenCalledWith('periodeValor', null);
         expect(mocks.setFieldValueMock).toHaveBeenCalledWith('periodeUnitat', null);
         expect(periodeToggle).not.toBeChecked();
+    });
+
+    it('AlarmaConfigForm_quanEsDesactivaElToggleDePeriodeInactiu_esborraElsValorsDelsCampsInactiu', async () => {
+        render(<AlarmaConfigForm />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('heading', { name: 'Editar configuració' })).toBeInTheDocument();
+        });
+
+        const periodeInactiuToggle = screen.getByLabelText(/Configurar període inactiu/);
+        expect(periodeInactiuToggle).toBeChecked();
+        fireEvent.click(periodeInactiuToggle);
+
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('inactiuDesde', null);
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('inactiuFins', null);
+        expect(periodeInactiuToggle).not.toBeChecked();
+    });
+
+    it('AlarmaConfigForm_quanEsRenderitza_mostraAmbdosTogglesDePeriode', async () => {
+        render(<AlarmaConfigForm />);
+
+        await waitFor(() => {
+            expect(screen.getByLabelText(/Configurar període$/)).toBeInTheDocument();
+            expect(screen.getByLabelText(/Configurar període inactiu/)).toBeInTheDocument();
+        });
+    });
+
+    it('AlarmaConfigForm_quanTeId_correuGenericDepenDeAdmin', async () => {
+        render(<AlarmaConfigForm id="44" />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('field-admin')).toBeInTheDocument();
+            expect(screen.getByTestId('field-correuGeneric')).toBeInTheDocument();
+        });
+
+        expect(screen.getByTestId('field-admin')).toHaveTextContent('admin:true');
+        expect(screen.getByTestId('field-correuGeneric')).toHaveTextContent('correuGeneric:true');
     });
 });
 

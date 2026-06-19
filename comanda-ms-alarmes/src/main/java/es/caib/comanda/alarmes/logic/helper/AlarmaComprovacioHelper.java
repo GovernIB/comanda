@@ -27,8 +27,8 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -56,7 +56,12 @@ public class AlarmaComprovacioHelper {
 	private final ParametresHelper parametresHelper;
 	private final ObjectMapper objectMapper;
 
+    /** Retorna true si la condició d'alarma configurada s'està complint. **/
 	public boolean comprovar(AlarmaConfigEntity alarmaConfig) {
+        if (isAlarmaPeriodeInactiu(alarmaConfig)) {
+            return false;
+        }
+
 		Salut salut = findSalutLast(alarmaConfig.getEntornAppId());
 		if (!isFreshSalut(salut)) {
 			processarCondicioIndeterminada(alarmaConfig, salut);
@@ -70,6 +75,42 @@ public class AlarmaComprovacioHelper {
 
 		return processarCondicioNegativa(alarmaConfig, salut);
 	}
+
+    /** Si estem dins el periode inactiu configurat, retorna true. **/
+    private boolean isAlarmaPeriodeInactiu(AlarmaConfigEntity alarmaConfig) {
+        if (alarmaConfig.getInactiuDesde() == null && alarmaConfig.getInactiuFins() == null) {
+            return false;
+        }
+        return estaDinsFranjaHoraria(alarmaConfig.getInactiuDesde(), alarmaConfig.getInactiuFins(), LocalTime.now());
+    }
+
+    /**
+     * Comprova si una hora es troba dins d'una franja horària.
+     * <p>
+     * Suporta franges dins el mateix dia (ex: 09:00-18:00) i franges que afecten dos dies
+     * (ex: 22:00-03:00). Si {@code desde} o {@code fins} són null, s'assumeix
+     * {@code LocalTime.MIN} o {@code LocalTime.MAX} respectivament.
+     * </p>
+     *
+     * @param desde      Inici de la franja horària (inclusiu). Null = MIN
+     * @param fins       Final de la franja horària (inclusiu). Null = MAX
+     * @param horaActual Hora a comprovar
+     * @return true si l'hora es troba dins de la franja, false en cas contrari
+     */
+    protected boolean estaDinsFranjaHoraria(LocalTime desde, LocalTime fins, LocalTime horaActual) {
+        if (desde == null) {
+            desde = LocalTime.MIN;
+        }
+        if (fins == null) {
+            fins = LocalTime.MAX;
+        }
+
+        if (desde.isBefore(fins) || desde.equals(fins)) {
+            return !horaActual.isBefore(desde) && !horaActual.isAfter(fins);
+        } else {
+            return !horaActual.isBefore(desde) || !horaActual.isAfter(fins);
+        }
+    }
 
 	private boolean evaluateAlarmCondition(AlarmaConfigEntity alarmaConfig, Salut salut) {
 		AlarmaConfigRegla regla = readRule(alarmaConfig);

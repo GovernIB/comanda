@@ -548,6 +548,11 @@ const translationCa = {
                 subtitle: "Període de temps durant el qual s'ha de complir la condició per a generar l'alarma",
                 switch: "Amb període d'activació"
             },
+            periodeInactiu: {
+                title: "Període inactiu",
+                subtitle: "Període de temps durant el qual no comprova l'estat de l'alarma, deixant-la amb l'estat actual",
+                switch: "Amb període inactiu"
+            },
             filter: {
                 showOnlyOwnEnabled: "Mostrar només les meves alarmes",
                 showOnlyOwnDisabled: "Mostra només les alarmes d'administrador",
