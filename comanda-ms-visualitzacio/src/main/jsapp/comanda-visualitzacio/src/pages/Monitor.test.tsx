@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import Monitors, { translateEnumValue } from './Monitor';
 import React from 'react';
@@ -87,21 +87,70 @@ vi.mock('reactlib', () => ({
         onRowClick?: (params: { row: Record<string, unknown> }) => void;
         fixedFilter?: string;
         columns: Array<{ field: string; headerName?: string; renderCell?: (params: any) => React.ReactNode }>;
-    }) => (
-        <section>
-            <h2>{title}</h2>
-            <div data-testid="fixed-filter">{fixedFilter}</div>
-            <div>{toolbarAdditionalRow}</div>
-            <div data-testid="url-header">{columns[3]?.headerName ?? columns[3]?.field}</div>
-            <button onClick={() => onRowClick?.({ row: { estat: 'ERROR', tipus: 'SORTIDA', excepcioStacktrace: 'stack' } })}>
-                Obre detall
-            </button>
-            <div data-testid="estat-cell">
-                {columns[6]?.renderCell?.({ value: 'WARN', formattedValue: 'Avís' })}
+    }) => {
+        const urlColumn = columns?.find(col => col.field === 'url');
+        const estatColumn = columns?.find(col => col.field === 'estat');
+        return (
+            <section>
+                <h2>{title}</h2>
+                <div data-testid="fixed-filter">{fixedFilter}</div>
+                <div>{toolbarAdditionalRow}</div>
+                {columns?.map((col) => (
+                    <div key={col.field} data-testid={`column-${col.field}`}>
+                        {col.headerName ?? col.field}
+                    </div>
+                ))}
+                <div data-testid="url-header">{urlColumn?.headerName ?? urlColumn?.field ?? 'url'}</div>
+                <button onClick={() => onRowClick?.({ row: { estat: 'ERROR', tipus: 'SORTIDA', excepcioStacktrace: 'stack' } })}>
+                    Obre detall
+                </button>
+                <div data-testid="estat-cell">
+                    {estatColumn?.renderCell?.({ value: 'WARN', formattedValue: 'Avís' })}
+                </div>
+            </section>
+        );
+    },
+    MuiFilter: ({ 
+        children, 
+        springFilterBuilder,
+        apiRef,
+        resourceName,
+    }: { 
+        children: React.ReactNode;
+        springFilterBuilder?: (data: any) => string;
+        apiRef?: { current: { clear: () => void } };
+        resourceName?: string;
+    }) => {
+        const [data, setData] = React.useState<any>({});
+        
+        const handleAppChange = (appId: number | undefined) => {
+            const newData = { ...data, app: appId ? { id: appId } : undefined };
+            setData(newData);
+            springFilterBuilder?.(newData);
+        };
+        
+        const handleEntornChange = (entornId: number | undefined) => {
+            const newData = { ...data, entorn: entornId ? { id: entornId } : undefined };
+            setData(newData);
+            springFilterBuilder?.(newData);
+        };
+        
+        return (
+            <div>
+                {children}
+                {resourceName === 'entornApp' && (
+                    <>
+                        <button data-testid="select-app" onClick={() => handleAppChange(1)}>Seleccionar App</button>
+                        <button data-testid="select-entorn" onClick={() => handleEntornChange(1)}>Seleccionar Entorn</button>
+                        <button data-testid="clear-filters" onClick={() => {
+                            setData({});
+                            apiRef?.current?.clear();
+                        }}>Limpiar Filtros</button>
+                    </>
+                )}
             </div>
-        </section>
-    ),
-    MuiFilter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+        );
+    },
     FormField: ({ name }: { name: string }) => <div data-testid={`field-${name}`}>{name}</div>,
     dateFormatLocale: () => '13/03/2026 10:00',
     useMuiContentDialog: () => [mocks.showDialogMock, <div key="dialog">Diàleg monitor</div>],
@@ -110,6 +159,7 @@ vi.mock('reactlib', () => ({
         current: {
             clear: mocks.clearMock,
             filter: mocks.filterMock,
+            setFieldValue: mocks.setFieldValueMock,
         },
     }),
     springFilterBuilder: {
@@ -216,4 +266,27 @@ describe('Monitors', () => {
         expect(screen.getByTestId('fixed-filter')).toHaveTextContent("modul:'ALARMES'");
         expect(screen.getByTestId('url-header')).toHaveTextContent('Adreça de correu');
     });
+
+    it('Monitors_quanFiltraPerApp_ocultaLaColumnaApp', async () => {
+        render(<Monitors />);
+        fireEvent.click(screen.getByTestId('select-app'));
+
+        await waitFor(() => {
+            expect(screen.queryByTestId('column-app')).not.toBeInTheDocument();
+        });
+
+        expect(screen.queryByTestId('column-entorn')).toBeInTheDocument();
+    });
+
+    it('Monitors_quanFiltraPerEntorn_ocultaLaColumnaEntorn', async () => {
+        render(<Monitors />);
+        fireEvent.click(screen.getByTestId('select-entorn'));
+
+        await waitFor(() => {
+            expect(screen.queryByTestId('column-entorn')).not.toBeInTheDocument();
+        });
+
+        expect(screen.queryByTestId('column-app')).toBeInTheDocument();
+    });
+
 });
