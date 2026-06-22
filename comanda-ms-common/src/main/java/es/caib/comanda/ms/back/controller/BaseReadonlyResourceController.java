@@ -203,7 +203,7 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 					resourcePermissions,
 					true,
 					false,
-					true,
+					false,
 					buildResourceCollectionLinks(
 							quickFilter,
 							filter,
