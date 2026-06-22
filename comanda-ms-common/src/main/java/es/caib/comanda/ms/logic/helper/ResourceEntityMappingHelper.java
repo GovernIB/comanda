@@ -1,6 +1,7 @@
 package es.caib.comanda.ms.logic.helper;
 
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
+import es.caib.comanda.ms.logic.intf.exception.ObjectMappingException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.model.FileReference;
 import es.caib.comanda.ms.logic.intf.model.Resource;
@@ -132,6 +133,15 @@ public class ResourceEntityMappingHelper {
 			String... ignoredFields) {
 		Set<String> ignoredFieldNames = new HashSet<>(Arrays.asList(ignoredFields));
 		addResourceConfigIgnoredFields(resourceClass, ignoredFieldNames);
+		if (entity instanceof org.hibernate.proxy.HibernateProxy) {
+			// This mapper relies on direct field access and does not support Hibernate proxies.
+			// A proxy may be returned when the entity has previously been loaded lazily.
+			// Check your Service overrides for calls to JPA that may be returning lazy-loaded references.
+			throw new ObjectMappingException(
+				entity.getClass(),
+				resourceClass,
+				"Trying to convert an entity to a resource and the entity is of type HibernateProxy");
+		}
 		return objectMappingHelper.newInstanceMap(
 				entity,
 				resourceClass,
