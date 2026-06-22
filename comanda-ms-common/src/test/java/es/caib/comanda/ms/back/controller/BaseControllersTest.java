@@ -111,9 +111,9 @@ class BaseControllersTest {
         // Valida la fusió de respostes provinents del header HTTP i del payload de la petició.
         TestReadonlyController controller = new TestReadonlyController();
         ReflectionTestUtils.setField(controller, "objectMapper", new ObjectMapper());
-        ReflectionTestUtils.setField(controller, "httpHeaderAnswers", "Bb-Answers");
+        ReflectionTestUtils.setField(controller, "httpHeaderAnswers", "OnChange-Answers");
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.addHeader("Bb-Answers", "{\"fromHeader\":true,\"fromRequest\":\"override\"}");
+        request.addHeader("OnChange-Answers", "{\"fromHeader\":true,\"fromRequest\":\"override\"}");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
 
         Map<String, Object> fromRequest = Map.of("fromRequest", "req", "newReq", "x");
@@ -148,7 +148,7 @@ class BaseControllersTest {
         ReflectionTestUtils.setField(controller, "resourceApiService", resourceApiService);
         ReflectionTestUtils.setField(controller, "objectMapper", new ObjectMapper());
         ReflectionTestUtils.setField(controller, "validator", validator);
-        ReflectionTestUtils.setField(controller, "httpHeaderAnswers", "Bb-Answers");
+        ReflectionTestUtils.setField(controller, "httpHeaderAnswers", "OnChange-Answers");
 
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(new MockHttpServletRequest()));
         var createResponse = controller.create(newResource, new BeanPropertyBindingResult(newResource, "resource"));

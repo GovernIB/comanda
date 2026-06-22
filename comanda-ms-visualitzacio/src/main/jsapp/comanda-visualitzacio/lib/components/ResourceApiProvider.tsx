@@ -14,6 +14,7 @@ import ResourceApiContext, {
 
 const LOG_PREFIX = 'RAPI';
 const OFFLINE_CHECK_TIMEOUT = 5000; // en milisegons
+const HTTP_HEADER_ANSWERS = 'OnChange-Answers';
 
 type ResourceApiMethods = {
     getOne: (id: any, args?: ResourceApiGetOneArgs) => Promise<any>;
@@ -426,7 +427,7 @@ const processAnswerRequiredError = (
                     availableAnswers
                 )
                     .then((answer: string) => {
-                        const answersHeader = args?.headers?.['Bb-Answers'];
+                        const answersHeader = args?.headers?.[HTTP_HEADER_ANSWERS];
                         const answers = answersHeader ? JSON.parse(answersHeader) : {};
                         const updatedAnswers = {
                             ...answers,
@@ -438,7 +439,7 @@ const processAnswerRequiredError = (
                         const currentHeaders = args?.headers ? args.headers : {};
                         const updatedHeaders = {
                             ...currentHeaders,
-                            ['Bb-Answers']: JSON.stringify(updatedAnswers),
+                            [HTTP_HEADER_ANSWERS]: JSON.stringify(updatedAnswers),
                         };
                         const updatedArgs = { ...args, headers: updatedHeaders };
                         callback(id, updatedArgs)
