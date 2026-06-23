@@ -30,7 +30,7 @@ class HttpAuthorizationHeaderHelperTest {
 
     @BeforeEach
     void setUp() {
-        helper = new HttpAuthorizationHeaderHelper(restTemplate);
+        helper = new HttpAuthorizationHeaderHelper();
         ReflectionTestUtils.setField(helper, "authUsername", "user");
         ReflectionTestUtils.setField(helper, "authPassword", "pass");
     }
@@ -53,6 +53,7 @@ class HttpAuthorizationHeaderHelperTest {
         ReflectionTestUtils.setField(helper, "providerBaseUrl", "http://auth");
         ReflectionTestUtils.setField(helper, "providerRealm", "realm");
         ReflectionTestUtils.setField(helper, "providerClientId", "client");
+        ReflectionTestUtils.setField(helper, "restTemplate", restTemplate);
 
         Map<String, String> responseBody = new HashMap<>();
         responseBody.put("access_token", "token123");

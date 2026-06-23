@@ -71,13 +71,12 @@ public class EntornAppServiceImplTest {
                                           AuthenticationHelper authenticationHelper,
                                           HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
                                           AclServiceClient aclServiceClient,
-                                          RestTemplate restTemplate,
                                           Validator validator,
                                           ResourceEntityMappingHelper resourceEntityMappingHelper,
                                           ApplicationEventPublisher eventPublisher) {
             super(appIntegracioRepository, subsistemaRepository, contextRepository, entornAppRepository, appInfoHelper,
                     cacheHeper, schedulerService, authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient,
-                    restTemplate, validator, resourceEntityMappingHelper, eventPublisher);
+                    validator, resourceEntityMappingHelper, eventPublisher);
         }
 
         @Override
@@ -177,7 +176,6 @@ public class EntornAppServiceImplTest {
             authenticationHelper,
             keycloakHelper,
             aclServiceClient,
-            restTemplate,
             validator,
             resourceEntityMappingHelper,
             eventPublisher
@@ -448,7 +446,7 @@ public class EntornAppServiceImplTest {
                 .thenReturn(response);
 
         EntornAppServiceImpl.PingUrlAction pingAction =
-                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+                new EntornAppServiceImpl.PingUrlAction(validator, statsAuthUser, statsAuthPassword);
 
         // Act
         EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
@@ -472,7 +470,7 @@ public class EntornAppServiceImplTest {
                 .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND, "Not Found"));
 
         EntornAppServiceImpl.PingUrlAction pingAction =
-                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+                new EntornAppServiceImpl.PingUrlAction(validator, statsAuthUser, statsAuthPassword);
 
         // Act
         EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
@@ -508,7 +506,7 @@ public class EntornAppServiceImplTest {
         when(validator.validate(appInfo)).thenReturn(Set.of());
 
         EntornAppServiceImpl.PingUrlAction pingAction =
-                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+                new EntornAppServiceImpl.PingUrlAction(validator, statsAuthUser, statsAuthPassword);
 
         // Act
         EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
@@ -537,7 +535,7 @@ public class EntornAppServiceImplTest {
                 .thenReturn((ResponseEntity) response);
 
         EntornAppServiceImpl.PingUrlAction pingAction =
-                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+                new EntornAppServiceImpl.PingUrlAction(validator, statsAuthUser, statsAuthPassword);
 
         // Act
         EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
@@ -566,7 +564,7 @@ public class EntornAppServiceImplTest {
                 .thenReturn(response);
 
         EntornAppServiceImpl.PingUrlAction pingAction =
-                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+                new EntornAppServiceImpl.PingUrlAction(validator, statsAuthUser, statsAuthPassword);
 
         // Act
         EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
@@ -604,7 +602,7 @@ public class EntornAppServiceImplTest {
         when(validator.validate(appInfoInvalida)).thenReturn(Set.of(violation));
 
         EntornAppServiceImpl.PingUrlAction pingAction =
-                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+                new EntornAppServiceImpl.PingUrlAction(validator, statsAuthUser, statsAuthPassword);
 
         // Act
         EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
@@ -642,7 +640,7 @@ public class EntornAppServiceImplTest {
         when(validator.validate(appInfoInvalida)).thenReturn(Set.of(violation));
 
         EntornAppServiceImpl.PingUrlAction pingAction =
-                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+                new EntornAppServiceImpl.PingUrlAction(validator, statsAuthUser, statsAuthPassword);
 
         // Act
         EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
@@ -671,7 +669,7 @@ public class EntornAppServiceImplTest {
                         new java.io.IOException("Mock error")));
 
         EntornAppServiceImpl.PingUrlAction pingAction =
-                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+                new EntornAppServiceImpl.PingUrlAction(validator, statsAuthUser, statsAuthPassword);
 
         // Act
         EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
@@ -694,7 +692,7 @@ public class EntornAppServiceImplTest {
                 .thenThrow(new ResourceAccessException("Connection timed out"));
 
         EntornAppServiceImpl.PingUrlAction pingAction =
-                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+                new EntornAppServiceImpl.PingUrlAction(validator, statsAuthUser, statsAuthPassword);
 
         // Act
         EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
@@ -735,7 +733,7 @@ public class EntornAppServiceImplTest {
         when(validator.validate(logs)).thenReturn(Set.of());
 
         EntornAppServiceImpl.PingUrlAction pingAction =
-                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+                new EntornAppServiceImpl.PingUrlAction(validator, statsAuthUser, statsAuthPassword);
 
         // Act
         EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);

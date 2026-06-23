@@ -260,10 +260,6 @@ class BaseHalFormsAndExpressionGeneratorTest {
     }
 
     static class TestHalFormsConfig extends BaseHalFormsConfig {
-        @Override
-        protected String[] getControllerPackages() {
-            return new String[0];
-        }
     }
 
     static class JoinedEntity {

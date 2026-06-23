@@ -1,5 +1,6 @@
 package es.caib.comanda.ms.logic.intf.service;
 
+import es.caib.comanda.ms.back.util.ResourceServiceLocator;
 import es.caib.comanda.ms.logic.intf.exception.ComponentNotFoundException;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import org.junit.jupiter.api.Test;

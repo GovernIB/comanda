@@ -134,7 +134,7 @@ class MappingAndInfraHelpersTest {
     void httpAuthorizationHeaderHelper_basicIBearer() {
         // Comprova la generació de capçaleres Authorization en mode Basic i Bearer.
         RestTemplate restTemplate = mock(RestTemplate.class);
-        HttpAuthorizationHeaderHelper helper = new HttpAuthorizationHeaderHelper(restTemplate);
+        HttpAuthorizationHeaderHelper helper = new HttpAuthorizationHeaderHelper();
 
         ReflectionTestUtils.setField(helper, "authUsername", "user");
         ReflectionTestUtils.setField(helper, "authPassword", "pwd");
@@ -143,6 +143,7 @@ class MappingAndInfraHelpersTest {
         ReflectionTestUtils.setField(helper, "providerBaseUrl", "http://kc");
         ReflectionTestUtils.setField(helper, "providerRealm", "realm");
         ReflectionTestUtils.setField(helper, "providerClientId", "client");
+        ReflectionTestUtils.setField(helper, "restTemplate", restTemplate);
         when(restTemplate.postForEntity(any(String.class), any(HttpEntity.class), eq(Map.class)))
                 .thenReturn(ResponseEntity.ok(Map.of("access_token", "tkn")));
         assertThat(helper.getAuthorizationHeader()).isEqualTo("Bearer tkn");

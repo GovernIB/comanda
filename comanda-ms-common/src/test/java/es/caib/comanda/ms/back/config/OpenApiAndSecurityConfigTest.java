@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.hateoas.mediatype.MessageResolver;
+import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,17 +27,15 @@ class OpenApiAndSecurityConfigTest {
         assertThat(none.getComponents()).isNull();
     }
 
-    @Test
-    void methodSecurityConfig_createsExpressionHandler() {
-        // Comprova que la configuració de seguretat de mètode crea l'expression handler esperat.
-        MethodSecurityConfig config = new MethodSecurityConfig();
-        org.springframework.test.util.ReflectionTestUtils.setField(config, "applicationContext", mock(ApplicationContext.class));
-        org.springframework.test.util.ReflectionTestUtils.setField(config, "permissionEvaluatorService", mock(PermissionEvaluatorService.class));
+	@Test
+	void methodSecurityConfig_createsExpressionHandler() {
+		PermissionEvaluator permissionEvaluator = mock(PermissionEvaluator.class);
+		MethodSecurityConfig config = new MethodSecurityConfig(permissionEvaluator);
 
-        MethodSecurityExpressionHandler handler = config.createExpressionHandler();
+		MethodSecurityExpressionHandler handler = config.methodSecurityExpressionHandler();
 
-        assertThat(handler).isNotNull();
-    }
+		assertThat(handler).isNotNull();
+	}
 
     @Test
     void hateoasMessageResolverConfig_createsResolver() {

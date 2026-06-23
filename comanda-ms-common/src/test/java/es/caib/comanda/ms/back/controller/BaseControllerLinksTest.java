@@ -37,7 +37,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -170,7 +170,7 @@ class BaseControllerLinksTest {
 
         RealMutableController mutable = new RealMutableController();
         SmartValidator validator = mock(SmartValidator.class);
-        ReflectionTestUtils.setField(mutable, "validator", validator);
+        ReflectionTestUtils.setField(mutable, BaseReadonlyResourceController.class, "validator", validator, SmartValidator.class);
         FormResource form = new FormResource();
         BeanPropertyBindingResult binding = new BeanPropertyBindingResult(form, "form");
         mutable.callFillResourceWithFieldsMap(form, Map.of("name", "filled"));
@@ -261,7 +261,7 @@ class BaseControllerLinksTest {
         @Override public Class<LinkResource> getResourceClass() { return LinkResource.class; }
 
         List<Link> callBuildSingleResourceLinks(Long id, ResourcePermissions permissions) {
-            return super.buildSingleResourceLinks(id, null, true, null, permissions);
+            return super.buildSingleResourceLinks(id, null, null, null, permissions, true, true, true);
         }
 
         List<Link> callBuildResourceCollectionLinks(org.springframework.data.domain.Pageable pageable, Page<?> page, ResourcePermissions permissions) {
@@ -294,7 +294,7 @@ class BaseControllerLinksTest {
         @Override public Class<LinkResource> getResourceClass() { return LinkResource.class; }
 
         List<Link> callBuildSingleResourceLinks(Long id, ResourcePermissions permissions) {
-            return super.buildSingleResourceLinks(id, null, true, null, permissions);
+            return super.buildSingleResourceLinks(id, null, null, null, permissions, true, true, true);
         }
 
         List<Link> callBuildResourceCollectionLinks(org.springframework.data.domain.Pageable pageable, Page<?> page, ResourcePermissions permissions) {
@@ -310,7 +310,7 @@ class BaseControllerLinksTest {
         }
 
         <T extends es.caib.comanda.ms.logic.intf.model.Resource<?>> void callValidateResource(T resource, BeanPropertyBindingResult bindingResult) throws MethodArgumentNotValidException {
-            super.validateResource(resource, bindingResult, 0);
+            super.validateResource(resource, 0, bindingResult);
         }
     }
 }

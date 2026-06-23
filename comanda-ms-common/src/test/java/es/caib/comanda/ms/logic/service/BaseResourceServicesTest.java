@@ -484,12 +484,12 @@ class BaseResourceServicesTest {
             });
         }
 
-        boolean callReorder(MutableEntity entity, Long sequenceForEntity, Long previousParentId, boolean sameSequenceInsertBefore, boolean isDelete) {
-            return reorderIfReorderable(entity, sequenceForEntity, previousParentId, sameSequenceInsertBefore, isDelete);
+        boolean callReorder(MutableEntity entity, Long newSequence, Long previousParentId, boolean sameSequenceInsertBefore, boolean isDelete) {
+            return reorderIfReorderable(entity, entity.getOrder(), newSequence, previousParentId, isDelete);
         }
 
         @Override
-        protected List<MutableEntity> reorderFindLinesWithParent(Serializable parentId) {
+        protected List<MutableEntity> reorderFindLinesWithParentAndSorted(Serializable parentId) {
             return reorderableLines;
         }
 

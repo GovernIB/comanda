@@ -15,6 +15,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
@@ -54,8 +55,8 @@ class AuthenticationPermissionHelperTest {
         ReflectionTestUtils.setField(helper, "authenticationHelper", new AuthenticationHelper());
         SecurityContextHolder.getContext().setAuthentication(auth);
 
-        assertThat(helper.checkResourcePermission(auth, null, AnnotatedResource.class.getName(), (BasePermission)BasePermission.READ)).isTrue();
-        assertThat(helper.checkResourcePermission(auth, null, "not.found.Clazz", (BasePermission)BasePermission.READ)).isFalse();
+        assertThat(helper.checkResourcePermission(auth, null, AnnotatedResource.class.getName(), new BasePermission[]{(BasePermission) BasePermission.READ})).isTrue();
+        assertThat(helper.checkResourcePermission(auth, null, "not.found.Clazz", new BasePermission[]{(BasePermission) BasePermission.READ})).isFalse();
         assertThat(helper.checkResourceArtifactPermission(AnnotatedResource.class, ResourceArtifactType.ACTION, "RUN")).isTrue();
         assertThat(helper.checkResourceArtifactPermission(AnnotatedResource.class, ResourceArtifactType.ACTION, "MISS")).isFalse();
     }
@@ -91,7 +92,7 @@ class AuthenticationPermissionHelperTest {
 
     static class TestPermissionHelper extends BasePermissionHelper {
         @Override
-        protected boolean checkCustomResourceAccessConstraint(Authentication auth, Class<?> resourceClass, ResourceAccessConstraint resourceAccessConstraint, BasePermission permission) {
+        protected boolean checkCustomResourceAccessConstraint(Authentication auth, Serializable resourceId, Class<?> resourceClass, ResourceAccessConstraint resourceAccessConstraint, BasePermission[] permissions) {
             return false;
         }
 

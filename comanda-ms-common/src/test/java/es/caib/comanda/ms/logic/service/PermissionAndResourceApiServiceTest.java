@@ -39,7 +39,7 @@ class PermissionAndResourceApiServiceTest {
         ReflectionTestUtils.setField(service, "permissionHelper", permissionHelper);
 
         Authentication auth = mock(Authentication.class);
-        when(permissionHelper.checkResourcePermission(auth, 1L, TestResource.class.getName(), (BasePermission)BasePermission.READ)).thenReturn(true);
+        when(permissionHelper.checkResourcePermission(auth, 1L, TestResource.class.getName(), new BasePermission[]{(BasePermission) BasePermission.READ})).thenReturn(true);
         boolean allowedRead = service.hasPermission(auth, 1L, TestResource.class.getName(), PermissionEvaluatorService.RestApiOperation.GET_ONE);
         assertThat(allowedRead).isTrue();
 
@@ -74,10 +74,10 @@ class PermissionAndResourceApiServiceTest {
         List<Class<? extends es.caib.comanda.ms.logic.intf.model.Resource<?>>> allowed = service.resourceFindAllowed();
         assertThat(allowed).containsExactly(TestResource.class);
 
-        when(permissionHelper.checkResourcePermission(2L, TestResource.class.getName(), (BasePermission)BasePermission.READ)).thenReturn(true);
-        when(permissionHelper.checkResourcePermission(2L, TestResource.class.getName(), (BasePermission)BasePermission.WRITE)).thenReturn(false);
-        when(permissionHelper.checkResourcePermission(2L, TestResource.class.getName(), (BasePermission)BasePermission.CREATE)).thenReturn(true);
-        when(permissionHelper.checkResourcePermission(2L, TestResource.class.getName(), (BasePermission)BasePermission.DELETE)).thenReturn(false);
+        when(permissionHelper.checkResourcePermission(2L, TestResource.class.getName(), new BasePermission[]{(BasePermission) BasePermission.READ})).thenReturn(true);
+        when(permissionHelper.checkResourcePermission(2L, TestResource.class.getName(), new BasePermission[]{(BasePermission) BasePermission.WRITE})).thenReturn(false);
+        when(permissionHelper.checkResourcePermission(2L, TestResource.class.getName(), new BasePermission[]{(BasePermission) BasePermission.CREATE})).thenReturn(true);
+        when(permissionHelper.checkResourcePermission(2L, TestResource.class.getName(), new BasePermission[]{(BasePermission) BasePermission.DELETE})).thenReturn(false);
 
         var p = service.permissionsCurrentUser(TestResource.class, 2L);
         assertThat(p.isReadGranted()).isTrue();

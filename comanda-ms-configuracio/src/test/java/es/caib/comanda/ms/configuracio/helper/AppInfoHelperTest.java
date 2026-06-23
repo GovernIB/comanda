@@ -100,7 +100,6 @@ public class AppInfoHelperTest {
         appInfoHelper = new AppInfoHelper(
                 httpAuthorizationHeaderHelper,
                 monitorServiceClient,
-                restTemplate,
                 cacheHelper,
 		        appInfoEntornAppHelper,
 		        appInfoIntegracionsHelper,
