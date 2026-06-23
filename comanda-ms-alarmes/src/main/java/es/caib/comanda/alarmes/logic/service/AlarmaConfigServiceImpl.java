@@ -2,19 +2,20 @@ package es.caib.comanda.alarmes.logic.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import es.caib.comanda.alarmes.logic.helper.UserInformationHelper;
 import es.caib.comanda.alarmes.logic.intf.model.*;
 import es.caib.comanda.alarmes.logic.intf.service.AlarmaConfigService;
 import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventPublisher;
 import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventTypes;
 import es.caib.comanda.alarmes.persist.entity.AlarmaConfigEntity;
+import es.caib.comanda.alarmes.persist.repository.AlarmaConfigRepository;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.client.model.Usuari;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
-import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
-import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
-import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
-import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
+import es.caib.comanda.ms.logic.intf.exception.*;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
+import es.caib.comanda.ms.logic.intf.util.ThreadLocalUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -41,13 +43,16 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
     private static final int RULE_VERSION = 1;
 
     private final AuthenticationHelper authenticationHelper;
+    private final AlarmaConfigRepository alarmaConfigRepository;
     private final AlarmaRepository alarmaRepository;
     private final ComandaSseEventPublisher comandaSseEventPublisher;
     private final ObjectMapper objectMapper;
+    private final UserInformationHelper userInformationHelper;
 
     @PostConstruct
     public void init() {
         register(AlarmaConfig.ALARMA_CONFIG_DELETE_ACTION, new DeleteAlarmaConfigAction());
+        register(AlarmaConfig.PERSPECTIVE_AUDIT_CODE, new AuditoriaPerspectiveApplicator());
     }
 
     @Override
@@ -65,6 +70,9 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
             throw new ResourceNotCreatedException(resource.getClass(), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.AlarmaConfigServiceImpl.beforeCreateEntity.not.admin"));
         }
         applyRuleConfiguration(entity, resource);
+        if (!resource.isAdmin() && resource.isCorreuGeneric()) {
+            resource.setCorreuGeneric(false);
+        }
     }
 
     @Override
@@ -73,6 +81,7 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
             throw new ResourceNotUpdatedException(getResourceClass(), String.valueOf(entity.getId()), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.AlarmaConfigServiceImpl.beforeUpdateEntity.not.admin"));
         }
         applyRuleConfiguration(entity, resource);
+        logicBeforeUpdateEntityAlarmaConfig(entity, resource);
     }
 
     @Override
@@ -89,6 +98,15 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
         resource.setRegla(regla);
         entity.setRuleVersion(regla != null ? RULE_VERSION : null);
         entity.setRuleJson(writeRule(regla));
+    }
+
+    /** Evita que alguns atributs canviï de valor, sense ús d'anotació. Perquè des del frontal es limitaran les opcions de forma més visual. **/
+    private void logicBeforeUpdateEntityAlarmaConfig (AlarmaConfigEntity entity, AlarmaConfig resource) {
+        resource.setEntornAppId(entity.getEntornAppId());
+        resource.setAdmin(entity.isAdmin());
+        if (!entity.isAdmin() && resource.isCorreuGeneric()) {
+            throw new ResourceNotUpdatedException(getResourceClass(), String.valueOf(entity.getId()), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.AlarmaConfigServiceImpl.beforeUpdateEntity.correuGeneric.not.admin"));
+        }
     }
 
     public AlarmaConfigRegla readRule(AlarmaConfigEntity entity) {
@@ -173,8 +191,9 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
         } else if (regla.getMetrica() == AlarmaConfigReglaMetrica.ESPAI_DISC_LLIURE) {
             metric = "disc lliure";
         }
-        if (regla.getComparador() == AlarmaConfigReglaComparador.EN) {
-            return subject + " " + metric + " en " + String.join(", ", regla.getValorsText());
+        if (regla.getMetrica() == AlarmaConfigReglaMetrica.ESTAT) {
+            String comparador = regla.getComparador() == null ? "" : regla.getComparador().name();
+            return subject + " " + metric + " " + comparador + " " + String.join(", ", regla.getValorsText());
         }
         BigDecimal valor = regla.getValorNumeric();
         return subject + " " + metric + " " + regla.getComparador() + " " + (valor != null ? valor.toPlainString() : "");
@@ -198,4 +217,61 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
         }
     }
 
+	@Override
+	protected void beforeCreateSave(AlarmaConfigEntity entity, AlarmaConfig resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
+		ThreadLocalUtil.setAttribute(ThreadLocalUtil.REORDER_ADDITIONAL_PROPS_KEY, entity);
+	}
+
+    private class AuditoriaPerspectiveApplicator implements PerspectiveApplicator<AlarmaConfigEntity, AlarmaConfig> {
+        @Override
+        public void applySingle(String code, AlarmaConfigEntity entity, AlarmaConfig resource) throws PerspectiveApplicationException {
+            if (entity.getCreatedBy()!=null) {
+                Usuari usuari = userInformationHelper.usuariFindByUsername(entity.getCreatedBy());
+                if (usuari!=null) {
+                    resource.setCreatedByFullName(usuari.getNom() + " (" + usuari.getCodi() + ")");
+                }
+            }
+            if (entity.getLastModifiedBy()!=null) {
+                Usuari usuari = userInformationHelper.usuariFindByUsername(entity.getLastModifiedBy());
+                resource.setLastModifiedByFullName(usuari.getNom() + " (" + usuari.getCodi() + ")");
+            }
+        }
+    }
+
+	// L'ordenació és individual de cada usuari i entornApp,
+	// menys quan no es tracta d'una alarma d'administrador, en aquell cas
+	// l'ordenació és individual de cada entornApp però global per a tots els administradors.
+	@Override
+	protected List<AlarmaConfigEntity> reorderFindLinesWithParent(Serializable selfIdSerializable) {
+        boolean isCurrentRowAdmin;
+        Long currentRowEntornAppId;
+        String currentRowCreatedBy;
+
+		if (selfIdSerializable != null) {
+			// El parentId fa referència al mateix AlarmaConfigEntity per a poder
+			// recuperar la row actual al mètode reorderFindLinesWithParent
+			Long selfId = (Long) selfIdSerializable;
+            AlarmaConfigEntity currentRow = alarmaConfigRepository.findById(selfId).orElseThrow();
+			isCurrentRowAdmin = currentRow.isAdmin();
+            currentRowEntornAppId = currentRow.getEntornAppId();
+            currentRowCreatedBy = currentRow.getCreatedBy();
+		} else {
+			// Al fer una creació, el selfId no s'ha emplenat encara i es recupera la row actual a través del ThreadLocal
+            AlarmaConfigEntity currentRow = ThreadLocalUtil.getAttribute(ThreadLocalUtil.REORDER_ADDITIONAL_PROPS_KEY, AlarmaConfigEntity.class);
+			isCurrentRowAdmin = currentRow.isAdmin();
+            currentRowEntornAppId = currentRow.getEntornAppId();
+            currentRowCreatedBy = authenticationHelper.getCurrentUserName();
+        }
+
+		if (isCurrentRowAdmin) {
+			return alarmaConfigRepository.findByEntornAppIdAndEsborratFalseAndAdminTrueOrderByOrdre(
+				currentRowEntornAppId
+			);
+		} else {
+			return alarmaConfigRepository.findByEntornAppIdAndEsborratFalseAndAdminFalseAndCreatedByOrderByOrdre(
+				currentRowEntornAppId,
+				currentRowCreatedBy
+			);
+		}
+	}
 }

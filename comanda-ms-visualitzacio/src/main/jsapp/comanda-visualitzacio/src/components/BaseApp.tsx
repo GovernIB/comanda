@@ -17,8 +17,8 @@ import {
     MuiBaseApp,
     useBaseAppContext,
     useResourceApiContext,
+    useMuiFormDialogApiRef,
 } from 'reactlib';
-import { DataFormDialogApi } from '../../lib/components/mui/datacommon/DataFormDialog';
 import Alarms, { AlarmsDialog } from './Alarms';
 import SystemTimeDisplay from './SystemTimeDisplay';
 import { useUserContext } from './UserContext';
@@ -225,7 +225,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
     const theme = useTheme();
     const baseAppMenuEntries = menuEntries;
     const { user, currentRole } = useUserContext();
-    const userDialogApiRef = React.useRef<DataFormDialogApi | undefined>(undefined);
+    const userDialogApiRef = useMuiFormDialogApiRef();
     const [alarmsDialogOpen, setAlarmsDialogOpen] = React.useState(false);
     const { indexState } = useResourceApiContext();
     const {

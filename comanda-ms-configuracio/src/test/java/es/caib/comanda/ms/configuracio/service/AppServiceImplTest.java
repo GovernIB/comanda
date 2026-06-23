@@ -4,12 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
-import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.intf.model.App;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
 import es.caib.comanda.configuracio.logic.mapper.AppExportMapper;
 import es.caib.comanda.configuracio.logic.service.AppServiceImpl;
-import es.caib.comanda.configuracio.logic.service.ConfiguracioSchedulerService;
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornEntity;
@@ -156,9 +154,9 @@ public class AppServiceImplTest {
     }
 
     @Test
-    void testAfterConversion() {
-        // Test that afterConversion correctly maps EntornAppEntity to EntornApp
-        appService.afterConversion(appEntity, appResource);
+    void testEntornAppsPerspectiveApplicator() {
+        AppServiceImpl.EntornAppsPerspectiveApplicator applicator = new AppServiceImpl.EntornAppsPerspectiveApplicator();
+        applicator.applySingle(App.PERSPECTIVE_ENTORN_APPS, appEntity, appResource);
 
         assertNotNull(appResource.getEntornApps());
         assertEquals(1, appResource.getEntornApps().size());
@@ -226,7 +224,7 @@ public class AppServiceImplTest {
                 eq("anna"),
                 eq(List.of("COM_USER")),
                 eq("Bearer test"))).thenReturn(org.springframework.http.ResponseEntity.ok(Set.of(11L)));
-        when(entornAppRepository.findAllById(Set.of(11L))).thenReturn(List.of(permittedEntornApp));
+        when(entornAppRepository.findAppIdsByEntornAppIds(Set.of(11L))).thenReturn(Set.of(2L));
 
         String result = appService.exposedAdditionalSpringFilter();
 
@@ -274,7 +272,7 @@ public class AppServiceImplTest {
                 eq("anna"),
                 eq(List.of("COM_USER")),
                 eq("Bearer test"))).thenReturn(org.springframework.http.ResponseEntity.ok(Set.of(11L)));
-        when(entornAppRepository.findAllById(Set.of(11L))).thenReturn(List.of(permittedEntornApp));
+        when(entornAppRepository.findAppIdsByEntornAppIds(Set.of(11L))).thenReturn(Set.of(2L));
 
         String result = appService.exposedAdditionalSpringFilter();
 

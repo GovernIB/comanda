@@ -5,7 +5,6 @@ import Apps, { AppForm } from './Apps';
 
 const mocks = vi.hoisted(() => ({
     useParamsMock: vi.fn(),
-    setMarginsDisabledMock: vi.fn(),
     temporalMessageShowMock: vi.fn(),
     refreshMock: vi.fn(),
     artifactActionMock: vi.fn(),
@@ -199,7 +198,6 @@ vi.mock('reactlib', () => ({
         eq: vi.fn((field: string, value: string) => `${field}=${value}`),
     },
     useBaseAppContext: () => ({
-        setMarginsDisabled: mocks.setMarginsDisabledMock,
         temporalMessageShow: mocks.temporalMessageShowMock,
     }),
     useFormContext: () => mocks.useFormContextValue,
@@ -296,7 +294,6 @@ describe('AppForm', () => {
         expect(screen.getByTestId('page-title')).toHaveTextContent('Editar aplicació (Comanda)');
         expect(screen.getByText('General')).toBeInTheDocument();
         expect(screen.getByText('Entorns')).toBeInTheDocument();
-        expect(mocks.setMarginsDisabledMock).toHaveBeenCalledWith(true);
         expect(screen.getAllByRole('button', { name: 'Permisos' })).toHaveLength(1);
         expect(screen.getByText('Activar')).toBeInTheDocument();
         expect(screen.getByText('Desactivar')).toBeInTheDocument();

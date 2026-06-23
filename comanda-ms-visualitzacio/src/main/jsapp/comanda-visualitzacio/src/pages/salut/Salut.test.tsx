@@ -6,7 +6,6 @@ const mocks = vi.hoisted(() => ({
     useParamsMock: vi.fn(),
     refreshSalutMock: vi.fn(),
     refreshAppInfoMock: vi.fn(),
-    useDisableMarginsMock: vi.fn(),
     useIntervalMock: vi.fn(),
     tMock: vi.fn((selector: any) =>
         selector({
@@ -106,8 +105,11 @@ vi.mock('./salutState.ts', () => ({
 }));
 
 vi.mock('../../components/salut/SalutPrincipalWidgets', () => ({
-    SalutLlistat: ({ salutGroups }: { salutGroups: unknown[] }) => (
-        <div>{`SalutLlistat ${salutGroups.length}`}</div>
+    SalutLlistat: ({ salutGroups, loading }: { salutGroups: unknown[]; loading?: boolean }) => (
+        <div>
+            <span>{`SalutLlistat ${salutGroups.length}`}</span>
+            <span>{`loading:${String(Boolean(loading))}`}</span>
+        </div>
     ),
 }));
 
@@ -125,10 +127,6 @@ vi.mock('../../components/salut/SalutItemStateChip', () => ({
 
 vi.mock('../../components/PageTitle', () => ({
     default: ({ title }: { title: string }) => <h1>{title}</h1>,
-}));
-
-vi.mock('../../hooks/useDisableMargins', () => ({
-    default: () => mocks.useDisableMarginsMock(),
 }));
 
 vi.mock('../../hooks/useInterval', () => ({
@@ -243,8 +241,18 @@ describe('Salut', () => {
 
         expect(screen.getByRole('heading', { name: 'Salut' })).toBeInTheDocument();
         expect(screen.getByTestId('salut-toolbar')).toHaveTextContent('Salut');
-        expect(mocks.useDisableMarginsMock).toHaveBeenCalled();
         expect(mocks.useIntervalMock).toHaveBeenCalled();
+    });
+
+    it('Salut_quanCarregaInicialment_activaElSkeletonDelLlistat', async () => {
+        // Verifica que la vista general passa l'estat de càrrega inicial al llistat per mostrar placeholders.
+        mocks.findEntornAppMock.mockReturnValue(new Promise(() => undefined));
+
+        render(<Salut />);
+
+        await waitFor(() => {
+            expect(screen.getByText('loading:true')).toBeInTheDocument();
+        });
     });
 
     it('Salut_quanHiHaRutaDapp_mostraLaVistaDeDetallIAjustaLaToolbar', async () => {

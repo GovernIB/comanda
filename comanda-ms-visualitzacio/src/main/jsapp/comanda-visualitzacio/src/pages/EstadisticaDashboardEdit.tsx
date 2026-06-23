@@ -11,7 +11,10 @@ import {
     useMessageDialogButtons,
     useConfirmDialogButtons,
     useMuiDataGridApiRef,
-    MuiDataGridColDef, useFilterApiRef, MuiFormDialogApi, MuiFormDialog,
+    MuiDataGridColDef,
+    useFilterApiRef,
+    MuiFormDialog,
+    useMuiFormDialogApiRef,
 } from 'reactlib';
 import { useNavigate, useParams } from 'react-router-dom';
 import {useCallback, useEffect, useRef, useState} from 'react';
@@ -987,7 +990,7 @@ const WidgetMenu = ({createWidget, entornId, aplicacio}:any) => {
     </>
 }
 export const useSimpleWidgetFormDialog = () => {
-    const formApiRef = React.useRef<MuiFormDialogApi>(undefined)
+    const formApiRef = useMuiFormDialogApiRef();
 
     const handleOpen = (id?:any) => {
         return formApiRef?.current?.show(id)
@@ -1009,7 +1012,7 @@ export const useSimpleWidgetFormDialog = () => {
     }
 }
 export const useGraficWidgetFormDialog = () => {
-    const formApiRef = React.useRef<MuiFormDialogApi>(undefined)
+    const formApiRef = useMuiFormDialogApiRef();
 
     const handleOpen = (id?:any) => {
         return formApiRef?.current?.show(id)
@@ -1031,7 +1034,7 @@ export const useGraficWidgetFormDialog = () => {
     }
 }
 export const useTaulaWidgetFormDialog = () => {
-    const formApiRef = React.useRef<MuiFormDialogApi>(undefined)
+    const formApiRef = useMuiFormDialogApiRef();
 
     const handleOpen = (id?:any) => {
         return formApiRef?.current?.show(id)

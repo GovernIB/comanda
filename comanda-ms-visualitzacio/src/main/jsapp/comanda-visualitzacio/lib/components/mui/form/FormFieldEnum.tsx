@@ -178,6 +178,7 @@ export const FormFieldEnum: React.FC<FormFieldEnumProps> = (props) => {
                     open: textFieldOpen,
                     readOnly,
                     displayEmpty: emptyValueDescription != null,
+                    SelectDisplayProps: { 'aria-label': label },
                     onClose: () => setTextFieldOpen(false),
                     onOpen: () => setTextFieldOpen(true),
                     renderValue: (value: any) => {

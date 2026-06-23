@@ -30,6 +30,7 @@ import java.util.jar.Manifest;
                 "es.caib.comanda.monitor",
 		        "es.caib.comanda.tasques",
 		        "es.caib.comanda.avisos",
+		        "es.caib.comanda.alarmes",
                 "es.caib.comanda.api",
                 "es.caib.comanda.acl"
         },
@@ -50,6 +51,8 @@ import java.util.jar.Manifest;
 		                "es\\.caib\\.comanda\\.tasques\\.persist\\.config\\..*",
 		                "es\\.caib\\.comanda\\.avisos\\.back\\.config\\..*",
 		                "es\\.caib\\.comanda\\.avisos\\.persist\\.config\\..*",
+	                    "es\\.caib\\.comanda\\.alarmes\\.back\\.config\\..*",
+		                "es\\.caib\\.comanda\\.alarmes\\.persist\\.config\\..*",
                         "es\\.caib\\.comanda\\.acl\\.back\\.config\\..*",
                         "es\\.caib\\.comanda\\.acl\\.persist\\.config\\..*",
                 })

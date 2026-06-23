@@ -5,7 +5,7 @@ import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
-import es.caib.comanda.ms.logic.intf.model.BaseResource;
+import es.caib.comanda.ms.logic.intf.model.BaseAuditableResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.AllArgsConstructor;
@@ -20,6 +20,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalTime;
 
 /**
  * Informació de configuració d'una alarma.
@@ -30,8 +31,10 @@ import java.math.BigDecimal;
 @Setter
 @NoArgsConstructor
 @ResourceConfig(
-        descriptionField = "nom",
-        mappingIgnoredFields = { "regla", "resumRegla" },
+        descriptionField = AlarmaConfig.Fields.nom,
+        mappingIgnoredFields = { AlarmaConfig.Fields.regla, AlarmaConfig.Fields.resumRegla },
+		orderField = AlarmaConfig.Fields.ordre,
+		defaultSortFields = { @ResourceConfig.ResourceSort(field = AlarmaConfig.Fields.entornAppId), @ResourceConfig.ResourceSort(field = AlarmaConfig.Fields.ordre) },
 		accessConstraints = {
 				@ResourceAccessConstraint(
 						type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,
@@ -45,13 +48,16 @@ import java.math.BigDecimal;
 		},
 		artifacts = {
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = AlarmaConfig.ALARMA_CONFIG_DELETE_ACTION, requiresId = true),
-                @ResourceArtifact(type = ResourceArtifactType.FILTER, code = AlarmaConfig.ALARMA_CONFIG_FILTER, formClass = AlarmaConfig.AlarmaConfigFilter.class)
-		}
+                @ResourceArtifact(type = ResourceArtifactType.FILTER, code = AlarmaConfig.ALARMA_CONFIG_FILTER, formClass = AlarmaConfig.AlarmaConfigFilter.class),
+                @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = AlarmaConfig.PERSPECTIVE_AUDIT_CODE),
+        }
 )
-public class AlarmaConfig extends BaseResource<Long> {
+@FieldNameConstants
+public class AlarmaConfig extends BaseAuditableResource<Long> {
 
 	public final static String ALARMA_CONFIG_DELETE_ACTION = "delete_alarmaConfig";
     public final static String ALARMA_CONFIG_FILTER = "alarmaConfig_filter";
+    public final static String PERSPECTIVE_AUDIT_CODE = "auditoria";
 
 	@NotNull
 	private Long entornAppId;
@@ -60,6 +66,7 @@ public class AlarmaConfig extends BaseResource<Long> {
 	@NotNull
 	@Size(max = 1024)
 	private String missatge;
+	private Long ordre;
     private AlarmaConfigRegla regla;
 	private AlarmaConfigPeriodeUnitat periodeUnitat;
     @Digits(integer = 15, fraction = 4)
@@ -69,6 +76,9 @@ public class AlarmaConfig extends BaseResource<Long> {
     @ValidAdminValue
 	private boolean correuGeneric;
     private boolean notificacioFinalitzada = true;
+	private boolean aturarAvaluacioPosteriors = false;
+    private LocalTime inactiuDesde;
+    private LocalTime inactiuFins;
     @Transient
     private String resumRegla;
     @Transient
@@ -77,7 +87,7 @@ public class AlarmaConfig extends BaseResource<Long> {
     public AlarmaTipusUsuari getTipusUsuariAlarma() {
         return admin
                 ? (correuGeneric ? AlarmaTipusUsuari.ADMINISTRADOR_GENERIC : AlarmaTipusUsuari.ADMINISTRADOR)
-                : (correuGeneric ? AlarmaTipusUsuari.USUARI_GENERIC        : AlarmaTipusUsuari.USUARI);
+                : (AlarmaTipusUsuari.USUARI);
     }
 
     @Getter

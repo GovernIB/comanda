@@ -22,6 +22,7 @@ import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
 import es.caib.comanda.ms.logic.intf.model.FieldOption;
@@ -74,6 +75,7 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 
 	@PostConstruct
 	public void init() {
+        register(App.PERSPECTIVE_ENTORN_APPS, new EntornAppsPerspectiveApplicator());
 		register(App.APP_EXPORT, new AppExportReportGenerator());
 		register(App.APP_IMPORT, new AppImportActionExecutor());
 	}
@@ -91,11 +93,10 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 				.collect(Collectors.toSet());
 		Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP);
 		if (!entornAppPermissionIds.isEmpty()) {
-			entornAppRepository.findAllById(
-					entornAppPermissionIds.stream()
-							.map(id -> Long.valueOf(String.valueOf(id)))
-							.collect(Collectors.toSet()))
-					.forEach(entornApp -> allowedAppIds.add(entornApp.getApp().getId()));
+			Set<Long> entornAppPermissionIdsSet = entornAppPermissionIds.stream()
+					.map(id -> Long.valueOf(String.valueOf(id)))
+					.collect(Collectors.toSet());
+			allowedAppIds.addAll(entornAppRepository.findAppIdsByEntornAppIds(entornAppPermissionIdsSet));
 		}
 		if (allowedAppIds.isEmpty()) {
 			return "id:0";
@@ -401,31 +402,6 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 	}
 
 	@Override
-	protected void afterConversion(AppEntity entity, App resource) {
-		List<EntornAppEntity> entornApps = entity.getEntornApps();
-		if (!entornApps.isEmpty()) {
-			resource.setEntornApps(
-					entornApps.stream().map(e -> {
-						EntornApp entornApp = EntornApp.builder()
-								.app(ResourceReference.toResourceReference(entity.getId(), entity.getNom()))
-								.entorn(ResourceReference.toResourceReference(e.getEntorn().getId(), e.getEntorn().getNom()))
-								.infoUrl(e.getInfoUrl())
-								.infoData(e.getInfoData())
-								.versio(e.getVersio())
-								.activa(e.isActiva())
-								.salutUrl(e.getSalutUrl())
-								.estadisticaInfoUrl(e.getEstadisticaInfoUrl())
-								.estadisticaUrl(e.getEstadisticaUrl())
-								.estadisticaCron(e.getEstadisticaCron())
-								.build();
-						entornApp.setId(e.getId());
-						return entornApp;
-					}).collect(Collectors.toList())
-			);
-		}
-	}
-
-	@Override
 	protected void afterUpdateSave(AppEntity entity, App resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
 		super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
 		cacheHelper.evictCacheItem(APP_CACHE, entity.getId().toString());
@@ -435,5 +411,33 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
     protected void afterDelete(AppEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
         super.afterDelete(entity, answers);
         cacheHelper.evictCacheItem(APP_CACHE, entity.getId().toString());
+    }
+
+    public static class EntornAppsPerspectiveApplicator implements PerspectiveApplicator<AppEntity, App> {
+        @Override
+        public void applySingle(String code, AppEntity entity, App resource) throws PerspectiveApplicationException {
+            List<EntornAppEntity> entornApps = entity.getEntornApps();
+            if (!entornApps.isEmpty()) {
+                resource.setEntornApps(
+                    entornApps.stream().map(e -> {
+                        EntornApp entornApp = EntornApp.builder()
+                            .app(ResourceReference.toResourceReference(entity.getId(), entity.getNom()))
+                            .entorn(ResourceReference.toResourceReference(e.getEntorn().getId(), e.getEntorn().getNom()))
+                            .infoUrl(e.getInfoUrl())
+                            .infoData(e.getInfoData())
+                            .versio(e.getVersio())
+                            .revisio(e.getRevisio())
+                            .activa(e.isActiva())
+                            .salutUrl(e.getSalutUrl())
+                            .estadisticaInfoUrl(e.getEstadisticaInfoUrl())
+                            .estadisticaUrl(e.getEstadisticaUrl())
+                            .estadisticaCron(e.getEstadisticaCron())
+                            .build();
+                        entornApp.setId(e.getId());
+                        return entornApp;
+                    }).collect(Collectors.toList())
+                );
+            }
+        }
     }
 }

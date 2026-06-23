@@ -5,6 +5,7 @@ import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.monitor.Monitor;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -28,17 +29,21 @@ public class PermisosClientHelper {
     // Client EntornApp
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = ENTORN_APP_CACHE, key = "#entornAppId?.toString()")
-    public EntornApp entornAppFindById(Long entornAppId) {
-        EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
-                entornAppId,
-                null,
-                httpAuthorizationHeaderHelper.getAuthorizationHeader());
-        if (entornApp != null) {
-            return entornApp.getContent();
-        }
-        return null;
-    }
+	@Cacheable(value = ENTORN_APP_CACHE, key = "#entornAppId?.toString()")
+	public EntornApp entornAppFindById(Long entornAppId) {
+		try {
+			EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
+					entornAppId,
+					null,
+					httpAuthorizationHeaderHelper.getAuthorizationHeader());
+			if (entornApp != null) {
+				return entornApp.getContent();
+			}
+		} catch (FeignException.NotFound e) {
+			return null;
+		}
+		return null;
+	}
 
     public Optional<EntornApp> entornAppFindByEntornAndApp(Long entornId, Long appId) {
         PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(

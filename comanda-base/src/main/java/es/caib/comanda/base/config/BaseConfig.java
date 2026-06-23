@@ -55,6 +55,7 @@ public class BaseConfig {
 	public static final String PROP_SECURITY_NAME_ATTRIBUTE_KEY = PROPERTY_PREFIX + "security.nameAttributeKey";
 	public static final String PROP_ALARMA_MAIL_FROM_ADDRESS = PROPERTY_PREFIX + "alarma.mail.from.address";
 	public static final String PROP_ALARMA_MAIL_FROM_NAME = PROPERTY_PREFIX + "alarma.mail.from.name";
+	public static final String PROP_ALARMA_MAIL_DEFAULT_DOMAIN = PROPERTY_PREFIX + "alarma.mail.default.domain";
 
 	// Propietats de LDAP
 	public static final String[] PROPS_LDAP = new String[]{
@@ -87,6 +88,7 @@ public class BaseConfig {
 
     // Propietats de CONFIGURACIO
     public static final String PROP_CONFIG_PREFIX = PROPERTY_PREFIX + "config.";
+    public static final String PROP_CONFIG_ENTORN_APP_HIST_RETENCIO_DIES = PROP_CONFIG_PREFIX + "entorn.app.hist.retencio.dies";
 
     // Propietats de SALUT
     public static final String PROP_SALUT_PREFIX = PROPERTY_PREFIX + "salut.";

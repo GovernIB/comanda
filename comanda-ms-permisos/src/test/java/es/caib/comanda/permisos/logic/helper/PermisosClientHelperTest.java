@@ -5,6 +5,7 @@ import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.monitor.Monitor;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import feign.FeignException;
 import org.junit.jupiter.api.Test;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
@@ -52,6 +53,21 @@ class PermisosClientHelperTest {
         EntornApp byId = helper.entornAppFindById(99L);
 
         assertThat(byId).isNull();
+    }
+
+    @Test
+    void entornAppFindById_retornaNullQuanLaCercaThrows() {
+        // Verifica que quan es llança FeignException.NotFound, es retorna null.
+        HttpAuthorizationHeaderHelper authHelper = mock(HttpAuthorizationHeaderHelper.class);
+        MonitorServiceClient monitorServiceClient = mock(MonitorServiceClient.class);
+        EntornAppServiceClient entornAppServiceClient = mock(EntornAppServiceClient.class);
+        when(authHelper.getAuthorizationHeader()).thenReturn("Bearer token");
+        PermisosClientHelper helper = new PermisosClientHelper(authHelper, monitorServiceClient, entornAppServiceClient);
+        when(entornAppServiceClient.getOne(100L, null, "Bearer token")).thenThrow(FeignException.NotFound.class);
+
+        EntornApp result = helper.entornAppFindById(100L);
+
+        assertThat(result).isNull();
     }
 
     @Test

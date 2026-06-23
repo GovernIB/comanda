@@ -32,7 +32,7 @@ export const useAclPermissionManager = (resourceType: string) => {
             dataGridComponentProps: {
                 title: t($ => $.components.permisos.title),
                 toolbarHideQuickFilter: true,
-                staticFilter: "resourceType:'" + resourceType + "' and resourceId:" + id,
+                fixedFilter: "resourceType:'" + resourceType + "' and resourceId:" + id,
                 staticSortModel: [{ field: 'subjectType', sort: 'asc' }, { field: 'subjectValue', sort: 'asc' }],
                 formAdditionalData: (_row: any, action: string) => ({
                     resourceType,

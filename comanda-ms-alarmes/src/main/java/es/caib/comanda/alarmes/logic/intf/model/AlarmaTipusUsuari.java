@@ -10,6 +10,5 @@ public enum AlarmaTipusUsuari {
 	ADMINISTRADOR,
     ADMINISTRADOR_GENERIC,
 	USUARI,
-    USUARI_GENERIC,
 
 }

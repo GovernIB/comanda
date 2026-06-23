@@ -44,7 +44,19 @@ public class CacheServiceImpl extends BaseMutableResourceService<ComandaCache, S
 
     @Override
     public Page<ComandaCache> findPage(String quickFilter, String filter, String[] namedQueries, String[] perspectives, Pageable pageable) {
-        return new PageImpl<>(getComandaCaches(), pageable, getComandaCaches().size());
+        List<ComandaCache> cacheList = getComandaCaches();
+        if (quickFilter != null && !quickFilter.isBlank()) {
+            cacheList = cacheList.stream()
+                    .filter((cache) -> {
+                        return cache.getId().contains(quickFilter)
+                                || cache.getDescripcio().contains(quickFilter)
+                                || String.valueOf(cache.getEntrades()).contains(quickFilter)
+                                || String.valueOf(cache.getMida()).contains(quickFilter);
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        return new PageImpl<>(cacheList, pageable, cacheList.size());
     }
 
     @Override

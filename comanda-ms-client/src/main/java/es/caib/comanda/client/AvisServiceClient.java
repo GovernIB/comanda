@@ -1,6 +1,7 @@
 package es.caib.comanda.client;
 
 import es.caib.comanda.client.model.Avis;
+import feign.FeignException;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
@@ -16,7 +17,7 @@ public interface AvisServiceClient {
     EntityModel<Avis> getOne(
             @PathVariable("id") final Long id,
             @RequestParam(value = "perspectives", required = false) final String[] perspectives,
-            @RequestHeader("Authorization") final String authorizationHeader);
+            @RequestHeader("Authorization") final String authorizationHeader) throws FeignException.NotFound;
 
     @GetMapping
     PagedModel<EntityModel<Avis>> find(

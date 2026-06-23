@@ -1,4 +1,4 @@
-import { Activity, FunctionComponent, useCallback, useEffect, useState } from 'react';
+import { Activity, FunctionComponent, useCallback, useEffect, useRef, useState } from 'react';
 import { SalutModel } from '../../types/salut.model';
 import { springFilterBuilder, useResourceApiService } from 'reactlib';
 import dayjs from 'dayjs';
@@ -23,7 +23,6 @@ import { filterNumericObjectKeys } from '../../util/objectUtils.ts';
 import { SalutField } from '../../components/salut/SalutChipTooltip';
 import { useAppInfoData } from './dataFetching';
 import { Box } from '@mui/material';
-import useDisableMargins from '../../hooks/useDisableMargins';
 import PageTitle from '../../components/PageTitle';
 
 // es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem
@@ -220,7 +219,10 @@ const useSalutData = ({
         loading: boolean;
         error?: unknown;
     }>({ groups: [], initialized: false, loading: false });
-    // TODO Considerar implementar bloqueig o cancelar peticions antigues si se fa una nova
+    const requestSequence = useRef<number>(0);
+    const filterDataApp = filterData?.app;
+    const filterDataEntorn = filterData?.entorn;
+    const filterDataEstatsSalut = filterData?.estatsSalut;
     const request = useCallback(async () => {
         if (!ready) {
             console.error('APIs not ready');
@@ -228,12 +230,51 @@ const useSalutData = ({
         }
 
         setSalutData(prevState => ({ ...prevState, loading: true, error: undefined }));
+        const sequence = ++requestSequence.current;
 
         try {
             const dataReferencia = dayjs().format(ISO_DATE_FORMAT);
             const agrupacio = agrupacioFromMinutes(dataRangeMinutes);
-            const appsIds = filterData?.app?.map(({id}) => (id))
-            const entornsIds = filterData?.entorn?.map(({id}) => (id))
+            const appsIds = filterDataApp?.map(({id}) => (id))
+            const entornsIds = filterDataEntorn?.map(({id}) => (id))
+            const hasEstatFilter = filterDataEstatsSalut && filterDataEstatsSalut.length > 0;
+            let entornAppIdsWithSalut;
+
+            if (hasEstatFilter) {
+                const salutLastItemsResponse = await salutApiReport(null, {
+                    code: 'salut_last',
+                    data: additionalFilter ?? '',
+                });
+
+                const salutLastItems = (salutLastItemsResponse as SalutModel[])
+                    .filter(item => {
+                        if (!filterDataEstatsSalut || filterDataEstatsSalut.length === 0) {
+                            return true; //Sols filtrar si hi ha filtre d'estat
+                        }
+                        //Incluirem sols el que tengun l'estat a filtrar
+                        return filterDataEstatsSalut.includes(item?.appEstat);
+                    })
+                    .map(item => new SalutModel(item));
+
+                entornAppIdsWithSalut = hasEstatFilter ?
+                    salutLastItems.map(item => item.entornAppId).filter((id, index, self) => self.indexOf(id) === index) :
+                    null;
+
+                if (hasEstatFilter && entornAppIdsWithSalut!.length === 0) {//Si no hi ha salut, no retornarem res
+                    setSalutData({
+                        lastRefresh: new Date(),
+                        apps: [],
+                        entorns: [],
+                        groups: [],
+                        grupsDates: [],
+                        agrupacio,
+                        error: undefined,
+                        initialized: true,
+                        loading: false,
+                    });
+                    return;
+                }
+            }
 
             const [
                 activeEntornAppsResponse,
@@ -248,6 +289,7 @@ const useSalutData = ({
                         springFilterBuilder.eq('app.activa', true),
                         springFilterBuilder.inn('app.id', appsIds),
                         springFilterBuilder.inn('entorn.id', entornsIds),
+                        entornAppIdsWithSalut ? springFilterBuilder.inn('id', entornAppIdsWithSalut) : null,
                     ),
                 }),
                 appFind({
@@ -278,6 +320,7 @@ const useSalutData = ({
                 entornAppIdList: activeEntornAppsResponse.rows.map(({ id }) => id),
             };
 
+            if (sequence !== requestSequence.current) return;
             const [estatsResponse, salutLastItemsResponse] = await Promise.all([
                 salutApiReport(null, { code: 'estats', data: reportData }),
                 salutApiReport(null, {
@@ -309,6 +352,8 @@ const useSalutData = ({
                 entornsResponse?.rows as EntornModel[]
             );
 
+            if (sequence !== requestSequence.current) return;
+
             setSalutData({
                 lastRefresh: new Date(),
                 apps,
@@ -328,6 +373,8 @@ const useSalutData = ({
                 loading: false,
             });
         } catch (e) {
+            if (sequence !== requestSequence.current) return;
+
             // TODO Mostrar error en la UI
             setSalutData({
                 lastRefresh: new Date(),
@@ -343,8 +390,9 @@ const useSalutData = ({
         dataRangeMinutes,
         entornAppFind,
         entornFind,
-        filterData?.app,
-        filterData?.entorn,
+        filterDataApp,
+        filterDataEntorn,
+        filterDataEstatsSalut,
         groupBy,
         ready,
         salutApiReport,
@@ -360,7 +408,6 @@ const useSalutData = ({
 };
 
 const Salut: FunctionComponent = () => {
-    useDisableMargins();
     const { id } = useParams();
     const { t } = useTranslation();
     const toolbarState = useSalutToolbarState();
@@ -374,6 +421,7 @@ const Salut: FunctionComponent = () => {
         additionalFilter,
     });
     const appInfoData = useAppInfoData(id, dataRangeMinutes);
+    const salutInitialLoading = !salutData.initialized;
 
     const [nextRefresh, setNextRefresh] = useState<Date>();
     const updateNextRefresh = () => {
@@ -452,6 +500,7 @@ const Salut: FunctionComponent = () => {
                         agrupacio={salutData.agrupacio}
                         springFilter={additionalFilter}
                         grupsDates={salutData.grupsDates}
+                        loading={salutInitialLoading}
                         {...salutLlistatState}
                     />
                 </Box>

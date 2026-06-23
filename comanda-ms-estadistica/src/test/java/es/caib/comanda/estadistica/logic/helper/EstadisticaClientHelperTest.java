@@ -2,14 +2,17 @@ package es.caib.comanda.estadistica.logic.helper;
 
 import es.caib.comanda.client.AppServiceClient;
 import es.caib.comanda.client.EntornAppServiceClient;
+import es.caib.comanda.client.EntornServiceClient;
 import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.client.model.App;
+import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.monitor.AccioTipusEnum;
 import es.caib.comanda.client.model.monitor.EstatEnum;
 import es.caib.comanda.client.model.monitor.ModulEnum;
 import es.caib.comanda.client.model.monitor.Monitor;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,6 +42,9 @@ public class EstadisticaClientHelperTest {
     private EntornAppServiceClient entornAppServiceClient;
 
     @Mock
+    private EntornServiceClient entornServiceClient;
+
+    @Mock
     private AppServiceClient appServiceClient;
 
     @InjectMocks
@@ -46,6 +52,7 @@ public class EstadisticaClientHelperTest {
 
     private App app;
     private EntornApp entornApp;
+    private Entorn entorn;
     private Monitor monitor;
     private String authHeader;
 
@@ -60,6 +67,12 @@ public class EstadisticaClientHelperTest {
         entornApp = EntornApp.builder()
                 .id(1L)
                 .activa(true)
+                .build();
+
+        entorn = Entorn.builder()
+                .id(1L)
+                .codi("ENT")
+                .nom("ENT Name")
                 .build();
 
         monitor = Monitor.builder()
@@ -104,6 +117,19 @@ public class EstadisticaClientHelperTest {
         verify(appServiceClient).getOne(eq(1L), isNull(), eq(authHeader));
     }
 
+	@Test
+	void testAppFindById_ThrowsNotFound() {
+		// Arrange
+		when(appServiceClient.getOne(eq(1L), isNull(), eq(authHeader))).thenThrow(FeignException.NotFound.class);
+
+		// Act
+		App result = estadisticaClientHelper.appFindById(1L);
+
+		// Assert
+		assertNull(result);
+		verify(appServiceClient).getOne(eq(1L), isNull(), eq(authHeader));
+	}
+
     @Test
     void testEntornAppFindById() {
         // Arrange
@@ -132,6 +158,19 @@ public class EstadisticaClientHelperTest {
         assertNull(result);
         verify(entornAppServiceClient).getOne(eq(1L), isNull(), eq(authHeader));
     }
+
+	@Test
+	void testEntornAppFindById_ThrowsNotFound() {
+		// Arrange
+		when(entornAppServiceClient.getOne(eq(1L), isNull(), eq(authHeader))).thenThrow(FeignException.NotFound.class);
+
+		// Act
+		EntornApp result = estadisticaClientHelper.entornAppFindById(1L);
+
+		// Assert
+		assertNull(result);
+		verify(entornAppServiceClient).getOne(eq(1L), isNull(), eq(authHeader));
+	}
 
     @Test
     void testEntornAppFindByActivaTrue() {
@@ -219,4 +258,45 @@ public class EstadisticaClientHelperTest {
         assertDoesNotThrow(() -> estadisticaClientHelper.monitorCreate(monitor));
         verify(monitorServiceClient).create(eq(monitor), eq(authHeader));
     }
+
+	@Test
+	void testEntornById() {
+		// Arrange
+		EntityModel<Entorn> entityModel = EntityModel.of(entorn);
+		when(entornServiceClient.getOne(eq(1L), isNull(), eq(authHeader))).thenReturn(entityModel);
+
+		// Act
+		Entorn result = estadisticaClientHelper.entornById(1L);
+
+		// Assert
+		assertNotNull(result);
+		assertEquals(1L, result.getId().longValue());
+		verify(entornServiceClient).getOne(eq(1L), isNull(), eq(authHeader));
+	}
+
+	@Test
+	void testEntornById_ReturnsNull() {
+		// Arrange
+		when(entornServiceClient.getOne(eq(1L), isNull(), eq(authHeader))).thenReturn(null);
+
+		// Act
+		Entorn result = estadisticaClientHelper.entornById(1L);
+
+		// Assert
+		assertNull(result);
+		verify(entornServiceClient).getOne(eq(1L), isNull(), eq(authHeader));
+	}
+
+	@Test
+	void testEntornById_ThrowsNotFound() {
+		// Arrange
+		when(entornServiceClient.getOne(eq(1L), isNull(), eq(authHeader))).thenThrow(FeignException.NotFound.class);
+
+		// Act
+		Entorn result = estadisticaClientHelper.entornById(1L);
+
+		// Assert
+		assertNull(result);
+		verify(entornServiceClient).getOne(eq(1L), isNull(), eq(authHeader));
+	}
 }

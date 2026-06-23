@@ -40,11 +40,15 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @ResourceConfig(
-		descriptionField = "entornAppDescription",
-		quickFilterFields = { "entorn.codi", "entorn.nom", "app.codi", "app.nom" },
+		descriptionField = EntornApp.Fields.entornAppDescription,
+		quickFilterFields = {
+			EntornApp.Fields.entorn+"."+Entorn.Fields.codi,
+			EntornApp.Fields.app+"."+App.Fields.codi,
+			EntornApp.Fields.entornAppDescription
+		},
         defaultSortFields = {
-                @ResourceSort(field = "app.ordre"),
-                @ResourceSort(field = "entorn.ordre")
+                @ResourceSort(field = EntornApp.Fields.app+"."+App.Fields.ordre),
+                @ResourceSort(field = EntornApp.Fields.entorn+"."+Entorn.Fields.ordre)
         },
 		accessConstraints = {
 				@ResourceAccessConstraint(
@@ -72,7 +76,9 @@ import java.util.List;
 				@ResourceArtifact(type = ResourceArtifactType.FILTER, code = EntornApp.ENTORN_APP_FILTER, formClass = EntornApp.EntornAppFilter.class),
                 @ResourceArtifact(type = ResourceArtifactType.FILTER, code = EntornApp.OPTIONAL_ENTORN_APP_FILTER, formClass = EntornApp.OptionalEntornAppFilter.class),
 				@ResourceArtifact(type = ResourceArtifactType.FILTER, code = EntornApp.SALUT_ENTORN_APP_FILTER, formClass = EntornApp.SalutEntornAppFilter.class),
+                @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = EntornApp.PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS),
 				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = EntornApp.PERSPECTIVE_DEFAULT_LOGS),
+                @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = EntornApp.PERSPECTIVE_HISTORICS_VERSIONS),
 		}
 )
 @EntornAppExists
@@ -88,7 +94,9 @@ public class EntornApp extends BaseResource<Long> {
 	public final static String REPORT_LLISTAR_LOGS = "llistar_logs";
 	public final static String REPORT_DESCARREGAR_LOG = "descarregar_log";
 	public final static String REPORT_PREVISUALITZAR_LOG = "previsualitzar_log";
+    public static final String PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS = "integracions_subsistemes_contexts";
 	public final static String PERSPECTIVE_DEFAULT_LOGS = "default_logs";
+    public static final String PERSPECTIVE_HISTORICS_VERSIONS = "historics_versions";
 
 	@NotNull
 	@Transient
@@ -123,7 +131,11 @@ public class EntornApp extends BaseResource<Long> {
 	private String logsUrl;
 
 	// Camps calculats de logs
+    @Transient
 	private String[] defaultLogs;
+    // Camps calculats de entornAppHist
+    @Transient
+    private List<EntornAppHist> entornAppHistorics;
 
 	// Informació de salut
 	@URL

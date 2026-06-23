@@ -2,6 +2,8 @@ package es.caib.comanda.alarmes.persist.entity;
 
 import es.caib.comanda.alarmes.logic.intf.model.*;
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
+import es.caib.comanda.ms.persist.entity.ReorderableEntity;
 import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,6 +12,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
+import java.time.LocalTime;
 
 /**
  * Entitat de base de dades que emmagatzema la configuració d'una alarma.
@@ -21,7 +24,7 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @NoArgsConstructor
-public class AlarmaConfigEntity extends BaseAuditableLongPkEntity<AlarmaConfig> {
+public class AlarmaConfigEntity extends BaseAuditableLongPkEntity<AlarmaConfig> implements ReorderableEntity<Long> {
 
 	@Column(name = "entorn_app_id", nullable = false)
 	private Long entornAppId;
@@ -49,6 +52,14 @@ public class AlarmaConfigEntity extends BaseAuditableLongPkEntity<AlarmaConfig> 
 	private BigDecimal periodeValor;
     @Column(name = "notificacio_finalitzada")
     private boolean notificacioFinalitzada = true;
+	@Column(name = "ordre")
+	private Long ordre;
+	@Column(name = "aturar_avaluacio_posteriors")
+	private boolean aturarAvaluacioPosteriors = false;
+    @Column(name = "inactiu_desde")
+    private LocalTime inactiuDesde;
+    @Column(name = "inactiu_fins")
+    private LocalTime inactiuFins;
 
 	@Builder
 	public AlarmaConfigEntity(AlarmaConfig alarmaConfig) {
@@ -60,6 +71,25 @@ public class AlarmaConfigEntity extends BaseAuditableLongPkEntity<AlarmaConfig> 
 		this.admin = alarmaConfig.isAdmin();
 		this.correuGeneric = alarmaConfig.isCorreuGeneric();
 		this.notificacioFinalitzada = alarmaConfig.isNotificacioFinalitzada();
+		this.aturarAvaluacioPosteriors = alarmaConfig.isAturarAvaluacioPosteriors();
 	}
 
+	// El parentId fa referència al mateix AlarmaConfigEntity per a poder
+	// recuperar la row actual al mètode reorderFindLinesWithParent
+	@Override
+	public Long getOrderParentId() {
+		// S'assumeix que no s'usarà la reordenació per canviar de entornApp, ja que baseboot fa una
+		// comprovació de parentIdChanged que no quedarà reflectida aquí si es canvia l'entornApp.
+		return getId();
+	}
+
+	@Override
+	public Long getOrder() {
+		return ordre;
+	}
+
+	@Override
+	public void setOrder(Long order) {
+		this.ordre = order;
+	}
 }

@@ -32,16 +32,26 @@ public class AlarmaEntity extends BaseAuditableLongPkEntity<Alarma> {
 	@Enumerated(EnumType.STRING)
 	@Column(name = "estat", length = 10, nullable = false)
 	private AlarmaEstat estat;
+
+	/** Data d'inici de l'esdeveniment que ha generat l'alarma */
 	@Column(name = "data_activacio")
 	private LocalDateTime dataActivacio;
 	// TODO actualment, aquest camp no té cap ús, possiblement s'hauria d'esborrar
 	@Deprecated
 	@Column(name = "data_enviament")
 	private LocalDateTime dataEnviament;
+	/** Data en què es va marcar com a llegida l'alarma */
 	@Column(name = "data_esborrat")
 	private LocalDateTime dataEsborrat;
+	/** Data en què l'esdeveniment de l'alarma ha deixat de complir les condicions establertes */
 	@Column(name = "data_finalitzacio")
 	private LocalDateTime dataFinalitzacio;
+	/**
+	 * Data en què s'ha iniciat la recuperació de l'alarma.
+	 * Les alarmes han de superar el temps d'estabilitat definit a PROP_ALARMA_RECOVERY_STABILITY_SECONDS abans de finalitzar-se.
+	 */
+	@Column(name = "data_inici_recuperacio")
+	private LocalDateTime dataIniciRecuperacio;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(
@@ -61,6 +71,7 @@ public class AlarmaEntity extends BaseAuditableLongPkEntity<Alarma> {
         this.dataEnviament = alarma.getDataEnviament();
         this.dataEsborrat = alarma.getDataEsborrat();
         this.dataFinalitzacio = alarma.getDataFinalitzacio();
+        this.dataIniciRecuperacio = alarma.getDataIniciRecuperacio();
 		this.alarmaConfig = alarmaConfig;
 	}
 

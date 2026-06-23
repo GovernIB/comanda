@@ -21,7 +21,7 @@ export const useTreeDataWithoutSwitch = (
     expandedByDefault?: boolean,
     // By default, treeView is enabled
     enabled: boolean = true,
-    groupingColDefAdditionalProps?: any
+    groupingColDefAdditionalProps?: Partial<GridGroupingColDefOverride>
 ) => {
     const { t } = useTranslation();
     const isGroupExpandedByDefault = React.useCallback(() => {
@@ -71,7 +71,7 @@ export const useTreeDataWithoutSwitch = (
             ),
             ...groupingColDefAdditionalProps,
         }),
-        [gridApiRef, groupingColDefAdditionalProps, headerFlex, headerName]
+        [gridApiRef, groupingColDefAdditionalProps, headerFlex, headerName, t]
     );
     const dataGridProps: Partial<
         Pick<

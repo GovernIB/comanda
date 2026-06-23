@@ -2,6 +2,8 @@ package es.caib.comanda.api.config;
 
 import es.caib.comanda.acl.back.controller.AclEntryController;
 import es.caib.comanda.avisos.back.controller.AvisController;
+import es.caib.comanda.alarmes.back.controller.AlarmaController;
+import es.caib.comanda.alarmes.back.controller.AlarmaConfigController;
 import es.caib.comanda.configuracio.back.controller.AppController;
 import es.caib.comanda.estadistica.back.controller.FetController;
 import es.caib.comanda.monitor.back.controller.MonitorController;
@@ -29,6 +31,8 @@ public class ApiHalFormsConfig extends BaseHalFormsConfig {
 //				MonitorController.class.getPackageName(),
 //				TascaController.class.getPackageName(),
 //				AvisController.class.getPackageName(),
+//				AlarmaController.class.getPackageName(),
+//				AlarmaConfigController.class.getPackageName(),
 //				AclEntryController.class.getPackageName(),
 //		};
 //	}

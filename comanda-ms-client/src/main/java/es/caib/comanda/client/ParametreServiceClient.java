@@ -20,7 +20,7 @@ public interface ParametreServiceClient {
 //	EntityModel<Parametre> getOne(
 //			@PathVariable("id") final Long id,
 //			@RequestParam("perspective") final String[] perspectives,
-//			@RequestHeader("Authorization") final String authorizationHeader);
+//			@RequestHeader("Authorization") final String authorizationHeader) throws FeignException.NotFound;
 
 	@GetMapping
 	PagedModel<EntityModel<Parametre>> find(

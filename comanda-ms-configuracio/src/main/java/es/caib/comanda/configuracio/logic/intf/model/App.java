@@ -29,11 +29,12 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@FieldNameConstants
 @ResourceConfig(
-		quickFilterFields = { "codi", "nom" },
-		descriptionField = "nom",
-        defaultSortFields = { @ResourceSort(field = "ordre") },
-        orderField = "ordre",
+		quickFilterFields = { App.Fields.codi, App.Fields.nom },
+		descriptionField = App.Fields.nom,
+        defaultSortFields = { @ResourceSort(field = App.Fields.ordre) },
+        orderField = App.Fields.ordre,
 		accessConstraints = {
 				@ResourceAccessConstraint(
 						type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,
@@ -51,11 +52,13 @@ import java.util.List;
 				)
 		},
 		artifacts = {
+                @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = App.PERSPECTIVE_ENTORN_APPS),
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = App.APP_EXPORT, requiresId = true),
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = App.APP_IMPORT, formClass = App.AppImportForm.class)
 		})
 public class App extends BaseResource<Long> {
 
+    public static final String PERSPECTIVE_ENTORN_APPS = "ENTORN_APPS";
 	public final static String APP_EXPORT = "app_export";
 	public final static String APP_IMPORT = "app_import";
 

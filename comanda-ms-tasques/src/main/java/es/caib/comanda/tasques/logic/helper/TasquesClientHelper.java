@@ -35,19 +35,21 @@ public class TasquesClientHelper {
     // Client EntornApp
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = ENTORN_APP_CACHE, key = "#entornAppId?.toString()")
-    public EntornApp entornAppFindById(Long entornAppId) {
-        try {
-            EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
-                    entornAppId,
-                    null,
-                    httpAuthorizationHeaderHelper.getAuthorizationHeader());
-            if (entornApp != null) {
-                return entornApp.getContent();
-            }
-        } catch (FeignException.NotFound ignored) {}
-        return null;
-    }
+	@Cacheable(value = ENTORN_APP_CACHE, key = "#entornAppId?.toString()")
+	public EntornApp entornAppFindById(Long entornAppId) {
+		try {
+			EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
+					entornAppId,
+					null,
+					httpAuthorizationHeaderHelper.getAuthorizationHeader());
+			if (entornApp != null) {
+				return entornApp.getContent();
+			}
+		} catch (FeignException.NotFound e) {
+			return null;
+		}
+		return null;
+	}
 
     public Optional<EntornApp> entornAppFindByEntornCodiAndAppCodi(String entornCodi, String appCodi) {
         PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
@@ -120,30 +122,38 @@ public class TasquesClientHelper {
     // Client App
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = APP_CACHE, key = "#appId?.toString()")
-    public App appById(Long appId) {
-        EntityModel<App> app = appServiceClient.getOne(
-                appId,
-                null,
-                httpAuthorizationHeaderHelper.getAuthorizationHeader());
-        if (app != null) {
-            return app.getContent();
-        }
-        return null;
-    }
+	@Cacheable(value = APP_CACHE, key = "#appId?.toString()")
+	public App appById(Long appId) {
+		try {
+			EntityModel<App> app = appServiceClient.getOne(
+					appId,
+					null,
+					httpAuthorizationHeaderHelper.getAuthorizationHeader());
+			if (app != null) {
+				return app.getContent();
+			}
+		} catch (FeignException.NotFound e) {
+			return null;
+		}
+		return null;
+	}
 
     // Client Entorn
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Cacheable(value = ENTORN_CACHE, key = "#entornId?.toString()")
-    public Entorn entornById(Long entornId) {
-        EntityModel<Entorn> entorn = entornServiceClient.getOne(
-                entornId,
-                null,
-                httpAuthorizationHeaderHelper.getAuthorizationHeader());
-        if (entorn != null) {
-            return entorn.getContent();
-        }
-        return null;
-    }
+	@Cacheable(value = ENTORN_CACHE, key = "#entornId?.toString()")
+	public Entorn entornById(Long entornId) {
+		try {
+			EntityModel<Entorn> entorn = entornServiceClient.getOne(
+					entornId,
+					null,
+					httpAuthorizationHeaderHelper.getAuthorizationHeader());
+			if (entorn != null) {
+				return entorn.getContent();
+			}
+		} catch (FeignException.NotFound e) {
+			return null;
+		}
+		return null;
+	}
 }

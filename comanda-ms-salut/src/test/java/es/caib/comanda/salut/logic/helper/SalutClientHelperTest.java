@@ -8,6 +8,7 @@ import es.caib.comanda.client.model.monitor.EstatEnum;
 import es.caib.comanda.client.model.monitor.ModulEnum;
 import es.caib.comanda.client.model.monitor.Monitor;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -83,6 +84,15 @@ class SalutClientHelperTest {
 
         assertThat(result).isNull();
     }
+
+	@Test
+	void entornAppFindById_quanElClientLlanzaNotFound_retornaNull() {
+		when(entornAppServiceClient.getOne(1L, null, AUTH_HEADER)).thenThrow(FeignException.NotFound.class);
+
+		EntornApp result = helper.entornAppFindById(1L);
+
+		assertThat(result).isNull();
+	}
 
     @Test
     void entornAppFindByActivaTrue_quanNoHiHaFiltreExtra_consultaAmbElFiltreBase() {

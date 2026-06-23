@@ -6,9 +6,9 @@ import {
     FormField,
     FormPage,
     FormTabsValue,
-    GridPage,
     MuiActionReportButton,
     MuiDataGrid,
+    MuiDataGridColDef,
     MuiForm,
     MuiFormTabContent,
     MuiFormTabs,
@@ -37,6 +37,17 @@ import { StacktraceBlock } from '../components/RickTextDetail.tsx';
 import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
 import notNull from '../util/arrayUtils.ts';
 import { useIsUserAdmin } from '../components/UserContext.ts';
+import { getErrorMessage } from '../util/exceptionUtils.ts';
+import * as z from 'zod';
+import { AppType } from '../models/app.schema';
+
+const PingUrlActionResponse = z.object({
+    success: z.boolean(),
+    validationError: z.boolean().optional(),
+    message: z.string(),
+});
+
+export type PingUrlResult = { status: string; elements?: { contentValue: React.JSX.Element }[] } | false;
 
 const useActions = (refresh?: () => void) => {
     const { artifactAction: apiAction } = useResourceApiService('entornApp');
@@ -47,9 +58,10 @@ const useActions = (refresh?: () => void) => {
     const pingUrl = React.useCallback(async (
         additionalData: any,
         expectedResponseTypeEnum: string,
-    ): Promise<any> => {
+    ): Promise<PingUrlResult> => {
         try {
-            const data = await apiAction(null, { code: 'pingUrl', data: {...additionalData, expectedResponseTypeEnum} });
+            const actionResponse = await apiAction(null, { code: 'pingUrl', data: {...additionalData, expectedResponseTypeEnum} });
+            const data = PingUrlActionResponse.parse(actionResponse);
             refresh?.();
             if (data?.validationError) {
                 const elementsDetail = [
@@ -70,11 +82,11 @@ const useActions = (refresh?: () => void) => {
                 temporalMessageShow(null, data.message, data.success ? 'success' : 'error');
             }
             return {status :data.success ? 'success' : 'error'};
-        } catch (error: any) {
-            temporalMessageShow(null, error.message, 'error');
+        } catch (error) {
+            temporalMessageShow(null, getErrorMessage(error), 'error');
             return false;
         }
-    }, [apiAction, refresh, temporalMessageShow]);
+    }, [apiAction, refresh, t, temporalMessageShow]);
 
     const report = (id:any, code:any, mssg:any, fileType:any) => {
         apiReport(id, {code, fileType})
@@ -192,30 +204,31 @@ const AppEntornForm: React.FC = () => {
     );
 };
 
-const AppsEntorns: React.FC = () => {
+const entornAppColumns: MuiDataGridColDef[] = [
+    {
+        field: 'entorn',
+        flex: 2,
+    },
+    {
+        field: 'versio',
+        flex: 1,
+    },
+    {
+        field: 'activa',
+        flex: 0.5,
+        renderCell: (params) => {
+            if (params?.row?.activa) {
+                return <CheckCircle color="success" />
+            } else {
+                return <Cancel color="error"/>
+            }
+        }
+    },
+];
+
+const AppsEntorns: React.FC<{ appNom?: string }> = ({ appNom }) => {
     const { t } = useTranslation();
     const { id: appId } = useParams();
-    const columns = [
-        {
-            field: 'entorn',
-            flex: 2,
-        },
-        {
-            field: 'versio',
-            flex: 1,
-        },
-        {
-            field: 'activa',
-            flex: 0.5,
-            renderCell: (params:any) => {
-                if (params?.row?.activa) {
-                    return <CheckCircle color="success" />
-                } else {
-                    return <Cancel color="error"/>
-                }
-            }
-        },
-    ];
 
     const apiRef = useMuiDataGridApiRef();
     const refresh = () => {
@@ -260,11 +273,11 @@ const AppsEntorns: React.FC = () => {
                 title={t($ => $.page.appsEntorns.title)}
                 resourceName="entornApp"
                 fixedFilter={`app.id : ${appId}`}
-                columns={columns}
+                columns={entornAppColumns}
                 paginationActive
                 popupEditActive
                 popupEditFormContent={<AppEntornForm />}
-                popupEditFormDialogResourceTitle={t($ => $.page.appsEntorns.resourceTitle)}
+                popupEditFormDialogResourceTitle={t($ => $.page.appsEntorns.resourceTitle)+` (${appNom})`}
                 formAdditionalData={{
                     app: { id: appId },
                 }}
@@ -282,12 +295,7 @@ export const AppForm: React.FC = () => {
     const { t } = useTranslation();
     const { id } = useParams();
     const [appNom, setAppNom] = React.useState<string>()
-    const { setMarginsDisabled } = useBaseAppContext();
     const gestorReadOnly = useReadOnlyGestor();
-    React.useEffect(() => {
-        setMarginsDisabled(true);
-        return () => setMarginsDisabled(false);
-    }, []);
     const formTabs: FormTabsValue[] = [
         {
             label: t($ => $.page.apps.general),
@@ -340,19 +348,19 @@ export const AppForm: React.FC = () => {
                 <MuiFormTabContent
                     index={1}
                 >
-                    <AppsEntorns />
+                    <AppsEntorns appNom={appNom} />
                 </MuiFormTabContent>
             </MuiFormTabs>
         </MuiForm>
     );
 };
 
-const columns = [
+const appColumns: MuiDataGridColDef[] = [
     {
         field: 'logo',
         flex: 1,
-        renderCell: (params: any) => {
-            const value = params.value; // Obtenir el valor de la cel·la
+        renderCell: (params) => {
+            const value = params.value;
             return value ? (
                 <img
                     src={`data:image/png;base64,${value}`}
@@ -392,7 +400,7 @@ const AppImportFormContent = () => {
         try {
             const text = await file.text();
             apiRef.current?.setFieldValue('jsonContent', text);
-        } catch (err: any) {
+        } catch {
             temporalMessageShow("", t($ => $.page.apps.import.parseError), 'error');
         }
     };
@@ -455,12 +463,12 @@ const Apps: React.FC = () => {
         {
             label: t($ => $.components.permisos.title),
             icon: 'lock',
-            onClick: (id: any, row: any) => appPermissionShow(id, row.nom),
+            onClick: (id: AppType['id'], row: AppType) => appPermissionShow(id, row.nom),
         },
         gestorReadOnly ? {
             label: t($ => $.components.details),
             icon: 'info',
-            onClick: (id: any) => navigate(`form/${id}`),
+            onClick: (id: AppType['id']) => navigate(`form/${id}`),
         } : null,
         {
             label: t($ => $.page.apps.action.export),
@@ -493,13 +501,13 @@ const Apps: React.FC = () => {
         },
     ];
     return (
-        <GridPage>
+        <>
             <PageTitle title={t($ => $.page.apps.title)} />
             <MuiDataGrid
                 apiRef={gridApiRef}
                 title={t($ => $.page.apps.title)}
                 resourceName="app"
-                columns={columns}
+                columns={appColumns}
                 toolbarType="upper"
                 paginationActive
                 //readOnly
@@ -512,7 +520,7 @@ const Apps: React.FC = () => {
                 {...(!gestorReadOnly ? dataGridProps : {})}
             />
             {appPermissionComponent}
-        </GridPage>
+        </>
     );
 };
 

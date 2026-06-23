@@ -14,6 +14,7 @@ type GridPageProps = React.PropsWithChildren & {
 };
 
 /**
+ * @deprecated L'aplicació no usa disableMargins ni contentExpandsToAvailableHeight. Substituir per un div amb els mateixos estils que aplica GridPage [Canvi específic per a COMANDA]
  * Pàgina que conté un element de graella de dades.
  *
  * @param props - Propietats del component.

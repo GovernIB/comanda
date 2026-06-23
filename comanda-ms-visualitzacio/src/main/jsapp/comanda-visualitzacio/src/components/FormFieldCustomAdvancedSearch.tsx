@@ -94,7 +94,7 @@ const useCustomAdvancedSearch = ({
                 quickFilterFullWidth
                 toolbarHideRefresh
                 readOnly
-                staticFilter={filter}
+                fixedFilter={filter}
                 staticSortModel={sortModel}
                 namedQueries={namedQueries}
                 perspectives={perspectives}

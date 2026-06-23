@@ -1,6 +1,7 @@
 package es.caib.comanda.alarmes.logic.service;
 
 import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventPublisher;
+import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventTypes;
 import es.caib.comanda.alarmes.logic.helper.AlarmaComprovacioHelper;
 import es.caib.comanda.alarmes.logic.helper.AlarmaMailHelper;
 import es.caib.comanda.alarmes.logic.intf.model.Alarma;
@@ -34,8 +35,10 @@ import javax.persistence.criteria.Root;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.mockito.InOrder;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -100,6 +103,135 @@ class AlarmaServiceImplTest {
 
         // Assert
         verifyNoInteractions(alarmaConfigRepository);
+    }
+
+    @Test
+    @DisplayName("comprovacioScheduledTask: alarma amb aturarAvaluacioPosteriors=true atura l'execució del grup")
+    void comprovacioScheduledTask_quanAlarmaAtura_noContinuaGrup() {
+        // Arrange
+        ReflectionTestUtils.setField(alarmaService, "schedulerLeader", true);
+        ReflectionTestUtils.setField(alarmaService, "schedulerBack", true);
+
+        AlarmaConfigEntity config1 = new AlarmaConfigEntity();
+        config1.setId(1L);
+        config1.setEntornAppId(101L);
+        config1.setAdmin(true);
+        config1.setAturarAvaluacioPosteriors(true);
+
+        AlarmaConfigEntity config2 = new AlarmaConfigEntity();
+        config2.setId(2L);
+        config2.setEntornAppId(101L);
+        config2.setAdmin(true);
+
+        when(alarmaConfigRepository.findAllByEsborratFalse()).thenReturn(Arrays.asList(config1, config2));
+        when(alarmaComprovacioHelper.comprovar(config1)).thenReturn(true);
+        // config2 no s'hauria de comprovar
+
+        // Act
+        alarmaService.comprovacioScheduledTask();
+
+        // Assert
+        verify(alarmaComprovacioHelper).comprovar(config1);
+        verify(alarmaComprovacioHelper, never()).comprovar(config2);
+    }
+
+    @Test
+    @DisplayName("comprovacioScheduledTask: alarma amb aturarAvaluacioPosteriors=false no atura l'execució del grup")
+    void comprovacioScheduledTask_quanAlarmaNoAtura_continuaGrup() {
+        // Arrange
+        ReflectionTestUtils.setField(alarmaService, "schedulerLeader", true);
+        ReflectionTestUtils.setField(alarmaService, "schedulerBack", true);
+
+        AlarmaConfigEntity config1 = new AlarmaConfigEntity();
+        config1.setId(1L);
+        config1.setEntornAppId(101L);
+        config1.setAdmin(true);
+        config1.setAturarAvaluacioPosteriors(false);
+
+        AlarmaConfigEntity config2 = new AlarmaConfigEntity();
+        config2.setId(2L);
+        config2.setEntornAppId(101L);
+        config2.setAdmin(true);
+
+        when(alarmaConfigRepository.findAllByEsborratFalse()).thenReturn(Arrays.asList(config1, config2));
+        when(alarmaComprovacioHelper.comprovar(config1)).thenReturn(true);
+        when(alarmaComprovacioHelper.comprovar(config2)).thenReturn(true);
+
+        // Act
+        alarmaService.comprovacioScheduledTask();
+
+        // Assert
+        verify(alarmaComprovacioHelper).comprovar(config1);
+        verify(alarmaComprovacioHelper).comprovar(config2);
+    }
+
+    @Test
+    @DisplayName("comprovacioScheduledTask: aturar un grup no afecta a altres grups")
+    void comprovacioScheduledTask_quanAturaGrup_noAfectaAltresGrups() {
+        // Arrange
+        ReflectionTestUtils.setField(alarmaService, "schedulerLeader", true);
+        ReflectionTestUtils.setField(alarmaService, "schedulerBack", true);
+
+        // Grup 1 (Admin, Entorn 101)
+        AlarmaConfigEntity config1G1 = new AlarmaConfigEntity();
+        config1G1.setId(1L);
+        config1G1.setEntornAppId(101L);
+        config1G1.setAdmin(true);
+        config1G1.setAturarAvaluacioPosteriors(true);
+
+        AlarmaConfigEntity config2G1 = new AlarmaConfigEntity();
+        config2G1.setId(2L);
+        config2G1.setEntornAppId(101L);
+        config2G1.setAdmin(true);
+
+        // Grup 2 (Admin, Entorn 102)
+        AlarmaConfigEntity config1G2 = new AlarmaConfigEntity();
+        config1G2.setId(3L);
+        config1G2.setEntornAppId(102L);
+        config1G2.setAdmin(true);
+
+        when(alarmaConfigRepository.findAllByEsborratFalse()).thenReturn(Arrays.asList(config1G1, config2G1, config1G2));
+        when(alarmaComprovacioHelper.comprovar(config1G1)).thenReturn(true);
+        // config2G1 no s'hauria de comprovar
+        when(alarmaComprovacioHelper.comprovar(config1G2)).thenReturn(true);
+
+        // Act
+        alarmaService.comprovacioScheduledTask();
+
+        // Assert
+        verify(alarmaComprovacioHelper).comprovar(config1G1);
+        verify(alarmaComprovacioHelper, never()).comprovar(config2G1);
+        verify(alarmaComprovacioHelper).comprovar(config1G2);
+    }
+
+    @Test
+    @DisplayName("comprovacioScheduledTask: alarma no activada no atura el grup encara que tingui aturarAvaluacioPosteriors=true")
+    void comprovacioScheduledTask_quanAlarmaNoActivada_noAturaGrup() {
+        // Arrange
+        ReflectionTestUtils.setField(alarmaService, "schedulerLeader", true);
+        ReflectionTestUtils.setField(alarmaService, "schedulerBack", true);
+
+        AlarmaConfigEntity config1 = new AlarmaConfigEntity();
+        config1.setId(1L);
+        config1.setEntornAppId(101L);
+        config1.setAdmin(true);
+        config1.setAturarAvaluacioPosteriors(true);
+
+        AlarmaConfigEntity config2 = new AlarmaConfigEntity();
+        config2.setId(2L);
+        config2.setEntornAppId(101L);
+        config2.setAdmin(true);
+
+        when(alarmaConfigRepository.findAllByEsborratFalse()).thenReturn(Arrays.asList(config1, config2));
+        when(alarmaComprovacioHelper.comprovar(config1)).thenReturn(false);
+        when(alarmaComprovacioHelper.comprovar(config2)).thenReturn(true);
+
+        // Act
+        alarmaService.comprovacioScheduledTask();
+
+        // Assert
+        verify(alarmaComprovacioHelper).comprovar(config1);
+        verify(alarmaComprovacioHelper).comprovar(config2);
     }
 
     @Test
@@ -180,6 +312,90 @@ class AlarmaServiceImplTest {
         assertThatThrownBy(() -> executor.exec(Alarma.ESBORRAR_ACTION, entity, null))
                 .isInstanceOf(ActionExecutionException.class)
                 .hasMessageContaining("L'alarma ha d'estar sense llegir");
+    }
+
+    @Test
+    @DisplayName("EsborrarMultipleActionExecutor: marca múltiples alarmes com ESBORRADA")
+    void esborrarMultipleActionExecutor_quanIdsValids_marcaComEsborrada() {
+        // Arrange
+        AlarmaEntity alarma1 = crearAlarmaEntity(AlarmaEstat.ACTIVA, false, CURRENT_USER);
+        alarma1.setId(1L);
+        AlarmaEntity alarma2 = crearAlarmaEntity(AlarmaEstat.ACTIVA, false, CURRENT_USER);
+        alarma2.setId(2L);
+
+        Alarma.EsborrarActionParams params = new Alarma.EsborrarActionParams();
+        params.setIds(Arrays.asList(1L, 2L));
+
+        when(alarmaRepository.findAllById(Arrays.asList(1L, 2L)))
+                .thenReturn(Arrays.asList(alarma1, alarma2));
+        when(authenticationHelper.getCurrentUserName()).thenReturn(CURRENT_USER);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+
+        AlarmaServiceImpl.EsborrarMultipleActionExecutor executor =
+                alarmaService.new EsborrarMultipleActionExecutor();
+
+        // Act
+        executor.exec(Alarma.ESBORRAR_MULTIPLE_ACTION, null, params);
+
+        // Assert
+        assertThat(alarma1.getEstat()).isEqualTo(AlarmaEstat.ESBORRADA);
+        assertThat(alarma1.getDataEsborrat()).isNotNull();
+        assertThat(alarma2.getEstat()).isEqualTo(AlarmaEstat.ESBORRADA);
+        assertThat(alarma2.getDataEsborrat()).isNotNull();
+        verify(comandaSseEventPublisher).publish(ComandaSseEventTypes.ACTIVE_ALARMS_CHANGED);
+    }
+
+    @Test
+    @DisplayName("EsborrarMultipleActionExecutor: llança excepció si la llista d'IDs és buida")
+    void esborrarMultipleActionExecutor_quanIdsBuits_llancaExcepcio() {
+        // Arrange
+        Alarma.EsborrarActionParams params = new Alarma.EsborrarActionParams();
+        params.setIds(Collections.emptyList());
+
+        AlarmaServiceImpl.EsborrarMultipleActionExecutor executor =
+                alarmaService.new EsborrarMultipleActionExecutor();
+
+        // Act & Assert
+        assertThatThrownBy(() -> executor.exec(Alarma.ESBORRAR_MULTIPLE_ACTION, null, params))
+                .isInstanceOf(ActionExecutionException.class)
+                .hasMessageContaining("No hi ha elements que processar");
+    }
+
+    @Test
+    @DisplayName("EsborrarMultipleActionExecutor: llança excepció si params és null")
+    void esborrarMultipleActionExecutor_quanParamsNull_llancaExcepcio() {
+        // Arrange
+        AlarmaServiceImpl.EsborrarMultipleActionExecutor executor =
+                alarmaService.new EsborrarMultipleActionExecutor();
+
+        // Act & Assert
+        assertThatThrownBy(() -> executor.exec(Alarma.ESBORRAR_MULTIPLE_ACTION, null, null))
+                .isInstanceOf(ActionExecutionException.class)
+                .hasMessageContaining("No hi ha elements que processar");
+    }
+
+    @Test
+    @DisplayName("EsborrarMultipleActionExecutor: llança excepció si usuari no té permisos")
+    void esborrarMultipleActionExecutor_quanSensePermisos_llancaExcepcio() {
+        // Arrange: alarma admin creada per un altre usuari
+        AlarmaEntity alarma = crearAlarmaEntity(AlarmaEstat.ACTIVA, true, "altre_usuari");
+        alarma.setId(1L);
+
+        Alarma.EsborrarActionParams params = new Alarma.EsborrarActionParams();
+        params.setIds(Collections.singletonList(1L));
+
+        when(alarmaRepository.findAllById(Collections.singletonList(1L)))
+                .thenReturn(Collections.singletonList(alarma));
+        when(authenticationHelper.getCurrentUserName()).thenReturn(CURRENT_USER);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false); // ← No admin
+
+        AlarmaServiceImpl.EsborrarMultipleActionExecutor executor =
+                alarmaService.new EsborrarMultipleActionExecutor();
+
+        // Act & Assert
+        assertThatThrownBy(() -> executor.exec(Alarma.ESBORRAR_MULTIPLE_ACTION, null, params))
+                .isInstanceOf(ActionExecutionException.class)
+                .hasMessageContaining("Sense permisos per executar l'acció");
     }
 
     @Test
@@ -396,6 +612,37 @@ class AlarmaServiceImplTest {
         assertThat(result.get(0).getEntornAppId()).isEqualTo(101L);
         assertThat(result.get(1).getId()).isEqualTo(2L);
         assertThat(result.get(1).getEntornAppId()).isEqualTo(202L);
+    }
+
+    @Test
+    @DisplayName("comprovacioScheduledTask: les alarmes d'un grup es processen per ordre")
+    void comprovacioScheduledTask_processaAlarmesPerOrdre() {
+        // Arrange
+        ReflectionTestUtils.setField(alarmaService, "schedulerLeader", true);
+        ReflectionTestUtils.setField(alarmaService, "schedulerBack", true);
+
+        AlarmaConfigEntity config1 = new AlarmaConfigEntity();
+        config1.setId(1L);
+        config1.setEntornAppId(101L);
+        config1.setAdmin(true);
+        config1.setOrdre(2L);
+
+        AlarmaConfigEntity config2 = new AlarmaConfigEntity();
+        config2.setId(2L);
+        config2.setEntornAppId(101L);
+        config2.setAdmin(true);
+        config2.setOrdre(1L);
+
+        when(alarmaConfigRepository.findAllByEsborratFalse()).thenReturn(Arrays.asList(config1, config2));
+        when(alarmaComprovacioHelper.comprovar(any())).thenReturn(true);
+
+        // Act
+        alarmaService.comprovacioScheduledTask();
+
+        // Assert
+        InOrder inOrder = inOrder(alarmaComprovacioHelper);
+        inOrder.verify(alarmaComprovacioHelper).comprovar(config2); // Ordre 1
+        inOrder.verify(alarmaComprovacioHelper).comprovar(config1); // Ordre 2
     }
 
     private AlarmaEntity crearAlarmaEntity(AlarmaEstat estat, boolean isAdmin, String createdBy) {

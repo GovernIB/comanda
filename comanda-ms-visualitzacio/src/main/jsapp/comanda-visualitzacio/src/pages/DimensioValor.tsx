@@ -6,14 +6,12 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
 import {
-    GridPage,
     MuiDataGrid,
     MuiDataGridColDef,
     springFilterBuilder,
     FormField,
     MuiFilter,
     useFilterApiRef,
-    useFormApiRef,
     useResourceApiService,
     useBaseAppContext,
 } from 'reactlib';
@@ -37,7 +35,6 @@ import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
 const DimensioValorFilter: React.FC<{ onSpringFilterChange: (f?: string) => void } > = ({ onSpringFilterChange }) => {
     const { t } = useTranslation();
     const filterApiRef = useFilterApiRef();
-    const formApiRef = useFormApiRef();
 
     const netejar = () => {
         filterApiRef?.current?.clear();
@@ -48,7 +45,6 @@ const DimensioValorFilter: React.FC<{ onSpringFilterChange: (f?: string) => void
             apiRef={filterApiRef}
             resourceName="dimensioValor"
             code="dimensioValorFilter"
-            formApiRef={formApiRef}
             commonFieldComponentProps={{ size: 'small' }}
             onSpringFilterChange={onSpringFilterChange}
             springFilterBuilder={(data) => {
@@ -95,7 +91,7 @@ const DimensioValor: React.FC = () => {
         // { field: 'valorAgrupacio', flex: 2 },
     ];
 
-    const staticFilter = React.useMemo(() => springFilterBuilder.eq('dimensio.id', id), [id]);
+    const fixedFilter = React.useMemo(() => springFilterBuilder.eq('dimensio.id', id), [id]);
 
     const toolbarElementsWithPositions = React.useMemo(() => {
         const backButtonDisabled = !anyHistoryEntryExist();
@@ -120,7 +116,7 @@ const DimensioValor: React.FC = () => {
     const gridTitle = `Valors dimensió ${dimensionName ?? ''}`;
 
     return (
-        <GridPage>
+        <>
             <PageTitle title={gridTitle} />
             <MuiDataGrid
                 title={gridTitle}
@@ -132,13 +128,13 @@ const DimensioValor: React.FC = () => {
                 toolbarAdditionalRow={filterElement}
                 toolbarElementsWithPositions={toolbarElementsWithPositions}
                 toolbarHideCreate
-                fixedFilter={staticFilter}
+                fixedFilter={fixedFilter}
                 filter={filter}
                 popupEditActive={false}
                 rowHideDeleteButton={gestorReadOnly}
                 // popupEditFormContent={<DimensioValorForm />}
             />
-        </GridPage>
+        </>
     );
 };
 

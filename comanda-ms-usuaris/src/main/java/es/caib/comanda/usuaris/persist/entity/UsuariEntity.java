@@ -1,12 +1,9 @@
 package es.caib.comanda.usuaris.persist.entity;
 
 import es.caib.comanda.base.config.BaseConfig;
-import es.caib.comanda.usuaris.logic.intf.model.MenuEstilEnum;
-import es.caib.comanda.usuaris.logic.intf.model.TemaAplicacioEnum;
+import es.caib.comanda.usuaris.logic.intf.model.*;
+import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import es.caib.comanda.ms.persist.entity.BaseAuditableLongPkEntity;
-import es.caib.comanda.usuaris.logic.intf.model.LanguageEnum;
-import es.caib.comanda.usuaris.logic.intf.model.NumOfElementsPerPageENum;
-import es.caib.comanda.usuaris.logic.intf.model.Usuari;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -72,4 +69,8 @@ public class UsuariEntity extends BaseAuditableLongPkEntity<Usuari> {
 	@Column(name="alarma_mail_agrupar", nullable = false)
 	private boolean alarmaMailAgrupar;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "alarma", length = 12, columnDefinition = "VARCHAR(12) DEFAULT 'LA'")
+    @Comment("Número de elementos por página")
+    private AlarmaSoundEnum alarma;
 }

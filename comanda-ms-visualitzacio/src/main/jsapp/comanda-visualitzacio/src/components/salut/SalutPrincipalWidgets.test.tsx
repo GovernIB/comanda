@@ -169,18 +169,6 @@ describe('SalutWidgetTitle', () => {
 });
 
 describe('SalutWidgetContent', () => {
-    it('SalutWidgetContent_quanEstaCarregant_mostraElsSkeletonsDelContingut', () => {
-        // Verifica que el contingut del widget mostra placeholders quan encara no hi ha dades disponibles.
-        const { container } = render(
-            <SalutWidgetContent
-                {...baseSalutWidgetContentProps}
-                loading={true}
-            />
-        );
-
-        expect(container.querySelectorAll('.MuiSkeleton-root').length).toBeGreaterThan(0);
-    });
-
     it('SalutWidgetContent_quanNoEstaExpandit_mostraElsGraficsiElBotoDexpandir', () => {
         // Comprova que el component renderitza els gràfics principals i el botó per expandir el llistat.
         const setExpanded = vi.fn();
@@ -243,6 +231,7 @@ describe('SalutLlistat', () => {
         // Comprova que el llistat retorna buit si no hi ha grups o metadades mínimes.
         const { container } = render(
             <SalutLlistat
+                loading={false}
                 salutGroups={[]}
                 setExpanded={() => undefined}
                 isExpanded={() => false}
@@ -252,10 +241,25 @@ describe('SalutLlistat', () => {
         expect(container).toBeEmptyDOMElement();
     });
 
+    it('SalutLlistat_quanEstaCarregant_mostraSkeletonsEncaraQueNoHiHagiGrups', () => {
+        // Comprova que la càrrega inicial no deixa la pantalla buida abans de rebre els grups.
+        const { container } = render(
+            <SalutLlistat
+                salutGroups={[]}
+                loading
+                setExpanded={() => undefined}
+                isExpanded={() => false}
+            />
+        );
+
+        expect(container.querySelectorAll('.MuiSkeleton-root').length).toBeGreaterThan(0);
+    });
+
     it('SalutLlistat_quanHiHaGrups_renderitzaUnBlocPerCadaGrup', () => {
         // Verifica que el component crea una targeta per a cada grup de salut disponible.
         render(
             <SalutLlistat
+                loading={false}
                 salutGroups={[
                     {
                         groupedApp: { nom: 'APP 1' },
@@ -300,6 +304,7 @@ describe('SalutLlistat', () => {
                 agrupacio="HORA"
                 setExpanded={() => undefined}
                 isExpanded={() => false}
+                loading={false}
             />
         );
 

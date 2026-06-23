@@ -7,6 +7,7 @@ import es.caib.comanda.client.model.App;
 import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -76,6 +77,19 @@ class AlarmaClientHelperTest {
         assertThat(result).isNull();
     }
 
+	@Test
+	@DisplayName("appFindById retorna null quan es llança FeignException.NotFound")
+	void appFindById_quanNotFound_retornaNull() {
+		// Arrange
+		when(appServiceClient.getOne(eq(APP_ID), any(), eq(AUTH_HEADER))).thenThrow(FeignException.NotFound.class);
+
+		// Act
+		App result = alarmaClientHelper.appFindById(APP_ID);
+
+		// Assert
+		assertThat(result).isNull();
+	}
+
     @Test
     @DisplayName("entornAppFindById retorna l'entornApp quan existeix")
     void entornAppFindById_quanExisteix_retornaEntornApp() {
@@ -106,6 +120,19 @@ class AlarmaClientHelperTest {
         assertThat(result).isNull();
     }
 
+	@Test
+	@DisplayName("entornAppFindById retorna null quan es llança FeignException.NotFound")
+	void entornAppFindById_quanNotFound_retornaNull() {
+		// Arrange
+		when(entornAppServiceClient.getOne(eq(ENTORN_APP_ID), any(), eq(AUTH_HEADER))).thenThrow(FeignException.NotFound.class);
+
+		// Act
+		EntornApp result = alarmaClientHelper.entornAppFindById(ENTORN_APP_ID);
+
+		// Assert
+		assertThat(result).isNull();
+	}
+
     @Test
     @DisplayName("entornById retorna l'entorn quan existeix")
     void entornById_quanExisteix_retornaEntorn() {
@@ -135,4 +162,17 @@ class AlarmaClientHelperTest {
         // Assert
         assertThat(result).isNull();
     }
+
+	@Test
+	@DisplayName("entornById retorna null quan es llança FeignException.NotFound")
+	void entornById_quanNotFound_retornaNull() {
+		// Arrange
+		when(entornServiceClient.getOne(eq(ENTORN_ID), any(), eq(AUTH_HEADER))).thenThrow(FeignException.NotFound.class);
+
+		// Act
+		Entorn result = alarmaClientHelper.entornById(ENTORN_ID);
+
+		// Assert
+		assertThat(result).isNull();
+	}
 }

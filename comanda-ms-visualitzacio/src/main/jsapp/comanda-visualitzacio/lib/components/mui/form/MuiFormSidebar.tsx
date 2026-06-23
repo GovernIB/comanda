@@ -22,7 +22,7 @@ export type FormSidebarProps = React.PropsWithChildren & {
     resourceTitle?: string;
     autoClose?: true;
     drawerWidth?: number;
-    apiRef: React.RefObject<FormSidebarApi | undefined>;
+    apiRef: React.RefObject<FormSidebarApi | null>;
 };
 
 export const MuiFormSidebar: React.FC<FormSidebarProps> = (props) => {
@@ -62,7 +62,7 @@ export const MuiFormSidebar: React.FC<FormSidebarProps> = (props) => {
         rejectFn?.();
         setOpen(false);
     };
-    if (apiRef != null) {
+    if (apiRef) {
         apiRef.current = {
             show,
             hide,

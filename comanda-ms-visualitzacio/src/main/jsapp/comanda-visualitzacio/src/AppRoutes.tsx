@@ -33,6 +33,7 @@ import Accessibilitat from './pages/accessibilitat/Accessibilitat';
 import { useIsUserAdmin, useIsUserConsulta, useIsUserUsuari, useUserContext } from './components/UserContext';
 import useStatsEnabled from './hooks/useStatsEnabled';
 import {Plantilla} from "./pages/Plantilla.tsx";
+import EntornAppHist from './pages/EntornsAppHistorics.tsx';
 
 export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';
@@ -122,6 +123,7 @@ const UserRoleRouteGuard: React.FC<{ children: React.ReactNode }> = ({ children 
             '/app',
             '/entorn',
             '/versionsEntorn',
+            '/entornAppHist',
             '/integracio',
             '/tasca',
             '/avis',
@@ -181,6 +183,9 @@ const AppRoutes: React.FC = () => {
                 </Route>
                 <Route path="versionsEntorn">
                     <Route index element={<VersionsEntorns />} />
+                </Route>
+                <Route path="entornAppHist">
+                    <Route index element={<EntornAppHist />} />
                 </Route>
                 <Route path="monitor">
                     <Route index element={<Monitors />} />

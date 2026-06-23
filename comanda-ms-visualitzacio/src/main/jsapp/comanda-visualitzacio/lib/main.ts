@@ -31,10 +31,16 @@ export {
     useMuiDataGridApiContext,
 } from './components/mui/datagrid/MuiDataGrid';
 export { useDataGridContext as useMuiDataGridContext } from './components/mui/datagrid/DataGridContext';
-export { DataGridDialog as MuiDataGridDialog } from './components/mui/datacommon/DataGridDialog';
+export {
+    DataGridDialog as MuiDataGridDialog,
+    useDataGridDialogApiRef as useMuiDataGridDialogApiRef,
+} from './components/mui/datacommon/DataGridDialog';
 export { MuiDataList } from './components/mui/datalist/MuiDataList';
 export { MuiForm } from './components/mui/form/MuiForm';
-export { DataFormDialog as MuiFormDialog } from './components/mui/datacommon/DataFormDialog';
+export {
+    DataFormDialog as MuiFormDialog,
+    useDataFormDialogApiRef as useMuiFormDialogApiRef,
+} from './components/mui/datacommon/DataFormDialog';
 export { MuiFormSidebar } from './components/mui/form/MuiFormSidebar';
 export { MuiFormTabs, MuiFormTabContent } from './components/mui/form/MuiFormTabs';
 export { MuiFilter } from './components/mui/form/MuiFilter';
@@ -66,6 +72,7 @@ export { CopyToClipboard } from './components/mui/CopyToClipboard';
 export { useAuthButtonContext } from './components/mui/AuthButton';
 
 export { envVar } from './util/envVars';
+export { formattedFieldValue } from './util/fields';
 export { numberFormat, numberFormatCurrency } from './util/numberFormat';
 export {
     dateFormatLocale,
@@ -85,6 +92,7 @@ export type { MenuEntry } from './components/mui/Menu';
 export type { MuiDataGridProps, MuiDataGridColDef } from './components/mui/datagrid/MuiDataGrid';
 export type { MuiDataGridApi, MuiDataGridApiRef } from './components/mui/datagrid/DataGridContext';
 export type { DataGridDialogApi as MuiDataGridDialogApi } from './components/mui/datacommon/DataGridDialog';
+export type { DataFormDialogApi as MuiDataFormDialogApi } from './components/mui/datacommon/DataFormDialog';
 export type { MuiFormProps } from './components/mui/form/MuiForm';
 export type { FormTabsValue } from './components/mui/form/MuiFormTabs';
 export type { ActionReportCustomButtonProps as MuiActionReportCustomButtonProps } from './components/mui/ActionReportButton';

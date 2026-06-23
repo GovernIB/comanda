@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {act, fireEvent, render, screen, waitFor} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import LogsViewer from './LogsViewer';
 
@@ -272,5 +272,60 @@ describe('LogsViewer', () => {
                 'error'
             );
         });
+    });
+
+    it('LogsViewer_quanSactivaAutoRefresh_programaRefrescosPeriodics', async () => {
+        // Comprova que activar el switch d'auto-refresc programa un interval que crida refreshPreview cada 10s.
+
+        // 👇 Mock de setInterval/clearInterval per controlar el temps
+        const setIntervalMock = vi.spyOn(globalThis, 'setInterval').mockImplementation(
+            (callback: TimerHandler, _timeout?: number) => {
+                (globalThis as any).__autoRefreshCallback__ = callback;
+                return 123 as unknown as ReturnType<typeof setInterval>;
+            }
+        );
+        const clearIntervalMock = vi.spyOn(globalThis, 'clearInterval').mockImplementation(() => undefined);
+
+        render(<LogsViewer entornAppId={7} preselectedLog={null} />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Sense fitxer seleccionat' }));
+        fireEvent.click(await screen.findByRole('button', { name: 'Previsualitzar' }));
+
+        // Espera que es carregui la previsualització inicial
+        await waitFor(() => {
+            expect(screen.getByText('Línia 1')).toBeInTheDocument();
+        });
+
+        // 👇 Trobar el switch per la seva etiqueta traduïda
+        const autoRefreshSwitch = screen.getByRole('switch');
+        expect(autoRefreshSwitch).not.toBeChecked();
+
+        // 👇 Activar el switch
+        fireEvent.click(autoRefreshSwitch!);
+        expect(autoRefreshSwitch).toBeChecked();
+
+        // 👇 Verificar que s'ha programat l'interval amb 10000ms (10 segons)
+        expect(setIntervalMock).toHaveBeenCalledWith(expect.any(Function), 10000);
+
+        // 👇 Simular el pas del temps executant manualment el callback de l'interval
+        act(() => {
+            (globalThis as any).__autoRefreshCallback__?.();
+        });
+
+        // 👇 Verificar que refreshPreview s'ha cridat de nou (2 crides: inicial + auto-refresh)
+        const previewCalls = mocks.artifactReportMock.mock.calls.filter(
+            ([, args]) => (args as { code: string }).code === 'previsualitzar_log'
+        );
+        expect(previewCalls.length).toBeGreaterThanOrEqual(2);
+
+        // 👇 Desactivar el switch i verificar que es cancel·la l'interval
+        fireEvent.click(autoRefreshSwitch);
+        expect(autoRefreshSwitch).not.toBeChecked();
+        expect(clearIntervalMock).toHaveBeenCalledWith(123);
+
+        // 👇 Neteja dels mocks globals
+        setIntervalMock.mockRestore();
+        clearIntervalMock.mockRestore();
+        delete (globalThis as any).__autoRefreshCallback__;
     });
 });

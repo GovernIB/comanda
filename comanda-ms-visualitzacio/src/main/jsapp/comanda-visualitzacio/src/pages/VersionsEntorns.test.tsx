@@ -30,15 +30,31 @@ vi.mock('reactlib', () => ({
         title: string;
         columns: Array<Record<string, any>>;
     }) => {
-        const sampleRow = {
+        const sampleRowLatest = {
             entornApps: [
                 {
                     entorn: { id: 1 },
                     versio: '1.2.0',
+                    revisio: 'abc123def456789',
                 },
                 {
                     entorn: { id: 2 },
                     versio: '1.10.0',
+                    revisio: 'xyz987uvw654321',
+                },
+            ],
+        };
+        const sampleRowSuccess = {
+            entornApps: [
+                {
+                    entorn: { id: 1 },
+                    versio: '1.10.0',
+                    revisio: 'abc123def456789',
+                },
+                {
+                    entorn: { id: 2 },
+                    versio: '1.2.0',
+                    revisio: 'xyz987uvw654321',
                 },
             ],
         };
@@ -48,12 +64,24 @@ vi.mock('reactlib', () => ({
                 <span data-testid="column-count">{columns.length}</span>
                 <span data-testid="column-header">{columns[1]?.headerName}</span>
                 <span data-testid="value-getter">
-                    {columns[1]?.valueGetter?.(undefined, sampleRow) ?? 'sense-valor'}
+                    {columns[1]?.valueGetter?.(undefined, sampleRowLatest) ?? 'sense-valor'}
                 </span>
+                <div data-testid="rendered-chip-warning">
+                    {columns[1]?.renderCell?.({
+                        formattedValue: '1.2.0',
+                        row: sampleRowLatest,
+                    })}
+                </div>
+                <div data-testid="rendered-chip-success">
+                    {columns[1]?.renderCell?.({
+                        formattedValue: '1.10.0',
+                        row: sampleRowSuccess,
+                    })}
+                </div>
                 <div data-testid="rendered-chip">
                     {columns[1]?.renderCell?.({
                         formattedValue: '1.2.0',
-                        row: sampleRow,
+                        row: sampleRowLatest,
                     })}
                 </div>
             </section>
@@ -94,5 +122,88 @@ describe('VersionsEntorns', () => {
         expect(screen.getByTestId('value-getter')).toHaveTextContent('1.2.0');
         expect(screen.getByTestId('rendered-chip')).toHaveTextContent('1.2.0');
         expect(mocks.entornFindMock).toHaveBeenCalledWith({ unpaged: true });
+    });
+
+    it('VersionsEntorns_quanLaVersioNoEsLaUltima_mostraWarning', async () => {
+        mocks.entornFindMock.mockResolvedValue({
+            rows: [
+                { id: 1, codi: 'PRO', nom: 'Producció' },
+                { id: 2, codi: 'PRE', nom: 'Preproducció' },
+            ],
+        });
+
+        render(<VersionsEntorns />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('rendered-chip-warning')).toBeInTheDocument();
+        });
+
+        const warningChip = screen.getByTestId('rendered-chip-warning').querySelector('.MuiChip-colorWarning');
+        expect(warningChip).toBeInTheDocument();
+    });
+
+    it('VersionsEntorns_quanLaVersioEsLaUltima_mostraSuccess', async () => {
+        mocks.entornFindMock.mockResolvedValue({
+            rows: [
+                { id: 1, codi: 'PRO', nom: 'Producció' },
+                { id: 2, codi: 'PRE', nom: 'Preproducció' },
+            ],
+        });
+
+        render(<VersionsEntorns />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('rendered-chip-success')).toBeInTheDocument();
+        });
+
+        const successChip = screen.getByTestId('rendered-chip-success').querySelector('.MuiChip-colorSuccess');
+        expect(successChip).toBeInTheDocument();
+    });
+
+    it('VersionsEntorns_quanHiHaRevisio_mostraElHashTruncat', async () => {
+        mocks.entornFindMock.mockResolvedValue({
+            rows: [
+                { id: 1, codi: 'PRO', nom: 'Producció' },
+            ],
+        });
+
+        render(<VersionsEntorns />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('rendered-chip')).toBeInTheDocument();
+        });
+
+        const renderedContent = screen.getByTestId('rendered-chip').textContent;
+        expect(renderedContent).toContain('abc123d');
+    });
+
+    it('VersionsEntorns_quanNoHiHaEntorns_noCreaColumnesDinamiques', async () => {
+        mocks.entornFindMock.mockResolvedValue({
+            rows: [],
+        });
+
+        render(<VersionsEntorns />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('column-count')).toHaveTextContent('1');
+        });
+    });
+
+    it('VersionsEntorns_comparaVersionsSemanticamentCorrectament', async () => {
+        mocks.entornFindMock.mockResolvedValue({
+            rows: [
+                { id: 1, codi: 'PRO', nom: 'Producció' },
+                { id: 2, codi: 'PRE', nom: 'Preproducció' },
+            ],
+        });
+
+        render(<VersionsEntorns />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('rendered-chip-success')).toBeInTheDocument();
+        });
+
+        const successChip = screen.getByTestId('rendered-chip-success').querySelector('.MuiChip-colorSuccess');
+        expect(successChip).toBeInTheDocument();
     });
 });

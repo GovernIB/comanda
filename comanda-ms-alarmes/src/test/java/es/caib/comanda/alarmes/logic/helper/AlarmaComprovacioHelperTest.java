@@ -18,6 +18,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -26,8 +29,13 @@ import org.springframework.hateoas.PagedModel;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
@@ -64,8 +72,17 @@ class AlarmaComprovacioHelperTest {
         config.setEntornAppId(10L);
         config.setNom("Test Config");
         config.setMissatge("Missatge d'alarma");
-        lenient().when(parametresHelper.getParametreEnter("es.caib.comanda.alarma.salut.freshness.seconds", 120)).thenReturn(120);
-        lenient().when(parametresHelper.getParametreEnter("es.caib.comanda.alarma.recovery.stability.seconds", 180)).thenReturn(180);
+        lenient().when(parametresHelper.getParametreEnter(eq("es.caib.comanda.alarma.salut.freshness.seconds"), any())).thenReturn(120);
+        lenient().when(parametresHelper.getParametreEnter(eq("es.caib.comanda.alarma.recovery.stability.seconds"), any())).thenReturn(180);
+        lenient().when(alarmaRepository.save(any(AlarmaEntity.class)))
+            .thenAnswer(invocation -> {
+                AlarmaEntity entity = invocation.getArgument(0);
+                if (entity.getId() == null) {
+                    entity.setId(123L);
+                }
+                return entity;
+            });
+
     }
 
     private void mockRule(AlarmaConfigRegla regla) {
@@ -256,12 +273,13 @@ class AlarmaComprovacioHelperTest {
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
                 .thenReturn(pagedModel);
-        
+
         AlarmaEntity alarmaActiva = new AlarmaEntity();
         alarmaActiva.setId(100L);
         alarmaActiva.setAlarmaConfig(config);
         alarmaActiva.setDataActivacio(LocalDateTime.now().minusHours(1));
         alarmaActiva.setEstat(AlarmaEstat.ACTIVA);
+        alarmaActiva.setDataIniciRecuperacio(LocalDateTime.now().minusSeconds(10));
 
         when(alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(config))
                 .thenReturn(Optional.of(alarmaActiva));
@@ -270,8 +288,9 @@ class AlarmaComprovacioHelperTest {
         boolean result = alarmaComprovacioHelper.comprovar(config);
 
         // Assert
-        assertThat(result).isFalse();
+        assertThat(result).isTrue();
         assertThat(alarmaActiva.getDataFinalitzacio()).isNull();
+        assertThat(alarmaActiva.getDataIniciRecuperacio()).isNotNull();
     }
 
     @Test
@@ -284,7 +303,7 @@ class AlarmaComprovacioHelperTest {
                 .comparador(AlarmaConfigReglaComparador.EN)
                 .valorsText(Collections.singletonList("DOWN"))
                 .build());
-        when(parametresHelper.getParametreEnter("es.caib.comanda.alarma.recovery.stability.seconds", 180)).thenReturn(1);
+        when(parametresHelper.getParametreEnter(eq("es.caib.comanda.alarma.recovery.stability.seconds"), any())).thenReturn(1);
         PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(freshSalut().appEstat(EstatSalutEnum.UP.name()).build());
 
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
@@ -296,17 +315,16 @@ class AlarmaComprovacioHelperTest {
         alarmaActiva.setAlarmaConfig(config);
         alarmaActiva.setDataActivacio(LocalDateTime.now().minusHours(1));
         alarmaActiva.setEstat(AlarmaEstat.ACTIVA);
+        alarmaActiva.setDataIniciRecuperacio(LocalDateTime.now().minusSeconds(2));
 
         when(alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(config))
                 .thenReturn(Optional.of(alarmaActiva));
-
-        alarmaComprovacioHelper.comprovar(config);
-        sleepSilently(1100);
 
         boolean result = alarmaComprovacioHelper.comprovar(config);
 
         assertThat(result).isFalse();
         assertThat(alarmaActiva.getDataFinalitzacio()).isNotNull();
+        assertThat(alarmaActiva.getDataIniciRecuperacio()).isNull();
     }
 
     @Test
@@ -325,7 +343,7 @@ class AlarmaComprovacioHelperTest {
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
                 .thenReturn(pagedModel);
-        
+
         AlarmaEntity alarmaEsborrany = new AlarmaEntity();
         alarmaEsborrany.setEstat(AlarmaEstat.ESBORRANY);
 
@@ -382,7 +400,7 @@ class AlarmaComprovacioHelperTest {
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
                 .thenReturn(pagedModel);
-        
+
         AlarmaEntity alarmaOberta = new AlarmaEntity();
         alarmaOberta.setEstat(AlarmaEstat.ACTIVA);
         when(alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(config))
@@ -493,7 +511,7 @@ class AlarmaComprovacioHelperTest {
 
         // Assert
         assertThat(alarmaEsborrany.getEstat()).isEqualTo(AlarmaEstat.ACTIVA);
-        verify(alarmaMailEventPublisher, never()).publish(any(), any()); // No s'assigna a alarmaActivada, només es canvia l'estat
+        verify(alarmaMailEventPublisher, times(1)).publish(any(), any());
     }
 
     @Test
@@ -516,7 +534,7 @@ class AlarmaComprovacioHelperTest {
                 .thenReturn(pagedModel);
         when(alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(config))
                 .thenReturn(Optional.empty());
-        
+
         AlarmaEntity novaAlarma = new AlarmaEntity();
         novaAlarma.setEstat(AlarmaEstat.ACTIVA);
         novaAlarma.setAlarmaConfig(config);
@@ -649,7 +667,7 @@ class AlarmaComprovacioHelperTest {
                 .comparador(AlarmaConfigReglaComparador.MAJOR)
                 .valorNumeric(new BigDecimal(1000))
                 .build();
-        
+
         mockRule(AlarmaConfigRegla.builder()
                 .tipusNode(AlarmaConfigReglaTipusNode.GRUP)
                 .operador(AlarmaConfigReglaOperador.AND)
@@ -692,7 +710,7 @@ class AlarmaComprovacioHelperTest {
                 .comparador(AlarmaConfigReglaComparador.MAJOR)
                 .valorNumeric(new BigDecimal(1000))
                 .build();
-        
+
         mockRule(AlarmaConfigRegla.builder()
                 .tipusNode(AlarmaConfigReglaTipusNode.GRUP)
                 .operador(AlarmaConfigReglaOperador.OR)
@@ -883,7 +901,7 @@ class AlarmaComprovacioHelperTest {
         Salut salutKB = freshSalut().detalls(Collections.singletonList(
                 SalutDetall.builder().codi("MED").valor("0,5 KB").build()
         )).build();
-        
+
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
                 .thenReturn(pagedModelFor(salutKB));
@@ -899,7 +917,7 @@ class AlarmaComprovacioHelperTest {
         )).build();
         when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
                 .thenReturn(pagedModelFor(salutB));
-        
+
         // 1048576 B = 1 MB. Condició: MENOR que 1 MB. Result: false.
         boolean resultB = alarmaComprovacioHelper.comprovar(config);
         assertThat(resultB).as("Check B").isFalse();
@@ -929,6 +947,234 @@ class AlarmaComprovacioHelperTest {
         assertThat(alarmaComprovacioHelper.comprovar(config)).isTrue();
     }
 
+	@Test
+	@DisplayName("L'activació d'una nova alarma agafa la data de la Salut")
+	void comprovar_quanNovaAlarma_dataActivacioEsLaDeLaSalut() {
+		// Arrange
+		mockRule(AlarmaConfigRegla.builder()
+			.tipusNode(AlarmaConfigReglaTipusNode.CONDICIO)
+			.ambit(AlarmaConfigReglaAmbit.APLICACIO)
+			.metrica(AlarmaConfigReglaMetrica.ESTAT)
+			.comparador(AlarmaConfigReglaComparador.EN)
+			.valorsText(Collections.singletonList("DOWN"))
+			.build());
+		LocalDateTime dataSalut = LocalDateTime.now().minusMinutes(1);
+		PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(Salut.builder()
+			.appEstat(EstatSalutEnum.DOWN.name())
+			.data(dataSalut)
+			.build());
+
+		when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
+		when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
+			.thenReturn(pagedModel);
+		when(alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(config))
+			.thenReturn(Optional.empty());
+
+		// Act
+		alarmaComprovacioHelper.comprovar(config);
+
+		// Assert
+		verify(alarmaRepository).save(argThat(entity ->
+			entity.getEstat() == AlarmaEstat.ACTIVA &&
+				dataSalut.equals(entity.getDataActivacio())
+		));
+	}
+
+	@Test
+	@DisplayName("L'activació d'un esborrany agafa la data de la Salut")
+	void comprovar_quanActivaEsborrany_dataActivacioEsLaDeLaSalut() {
+		// Arrange
+		mockRule(AlarmaConfigRegla.builder()
+			.tipusNode(AlarmaConfigReglaTipusNode.CONDICIO)
+			.ambit(AlarmaConfigReglaAmbit.APLICACIO)
+			.metrica(AlarmaConfigReglaMetrica.ESTAT)
+			.comparador(AlarmaConfigReglaComparador.EN)
+			.valorsText(Collections.singletonList("DOWN"))
+			.build());
+		config.setPeriodeValor(new BigDecimal(1));
+		config.setPeriodeUnitat(AlarmaConfigPeriodeUnitat.MINUTS);
+
+		LocalDateTime dataSalut = LocalDateTime.now().minusMinutes(1);
+		PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(Salut.builder()
+			.appEstat(EstatSalutEnum.DOWN.name())
+			.data(dataSalut)
+			.build());
+
+		when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
+		when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
+			.thenReturn(pagedModel);
+
+		AlarmaEntity alarmaEsborrany = new AlarmaEntity();
+		alarmaEsborrany.setEstat(AlarmaEstat.ESBORRANY);
+		alarmaEsborrany.setAlarmaConfig(config);
+		alarmaEsborrany.setCreatedDate(LocalDateTime.now().minusMinutes(2));
+
+		when(alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(config))
+			.thenReturn(Optional.of(alarmaEsborrany));
+
+		// Act
+		alarmaComprovacioHelper.comprovar(config);
+
+		// Assert
+		assertThat(alarmaEsborrany.getEstat()).isEqualTo(AlarmaEstat.ACTIVA);
+		assertThat(alarmaEsborrany.getDataActivacio()).isEqualTo(dataSalut);
+	}
+
+	@Test
+	@DisplayName("L'activació d'un esborrany quan es canvia a sense període agafa la data de la Salut")
+	void comprovar_quanCanviaASensePeriodeIActivaEsborrany_dataActivacioEsLaDeLaSalut() {
+		// Arrange
+		mockRule(AlarmaConfigRegla.builder()
+			.tipusNode(AlarmaConfigReglaTipusNode.CONDICIO)
+			.ambit(AlarmaConfigReglaAmbit.APLICACIO)
+			.metrica(AlarmaConfigReglaMetrica.ESTAT)
+			.comparador(AlarmaConfigReglaComparador.EN)
+			.valorsText(Collections.singletonList("DOWN"))
+			.build());
+		config.setPeriodeValor(null); // Sense període
+
+		LocalDateTime dataSalut = LocalDateTime.now().minusMinutes(1);
+		PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(Salut.builder()
+			.appEstat(EstatSalutEnum.DOWN.name())
+			.data(dataSalut)
+			.build());
+
+		when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
+		when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
+			.thenReturn(pagedModel);
+
+		AlarmaEntity alarmaEsborrany = new AlarmaEntity();
+		alarmaEsborrany.setEstat(AlarmaEstat.ESBORRANY);
+		alarmaEsborrany.setAlarmaConfig(config);
+
+		when(alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(config))
+			.thenReturn(Optional.of(alarmaEsborrany));
+
+		// Act
+		alarmaComprovacioHelper.comprovar(config);
+
+		// Assert
+		assertThat(alarmaEsborrany.getEstat()).isEqualTo(AlarmaEstat.ACTIVA);
+		assertThat(alarmaEsborrany.getDataActivacio()).isEqualTo(dataSalut);
+		verify(alarmaMailEventPublisher).publish(alarmaEsborrany, AlarmaMailEventType.ACTIVACIO);
+	}
+
+	@Test
+	@DisplayName("La finalització d'una alarma agafa la data d'inici de la recuperació")
+	void comprovar_quanFinalitzaAlarma_dataFinalitzacioEsLaDeIniciRecuperacio() {
+		// Arrange
+		mockRule(AlarmaConfigRegla.builder()
+			.tipusNode(AlarmaConfigReglaTipusNode.CONDICIO)
+			.ambit(AlarmaConfigReglaAmbit.APLICACIO)
+			.metrica(AlarmaConfigReglaMetrica.ESTAT)
+			.comparador(AlarmaConfigReglaComparador.EN)
+			.valorsText(Collections.singletonList("DOWN"))
+			.build());
+		// Forcem que la recuperació sigui estable immediatament
+		when(parametresHelper.getParametreEnter(eq("es.caib.comanda.alarma.recovery.stability.seconds"), any())).thenReturn(0);
+
+		LocalDateTime dataSalut = LocalDateTime.now().minusSeconds(10);
+		PagedModel<EntityModel<Salut>> pagedModel = pagedModelFor(Salut.builder()
+			.appEstat(EstatSalutEnum.UP.name())
+			.data(dataSalut)
+			.build());
+
+		when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
+		when(salutServiceClient.find(any(), anyString(), any(), any(), anyString(), anyInt(), any(), anyString()))
+			.thenReturn(pagedModel);
+
+		AlarmaEntity alarmaActiva = new AlarmaEntity();
+		alarmaActiva.setEstat(AlarmaEstat.ACTIVA);
+		alarmaActiva.setDataActivacio(LocalDateTime.now().minusHours(1));
+		LocalDateTime dataIniciRecuperacio = LocalDateTime.now().minusSeconds(5);
+		alarmaActiva.setDataIniciRecuperacio(dataIniciRecuperacio);
+
+		when(alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(config))
+			.thenReturn(Optional.of(alarmaActiva));
+
+		// Act
+		alarmaComprovacioHelper.comprovar(config);
+
+		// Assert
+		assertThat(alarmaActiva.getDataFinalitzacio()).isEqualTo(dataIniciRecuperacio);
+	}
+
+	@ParameterizedTest(name = "valor=\"{0}\", comparador={1}, llindar={2}, resultat={3}")
+	@MethodSource("memoriaDisponibleCases")
+	@DisplayName("Comprova MEMORIA_DISPONIBLE amb diferents unitats i comparadors")
+	void comprovar_quanMemoriaDisponible_retornaCorrectament(
+		String valorSalut,
+		AlarmaConfigReglaComparador comparador,
+		BigDecimal valorNumeric,
+		boolean expectedResult
+	) {
+		lenient().when(httpAuthorizationHeaderHelper.getAuthorizationHeader())
+			.thenReturn(AUTH_HEADER);
+
+		lenient().when(alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(any()))
+			.thenReturn(Optional.empty());
+
+		mockRule(AlarmaConfigRegla.builder()
+			.tipusNode(AlarmaConfigReglaTipusNode.CONDICIO)
+			.ambit(AlarmaConfigReglaAmbit.SISTEMA)
+			.metrica(AlarmaConfigReglaMetrica.MEMORIA_DISPONIBLE)
+			.comparador(comparador)
+			.valorNumeric(valorNumeric)
+			.build());
+
+		Salut salut = freshSalut().detalls(Collections.singletonList(
+			SalutDetall.builder()
+				.codi("MED")
+				.valor(valorSalut)
+				.build()
+		)).build();
+
+		lenient().when(salutServiceClient.find(
+				any(),
+				anyString(),
+				any(),
+				any(),
+				anyString(),
+				anyInt(),
+				any(),
+				anyString()))
+			.thenReturn(pagedModelFor(salut));
+
+		assertThat(alarmaComprovacioHelper.comprovar(config))
+			.isEqualTo(expectedResult);
+	}
+
+	private static Stream<Arguments> memoriaDisponibleCases() {
+		List<Object[]> baseCases = new ArrayList<>();
+		List<Arguments> cases = new ArrayList<>();
+
+		// Comparacions
+		baseCases.add(new Object[]{"4096 K", AlarmaConfigReglaComparador.MENOR, BigDecimal.TEN, true});
+		baseCases.add(new Object[]{"4096 K", AlarmaConfigReglaComparador.MENOR, BigDecimal.ONE, false});
+		baseCases.add(new Object[]{"2 M", AlarmaConfigReglaComparador.MAJOR, BigDecimal.ONE, true});
+		baseCases.add(new Object[]{"2 T", AlarmaConfigReglaComparador.MAJOR, BigDecimal.ONE, true});
+		baseCases.add(new Object[]{"1 G", AlarmaConfigReglaComparador.MAJOR, new BigDecimal(2048), false});
+		baseCases.add(new Object[]{"1024 M", AlarmaConfigReglaComparador.IGUAL, new BigDecimal(1024), true});
+		baseCases.add(new Object[]{"1 G", AlarmaConfigReglaComparador.IGUAL, new BigDecimal(1024), true});
+		baseCases.add(new Object[]{"1 T", AlarmaConfigReglaComparador.IGUAL, new BigDecimal(1024), false});
+		// Conversió d'unitats
+		baseCases.add(new Object[]{"1 K", AlarmaConfigReglaComparador.IGUAL, new BigDecimal(1), false}); // KB s'arrodoneix a la unitat nativa (MB)
+		baseCases.add(new Object[]{"600 K", AlarmaConfigReglaComparador.IGUAL, new BigDecimal(1), true}); // KB s'arrodoneix a la unitat nativa (MB)
+		baseCases.add(new Object[]{"1 M", AlarmaConfigReglaComparador.IGUAL, new BigDecimal(1), true});
+		baseCases.add(new Object[]{"1 G", AlarmaConfigReglaComparador.IGUAL, new BigDecimal(1024), true});
+		baseCases.add(new Object[]{"1 T", AlarmaConfigReglaComparador.IGUAL, new BigDecimal(1024*1024), true});
+
+		// Add base cases as decimal scale
+		cases.addAll(baseCases.stream()
+			.map(baseCase -> Arguments.of(baseCase[0] + "B", baseCase[1], baseCase[2], baseCase[3]))
+			.collect(Collectors.toList()));
+		// Add base cases as binary scale
+		cases.addAll(baseCases.stream()
+			.map(baseCase -> Arguments.of(baseCase[0] + "iB", baseCase[1], baseCase[2], baseCase[3]))
+			.collect(Collectors.toList()));
+        return cases.stream();
+	}
+
     private Salut.SalutBuilder freshSalut() {
         return Salut.builder().data(LocalDateTime.now());
     }
@@ -946,4 +1192,37 @@ class AlarmaComprovacioHelperTest {
             throw new AssertionError("Interrupció inesperada durant el test", ex);
         }
     }
+
+    @ParameterizedTest(name = "desde={0}, fins={1}, horaActual={2} → esperat={3}")
+    @MethodSource("periodeInactiuCases")
+    @DisplayName("isAlarmaPeriodeInactiu: diferents combinacions de franges horàries")
+    void isAlarmaPeriodeInactiu_casosParametritzats(
+            LocalTime inactiuDesde,
+            LocalTime inactiuFins,
+            LocalTime horaActual,
+            boolean expectedResult
+    ) {
+        // Arrange && Act
+        boolean result = alarmaComprovacioHelper.estaDinsFranjaHoraria(inactiuDesde, inactiuFins, horaActual);
+        // Assert
+        assertThat(result).isEqualTo(expectedResult);
+    }
+
+    private static Stream<Arguments> periodeInactiuCases() {
+        return Stream.of(
+                Arguments.of(LocalTime.of(9, 0), LocalTime.of(18, 0), LocalTime.of(12, 0), true),
+                Arguments.of(LocalTime.of(9, 0), LocalTime.of(18, 0), LocalTime.of(8, 0), false),
+                Arguments.of(LocalTime.of(9, 0), LocalTime.of(18, 0), LocalTime.of(19, 0), false),
+                Arguments.of(LocalTime.of(9, 0), LocalTime.of(18, 0), LocalTime.of(9, 0), true),
+                Arguments.of(LocalTime.of(22, 0), LocalTime.of(3, 0), LocalTime.of(23, 0), true),
+                Arguments.of(LocalTime.of(22, 0), LocalTime.of(3, 0), LocalTime.of(1, 0), true),
+                Arguments.of(LocalTime.of(22, 0), LocalTime.of(3, 0), LocalTime.of(10, 0), false),
+                Arguments.of(LocalTime.of(22, 0), LocalTime.of(3, 0), LocalTime.of(22, 0), true),
+                Arguments.of(null, LocalTime.of(3, 0), LocalTime.of(0, 0), true),
+                Arguments.of(LocalTime.of(22, 0), null, LocalTime.of(23, 0), true),
+                Arguments.of(LocalTime.of(10, 0), LocalTime.of(10, 0), LocalTime.of(10, 0), true),
+                Arguments.of(LocalTime.of(10, 0), LocalTime.of(10, 0), LocalTime.of(10, 1), false)
+        );
+    }
+
 }

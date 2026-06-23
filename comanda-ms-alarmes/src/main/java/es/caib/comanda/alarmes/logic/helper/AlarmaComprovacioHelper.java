@@ -27,8 +27,8 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -55,10 +55,14 @@ public class AlarmaComprovacioHelper {
     private final ComandaSseEventPublisher comandaSseEventPublisher;
 	private final ParametresHelper parametresHelper;
 	private final ObjectMapper objectMapper;
-	private final Map<Long, LocalDateTime> recoveryStableSinceByConfigId = new ConcurrentHashMap<>();
 
+    /** Retorna true si la condició d'alarma configurada s'està complint. **/
 	public boolean comprovar(AlarmaConfigEntity alarmaConfig) {
 		Salut salut = findSalutLast(alarmaConfig.getEntornAppId());
+        if (isAlarmaPeriodeInactiu(alarmaConfig, salut)) {
+            return false;
+        }
+
 		if (!isFreshSalut(salut)) {
 			processarCondicioIndeterminada(alarmaConfig, salut);
 			return false;
@@ -66,13 +70,47 @@ public class AlarmaComprovacioHelper {
 
 		boolean condicioAlarma = evaluateAlarmCondition(alarmaConfig, salut);
 		if (condicioAlarma) {
-			processarCondicioAfirmativa(alarmaConfig);
-			return true;
+			return processarCondicioAfirmativa(alarmaConfig, salut);
 		}
 
-		processarCondicioNegativa(alarmaConfig);
-		return false;
+		return processarCondicioNegativa(alarmaConfig, salut);
 	}
+
+    /** Si estem dins el periode inactiu configurat, retorna true. **/
+    private boolean isAlarmaPeriodeInactiu(AlarmaConfigEntity alarmaConfig, Salut salut) {
+        if (alarmaConfig.getInactiuDesde() == null && alarmaConfig.getInactiuFins() == null) {
+            return false;
+        }
+        return estaDinsFranjaHoraria(alarmaConfig.getInactiuDesde(), alarmaConfig.getInactiuFins(), LocalTime.from(salut.getData()));
+    }
+
+    /**
+     * Comprova si una hora es troba dins d'una franja horària.
+     * <p>
+     * Suporta franges dins el mateix dia (ex: 09:00-18:00) i franges que afecten dos dies
+     * (ex: 22:00-03:00). Si {@code desde} o {@code fins} són null, s'assumeix
+     * {@code LocalTime.MIN} o {@code LocalTime.MAX} respectivament.
+     * </p>
+     *
+     * @param desde      Inici de la franja horària (inclusiu). Null = MIN
+     * @param fins       Final de la franja horària (inclusiu). Null = MAX
+     * @param horaActual Hora a comprovar
+     * @return true si l'hora es troba dins de la franja, false en cas contrari
+     */
+    protected boolean estaDinsFranjaHoraria(LocalTime desde, LocalTime fins, LocalTime horaActual) {
+        if (desde == null) {
+            desde = LocalTime.MIN;
+        }
+        if (fins == null) {
+            fins = LocalTime.MAX;
+        }
+
+        if (desde.isBefore(fins) || desde.equals(fins)) {
+            return !horaActual.isBefore(desde) && !horaActual.isAfter(fins);
+        } else {
+            return !horaActual.isBefore(desde) || !horaActual.isAfter(fins);
+        }
+    }
 
 	private boolean evaluateAlarmCondition(AlarmaConfigEntity alarmaConfig, Salut salut) {
 		AlarmaConfigRegla regla = readRule(alarmaConfig);
@@ -196,10 +234,12 @@ public class AlarmaComprovacioHelper {
 	 * de correus per a alarmes segons el seu estat i condicions definides.
 	 *
 	 * @param alarmaConfig Entitat de configuració de l'alarma
+	 *
+	 * @return true si s'ha activat l'alarma, false en cas contrari.
 	 */
-	private void processarCondicioAfirmativa(AlarmaConfigEntity alarmaConfig) {
-		clearRecoveryTracking(alarmaConfig);
+	private boolean processarCondicioAfirmativa(AlarmaConfigEntity alarmaConfig, Salut salut) {
 		Optional<AlarmaEntity> optionalAlarmaAnteriorNoFinalitzada = alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(alarmaConfig);
+		clearRecoveryTracking(optionalAlarmaAnteriorNoFinalitzada.orElse(null));
 		AlarmaEntity alarmaActivada = null;
 
 		if (hasAlarmaConfigPeriodes(alarmaConfig)) {
@@ -213,7 +253,7 @@ public class AlarmaComprovacioHelper {
 						alarmaConfig.getId(),
 						alarmaConfig.getNom(),
 						alarmaConfig.isAdmin() ? "[ADMIN]" : alarmaConfig.getCreatedBy());
-				return;
+				return false;
 			}
 			AlarmaEntity alarmaAnteriorNoFinalitzada = optionalAlarmaAnteriorNoFinalitzada.get();
 
@@ -227,11 +267,11 @@ public class AlarmaComprovacioHelper {
 				} else if (alarmaConfig.getPeriodeUnitat() == AlarmaConfigPeriodeUnitat.HORES) {
 					activar = duration.getSeconds() / 3600 > alarmaConfig.getPeriodeValor().intValue();
 				} else if (alarmaConfig.getPeriodeUnitat() == AlarmaConfigPeriodeUnitat.DIES) {
-					activar = duration.getSeconds() / 3600 * 24 > alarmaConfig.getPeriodeValor().intValue();
+					activar = duration.getSeconds() / (3600 * 24) > alarmaConfig.getPeriodeValor().intValue();
 				}
 				if (activar) {
 					alarmaAnteriorNoFinalitzada.setEstat(AlarmaEstat.ACTIVA);
-					alarmaAnteriorNoFinalitzada.setDataActivacio(LocalDateTime.now());
+					alarmaAnteriorNoFinalitzada.setDataActivacio(salut.getData());
 					alarmaActivada = alarmaAnteriorNoFinalitzada;
                     publishActiveAlarmsChangedEvent();
 					log.debug("Alarma de tipus esborrany activada (configId={}, configNom={}, destinatari={}",
@@ -246,18 +286,20 @@ public class AlarmaComprovacioHelper {
 				// pendents d'activar-se poden activar-se sempre que la condició segueixi activa.
 				if (optionalAlarmaAnteriorNoFinalitzada.get().getEstat() == AlarmaEstat.ESBORRANY) {
 					optionalAlarmaAnteriorNoFinalitzada.get().setEstat(AlarmaEstat.ACTIVA);
-					optionalAlarmaAnteriorNoFinalitzada.get().setDataActivacio(LocalDateTime.now());
+					optionalAlarmaAnteriorNoFinalitzada.get().setDataActivacio(salut.getData());
 					alarmaActivada = optionalAlarmaAnteriorNoFinalitzada.get();
                     publishActiveAlarmsChangedEvent();
+					// TODO Refactoritzar per a unificar els events publishAlarmaMailEvent del mètode
+					publishAlarmaMailEvent(alarmaActivada, AlarmaMailEventType.ACTIVACIO);
 				}
-				return;
+				return true;
 			}
 
 			Alarma alarma = new Alarma();
 			alarma.setEntornAppId(alarmaConfig.getEntornAppId());
 			alarma.setEstat(AlarmaEstat.ACTIVA);
 			alarma.setMissatge(alarmaConfig.getMissatge());
-			alarma.setDataActivacio(LocalDateTime.now());
+			alarma.setDataActivacio(salut.getData());
 			alarmaActivada = alarmaRepository.save(
 					AlarmaEntity.builder().
 							alarma(alarma).
@@ -272,7 +314,9 @@ public class AlarmaComprovacioHelper {
 
 		if (alarmaActivada != null) {
 			publishAlarmaMailEvent(alarmaActivada, AlarmaMailEventType.ACTIVACIO);
+			return true;
 		}
+		return false;
 	}
 
 	/**
@@ -283,40 +327,45 @@ public class AlarmaComprovacioHelper {
 	 *
 	 * @param alarmaConfig Entitat de configuració de l'alarma. Conté la informació
 	 * necessària per identificar i operar sobre les alarmes associades.
+	 *
+	 * @return true si no s'ha desactivat l'alarma a causa de RECOVERY_STABILITY_SECONDS, false en cas contrari.
 	 */
-	private void processarCondicioNegativa(AlarmaConfigEntity alarmaConfig) {
+	private boolean processarCondicioNegativa(AlarmaConfigEntity alarmaConfig, Salut salut) {
 		Optional<AlarmaEntity> optionalAlarmaAnteriorNoFinalitzada = alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(alarmaConfig);
 		if (optionalAlarmaAnteriorNoFinalitzada.isEmpty()) {
-			clearRecoveryTracking(alarmaConfig);
-			return;
+			return false;
 		}
 		AlarmaEntity alarmaAnteriorNoFinalitzada = optionalAlarmaAnteriorNoFinalitzada.get();
 
 		if (alarmaAnteriorNoFinalitzada.getEstat() == AlarmaEstat.ESBORRANY) {
-			clearRecoveryTracking(alarmaConfig);
 			alarmaRepository.delete(alarmaAnteriorNoFinalitzada);
 		} else {
 			LocalDateTime now = LocalDateTime.now();
-			LocalDateTime stableSince = recoveryStableSinceByConfigId.computeIfAbsent(alarmaConfig.getId(), ignored -> now);
+			if (alarmaAnteriorNoFinalitzada.getDataIniciRecuperacio() == null) {
+				alarmaAnteriorNoFinalitzada.setDataIniciRecuperacio(salut.getData());
+			}
+			LocalDateTime stableSince = alarmaAnteriorNoFinalitzada.getDataIniciRecuperacio();
 			long recoveryStabilitySeconds = getRecoveryStabilitySeconds();
 			if (Duration.between(stableSince, now).getSeconds() < recoveryStabilitySeconds) {
 				log.debug("Recuperació detectada però encara no estable (configId={}, estableDesDe={}, estabilitzacioSegons={})",
 						alarmaConfig.getId(),
 						stableSince,
 						recoveryStabilitySeconds);
-				return;
+				return true;
 			}
-			alarmaAnteriorNoFinalitzada.setDataFinalitzacio(now);
-			clearRecoveryTracking(alarmaConfig);
+			alarmaAnteriorNoFinalitzada.setDataFinalitzacio(stableSince);
+			clearRecoveryTracking(alarmaAnteriorNoFinalitzada);
             publishActiveAlarmsChangedEvent();
             if (alarmaConfig.isNotificacioFinalitzada()) {
                 publishAlarmaMailEvent(alarmaAnteriorNoFinalitzada, AlarmaMailEventType.RECUPERACIO);
             }
 		}
+		return false;
 	}
 
 	private void processarCondicioIndeterminada(AlarmaConfigEntity alarmaConfig, Salut salut) {
-		clearRecoveryTracking(alarmaConfig);
+		Optional<AlarmaEntity> optionalAlarmaAnteriorNoFinalitzada = alarmaRepository.findTopByAlarmaConfigAndDataFinalitzacioIsNullOrderByIdDesc(alarmaConfig);
+		clearRecoveryTracking(optionalAlarmaAnteriorNoFinalitzada.orElse(null));
 		if (salut == null) {
 			log.debug("No es modifica l'alarma perquè no hi ha dades de salut recents per l'entornApp {}", alarmaConfig.getEntornAppId());
 			return;
@@ -361,9 +410,9 @@ public class AlarmaComprovacioHelper {
 				(int) DEFAULT_RECOVERY_STABILITY_SECONDS);
 	}
 
-	private void clearRecoveryTracking(AlarmaConfigEntity alarmaConfig) {
-		if (alarmaConfig != null && alarmaConfig.getId() != null) {
-			recoveryStableSinceByConfigId.remove(alarmaConfig.getId());
+	private void clearRecoveryTracking(AlarmaEntity alarmaEntity) {
+		if (alarmaEntity != null && alarmaEntity.getDataIniciRecuperacio() != null) {
+			alarmaEntity.setDataIniciRecuperacio(null);
 		}
 	}
 
@@ -422,24 +471,26 @@ public class AlarmaComprovacioHelper {
 		if (parsedMeasure == null) {
 			return null;
 		}
-		String unit = parsedMeasure.unit();
+		String unit = parsedMeasure.unit() != null ? parsedMeasure.unit().toUpperCase() : "";
 		BigDecimal value = parsedMeasure.value();
-		if (unit == null || unit.isBlank() || "MB".equals(unit)) {
-			return value;
+		switch (unit) {
+
+			case "GB":
+			case "GIB":
+				return value.multiply(BigDecimal.valueOf(1024));
+			case "TB":
+			case "TIB":
+				return value.multiply(BigDecimal.valueOf(1024 * 1024L));
+			case "KB":
+			case "KIB":
+				return value.divide(BigDecimal.valueOf(1024), BigDecimal.ROUND_HALF_UP);
+			case "B":
+				return value.divide(BigDecimal.valueOf(1024 * 1024L), BigDecimal.ROUND_HALF_UP);
+			case "MB":
+			case "MIB":
+			default:
+				return value;
 		}
-		if ("GB".equals(unit)) {
-			return value.multiply(BigDecimal.valueOf(1024));
-		}
-		if ("TB".equals(unit)) {
-			return value.multiply(BigDecimal.valueOf(1024 * 1024L));
-		}
-		if ("KB".equals(unit)) {
-			return value.divide(BigDecimal.valueOf(1024), BigDecimal.ROUND_HALF_UP);
-		}
-		if ("B".equals(unit)) {
-			return value.divide(BigDecimal.valueOf(1024 * 1024L), BigDecimal.ROUND_HALF_UP);
-		}
-		return value;
 	}
 
 	private ParsedMeasure parseMeasure(String raw) {

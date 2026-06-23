@@ -49,6 +49,8 @@ import { AlarmsButton, AlarmsDialog } from '../Alarms.tsx';
 import { AlarmaConfigDialog } from '../../pages/AlarmaConfig';
 import { getSalutExpansionKey, SalutExpansionStateKey } from '../../pages/salut/salutState.ts';
 
+const SALUT_LLISTAT_SKELETON_COUNT = 3;
+
 const StyledText = styled('text')(({ theme }) => ({
     fill: theme.palette.text.primary,
     textAnchor: 'middle',
@@ -522,6 +524,42 @@ export const SalutWidgetTitle: React.FC<{
     );
 };
 
+const SalutWidgetSkeleton = () => {
+    const theme = useTheme();
+    const isScreenSmall = useMediaQuery(theme.breakpoints.down('lg'));
+    return (
+        <Paper
+            elevation={1}
+            aria-busy="true"
+            sx={{
+                width: '400px',
+                maxWidth: '100%',
+                minHeight: '230px',
+                px: 2,
+                pt: 1,
+                pb: 2,
+            }}
+        >
+            <SalutWidgetTitle loading />
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: isScreenSmall ? 'column' : 'row',
+                    alignItems: isScreenSmall ? 'stretch' : 'center',
+                    gap: 2,
+                    mt: 1,
+                }}
+            >
+                <Skeleton variant="circular" width={150} height={150} sx={{ flexShrink: 0 }} />
+                <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                    <Skeleton variant="rectangular" width="100%" height={120} />
+                </Box>
+            </Box>
+            <Skeleton variant="rectangular" width="100%" height={32} sx={{ mt: 2 }} />
+        </Paper>
+    );
+};
+
 export const SalutWidgetContent: React.FC<{
     expanded: boolean;
     setExpanded: (expand: boolean, expansionKey: SalutExpansionStateKey) => void;
@@ -530,7 +568,6 @@ export const SalutWidgetContent: React.FC<{
     salutLastItems: SalutModel[];
     agrupacio: string;
     estats: SalutData['estats'];
-    loading?: boolean;
     groupedApp?: AppModel;
     groupedEntorn?: EntornModel;
     apps?: AppModel[];
@@ -546,7 +583,6 @@ export const SalutWidgetContent: React.FC<{
         salutLastItems,
         agrupacio,
         estats,
-        loading,
         groupedApp,
         groupedEntorn,
         entornApps,
@@ -565,18 +601,6 @@ export const SalutWidgetContent: React.FC<{
                     groupedEntorn,
                     groupedApp,
                 })
-            );
-
-        if (loading)
-            return (
-                <>
-                    <Box sx={{ ...estils.contentText(true), width: '10em' }}>
-                        <Skeleton width="100%" height={80} />
-                    </Box>
-                    <Box sx={{ ...estils.contentText(true), width: '4em' }}>
-                        <Skeleton width="100%" height={20} />
-                    </Box>
-                </>
             );
 
         return (
@@ -695,6 +719,7 @@ export const SalutLlistat = ({
     agrupacio,
     apps,
     entorns,
+    loading,
     setExpanded,
     isExpanded,
 }: {
@@ -704,22 +729,32 @@ export const SalutLlistat = ({
     grupsDates?: string[];
     agrupacio?: string;
     springFilter?: string;
+    loading: boolean;
     setExpanded: (expand: boolean, expansionKey: SalutExpansionStateKey) => void;
     isExpanded: (expansionKey: SalutExpansionStateKey) => boolean;
 }) => {
     const { size: trackedGridSize, refCallback: trackedGridRef } = useSizeTracker(100);
+    const containerSx = {
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 2,
+        justifyContent: 'flex-start',
+    };
+
+    if (loading) {
+        return (
+            <Box ref={trackedGridRef} sx={containerSx}>
+                {Array.from({ length: SALUT_LLISTAT_SKELETON_COUNT }).map((_, index) => (
+                    <SalutWidgetSkeleton key={`salutWidgetContentSkeleton-${index}`} />
+                ))}
+            </Box>
+        );
+    }
+
     if (!salutGroups.length || grupsDates == null || agrupacio == null) return;
 
     return (
-        <Box
-            ref={trackedGridRef}
-            sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 2,
-                justifyContent: 'flex-start',
-            }}
-        >
+        <Box ref={trackedGridRef} sx={containerSx}>
             {salutGroups.map((salutGroup) => {
                 // Si no se ha agrupado por app ni entorn, la agrupación debe estar desactivada
                 const isGroupingDisabled =

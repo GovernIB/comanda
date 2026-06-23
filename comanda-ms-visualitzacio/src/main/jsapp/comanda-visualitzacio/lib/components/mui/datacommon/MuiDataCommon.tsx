@@ -5,7 +5,7 @@ import { FormI18nKeys } from '../../form/Form';
 import { useBaseAppContext, DialogButton } from '../../BaseAppContext';
 import { useConfirmDialogButtons, useCloseDialogButtons } from '../../AppButtons';
 import { toToolbarIcon } from '../ToolbarIcon';
-import DataFormDialog, { DataFormDialogApi } from './DataFormDialog';
+import DataFormDialog, { useDataFormDialogApiRef } from './DataFormDialog';
 
 export type DataCommonFindArgs = ResourceApiFindCommonArgs;
 
@@ -166,28 +166,26 @@ export const useApiDataCommon = (
         if (apiIsReady) {
             const findDisabled = autoFindDisabled && firstRefresh;
             setFirstRefresh(false);
-            if (!findDisabled) {
-                if (resourceFieldName == null) {
-                    setFields(apiCurrentFields ?? []);
-                } else if (resourceType == null) {
-                    apiFieldOptionsFields({ fieldName: resourceFieldName }).then((fields) => {
+            if (resourceFieldName == null) {
+                setFields(apiCurrentFields ?? []);
+            } else if (resourceType == null) {
+                apiFieldOptionsFields({ fieldName: resourceFieldName }).then((fields) => {
+                    setFields(fields);
+                });
+            } else {
+                const args = {
+                    type: resourceType,
+                    code: resourceTypeCode ?? '',
+                    fieldName: resourceFieldName,
+                };
+                setError(null);
+                apiArtifactFieldOptionsFields(args)
+                    .then((fields) => {
                         setFields(fields);
-                    });
-                } else {
-                    const args = {
-                        type: resourceType,
-                        code: resourceTypeCode ?? '',
-                        fieldName: resourceFieldName,
-                    };
-                    setError(null);
-                    apiArtifactFieldOptionsFields(args)
-                        .then((fields) => {
-                            setFields(fields);
-                        })
-                        .catch(setError);
-                }
-                refresh();
+                    })
+                    .catch(setError);
             }
+            !findDisabled && refresh();
         }
     }, [apiIsReady, autoFindDisabled, findArgs]);
     React.useEffect(() => {
@@ -255,7 +253,7 @@ export const useDataCommonEditable = (
     onDelete: ((id: any | any[]) => void) | undefined
 ) => {
     const { t, temporalMessageShow, messageDialogShow } = useBaseAppContext();
-    const dataDialogPopupApiRef = React.useRef<DataFormDialogApi>(undefined);
+    const dataFormDialogApiRef = useDataFormDialogApiRef();
     const confirmDialogButtons = useConfirmDialogButtons();
     const closeDialogButtons = useCloseDialogButtons();
     const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
@@ -271,7 +269,7 @@ export const useDataCommonEditable = (
                     : formAdditionalData),
                 ...additionalData,
             };
-            dataDialogPopupApiRef.current
+            dataFormDialogApiRef.current
                 ?.show(undefined, processedAdditionalData)
                 .then((data) => {
                     onCreate?.(data);
@@ -295,7 +293,7 @@ export const useDataCommonEditable = (
             const hasUpdateAction = row?._actions['update'] != null;
             const noUpdateLinkTitle = !hasUpdateAction ? t('datacommon.details.label') : undefined;
             const noUpdateDialogButtons = !hasUpdateAction ? closeDialogButtons : undefined;
-            dataDialogPopupApiRef.current
+            dataFormDialogApiRef.current
                 ?.show(id, processedAdditionalData, noUpdateLinkTitle, noUpdateDialogButtons)
                 .then((data) => {
                     onUpdate?.(data);
@@ -486,7 +484,7 @@ export const useDataCommonEditable = (
                 formComponentProps={popupEditFormComponentProps}
                 formI18nKeys={popupEditFormI18nKeys}
                 onClose={popupEditFormDialogOnClose}
-                apiRef={dataDialogPopupApiRef}>
+                apiRef={dataFormDialogApiRef}>
                 {popupEditFormContent}
             </DataFormDialog>
         ) : null;

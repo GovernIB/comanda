@@ -2,7 +2,6 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
 import {
-    GridPage,
     MuiDataGrid,
     MuiFilter,
     FormField,
@@ -11,8 +10,9 @@ import {
     useCloseDialogButtons,
     useFilterApiRef,
     springFilterBuilder as builder,
-    useFormApiRef,
+    MuiDataGridColDef,
 } from 'reactlib';
+import { GridRenderCellParams } from '@mui/x-data-grid';
 import { ContentDetail } from '../components/ContentDetail';
 import { StacktraceBlock } from '../components/RickTextDetail';
 import { Tabs, Tab, Chip, Box, Icon, IconButton } from '@mui/material';
@@ -81,11 +81,16 @@ const EstatBadge: React.FC<{ value: string, children?: string, }> = ({ value, ch
   };
   const color = colorMap[value] ?? 'default';
   const label = children ?? translateEnumValue(value, estatTranslationMap, t);
-  return <Chip label={label} color={color} size="small" />;
+  return <Chip label={label} color={color} title={label} size="small" />;
 };
 
-const MonitorDetails: React.FC<any> = (props) => {
-    const { data } = props;
+type MonitorDetailsProps = {
+    data: any;
+    selectedModule: string;
+};
+
+const MonitorDetails: React.FC<MonitorDetailsProps> = (props) => {
+    const { data, selectedModule } = props;
     const { t } = useTranslation();
     const { t: tStringKey } = useTranslationStringKey();
     const elementsDetail = [
@@ -102,6 +107,7 @@ const MonitorDetails: React.FC<any> = (props) => {
             contentValue: <EstatBadge value={data?.estat} />,
         },
         { label: t($ => $.page.monitors.detail.codiUsuari), value: data?.codiUsuari },
+        { label: t($ => $.page.monitors.column.mailAddress), value: selectedModule === 'ALARMES' ? data?.url : undefined },
         { label: t($ => $.page.monitors.detail.errorDescripcio), value: data?.errorDescripcio },
         { label: t($ => $.page.monitors.detail.excepcioMessage), value: data?.excepcioMessage },
         {
@@ -126,7 +132,6 @@ const MonitorFilter: React.FC<MonitorFilterProps> = ({ onAppChange, onEntornChan
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const entornAppFilterApiRef = useFilterApiRef();
     const monitorFilterApiRef = useFilterApiRef();
-    const monitorFormApiRef = useFormApiRef();
     const clear = () => {
         entornAppFilterApiRef.current?.clear();
         monitorFilterApiRef.current?.clear();
@@ -138,8 +143,8 @@ const MonitorFilter: React.FC<MonitorFilterProps> = ({ onAppChange, onEntornChan
     const entornAppSpringFilterBuilder = (data: any): string => {
         const appId = data?.app?.id;
         const entornId = data?.entorn?.id;
-        monitorFormApiRef.current?.setFieldValue('appId', appId);
-        monitorFormApiRef.current?.setFieldValue('entornId', entornId);
+        monitorFilterApiRef.current?.setFieldValue('appId', appId);
+        monitorFilterApiRef.current?.setFieldValue('entornId', entornId);
         onAppChange?.(appId);
         onEntornChange?.(entornId);
         return '';
@@ -199,7 +204,6 @@ const MonitorFilter: React.FC<MonitorFilterProps> = ({ onAppChange, onEntornChan
             code="FILTER"
             springFilterBuilder={monitorSpringFilterBuilder}
             apiRef={monitorFilterApiRef}
-            formApiRef={monitorFormApiRef}
             commonFieldComponentProps={{ size: 'small' }}
             componentProps={{
                 sx: { mb: 1, display: moreFields ? 'block' : 'none' }
@@ -221,11 +225,12 @@ const dataGridPerspectives = ['ENTORN_APP'];
 const Monitors: React.FC = () => {
     const { t } = useTranslation();
     const closeDialogButton = useCloseDialogButtons();
+    const [selectedModule, setSelectedModule] = React.useState<string>('SALUT');
     const [detailDialogShow, detailDialogComponent] = useMuiContentDialog(closeDialogButton);
     const showDetail = (data: any) => {
         detailDialogShow(
             t($ => $.page.monitors.detail.title),
-            <MonitorDetails data={data} />,
+            <MonitorDetails data={data} selectedModule={selectedModule} />,
             closeDialogButton,
             { maxWidth: 'lg', fullWidth: true, }
         );
@@ -240,14 +245,15 @@ const Monitors: React.FC = () => {
     }, [filterAppId, filterEntornId]);
     const handleFilterAppChange = (appId: number | undefined) => setFilterAppId(appId);
     const handleFilterEntornChange = (entornId: number | undefined) => setFilterEntornId(entornId);
-    const [selectedModule, setSelectedModule] = React.useState<string>('SALUT');
     const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
         setSelectedModule(newValue);
     };
-    const columns = [
-        { field: 'data', flex: 1, },
-        { field: 'operacio', flex: 2, },
-        { field: 'tipus', flex: 1, },
+    const baseColumns: MuiDataGridColDef[] = React.useMemo(() => [
+        { field: 'app', flex: 1, sortable: false, valueFormatter: (value?: any) => value?.description },
+        { field: 'entorn', flex: 1.5, sortable: false, valueFormatter: (value?: any) => value?.description },
+        { field: 'data', flex: 1, minWidth: 150 },
+        { field: 'operacio', flex: 2 },
+        { field: 'tipus', flex: 1 },
         {
             field: 'url',
             flex: 2,
@@ -255,22 +261,31 @@ const Monitors: React.FC = () => {
                 ? t($ => $.page.monitors.column.mailAddress)
                 : 'URL',
         },
-        { field: 'modul', flex: 1, },
-        { field: 'tempsResposta', flex: 1, },
+        { field: 'modul', flex: 1 },
+        { field: 'tempsResposta', flex: 1.4 },
         {
             field: 'estat',
-            flex: 0.5,
-            renderCell: (params: any) => <EstatBadge value={params.value}>{params.formattedValue}</EstatBadge>
+            flex: 1,
+            renderCell: (params: GridRenderCellParams) => (
+                <EstatBadge value={params.value}>{params.formattedValue}</EstatBadge>
+            ),
         },
-    ];
-    const columnsMonitor = React.useMemo(() => {
-        if (selectedModule === 'TASCA' || selectedModule === 'AVIS') {
-            return columns.filter(col => col.field !== 'url');
+    ], [selectedModule, t]);
+    const columns = React.useMemo(() => {
+        let filteredColumns = [...baseColumns];
+        if (filterAppId) {
+            filteredColumns = filteredColumns.filter(col => col.field !== 'app');
         }
-        return columns;
-    }, [selectedModule]);
+        if (filterEntornId) {
+            filteredColumns = filteredColumns.filter(col => col.field !== 'entorn');
+        }
+        if (selectedModule === 'TASCA' || selectedModule === 'AVIS') {
+            filteredColumns = filteredColumns.filter(col => col.field !== 'url');
+        }
+        return filteredColumns;
+    }, [selectedModule, filterAppId, filterEntornId, baseColumns]);
     return (
-        <GridPage>
+        <>
             <PageTitle title={t($ => $.page.monitors.title)} />
             <MuiDataGrid
                 title={t($ => $.page.monitors.title)}
@@ -281,17 +296,17 @@ const Monitors: React.FC = () => {
                     <TabMonitor selectedModule={selectedModule} handleTabChange={handleTabChange} /> </>
                 }
                 resourceName="monitor"
-                columns={columnsMonitor}
+                columns={columns}
                 perspectives={dataGridPerspectives}
                 toolbarType="upper"
                 paginationActive
                 readOnly
-                onRowClick={(params: any) => showDetail(params.row)}
+                onRowClick={(params) => showDetail(params.row)}
                 fixedFilter={`modul:'${selectedModule}'`}
                 namedQueries={namedQueries}
             />
             {detailDialogComponent}
-        </GridPage>
+        </>
     );
 }
 

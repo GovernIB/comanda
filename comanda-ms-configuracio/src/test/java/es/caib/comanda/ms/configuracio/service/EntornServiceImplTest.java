@@ -8,6 +8,7 @@ import es.caib.comanda.configuracio.logic.service.EntornServiceImpl;
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornEntity;
+import es.caib.comanda.configuracio.persist.projection.EntornPermissionQueryProjection;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornRepository;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
@@ -19,6 +20,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 
 import org.springframework.http.ResponseEntity;
 
@@ -87,6 +91,14 @@ public class EntornServiceImplTest {
         assertNotNull(entornService);
     }
 
+    private EntornPermissionQueryProjection mockProjection(Long entornAppId, Long appId, Long entornId) {
+        EntornPermissionQueryProjection projection = mock(EntornPermissionQueryProjection.class);
+        lenient().when(projection.getEntornAppId()).thenAnswer(invocation -> entornAppId);
+        lenient().when(projection.getAppId()).thenAnswer(invocation -> appId);
+        lenient().when(projection.getEntornId()).thenAnswer(invocation -> entornId);
+        return projection;
+    }
+
     @Test
     void additionalSpringFilter_quanNoHiHaPermisos_retornaFiltreBuitValid() {
         stubAclContext("COM_USER");
@@ -94,7 +106,7 @@ public class EntornServiceImplTest {
                 .thenReturn(ResponseEntity.ok(null));
         when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), eq(List.of(PermissionEnum.READ)), eq("anna"), eq(List.of("COM_USER")), eq("Bearer test")))
                 .thenReturn(ResponseEntity.ok(Collections.emptySet()));
-        when(entornAppRepository.findByActivaTrueAndAppActivaTrue()).thenReturn(List.of());
+        when(entornAppRepository.findAllEntornPermissionQueryProjection()).thenReturn(Collections.emptySet());
 
         String result = org.springframework.test.util.ReflectionTestUtils.invokeMethod(entornService, "additionalSpringFilter", null, null);
 
@@ -104,19 +116,16 @@ public class EntornServiceImplTest {
     @Test
     void additionalSpringFilter_quanNomesHiHaPermisosPerApp_retornaEntornsDelsEntornsAppActiusDeLaApp() {
         stubAclContext("COM_USER");
-        AppEntity appEntity = new AppEntity();
-        appEntity.setId(1L);
-        EntornEntity firstEntorn = new EntornEntity();
-        firstEntorn.setId(10L);
-        EntornAppEntity firstEntornApp = new EntornAppEntity();
-        firstEntornApp.setId(100L);
-        firstEntornApp.setApp(appEntity);
-        firstEntornApp.setEntorn(firstEntorn);
         when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), eq(List.of(PermissionEnum.READ)), eq("anna"), eq(List.of("COM_USER")), eq("Bearer test")))
-                .thenReturn(ResponseEntity.ok(Set.of(1L)));
+                .thenReturn(ResponseEntity.ok(Set.of("1")));
         when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), eq(List.of(PermissionEnum.READ)), eq("anna"), eq(List.of("COM_USER")), eq("Bearer test")))
                 .thenReturn(ResponseEntity.ok(Collections.emptySet()));
-        when(entornAppRepository.findByActivaTrueAndAppActivaTrue()).thenReturn(List.of(firstEntornApp));
+        
+        EntornPermissionQueryProjection projection = mock(EntornPermissionQueryProjection.class);
+        lenient().when(projection.getEntornAppId()).thenReturn(100L);
+        lenient().when(projection.getAppId()).thenReturn(1L);
+        lenient().when(projection.getEntornId()).thenReturn(10L);
+        when(entornAppRepository.findAllEntornPermissionQueryProjection()).thenReturn(Set.of(projection));
 
         String result = org.springframework.test.util.ReflectionTestUtils.invokeMethod(entornService, "additionalSpringFilter", null, null);
 
@@ -126,19 +135,16 @@ public class EntornServiceImplTest {
     @Test
     void additionalSpringFilter_quanNomesHiHaPermisosPerEntornApp_retornaEntornsDelsEntornsAppPermesos() {
         stubAclContext("COM_USER");
-        AppEntity appEntity = new AppEntity();
-        appEntity.setId(99L);
-        EntornEntity firstEntorn = new EntornEntity();
-        firstEntorn.setId(10L);
-        EntornAppEntity firstEntornApp = new EntornAppEntity();
-        firstEntornApp.setId(100L);
-        firstEntornApp.setApp(appEntity);
-        firstEntornApp.setEntorn(firstEntorn);
         when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), eq(List.of(PermissionEnum.READ)), eq("anna"), eq(List.of("COM_USER")), eq("Bearer test")))
                 .thenReturn(ResponseEntity.ok(Collections.emptySet()));
         when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), eq(List.of(PermissionEnum.READ)), eq("anna"), eq(List.of("COM_USER")), eq("Bearer test")))
-                .thenReturn(ResponseEntity.ok(Set.of(100L)));
-        when(entornAppRepository.findByActivaTrueAndAppActivaTrue()).thenReturn(List.of(firstEntornApp));
+                .thenReturn(ResponseEntity.ok(Set.of("100")));
+        
+        EntornPermissionQueryProjection projection = mock(EntornPermissionQueryProjection.class);
+        lenient().when(projection.getEntornAppId()).thenReturn(100L);
+        lenient().when(projection.getAppId()).thenReturn(99L);
+        lenient().when(projection.getEntornId()).thenReturn(10L);
+        when(entornAppRepository.findAllEntornPermissionQueryProjection()).thenReturn(Set.of(projection));
 
         String result = org.springframework.test.util.ReflectionTestUtils.invokeMethod(entornService, "additionalSpringFilter", null, null);
 
@@ -152,7 +158,7 @@ public class EntornServiceImplTest {
                 .thenReturn(ResponseEntity.ok(Collections.emptySet()));
         when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), eq(List.of(PermissionEnum.READ)), eq("anna"), eq(List.of("COM_USER", "COM_EXTRA")), eq("Bearer test")))
                 .thenReturn(ResponseEntity.ok(Collections.emptySet()));
-        when(entornAppRepository.findByActivaTrueAndAppActivaTrue()).thenReturn(List.of());
+        when(entornAppRepository.findAllEntornPermissionQueryProjection()).thenReturn(Collections.emptySet());
 
         org.springframework.test.util.ReflectionTestUtils.invokeMethod(entornService, "additionalSpringFilter", null, null);
 

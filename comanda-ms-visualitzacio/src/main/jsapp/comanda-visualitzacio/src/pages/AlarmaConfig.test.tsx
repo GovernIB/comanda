@@ -10,12 +10,29 @@ const mocks = vi.hoisted(() => ({
     messageDialogShowMock: vi.fn(),
     temporalMessageShowMock: vi.fn(),
     refreshMock: vi.fn(),
-    tMock: vi.fn((selector: any) =>
-        selector({
+    tMock: vi.fn((selector: any) => {
+        if (typeof selector !== 'function') return selector;
+        return selector({
+            enum: {
+                appEstat: {
+                    UP: { title: 'Activa' },
+                    WARN: { title: 'Avís' },
+                    DEGRADED: { title: 'Degradada' },
+                    DOWN: { title: 'Caiguda' },
+                    MAINTENANCE: { title: 'Manteniment' },
+                    UNKNOWN: { title: 'Desconegut' },
+                    ERROR: { title: 'Error' },
+                },
+            },
             components: {
                 clear: 'Netejar',
             },
             page: {
+                alarma: {
+                    snackbar: {
+                        title: 'Alarmes',
+                    },
+                },
                 alarmaConfig: {
                     title: 'Configuració d alarmes',
                     update: 'Editar configuració',
@@ -23,22 +40,57 @@ const mocks = vi.hoisted(() => ({
                     condicio: {
                         title: 'Condició',
                         subtitle: 'Condició de dispar',
+                        add: 'Afegir condició',
+                        scope: 'Àmbit',
+                        scopeOptions: {
+                            aplicacio: 'Aplicació',
+                            subsistema: 'Subsistema',
+                            integracio: 'Integració',
+                            sistema: 'Sistema',
+                        },
+                        code: 'Codi',
+                        metric: 'Mètrica',
+                        metricOptions: {
+                            estat: 'Estat',
+                            latencia: 'Latència',
+                            carregaMitjanaSistema: 'Càrrega mitjana del sistema',
+                            memoriaDisponible: 'Memòria disponible',
+                            espaiDiscLliure: 'Espai de disc lliure',
+                        },
+                        comparator: 'Comparador',
+                        comparatorOptions: {
+                            major: 'Major',
+                            majorIgual: 'Major o igual',
+                            menor: 'Menor',
+                            menorIgual: 'Menor o igual',
+                            igual: 'Igual',
+                            diferent: 'Diferent',
+                            en: 'En',
+                        },
+                        value: 'Valor',
+                        valueMs: 'Valor (ms)',
+                        operator: 'Lògica entre condicions',
                     },
                     periode: {
                         switch: 'Configurar període',
                         title: 'Període',
                         subtitle: 'Límit temporal',
                     },
+                    periodeInactiu: {
+                        switch: 'Configurar període inactiu',
+                        title: 'Període inactiu',
+                        subtitle: 'Interval sense activitat',
+                    },
                     filter: {
-                        showOnlyOwnEnabled: 'Només meves',
-                        showOnlyOwnDisabled: 'Totes les configuracions',
+                        showOnlyOwnEnabled: 'Mostrar només les meves alarmes',
+                        showOnlyOwnDisabled: 'Mostra només les alarmes d\'administrador',
                         more: 'Més filtres',
                         entornApp: "Entorn d'aplicació",
                     },
                 },
             },
-        })
-    ),
+        });
+    }),
     tLibMock: vi.fn((key: string) => {
         const values: Record<string, string> = {
             'datacommon.delete.label': 'Eliminar',
@@ -77,12 +129,14 @@ vi.mock('reactlib', async (importOriginal) => {
         title,
         filter,
         toolbarAdditionalRow,
+        toolbarElementsWithPositions,
         rowAdditionalActions,
         columns,
     }: {
         title: string;
         filter?: string;
         toolbarAdditionalRow?: React.ReactNode;
+        toolbarElementsWithPositions?: Array<{ element: React.ReactNode; position: string }>;
         rowAdditionalActions?: Array<{ label: string; onClick?: (id: unknown) => void }>;
         columns?: MuiDataGridColDef[];
     }) => (
@@ -90,6 +144,11 @@ vi.mock('reactlib', async (importOriginal) => {
             <h2>{title}</h2>
             <div data-testid="filter-value">{filter ?? ''}</div>
             {toolbarAdditionalRow}
+            {toolbarElementsWithPositions?.map((item, index) => (
+                <div key={index} data-testid={`toolbar-element-${index}`}>
+                    {item.element}
+                </div>
+            ))}
             {columns?.map((col: any, index: number) => (
                 <div key={index} data-testid={`column-${col.field}`}>
                     {col.field}
@@ -117,6 +176,20 @@ vi.mock('reactlib', async (importOriginal) => {
                 tipus: 'APP_LATENCIA',
                 periodeValor: 5,
                 periodeUnitat: 'MINUTS',
+                inactiuDesde: '01:00:00',
+                inactiuFins: '03:00:00',
+                admin: false,
+                regla: {
+                    tipusNode: 'GRUP',
+                    operador: 'AND',
+                    fills: [{
+                        tipusNode: 'CONDICIO',
+                        ambit: 'APLICACIO',
+                        metrica: 'ESTAT',
+                        comparador: 'EN',
+                        valorsText: ['DOWN']
+                    }]
+                }
             });
             onValidationErrorsChange?.(null, [
                 { field: 'entornAppId', code: 'NotNull', message: 'Obligatori' },
@@ -134,18 +207,18 @@ vi.mock('reactlib', async (importOriginal) => {
         onDataChange,
         onSpringFilterChange,
         springFilterBuilder: springFilterBuilderProp,
-        formApiRef,
+        apiRef,
     }: {
         children: React.ReactNode;
         onDataChange?: (data: any) => void;
         onSpringFilterChange?: (springFilter?: string) => void,
         springFilterBuilder?: (data: any) => string;
-        formApiRef?: { current: { setFieldValue: (field: string, value: any) => void } };
+        apiRef?: { current: { setFieldValue: (field: string, value: any) => void } };
     }) => {
         const data = { entornApp: { id: 9 } };
         React.useEffect(() => {
             onDataChange?.(data);
-            formApiRef?.current?.setFieldValue?.('entornApp', { id: 7, description: 'Entorn 7' });
+            apiRef?.current?.setFieldValue?.('entornApp', { id: 7, description: 'Entorn 7' });
         }, []);
         React.useEffect(() => {
             const filter = springFilterBuilderProp?.(data);
@@ -157,9 +230,30 @@ vi.mock('reactlib', async (importOriginal) => {
     FormField: ({ name, disabled }: { name: string; disabled?: boolean }) => (
         <div data-testid={`field-${name}`}>{`${name}:${String(disabled ?? false)}`}</div>
     ),
+    useFormContext: () => ({
+        data: {
+            regla: {
+                tipusNode: 'GRUP',
+                operador: 'AND',
+                fills: [{
+                    tipusNode: 'CONDICIO',
+                    ambit: 'APLICACIO',
+                    metrica: 'ESTAT',
+                    comparador: 'EN',
+                    valorsText: ['DOWN']
+                }]
+            }
+        },
+        apiRef: {
+            current: {
+                setFieldValue: mocks.setFieldValueMock,
+            }
+        }
+    }),
     useFormApiRef: () => ({
         current: {
             setFieldValue: mocks.setFieldValueMock,
+            save: vi.fn(),
         },
     }),
     useResourceApiService: (resource: string) => {
@@ -174,6 +268,7 @@ vi.mock('reactlib', async (importOriginal) => {
             isReady: true,
             artifactAction: mocks.artifactActionMock,
             getOne: mocks.getOneAlarmaConfigMock,
+            find: vi.fn().mockResolvedValue({ rows: [] }),
         };
     },
     useBaseAppContext: () => ({
@@ -182,17 +277,24 @@ vi.mock('reactlib', async (importOriginal) => {
         t: mocks.tLibMock,
     }),
     useConfirmDialogButtons: () => <button>Confirmar</button>,
+    useCloseDialogButtons: () => <button>Tancar</button>,
     useMuiDataGridApiRef: () => ({
         current: {
             refresh: mocks.refreshMock,
         },
     }),
+    useMuiDataGridProps: (props: any) => props,
     useFilterApiRef: () => ({
         current: {
             clear: vi.fn(),
+            setFieldValue: mocks.setFieldValueMock,
         },
     }),
 }});
+
+vi.mock('../components/PageTitle.tsx', () => ({
+    default: ({ title }: { title: string }) => <div data-testid="page-title">{title}</div>,
+}));
 
 vi.mock('../components/UserContext', () => ({
     useIsUserAdmin: () => true,
@@ -258,10 +360,9 @@ describe('AlarmaConfigForm', () => {
             expect(screen.getByRole('heading', { name: 'Editar configuració' })).toBeInTheDocument();
             expect(screen.getByText('Condició')).toBeInTheDocument();
             expect(screen.getByText('Període')).toBeInTheDocument();
-            expect(screen.getByRole('combobox', { name: "Lògica entre condicions" })).toBeInTheDocument();
             expect(screen.getByText('Afegir condició')).toBeInTheDocument();
             expect(screen.getByTestId('field-periodeValor')).toBeInTheDocument();
-            expect(screen.getByTestId('field-admin')).toHaveTextContent('admin:false');
+            expect(screen.getByTestId('field-admin')).toHaveTextContent('admin:true');
         });
     });
 
@@ -281,13 +382,50 @@ describe('AlarmaConfigForm', () => {
             expect(screen.getByRole('heading', { name: 'Editar configuració' })).toBeInTheDocument();
         });
 
-        const periodeToggle = screen.getByLabelText(/Configurar període/);
+        const periodeToggle = screen.getByLabelText(/Configurar període(?!.*inactiu)/);
         expect(periodeToggle).toBeChecked();
         fireEvent.click(periodeToggle);
 
         expect(mocks.setFieldValueMock).toHaveBeenCalledWith('periodeValor', null);
         expect(mocks.setFieldValueMock).toHaveBeenCalledWith('periodeUnitat', null);
         expect(periodeToggle).not.toBeChecked();
+    });
+
+    it('AlarmaConfigForm_quanEsDesactivaElToggleDePeriodeInactiu_esborraElsValorsDelsCampsInactiu', async () => {
+        render(<AlarmaConfigForm />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('heading', { name: 'Editar configuració' })).toBeInTheDocument();
+        });
+
+        const periodeInactiuToggle = screen.getByLabelText(/Configurar període inactiu/);
+        expect(periodeInactiuToggle).toBeChecked();
+        fireEvent.click(periodeInactiuToggle);
+
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('inactiuDesde', null);
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('inactiuFins', null);
+        expect(periodeInactiuToggle).not.toBeChecked();
+    });
+
+    it('AlarmaConfigForm_quanEsRenderitza_mostraAmbdosTogglesDePeriode', async () => {
+        render(<AlarmaConfigForm />);
+
+        await waitFor(() => {
+            expect(screen.getByLabelText(/Configurar període$/)).toBeInTheDocument();
+            expect(screen.getByLabelText(/Configurar període inactiu/)).toBeInTheDocument();
+        });
+    });
+
+    it('AlarmaConfigForm_quanTeId_correuGenericDepenDeAdmin', async () => {
+        render(<AlarmaConfigForm id="44" />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('field-admin')).toBeInTheDocument();
+            expect(screen.getByTestId('field-correuGeneric')).toBeInTheDocument();
+        });
+
+        expect(screen.getByTestId('field-admin')).toHaveTextContent('admin:true');
+        expect(screen.getByTestId('field-correuGeneric')).toHaveTextContent('correuGeneric:true');
     });
 });
 
@@ -303,14 +441,15 @@ describe('AlarmaConfig', () => {
     });
 
     it('AlarmaConfig_quanEsRenderitza_mostraElGridIElFiltreInicialDeLusuari', async () => {
-        // Comprova que la pàgina arrenca filtrant per l'usuari actual i mostra el toggle de només meves.
+        // Comprova que la pàgina arrenca filtrant per l'usuari actual i mostra el toggle de Mostrar només les meves alarmes.
         render(<AlarmaConfig />);
 
         await waitFor(() => {
             expect(screen.getByRole('heading', { name: 'Configuració d alarmes' })).toBeInTheDocument();
+            expect(
+                screen.getByTitle("Mostrar només les meves alarmes")
+            ).toBeInTheDocument();
         });
-
-        expect(screen.getByTitle('Només meves')).toBeInTheDocument();
     });
 
     it('AlarmaConfig_quanEsPremElToggle_canviaElFiltreIQuanSElimina_refrescaElGrid', async () => {
@@ -318,12 +457,12 @@ describe('AlarmaConfig', () => {
         render(<AlarmaConfig />);
 
         await waitFor(() => {
-            expect(screen.getByTitle('Només meves')).toBeInTheDocument();
+            expect(screen.getByTitle('Mostrar només les meves alarmes')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByTitle('Només meves'));
+        fireEvent.click(screen.getByTitle('Mostrar només les meves alarmes'));
         expect(screen.getByTestId('filter-value')).not.toHaveTextContent('');
-        expect(screen.getByTitle('Totes les configuracions')).toBeInTheDocument();
+        expect(screen.getByTitle('Mostra només les alarmes d\'administrador')).toBeInTheDocument();
 
         fireEvent.click(screen.getByRole('button', { name: 'Eliminar' }));
 
@@ -340,39 +479,23 @@ describe('AlarmaConfig', () => {
 
         await waitFor(() => {
             expect(screen.queryByTestId('column-tipusUsuariAlarma')).not.toBeInTheDocument();
+            expect(screen.queryByTestId('column-createdByFullName')).not.toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByTitle('Només meves'));
+        fireEvent.click(screen.getByTitle('Mostrar només les meves alarmes'));
 
         await waitFor(() => {
             expect(screen.getByTestId('column-tipusUsuariAlarma')).toBeInTheDocument();
-        });
-    });
-
-    it('AlarmaConfig_quanEsRenderitza_mostraElGridIElFiltreInicialDeLusuari', async () => {
-        render(<AlarmaConfig />);
-        await waitFor(() => {
-            expect(screen.getByTitle('Només meves')).toBeInTheDocument(); // ✅ Título inicial correcto
+            expect(screen.getByTestId('column-createdByFullName')).toBeInTheDocument();
         });
     });
 
     it('AlarmaConfig_quanEsPremElToggle_canviaElFiltreIQuanSElimina_refrescaElGrid', async () => {
         render(<AlarmaConfig />);
         await waitFor(() => {
-            expect(screen.getByTitle('Només meves')).toBeInTheDocument();
+            expect(screen.getByTitle('Mostrar només les meves alarmes')).toBeInTheDocument();
         });
-        fireEvent.click(screen.getByTitle('Només meves'));
-        expect(screen.getByTitle('Totes les configuracions')).toBeInTheDocument(); // ✅ Título cambia
-    });
-
-    it('AlarmaConfig_quanEsDesactivaElFiltreDeNomésMeva_mostraLaColumnaDeTipusUsuari', async () => {
-        render(<AlarmaConfig />);
-        await waitFor(() => {
-            expect(screen.queryByTestId('column-tipusUsuariAlarma')).not.toBeInTheDocument();
-        });
-        fireEvent.click(screen.getByTitle('Només meves'));
-        await waitFor(() => {
-            expect(screen.getByTestId('column-tipusUsuariAlarma')).toBeInTheDocument(); // ✅ Columna aparece
-        });
+        fireEvent.click(screen.getByTitle('Mostrar només les meves alarmes'));
+        expect(screen.getByTitle("Mostra només les alarmes d'administrador")).toBeInTheDocument();
     });
 });

@@ -3,7 +3,9 @@ package es.caib.comanda.configuracio.logic.service;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
+import es.caib.comanda.configuracio.persist.repository.EntornAppHistRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +14,7 @@ import org.springframework.core.task.TaskRejectedException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,7 +23,9 @@ import java.util.stream.Collectors;
 public class ConfiguracioSchedulerService {
 
     private final EntornAppRepository entornAppRepository;
+    private final EntornAppHistRepository entornAppHistRepository;
     private final AppInfoHelper appInfoHelper;
+    private final ParametresHelper parametresHelper;
     private final TaskExecutor configuracioWorkerExecutor;
 
     @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{true}}")
@@ -30,10 +35,14 @@ public class ConfiguracioSchedulerService {
 
     public ConfiguracioSchedulerService(
             EntornAppRepository entornAppRepository,
+            EntornAppHistRepository entornAppHistRepository,
             AppInfoHelper appInfoHelper,
+            ParametresHelper parametresHelper,
             @Qualifier("configuracioWorkerExecutor") TaskExecutor configuracioWorkerExecutor) {
         this.entornAppRepository = entornAppRepository;
+        this.entornAppHistRepository = entornAppHistRepository;
         this.appInfoHelper = appInfoHelper;
+        this.parametresHelper = parametresHelper;
         this.configuracioWorkerExecutor = configuracioWorkerExecutor;
     }
 
@@ -77,6 +86,24 @@ public class ConfiguracioSchedulerService {
     private boolean isLeader() {
         // TODO: Implementar per microserveis
         return schedulerLeader && schedulerBack;
+    }
+
+    @Scheduled(cron = "30 10 0 * * *")
+    public void scheduledConfiguracioEntornAppHistTasks() {
+        try {
+            if (!isLeader()) {
+                log.debug("Metode diari per a entornAppHist ignorat: aquesta instància no és leader per als schedulers");
+                return;
+            }
+            Integer retencioDiesHistoric = parametresHelper.getParametreEnter(BaseConfig.PROP_CONFIG_ENTORN_APP_HIST_RETENCIO_DIES, 30);
+            if (retencioDiesHistoric != null && retencioDiesHistoric > 0) {
+                LocalDateTime menysRetencioHistoric = LocalDateTime.now().minusDays(retencioDiesHistoric.longValue());
+                long eliminats = entornAppHistRepository.deleteByDataBefore(menysRetencioHistoric);
+                log.info("Neteja d'entornAppHist finalitzada. Eliminats {} registres anteriors a {}", eliminats, menysRetencioHistoric);
+            }
+        } catch (Exception e) {
+            log.error("Error executant la neteja d'entornAppHist", e);
+        }
     }
 
 }

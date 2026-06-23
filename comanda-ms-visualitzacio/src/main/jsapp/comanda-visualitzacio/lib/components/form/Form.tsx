@@ -183,8 +183,8 @@ const useControlledId = (idProp: any) => {
  *
  * @returns referència a l'API del component Form.
  */
-export const useFormApiRef: () => React.RefObject<FormApi> = () => {
-    const formApiRef = React.useRef<FormApi | any>({});
+export const useFormApiRef: () => FormApiRef = () => {
+    const formApiRef = React.useRef<FormApi>(null);
     return formApiRef;
 };
 
@@ -280,7 +280,6 @@ export const Form: React.FC<FormProps> = (props) => {
     const [isDataInitialized, setIsDataInitialized] = React.useState<boolean>(false);
     const [apiActions, setApiActions] = React.useState<any>(undefined);
     const [navigateToLink, setNavigateToLink] = React.useState<string>();
-    const apiRef = React.useRef<FormApi>(undefined);
     const { id, setInternalId } = useControlledId(idProp);
     const location = useLocation();
     const additionalData = additionalDataProp ?? location.state?.additionalData;
@@ -419,19 +418,21 @@ export const Form: React.FC<FormProps> = (props) => {
     const reset = (
         data: any,
         newId?: any,
+        revertData?: any,
         navigateToLink?: boolean,
         isDataInitialized?: boolean
     ) => {
+        const joinedData = { ...data, ...revertData };
         dataDispatchAction({
             type: FormFieldDataActionType.RESET,
-            payload: data,
+            payload: joinedData,
         });
         setIsLoading(false);
         setModified(false);
         setExternalModified(false);
         setRevertData(data);
         setApiFieldErrors(undefined);
-        validateWithValidator(data);
+        validateWithValidator(joinedData);
         setIsDataInitialized(isDataInitialized != null ? isDataInitialized : true);
         if (navigateToLink) {
             if (id == null) {
@@ -445,7 +446,7 @@ export const Form: React.FC<FormProps> = (props) => {
             }
         }
         newId !== undefined && setInternalId(newId);
-        onReset?.(data);
+        onReset?.(joinedData);
     };
     const externalReset = (data?: any, id?: any) => {
         // Versió de reset per a cridar externament mitjançant l'API
@@ -471,25 +472,20 @@ export const Form: React.FC<FormProps> = (props) => {
     const refresh = (force?: boolean) =>
         new Promise((resolve, reject) => {
             if (fields && (force || !isDataInitialized)) {
-                if (initialDataProp != null) {
-                    reset(initialDataProp);
-                    resolve(initialDataProp);
-                } else {
-                    getInitialData(id, fields, additionalData, initOnChangeRequest)
-                        .then((initialData: any) => {
-                            debug && logConsole.debug('Initial data loaded', initialData);
-                            const {
-                                _actions: initialDataActions,
-                                _links: initialDataLinks,
-                                _templates: initialDataTemplates,
-                                ...realInitialData
-                            } = initialData;
-                            id != null && setApiActions(initialDataActions);
-                            reset(realInitialData);
-                            resolve(realInitialData);
-                        })
-                        .catch(reject);
-                }
+                getInitialData(id, fields, additionalData, initOnChangeRequest)
+                    .then((initialData: any) => {
+                        debug && logConsole.debug('Initial data loaded', initialData);
+                        const {
+                            _actions: initialDataActions,
+                            _links: initialDataLinks,
+                            _templates: initialDataTemplates,
+                            ...realInitialData
+                        } = initialData;
+                        id != null && setApiActions(initialDataActions);
+                        reset(realInitialData, undefined, initialDataProp);
+                        resolve(realInitialData);
+                    })
+                    .catch(reject);
             }
         });
     const revert = (unconfirmed?: boolean) => {
@@ -593,7 +589,13 @@ export const Form: React.FC<FormProps> = (props) => {
                                     ? onCreateSuccess(savedData)
                                     : onSaveSuccess?.(data);
                             }
-                            reset(savedData, id == null ? savedData.id : undefined, true, false);
+                            reset(
+                                savedData,
+                                id == null ? savedData.id : undefined,
+                                undefined,
+                                true,
+                                false
+                            );
                             resolve(savedData);
                         })
                         .catch((error: ResourceApiError) => {
@@ -727,7 +729,7 @@ export const Form: React.FC<FormProps> = (props) => {
             navigateToSaveLink(navigateToLink, id, true);
         }
     }, [navigateToLink]);
-    apiRef.current = {
+    const getFormApi = () => ({
         getId,
         getData,
         refresh: () => refresh(true),
@@ -740,23 +742,26 @@ export const Form: React.FC<FormProps> = (props) => {
         setFieldValue,
         setModified: setExternalModified,
         handleSubmissionErrors,
-    };
+    });
+    const apiRef = React.useRef<FormApi>(getFormApi());
+    React.useEffect(() => {
+        apiRef.current = getFormApi();
+    }, [
+        getId,
+        getData,
+        refresh,
+        externalReset,
+        revert,
+        validate,
+        save,
+        delette,
+        focus,
+        setFieldValue,
+        setExternalModified,
+        handleSubmissionErrors,
+    ]);
     if (apiRefProp) {
-        if (apiRefProp.current) {
-            apiRefProp.current.getId = getId;
-            apiRefProp.current.getData = getData;
-            apiRefProp.current.refresh = () => refresh(true);
-            apiRefProp.current.reset = externalReset;
-            apiRefProp.current.revert = revert;
-            apiRefProp.current.validate = validate;
-            apiRefProp.current.save = save;
-            apiRefProp.current.delete = delette;
-            apiRefProp.current.focus = focus;
-            apiRefProp.current.setFieldValue = setFieldValue;
-            apiRefProp.current.handleSubmissionErrors = handleSubmissionErrors;
-        } else {
-            logConsole.warn('apiRef prop must be initialized with an empty object');
-        }
+        apiRefProp.current = getFormApi();
     }
     const fieldErrors = [
         ...(validationErrors ?? []),

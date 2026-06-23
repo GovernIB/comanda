@@ -1,6 +1,6 @@
 import { dateFormatLocale, useCloseDialogButtons, useResourceApiService } from 'reactlib';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Button, ToggleButton, Tooltip, Typography } from '@mui/material';
+import {Box, Button, FormControlLabel, Switch, ToggleButton, Tooltip, Typography} from '@mui/material';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import WrapTextIcon from '@mui/icons-material/WrapText';
 import VerticalAlignBottomIcon from '@mui/icons-material/VerticalAlignBottom';
@@ -14,7 +14,7 @@ import type { GridColDef } from '@mui/x-data-grid';
 import DownloadIcon from '@mui/icons-material/Download';
 import PageviewIcon from '@mui/icons-material/Pageview';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { ResourceApiBlobResponse } from '../../../lib/components/ResourceApiProvider';
+import { ResourceApiBlobResponse } from 'reactlib';
 import CircularProgress from '@mui/material/CircularProgress';
 import { mergeSequentialStringArrays } from '../../util/stringUtils';
 import { useTranslation } from 'react-i18next';
@@ -22,7 +22,14 @@ import useDataGridLocale from '../../hooks/useDataGridLocale';
 import { useMessage } from '../../components/MessageShow';
 import { EntornAppModel } from '../../types/app.model.tsx';
 import { DefaultLogsPerspective } from './dataFetching.ts';
+import * as z from 'zod';
+import { getErrorMessage } from '../../util/exceptionUtils.ts';
 
+const PrevisualitzarLogResponseSchema = z.array(
+    z.object({
+        linia: z.string(),
+    })
+);
 /**
  * Informació de la llista de fitxers de log.
  */
@@ -77,13 +84,13 @@ const LogList = ({
                 });
                 setLogs(list as FitxerInfo[]);
             } catch (e) {
-                showMessage("Error", (e as any)?.message, 'error');
+                showMessage("Error", getErrorMessage(e), 'error');
             } finally {
                 setLogsLoading(false);
             }
         }
         requests();
-    }, [isReady, artifactReport, entornAppId]);
+    }, [isReady, artifactReport, entornAppId, showMessage]);
     // Columnes de la taula de logs.
     const logListColumns: GridColDef<LogListRow>[] = useMemo(
         () => [
@@ -366,6 +373,7 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
     const closeDialogButtons = useCloseDialogButtons();
     const [dialogOpen, setDialogOpen] = useState(false);
     const { isReady, artifactReport } = useResourceApiService('entornApp');
+    const refreshRequestSequence = useRef<number>(0);
     const { showTemporal: showMessage, component } = useMessage();
 
     /**
@@ -377,25 +385,27 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
             return;
         }
         setIsRefreshLoading(true);
+        const sequence = ++refreshRequestSequence.current;
         try {
-            const list = await artifactReport(entornAppId, {
+            const reportResponse = await artifactReport(entornAppId, {
                 code: 'previsualitzar_log',
                 data: {
                     fileName: selected,
                     lineCount: 1000,
                 },
             });
+            const list = PrevisualitzarLogResponseSchema.parse(reportResponse);
+            if (sequence !== refreshRequestSequence.current) return;
             setLines(prevState => {
-                const newLines = (list as any[]).map(liniaDto => liniaDto.linia) as string[];
+                const newLines = list.map(liniaDto => liniaDto.linia);
                 return mergeSequentialStringArrays(prevState ?? [], newLines);
             });
         } catch (e) {
-            // @ts-ignore
-            showMessage("Error", e?.message, 'error');
+            showMessage("Error", getErrorMessage(e), 'error');
         } finally {
             setIsRefreshLoading(false);
         }
-    }, [artifactReport, entornAppId, selected]);
+    }, [artifactReport, entornAppId, selected, showMessage]);
 
     useEffect(() => {
         if (!isReady) {
@@ -432,13 +442,12 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
                 a.remove();
                 window.URL.revokeObjectURL(url);
             } catch (e) {
-                // @ts-ignore
-                showMessage("Error", e?.message, 'error');
+                showMessage("Error", getErrorMessage(e), 'error');
             } finally {
                 setIsDownloadLoading(false);
             }
         },
-        [artifactReport, entornAppId, isReady]
+        [artifactReport, entornAppId, isReady, showMessage]
     );
 
     /**
@@ -452,6 +461,20 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
 
     const [softWrap, setSoftWrap] = useState(false);
     const [scrollToBottom, setScrollToBottom] = useState(true);
+    const [autoRefresh, setAutoRefresh] = useState(false);
+
+    useEffect(() => {
+        let intervalId: ReturnType<typeof setInterval> | null = null;
+
+        if (autoRefresh) {
+            intervalId = setInterval(refreshPreview, 10000);
+        }
+        return () => {
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+        };
+    }, [autoRefresh, refreshPreview]);
 
     return (
         <Box
@@ -519,7 +542,7 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
                     {selected && (
                         <>
                             <Tooltip title={t($ => $.page.salut.logs.refresh)}>
-                                <IconButton loading={isRefreshLoading} onClick={() => refreshPreview()}>
+                                <IconButton loading={isRefreshLoading} onClick={() => refreshPreview()} disabled={autoRefresh}>
                                     <RefreshIcon />
                                 </IconButton>
                             </Tooltip>
@@ -530,6 +553,12 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
                                 >
                                     <DownloadIcon />
                                 </IconButton>
+                            </Tooltip>
+                            <Tooltip title={t($ => $.page.salut.logs.autoRefresh)}>
+                                <FormControlLabel control={<Switch
+                                    checked={autoRefresh}
+                                    onChange={(_event, checked) => setAutoRefresh(checked)}
+                                />} label={t($ => $.page.salut.logs.autoRefresh)} />
                             </Tooltip>
                         </>
                     )}

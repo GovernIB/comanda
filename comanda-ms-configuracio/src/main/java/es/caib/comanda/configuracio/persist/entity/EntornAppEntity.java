@@ -106,4 +106,25 @@ public class EntornAppEntity extends BaseAuditableLongPkEntity<EntornApp> {
 	@Comment("Dirección de correo electrónico genérico para la notificación de alarmas")
 	private String alarmesEmail;
 
+	private static final String APP_TABLE = BaseConfig.DB_PREFIX + "app";
+	private static final String ENTORN_TABLE = BaseConfig.DB_PREFIX + "entorn";
+
+	// Camps calculats
+	@Formula(
+		"(" +
+			"coalesce((" +
+			"select a.nom " +
+			"from " + APP_TABLE + " a " +
+			"where a.id = app_id" +
+			"), '')" +
+			" || ' - ' || " +
+			"coalesce((" +
+			"select e.nom " +
+			"from " + ENTORN_TABLE + " e " +
+			"where e.id = entorn_id" +
+			"), '')" +
+			")"
+	)
+	private String entornAppDescription;
+
 }

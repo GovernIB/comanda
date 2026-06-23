@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: alarmes-change-0.1.3-130-1
+      author: limit
+      comment: Afegir camp data_inici_recuperacio per a gestionar el procés de recuperació de les alarmes
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}alarma
+            columns:
+              - column:
+                  name: data_inici_recuperacio
+                  type: TIMESTAMP

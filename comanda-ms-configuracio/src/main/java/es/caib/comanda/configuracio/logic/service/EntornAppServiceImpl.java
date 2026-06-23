@@ -9,14 +9,8 @@ import es.caib.comanda.configuracio.logic.intf.model.*;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.EntornAppPingAction;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.PingUrlResponse;
 import es.caib.comanda.configuracio.logic.intf.service.EntornAppService;
-import es.caib.comanda.configuracio.persist.entity.AppContextEntity;
-import es.caib.comanda.configuracio.persist.entity.AppIntegracioEntity;
-import es.caib.comanda.configuracio.persist.entity.AppSubsistemaEntity;
-import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
-import es.caib.comanda.configuracio.persist.repository.AppIntegracioRepository;
-import es.caib.comanda.configuracio.persist.repository.ContextRepository;
-import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
-import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
+import es.caib.comanda.configuracio.persist.entity.*;
+import es.caib.comanda.configuracio.persist.repository.*;
 import es.caib.comanda.model.v1.log.FitxerContingut;
 import es.caib.comanda.model.v1.log.FitxerInfo;
 import es.caib.comanda.ms.logic.helper.*;
@@ -84,6 +78,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     private final SubsistemaRepository subsistemaRepository;
     private final ContextRepository contextRepository;
     private final EntornAppRepository entornAppRepository;
+    private final EntornAppHistRepository entornAppHistRepository;
     private final AppInfoHelper appInfoHelper;
     private final CacheHelper cacheHelper;
     private final ConfiguracioSchedulerService schedulerService;
@@ -104,6 +99,8 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         register(EntornApp.ENTORN_APP_TOOGLE_ACTIVA, new EntornAppServiceImpl.ToogleActiva(resourceEntityMappingHelper));
         register(EntornApp.ENTORN_APP_REFRESH_INFO, new EntornAppServiceImpl.RefreshInfo(resourceEntityMappingHelper));
         register(EntornApp.PERSPECTIVE_DEFAULT_LOGS, new DefaultLogsPerspectiveApplicator());
+        register(EntornApp.PERSPECTIVE_HISTORICS_VERSIONS, new HistoricVersionsPerspectiveApplicator());
+        register(EntornApp.PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS, new IntegracionsSubsistemesContextsPerspectiveApplicator());
     }
 
 	@Override
@@ -149,45 +146,6 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                 .map(String::valueOf)
                 .map(id -> fieldName + ":" + id)
                 .collect(Collectors.joining(" or "));
-    }
-
-    @Override
-    protected void afterConversion(EntornAppEntity entity, EntornApp resource) {
-        List<AppIntegracioEntity> integracions = appIntegracioRepository.findByEntornApp(entity);
-        if (!integracions.isEmpty()) {
-            resource.setIntegracions(
-                    integracions.stream().map(i -> new AppIntegracio(
-                            ResourceReference.toResourceReference(i.getIntegracio().getId(), i.getIntegracio().getNom()),
-                            null,
-                            i.getIntegracio().getCodi(),
-                            i.getIntegracio().getLogo(),
-                            i.isActiva())).collect(Collectors.toList()));
-        }
-        List<AppSubsistemaEntity> subsistemes = subsistemaRepository.findByEntornApp(entity);
-        if (!integracions.isEmpty()) {
-            resource.setSubsistemes(
-                    subsistemes.stream().map(s -> new AppSubsistema(
-                            s.getCodi(),
-                            s.getNom(),
-                            s.isActiu(),
-                            null)).collect(Collectors.toList()));
-        }
-        List<AppContextEntity> contexts = contextRepository.findByEntornApp(entity);
-        if (!contexts.isEmpty()) {
-            resource.setContexts(
-                    contexts.stream().map(s -> new AppContext(
-                            s.getCodi(),
-                            s.getNom(),
-                            s.getPath(),
-//                            null,
-                            (s.getManuals() != null ? s.getManuals().stream().map(m -> new AppManual(m.getNom(), m.getPath(), null)).collect(Collectors.toList()) : null),
-                            s.getApi(),
-                            s.isActiu(),
-                            null)).collect(Collectors.toList()));
-        }
-        resource.setEntornAppDescription((resource.getApp() != null ? resource.getApp().getDescription() : "")
-                + " - "
-                + (resource.getEntorn() != null ? resource.getEntorn().getDescription() : ""));
     }
 
     @Override
@@ -472,12 +430,62 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         public void onChange(Serializable id, EntornApp.PrevisualitzarLogParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, EntornApp.PrevisualitzarLogParams target) {}
     }
 
+    public class IntegracionsSubsistemesContextsPerspectiveApplicator implements PerspectiveApplicator<EntornAppEntity, EntornApp> {
+        @Override
+        public void applySingle(String code, EntornAppEntity entity, EntornApp resource) throws PerspectiveApplicationException {
+            List<AppIntegracioEntity> integracions = appIntegracioRepository.findByEntornApp(entity);
+            if (!integracions.isEmpty()) {
+                resource.setIntegracions(
+                        integracions.stream().map(i -> new AppIntegracio(
+                                ResourceReference.toResourceReference(i.getIntegracio().getId(), i.getIntegracio().getNom()),
+                                null,
+                                i.getIntegracio().getCodi(),
+                                i.getIntegracio().getLogo(),
+                                i.isActiva())).collect(Collectors.toList()));
+            }
+            List<AppSubsistemaEntity> subsistemes = subsistemaRepository.findByEntornApp(entity);
+            if (!subsistemes.isEmpty()) {
+                resource.setSubsistemes(
+                        subsistemes.stream().map(s -> new AppSubsistema(
+                                s.getCodi(),
+                                s.getNom(),
+                                s.isActiu(),
+                                null)).collect(Collectors.toList()));
+            }
+            List<AppContextEntity> contexts = contextRepository.findByEntornApp(entity);
+            if (!contexts.isEmpty()) {
+                resource.setContexts(
+                        contexts.stream().map(s -> new AppContext(
+                                s.getCodi(),
+                                s.getNom(),
+                                s.getPath(),
+                                (s.getManuals() != null ? s.getManuals().stream().map(m -> new AppManual(m.getNom(), m.getPath(), null)).collect(Collectors.toList()) : null),
+                                s.getApi(),
+                                s.isActiu(),
+                                null)).collect(Collectors.toList()));
+            }
+        }
+    }
+
     public static class DefaultLogsPerspectiveApplicator implements PerspectiveApplicator<EntornAppEntity, EntornApp> {
         @Override
         public void applySingle(String code, EntornAppEntity entity, EntornApp resource) throws PerspectiveApplicationException {
             String appName = entity.getApp() != null ? entity.getApp().getNom() : "";
             String[] defaultLogs = {"es.caib." + appName.toLowerCase() + ".log", "server.log"};
             resource.setDefaultLogs(defaultLogs);
+        }
+    }
+
+    public class HistoricVersionsPerspectiveApplicator implements PerspectiveApplicator<EntornAppEntity, EntornApp> {
+        @Override
+        public void applySingle(String code, EntornAppEntity entity, EntornApp resource) throws PerspectiveApplicationException {
+            List<EntornAppHistEntity> entornAppHistEntities = entornAppHistRepository.findByEntornAppOrderByDataDesc(entity);
+            resource.setEntornAppHistorics(
+                    entornAppHistEntities.stream()
+                            .map(s -> objectMappingHelper.newInstanceMap(
+                                    s,
+                                    EntornAppHist.class))
+                            .collect(Collectors.toList()));
         }
     }
 

@@ -3,6 +3,7 @@ package es.caib.comanda.alarmes.logic.helper;
 import es.caib.comanda.client.UsuariServiceClient;
 import es.caib.comanda.client.model.Usuari;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import feign.FeignException;
 import lombok.Getter;
 import org.fundaciobit.pluginsib.userinformation.ldap.LdapUserInformationPlugin;
 import org.springframework.core.env.Environment;
@@ -44,9 +45,14 @@ public class UserInformationHelper {
 	}
 
 	public Usuari usuariFindByUsername(String username) {
-		EntityModel<Usuari> usuari = usuariServiceClient.getOneByCodiInternal(
-				username,
-				httpAuthorizationHeaderHelper.getAuthorizationHeader());
+		EntityModel<Usuari> usuari;
+		try {
+			usuari = usuariServiceClient.getOneByCodiInternal(
+					username,
+					httpAuthorizationHeaderHelper.getAuthorizationHeader());
+		} catch (FeignException.NotFound e) {
+			return null;
+		}
 		return usuari != null ? usuari.getContent() : null;
 	}
 

@@ -21,6 +21,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 				"es.caib.comanda.monitor.persist",
 				"es.caib.comanda.tasques.persist",
 				"es.caib.comanda.avisos.persist",
+				"es.caib.comanda.alarmes.persist",
 				"es.caib.comanda.acl.persist",
 		},
 		entityManagerFactoryRef = "mainEntityManager",
@@ -39,6 +40,7 @@ public class ApiPersistenceConfig extends BasePersistenceConfig {
 				"es.caib.comanda.monitor.persist",
 				"es.caib.comanda.tasques.persist",
 				"es.caib.comanda.avisos.persist",
+				"es.caib.comanda.alarmes.persist",
 				"es.caib.comanda.acl.persist",
 		};
 	}
