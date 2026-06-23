@@ -257,8 +257,8 @@ const translationEs: translationResourcesType = {
                     estat: "Estado",
                     peticionsTotals: "Peticiones totales",
                     tempsMigTotal: "Tiempo medio total",
-                    peticionsPeriode: "Peticiones periodo",
-                    tempsMigPeriode: "Tiempo medio periodo",
+                    peticionsPeriode: "Peticiones período",
+                    tempsMigPeriode: "Tiempo medio período",
                 },
                 filter: {
                     estat: "Estats",
@@ -278,8 +278,8 @@ const translationEs: translationResourcesType = {
                     estat: "Estado",
                     peticionsTotals: "Peticiones totales",
                     tempsMigTotal: "Tiempo medio total",
-                    peticionsPeriode: "Peticiones periodo",
-                    tempsMigPeriode: "Tiempo medio periodo",
+                    peticionsPeriode: "Peticiones período",
+                    tempsMigPeriode: "Tiempo medio período",
                 },
                 filter: {
                     estat: "Estats",
@@ -544,13 +544,13 @@ const translationEs: translationResourcesType = {
                 add: "Añadir condición",
             },
             periode: {
-                title: "Periodo",
-                subtitle: "Periodo de tiempo durante el cual se debe cumplir la condición para generar la alarma",
-                switch: "Con periodo de activación"
+                title: "Período",
+                subtitle: "Período de tiempo durante el cual se debe cumplir la condición para generar la alarma",
+                switch: "Con período de activación"
             },
             periodeInactiu: {
-                title: "Periodo inactivo",
-                subtitle: "Periodo de tiempo durante el cual no comprueba el estado de la alarma, dejándola con el estado actual",
+                title: "Período inactivo",
+                subtitle: "Período de tiempo durante el cual no comprueba el estado de la alarma, dejándola con el estado actual",
                 switch: "Con período inactivo"
             },
             filter: {
@@ -743,7 +743,7 @@ const translationEs: translationResourcesType = {
                 size: "Tamaño",
             },
             form: {
-                periode: "Periodo",
+                periode: "Período",
                 simple: "Widget simple",
                 grafic: "Widget gráfico",
                 taula: "Widget tabla",
@@ -1099,7 +1099,7 @@ const translationEs: translationResourcesType = {
     },
     generic: {
         tipus: "Tipo",
-        periode: "Periodo",
+        periode: "Período",
     },
     errors: {
         camp: {
