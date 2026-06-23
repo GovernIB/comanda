@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: alarmes-change-0.1.3-126-1
+      id: alarmes-change-0.1.3-134-1
       author: limit
       comment: Añadir las columnas 'inactiu_desde' y 'inactiu_fins' (TIME) a la configuración de alarmas para definir franjas horarias de inactividad
       changes:

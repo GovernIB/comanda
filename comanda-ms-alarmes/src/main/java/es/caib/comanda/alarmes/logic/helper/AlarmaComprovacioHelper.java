@@ -58,11 +58,11 @@ public class AlarmaComprovacioHelper {
 
     /** Retorna true si la condició d'alarma configurada s'està complint. **/
 	public boolean comprovar(AlarmaConfigEntity alarmaConfig) {
-        if (isAlarmaPeriodeInactiu(alarmaConfig)) {
+		Salut salut = findSalutLast(alarmaConfig.getEntornAppId());
+        if (isAlarmaPeriodeInactiu(alarmaConfig, salut)) {
             return false;
         }
 
-		Salut salut = findSalutLast(alarmaConfig.getEntornAppId());
 		if (!isFreshSalut(salut)) {
 			processarCondicioIndeterminada(alarmaConfig, salut);
 			return false;
@@ -77,11 +77,11 @@ public class AlarmaComprovacioHelper {
 	}
 
     /** Si estem dins el periode inactiu configurat, retorna true. **/
-    private boolean isAlarmaPeriodeInactiu(AlarmaConfigEntity alarmaConfig) {
+    private boolean isAlarmaPeriodeInactiu(AlarmaConfigEntity alarmaConfig, Salut salut) {
         if (alarmaConfig.getInactiuDesde() == null && alarmaConfig.getInactiuFins() == null) {
             return false;
         }
-        return estaDinsFranjaHoraria(alarmaConfig.getInactiuDesde(), alarmaConfig.getInactiuFins(), LocalTime.now());
+        return estaDinsFranjaHoraria(alarmaConfig.getInactiuDesde(), alarmaConfig.getInactiuFins(), LocalTime.from(salut.getData()));
     }
 
     /**
