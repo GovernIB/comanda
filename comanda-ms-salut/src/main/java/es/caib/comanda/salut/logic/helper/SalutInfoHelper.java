@@ -11,6 +11,7 @@ import es.caib.comanda.model.v1.salut.IntegracioSalut;
 import es.caib.comanda.model.v1.salut.MissatgeSalut;
 import es.caib.comanda.model.v1.salut.SalutInfo;
 import es.caib.comanda.model.v1.salut.SubsistemaSalut;
+import es.caib.comanda.ms.logic.helper.RestTemplateHelper;
 import es.caib.comanda.salut.logic.event.SalutCompactionFinishedEvent;
 import es.caib.comanda.salut.logic.event.SalutInfoUpdatedEvent;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
@@ -67,7 +68,7 @@ public class SalutInfoHelper {
 	private final SalutHistRepository salutHistRepository;
 
 	private final SalutClientHelper salutClientHelper;
-	private final RestTemplate restTemplate;
+	private static final RestTemplate restTemplate = RestTemplateHelper.createRestTemplate();
     private final ApplicationEventPublisher eventPublisher;
     private final MetricsHelper metricsHelper;
     private final SalutPurgeHelper salutPurgeService;

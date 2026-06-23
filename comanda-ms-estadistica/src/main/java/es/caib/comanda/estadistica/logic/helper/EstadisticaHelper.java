@@ -21,6 +21,7 @@ import es.caib.comanda.model.v1.estadistica.EstadistiquesInfo;
 import es.caib.comanda.model.v1.estadistica.IndicadorDesc;
 import es.caib.comanda.model.v1.estadistica.RegistreEstadistic;
 import es.caib.comanda.model.v1.estadistica.RegistresEstadistics;
+import es.caib.comanda.ms.logic.helper.RestTemplateHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -72,7 +73,7 @@ public class EstadisticaHelper {
     private final TempsRepository tempsRepository;
     private final FetRepository fetRepository;
     private final EstadisticaClientHelper estadisticaClientHelper;
-    private final RestTemplate restTemplate;
+    private static final RestTemplate restTemplate = RestTemplateHelper.createRestTemplate();
 
     private static final ConcurrentHashMap<Long, Object> LOCKS = new ConcurrentHashMap<>();
 

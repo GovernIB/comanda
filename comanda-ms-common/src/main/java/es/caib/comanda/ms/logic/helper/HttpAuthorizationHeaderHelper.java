@@ -41,8 +41,7 @@ public class HttpAuthorizationHeaderHelper {
 	@Value("${" + BaseConfig.PROP_HTTPAUTH_PASSWORD + ":#{null}}")
 	private String authPassword;
 
-	@Lazy
-	private final RestTemplate restTemplate;
+	private static final RestTemplate restTemplate = RestTemplateHelper.createRestTemplate();
 
 	public String getAuthorizationHeader() {
 		if (isProviderConfigured()) {

@@ -5,6 +5,7 @@ import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.model.v1.salut.AppInfo;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import es.caib.comanda.ms.logic.helper.RestTemplateHelper;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -45,8 +46,7 @@ public class AppInfoHelper {
 	private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
 	private final MonitorServiceClient monitorServiceClient;
 
-	@Lazy
-	private final RestTemplate restTemplate;
+	private static final RestTemplate restTemplate = RestTemplateHelper.createRestTemplate();
 	private final CacheHelper cacheHelper;
     private final AppInfoEntornAppHelper appInfoEntornAppHelper;
     private final AppInfoIntegracionsHelper appInfoIntegracionsHelper;

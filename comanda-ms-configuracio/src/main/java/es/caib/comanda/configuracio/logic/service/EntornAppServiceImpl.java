@@ -19,10 +19,7 @@ import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.SubsistemaRepository;
 import es.caib.comanda.model.v1.log.FitxerContingut;
 import es.caib.comanda.model.v1.log.FitxerInfo;
-import es.caib.comanda.ms.logic.helper.CacheHelper;
-import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
-import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
-import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
+import es.caib.comanda.ms.logic.helper.*;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
@@ -93,17 +90,17 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     private final AuthenticationHelper authenticationHelper;
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     private final AclServiceClient aclServiceClient;
-    private final RestTemplate restTemplate;
+    private static final RestTemplate restTemplate = RestTemplateHelper.createRestTemplate();
     private final Validator validator;
     private final ResourceEntityMappingHelper resourceEntityMappingHelper;
     private final ApplicationEventPublisher eventPublisher;
 
     @PostConstruct
     public void init() {
-        register(EntornApp.ENTORN_APP_ACTION_PING_URL, new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword));
-        register(EntornApp.REPORT_LLISTAR_LOGS, new InformeLlistarLogs(restTemplate));
-        register(EntornApp.REPORT_DESCARREGAR_LOG, new InformeDescarregarLog(restTemplate, entornAppRepository));
-        register(EntornApp.REPORT_PREVISUALITZAR_LOG, new InformePrevisualitzarLog(restTemplate));
+        register(EntornApp.ENTORN_APP_ACTION_PING_URL, new EntornAppServiceImpl.PingUrlAction(validator, statsAuthUser, statsAuthPassword));
+        register(EntornApp.REPORT_LLISTAR_LOGS, new InformeLlistarLogs());
+        register(EntornApp.REPORT_DESCARREGAR_LOG, new InformeDescarregarLog(entornAppRepository));
+        register(EntornApp.REPORT_PREVISUALITZAR_LOG, new InformePrevisualitzarLog());
         register(EntornApp.ENTORN_APP_TOOGLE_ACTIVA, new EntornAppServiceImpl.ToogleActiva(resourceEntityMappingHelper));
         register(EntornApp.ENTORN_APP_REFRESH_INFO, new EntornAppServiceImpl.RefreshInfo(resourceEntityMappingHelper));
         register(EntornApp.PERSPECTIVE_DEFAULT_LOGS, new DefaultLogsPerspectiveApplicator());
@@ -215,13 +212,11 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     // ACCIONS
 
     public static class PingUrlAction implements ActionExecutor<EntornAppEntity, EntornAppPingAction, PingUrlResponse> {
-        private final RestTemplate restTemplate;
         private final Validator validator;
         private String statsAuthUser;
         private String statsAuthPassword;
 
-        public PingUrlAction(RestTemplate restTemplate, Validator validator,  String statsAuthUser, String statsAuthPassword) {
-            this.restTemplate = restTemplate;
+        public PingUrlAction(Validator validator,  String statsAuthUser, String statsAuthPassword) {
             this.validator = validator;
             this.statsAuthUser = statsAuthUser;
             this.statsAuthPassword = statsAuthPassword;
@@ -369,8 +364,6 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
     @RequiredArgsConstructor
     private class InformeLlistarLogs implements ReportGenerator<EntornAppEntity, Long, FitxerInfo> {
-        private final RestTemplate restTemplate;
-
         @Override
         public List<FitxerInfo> generateData(String code, EntornAppEntity entornAppEntity, Long params) throws ReportGenerationException {
             HttpEntity<Void> httpEntity = new HttpEntity<>(getLogsAuthHeaders());
@@ -389,7 +382,6 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
     @RequiredArgsConstructor
     public class InformeDescarregarLog implements ReportGenerator<EntornAppEntity, String, InformeDescarregarLog.DescarregarLogParams> {
-        private final RestTemplate restTemplate;
         private final EntornAppRepository entornAppRepository;
 
         @Getter
@@ -461,8 +453,6 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
     @RequiredArgsConstructor
     public class InformePrevisualitzarLog implements ReportGenerator<EntornAppEntity, EntornApp.PrevisualitzarLogParams, EntornApp.PrevisualitzarLogResponse> {
-        private final RestTemplate restTemplate;
-
         @Override
         public List<EntornApp.PrevisualitzarLogResponse> generateData(String code, EntornAppEntity entornAppEntity, EntornApp.PrevisualitzarLogParams params) throws ReportGenerationException {
             HttpEntity<Void> httpEntity = new HttpEntity<>(getLogsAuthHeaders());
