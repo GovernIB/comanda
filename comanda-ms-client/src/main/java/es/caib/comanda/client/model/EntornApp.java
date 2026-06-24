@@ -45,4 +45,8 @@ public class EntornApp implements Serializable {
     private Integer eliminacioMesos;
 
     private String alarmesEmail;
+
+    private boolean parametreAuth;
+    private String nomUsuariAuth;
+    private String contrasenyaAuth;
 }

@@ -68,6 +68,7 @@ import java.util.List;
 		},
 		artifacts = {
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_PING_URL, formClass = EntornApp.EntornAppPingAction.class),
+                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_EXISTS_PARAMETER, formClass = EntornApp.EntornAppExistsParameterAction.class),
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_TOOGLE_ACTIVA, requiresId = true),
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_REFRESH_INFO, requiresId = true),
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = EntornApp.REPORT_LLISTAR_LOGS, requiresId = true),
@@ -86,6 +87,7 @@ import java.util.List;
 public class EntornApp extends BaseResource<Long> {
 
 	public final static String ENTORN_APP_ACTION_PING_URL = "pingUrl";
+    public final static String ENTORN_APP_ACTION_EXISTS_PARAMETER = "existsParameter";
 	public final static String ENTORN_APP_FILTER = "entornApp_filter";
     public final static String OPTIONAL_ENTORN_APP_FILTER = "optional_entornApp_filter";
 	public final static String SALUT_ENTORN_APP_FILTER = "salut_entornApp_filter";
@@ -159,12 +161,12 @@ public class EntornApp extends BaseResource<Long> {
 	private String estadisticaUrl;
  	private String estadisticaCron;
 
-    // Si les estadístiques requereixen autenticació bàsica
+    /** Si les estadístiques requereixen autenticació bàsica */
     @InputType("checkbox")
     @Builder.Default
     private boolean estadisticaAuth = false;
 
-	// Si les peticions de salut requereixen autenticació bàsica
+	/** Si les peticions de salut requereixen autenticació bàsica */
     @InputType("checkbox")
     @Builder.Default
 	private boolean salutAuth = false;
@@ -176,6 +178,13 @@ public class EntornApp extends BaseResource<Long> {
     private Integer eliminacioMesos;
 
 	private String alarmesEmail;
+
+    /** Si el nom i la contrasenya son parametres **/
+    @InputType("checkbox")
+    @Builder.Default
+    private boolean parametreAuth = false;
+    private String nomUsuariAuth;
+    private String contrasenyaAuth;
 
 	// Camps calculats
 	private String entornAppDescription;
@@ -195,6 +204,15 @@ public class EntornApp extends BaseResource<Long> {
 		private EntornApp formData;
         private ExpectedResponseTypeEnum expectedResponseTypeEnum;
 	}
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class EntornAppExistsParameterAction implements Serializable {
+        @NotNull
+        private String parameterValue;
+    }
 
 	@Getter
 	@Setter
@@ -243,6 +261,15 @@ public class EntornApp extends BaseResource<Long> {
         private Boolean validationError;
 		private String message;
 	}
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @FieldNameConstants
+    public static class ExistsParameterResponse implements Serializable {
+        private boolean exists = false;
+    }
 
 	@Getter
 	@Setter

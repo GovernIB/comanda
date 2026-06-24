@@ -1,8 +1,6 @@
 package es.caib.comanda.ms.configuracio.service;
 
 import es.caib.comanda.client.AclServiceClient;
-import es.caib.comanda.client.EstadisticaServiceClient;
-import es.caib.comanda.client.SalutServiceClient;
 import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.base.config.BaseConfig;
@@ -21,11 +19,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -40,6 +42,7 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Path;
 import javax.validation.Validator;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
 import static org.junit.jupiter.api.Assertions.*;
@@ -66,10 +69,11 @@ public class EntornAppServiceImplTest {
                                           RestTemplate restTemplate,
                                           Validator validator,
                                           ResourceEntityMappingHelper resourceEntityMappingHelper,
-                                          ApplicationEventPublisher eventPublisher) {
+                                          ApplicationEventPublisher eventPublisher,
+                                          Environment environment) {
             super(appIntegracioRepository, subsistemaRepository, contextRepository, entornAppRepository, entornAppHistRepository, appInfoHelper,
                     cacheHeper, schedulerService, authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient,
-                    restTemplate, validator, resourceEntityMappingHelper, eventPublisher);
+                    restTemplate, validator, resourceEntityMappingHelper, eventPublisher, environment);
         }
 
         @Override
@@ -120,12 +124,6 @@ public class EntornAppServiceImplTest {
     private AclServiceClient aclServiceClient;
 
     @Mock
-    private SalutServiceClient salutServiceClient;
-
-    @Mock
-    private EstadisticaServiceClient estadisticaServiceClient;
-
-    @Mock
     private ConfiguracioSchedulerService schedulerService;
 
     @Mock
@@ -149,6 +147,8 @@ public class EntornAppServiceImplTest {
     private ApplicationContext applicationContext;
     @Mock
     private ObjectMappingHelper objectMappingHelper;
+    @Mock
+    private Environment environment;
 
     private TestableEntornAppServiceImpl entornAppService;
 
@@ -178,7 +178,8 @@ public class EntornAppServiceImplTest {
             restTemplate,
             validator,
             resourceEntityMappingHelper,
-            eventPublisher
+            eventPublisher,
+            environment
         );
         ReflectionTestUtils.setField(entornAppService, "objectMappingHelper", objectMappingHelper);
         
@@ -448,7 +449,7 @@ public class EntornAppServiceImplTest {
                 .thenReturn(response);
 
         EntornAppServiceImpl.PingUrlAction pingAction =
-                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword, environment);
 
         // Act
         EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
@@ -472,7 +473,7 @@ public class EntornAppServiceImplTest {
                 .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND, "Not Found"));
 
         EntornAppServiceImpl.PingUrlAction pingAction =
-                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword, environment);
 
         // Act
         EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
@@ -508,7 +509,7 @@ public class EntornAppServiceImplTest {
         when(validator.validate(appInfo)).thenReturn(Set.of());
 
         EntornAppServiceImpl.PingUrlAction pingAction =
-                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword, environment);
 
         // Act
         EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
@@ -537,7 +538,7 @@ public class EntornAppServiceImplTest {
                 .thenReturn((ResponseEntity) response);
 
         EntornAppServiceImpl.PingUrlAction pingAction =
-                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword, environment);
 
         // Act
         EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
@@ -566,7 +567,7 @@ public class EntornAppServiceImplTest {
                 .thenReturn(response);
 
         EntornAppServiceImpl.PingUrlAction pingAction =
-                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword, environment);
 
         // Act
         EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
@@ -604,7 +605,7 @@ public class EntornAppServiceImplTest {
         when(validator.validate(appInfoInvalida)).thenReturn(Set.of(violation));
 
         EntornAppServiceImpl.PingUrlAction pingAction =
-                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword, environment);
 
         // Act
         EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
@@ -642,7 +643,7 @@ public class EntornAppServiceImplTest {
         when(validator.validate(appInfoInvalida)).thenReturn(Set.of(violation));
 
         EntornAppServiceImpl.PingUrlAction pingAction =
-                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword, environment);
 
         // Act
         EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
@@ -671,7 +672,7 @@ public class EntornAppServiceImplTest {
                         new java.io.IOException("Mock error")));
 
         EntornAppServiceImpl.PingUrlAction pingAction =
-                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword, environment);
 
         // Act
         EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
@@ -694,7 +695,7 @@ public class EntornAppServiceImplTest {
                 .thenThrow(new ResourceAccessException("Connection timed out"));
 
         EntornAppServiceImpl.PingUrlAction pingAction =
-                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword, environment);
 
         // Act
         EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
@@ -735,7 +736,7 @@ public class EntornAppServiceImplTest {
         when(validator.validate(logs)).thenReturn(Set.of());
 
         EntornAppServiceImpl.PingUrlAction pingAction =
-                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword);
+                new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword, environment);
 
         // Act
         EntornApp.PingUrlResponse result = pingAction.isEndpointReachable(params);
@@ -838,5 +839,39 @@ public class EntornAppServiceImplTest {
         assertNotNull(resource.getEntornAppHistorics());
         assertTrue(resource.getEntornAppHistorics().isEmpty());
         verifyNoInteractions(objectMappingHelper);
+    }
+
+    @ParameterizedTest(name = "ExistsParameterAction: clau={0}, valor={1} → exists={2}")
+    @MethodSource("existsParameterCases")
+    @DisplayName("ExistsParameterAction: diferents combinacions de clau i valor")
+    void existsParameterAction_casosParametritzats(String clau, String valor, boolean expectedExists) {
+        // Given
+        EntornApp.EntornAppExistsParameterAction params = new EntornApp.EntornAppExistsParameterAction();
+        params.setParameterValue(clau);
+
+        if (clau != null && !clau.isBlank()) {
+            lenient().when(environment.getProperty(clau)).thenReturn(valor);
+        }
+
+        EntornAppServiceImpl.ExistsParameterAction action = new EntornAppServiceImpl.ExistsParameterAction(environment);
+
+        // When
+        EntornApp.ExistsParameterResponse result = action.exec(
+                EntornApp.ENTORN_APP_ACTION_EXISTS_PARAMETER, entornAppEntity, params);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(expectedExists, result.isExists());
+    }
+
+    private static Stream<Arguments> existsParameterCases() {
+        return Stream.of(
+                // clau, valor, expectedExists
+                Arguments.of(null, null, false),                    // null → false
+                Arguments.of("   ", null, false),                   // blank → false
+                Arguments.of("valid.key", "someValue", true),       // Propietat existeix → true
+                Arguments.of("nonexistent.key", null, false),       // Propietat no existeix → false
+                Arguments.of("empty.key", "   ", false)             // Propietat blank → false
+        );
     }
 }

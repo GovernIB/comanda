@@ -40,6 +40,7 @@ import { useIsUserAdmin } from '../components/UserContext.ts';
 import { getErrorMessage } from '../util/exceptionUtils.ts';
 import * as z from 'zod';
 import { AppType } from '../models/app.schema';
+import ParameterExistsAdornment from '../components/ParameterExistsAdornment.tsx';
 
 const PingUrlActionResponse = z.object({
     success: z.boolean(),
@@ -48,6 +49,7 @@ const PingUrlActionResponse = z.object({
 });
 
 export type PingUrlResult = { status: string; elements?: { contentValue: React.JSX.Element }[] } | false;
+export type ExistsParameterResult = { exists: boolean };
 
 const useActions = (refresh?: () => void) => {
     const { artifactAction: apiAction } = useResourceApiService('entornApp');
@@ -88,6 +90,21 @@ const useActions = (refresh?: () => void) => {
         }
     }, [apiAction, refresh, t, temporalMessageShow]);
 
+    const existsParameter = React.useCallback(async (
+        parameterValue: string,
+    ): Promise<ExistsParameterResult> => {
+        try {
+            const actionResponse = await apiAction(null, { 
+                code: 'existsParameter', 
+                data: { parameterValue } 
+            });
+            return actionResponse?.exists;
+        } catch (error) {
+            temporalMessageShow(null, getErrorMessage(error), 'error');
+            return {"exists" : false};
+        }
+    }, [apiAction, temporalMessageShow]);
+
     const report = (id:any, code:any, mssg:any, fileType:any) => {
         apiReport(id, {code, fileType})
             .then((result) => {
@@ -117,6 +134,7 @@ const useActions = (refresh?: () => void) => {
         pingUrl,
         appExport,
         toogleActiva,
+        existsParameter,
     };
 };
 
@@ -126,7 +144,7 @@ const AppEntornForm: React.FC = () => {
     const { data } = useFormContext();
     const { id: appId } = useParams();
     const entornFilter = springFilterBuilder.not(springFilterBuilder.exists(springFilterBuilder.eq("entornAppEntities.app.id", appId)));
-    const { pingUrl } = useActions();
+    const { pingUrl, existsParameter } = useActions();
     const closeDialogButton = useCloseDialogButtons();
     const [detailDialogShow, detailDialogComponent] = useMuiContentDialog(closeDialogButton);
 
@@ -174,6 +192,15 @@ const AppEntornForm: React.FC = () => {
             </Grid>
             <Grid size={12}>
                 <FormField name="alarmesEmail" />
+            </Grid>
+            <Grid size={9}>
+                <FormField name="nomUsuariAuth" componentProps={isCurrentUserAdmin && {slotProps: {input: {endAdornment: ( <ParameterExistsAdornment  value={data?.nomUsuariAuth}  onClick={existsParameter} disabled={!data?.parametreAuth}/>)}}}} />
+            </Grid>
+            <Grid size={3}>
+                <FormField name="parametreAuth" />
+            </Grid>
+            <Grid size={12}>
+                <FormField name="contrasenyaAuth" componentProps={isCurrentUserAdmin && {slotProps: {input: {endAdornment: ( <ParameterExistsAdornment  value={data?.contrasenyaAuth}  onClick={existsParameter} disabled={!data?.parametreAuth}/>)}}}} />
             </Grid>
             <Grid size={12}>
                 <FormField name="compactable" type="checkbox" label={t($ => $.page.apps.fields.compactable)} />

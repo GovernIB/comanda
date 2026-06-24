@@ -59,7 +59,9 @@ public class ConfiguracioSchedulerService {
             return;
         }
         var entornAppProjections = entornAppsActives.stream()
-                .map(ea -> new AppInfoHelper.AppInfoEntornAppProjection(ea.getId(), ea.getInfoUrl(), ea.isSalutAuth(), ea.getApp().getNom(), ea.getEntorn().getNom()))
+                .map(ea -> new AppInfoHelper.AppInfoEntornAppProjection(ea.getId(), ea.getInfoUrl(),
+                        ea.isSalutAuth(), ea.getApp().getNom(), ea.getEntorn().getNom(),
+                        ea.isParametreAuth(), ea.getNomUsuariAuth(), ea.getContrasenyaAuth()))
                 .collect(Collectors.toList());
         var entornAppIds = entornAppProjections.stream().map(ea -> ea.getId().toString()).collect(Collectors.joining(", "));
         log.debug("Es van a executar les tasques de configuració per {} entorn-apps: {}", entornAppsActives.size(), entornAppIds);

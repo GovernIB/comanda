@@ -274,6 +274,14 @@ vi.mock('../components/UserContext.ts', () => ({
     useIsUserAdmin: () => true,
 }));
 
+vi.mock('../components/ParameterExistsAdornment.tsx', () => ({
+    default: ({ value, disabled }: { value?: string; disabled?: boolean }) => (
+        <button data-testid="parameter-exists-button" disabled={disabled || !value} >
+            Verificar parámetro
+        </button>
+    ),
+}));
+
 describe('AppForm', () => {
     afterEach(() => {
         vi.clearAllMocks();

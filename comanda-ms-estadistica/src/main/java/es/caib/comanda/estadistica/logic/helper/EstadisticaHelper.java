@@ -27,7 +27,9 @@ import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -39,12 +41,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -73,6 +70,7 @@ public class EstadisticaHelper {
     private final FetRepository fetRepository;
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final RestTemplate restTemplate;
+    private final Environment environment;
 
     private static final ConcurrentHashMap<Long, Object> LOCKS = new ConcurrentHashMap<>();
 
@@ -211,16 +209,29 @@ public class EstadisticaHelper {
         return result;
     }
 
+    /** Construeix HttpEntity amb Basic Auth. Lògica de {@code AuthHeaderUtil} (microservei configuracio) **/
     private HttpEntity<Void> buildAuthEntityIfNeeded(EntornApp entornApp) {
         if (!entornApp.isEstadisticaAuth()) {
             return null;
         }
-        if (statsAuthUser == null || statsAuthPassword == null) {
+        String nomUsuari = buildValorStatsAuth(statsAuthUser, entornApp.getNomUsuariAuth(), entornApp.isParametreAuth());
+        if (nomUsuari == null || nomUsuari.isBlank()) {
             return null;
         }
-        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-        headers.set("Authorization", basicAuthHeader(statsAuthUser, statsAuthPassword));
-        return new org.springframework.http.HttpEntity<>(headers);
+        String contrasenyaUsuari = Optional.ofNullable(buildValorStatsAuth(statsAuthPassword, entornApp.getContrasenyaAuth(), entornApp.isParametreAuth())).orElse("");
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", basicAuthHeader(nomUsuari, contrasenyaUsuari));
+        return new HttpEntity<>(headers);
+    }
+
+    private String buildValorStatsAuth(String valorStatic, String valorEntornApp, boolean parametreAuth) {
+        if (valorEntornApp != null) {
+            if (!parametreAuth) {
+                return valorEntornApp;
+            }
+            return environment.getProperty(valorEntornApp);
+        }
+        return valorStatic;
     }
 
     private String basicAuthHeader(String user, String password) {

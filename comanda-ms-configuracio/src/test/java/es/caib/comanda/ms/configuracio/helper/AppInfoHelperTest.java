@@ -16,6 +16,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -69,6 +70,9 @@ public class AppInfoHelperTest {
     @Mock
     private CacheHelper cacheHelper;
 
+    @Mock
+    private Environment environment;
+
     @Captor
     private ArgumentCaptor<IntegracioEntity> integracioEntityCaptor;
 
@@ -108,7 +112,9 @@ public class AppInfoHelperTest {
 		        appInfoEntornAppHelper,
 		        appInfoIntegracionsHelper,
 		        appInfoSubsistemesHelper,
-		        appInfoContextsHelper);
+		        appInfoContextsHelper,
+                environment
+                );
 
         // Setup test data
         AppEntity appEntity = new AppEntity();
@@ -137,7 +143,10 @@ public class AppInfoHelperTest {
                 entornAppEntity.getInfoUrl(),
                 entornAppEntity.isSalutAuth(),
                 appEntity.getNom(),
-                entornEntity.getNom()
+                entornEntity.getNom(),
+                false,
+                null,
+                null
         );
 
         // Setup integracions

@@ -83,11 +83,11 @@ public class EntornAppEntity extends BaseAuditableEntity<EntornApp> {
 	@Column(name = "estadistica_cron", length = 40)
 	private String estadisticaCron;
 
-	// Si les estadístiques requereixen autenticació bàsica
+    /** Si les estadístiques requereixen autenticació bàsica */
 	@Column(name = "estadistica_auth", nullable = false)
 	private boolean estadisticaAuth = false;
 
-	// Si les peticions de salut requereixen autenticació bàsica
+    /**  Si les peticions de salut requereixen autenticació bàsica */
 	@Column(name = "salut_auth", nullable = false)
 	private boolean salutAuth = false;
 
@@ -105,6 +105,14 @@ public class EntornAppEntity extends BaseAuditableEntity<EntornApp> {
 	@Column(name = "alarmes_email", length = 255)
 	@Comment("Dirección de correo electrónico genérico para la notificación de alarmas")
 	private String alarmesEmail;
+
+    /** Si el nom i la contrasenya son parametres */
+    @Column(name = "parametre_auth", nullable = false)
+    private boolean parametreAuth = false;
+    @Column(name = "nom_usuari_auth")
+    private String nomUsuariAuth;
+    @Column(name = "contrasenya_auth")
+    private String contrasenyaAuth;
 
 	private static final String APP_TABLE = BaseConfig.DB_PREFIX + "app";
 	private static final String ENTORN_TABLE = BaseConfig.DB_PREFIX + "entorn";

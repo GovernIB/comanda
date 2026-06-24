@@ -2,6 +2,7 @@ package es.caib.comanda.configuracio.logic.helper;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.MonitorServiceClient;
+import es.caib.comanda.configuracio.logic.intf.util.AuthHeaderUtil;
 import es.caib.comanda.model.v1.salut.AppInfo;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
@@ -52,6 +54,7 @@ public class AppInfoHelper {
     private final AppInfoIntegracionsHelper appInfoIntegracionsHelper;
 	private final AppInfoSubsistemesHelper appInfoSubsistemesHelper;
 	private final AppInfoContextsHelper appInfoContextsHelper;
+    private final Environment environment;
 
 	public void refreshAppInfo(AppInfoEntornAppProjection entornApp) {
         Long entornAppId = entornApp.getId();
@@ -121,17 +124,9 @@ public class AppInfoHelper {
         if (!entornApp.isSalutAuth()) {
             return null;
         }
-        if (statsAuthUser == null || statsAuthPassword == null) {
-            return null;
-        }
-        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-        headers.set("Authorization", basicAuthHeader(statsAuthUser, statsAuthPassword));
-        return new org.springframework.http.HttpEntity<>(headers);
-    }
-
-    private String basicAuthHeader(String user, String password) {
-        String token = java.util.Base64.getEncoder().encodeToString((user + ":" + password).getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        return "Basic " + token;
+        return AuthHeaderUtil.buildAuthHttpEntity(statsAuthUser, statsAuthPassword,
+                entornApp.getNomUsuariAuth(), entornApp.getContrasenyaAuth(),
+                entornApp.isParametreAuth(), environment);
     }
 
 	private AppInfo fetchAppInfo(AppInfoEntornAppProjection entornApp) throws MalformedURLException {
@@ -193,6 +188,9 @@ public class AppInfoHelper {
         private boolean isSalutAuth;
         private String appNom;
         private String entornNom;
+        private boolean parametreAuth = false;
+        private String nomUsuariAuth;
+        private String contrasenyaAuth;
     }
 
 }

@@ -7,8 +7,11 @@ import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.intf.model.*;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.EntornAppPingAction;
+import es.caib.comanda.configuracio.logic.intf.model.EntornApp.EntornAppExistsParameterAction;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.PingUrlResponse;
+import es.caib.comanda.configuracio.logic.intf.model.EntornApp.ExistsParameterResponse;
 import es.caib.comanda.configuracio.logic.intf.service.EntornAppService;
+import es.caib.comanda.configuracio.logic.intf.util.AuthHeaderUtil;
 import es.caib.comanda.configuracio.persist.entity.*;
 import es.caib.comanda.configuracio.persist.repository.*;
 import es.caib.comanda.model.v1.log.FitxerContingut;
@@ -33,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.env.Environment;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -92,15 +96,17 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     private final Validator validator;
     private final ResourceEntityMappingHelper resourceEntityMappingHelper;
     private final ApplicationEventPublisher eventPublisher;
+    private final Environment environment;
 
     @PostConstruct
     public void init() {
-        register(EntornApp.ENTORN_APP_ACTION_PING_URL, new EntornAppServiceImpl.PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword));
-        register(EntornApp.REPORT_LLISTAR_LOGS, new InformeLlistarLogs(restTemplate));
-        register(EntornApp.REPORT_DESCARREGAR_LOG, new InformeDescarregarLog(restTemplate, entornAppRepository));
-        register(EntornApp.REPORT_PREVISUALITZAR_LOG, new InformePrevisualitzarLog(restTemplate));
-        register(EntornApp.ENTORN_APP_TOOGLE_ACTIVA, new EntornAppServiceImpl.ToogleActiva(resourceEntityMappingHelper));
-        register(EntornApp.ENTORN_APP_REFRESH_INFO, new EntornAppServiceImpl.RefreshInfo(resourceEntityMappingHelper));
+        register(EntornApp.ENTORN_APP_ACTION_PING_URL, new PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword, environment));
+        register(EntornApp.ENTORN_APP_ACTION_EXISTS_PARAMETER, new ExistsParameterAction(environment));
+        register(EntornApp.REPORT_LLISTAR_LOGS, new InformeLlistarLogs(restTemplate, statsAuthUser, statsAuthPassword, environment));
+        register(EntornApp.REPORT_DESCARREGAR_LOG, new InformeDescarregarLog(restTemplate, entornAppRepository, statsAuthUser, statsAuthPassword, environment));
+        register(EntornApp.REPORT_PREVISUALITZAR_LOG, new InformePrevisualitzarLog(restTemplate, statsAuthUser, statsAuthPassword, environment));
+        register(EntornApp.ENTORN_APP_TOOGLE_ACTIVA, new ToogleActiva(resourceEntityMappingHelper));
+        register(EntornApp.ENTORN_APP_REFRESH_INFO, new RefreshInfo(resourceEntityMappingHelper));
         register(EntornApp.PERSPECTIVE_DEFAULT_LOGS, new DefaultLogsPerspectiveApplicator());
         register(EntornApp.PERSPECTIVE_HISTORICS_VERSIONS, new HistoricVersionsPerspectiveApplicator());
         register(EntornApp.PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS, new IntegracionsSubsistemesContextsPerspectiveApplicator());
@@ -175,14 +181,16 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     public static class PingUrlAction implements ActionExecutor<EntornAppEntity, EntornAppPingAction, PingUrlResponse> {
         private final RestTemplate restTemplate;
         private final Validator validator;
-        private String statsAuthUser;
-        private String statsAuthPassword;
+        private final String statsAuthUser;
+        private final String statsAuthPassword;
+        private final Environment environment;
 
-        public PingUrlAction(RestTemplate restTemplate, Validator validator,  String statsAuthUser, String statsAuthPassword) {
+        public PingUrlAction(RestTemplate restTemplate, Validator validator,  String statsAuthUser, String statsAuthPassword, Environment environment) {
             this.restTemplate = restTemplate;
             this.validator = validator;
             this.statsAuthUser = statsAuthUser;
             this.statsAuthPassword = statsAuthPassword;
+            this.environment = environment;
         }
 
         @Override
@@ -263,18 +271,16 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             boolean isExcludedSalutRequest = params.getEndpoint().equals(params.getFormData().getSalutUrl());
             if (isExcludedSalutRequest ||
                 (isEstadisticaRequest && !params.getFormData().isEstadisticaAuth()) ||
-                (!isEstadisticaRequest && !params.getFormData().isSalutAuth()) ||
-                (statsAuthUser == null || statsAuthPassword == null)) {
+                (!isEstadisticaRequest && !params.getFormData().isSalutAuth())) {
                 return null;
             }
-            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-            headers.set("Authorization", basicAuthHeader(statsAuthUser, statsAuthPassword));
-            return new org.springframework.http.HttpEntity<>(headers);
-        }
-
-        private String basicAuthHeader(String user, String password) {
-            String token = java.util.Base64.getEncoder().encodeToString((user + ":" + password).getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            return "Basic " + token;
+            return AuthHeaderUtil.buildAuthHttpEntity(
+                    statsAuthUser, statsAuthPassword,
+                    params.getFormData().getNomUsuariAuth(),
+                    params.getFormData().getContrasenyaAuth(),
+                    params.getFormData().isParametreAuth(),
+                    environment
+            );
         }
         private String getMessageForStatusCode(int statusCode) {
             switch (statusCode) {
@@ -286,6 +292,24 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                         "es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.default",
                         statusCode, "HTTP Error");
             }
+        }
+    }
+
+    @RequiredArgsConstructor
+    public static class ExistsParameterAction implements ActionExecutor<EntornAppEntity, EntornAppExistsParameterAction, ExistsParameterResponse> {
+        private final Environment environment;
+
+        @Override
+        public void onChange(Serializable id, EntornAppExistsParameterAction previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, EntornAppExistsParameterAction target) {}
+
+        @Override
+        public ExistsParameterResponse exec(String code, EntornAppEntity entity, EntornAppExistsParameterAction params) throws ActionExecutionException {
+            String key = params.getParameterValue();
+            if (key == null || key.isBlank()) {
+                return new ExistsParameterResponse(false);
+            }
+            String valor = environment.getProperty(key);
+            return new ExistsParameterResponse(valor != null && !valor.isBlank());
         }
     }
 
@@ -313,25 +337,30 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
         @Override
         public EntornApp exec(String code, EntornAppEntity entity, String params) throws ActionExecutionException {
-            var appInfoProjection = new AppInfoHelper.AppInfoEntornAppProjection(entity.getId(), entity.getInfoUrl(), entity.isSalutAuth(), entity.getApp().getNom(), entity.getEntorn().getNom());
+            var appInfoProjection = new AppInfoHelper.AppInfoEntornAppProjection(entity.getId(), entity.getInfoUrl(),
+                    entity.isSalutAuth(), entity.getApp().getNom(), entity.getEntorn().getNom(),
+                    entity.isParametreAuth(), entity.getNomUsuariAuth(), entity.getContrasenyaAuth());
             appInfoHelper.refreshAppInfo(appInfoProjection);
             return resourceEntityMappingHelper.entityToResource(entity, EntornApp.class);
         }
     }
 
-    private HttpHeaders getLogsAuthHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBasicAuth(statsAuthUser, statsAuthPassword);
-        return headers;
-    }
-
     @RequiredArgsConstructor
-    private class InformeLlistarLogs implements ReportGenerator<EntornAppEntity, Long, FitxerInfo> {
+    private static class InformeLlistarLogs implements ReportGenerator<EntornAppEntity, Long, FitxerInfo> {
         private final RestTemplate restTemplate;
+        private final String statsAuthUser;
+        private final String statsAuthPassword;
+        private final Environment environment;
 
         @Override
         public List<FitxerInfo> generateData(String code, EntornAppEntity entornAppEntity, Long params) throws ReportGenerationException {
-            HttpEntity<Void> httpEntity = new HttpEntity<>(getLogsAuthHeaders());
+            HttpEntity<Void> httpEntity = AuthHeaderUtil.buildAuthHttpEntity(
+                    statsAuthUser, statsAuthPassword,
+                    entornAppEntity.getNomUsuariAuth(),
+                    entornAppEntity.getContrasenyaAuth(),
+                    entornAppEntity.isParametreAuth(),
+                    environment
+            );
 
             String logsUrl = entornAppEntity.getLogsUrl();
             URI uri = URI.create(logsUrl);
@@ -346,13 +375,16 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     }
 
     @RequiredArgsConstructor
-    public class InformeDescarregarLog implements ReportGenerator<EntornAppEntity, String, InformeDescarregarLog.DescarregarLogParams> {
+    public static class InformeDescarregarLog implements ReportGenerator<EntornAppEntity, String, InformeDescarregarLog.DescarregarLogParams> {
         private final RestTemplate restTemplate;
         private final EntornAppRepository entornAppRepository;
+        private final String statsAuthUser;
+        private final String statsAuthPassword;
+        private final Environment environment;
 
         @Getter
         @AllArgsConstructor
-        public class DescarregarLogParams implements Serializable {
+        public static class DescarregarLogParams implements Serializable {
             private Long entornAppId;
             private String nomFitxer;
         }
@@ -365,10 +397,15 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         @Override
         public DownloadableFile generateFile(String code, List<?> data, ReportFileType fileType, OutputStream out) {
             DescarregarLogParams params = (DescarregarLogParams) data.get(0);
-
-            HttpEntity<Void> httpEntity = new HttpEntity<>(getLogsAuthHeaders());
-
             EntornAppEntity entornAppEntity = entornAppRepository.findById(params.getEntornAppId()).get();
+            HttpEntity<Void> httpEntity = AuthHeaderUtil.buildAuthHttpEntity(
+                    statsAuthUser, statsAuthPassword,
+                    entornAppEntity.getNomUsuariAuth(),
+                    entornAppEntity.getContrasenyaAuth(),
+                    entornAppEntity.isParametreAuth(),
+                    environment
+            );
+
             String baseUrl = entornAppEntity.getLogsUrl();
             String logsUrl = baseUrl + (baseUrl.endsWith("/") ? "" : "/")
                     + params.getNomFitxer();
@@ -418,12 +455,21 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     }
 
     @RequiredArgsConstructor
-    public class InformePrevisualitzarLog implements ReportGenerator<EntornAppEntity, EntornApp.PrevisualitzarLogParams, EntornApp.PrevisualitzarLogResponse> {
+    public static class InformePrevisualitzarLog implements ReportGenerator<EntornAppEntity, EntornApp.PrevisualitzarLogParams, EntornApp.PrevisualitzarLogResponse> {
         private final RestTemplate restTemplate;
+        private final String statsAuthUser;
+        private final String statsAuthPassword;
+        private final Environment environment;
 
         @Override
         public List<EntornApp.PrevisualitzarLogResponse> generateData(String code, EntornAppEntity entornAppEntity, EntornApp.PrevisualitzarLogParams params) throws ReportGenerationException {
-            HttpEntity<Void> httpEntity = new HttpEntity<>(getLogsAuthHeaders());
+            HttpEntity<Void> httpEntity = AuthHeaderUtil.buildAuthHttpEntity(
+                    statsAuthUser, statsAuthPassword,
+                    entornAppEntity.getNomUsuariAuth(),
+                    entornAppEntity.getContrasenyaAuth(),
+                    entornAppEntity.isParametreAuth(),
+                    environment
+            );
 
             String baseUrl = entornAppEntity.getLogsUrl();
             String logsUrl = baseUrl + (baseUrl.endsWith("/") ? "" : "/") + params.getFileName() + "/linies/" + params.getLineCount();
