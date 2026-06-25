@@ -2,7 +2,7 @@ package es.caib.comanda.permisos.persist.entity;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.persist.entity.BaseEntity;
-import es.caib.comanda.permisos.logic.intf.model.Permis;
+import es.caib.comanda.permisos.logic.intf.model.Acces;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,7 +16,7 @@ import javax.persistence.Table;
 @Getter
 @Setter
 @NoArgsConstructor
-public class AccesEntity extends BaseEntity<Permis> {
+public class AccesEntity extends BaseEntity<Acces> {
 
     @Column(name = "acces", length = 64)
     private String acces;
