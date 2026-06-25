@@ -5,10 +5,7 @@ import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import es.caib.comanda.tasques.logic.helper.TasquesClientHelper;
 import es.caib.comanda.tasques.logic.intf.model.Tasca;
 import es.caib.comanda.tasques.persist.entity.TascaEntity;
-import org.mapstruct.AfterMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
+import org.mapstruct.*;
 
 import java.util.Optional;
 
@@ -28,10 +25,10 @@ public interface TascaMapper {
     @Mapping(target = "dataFi", expression = "java(tasca.getDataFi() != null ? tasca.getDataFi().toLocalDateTime() : null)")
     @Mapping(target = "dataCaducitat", expression = "java(tasca.getDataCaducitat() != null ? tasca.getDataCaducitat().toLocalDateTime() : null)")
     @Mapping(target = "url", source = "tasca.redireccio")
-    @Mapping(target = "entornAppId", source = "entornApp.id")
-    @Mapping(target = "entornId", source = "entornApp.entorn.id")
-    @Mapping(target = "appId", source = "entornApp.app.id")
-    Tasca toTasca(es.caib.comanda.model.v1.tasca.Tasca tasca, EntornApp entornApp);
+    @Mapping(target = "entornAppId", expression = "java(entornApp.getId())")
+    @Mapping(target = "entornId", expression = "java(entornApp.getEntorn().getId())")
+    @Mapping(target = "appId", expression = "java(entornApp.getApp().getId())")
+    Tasca toTasca(es.caib.comanda.model.v1.tasca.Tasca tasca, @Context EntornApp entornApp);
 
     TascaEntity toTascaEntity(Tasca tasca);
 

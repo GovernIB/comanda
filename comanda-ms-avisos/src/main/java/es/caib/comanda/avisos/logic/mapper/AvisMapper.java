@@ -5,10 +5,7 @@ import es.caib.comanda.avisos.logic.intf.model.Avis;
 import es.caib.comanda.avisos.persist.entity.AvisEntity;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
-import org.mapstruct.AfterMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
+import org.mapstruct.*;
 
 import java.util.Optional;
 
@@ -26,10 +23,10 @@ public interface AvisMapper {
     @Mapping(target = "dataInici", expression = "java(avis.getDataInici() != null ? avis.getDataInici().toLocalDateTime() : null)")
     @Mapping(target = "dataFi", expression = "java(avis.getDataFi() != null ? avis.getDataFi().toLocalDateTime() : null)")
     @Mapping(target = "url", source = "avis.redireccio")
-    @Mapping(target = "entornAppId", source = "entornApp.id")
-    @Mapping(target = "entornId", source = "entornApp.entorn.id")
-    @Mapping(target = "appId", source = "entornApp.app.id")
-    Avis toAvis(es.caib.comanda.model.v1.avis.Avis avis, EntornApp entornApp);
+    @Mapping(target = "entornAppId", expression = "java(entornApp.getId())")
+    @Mapping(target = "entornId", expression = "java(entornApp.getEntorn().getId())")
+    @Mapping(target = "appId", expression = "java(entornApp.getApp().getId())")
+    Avis toAvis(es.caib.comanda.model.v1.avis.Avis avis, @Context EntornApp entornApp);
 
     AvisEntity toAvisEntity(Avis avis);
 

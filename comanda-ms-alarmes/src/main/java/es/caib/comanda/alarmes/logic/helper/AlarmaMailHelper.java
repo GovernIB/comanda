@@ -12,6 +12,7 @@ import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.mail.MessagingException;
@@ -33,10 +34,10 @@ import java.util.stream.Stream;
 public class AlarmaMailHelper {
 	private static final DateTimeFormatter ALARMA_DIA_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy 'a les' HH:mm");
 
-//	@Value("${" + BaseConfig.PROP_ALARMA_MAIL_FROM_ADDRESS + ":#{null}}")
-//	private String alarmaMailFromAddress;
-//	@Value("${" + BaseConfig.PROP_ALARMA_MAIL_FROM_NAME + ":#{null}}")
-//	private String alarmaMailFromName;
+	@Value("${" + BaseConfig.PROP_HTTPAUTH_USERNAME + ":#{null}}")
+	private String httpAuthUsername;
+	@Value("${" + BaseConfig.PROP_STATS_AUTH_USER + ":#{null}}")
+	private String statsAuthUsername;
 
 	private final AlarmaClientHelper alarmaClientHelper;
 	private final MailHelper mailHelper;
@@ -270,14 +271,23 @@ public class AlarmaMailHelper {
 				.collect(Collectors.joining("\n\n"));
 	}
 
+	private boolean isUserProfileAlarmaActiva(Usuari user) {
+		if (user == null)
+			return false;
+		// Els usuaris definits a PROP_HTTPAUTH_USERNAME o PROP_STATS_AUTH_USER tenen els correus deshabilitats per petició de l'usuari
+		if (httpAuthUsername != null && httpAuthUsername.equals(user.getCodi())) return false;
+		if (statsAuthUsername != null && statsAuthUsername.equals(user.getCodi())) return false;
+		return user.isAlarmaMail();
+	}
+
 	private boolean isUserProfileAlarmaActivaAndGrouped(String username) {
 		Usuari user = userInformationHelper.usuariFindByUsername(username);
-		return user != null && user.isAlarmaMail() && user.isAlarmaMailAgrupar();
+		return isUserProfileAlarmaActiva(user) && user.isAlarmaMailAgrupar();
 	}
 
 	private boolean isUserProfileAlarmaActivaAndUngrouped(String username) {
 		Usuari user = userInformationHelper.usuariFindByUsername(username);
-		return user != null && user.isAlarmaMail() && !user.isAlarmaMailAgrupar();
+		return isUserProfileAlarmaActiva(user) && !user.isAlarmaMailAgrupar();
 	}
 
 	/**

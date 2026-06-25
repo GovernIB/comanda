@@ -53,7 +53,7 @@ services:
       - es.caib.comanda.stats.auth.usuari=${STATS_AUTH_USUARI:-}
       - es.caib.comanda.stats.auth.password=${STATS_AUTH_PASSWORD:-}
       - DEBUG=${DEBUG:-}
-      - DEBUG_PORT=${DEBUG_HOST:-0.0.0.0:}${DEBUG_PORT:-8787}
+      - DEBUG_PORT=${DEBUG_HOST:-0.0.0.0}:8787
       - JAVA_TOOL_OPTIONS="-XX:-UseContainerSupport"
     extra_hosts:
       - host.docker.internal:host-gateway
