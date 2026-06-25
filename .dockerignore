@@ -1,0 +1,77 @@
+# El Dockerfile only needs:
+#   pinbal-ear/src/main/docker/config/  (JBoss configuration files)
+#   pinbal-ear/target/pinbal.ear        (the deployable EAR)
+# Everything else is excluded.
+
+# ── Module target directories ─────────────────────────────────────────────────
+comanda-api-interna/target
+comanda-api-legacy/target
+comanda-api-models/target
+comanda-api-utils/target
+comanda-back/target
+comanda-base/target
+comanda-bom/target
+comanda-bom-ms/target
+comanda-ear/target
+comanda-ms-acl/target
+comanda-ms-alarmes/target
+comanda-ms-avisos/target
+comanda-ms-broker/target
+comanda-ms-client/target
+comanda-ms-common/target
+comanda-ms-configuracio/target
+comanda-ms-estadistica/target
+comanda-ms-gateway/target
+comanda-ms-monitor/target
+comanda-ms-permisos/target
+comanda-ms-salut/target
+comanda-ms-tasques/target
+comanda-ms-usuaris/target
+comanda-ms-visualitzacio/target
+
+# ── Module source directories ─────────────────────────────────────────────────
+comanda-api-interna/src
+comanda-api-legacy/src
+comanda-api-models/src
+comanda-api-utils/src
+comanda-back/src
+comanda-base/src
+comanda-ear/src
+comanda-ms-acl/src
+comanda-ms-alarmes/src
+comanda-ms-avisos/src
+comanda-ms-broker/src
+comanda-ms-client/src
+comanda-ms-common/src
+comanda-ms-configuracio/src
+comanda-ms-estadistica/src
+comanda-ms-gateway/src
+comanda-ms-monitor/src
+comanda-ms-permisos/src
+comanda-ms-salut/src
+comanda-ms-tasques/src
+comanda-ms-usuaris/src
+comanda-ms-visualitzacio/src
+
+# ── pinbal-ear: keep only docker config and the EAR artifact ─────────────────
+# Exclude all target subdirectories/files except pinbal.ear
+comanda-ear/target/docker
+comanda-ear/target/comanda
+comanda-ear/target/temp
+comanda-ear/target/application.xml
+comanda-ear/target/maven-archiver
+comanda-ear/target/maven-status
+
+# Exclude pinbal-ear sources not needed by Dockerfile
+comanda-ear/src/main/application
+comanda-ear/src/main/resources
+
+# ── Miscellaneous ─────────────────────────────────────────────────────────────
+
+local-repo
+doc
+*.iml
+.git
+.idea
+**/.gitignore
+**/node_modules
