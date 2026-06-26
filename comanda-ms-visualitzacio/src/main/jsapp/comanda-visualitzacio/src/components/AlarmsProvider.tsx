@@ -1,6 +1,6 @@
 import { AlarmsContext } from './AlarmsContext';
 import { AlarmType } from './Alarms.tsx';
-import { useCallback, useEffect, useEffectEvent, useState } from 'react';
+import { useCallback, useEffect, useEffectEvent, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSseContext } from './SseProvider.tsx';
 import { useResourceApiService } from 'reactlib';
@@ -18,7 +18,7 @@ const AlarmsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =
     const { showTemporal: showMessage, component: messageComponent } = useMessage();
     const [alarms, setAlarms] = useState<AlarmType[] | null>(null);
     const { user } = useUserContext()
-    const { play } = useAudio(user?.alarma || "LA");
+    const { play } = useAudio(user?.alarma || "SOUND_16");
 
     const applyAlarms = useEffectEvent((response: AlarmType[]) => {
         const newAlarms = response.filter(alarm => !alarms?.some(a => a.id === alarm.id));
@@ -92,8 +92,10 @@ const AlarmsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =
         };
     }, [apiIsReady, fetchAlarms, sseStatus]);
 
+    const alarmMemo = useMemo(() => ({ alarms }), [alarms]);
+
     return (
-        <AlarmsContext.Provider value={{ alarms }}>
+        <AlarmsContext.Provider value={alarmMemo}>
             {messageComponent}
             {children}
         </AlarmsContext.Provider>
