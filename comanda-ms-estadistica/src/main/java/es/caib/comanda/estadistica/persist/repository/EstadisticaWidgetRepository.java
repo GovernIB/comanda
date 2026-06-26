@@ -3,6 +3,8 @@ package es.caib.comanda.estadistica.persist.repository;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
 
+import java.util.List;
+
 /**
  * Repositori per a accedir i gestionar entitats de tipus `EstadisticaWidgetEntity` a la base de dades.
  *
@@ -13,5 +15,7 @@ import es.caib.comanda.ms.persist.repository.BaseRepository;
  * Autor: Límit Tecnologies
  */
 public interface EstadisticaWidgetRepository extends BaseRepository<EstadisticaWidgetEntity, Long> {
+
+    List<EstadisticaWidgetEntity> findByAppId(Long appId);
 
 }

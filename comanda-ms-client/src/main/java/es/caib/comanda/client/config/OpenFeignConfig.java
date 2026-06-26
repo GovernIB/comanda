@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 		EntornAppServiceClient.class,
 		MonitorServiceClient.class,
         SalutServiceClient.class,
-        EstadisticaServiceClient.class,
         ParametreServiceClient.class,
         TascaServiceClient.class,
         AvisServiceClient.class,

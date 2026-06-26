@@ -11,11 +11,13 @@ import {
     useFilterApiRef,
     springFilterBuilder as builder,
     MuiDataGridColDef,
+    useAuthContext,
+    useBaseAppContext,
 } from 'reactlib';
 import { GridRenderCellParams } from '@mui/x-data-grid';
 import { ContentDetail } from '../components/ContentDetail';
 import { StacktraceBlock } from '../components/RickTextDetail';
-import { Tabs, Tab, Chip, Box, Icon, IconButton } from '@mui/material';
+import { Tabs, Tab, Chip, Box, Icon, IconButton, Button, CircularProgress } from '@mui/material';
 import useTranslationStringKey from '../hooks/useTranslationStringKey';
 import PageTitle from '../components/PageTitle.tsx';
 
@@ -93,6 +95,29 @@ const MonitorDetails: React.FC<MonitorDetailsProps> = (props) => {
     const { data, selectedModule } = props;
     const { t } = useTranslation();
     const { t: tStringKey } = useTranslationStringKey();
+    const { getToken } = useAuthContext();
+    const { temporalMessageShow } = useBaseAppContext();
+    const [retrying, setRetrying] = React.useState(false);
+
+    const isNetejaError = data?.operacio === 'netejaEntornApp' && data?.estat === 'ERROR';
+
+    const handleReintent = async () => {
+        setRetrying(true);
+        try {
+            const token = getToken?.();
+            const response = await fetch(`/api/v1/monitors/${data.id}/reintentarNeteja`, {
+                method: 'POST',
+                headers: token ? { 'Authorization': 'Bearer ' + token } : undefined,
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            temporalMessageShow?.(null, t($ => $.page.monitors.detail.netejaEntornApp.reintentarSuccess), 'success');
+        } catch (err) {
+            temporalMessageShow?.(t($ => $.page.monitors.detail.netejaEntornApp.reintentarError), String(err), 'error');
+        } finally {
+            setRetrying(false);
+        }
+    };
+
     const elementsDetail = [
         { label: t($ => $.page.monitors.detail.app), value: data?.app?.description },
         { label: t($ => $.page.monitors.detail.entorn), value: data?.entorn?.description },
@@ -119,7 +144,24 @@ const MonitorDetails: React.FC<MonitorDetailsProps> = (props) => {
             ),
         },
     ];
-    return <ContentDetail title={""} elements={elementsDetail} />;
+    return (
+        <>
+            <ContentDetail title={""} elements={elementsDetail} />
+            {isNetejaError && (
+                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button
+                        variant="contained"
+                        color="warning"
+                        startIcon={retrying ? <CircularProgress size={16} color="inherit" /> : <Icon>refresh</Icon>}
+                        onClick={handleReintent}
+                        disabled={retrying}
+                    >
+                        {t($ => $.page.monitors.detail.netejaEntornApp.reintentarButton)}
+                    </Button>
+                </Box>
+            )}
+        </>
+    );
 }
 
 type MonitorFilterProps = {

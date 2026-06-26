@@ -10,4 +10,6 @@ import es.caib.comanda.salut.logic.intf.model.Salut;
  */
 public interface SalutService extends ReadonlyResourceService<Salut, Long> {
 
+    void netejaPerEntornApp(Long entornAppId);
+
 }

@@ -9,4 +9,7 @@ import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
  * @author Límit Tecnologies
  */
 public interface AlarmaConfigService extends MutableResourceService<AlarmaConfig, Long> {
+
+    void netejaPerEntornApp(Long entornAppId);
+
 }

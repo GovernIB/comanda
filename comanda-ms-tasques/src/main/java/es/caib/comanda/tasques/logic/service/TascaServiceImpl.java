@@ -18,6 +18,7 @@ import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
@@ -44,6 +45,15 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
     private final AuthenticationHelper authenticationHelper;
     private final TasquesClientHelper tasquesClientHelper;
     private final TascaMapper tascaMapper;
+
+    @Override
+    @Transactional
+    public void netejaPerEntornApp(Long entornAppId) {
+        List<TascaEntity> tasques = ((TascaRepository) entityRepository).findByEntornAppId(entornAppId);
+        if (!tasques.isEmpty()) {
+            entityRepository.deleteAll(tasques);
+        }
+    }
 
     @PostConstruct
     public void init() {

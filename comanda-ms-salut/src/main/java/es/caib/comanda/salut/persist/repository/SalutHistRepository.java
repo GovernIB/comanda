@@ -37,4 +37,8 @@ public interface SalutHistRepository extends BaseRepository<SalutHistEntity, Lon
             @Param("entornAppId") Long entornAppId,
             @Param("dataLlindar") LocalDateTime dataLlindar
     );
+
+    @Modifying
+    @Query("DELETE FROM SalutHistEntity s WHERE s.entornAppId = :entornAppId")
+    void deleteByEntornAppId(@Param("entornAppId") Long entornAppId);
 }

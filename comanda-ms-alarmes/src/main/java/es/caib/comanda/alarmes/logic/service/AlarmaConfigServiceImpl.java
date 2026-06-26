@@ -10,10 +10,12 @@ import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventTypes;
 import es.caib.comanda.alarmes.persist.entity.AlarmaConfigEntity;
 import es.caib.comanda.alarmes.persist.repository.AlarmaConfigRepository;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
+import es.caib.comanda.alarmes.persist.repository.AlarmaUsuariRepository;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.model.Usuari;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.intf.exception.*;
+import org.springframework.transaction.annotation.Transactional;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.intf.util.ThreadLocalUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
@@ -45,9 +47,18 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
     private final AuthenticationHelper authenticationHelper;
     private final AlarmaConfigRepository alarmaConfigRepository;
     private final AlarmaRepository alarmaRepository;
+    private final AlarmaUsuariRepository alarmaUsuariRepository;
     private final ComandaSseEventPublisher comandaSseEventPublisher;
     private final ObjectMapper objectMapper;
     private final UserInformationHelper userInformationHelper;
+
+    @Override
+    @Transactional
+    public void netejaPerEntornApp(Long entornAppId) {
+        alarmaUsuariRepository.deleteByAlarmaEntornAppId(entornAppId);
+        alarmaRepository.deleteByEntornAppId(entornAppId);
+        alarmaConfigRepository.deleteByEntornAppId(entornAppId);
+    }
 
     @PostConstruct
     public void init() {

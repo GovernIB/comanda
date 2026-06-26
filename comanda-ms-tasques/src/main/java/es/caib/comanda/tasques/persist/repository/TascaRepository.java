@@ -5,11 +5,14 @@ import es.caib.comanda.tasques.persist.entity.TascaEntity;
 import org.springframework.data.jpa.repository.Modifying;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface TascaRepository extends BaseRepository<TascaEntity, Long> {
 
 	Optional<TascaEntity> findByEntornAppIdAndIdentificador(Long entornAppId, String identificador);
+
+    List<TascaEntity> findByEntornAppId(Long entornAppId);
 
     @Modifying
     int deleteByDataIniciBeforeAndDataFiIsNull(LocalDateTime dataLimit);

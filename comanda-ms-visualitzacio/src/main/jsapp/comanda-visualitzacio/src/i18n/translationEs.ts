@@ -720,6 +720,11 @@ const translationEs: translationResourcesType = {
                     entrada: "Entrada",
                     interna: "Interna",
                 },
+                netejaEntornApp: {
+                    reintentarButton: "Reintentar limpieza",
+                    reintentarSuccess: "Limpieza reiniciada correctamente",
+                    reintentarError: "Error al reintentar la limpieza",
+                },
             },
             modulEnum: {
                 salut: "Salud",

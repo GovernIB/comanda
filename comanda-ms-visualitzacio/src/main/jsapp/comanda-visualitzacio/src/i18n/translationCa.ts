@@ -720,6 +720,11 @@ const translationCa = {
                     entrada: "Entrada",
                     interna: "Interna",
                 },
+                netejaEntornApp: {
+                    reintentarButton: "Reintentar neteja",
+                    reintentarSuccess: "Neteja reiniciada correctament",
+                    reintentarError: "Error en reintentar la neteja",
+                },
             },
             modulEnum: {
                 salut: "Salut",

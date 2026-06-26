@@ -20,6 +20,7 @@ import es.caib.comanda.salut.persist.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
@@ -63,6 +64,20 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
     private final AuthenticationHelper authenticationHelper;
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     private final AclServiceClient aclServiceClient;
+
+    @Override
+    @Transactional
+    public void netejaPerEntornApp(Long entornAppId) {
+        List<Long> salutIds = ((SalutRepository) entityRepository).findIdsByEntornAppId(entornAppId);
+        if (!salutIds.isEmpty()) {
+            salutIntegracioRepository.deleteAllBySalutIdIn(salutIds);
+            salutSubsistemaRepository.deleteAllBySalutIdIn(salutIds);
+            salutMissatgeRepository.deleteAllBySalutIdIn(salutIds);
+            salutDetallRepository.deleteAllBySalutIdIn(salutIds);
+            ((SalutRepository) entityRepository).deleteAllByIdInBatch(salutIds);
+        }
+        salutHistRepository.deleteByEntornAppId(entornAppId);
+    }
 
 	@PostConstruct
 	public void init() {

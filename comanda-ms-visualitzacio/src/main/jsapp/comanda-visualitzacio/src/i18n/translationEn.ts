@@ -720,6 +720,11 @@ const translationEn: translationResourcesType = {
                     entrada: "Input",
                     interna: "Internal",
                 },
+                netejaEntornApp: {
+                    reintentarButton: "Retry cleanup",
+                    reintentarSuccess: "Cleanup successfully re-queued",
+                    reintentarError: "Error retrying cleanup",
+                },
             },
             modulEnum: {
                 salut: "Health",

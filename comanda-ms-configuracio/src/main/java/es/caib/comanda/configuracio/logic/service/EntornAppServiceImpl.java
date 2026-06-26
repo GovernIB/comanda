@@ -28,6 +28,7 @@ import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
 import es.caib.comanda.ms.logic.intf.model.ReportFileType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
+import es.caib.comanda.ms.logic.intf.event.EntornAppEsborratEvent;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -174,6 +175,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         super.afterDelete(entity, answers);
 
         cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entity.getId().toString());
+        eventPublisher.publishEvent(new EntornAppEsborratEvent(entity.getId()));
     }
 
     // ACCIONS
