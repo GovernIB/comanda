@@ -34,6 +34,7 @@ import { useIsUserAdmin, useIsUserConsulta, useIsUserUsuari, useUserContext } fr
 import useStatsEnabled from './hooks/useStatsEnabled';
 import {Plantilla} from "./pages/Plantilla.tsx";
 import EntornAppHist from './pages/EntornsAppHistorics.tsx';
+import MonitorDb from './pages/MonitorDb.tsx';
 
 export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';
@@ -189,6 +190,9 @@ const AppRoutes: React.FC = () => {
                 </Route>
                 <Route path="monitor">
                     <Route index element={<Monitors />} />
+                </Route>
+                <Route path="monitor-db">
+                    <Route index element={<MonitorDb />} />
                 </Route>
                 <Route path="cache">
                     <Route index element={<Caches />} />

@@ -11,6 +11,7 @@ import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import { useResourceApiService } from 'reactlib';
 import useStatsEnabled from './hooks/useStatsEnabled';
+import useMonitorDbEnabled from './hooks/useMonitorDbEnabled';
 import notNull from './util/arrayUtils';
 import { MenuEstil } from './types/usuari.model.tsx';
 import {useResourceApiContext} from "reactlib";
@@ -59,6 +60,7 @@ export const useAppEntries = () => {
     const { user } = useUserContext();
     const isUserReady = user != null;
     const statsEnabled = useStatsEnabled() === true;
+    const monitorDbEnabled = useMonitorDbEnabled() === true;
     const { isReady: entornAppApiIsReady, find: entornAppFind } = useResourceApiService('entornApp');
     const [hasSalutAccess, setHasSalutAccess] = React.useState(false);
     const isLimitedUser = isUserReady && isUserUsuari;
@@ -125,6 +127,12 @@ export const useAppEntries = () => {
                 icon: 'monitor',
                 resourceName: 'monitor',
             },
+            ...(isUserAdmin && monitorDbEnabled ? [{
+                id: 'monitorDb',
+                title: t($ => $.menu.monitorDb),
+                to: '/monitor-db',
+                icon: 'dns',
+            }] : []),
             {
                 id: 'cache',
                 title: t($ => $.menu.cache),
