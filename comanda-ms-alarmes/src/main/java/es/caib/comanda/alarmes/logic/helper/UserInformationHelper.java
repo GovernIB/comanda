@@ -60,11 +60,15 @@ public class UserInformationHelper {
 						username,
 						httpAuthorizationHeaderHelper.getAuthorizationHeader());
 			} catch (FeignException.NotFound e) {
-				monitor.endAction();
+				monitor.endAction("Usuari no trobat: " + username);
 				return null;
 			}
 			Usuari result = usuari != null ? usuari.getContent() : null;
-			monitor.endAction();
+			if (result == null) {
+				monitor.endAction("La resposta no conté dades per a l'usuari: " + username);
+			} else {
+				monitor.endAction();
+			}
 			return result;
 		} catch (Exception ex) {
 			monitor.endAction(ex, "Error cercant usuari per nom d'usuari");
@@ -80,7 +84,11 @@ public class UserInformationHelper {
 		monitor.startAction();
 		try {
 			String[] result = userInformationPlugin.getUsernamesByRol(role);
-			monitor.endAction();
+			if (result == null || result.length == 0) {
+				monitor.endAction("No s'han trobat usuaris per al rol: " + role);
+			} else {
+				monitor.endAction();
+			}
 			return result;
 		} catch (Exception ex) {
 			monitor.endAction(ex, "Error cercant usuaris per rol");

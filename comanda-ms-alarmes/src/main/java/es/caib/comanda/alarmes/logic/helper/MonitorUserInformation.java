@@ -43,6 +43,15 @@ public class MonitorUserInformation {
         alarmaClientHelper.monitorCreate(monitor);
     }
 
+    public void endAction(String descripcio) {
+        monitor.setEstat(EstatEnum.OK);
+        monitor.setTempsResposta(getElapsedTime());
+        if (Strings.isNotBlank(descripcio)) {
+            monitor.setErrorDescripcio(descripcio);
+        }
+        alarmaClientHelper.monitorCreate(monitor);
+    }
+
     public void endAction(Throwable t, String errorDescripcio) {
         monitor.setEstat(EstatEnum.ERROR);
         monitor.setTempsResposta(getElapsedTime());
