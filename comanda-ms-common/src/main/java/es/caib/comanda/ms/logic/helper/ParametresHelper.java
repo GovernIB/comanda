@@ -5,6 +5,7 @@ import es.caib.comanda.client.model.ParamTipus;
 import es.caib.comanda.client.model.Parametre;
 import es.caib.comanda.ms.logic.intf.exception.ParametreTipusException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -48,15 +49,24 @@ public class ParametresHelper {
 
     public Parametre perametreFindByCodi(String codi, String defaultValue) {
         // Utilitzam self per que passi pel proxy y funcioni la caché
-        Parametre parametre = self.perametreFindByCodi(codi);
+        Parametre parametre = perametreFindByCodiSafe(codi);
         if (parametre == null) {
             return Parametre.builder().codi(codi).valor(defaultValue).build();
         }
         return parametre;
     }
 
+    private Parametre perametreFindByCodiSafe(String codi) {
+        try {
+            return self.perametreFindByCodi(codi);
+        } catch (FeignException e) {
+            log.warn("No s'ha pogut llegir el paràmetre '{}' del servei de configuració: {}", codi, e.getMessage());
+            return null;
+        }
+    }
+
     public Double getParametreNumeric(String codi) {
-        Parametre parametre = self.perametreFindByCodi(codi);
+        Parametre parametre = perametreFindByCodiSafe(codi);
         if (parametre == null) {
             return null;
         }
@@ -85,7 +95,7 @@ public class ParametresHelper {
     }
 
     public Integer getParametreEnter(String codi) {
-        Parametre parametre = self.perametreFindByCodi(codi);
+        Parametre parametre = perametreFindByCodiSafe(codi);
         if (parametre == null) {
             return null;
         }
@@ -114,7 +124,7 @@ public class ParametresHelper {
     }
 
     public Boolean getParametreBoolean(String codi) {
-        Parametre parametre = self.perametreFindByCodi(codi);
+        Parametre parametre = perametreFindByCodiSafe(codi);
         if (parametre == null) {
             return null;
         }
@@ -141,7 +151,7 @@ public class ParametresHelper {
     }
 
     public String getParametreText(String codi) {
-        Parametre parametre = self.perametreFindByCodi(codi);
+        Parametre parametre = perametreFindByCodiSafe(codi);
         if (parametre == null || parametre.getValor() == null || parametre.getValor().trim().isEmpty()) {
             return null;
         }
