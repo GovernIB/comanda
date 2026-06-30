@@ -1069,6 +1069,13 @@ const translationEn: translationResourcesType = {
         },
         parametres: {
             title: "Parameters",
+            find: "Search parameters",
+            empty: "No parameters found",
+            noGroup: "Select a group on the left",
+            save: {
+                success: "Parameter saved successfully",
+                error: "Error saving the parameter",
+            },
             detail: {
                 title: "Parameter details",
                 grup: "Group",

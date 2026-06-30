@@ -1,131 +1,56 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import Parametres from './Parametres';
 
 const mocks = vi.hoisted(() => ({
-    showDialogMock: vi.fn(),
-    useFormContextMock: vi.fn(),
     tMock: vi.fn((selector: any) =>
         selector({
             page: {
                 parametres: {
                     title: 'Paràmetres',
+                    find: 'Cercar paràmetres',
+                    empty: 'Cap paràmetre trobat',
+                    noGroup: "Selecciona un grup a l'esquerra",
+                    save: {
+                        success: 'Paràmetre desat correctament',
+                        error: 'Error al desar el paràmetre',
+                    },
                     detail: {
-                        title: 'Detall paràmetre',
-                        grup: 'Grup',
-                        subGrup: 'Subgrup',
-                        tipus: 'Tipus',
-                        codi: 'Codi',
-                        nom: 'Nom',
-                        descripcio: 'Descripció',
-                        valor: 'Valor',
-                        valuesTootip: {
-                            null: 'Valor nul',
-                            true: 'Valor cert',
-                            false: 'Valor fals',
-                        },
-                        tipusEnum: {
-                            BOOLEAN: 'Booleà',
-                        },
+                        valuesTootip: { null: 'Valor nul', true: 'Valor cert', false: 'Valor fals' },
                     },
                 },
             },
-            treeData: {
-                expandAll: 'Expandir tot',
-                collapseAll: 'Col·lapsar tot',
-            },
         })
     ),
-    tLibMock: vi.fn((key: string) => {
-        const values: Record<string, string> = {
-            'datacommon.update.label': 'Editar',
-            'datacommon.details.label': 'Detall',
-        };
-        return values[key] ?? key;
-    }),
-    tStringKeyMock: vi.fn((key: string) => {
-        const values: Record<string, string> = {
-            'page.parametres.detail.tipusEnum.BOOLEAN': 'Booleà',
-        };
-        return values[key] ?? key;
-    }),
+    quickFilterChange: vi.fn(),
+    groupChange: vi.fn(),
 }));
 
 vi.mock('react-i18next', () => ({
-    useTranslation: () => ({
-        t: mocks.tMock,
-    }),
+    useTranslation: () => ({ t: mocks.tMock }),
 }));
 
 vi.mock('reactlib', () => ({
     GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    MuiDataGrid: ({
-        title,
-        popupEditFormContent,
-        rowAdditionalActions,
-        groupingColDef,
-        isGroupExpandedByDefault,
-        columns,
-    }: {
-        title: string;
-        popupEditFormContent?: React.ReactNode;
-        rowAdditionalActions?: Array<{ label: string; onClick?: (id: unknown, row: any) => void; hidden?: (row: any) => boolean }>;
-        groupingColDef?: { renderHeader?: (params: any) => React.ReactNode; renderCell?: (params: any) => React.ReactNode };
-        isGroupExpandedByDefault?: (node: { id: string | number }) => boolean;
-        columns: Array<{ field: string; renderCell?: (params: any) => React.ReactNode }>;
-    }) => (
-        <section>
-            <h2>{title}</h2>
-            <div>{popupEditFormContent}</div>
-            <div data-testid="group-expanded-default">{String(isGroupExpandedByDefault?.({ id: 'group-1' }))}</div>
-            <div>{groupingColDef?.renderHeader?.({ colDef: { headerName: 'Agrupació' } })}</div>
-            <div data-testid="valor-null">{columns[2]?.renderCell?.({ row: { tipus: 'TEXT', valor: null } })}</div>
-            <div data-testid="valor-bool">{columns[2]?.renderCell?.({ row: { tipus: 'BOOLEAN', valorBoolean: true } })}</div>
-            <button onClick={() => rowAdditionalActions?.[0]?.onClick?.('1', { id: '1', editable: true })}>
-                {rowAdditionalActions?.[0]?.label}
-            </button>
-            <button onClick={() => rowAdditionalActions?.[1]?.onClick?.('2', { id: '2', editable: false, tipus: 'BOOLEAN', valorBoolean: false })}>
-                {rowAdditionalActions?.[1]?.label}
-            </button>
-            <div data-testid="hidden-editable">{String(rowAdditionalActions?.[0]?.hidden?.({ id: '1', editable: true }))}</div>
-            <div data-testid="hidden-details">{String(rowAdditionalActions?.[1]?.hidden?.({ id: '2', editable: false }))}</div>
-        </section>
-    ),
-    FormField: ({ name }: { name: string }) => <div data-testid={`field-${name}`}>{name}</div>,
-    useCloseDialogButtons: () => <button>Tancar</button>,
-    useMuiContentDialog: () => [mocks.showDialogMock, <div key="dialog">Diàleg paràmetre</div>],
-    useBaseAppContext: () => ({
-        t: mocks.tLibMock,
-    }),
-    useFormContext: () => mocks.useFormContextMock(),
+    useDebounce: (v: string) => v,
 }));
 
-vi.mock('../../lib/components/mui/datagrid/DataGridNoRowsOverlay', () => ({
-    default: () => <div>Sense files</div>,
-}));
-
-vi.mock('@mui/x-data-grid-pro', () => ({
-    GridTreeDataGroupingCell: () => <div>Tree cell</div>,
-    isAutogeneratedRow: () => false,
-}));
-
-vi.mock('../components/ContentDetail', () => ({
-    ContentDetail: ({ elements }: { elements: Array<{ label?: string; value?: unknown; contentValue?: React.ReactNode }> }) => (
-        <div>
-            {elements.map((element, index) => (
-                <div key={index}>
-                    <span>{element.label}</span>
-                    <span>{element.contentValue ?? String(element.value ?? '')}</span>
-                </div>
-            ))}
+vi.mock('./parametres/ParametresGrups', () => ({
+    ParametresGrups: ({ onChange }: { onChange: (grup: string | null, subGrup: string | null) => void }) => (
+        <div data-testid="parametres-grups">
+            <button onClick={() => onChange('GRUP1', 'SUBGRUP1')}>Seleccionar grup</button>
         </div>
     ),
 }));
 
-vi.mock('../hooks/useTranslationStringKey', () => ({
-    default: () => ({
-        t: mocks.tStringKeyMock,
-    }),
+vi.mock('./parametres/ParametresItems', () => ({
+    ParametresItems: ({ grup, subGrup, quickFilter }: { grup: string | null; subGrup: string | null; quickFilter: string }) => (
+        <div data-testid="parametres-items">
+            <span data-testid="grup">{grup}</span>
+            <span data-testid="subGrup">{subGrup}</span>
+            <span data-testid="quickFilter">{quickFilter}</span>
+        </div>
+    ),
 }));
 
 vi.mock('../components/PageTitle.tsx', () => ({
@@ -133,66 +58,35 @@ vi.mock('../components/PageTitle.tsx', () => ({
 }));
 
 describe('Parametres', () => {
-    afterEach(() => {
-        vi.clearAllMocks();
-    });
-
-    beforeEach(() => {
-        mocks.useFormContextMock.mockReturnValue({
-            data: {
-                tipus: 'BOOLEAN',
-            },
-        });
-    });
-
-    it('Parametres_quanEsRenderitza_mostraElGridLArbreIElFormulariSegonsElTipus', () => {
-        // Comprova que la pàgina mostra l'arbre, les accions i el formulari amb el camp correcte per a booleans.
+    it('Parametres_quanEsRenderitza_mostraElTitolIElsComponents', () => {
         render(<Parametres />);
 
         expect(screen.getByTestId('page-title')).toHaveTextContent('Paràmetres');
-        expect(screen.getByRole('heading', { name: 'Paràmetres' })).toBeInTheDocument();
-        expect(screen.getByTestId('field-codi')).toBeInTheDocument();
-        expect(screen.getByTestId('field-tipus')).toBeInTheDocument();
-        expect(screen.getByTestId('field-valorBoolean')).toBeInTheDocument();
-        expect(screen.getByTestId('group-expanded-default')).toHaveTextContent('true');
-        expect(screen.getByTitle('Expandir tot')).toBeInTheDocument();
-        expect(screen.getByTitle('Col·lapsar tot')).toBeInTheDocument();
-        expect(screen.getByTestId('hidden-editable')).toHaveTextContent('false');
-        expect(screen.getByTestId('hidden-details')).toHaveTextContent('false');
+        expect(screen.getByTestId('parametres-grups')).toBeInTheDocument();
+        expect(screen.getByTestId('parametres-items')).toBeInTheDocument();
     });
 
-    it('Parametres_quanEsRenderitzenValorsEspecials_mostraElsIndicadorsVisuals', () => {
-        // Verifica que els valors nuls i booleans es representen amb icones i tooltips específics.
+    it('Parametres_quanEsRenderitza_mostraElCampDeCerca', () => {
         render(<Parametres />);
 
-        expect(screen.getByLabelText('Valor nul')).toBeInTheDocument();
-        expect(screen.getByLabelText('Valor cert')).toBeInTheDocument();
+        expect(screen.getByLabelText('Cercar paràmetres')).toBeInTheDocument();
     });
 
-    it('Parametres_quanEsPremDetall_obreElDialegInformatiu', () => {
-        // Comprova que l'acció de detall obre el diàleg amb el contingut del paràmetre seleccionat.
+    it('Parametres_quanEsSeleccionaUnGrup_actualitzaElsPanellDItems', () => {
         render(<Parametres />);
 
-        fireEvent.click(screen.getByRole('button', { name: 'Detall' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Seleccionar grup' }));
 
-        expect(mocks.showDialogMock).toHaveBeenCalledWith(
-            'Detall paràmetre',
-            expect.anything(),
-            expect.anything(),
-            expect.objectContaining({ maxWidth: 'lg', fullWidth: true })
-        );
+        expect(screen.getByTestId('grup')).toHaveTextContent('GRUP1');
+        expect(screen.getByTestId('subGrup')).toHaveTextContent('SUBGRUP1');
     });
 
-    it('Parametres_quanNoHiHaTipusUtilitzaElCampPerDefecte', () => {
-        // Comprova que el formulari cau al camp de valor genèric quan el tipus no està informat.
-        mocks.useFormContextMock.mockReturnValue({
-            data: {
-                tipus: undefined,
-            },
-        });
-
+    it('Parametres_quanSEscriuAlFiltre_propagaElValorAlsPanells', () => {
         render(<Parametres />);
 
-        expect(screen.getByTestId('field-valor')).toBeInTheDocument();
+        const input = screen.getByLabelText('Cercar paràmetres');
+        fireEvent.change(input, { target: { value: 'mail' } });
+
+        expect(screen.getByTestId('quickFilter')).toHaveTextContent('mail');
     });
 });

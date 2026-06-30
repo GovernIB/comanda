@@ -1069,6 +1069,13 @@ const translationCa = {
         },
         parametres: {
             title: "Paràmetres",
+            find: "Cercar paràmetres",
+            empty: "Cap paràmetre trobat",
+            noGroup: "Selecciona un grup a l'esquerra",
+            save: {
+                success: "Paràmetre desat correctament",
+                error: "Error al desar el paràmetre",
+            },
             detail: {
                 title: "Detalls del paràmetre",
                 grup: "Grup",
