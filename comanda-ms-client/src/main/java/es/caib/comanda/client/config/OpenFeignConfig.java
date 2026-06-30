@@ -1,6 +1,7 @@
 package es.caib.comanda.client.config;
 
 import es.caib.comanda.client.*;
+import feign.Request;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import feign.Retryer;
@@ -10,6 +11,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.Cookie;
 import java.util.Arrays;
@@ -54,6 +57,11 @@ public class OpenFeignConfig {
 				}
 			}
 		};
+	}
+
+	@Bean
+	public Request.Options feignRequestOptions() {
+		return new Request.Options(5, TimeUnit.SECONDS, 10, TimeUnit.SECONDS, true);
 	}
 
 	@Bean
