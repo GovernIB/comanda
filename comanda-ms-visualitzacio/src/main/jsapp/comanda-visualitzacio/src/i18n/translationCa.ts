@@ -795,6 +795,7 @@ const translationCa = {
             title: "Monitors",
             column: {
                 mailAddress: "Adreça de correu",
+                rolOUsuari: "Rol / Usuari",
             },
             detail: {
                 title: "Detalls de la comunicació amb la integració",
@@ -831,6 +832,7 @@ const translationCa = {
                 alarmes: "Alarmes",
                 tasca: "Tasca",
                 avis: "Avís",
+                usuaris: "Usuaris",
             },
             tab: {
                 email: "EMAIL",

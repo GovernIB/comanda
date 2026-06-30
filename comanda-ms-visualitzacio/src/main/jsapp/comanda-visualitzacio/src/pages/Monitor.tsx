@@ -28,6 +28,7 @@ const moduleOptions = [
     { value: 'ALARMES', labelKey: 'page.monitors.tab.email' },
     { value: 'TASCA', labelKey: 'page.monitors.modulEnum.tasca' },
     { value: 'AVIS', labelKey: 'page.monitors.modulEnum.avis' },
+    { value: 'USUARIS', labelKey: 'page.monitors.modulEnum.usuaris' },
 ];
 
 type TabMonitorProps = {
@@ -301,7 +302,9 @@ const Monitors: React.FC = () => {
             flex: 2,
             headerName: selectedModule === 'ALARMES'
                 ? t($ => $.page.monitors.column.mailAddress)
-                : 'URL',
+                : selectedModule === 'USUARIS'
+                    ? t($ => $.page.monitors.column.rolOUsuari)
+                    : 'URL',
         },
         { field: 'modul', flex: 1 },
         { field: 'tempsResposta', flex: 1.4 },

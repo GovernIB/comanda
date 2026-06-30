@@ -26,14 +26,17 @@ public class UserInformationHelper {
 	private final LdapUserInformationPlugin userInformationPlugin;
 	private final UsuariServiceClient usuariServiceClient;
 	private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
+	private final AlarmaClientHelper alarmaClientHelper;
 
 	public UserInformationHelper(
 			UsuariServiceClient usuariServiceClient,
 			HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
+			AlarmaClientHelper alarmaClientHelper,
 			Environment environment
 	) {
 		this.usuariServiceClient = usuariServiceClient;
 		this.httpAuthorizationHeaderHelper = httpAuthorizationHeaderHelper;
+		this.alarmaClientHelper = alarmaClientHelper;
 		var properties = new Properties();
 		for (String property : PROPS_LDAP) {
 			String value = environment.getProperty(property);
@@ -45,21 +48,42 @@ public class UserInformationHelper {
 	}
 
 	public Usuari usuariFindByUsername(String username) {
-		EntityModel<Usuari> usuari;
+		MonitorUserInformation monitor = new MonitorUserInformation(
+				MonitorUserInformation.FIND_BY_USERNAME,
+				username,
+				alarmaClientHelper);
+		monitor.startAction();
 		try {
-			usuari = usuariServiceClient.getOneByCodiInternal(
-					username,
-					httpAuthorizationHeaderHelper.getAuthorizationHeader());
-		} catch (FeignException.NotFound e) {
-			return null;
+			EntityModel<Usuari> usuari;
+			try {
+				usuari = usuariServiceClient.getOneByCodiInternal(
+						username,
+						httpAuthorizationHeaderHelper.getAuthorizationHeader());
+			} catch (FeignException.NotFound e) {
+				monitor.endAction();
+				return null;
+			}
+			Usuari result = usuari != null ? usuari.getContent() : null;
+			monitor.endAction();
+			return result;
+		} catch (Exception ex) {
+			monitor.endAction(ex, "Error cercant usuari per nom d'usuari");
+			throw ex;
 		}
-		return usuari != null ? usuari.getContent() : null;
 	}
 
 	public String[] findByRole(String role) {
+		MonitorUserInformation monitor = new MonitorUserInformation(
+				MonitorUserInformation.FIND_BY_ROLE,
+				role,
+				alarmaClientHelper);
+		monitor.startAction();
 		try {
-			return userInformationPlugin.getUsernamesByRol(role);
+			String[] result = userInformationPlugin.getUsernamesByRol(role);
+			monitor.endAction();
+			return result;
 		} catch (Exception ex) {
+			monitor.endAction(ex, "Error cercant usuaris per rol");
 			throw new UserInformationException(
 					"getUsernamesByRol",
 					new String[] { role },

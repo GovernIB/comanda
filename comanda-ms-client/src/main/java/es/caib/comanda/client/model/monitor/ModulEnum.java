@@ -14,5 +14,6 @@ public enum ModulEnum {
     CONFIGURACIO,
     ALARMES,
     TASCA,
-    AVIS
+    AVIS,
+    USUARIS
 }
