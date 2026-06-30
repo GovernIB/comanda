@@ -2,6 +2,7 @@ package es.caib.comanda.ms.configuracio.service;
 
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.service.ConfiguracioSchedulerService;
+import es.caib.comanda.ms.logic.helper.SchedulerTaskRegistryService;
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornEntity;
@@ -31,6 +32,8 @@ public class ConfiguracioSchedulerServiceTest {
     private AppInfoHelper appInfoHelper;
     @Mock
     private TaskExecutor configuracioWorkerExecutor;
+    @Mock
+    private SchedulerTaskRegistryService schedulerTaskRegistry;
 
     private ConfiguracioSchedulerService service;
     private EntornAppEntity ea1;
@@ -41,7 +44,8 @@ public class ConfiguracioSchedulerServiceTest {
         service = new ConfiguracioSchedulerService(
                 entornAppRepository,
                 appInfoHelper,
-                configuracioWorkerExecutor
+                configuracioWorkerExecutor,
+                schedulerTaskRegistry
         );
         // Leader by default
         ReflectionTestUtils.setField(service, "schedulerLeader", true);

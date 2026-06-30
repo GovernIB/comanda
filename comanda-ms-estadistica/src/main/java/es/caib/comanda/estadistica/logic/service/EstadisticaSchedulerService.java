@@ -6,6 +6,7 @@ import es.caib.comanda.estadistica.logic.helper.CompactacioHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaHelper;
 import es.caib.comanda.ms.logic.helper.ParametresHelper;
+import es.caib.comanda.ms.logic.helper.SchedulerTaskRegistryService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +16,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.PostConstruct;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,11 +26,14 @@ import java.util.stream.Collectors;
 @Slf4j
 public class EstadisticaSchedulerService {
 
+    private static final String TASK_ID = "ESTADISTICA_REFRESC";
+
     private final EstadisticaHelper estadisticaHelper;
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final CompactacioHelper compactacioHelper;
     private final ParametresHelper parametresHelper;
     private final TaskExecutor estadisticaWorkerExecutor;
+    private final SchedulerTaskRegistryService schedulerTaskRegistry;
 
     @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{true}}")
     private Boolean schedulerLeader;
@@ -39,18 +45,27 @@ public class EstadisticaSchedulerService {
             EstadisticaClientHelper estadisticaClientHelper,
             CompactacioHelper compactacioHelper,
             ParametresHelper parametresHelper,
-            @Qualifier("estadisticaWorkerExecutor") TaskExecutor estadisticaWorkerExecutor) {
+            @Qualifier("estadisticaWorkerExecutor") TaskExecutor estadisticaWorkerExecutor,
+            SchedulerTaskRegistryService schedulerTaskRegistry) {
         this.estadisticaHelper = estadisticaHelper;
         this.estadisticaClientHelper = estadisticaClientHelper;
         this.compactacioHelper = compactacioHelper;
         this.parametresHelper = parametresHelper;
         this.estadisticaWorkerExecutor = estadisticaWorkerExecutor;
+        this.schedulerTaskRegistry = schedulerTaskRegistry;
+    }
+
+    @PostConstruct
+    public void registrarTasques() {
+        schedulerTaskRegistry.registerCron(TASK_ID, "Refresc d'estadístiques", "Obté les dades estadístiques de les aplicacions", "0 * * * * *", this::scheduledEstadisticaTasks);
     }
 
     @Scheduled(cron = "0 * * * * *")
     public void scheduledEstadisticaTasks() {
+        schedulerTaskRegistry.recordStart(TASK_ID);
         if (!isLeader()) {
             log.info("Refresc d'estadístiques ignorada: aquesta instància no és leader per als schedulers");
+            schedulerTaskRegistry.recordSuccess(TASK_ID);
             return;
         }
         LocalDateTime referenceDate = LocalDateTime.now();
@@ -86,6 +101,7 @@ public class EstadisticaSchedulerService {
                 log.warn("Compactació d'estadístiques: {} no és un cron vàlid.", compactarCron);
             }
         }
+        schedulerTaskRegistry.recordSuccess(TASK_ID);
     }
     private void executarProces(EntornApp entornApp) {
         // Encuar el treball al worker executor per no bloquejar el scheduler i no perdre execucions

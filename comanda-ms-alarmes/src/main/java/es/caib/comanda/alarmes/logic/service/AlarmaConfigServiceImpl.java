@@ -100,11 +100,22 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
     }
 
     /** Evita que alguns atributs canviï de valor, sense ús d'anotació. Perquè des del frontal es limitaran les opcions de forma més visual. **/
-    private void logicBeforeUpdateEntityAlarmaConfig (AlarmaConfigEntity entity, AlarmaConfig resource) {
+    private void logicBeforeUpdateEntityAlarmaConfig(AlarmaConfigEntity entity, AlarmaConfig resource) {
         resource.setEntornAppId(entity.getEntornAppId());
-        resource.setAdmin(entity.isAdmin());
-        if (!entity.isAdmin() && resource.isCorreuGeneric()) {
-            throw new ResourceNotUpdatedException(getResourceClass(), String.valueOf(entity.getId()), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.AlarmaConfigServiceImpl.beforeUpdateEntity.correuGeneric.not.admin"));
+        boolean isCurrentUserAdmin = authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN);
+        if (!isCurrentUserAdmin) {
+            resource.setAdmin(entity.isAdmin());
+            if (!entity.isAdmin() && resource.isCorreuGeneric()) {
+                throw new ResourceNotUpdatedException(getResourceClass(), String.valueOf(entity.getId()), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.AlarmaConfigServiceImpl.beforeUpdateEntity.correuGeneric.not.admin"));
+            }
+        } else {
+            if (entity.isAdmin() != resource.isAdmin()) {
+                // Quan el flag d'admin canvia, col·locar l'alarma al final de l'ordenació del nou grup
+                resource.setOrdre(null);
+            }
+            if (!resource.isAdmin() && resource.isCorreuGeneric()) {
+                resource.setCorreuGeneric(false);
+            }
         }
     }
 

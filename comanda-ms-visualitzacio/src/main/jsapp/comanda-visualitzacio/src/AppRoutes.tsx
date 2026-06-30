@@ -19,6 +19,7 @@ import EstadisticaDashboardEdit from './pages/EstadisticaDashboardEdit';
 import EstadisticaDashboardView from './pages/EstadisticaDashboardView';
 import VersionsEntorns from './pages/VersionsEntorns';
 import Broker from './pages/Broker';
+import TasquesBackground from './pages/TasquesBackground';
 import QueueMessages from './pages/QueueMessages';
 import CalendariEstadistiques from './pages/CalendariEstadistiques';
 import Tasca from './pages/Tasca';
@@ -233,6 +234,9 @@ const AppRoutes: React.FC = () => {
                 <Route path="broker">
                     <Route index element={<Broker />} />
                     <Route path="queue/:queueName" element={<QueueMessages />} />
+                </Route>
+                <Route path="tasquesBackground">
+                    <Route index element={<TasquesBackground />} />
                 </Route>
                 <Route path="parametre">
                     <Route index element={<Parametres />} />

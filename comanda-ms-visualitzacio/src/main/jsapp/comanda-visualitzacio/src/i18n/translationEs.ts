@@ -83,10 +83,11 @@ const translationEs: translationResourcesType = {
         avis: "Avisos",
         alarmes: "Alarmas activas",
         monitoritzacio: "Monitorización",
-        monitoritzacioDescription: "Monitorización de integraciones, caches y colas.",
+        monitoritzacioDescription: "Monitorización de integraciones, caches, colas y tareas en segundo plano.",
         monitor: "Monitor",
         cache: "Gestión de cachés",
         broker: "Gestor de colas",
+        tasquesBackground: "Tareas en segundo plano",
         configuracio: "Configuración",
         configuracioDescription: "Opciones de administración de la aplicación.",
         app: "Aplicaciones",
@@ -667,6 +668,7 @@ const translationEs: translationResourcesType = {
             column: {
                 mailAddress: "Dirección de correo",
                 rolOUsuari: "Rol / Usuario",
+                destinatari: "Destinatario",
             },
             detail: {
                 title: "Detalles de la comunicación con la integración",
@@ -701,6 +703,7 @@ const translationEs: translationResourcesType = {
                 usuaris: "Usuarios",
             },
             tab: {
+                alarmes: "ALARMES",
                 email: "EMAIL",
             },
             filter: {
@@ -871,6 +874,24 @@ const translationEs: translationResourcesType = {
                 messageCount: "Número de mensajes",
                 consumerCount: "Número de consumidores",
                 viewMessages: "Ver mensajes",
+            },
+        },
+        tasquesBackground: {
+            title: "Tareas en segundo plano",
+            columns: {
+                nom: "Nombre",
+                expressioHuman: "Planificación",
+                proxExecucio: "Próxima ejecución",
+                ultimaExecucio: "Última ejecución",
+                ultimaEstat: "Estado",
+                ultimaDuracio: "Duración (ms)",
+            },
+            reiniciar: {
+                label: "Reiniciar",
+                titol: "Reiniciar tarea",
+                confirm: "¿Está seguro de que desea reiniciar la tarea '{{nom}}'?",
+                success: "La tarea se ha reiniciado correctamente.",
+                error: "Error al reiniciar la tarea",
             },
         },
         queue: {

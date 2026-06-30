@@ -55,7 +55,12 @@ public class AlarmaComprovacioHelper {
     private final ComandaSseEventPublisher comandaSseEventPublisher;
 	private final ParametresHelper parametresHelper;
 	private final ObjectMapper objectMapper;
+	private final AlarmaClientHelper alarmaClientHelper;
 	private final Map<Long, LocalDateTime> recoveryStableSinceByConfigId = new ConcurrentHashMap<>();
+
+	private boolean isLogActivacio() {
+		return Boolean.TRUE.equals(parametresHelper.getParametreBoolean(BaseConfig.PROP_ALARMA_LOG_ACTIVACIO, false));
+	}
 
 	public boolean comprovar(AlarmaConfigEntity alarmaConfig) {
 		Salut salut = findSalutLast(alarmaConfig.getEntornAppId());
@@ -65,6 +70,12 @@ public class AlarmaComprovacioHelper {
 		}
 
 		boolean condicioAlarma = evaluateAlarmCondition(alarmaConfig, salut);
+		if (isLogActivacio()) {
+			log.info("[ALARMA] Comprovació configId={} nom='{}' destinatari={} -> condicio={}",
+					alarmaConfig.getId(), alarmaConfig.getNom(),
+					alarmaConfig.isAdmin() ? "[ADMIN]" : alarmaConfig.getCreatedBy(),
+					condicioAlarma);
+		}
 		if (condicioAlarma) {
 			return processarCondicioAfirmativa(alarmaConfig);
 		}
@@ -210,9 +221,13 @@ public class AlarmaComprovacioHelper {
 				alarma.setMissatge(alarmaConfig.getMissatge());
 				alarmaRepository.save(AlarmaEntity.builder().alarma(alarma).alarmaConfig(alarmaConfig).build());
 				log.debug("Nova alarma de tipus esborrany creada (configId={}, configNom={}, destinatari={})",
-						alarmaConfig.getId(),
-						alarmaConfig.getNom(),
+						alarmaConfig.getId(), alarmaConfig.getNom(),
 						alarmaConfig.isAdmin() ? "[ADMIN]" : alarmaConfig.getCreatedBy());
+				if (isLogActivacio()) {
+					log.info("[ALARMA] Esborrany creat configId={} nom='{}' destinatari={}",
+							alarmaConfig.getId(), alarmaConfig.getNom(),
+							alarmaConfig.isAdmin() ? "[ADMIN]" : alarmaConfig.getCreatedBy());
+				}
 				return false;
 			}
 			AlarmaEntity alarmaAnteriorNoFinalitzada = optionalAlarmaAnteriorNoFinalitzada.get();
@@ -235,9 +250,13 @@ public class AlarmaComprovacioHelper {
 					alarmaActivada = alarmaAnteriorNoFinalitzada;
                     publishActiveAlarmsChangedEvent();
 					log.debug("Alarma de tipus esborrany activada (configId={}, configNom={}, destinatari={}",
-							alarmaConfig.getId(),
-							alarmaConfig.getNom(),
+							alarmaConfig.getId(), alarmaConfig.getNom(),
 							alarmaConfig.isAdmin() ? "[ADMIN]" : alarmaConfig.getCreatedBy());
+					if (isLogActivacio()) {
+						log.info("[ALARMA] Esborrany activat configId={} nom='{}' destinatari={}",
+								alarmaConfig.getId(), alarmaConfig.getNom(),
+								alarmaConfig.isAdmin() ? "[ADMIN]" : alarmaConfig.getCreatedBy());
+					}
 				}
 			}
 		} else {
@@ -267,13 +286,18 @@ public class AlarmaComprovacioHelper {
 							build());
             publishActiveAlarmsChangedEvent();
 			log.debug("Nova alarma activa creada (configId={}, configNom={}, destinatari={}",
-					alarmaConfig.getId(),
-					alarmaConfig.getNom(),
+					alarmaConfig.getId(), alarmaConfig.getNom(),
 					alarmaConfig.isAdmin() ? "[ADMIN]" : alarmaConfig.getCreatedBy());
+			if (isLogActivacio()) {
+				log.info("[ALARMA] Activada configId={} nom='{}' destinatari={}",
+						alarmaConfig.getId(), alarmaConfig.getNom(),
+						alarmaConfig.isAdmin() ? "[ADMIN]" : alarmaConfig.getCreatedBy());
+			}
 		}
 
 		if (alarmaActivada != null) {
 			publishAlarmaMailEvent(alarmaActivada, AlarmaMailEventType.ACTIVACIO);
+			registrarEstatAlarmaMonitor(alarmaConfig, MonitorAlarmes.ACTIVACIO_ALARMA);
 			return true;
 		}
 		return false;
@@ -318,6 +342,13 @@ public class AlarmaComprovacioHelper {
             if (alarmaConfig.isNotificacioFinalitzada()) {
                 publishAlarmaMailEvent(alarmaAnteriorNoFinalitzada, AlarmaMailEventType.RECUPERACIO);
             }
+			if (isLogActivacio()) {
+				log.info("[ALARMA] Desactivada configId={} nom='{}' destinatari={} notificacioFinalitzada={}",
+						alarmaConfig.getId(), alarmaConfig.getNom(),
+						alarmaConfig.isAdmin() ? "[ADMIN]" : alarmaConfig.getCreatedBy(),
+						alarmaConfig.isNotificacioFinalitzada());
+			}
+			registrarEstatAlarmaMonitor(alarmaConfig, MonitorAlarmes.DESACTIVACIO_ALARMA);
 		}
 		return false;
 	}
@@ -366,6 +397,26 @@ public class AlarmaComprovacioHelper {
 		return parametresHelper.getParametreEnter(
 				BaseConfig.PROP_ALARMA_RECOVERY_STABILITY_SECONDS,
 				(int) DEFAULT_RECOVERY_STABILITY_SECONDS);
+	}
+
+	private void registrarEstatAlarmaMonitor(AlarmaConfigEntity alarmaConfig, String operacio) {
+		try {
+			String destinatari = alarmaConfig.isAdmin() ? "Administrador" : alarmaConfig.getCreatedBy();
+			String operacioFull = alarmaConfig.isCorreuGeneric()
+					? operacio + " (" + MonitorAlarmes.NOTIFICA_CORREU_GENERIC + ")"
+					: operacio;
+			MonitorAlarmes monitorAlarmes = new MonitorAlarmes(
+					alarmaConfig.getEntornAppId(),
+					operacioFull,
+					destinatari,
+					destinatari,
+					es.caib.comanda.client.model.monitor.AccioTipusEnum.INTERNA,
+					alarmaClientHelper);
+			monitorAlarmes.startAction();
+			monitorAlarmes.endAction();
+		} catch (Exception e) {
+			log.warn("Error registrant l'estat de l'alarma al monitor (configId={}): {}", alarmaConfig.getId(), e.getMessage());
+		}
 	}
 
 	private void clearRecoveryTracking(AlarmaConfigEntity alarmaConfig) {

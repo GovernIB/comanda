@@ -83,10 +83,11 @@ const translationEn: translationResourcesType = {
         avis: "Warnings",
         alarmes: "Active alarms",
         monitoritzacio: "Monitoring",
-        monitoritzacioDescription: "Integration, caches and cue monitoring.",
+        monitoritzacioDescription: "Integration, caches, queues and background tasks monitoring.",
         monitor: "Monitor",
         cache: "Cache management",
         broker: "Queue Manager",
+        tasquesBackground: "Background tasks",
         configuracio: "Configuration",
         configuracioDescription: "Application's administration options.",
         app: "Applications",
@@ -667,6 +668,7 @@ const translationEn: translationResourcesType = {
             column: {
                 mailAddress: "Email address",
                 rolOUsuari: "Role / User",
+                destinatari: "Recipient",
             },
             detail: {
                 title: "Communication details with the integration",
@@ -701,6 +703,7 @@ const translationEn: translationResourcesType = {
                 usuaris: "Users",
             },
             tab: {
+                alarmes: "ALARMES",
                 email: "EMAIL",
             },
             filter: {
@@ -871,6 +874,24 @@ const translationEn: translationResourcesType = {
                 messageCount: "Message Count",
                 consumerCount: "Consumer Count",
                 viewMessages: "View Messages",
+            },
+        },
+        tasquesBackground: {
+            title: "Background tasks",
+            columns: {
+                nom: "Name",
+                expressioHuman: "Schedule",
+                proxExecucio: "Next execution",
+                ultimaExecucio: "Last execution",
+                ultimaEstat: "Status",
+                ultimaDuracio: "Duration (ms)",
+            },
+            reiniciar: {
+                label: "Restart",
+                titol: "Restart task",
+                confirm: "Are you sure you want to restart the task '{{nom}}'?",
+                success: "The task has been successfully restarted.",
+                error: "Error restarting the task",
             },
         },
         queue: {

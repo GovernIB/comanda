@@ -6,9 +6,12 @@ import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import feign.FeignException;
 import lombok.Getter;
 import org.fundaciobit.pluginsib.userinformation.ldap.LdapUserInformationPlugin;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.env.Environment;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.stereotype.Component;
+
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.USUARI_CACHE;
 
 import java.util.Arrays;
 import java.util.Properties;
@@ -47,6 +50,7 @@ public class UserInformationHelper {
 		this.userInformationPlugin = new LdapUserInformationPlugin("es.caib.comanda.", properties);
 	}
 
+	@Cacheable(value = USUARI_CACHE, key = "#username")
 	public Usuari usuariFindByUsername(String username) {
 		MonitorUserInformation monitor = new MonitorUserInformation(
 				MonitorUserInformation.FIND_BY_USERNAME,

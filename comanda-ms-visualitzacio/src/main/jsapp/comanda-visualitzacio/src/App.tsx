@@ -116,6 +116,13 @@ export const useAppEntries = () => {
                 to: '/broker',
                 icon: 'send_time_extension',
                 resourceName: 'broker',
+            },
+            {
+                id: 'tasquesBackground',
+                title: t($ => $.menu.tasquesBackground),
+                to: '/tasquesBackground',
+                icon: 'schedule',
+                resourceName: 'tascaBackground',
             }
         ]
     };

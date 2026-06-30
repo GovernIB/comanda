@@ -2,6 +2,7 @@ package es.caib.comanda.tasques.logic.service;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.helper.ParametresHelper;
+import es.caib.comanda.ms.logic.helper.SchedulerTaskRegistryService;
 import es.caib.comanda.tasques.persist.repository.TascaRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,9 +20,10 @@ class TascaSchedulerServiceTest {
 
     @Mock
     private ParametresHelper parametresHelper;
-
     @Mock
     private TascaRepository tascaRepository;
+    @Mock
+    private SchedulerTaskRegistryService schedulerTaskRegistry;
 
     @InjectMocks
     private TascaSchedulerService tascaSchedulerService;
