@@ -559,6 +559,8 @@ const translationCa = {
                 showOnlyOwnDisabled: "Mostra només les alarmes d'administrador",
                 more: "Més camps",
                 entornApp: "Entorn d'aplicació",
+                showUsersAlarmsEnabled: "Mostrar alarmes de tots els usuaris",
+                showUsersAlarmsDisabled: "Ocultar alarmes de tots els usuaris",
             },
         },
         alarma: {
@@ -591,6 +593,10 @@ const translationCa = {
             estats: {
                 finalitzada: "Finalitzada",
                 finalitzadaEsborrada: "Finalitzada (Llegida)",
+            },
+            userSection: {
+                header: "Alarmes d'usuaris",
+                userTitle: "Usuari: {{username}}",
             },
         },
         apps: {

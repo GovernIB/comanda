@@ -559,6 +559,8 @@ const translationEn: translationResourcesType = {
                 showOnlyOwnDisabled: "Show only alarms from administrators",
                 more: "More fields",
                 entornApp: "Application environment",
+                showUsersAlarmsEnabled: "Show alarms from all users",
+                showUsersAlarmsDisabled: "Hide alarms from all users",
             },
         },
         alarma: {
@@ -591,6 +593,10 @@ const translationEn: translationResourcesType = {
             estats: {
                 finalitzada: "Finalized",
                 finalitzadaEsborrada: "Finalized (read)",
+            },
+            userSection: {
+                header: "User alarms",
+                userTitle: "User: {{username}}",
             },
         },
         apps: {
