@@ -12,6 +12,7 @@ import es.caib.comanda.alarmes.persist.repository.AlarmaConfigRepository;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -62,6 +63,8 @@ class AlarmaServiceImplTest {
     private EntityManager entityManager;
     @Mock
     private ComandaSseEventPublisher comandaSseEventPublisher;
+    @Mock
+    private ParametresHelper parametresHelper;
 
     @InjectMocks
     private AlarmaServiceImpl alarmaService;

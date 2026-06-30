@@ -1,5 +1,6 @@
 package es.caib.comanda.alarmes.logic.helper;
 
+import es.caib.comanda.alarmes.logic.helper.AlarmaClientHelper;
 import es.caib.comanda.client.UsuariServiceClient;
 import es.caib.comanda.client.model.Usuari;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
@@ -24,6 +25,8 @@ class UserInformationHelperTest {
     private UsuariServiceClient usuariServiceClient;
     @Mock
     private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
+    @Mock
+    private AlarmaClientHelper alarmaClientHelper;
     @Mock
     private Environment environment;
 

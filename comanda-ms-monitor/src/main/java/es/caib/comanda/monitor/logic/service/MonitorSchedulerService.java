@@ -3,6 +3,7 @@ package es.caib.comanda.monitor.logic.service;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.monitor.logic.helper.MonitorHelper;
 import es.caib.comanda.ms.logic.helper.ParametresHelper;
+import es.caib.comanda.ms.logic.helper.SchedulerTaskRegistryService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,9 +24,12 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class MonitorSchedulerService {
 
+    private static final String TASK_ID = "MONITOR_BORRAT";
+
     private final TaskScheduler taskScheduler;
     private final ParametresHelper parametresHelper;
     private final MonitorHelper monitorHelper;
+    private final SchedulerTaskRegistryService schedulerTaskRegistry;
 
     @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{true}}")
     private Boolean schedulerLeader;
@@ -36,10 +40,13 @@ public class MonitorSchedulerService {
 
     public MonitorSchedulerService(
             @Qualifier("monitorTaskScheduler") TaskScheduler taskScheduler,
-            ParametresHelper parametresHelper, MonitorHelper monitorHelper) {
+            ParametresHelper parametresHelper,
+            MonitorHelper monitorHelper,
+            SchedulerTaskRegistryService schedulerTaskRegistry) {
         this.taskScheduler = taskScheduler;
         this.parametresHelper = parametresHelper;
         this.monitorHelper = monitorHelper;
+        this.schedulerTaskRegistry = schedulerTaskRegistry;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -68,6 +75,7 @@ public class MonitorSchedulerService {
         if (isLeader() && borratActiu) {
             final Integer retencio = parametresHelper.getParametreEnter(BaseConfig.PROP_MONITOR_BUIDAT_RETENCIO_DIES, 7);
             final Integer periode = parametresHelper.getParametreEnter(BaseConfig.PROP_MONITOR_BUIDAT_PERIODE_MINUTS, 60);
+            schedulerTaskRegistry.registerFixedRate(TASK_ID, "Purga del monitor", "Elimina les entrades antigues del monitor", periode, () -> executarBorrat(retencio));
 
             try {
                 PeriodicTrigger periodicTrigger = new PeriodicTrigger(periode, TimeUnit.MINUTES);
@@ -88,11 +96,14 @@ public class MonitorSchedulerService {
 
     public void executarBorrat(Integer retencio) {
         if (isLeader()) {
+            schedulerTaskRegistry.recordStart(TASK_ID);
             try {
                 log.debug("Executant borrat de monitor...");
                 monitorHelper.buidat(retencio);
+                schedulerTaskRegistry.recordSuccess(TASK_ID);
             } catch (Exception e) {
                 log.error("Error en l'execució del borrat del monitor", e);
+                schedulerTaskRegistry.recordError(TASK_ID);
             }
         }
     }

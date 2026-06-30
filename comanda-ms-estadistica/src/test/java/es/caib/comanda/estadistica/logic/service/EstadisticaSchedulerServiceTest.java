@@ -8,6 +8,7 @@ import es.caib.comanda.estadistica.logic.helper.CompactacioHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaHelper;
 import es.caib.comanda.ms.logic.helper.ParametresHelper;
+import es.caib.comanda.ms.logic.helper.SchedulerTaskRegistryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,6 +40,8 @@ public class EstadisticaSchedulerServiceTest {
     private ParametresHelper parametresHelper;
     @Mock
     private TaskExecutor estadisticaWorkerExecutor;
+    @Mock
+    private SchedulerTaskRegistryService schedulerTaskRegistry;
 
     private EstadisticaSchedulerService service;
     private EntornApp ea1;
@@ -51,7 +54,8 @@ public class EstadisticaSchedulerServiceTest {
                 estadisticaClientHelper,
                 compactacioHelper,
                 parametresHelper,
-                estadisticaWorkerExecutor
+                estadisticaWorkerExecutor,
+                schedulerTaskRegistry
         );
         // Leader by default
         ReflectionTestUtils.setField(service, "schedulerLeader", true);

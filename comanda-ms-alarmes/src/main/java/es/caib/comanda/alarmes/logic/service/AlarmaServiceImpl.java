@@ -15,6 +15,7 @@ import es.caib.comanda.alarmes.persist.repository.AlarmaConfigRepository;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import es.caib.comanda.ms.logic.intf.exception.ArtifactNotFoundException;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
@@ -59,6 +60,7 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 	private final AuthenticationHelper authenticationHelper;
     private final EntityManager entityManager;
     private final ComandaSseEventPublisher comandaSseEventPublisher;
+    private final ParametresHelper parametresHelper;
 
 	@Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{true}}")
 	private Boolean schedulerLeader;
@@ -86,21 +88,26 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 			alarms.stream()
 				.collect(Collectors.groupingBy(alarmConfig ->
 					alarmConfig.isAdmin()
-						? new GroupKey(
-						true,
-						alarmConfig.getEntornAppId(),
-						null)
-						: new GroupKey(
-						false,
-						alarmConfig.getEntornAppId(),
-						alarmConfig.getCreatedBy())
-				));
+						? new GroupKey(true, alarmConfig.getEntornAppId(), null)
+						: new GroupKey(false, alarmConfig.getEntornAppId(), alarmConfig.getCreatedBy())));
+		boolean logActivacio = isLogActivacio();
 		log.debug("{} grups d'alarmes generats", alarmaConfigGroups.size());
+		if (logActivacio) {
+			log.info("[ALARMA] Inici comprovació: {} grups, {} configs totals", alarmaConfigGroups.size(), alarms.size());
+		}
 		long activadesCount = 0;
 		for (Map.Entry<GroupKey, List<AlarmaConfigEntity>> entry : alarmaConfigGroups.entrySet()) {
 			List<AlarmaConfigEntity> sortedAlarms = entry.getValue().stream()
 					.sorted(Comparator.comparing(AlarmaConfigEntity::getOrdre, Comparator.nullsLast(Comparator.naturalOrder())))
 					.collect(Collectors.toList());
+			if (logActivacio) {
+				log.info("[ALARMA] Grup {} -> {} alarmes: {}",
+						entry.getKey(),
+						sortedAlarms.size(),
+						sortedAlarms.stream()
+								.map(a -> "configId=" + a.getId() + "('" + a.getNom() + "'" + (a.isAturarAvaluacioPosteriors() ? ",ATURA" : "") + ")")
+								.collect(Collectors.joining(", ")));
+			}
 			for (AlarmaConfigEntity alarmaConfig : sortedAlarms) {
 				boolean alarmaActivada = alarmaComprovacioHelper.comprovar(alarmaConfig);
 				if (!alarmaActivada) continue;
@@ -108,11 +115,18 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 				activadesCount++;
 				if (alarmaConfig.isAturarAvaluacioPosteriors()) {
 					log.debug("L'alarma {} s'ha activat i ha aturat l'execució del grup {}", alarmaConfig.getId(), entry.getKey());
+					if (logActivacio) {
+						log.info("[ALARMA] configId={} ('{}'): activa + aturarAvaluacioPosteriors=true -> s'atura el grup {}",
+								alarmaConfig.getId(), alarmaConfig.getNom(), entry.getKey());
+					}
 					break;
 				}
 			}
 		}
 		log.debug("...comprovació d'alarmes finalitzada ({} alarmes activades)", activadesCount);
+		if (logActivacio) {
+			log.info("[ALARMA] Fi comprovació: {} alarmes actives/en curs", activadesCount);
+		}
 	}
 
 	@Override
@@ -333,6 +347,10 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 		boolean isAdmin;
 		Long entornAppId;
 		String createdBy;
+	}
+
+	private boolean isLogActivacio() {
+		return Boolean.TRUE.equals(parametresHelper.getParametreBoolean(BaseConfig.PROP_ALARMA_LOG_ACTIVACIO, false));
 	}
 
 	private boolean isLeader() {

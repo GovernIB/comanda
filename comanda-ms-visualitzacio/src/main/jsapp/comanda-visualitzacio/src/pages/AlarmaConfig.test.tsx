@@ -362,7 +362,7 @@ describe('AlarmaConfigForm', () => {
             expect(screen.getByText('Període')).toBeInTheDocument();
             expect(screen.getByText('Afegir condició')).toBeInTheDocument();
             expect(screen.getByTestId('field-periodeValor')).toBeInTheDocument();
-            expect(screen.getByTestId('field-admin')).toHaveTextContent('admin:true');
+            expect(screen.getByTestId('field-admin')).toHaveTextContent('admin:false');
         });
     });
 

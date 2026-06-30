@@ -2,6 +2,7 @@ package es.caib.comanda.monitor.logic.service;
 
 import es.caib.comanda.monitor.logic.helper.MonitorHelper;
 import es.caib.comanda.ms.logic.helper.ParametresHelper;
+import es.caib.comanda.ms.logic.helper.SchedulerTaskRegistryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,8 @@ class MonitorSchedulerServiceTest {
     private ParametresHelper parametresHelper;
     @Mock
     private MonitorHelper monitorHelper;
+    @Mock
+    private SchedulerTaskRegistryService schedulerTaskRegistry;
 
     @InjectMocks
     private MonitorSchedulerService monitorSchedulerService;

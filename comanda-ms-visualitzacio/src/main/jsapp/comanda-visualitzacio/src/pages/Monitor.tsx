@@ -25,7 +25,8 @@ const moduleOptions = [
     { value: 'SALUT', labelKey: 'page.monitors.modulEnum.salut' },
     { value: 'ESTADISTICA', labelKey: 'page.monitors.modulEnum.estadistica' },
     { value: 'CONFIGURACIO', labelKey: 'page.monitors.modulEnum.configuracio' },
-    { value: 'ALARMES', labelKey: 'page.monitors.tab.email' },
+    { value: 'ALARMES', labelKey: 'page.monitors.tab.alarmes', fixedFilter: `modul:'ALARMES' and tipus:'INTERNA'` },
+    { value: 'EMAIL', labelKey: 'page.monitors.tab.email', fixedFilter: `modul:'ALARMES' and tipus:'SORTIDA'` },
     { value: 'TASCA', labelKey: 'page.monitors.modulEnum.tasca' },
     { value: 'AVIS', labelKey: 'page.monitors.modulEnum.avis' },
     { value: 'USUARIS', labelKey: 'page.monitors.modulEnum.usuaris' },
@@ -133,7 +134,8 @@ const MonitorDetails: React.FC<MonitorDetailsProps> = (props) => {
             contentValue: <EstatBadge value={data?.estat} />,
         },
         { label: t($ => $.page.monitors.detail.codiUsuari), value: data?.codiUsuari },
-        { label: t($ => $.page.monitors.column.mailAddress), value: selectedModule === 'ALARMES' ? data?.url : undefined },
+        { label: t($ => $.page.monitors.column.destinatari), value: selectedModule === 'ALARMES' ? data?.url : undefined },
+        { label: t($ => $.page.monitors.column.mailAddress), value: selectedModule === 'EMAIL' ? data?.url : undefined },
         { label: t($ => $.page.monitors.detail.errorDescripcio), value: data?.errorDescripcio },
         { label: t($ => $.page.monitors.detail.excepcioMessage), value: data?.excepcioMessage },
         {
@@ -291,20 +293,24 @@ const Monitors: React.FC = () => {
     const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
         setSelectedModule(newValue);
     };
-    const baseColumns: MuiDataGridColDef[] = React.useMemo(() => [
+    const currentModuleOption = moduleOptions.find(o => o.value === selectedModule);
+    const currentFixedFilter = currentModuleOption?.fixedFilter ?? `modul:'${selectedModule}'`;
+    const columns = [
         { field: 'app', flex: 1, sortable: false, valueFormatter: (value?: any) => value?.description },
         { field: 'entorn', flex: 1.5, sortable: false, valueFormatter: (value?: any) => value?.description },
         { field: 'data', flex: 1, minWidth: 150 },
-        { field: 'operacio', flex: 2 },
-        { field: 'tipus', flex: 1 },
+        { field: 'operacio', flex: 2, },
+        { field: 'tipus', flex: 1, },
         {
             field: 'url',
             flex: 2,
             headerName: selectedModule === 'ALARMES'
-                ? t($ => $.page.monitors.column.mailAddress)
-                : selectedModule === 'USUARIS'
-                    ? t($ => $.page.monitors.column.rolOUsuari)
-                    : 'URL',
+                ? t($ => $.page.monitors.column.destinatari)
+                : selectedModule === 'EMAIL'
+                    ? t($ => $.page.monitors.column.mailAddress)
+                    : selectedModule === 'USUARIS'
+                        ? t($ => $.page.monitors.column.rolOUsuari)
+                        : 'URL',
         },
         { field: 'modul', flex: 1 },
         { field: 'tempsResposta', flex: 1.4 },
@@ -347,7 +353,7 @@ const Monitors: React.FC = () => {
                 paginationActive
                 readOnly
                 onRowClick={(params) => showDetail(params.row)}
-                fixedFilter={`modul:'${selectedModule}'`}
+                fixedFilter={currentFixedFilter}
                 namedQueries={namedQueries}
             />
             {detailDialogComponent}

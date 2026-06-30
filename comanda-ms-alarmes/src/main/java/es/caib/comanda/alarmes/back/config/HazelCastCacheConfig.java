@@ -28,6 +28,7 @@ public class HazelCastCacheConfig {
         config.addMapConfig(new MapConfig().setName("appCache").setTimeToLiveSeconds(3600));
         config.addMapConfig(new MapConfig().setName("entornCache").setTimeToLiveSeconds(3600));
         config.addMapConfig(new MapConfig().setName("dashboardWidgetCache").setTimeToLiveSeconds(28800).setEvictionConfig(getEvictionConfig())); // 8 hores de TTL
+        config.addMapConfig(new MapConfig().setName("usuariCache").setTimeToLiveSeconds(900));
         return config;
     }
 

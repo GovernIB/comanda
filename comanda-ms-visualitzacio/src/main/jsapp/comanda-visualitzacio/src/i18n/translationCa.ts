@@ -83,11 +83,12 @@ const translationCa = {
         avis: "Avisos",
         alarmes: "Alarmes actives",
         monitoritzacio: "Monitorització",
-        monitoritzacioDescription: "Monitorització de integracions, caches i cues.",
+        monitoritzacioDescription: "Monitorització de integracions, caches, cues i tasques en segon pla.",
         monitor: "Monitor",
         monitorDb: "Monitor de BD",
         cache: "Gestió de cachés",
         broker: "Gestor de cues",
+        tasquesBackground: "Tasques en segon pla",
         configuracio: "Configuració",
         configuracioDescription: "Opcions de d'administració de l'aplicació.",
         app: "Aplicacions",
@@ -802,6 +803,7 @@ const translationCa = {
             column: {
                 mailAddress: "Adreça de correu",
                 rolOUsuari: "Rol / Usuari",
+                destinatari: "Destinatari",
             },
             detail: {
                 title: "Detalls de la comunicació amb la integració",
@@ -841,6 +843,7 @@ const translationCa = {
                 usuaris: "Usuaris",
             },
             tab: {
+                alarmes: "ALARMES",
                 email: "EMAIL",
             },
             filter: {
@@ -1011,6 +1014,24 @@ const translationCa = {
                 messageCount: "Nombre de missatges",
                 consumerCount: "Nombre de consumidors",
                 viewMessages: "Veure missatges",
+            },
+        },
+        tasquesBackground: {
+            title: "Tasques en segon pla",
+            columns: {
+                nom: "Nom",
+                expressioHuman: "Planificació",
+                proxExecucio: "Propera execució",
+                ultimaExecucio: "Última execució",
+                ultimaEstat: "Estat",
+                ultimaDuracio: "Duració (ms)",
+            },
+            reiniciar: {
+                label: "Reiniciar",
+                titol: "Reiniciar tasca",
+                confirm: "Estau segur que voleu reiniciar la tasca '{{nom}}'?",
+                success: "La tasca s'ha reiniciat correctament.",
+                error: "Error en reiniciar la tasca",
             },
         },
         queue: {
