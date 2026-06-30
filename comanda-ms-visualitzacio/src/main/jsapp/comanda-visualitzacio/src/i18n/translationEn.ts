@@ -666,6 +666,7 @@ const translationEn: translationResourcesType = {
             title: "Monitors",
             column: {
                 mailAddress: "Email address",
+                rolOUsuari: "Role / User",
             },
             detail: {
                 title: "Communication details with the integration",
@@ -697,6 +698,7 @@ const translationEn: translationResourcesType = {
                 alarmes: "Alarms",
                 tasca: "Task",
                 avis: "Notice",
+                usuaris: "Users",
             },
             tab: {
                 email: "EMAIL",
