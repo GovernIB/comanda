@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GroupingEnum, SalutToolbar } from './SalutToolbar';
@@ -109,8 +109,6 @@ describe('SalutToolbar render', () => {
                 onRefreshClick={() => undefined}
                 dataRangeDuration="PT15M"
                 setDataRangeDuration={() => undefined}
-                refreshDuration="PT5M"
-                setRefreshDuration={() => undefined}
                 filterData={{}}
                 setFilterData={() => undefined}
                 grouping={GroupingEnum.APPLICATION}
@@ -134,8 +132,6 @@ describe('SalutToolbar render', () => {
                 goBackActive={true}
                 dataRangeDuration="PT15M"
                 setDataRangeDuration={() => undefined}
-                refreshDuration="PT5M"
-                setRefreshDuration={() => undefined}
                 filterData={{}}
                 setFilterData={() => undefined}
                 grouping={GroupingEnum.APPLICATION}
@@ -158,8 +154,6 @@ describe('SalutToolbar render', () => {
                 onRefreshClick={() => undefined}
                 dataRangeDuration="PT15M"
                 setDataRangeDuration={() => undefined}
-                refreshDuration="PT5M"
-                setRefreshDuration={() => undefined}
                 filterData={{}}
                 setFilterData={() => undefined}
                 grouping={GroupingEnum.APPLICATION}
@@ -179,8 +173,6 @@ describe('SalutToolbar render', () => {
                 onRefreshClick={() => undefined}
                 dataRangeDuration="PT15M"
                 setDataRangeDuration={() => undefined}
-                refreshDuration="PT5M"
-                setRefreshDuration={() => undefined}
                 filterData={{
                     app: [{ id: '1', description: 'App Demo' }],
                     entorn: [{ id: '2', description: 'PRO' }],
@@ -203,8 +195,6 @@ describe('SalutToolbar render', () => {
                 onRefreshClick={() => undefined}
                 dataRangeDuration="PT15M"
                 setDataRangeDuration={() => undefined}
-                refreshDuration="PT5M"
-                setRefreshDuration={() => undefined}
                 filterData={{ app: [{ id: '1', description: 'App Demo' }] }}
                 setFilterData={() => undefined}
                 grouping={GroupingEnum.APPLICATION}
@@ -225,8 +215,6 @@ describe('SalutToolbar render', () => {
                 onRefreshClick={() => undefined}
                 dataRangeDuration="PT15M"
                 setDataRangeDuration={() => undefined}
-                refreshDuration="PT5M"
-                setRefreshDuration={() => undefined}
                 filterData={{}}
                 setFilterData={() => undefined}
                 grouping={GroupingEnum.APPLICATION}
@@ -250,8 +238,6 @@ describe('SalutToolbar render', () => {
                 onRefreshClick={() => undefined}
                 dataRangeDuration="PT15M"
                 setDataRangeDuration={() => undefined}
-                refreshDuration="PT5M"
-                setRefreshDuration={() => undefined}
                 filterData={{}}
                 setFilterData={() => undefined}
                 grouping={GroupingEnum.APPLICATION}
@@ -260,28 +246,22 @@ describe('SalutToolbar render', () => {
         );
 
         expect(screen.getByTitle('Refrescar')).toBeDisabled();
-        expect(screen.getByLabelText('Període de refresc')).toHaveAttribute('aria-disabled', 'true');
         expect(screen.getByLabelText('Rang temporal')).toHaveAttribute('aria-disabled', 'true');
         expect(screen.getByTitle('Per aplicació')).toBeDisabled();
         expect(screen.getByTitle('Per entorn')).toBeDisabled();
         expect(screen.getByTitle('Cap')).toBeDisabled();
     });
 
-    it('SalutToolbar_quanHiHaDatesDeRefresh_mostraElResumTemporal', () => {
-        // Comprova que la toolbar mostra el darrer refresh i el temps que falta fins al següent.
-        vi.setSystemTime(new Date('2026-03-13T10:00:00'));
-
+    it('SalutToolbar_quanHiHaDataDeRefresh_mostraElResumTemporal', () => {
+        // Comprova que la toolbar mostra el darrer refresh quan hi ha dades.
         render(
             <SalutToolbar
                 title="Salut"
                 ready={true}
                 onRefreshClick={() => undefined}
                 lastRefresh={new Date('2026-03-13T09:59:00')}
-                nextRefresh={new Date('2026-03-13T10:00:30')}
                 dataRangeDuration="PT15M"
                 setDataRangeDuration={() => undefined}
-                refreshDuration="PT5M"
-                setRefreshDuration={() => undefined}
                 filterData={{}}
                 setFilterData={() => undefined}
                 grouping={GroupingEnum.APPLICATION}
@@ -289,11 +269,6 @@ describe('SalutToolbar render', () => {
             />
         );
 
-        act(() => {
-            vi.advanceTimersByTime(1000);
-        });
-
         expect(screen.getByText(/Darrer:/)).toBeInTheDocument();
-        expect(screen.getByText(/Següent:/)).toBeInTheDocument();
     });
 });

@@ -1,6 +1,7 @@
 package es.caib.comanda.alarmes.logic.service.sse;
 
 import es.caib.comanda.alarmes.back.sse.ComandaSseService;
+import es.caib.comanda.ms.sse.ComandaSsePublishRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;

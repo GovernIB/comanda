@@ -15,6 +15,7 @@ import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
 import es.caib.comanda.salut.logic.helper.MetricsHelper;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
+import es.caib.comanda.salut.logic.helper.SalutEstatHelper;
 import es.caib.comanda.salut.logic.intf.model.Salut;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
 import es.caib.comanda.salut.logic.intf.model.SalutInformeAgrupacio;
@@ -67,7 +68,8 @@ class SalutServiceImplTest {
                                         MetricsHelper metricsHelper,
                                         AuthenticationHelper authenticationHelper,
                                         HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
-                                        AclServiceClient aclServiceClient) {
+                                        AclServiceClient aclServiceClient,
+                                        SalutEstatHelper salutEstatHelper) {
             super(salutIntegracioRepository,
                     salutSubsistemaRepository,
                     salutMissatgeRepository,
@@ -77,7 +79,8 @@ class SalutServiceImplTest {
                     metricsHelper,
                     authenticationHelper,
                     httpAuthorizationHeaderHelper,
-                    aclServiceClient);
+                    aclServiceClient,
+                    salutEstatHelper);
         }
 
         public String exposedAdditionalSpringFilter() {
@@ -121,10 +124,13 @@ class SalutServiceImplTest {
     @Mock
     private AclServiceClient aclServiceClient;
 
+    private SalutEstatHelper salutEstatHelper;
+
     private TestableSalutServiceImpl service;
 
     @BeforeEach
     void setUp() throws Exception {
+        salutEstatHelper = new SalutEstatHelper(salutRepository);
         service = new TestableSalutServiceImpl(
                 salutIntegracioRepository,
                 salutSubsistemaRepository,
@@ -135,7 +141,8 @@ class SalutServiceImplTest {
                 metricsHelper,
                 authenticationHelper,
                 httpAuthorizationHeaderHelper,
-                aclServiceClient);
+                aclServiceClient,
+                salutEstatHelper);
         injectBaseField("entityRepository", salutRepository);
         injectBaseField("objectMappingHelper", objectMappingHelper);
         injectBaseField("resourceEntityMappingHelper", new ResourceEntityMappingHelper(new ObjectMappingHelper()));

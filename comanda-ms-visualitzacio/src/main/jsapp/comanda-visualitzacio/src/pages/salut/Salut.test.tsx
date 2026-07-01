@@ -6,7 +6,11 @@ const mocks = vi.hoisted(() => ({
     useParamsMock: vi.fn(),
     refreshSalutMock: vi.fn(),
     refreshAppInfoMock: vi.fn(),
-    useIntervalMock: vi.fn(),
+    sseMock: {
+        subscribe: vi.fn(() => vi.fn()),
+        status: 'connected' as const,
+        connected: true,
+    },
     tMock: vi.fn((selector: any) =>
         selector({
             page: {
@@ -89,7 +93,6 @@ vi.mock('../../components/salut/SalutToolbar', () => ({
     useSalutToolbarState: () => ({
         grouping: 'APPLICATION',
         dataRangeDuration: 'PT15M',
-        refreshDuration: 'PT5M',
         filterData: {},
         ...(typeof (globalThis as any).__salutToolbarStateMock === 'function'
             ? (globalThis as any).__salutToolbarStateMock()
@@ -129,8 +132,8 @@ vi.mock('../../components/PageTitle', () => ({
     default: ({ title }: { title: string }) => <h1>{title}</h1>,
 }));
 
-vi.mock('../../hooks/useInterval', () => ({
-    default: (args: unknown) => mocks.useIntervalMock(args),
+vi.mock('../../components/SseProvider', () => ({
+    useSseContext: () => mocks.sseMock,
 }));
 
 vi.mock('./dataFetching', () => ({
@@ -241,7 +244,7 @@ describe('Salut', () => {
 
         expect(screen.getByRole('heading', { name: 'Salut' })).toBeInTheDocument();
         expect(screen.getByTestId('salut-toolbar')).toHaveTextContent('Salut');
-        expect(mocks.useIntervalMock).toHaveBeenCalled();
+        expect(mocks.sseMock.subscribe).toHaveBeenCalled();
     });
 
     it('Salut_quanCarregaInicialment_activaElSkeletonDelLlistat', async () => {
@@ -272,25 +275,18 @@ describe('Salut', () => {
     });
 
     it('Salut_quanEsPremRefrescar_tornaADemanarLesDadesIGestionaElRefreshDelDetall', async () => {
-        // Comprova que el tick periòdic del component reactiva el refresh global i inclou el refresh del detall de l'app.
+        // Comprova que el botó de refresc manual executa el refresh global i inclou el detall de l'app.
         render(<Salut />);
 
         await waitFor(() => {
             expect(screen.getByText(/SalutLlistat/)).toBeInTheDocument();
         });
 
-        const intervalArgs = mocks.useIntervalMock.mock.calls[0]?.[0] as {
-            tick: () => void;
-            init: () => void;
-        };
-
         act(() => {
-            intervalArgs.init();
-            intervalArgs.tick();
+            screen.getByRole('button', { name: 'Refrescar' }).click();
         });
 
         expect(mocks.refreshAppInfoMock).toHaveBeenCalled();
-        expect(mocks.useIntervalMock).toHaveBeenCalled();
     });
 
     it('Salut_quanLaRutaDeDetallNoTeEntornApp_noMostraSubtitol', async () => {

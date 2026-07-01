@@ -1,18 +1,19 @@
-package es.caib.comanda.alarmes.logic.service.sse;
+package es.caib.comanda.ms.sse;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+/**
+ * Esdeveniment SSE enviat als clients connectats.
+ */
 @Getter
-@Setter
-@NoArgsConstructor
 @AllArgsConstructor
-public class ComandaSseEvent implements Serializable {
+@NoArgsConstructor
+public class ComandaSseEvent {
 
     public static final String SSE_EVENT_NAME = "comanda-event";
 

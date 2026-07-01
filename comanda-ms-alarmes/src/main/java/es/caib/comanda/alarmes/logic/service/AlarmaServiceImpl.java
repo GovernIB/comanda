@@ -1,7 +1,7 @@
 package es.caib.comanda.alarmes.logic.service;
 
 import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventPublisher;
-import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventTypes;
+import es.caib.comanda.ms.sse.ComandaSseEventTypes;
 import es.caib.comanda.alarmes.logic.helper.AlarmaComprovacioHelper;
 import es.caib.comanda.alarmes.logic.helper.AlarmaMailHelper;
 import es.caib.comanda.alarmes.logic.intf.model.Alarma;

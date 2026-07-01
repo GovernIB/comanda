@@ -6,7 +6,7 @@ import es.caib.comanda.alarmes.logic.helper.UserInformationHelper;
 import es.caib.comanda.alarmes.logic.intf.model.*;
 import es.caib.comanda.alarmes.logic.intf.service.AlarmaConfigService;
 import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventPublisher;
-import es.caib.comanda.alarmes.logic.service.sse.ComandaSseEventTypes;
+import es.caib.comanda.ms.sse.ComandaSseEventTypes;
 import es.caib.comanda.alarmes.persist.entity.AlarmaConfigEntity;
 import es.caib.comanda.alarmes.persist.repository.AlarmaConfigRepository;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;

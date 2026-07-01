@@ -295,7 +295,7 @@ const Monitors: React.FC = () => {
     };
     const currentModuleOption = moduleOptions.find(o => o.value === selectedModule);
     const currentFixedFilter = currentModuleOption?.fixedFilter ?? `modul:'${selectedModule}'`;
-    const columns = [
+    const baseColumns = React.useMemo<MuiDataGridColDef[]>(() => [
         { field: 'app', flex: 1, sortable: false, valueFormatter: (value?: any) => value?.description },
         { field: 'entorn', flex: 1.5, sortable: false, valueFormatter: (value?: any) => value?.description },
         { field: 'data', flex: 1, minWidth: 150 },

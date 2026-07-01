@@ -112,6 +112,7 @@ vi.mock('reactlib', () => ({
         }
         return {
             isReady: true,
+            find: vi.fn().mockResolvedValue({ rows: [] }),
         };
     },
     useResourceApiContext: () => mocks.resourceApiContextMock,
