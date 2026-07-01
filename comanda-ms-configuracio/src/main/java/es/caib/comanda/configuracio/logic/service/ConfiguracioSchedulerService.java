@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 public class ConfiguracioSchedulerService {
 
     private static final String TASK_ID = "CONFIGURACIO_REFRESC";
+    private static final String TASK_ID_HIST = "CONFIGURACIO_HIST_NETEJA";
 
     private final EntornAppRepository entornAppRepository;
     private final EntornAppHistRepository entornAppHistRepository;
@@ -56,6 +57,7 @@ public class ConfiguracioSchedulerService {
     @PostConstruct
     public void registrarTasques() {
         schedulerTaskRegistry.registerCron(TASK_ID, "Refresc de configuració", "Actualitza la informació de configuració de les aplicacions", "30 0/15 * * * *", this::scheduledConfiguracioTasks);
+        schedulerTaskRegistry.registerCron(TASK_ID_HIST, "Neteja d'historial de configuració", "Elimina els registres antics d'historial de l'entorn-app de configuració", "30 10 0 * * *", this::scheduledConfiguracioEntornAppHistTasks);
     }
 
     @Scheduled(cron = "30 0/15 * * * *")
@@ -113,9 +115,11 @@ public class ConfiguracioSchedulerService {
 
     @Scheduled(cron = "30 10 0 * * *")
     public void scheduledConfiguracioEntornAppHistTasks() {
+        schedulerTaskRegistry.recordStart(TASK_ID_HIST);
         try {
             if (!isLeader()) {
                 log.debug("Metode diari per a entornAppHist ignorat: aquesta instància no és leader per als schedulers");
+                schedulerTaskRegistry.recordSuccess(TASK_ID_HIST);
                 return;
             }
             Integer retencioDiesHistoric = parametresHelper.getParametreEnter(BaseConfig.PROP_CONFIG_ENTORN_APP_HIST_RETENCIO_DIES, 30);
@@ -124,8 +128,10 @@ public class ConfiguracioSchedulerService {
                 long eliminats = entornAppHistRepository.deleteByDataBefore(menysRetencioHistoric);
                 log.info("Neteja d'entornAppHist finalitzada. Eliminats {} registres anteriors a {}", eliminats, menysRetencioHistoric);
             }
+            schedulerTaskRegistry.recordSuccess(TASK_ID_HIST);
         } catch (Exception e) {
             log.error("Error executant la neteja d'entornAppHist", e);
+            schedulerTaskRegistry.recordError(TASK_ID_HIST);
         }
     }
 
