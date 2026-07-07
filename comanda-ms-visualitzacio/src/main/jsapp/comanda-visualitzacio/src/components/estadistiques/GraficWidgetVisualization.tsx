@@ -1,8 +1,6 @@
 import React from 'react';
-import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
-import {useTheme} from '@mui/material/styles';
+import { Box, Typography, Skeleton } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import {
     BarChart,
     LineChart,
@@ -17,16 +15,10 @@ import {
     LineSeries,
     YAxis,
 } from '@mui/x-charts';
-import estils from "./WidgetEstils.ts";
-import {createTransparentColor, isLightColor} from "../../util/colorUtil.ts";
-import Chip from "@mui/material/Chip";
-import Skeleton from '@mui/material/Skeleton';
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { PieSeries } from '@mui/x-charts';
+import estils from './WidgetEstils';
+import { useWidgetTheme } from './useWidgetTheme';
+import { WidgetContainer, WidgetHeader, WidgetFooter, WidgetErrorDisplay } from './WidgetLayout';
 
 interface ColumnLabel {
     id: string;
@@ -45,44 +37,44 @@ export interface GraficWidgetVisualizationProps {
     dades?: Record<string, unknown>[];
     columnaAgregacio?: string;
     llegendaX?: string;
+    destacat?: boolean;
 
     // Atributs visuals
     colorText?: string;
     colorFons?: string;
-    mostrarVora: boolean;
+    mostrarVora?: boolean;
     colorVora?: string;
-    ampleVora: number;
-
+    ampleVora?: number;
 
     // Visual attributes
-    colorsPaleta?: string;  // Colors separated by commas
+    colorsPaleta?: string;
     mostrarReticula?: boolean;
 
-    // Bar chart specific
+    // Bar chart
     barStacked?: boolean;
     barHorizontal?: boolean;
 
-    // Line chart specific
+    // Line chart
     lineShowPoints?: boolean;
     lineSmooth?: boolean;
     lineWidth?: number;
     area?: boolean;
 
-    // Pie chart specific
+    // Pie chart
     pieDonut?: boolean;
     pieShowLabels?: boolean;
     outerRadius?: number;
     innerRadius?: number;
     labelSize?: number;
 
-    // Gauge chart specific
+    // Gauge chart
     gaugeMin?: number;
     gaugeMax?: number;
-    gaugeColors?: string;  // Colors separated by commas
-    gaugeRangs?: string;   // Ranges separated by commas
+    gaugeColors?: string;
+    gaugeRangs?: string;
 
-    // Heatmap chart specific
-    heatmapColors?: string;  // Colors separated by commas
+    // Heatmap chart
+    heatmapColors?: string;
     heatmapMinValue?: number;
     heatmapMaxValue?: number;
 
@@ -94,44 +86,19 @@ export interface GraficWidgetVisualizationProps {
     errorTrace?: string;
     onClick?: () => void;
 
-    midaFontTitol?: number,
-    midaFontDescripcio?: number,
+    midaFontTitol?: number;
+    midaFontDescripcio?: number;
+
+    // Dashboard context
+    dashboardEntornCodi?: string;
 }
 
-interface GraficWidgetColors {
-    textColor: string;
-    backgroundColor: string;
-    voraColor: string;
-    isWhiteBackground: boolean;
-}
-
-const useWidgetColors = (props: GraficWidgetVisualizationProps, theme: any): GraficWidgetColors => {
-    const { colorText, colorFons, colorVora } = props;
-
-    const colors = {
-        text: colorText || theme.palette.text.primary,
-        background: colorFons || theme.palette.background.paper,
-        vora: colorVora || theme.palette.divider,
-    };
-
-    return {
-        textColor: colors.text,
-        backgroundColor: colors.background,
-        voraColor: colors.vora,
-        isWhiteBackground: !colorFons || isLightColor(colors.background),
-    };
-};
-
-/**
- * Component for visualizing a graph widget with configurable visual attributes.
- * Can be used both for dashboard display and for preview in configuration forms.
- */
 const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (props) => {
     const {
         // Widget data
-        titol = 'Títol del gràfic',
+        titol,
         descripcio,
-        entornCodi = 'DEV',
+        entornCodi,
         // colorText,
         // colorFons,
         mostrarVora = false,
@@ -182,23 +149,28 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         errorMsg,
         errorTrace,
         onClick,
+        dashboardEntornCodi,
 
-        midaFontTitol,
-        midaFontDescripcio,
+        //midaFontTitol,
+        //midaFontDescripcio,
     } = props;
     const theme = useTheme();
-    const colors: GraficWidgetColors = useWidgetColors(props, theme);
-
-    const bgColor = colors.isWhiteBackground ? colors.backgroundColor + ' !important' : 'transparent';
-    const bg = colors.isWhiteBackground ? 'none' : `linear-gradient(to bottom, ${colors.backgroundColor}, ${createTransparentColor(colors.backgroundColor, 0.75)})`;
-    const voraAmple = ampleVora || (mostrarVora ? 1 : 0);
-    const contrastTextColor = colors.isWhiteBackground ? '#000000' : '#FFFFFF';
-    const entornChipSx = {
-        ...estils.entornCodi,
-        color: contrastTextColor,
-        backgroundColor: colors.isWhiteBackground ? theme.palette.grey[200] : createTransparentColor(colors.backgroundColor, 0.35),
-        border: `1px solid ${colors.voraColor}`,
-    };
+    const {
+        textColor,
+        backgroundColor,
+        voraColor,
+        isWhiteBackground,
+        contrastTextColor,
+        bgColor,
+        bg,
+        voraAmple,
+    } = useWidgetTheme({
+        colorText: props.colorText,
+        colorFons: props.colorFons,
+        colorVora: props.colorVora,
+        mostrarVora,
+        ampleVora,
+    });
     const chartTextColor = contrastTextColor;
     const axisStyleProps = {
         tickLabelStyle: { fill: chartTextColor },
@@ -218,53 +190,37 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         '& .MuiChartsLegend-label': { fill: chartTextColor },
     };
 
-    // Parse color palette
     const paletaColors = colorsPaleta.split(',');
-
-    // Determine chart height based on preview mode
     const chartHeight = preview ? 150 : 300;
 
-    // Render the appropriate chart based on the type
     const renderChart = () => {
         switch (tipusGrafic) {
-            case 'BAR_CHART':
-                return renderBarChart();
-            case 'LINE_CHART':
-                return renderLineChart();
-            case 'PIE_CHART':
-                return renderPieChart();
-            case 'SCATTER_CHART':
-                return renderScatterChart();
-            case 'SPARK_LINE_CHART':
-                return renderSparkLineChart();
-            case 'GAUGE_CHART':
-                return renderGaugeChart();
-            case 'HEATMAP_CHART':
-                return renderHeatmapChart();
-            default:
-                return renderBarChart();
+            case 'BAR_CHART': return renderBarChart();
+            case 'LINE_CHART': return renderLineChart();
+            case 'PIE_CHART': return renderPieChart();
+            case 'SCATTER_CHART': return renderScatterChart();
+            case 'SPARK_LINE_CHART': return renderSparkLineChart();
+            case 'GAUGE_CHART': return renderGaugeChart();
+            case 'HEATMAP_CHART': return renderHeatmapChart();
+            default: return renderBarChart();
         }
     };
 
     // Render a bar chart
     const renderBarChart = () => {
-        // Extract data keys
         const discriminador: string = !columnaAgregacio ? 'agregacio' : columnaAgregacio;
-        const dataKeys =
-            dades.length > 0
-                ? Object.keys(dades[0]).filter(key => key !== discriminador) // Exclou el discriminador, ja que es fa servir per al `xAxis`.
-                : [];
-        // Construïm el `dataset` utilitzat pel gràfic. Aquí simplement copiem la matriu de dades.
-        // const dataset = [...dades];
+        const dataKeys = dades.length > 0
+            ? Object.keys(dades[0]).filter(key => key !== discriminador)
+            : [];
+
         const dataset = dades.map(item => ({
-            [discriminador]: item[discriminador], // La categoria (eix X o Y segons l'orientació)
+            [discriminador]: item[discriminador],
             ...dataKeys.reduce((acc: Record<string, unknown>, key: string) => {
                 acc[key] = item[key] || 0;
                 return acc;
             }, {}),
         }));
 
-        // Prepare series for MUI X-Charts
         const series = dataKeys.map((key, index) => ({
             dataKey: key,
             label: labels?.find(label => label.id === key)?.label || key,
@@ -274,39 +230,22 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
 
         const xAxis: Array<XAxis> = [];
         const yAxisLabel = preview ? 'Eix Y' : undefined;
-        if (barHorizontal) {
-            // Si és horitzontal, l'eix X té valors numèrics
-            xAxis.push({
-                scaleType: 'linear',
-                label: llegendaX || (preview ? 'Eix X' : undefined),
-                ...axisStyleProps,
-            });
-        } else {
-            // Si no és horitzontal, l'eix X té categories
+        if (barHorizontal) { // Si és horitzontal, l'eix X té valors numèrics
+            xAxis.push({ scaleType: 'linear', label: llegendaX || (preview ? 'Eix X' : undefined), ...axisStyleProps });
+        } else { // Si no és horitzontal, l'eix X té categories
             xAxis.push({ scaleType: 'band', data: dades.map(item => item[discriminador]), label: llegendaX || (preview ? 'Eix X' : undefined), ...axisStyleProps });
         }
 
         const yAxis: Array<YAxis> = [];
-        if (barHorizontal) {
-            // Si és horitzontal, l'eix Y té categories
-            yAxis.push({
-                scaleType: 'band',
-                data: dades.map(item => item[discriminador]),
-                label: llegendaX || undefined,
-                ...axisStyleProps,
-            });
-        } else {
-            // Si no és horitzontal, l'eix Y té valors numèrics
+        if (barHorizontal) { // Si és horitzontal, l'eix Y té categories
+            yAxis.push({ scaleType: 'band', data: dades.map(item => item[discriminador]), label: llegendaX || undefined, ...axisStyleProps });
+        } else { // Si no és horitzontal, l'eix Y té valors numèrics
             yAxis.push({ scaleType: 'linear', label: yAxisLabel, ...axisStyleProps });
         }
 
         const grid = barHorizontal
-            ? mostrarReticula
-                ? { vertical: true }
-                : { vertical: false }
-            : mostrarReticula
-              ? { horizontal: true }
-              : { horizontal: false };
+            ? mostrarReticula ? { vertical: true } : { vertical: false }
+            : mostrarReticula ? { horizontal: true } : { horizontal: false };
 
         return (
             <Box sx={{ width: '100%', height: chartHeight }}>
@@ -337,12 +276,11 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
 
     // Render a line chart
     const renderLineChart = () => {
-        // Extract data keys
         const discriminador: string = !columnaAgregacio ? 'agregacio' : columnaAgregacio;
         const dataKeys = dades.length > 0
-            ? Object.keys(dades[0]).filter(key => key !== discriminador)  // Exclou el discriminador, ja que es fa servir per al `xAxis`.
+            ? Object.keys(dades[0]).filter(key => key !== discriminador)
             : [];
-        // Prepare series for MUI X-Charts
+
         const series: LineSeries[] = dataKeys.map((key, index) => ({
             dataKey: key,
             label: labels?.find((label) => label.id === key)?.label || key,
@@ -352,7 +290,6 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             area: area,
         }));
 
-        // Prepare xAxis categories from data
         const xAxisData: ReadonlyArray<XAxis<'band'>> = [{
             dataKey: discriminador,
             scaleType: 'band',
@@ -361,24 +298,14 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             // data: dades.map(d => d[datakey]),
         }];
 
-        const grid = mostrarReticula
-            ? {
-                horizontal: true,
-                // vertical: true,
-            }
-            : {
-                horizontal: false,
-                // vertical: false,
-            }
+        const grid = mostrarReticula ? { horizontal: true } : { horizontal: false };
 
         return (
             <Box sx={{width: '100%', height: chartHeight}}>
                 <LineChart
                     sx={{
                         ...chartCommonSx,
-                        '& .MuiLineElement-root': {
-                            strokeWidth: +lineWidth,
-                        },
+                        '& .MuiLineElement-root': { strokeWidth: +lineWidth },
                     }}
                     xAxis={xAxisData}
                     yAxis={[{scaleType: 'linear', label: preview ? 'Eix Y' : undefined, ...axisStyleProps}]}
@@ -395,8 +322,8 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                         },
                     }}
                 >
-                    <ChartsTooltip/>
-                    <ChartsLegend/>
+                    <ChartsTooltip />
+                    <ChartsLegend />
                 </LineChart>
             </Box>
         );
@@ -404,71 +331,57 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
 
     // Render a pie chart
     const renderPieChart = () => {
-        // For pie chart, transform data if needed
         const pieData = dades.map((item, index) => ({
             id: index,
             label: item.label as string | undefined,
             value: typeof item.value === 'number' ? item.value : 0,
-            color: paletaColors[index % paletaColors.length]
+            color: paletaColors[index % paletaColors.length],
         }));
 
-        // Calculate inner radius for donut chart
         const radiExterior = outerRadius ? outerRadius : preview ? 60 : 80;
-        const radiInterior = innerRadius? innerRadius : pieDonut ? radiExterior * 0.6 : 0;
+        const radiInterior = innerRadius ? innerRadius : pieDonut ? radiExterior * 0.6 : 0;
 
-        // Define a simple interface for the arc label params
         interface ArcLabelParams {
             label?: string;
-            [key: string]: any; // Allow any other properties
+            [key: string]: any;
         }
 
-        // Custom label component for pie chart
         const getArcLabel = (params: ArcLabelParams) => {
             return pieShowLabels ? (params.label ?? '') : '';
         };
 
         const ContrastPieArcLabel = ({ color, ...other }: any) => {
             const labelColor = theme.palette.getContrastText(color);
-
             return (
                 <PieArcLabel
                     {...other}
                     color={color}
                     fill={labelColor}
-                    style={{
-                        ...(other?.style || {}),
-                        fill: labelColor,
-                        color: labelColor,
-                    }}
+                    style={{ ...(other?.style || {}), fill: labelColor, color: labelColor }}
                 />
             );
         };
 
-        const series: Readonly<PieSeries[]> = [
-            {
-                data: pieData,
-                innerRadius: +radiInterior,
-                outerRadius: +radiExterior,
-                paddingAngle: 1,
-                cornerRadius: 4,
-                arcLabel: getArcLabel,
-                arcLabelMinAngle: 20,
-                highlightScope: { fade: 'global', highlight: 'item' },
-                faded: { innerRadius: 20, additionalRadius: -15, color: 'gray' },
-            },
-        ];
+        const series: Readonly<PieSeries[]> = [{
+            data: pieData,
+            innerRadius: +radiInterior,
+            outerRadius: +radiExterior,
+            paddingAngle: 1,
+            cornerRadius: 4,
+            arcLabel: getArcLabel,
+            arcLabelMinAngle: 20,
+            highlightScope: { fade: 'global', highlight: 'item' },
+            faded: { innerRadius: 20, additionalRadius: -15, color: 'gray' },
+        }];
+
         return (
             <Box sx={{ width: '100%', height: chartHeight }}>
                 <PieChart
                     sx={{
                         ...chartCommonSx,
-                        '& .MuiPieArcLabel-root': {
-                            fontSize: labelSize ? labelSize + 'px' : '1em',
-                        },
+                        '& .MuiPieArcLabel-root': { fontSize: labelSize ? labelSize + 'px' : '1em' },
                     }}
-                    slots={{
-                        pieArcLabel: ContrastPieArcLabel,
-                    }}
+                    slots={{ pieArcLabel: ContrastPieArcLabel }}
                     series={series}
                     height={chartHeight}
                     margin={{top: 10, bottom: 10, left: 10, right: 10}}
@@ -521,14 +434,14 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                 justifyContent: 'center',
                 alignItems: 'center',
                 height: chartHeight,
-                color: theme.palette.text.secondary
+                color: theme.palette.text.secondary,
             }}>
                 <Typography sx={{color: theme.palette.error.main}}>
                     Scatter Chart (Pendent d'implementació)
                 </Typography>
             </Box>
         );
-    }
+    };
 
     // Render a spark chart
     const renderSparkLineChart = () => {
@@ -550,9 +463,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                     curve={lineSmooth ? 'monotoneX' : 'linear'}
                     area={area}
                     sx={{
-                        '& .MuiLineElement-root': {
-                            strokeWidth: +lineWidth,
-                        },
+                        '& .MuiLineElement-root': { strokeWidth: +lineWidth },
                     }}
                 />
             </Box>);
@@ -561,7 +472,6 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
     // Render a gauge chart
     const renderGaugeChart = () => {
         const valorGauge = Array.isArray(dades) && dades.length > 0 ? Number(dades[0].value) : 0;
-        // const colors = gaugeColors ? gaugeColors.split(',').map(c => c.trim()) : ["#000000"];
         const colors = colorsPaleta ? colorsPaleta.split(',').map(c => c.trim()) : ["#000000"];
         const rangs = gaugeRangs ? gaugeRangs.split(',').map(r => Number(r.trim())).filter(v => !isNaN(v)) : [];
         const getColor = (value: number) => {
@@ -646,7 +556,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                 justifyContent: 'center',
                 alignItems: 'center',
                 height: chartHeight,
-                color: theme.palette.text.secondary
+                color: theme.palette.text.secondary,
             }}>
                 <Typography sx={{color: theme.palette.error.main}}>
                     Heatmap Chart (Pendent d'implementació)
@@ -655,58 +565,32 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         );
     };
 
-    const titleEstils = {
-        ...estils.titleText,
-        fontSize: midaFontTitol ?`${midaFontTitol}px` :estils.titleText.fontSize
-    }
-    const descEstils = {
-        ...estils.descText(colors.textColor),
-        fontSize: midaFontDescripcio ?`${midaFontDescripcio}px` :estils.descText(colors.textColor).fontSize
-    }
-
     return (
-        <Paper elevation={2} onClick={onClick} sx={estils.paperContainer(bgColor, bg, colors.textColor, mostrarVora, voraAmple, colors.voraColor, onClick, theme)}>
-            {/* Titol */}
-            <Box sx={estils.titleContainer} >
-                {loading ? (
-                    <>
-                        <Skeleton width="70%" height={32} />
-                        <Box sx={estils.iconContainer}>
-                            <Skeleton width={40} height={24} />
-                        </Box>
-                    </>
-                ) : (
-                    <>
-                        <Typography sx={titleEstils} >{titol}</Typography>
-                        <Box sx={estils.iconContainer}>
-                            <Chip sx={entornChipSx} label={entornCodi} size={"small"} />
-                        </Box>
-                    </>
-                )}
-            </Box>
+        <WidgetContainer
+            bgColor={bgColor}
+            bg={bg}
+            textColor={textColor}
+            mostrarVora={mostrarVora}
+            voraAmple={voraAmple}
+            voraColor={voraColor}
+            onClick={onClick}
+        >
+            <WidgetHeader
+                titol={titol}
+                entornCodi={entornCodi}
+                loading={loading}
+                isWhiteBackground={isWhiteBackground}
+                backgroundColor={backgroundColor}
+                voraColor={voraColor}
+                contrastTextColor={contrastTextColor}
+                dashboardEntornCodi={dashboardEntornCodi}
+            />
 
             {error ? (
-                // Error content
-                <Box sx={{ flex: 1, p: 2, overflow: "auto" }}>
-                    <Accordion sx={{...estils.errorAccordion, pointerEvents: "auto"}} onMouseDown={(event) => {
-                        event.stopPropagation(); // Evita que React-Grid-Layout bloquegi el clic
-                    }}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={estils.errorSummary(theme)}>
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                <ErrorOutlineIcon sx={estils.errorIcon(theme)} />
-                                <Typography sx={{fontSize: '0.75rem'}}>{errorMsg || 'Error'}</Typography>
-                            </Box>
-                        </AccordionSummary>
-                        <AccordionDetails sx={estils.errorDetails(theme)}>
-                            {errorTrace || 'No error trace available'}
-                        </AccordionDetails>
-                    </Accordion>
-                </Box>
+                <WidgetErrorDisplay errorMsg={errorMsg} errorTrace={errorTrace} />
             ) : (
-                // Normal content
                 <>
-                    {/* Chart */}
-                    <Box sx={ estils.tableContainerBox } >
+                    <Box sx={estils.tableContainerBox}>
                         {loading ? (
                             <Box sx={{ width: '100%', height: chartHeight, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                                 <Skeleton variant="rectangular" width="100%" height={chartHeight} />
@@ -716,17 +600,14 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                         )}
                     </Box>
 
-                    {/*Peu*/}
-                    <Box sx={estils.footerContainer}>
-                        {loading ? (
-                            <Skeleton width="60%" height={24} />
-                        ) : (
-                            <Typography sx={descEstils}>{descripcio}</Typography>
-                        )}
-                    </Box>
+                    <WidgetFooter
+                        descripcio={descripcio}
+                        textColor={textColor}
+                        loading={loading}
+                    />
                 </>
             )}
-        </Paper>
+        </WidgetContainer>
     );
 };
 
@@ -813,17 +694,12 @@ const generateSampleLabels = (chartType?: string): ColumnLabel[] | undefined => 
 };
 const generateSampleAgregacio = (chartType?: string): string | undefined => {
     switch (chartType) {
-        case 'BAR_CHART':
-            return 'name';
+        case 'BAR_CHART': return 'name';
         case 'LINE_CHART':
-        case 'SPARK_LINE_CHART':
-            return 'x';
-        case 'PIE_CHART':
-            return 'name';
-        case 'SCATTER_CHART':
-            return 'name';
-        default:
-            return undefined;
+        case 'SPARK_LINE_CHART': return 'x';
+        case 'PIE_CHART': return 'name';
+        case 'SCATTER_CHART': return 'name';
+        default: return undefined;
     }
-}
+};
 export default GraficWidgetVisualization;

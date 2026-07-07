@@ -55,8 +55,12 @@ vi.mock('./EstadisticaWidgetFormFields', () => ({
     default: ({ children }: { children: React.ReactNode }) => <div data-testid="widget-form-fields">{children}</div>,
 }));
 
-vi.mock('./TaulaWidgetVisualization', () => ({
-    default: () => <div data-testid="taula-preview">preview</div>,
+vi.mock('./WidgetPreview', () => ({
+    WidgetPreview: ({ widgetType, widgetData }: { widgetType: string; widgetData: any }) => (
+        <div data-testid="widget-preview">
+            {widgetType} - {widgetData.descripcio}
+        </div>
+    ),
 }));
 
 vi.mock('./VisualAttributesPanel', () => ({
@@ -101,7 +105,7 @@ describe('EstadisticaTaulaWidgetForm', () => {
 
         expect(screen.getByText('Widget taula')).toBeInTheDocument();
         expect(screen.getByTestId('columnes-table-columnes')).toBeInTheDocument();
-        expect(screen.getByTestId('taula-preview')).toBeInTheDocument();
+        expect(screen.getByTestId('widget-preview')).toHaveTextContent('TAULA - Descripcio de la taula');
         expect(screen.getByTestId('visual-panel')).toBeInTheDocument();
     });
 

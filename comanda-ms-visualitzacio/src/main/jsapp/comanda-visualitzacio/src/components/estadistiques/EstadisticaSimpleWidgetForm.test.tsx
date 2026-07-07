@@ -54,8 +54,12 @@ vi.mock('./EstadisticaWidgetFormFields', () => ({
     default: ({ children }: { children: React.ReactNode }) => <div data-testid="widget-form-fields">{children}</div>,
 }));
 
-vi.mock('./SimpleWidgetVisualization', () => ({
-    default: (props: Record<string, unknown>) => <div data-testid="simple-preview">{String(props.titol)}</div>,
+vi.mock('./WidgetPreview', () => ({
+    WidgetPreview: ({ widgetType, widgetData }: { widgetType: string; widgetData: any }) => (
+        <div data-testid="widget-preview">
+            {widgetType} - {widgetData.titol}
+        </div>
+    ),
 }));
 
 vi.mock('./VisualAttributesPanel', () => ({
@@ -91,7 +95,7 @@ describe('EstadisticaSimpleWidgetForm', () => {
         expect(screen.getByTestId('widget-form-fields')).toBeInTheDocument();
         expect(screen.getByText('Widget simple')).toBeInTheDocument();
         expect(screen.getByTestId('advanced-search-indicador')).toBeInTheDocument();
-        expect(screen.getByTestId('simple-preview')).toHaveTextContent('Resum principal');
+        expect(screen.getByTestId('widget-preview')).toHaveTextContent('SIMPLE - Resum principal');
         expect(screen.getByTestId('visual-panel')).toBeInTheDocument();
     });
 

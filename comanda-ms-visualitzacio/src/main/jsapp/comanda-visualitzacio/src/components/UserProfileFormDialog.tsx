@@ -134,7 +134,6 @@ export const EstilMenuSelector: React.FC = () => {
 const UserProfileForm = () => {
     const { t } = useTranslation();
     const { data } = useFormContext();
-    console.log("alarma", data?.alarma)
     // const { play } = useAudio(data?.alarma);
 
     return <Grid container spacing={1} sx={{ px: 1, }}>

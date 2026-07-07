@@ -4,9 +4,6 @@ import { FormField, useFormContext } from 'reactlib';
 import * as React from 'react';
 import { useEffect, useMemo, useRef } from 'react';
 import EstadisticaWidgetFormFields from './EstadisticaWidgetFormFields';
-import TaulaWidgetVisualization, {
-    TaulaWidgetVisualizationProps,
-} from './TaulaWidgetVisualization';
 import VisualAttributesPanel from './VisualAttributesPanel';
 import { columnesDimensio } from '../sharedAdvancedSearch/advancedSearchColumns';
 import { useTranslation } from 'react-i18next';
@@ -14,18 +11,24 @@ import Button from '@mui/material/Button';
 import EditIcon from '@mui/icons-material/Edit';
 import ColumnesTable from './ColumnesTable';
 import Divider from '@mui/material/Divider';
+import { WidgetPreview } from './WidgetPreview';
+import { TaulaWidgetVisualizationProps } from './TaulaWidgetVisualization';
 
 type EstadisticaTaulaWidgetFormProps = {
     mode?: 'full' | 'stats' | 'visual';
+    dashboardPlantilla?: any;
+    destacat?: boolean;
 };
 
-const EstadisticaTaulaWidgetForm: React.FC<EstadisticaTaulaWidgetFormProps> = ({ mode = 'full' }) => {
+const EstadisticaTaulaWidgetForm: React.FC<EstadisticaTaulaWidgetFormProps> = ({ mode = 'full', dashboardPlantilla, destacat }) => {
     const { data, apiRef } = useFormContext();
     const { t } = useTranslation();
     const previewData: TaulaWidgetVisualizationProps = useMemo(
         (): TaulaWidgetVisualizationProps => ({
+            entornCodi: 'ENT',
             titol: data.titol,
             descripcio: data.descripcio || 'Descripcio de la taula',
+            destacat: data.destacat || destacat,
             // columnes: [{}, {}, {}],
             // files: [{}, {}, {}],
             // Visual attributes
@@ -147,7 +150,11 @@ const EstadisticaTaulaWidgetForm: React.FC<EstadisticaTaulaWidgetFormProps> = ({
                     {t($ => $.page.widget.form.preview)}
                 </Typography>
                 <Box sx={{ height: '240px' }}>
-                    <TaulaWidgetVisualization preview={true} {...previewData} />
+                    <WidgetPreview
+                        widgetType="TAULA"
+                        widgetData={previewData}
+                        dashboardPlantilla={dashboardPlantilla}
+                    />
                 </Box>
                 {renderTaulaFormFields()}
             </Box>

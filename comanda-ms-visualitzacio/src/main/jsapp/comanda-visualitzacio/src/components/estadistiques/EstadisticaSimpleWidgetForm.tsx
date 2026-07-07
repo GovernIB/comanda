@@ -3,30 +3,33 @@ import { FormField, useFormContext } from 'reactlib';
 import * as React from 'react';
 import { useMemo } from 'react';
 import EstadisticaWidgetFormFields from './EstadisticaWidgetFormFields';
-import SimpleWidgetVisualization, {
-    SimpleWidgetVisualizationProps,
-} from './SimpleWidgetVisualization';
 import VisualAttributesPanel from './VisualAttributesPanel';
 import { columnesIndicador } from '../sharedAdvancedSearch/advancedSearchColumns';
 import { Divider, Box, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import IconAutocompleteSelect from '../IconAutocompleteSelect';
 import FormFieldCustomAdvancedSearch from '../FormFieldCustomAdvancedSearch';
+import { WidgetPreview } from './WidgetPreview';
+import { SimpleWidgetVisualizationProps } from './SimpleWidgetVisualization';
 
 type EstadisticaSimpleWidgetFormProps = {
     mode?: 'full' | 'stats' | 'visual';
+    dashboardPlantilla?: any;
+    destacat?: boolean;
 };
 
-const EstadisticaSimpleWidgetForm: React.FC<EstadisticaSimpleWidgetFormProps> = ({ mode = 'full' }) => {
+const EstadisticaSimpleWidgetForm: React.FC<EstadisticaSimpleWidgetFormProps> = ({ mode = 'full', dashboardPlantilla, destacat }) => {
     const { data } = useFormContext();
     const { t } = useTranslation();
     const previewData: SimpleWidgetVisualizationProps = useMemo(
         (): SimpleWidgetVisualizationProps => ({
+            entornCodi: 'ENT',
             titol: data.titol || 'Títol del widget',
-            valor: 1234, // Sample value for preview
+            valor: 1234,
             unitat: data.unitat || 'unitat',
             descripcio: data.descripcio || 'descripcio del widget',
             canviPercentual: data.canviPercentual || '12.34',
+            destacat: data.destacat || destacat,
             icona: data.icona,
             colorText: data.colorText,
             colorFons: data.colorFons,
@@ -127,7 +130,11 @@ const EstadisticaSimpleWidgetForm: React.FC<EstadisticaSimpleWidgetFormProps> = 
                     {t($ => $.page.widget.form.preview)}
                 </Typography>
                 <Box sx={{ height: '190px' }}>
-                    <SimpleWidgetVisualization preview={true} {...previewData} />
+                    <WidgetPreview
+                        widgetType="SIMPLE"
+                        widgetData={previewData}
+                        dashboardPlantilla={dashboardPlantilla}
+                    />
                 </Box>
                 {renderSimpleFormFields()}
             </Box>

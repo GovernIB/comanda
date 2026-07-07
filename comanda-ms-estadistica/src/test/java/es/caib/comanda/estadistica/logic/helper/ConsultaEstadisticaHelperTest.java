@@ -14,15 +14,19 @@ import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
+import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
+import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeMode;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PresetPeriode;
+import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.TempsEntity;
+import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
@@ -32,6 +36,7 @@ import es.caib.comanda.estadistica.persist.repository.FetRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -45,22 +50,16 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ConsultaEstadisticaHelperTest {
 
-    @Mock
-    private FetRepository fetRepository;
-
-    @Mock
-    private AtributsVisualsHelper atributsVisualsHelper;
-
-    @Mock
-    private EstadisticaClientHelper estadisticaClientHelper;
-
-    @Mock
-    private DashboardItemRepository dashboardItemRepository;
+    @Mock private FetRepository fetRepository;
+    @Mock private AtributsVisualsHelper atributsVisualsHelper;
+    @Mock private EstadisticaClientHelper estadisticaClientHelper;
+    @Mock private DashboardItemRepository dashboardItemRepository;
+    @Mock private DashboardStyleResolverHelper dashboardStyleResolverHelper;
 
     @InjectMocks
     private ConsultaEstadisticaHelper consultaEstadisticaHelper;
@@ -92,6 +91,10 @@ public class ConsultaEstadisticaHelperTest {
                     .orElseThrow(() -> new RuntimeException("Temps not found with id: " + tempsId));
             fet.setTemps(temps);
         }
+        lenient().when(atributsVisualsHelper.getAtributsVisuals(any(DashboardItemEntity.class)))
+                .thenReturn(null);
+        lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class)))
+                .thenReturn(null);
     }
 
     @Test
@@ -1277,5 +1280,195 @@ public class ConsultaEstadisticaHelperTest {
         } catch (Exception e) {
             fail("Exception occurred: " + e.getMessage());
         }
+    }
+
+    @Test
+    void testResolveAtributsVisualsTemaFosc_aplicaDarkPalette() {
+        DashboardItemEntity dashboardItem = new DashboardItemEntity();
+        dashboardItem.setId(1L);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        dashboardItem.setWidget(widget);
+
+        PlantillaEntity plantilla = new PlantillaEntity();
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setPlantilla(plantilla);
+        dashboardItem.setDashboard(dashboard);
+
+        lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class)))
+                .thenReturn(new AtributsVisualsSimple());
+
+        consultaEstadisticaHelper.resolveAtributsVisuals(dashboardItem, true);
+
+        ArgumentCaptor<PaletteGroupType> groupTypeCaptor = ArgumentCaptor.forClass(PaletteGroupType.class);
+        verify(dashboardStyleResolverHelper).applyTemplateDefaults(
+                any(), eq(plantilla), groupTypeCaptor.capture(), any(WidgetStyleScope.class));
+        assertEquals(PaletteGroupType.DARK, groupTypeCaptor.getValue());
+    }
+
+    @Test
+    void testResolveAtributsVisualsTemaClar_aplicaLightPalette() {
+        DashboardItemEntity dashboardItem = new DashboardItemEntity();
+        dashboardItem.setId(1L);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        dashboardItem.setWidget(widget);
+
+        PlantillaEntity plantilla = new PlantillaEntity();
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setPlantilla(plantilla);
+        dashboardItem.setDashboard(dashboard);
+
+        lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class)))
+                .thenReturn(new AtributsVisualsSimple());
+
+        consultaEstadisticaHelper.resolveAtributsVisuals(dashboardItem, false);
+
+        ArgumentCaptor<PaletteGroupType> groupTypeCaptor = ArgumentCaptor.forClass(PaletteGroupType.class);
+        verify(dashboardStyleResolverHelper).applyTemplateDefaults(
+                any(), eq(plantilla), groupTypeCaptor.capture(), any(WidgetStyleScope.class));
+        assertEquals(PaletteGroupType.LIGHT, groupTypeCaptor.getValue());
+    }
+
+    @Test
+    void testResolveAtributsVisualsDestacatFosc_aplicaDarkHighlighted() {
+        DashboardItemEntity dashboardItem = new DashboardItemEntity();
+        dashboardItem.setId(1L);
+        dashboardItem.setDestacat(true);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        dashboardItem.setWidget(widget);
+
+        PlantillaEntity plantilla = new PlantillaEntity();
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setPlantilla(plantilla);
+        dashboardItem.setDashboard(dashboard);
+
+        lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class)))
+                .thenReturn(new AtributsVisualsSimple());
+
+        consultaEstadisticaHelper.resolveAtributsVisuals(dashboardItem, true);
+
+        ArgumentCaptor<PaletteGroupType> groupTypeCaptor = ArgumentCaptor.forClass(PaletteGroupType.class);
+        verify(dashboardStyleResolverHelper).applyTemplateDefaults(
+                any(), eq(plantilla), groupTypeCaptor.capture(), any(WidgetStyleScope.class));
+        assertEquals(PaletteGroupType.DARK_HIGHLIGHTED, groupTypeCaptor.getValue());
+    }
+
+    @Test
+    void testResolveAtributsVisualsDestacatClar_aplicaLightHighlighted() {
+        DashboardItemEntity dashboardItem = new DashboardItemEntity();
+        dashboardItem.setId(1L);
+        dashboardItem.setDestacat(true);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        dashboardItem.setWidget(widget);
+
+        PlantillaEntity plantilla = new PlantillaEntity();
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setPlantilla(plantilla);
+        dashboardItem.setDashboard(dashboard);
+
+        lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class)))
+                .thenReturn(new AtributsVisualsSimple());
+
+        consultaEstadisticaHelper.resolveAtributsVisuals(dashboardItem, false);
+
+        ArgumentCaptor<PaletteGroupType> groupTypeCaptor = ArgumentCaptor.forClass(PaletteGroupType.class);
+        verify(dashboardStyleResolverHelper).applyTemplateDefaults(
+                any(), eq(plantilla), groupTypeCaptor.capture(), any(WidgetStyleScope.class));
+        assertEquals(PaletteGroupType.LIGHT_HIGHLIGHTED, groupTypeCaptor.getValue());
+    }
+
+    @Test
+    void testResolveAtributsVisualsPlantillaTitolPrioritzaSobreDashboard() {
+        DashboardItemEntity dashboardItem = new DashboardItemEntity();
+        dashboardItem.setId(1L);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        dashboardItem.setWidget(widget);
+
+        PlantillaEntity plantillaDashboard = new PlantillaEntity();
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setPlantilla(plantillaDashboard);
+        dashboardItem.setDashboard(dashboard);
+
+        PlantillaEntity plantillaTitol = new PlantillaEntity();
+        dashboardItem.setPlantilla(plantillaTitol);
+
+        lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class)))
+                .thenReturn(new AtributsVisualsSimple());
+
+        consultaEstadisticaHelper.resolveAtributsVisuals(dashboardItem, false);
+
+        ArgumentCaptor<PlantillaEntity> plantillaCaptor = ArgumentCaptor.forClass(PlantillaEntity.class);
+        verify(dashboardStyleResolverHelper).applyTemplateDefaults(
+                any(), plantillaCaptor.capture(), any(), any());
+        assertSame(plantillaTitol, plantillaCaptor.getValue());
+    }
+
+    @Test
+    void testResolveAtributsVisualsSensePlantilla_noAplicaDefaults() {
+        DashboardItemEntity dashboardItem = new DashboardItemEntity();
+        dashboardItem.setId(1L);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        dashboardItem.setWidget(widget);
+
+        lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class)))
+                .thenReturn(new AtributsVisualsSimple());
+
+        Object result = consultaEstadisticaHelper.resolveAtributsVisuals(dashboardItem, false);
+
+        assertNotNull(result);
+        verify(dashboardStyleResolverHelper, never()).applyTemplateDefaults(any(), any(), any(), any());
+    }
+
+    @Test
+    void testResolveAtributsVisualsWidgetGrafic_aplicaScopeGrafic() {
+        DashboardItemEntity dashboardItem = new DashboardItemEntity();
+        dashboardItem.setId(1L);
+
+        EstadisticaGraficWidgetEntity widget = new EstadisticaGraficWidgetEntity();
+        dashboardItem.setWidget(widget);
+
+        PlantillaEntity plantilla = new PlantillaEntity();
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setPlantilla(plantilla);
+        dashboardItem.setDashboard(dashboard);
+
+        lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class)))
+                .thenReturn(new AtributsVisualsGrafic());
+
+        consultaEstadisticaHelper.resolveAtributsVisuals(dashboardItem, false);
+
+        ArgumentCaptor<WidgetStyleScope> scopeCaptor = ArgumentCaptor.forClass(WidgetStyleScope.class);
+        verify(dashboardStyleResolverHelper).applyTemplateDefaults(
+                any(), any(), any(), scopeCaptor.capture());
+        assertEquals(WidgetStyleScope.GRAFIC, scopeCaptor.getValue());
+    }
+
+    @Test
+    void testResolveAtributsVisualsWidgetTaula_aplicaScopeTaula() {
+        DashboardItemEntity dashboardItem = new DashboardItemEntity();
+        dashboardItem.setId(1L);
+
+        EstadisticaTaulaWidgetEntity widget = new EstadisticaTaulaWidgetEntity();
+        dashboardItem.setWidget(widget);
+
+        PlantillaEntity plantilla = new PlantillaEntity();
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setPlantilla(plantilla);
+        dashboardItem.setDashboard(dashboard);
+
+        lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class)))
+                .thenReturn(new AtributsVisualsTaula());
+
+        consultaEstadisticaHelper.resolveAtributsVisuals(dashboardItem, false);
+
+        ArgumentCaptor<WidgetStyleScope> scopeCaptor = ArgumentCaptor.forClass(WidgetStyleScope.class);
+        verify(dashboardStyleResolverHelper).applyTemplateDefaults(
+                any(), any(), any(), scopeCaptor.capture());
+        assertEquals(WidgetStyleScope.TAULA, scopeCaptor.getValue());
     }
 }

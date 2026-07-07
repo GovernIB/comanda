@@ -24,6 +24,7 @@ import es.caib.comanda.estadistica.logic.intf.service.EstadisticaSimpleWidgetSer
 import es.caib.comanda.estadistica.logic.intf.service.EstadisticaTaulaWidgetService;
 import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
+import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
@@ -147,26 +148,10 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                 log.debug("Dashboard {}: {} items", entity.getId(), dashboardItems.size());
             }
             if (dashboard.getTitols() != null) {
+                boolean temaFosc = params != null && Boolean.TRUE.equals(params.getTemaFosc());
                 dashboartTitols = dashboard.getTitols().stream()
                         .map(titol -> {
-                            AtributsVisualsTitol atributsVisuals = AtributsVisualsTitol.builder()
-                                    .colorTitol(titol.getColorTitol())
-                                    .midaFontTitol(titol.getMidaFontTitol())
-                                    .colorSubtitol(titol.getColorSubtitol())
-                                    .midaFontSubtitol(titol.getMidaFontSubtitol())
-                                    .colorFons(titol.getColorFons())
-                                    .mostrarVora(titol.getMostrarVora())
-                                    .colorVora(titol.getColorVora())
-                                    .ampleVora(titol.getAmpleVora())
-                                    .build();
-                            PlantillaEntity plantilla = titol.getPlantilla() != null ? titol.getPlantilla() : dashboard.getPlantilla();
-                            if (plantilla != null) {
-                                dashboardStyleResolverHelper.applyTemplateDefaults(
-                                        atributsVisuals,
-                                        plantilla,
-                                        Boolean.TRUE.equals(titol.getDestacat()) ? PaletteGroupType.LIGHT_HIGHLIGHTED : PaletteGroupType.LIGHT,
-                                        titleStyleScope(titol.getTipusTitol()));
-                            }
+                            AtributsVisualsTitol atributsVisuals = resolveAtributsVisualsTitol(titol, dashboard, temaFosc);
                             InformeWidgetTitolItem informeTitol = InformeWidgetTitolItem.builder()
                                     .dashboardTitolId(titol.getId())
                                     .tipus(WidgetTipus.TITOL)
@@ -186,6 +171,34 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
             }
             dashboardItems.addAll(dashboartTitols);
             return dashboardItems;
+        }
+
+        /** Resol els atributs visuals d'un títol aplicant primer els valors propis i després la plantilla. **/
+        private AtributsVisualsTitol resolveAtributsVisualsTitol(
+                DashboardTitolEntity titol,
+                DashboardEntity dashboard,
+                boolean temaFosc) {
+            AtributsVisualsTitol atributsVisuals = AtributsVisualsTitol.builder()
+                    .colorTitol(titol.getColorTitol())
+                    .midaFontTitol(titol.getMidaFontTitol())
+                    .colorSubtitol(titol.getColorSubtitol())
+                    .midaFontSubtitol(titol.getMidaFontSubtitol())
+                    .colorFons(titol.getColorFons())
+                    .mostrarVora(titol.getMostrarVora())
+                    .colorVora(titol.getColorVora())
+                    .ampleVora(titol.getAmpleVora())
+                    .build();
+            PlantillaEntity plantilla = titol.getPlantilla() != null
+                    ? titol.getPlantilla()
+                    : (dashboard != null ? dashboard.getPlantilla() : null);
+            if (plantilla != null) {
+                boolean destacat = Boolean.TRUE.equals(titol.getDestacat());
+                PaletteGroupType groupType = temaFosc
+                        ? (destacat ? PaletteGroupType.DARK_HIGHLIGHTED : PaletteGroupType.DARK)
+                        : (destacat ? PaletteGroupType.LIGHT_HIGHLIGHTED : PaletteGroupType.LIGHT);
+                dashboardStyleResolverHelper.applyTemplateDefaults(atributsVisuals, plantilla, groupType, titleStyleScope(titol.getTipusTitol()));
+            }
+            return atributsVisuals;
         }
 
         private WidgetStyleScope titleStyleScope(DashboardTitolTipus tipusTitol) {

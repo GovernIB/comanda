@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-import estils from './WidgetEstils.ts';
-import { createTransparentColor, isLightColor } from '../../util/colorUtil.ts';
 import { useTheme } from '@mui/material/styles';
+import estils from './WidgetEstils';
+import { useWidgetTheme } from './useWidgetTheme';
 
 export interface TitolWidgetVisualizationProps {
     titol: string;
@@ -12,68 +12,55 @@ export interface TitolWidgetVisualizationProps {
     colorTitol?: string;
     colorSubtitol?: string;
     colorFons?: string;
+    destacat?: boolean;
     onClick?: () => void;
-    mostrarVora: boolean;
-    mostrarVoraBottom: boolean;
+    mostrarVora?: boolean;
+    mostrarVoraBottom?: boolean;
     colorVora?: string;
     ampleVora?: number;
 }
 
-const useWidgetColors = (props: TitolWidgetVisualizationProps, theme: any) => {
-    const {
-        colorTitol = theme.palette.text.primary,
-        colorFons,
-        colorVora = theme.palette.divider,
-    } = props;
-
-    const backgroundColor = colorFons || theme.palette.background.paper;
-
-    return {
-        textColor: colorTitol,
-        backgroundColor: backgroundColor,
-        voraColor: colorVora,
-        isWhiteBackground: !colorFons || isLightColor(backgroundColor),
-    };
-};
-
 const TitolWidgetVisualization: React.FC<TitolWidgetVisualizationProps> = (props) => {
     const {
-        titol = 'Títol...',
+        titol,
         subtitol,
         midaFontTitol,
         midaFontSubtitol,
         colorSubtitol,
-        colorFons,
         onClick,
         mostrarVora,
-        mostrarVoraBottom = true, // TODO Por defecto a true hasta que se añada la columna en base de datos
-        ampleVora,
+        mostrarVoraBottom = true,
     } = props;
 
     const theme = useTheme();
-    const { textColor, backgroundColor, voraColor, isWhiteBackground } = useWidgetColors(
-        props,
-        theme
-    );
-    const bg = isWhiteBackground
-        ? 'none'
-        : `linear-gradient(to bottom, ${colorFons}, ${createTransparentColor(backgroundColor, 0.75)})`;
-    const voraAmple = ampleVora || (mostrarVora ? 1 : 0);
+
+    const {
+        textColor,
+        backgroundColor,
+        voraColor,
+        bg,
+        voraAmple,
+    } = useWidgetTheme({
+        colorText: props.colorTitol,
+        colorFons: props.colorFons,
+        colorVora: props.colorVora,
+        mostrarVora,
+        ampleVora: props.ampleVora,
+    });
 
     const titleEstils = {
         ...estils.titleText,
         fontSize: midaFontTitol ? `${midaFontTitol}px` : estils.titleText.fontSize,
     };
+
     const subtitolEstils = {
         ...estils.descText(colorSubtitol || textColor),
-        fontSize: midaFontSubtitol
-            ? `${midaFontSubtitol}px`
-            : estils.descText(colorSubtitol || textColor).fontSize,
+        fontSize: midaFontSubtitol ? `${midaFontSubtitol}px` : estils.descText(colorSubtitol || textColor).fontSize,
     };
     const borderStyle = {
         ...estils.paperContainer(
             backgroundColor,
-            bg,
+            bg === 'none' ? backgroundColor : bg,
             textColor,
             mostrarVora && !mostrarVoraBottom,
             voraAmple,
@@ -81,8 +68,7 @@ const TitolWidgetVisualization: React.FC<TitolWidgetVisualizationProps> = (props
             onClick,
             theme
         ),
-        borderBottom:
-            mostrarVora || mostrarVoraBottom ? `${voraAmple}px solid ${voraColor}` : 'none',
+        borderBottom: mostrarVora || mostrarVoraBottom ? `${voraAmple}px solid ${voraColor}` : 'none',
         borderRadius: !mostrarVoraBottom ? '.6rem' : 'none',
     };
 

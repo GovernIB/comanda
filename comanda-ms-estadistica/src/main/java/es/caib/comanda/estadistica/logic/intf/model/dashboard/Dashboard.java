@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.model.dashboard;
 
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.Plantilla;
 import es.caib.comanda.estadistica.logic.intf.model.widget.AppResource;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EntornResource;
@@ -55,7 +56,7 @@ import java.util.List;
         },
         artifacts = {
                 @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Dashboard.CLONE_ACTION, requiresId = true, formClass = Dashboard.class),
-                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Dashboard.WIDGETS_REPORT, requiresId = true),
+                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Dashboard.WIDGETS_REPORT, requiresId = true, formClass= InformeWidgetParams.class),
                 @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Dashboard.DASHBOARD_EXPORT, requiresId = true)
         }
 )

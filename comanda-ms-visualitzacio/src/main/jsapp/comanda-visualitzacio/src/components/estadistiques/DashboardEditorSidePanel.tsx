@@ -2,6 +2,7 @@ import * as React from 'react';
 import {
     Box,
     Button,
+    CircularProgress,
     Divider,
     FormControl,
     Icon,
@@ -26,6 +27,9 @@ import type { FormApi } from '../../../lib/components/form/FormContext.tsx';
 import EstadisticaSimpleWidgetForm from './EstadisticaSimpleWidgetForm.tsx';
 import EstadisticaGraficWidgetForm from './EstadisticaGraficWidgetForm.tsx';
 import EstadisticaTaulaWidgetForm from './EstadisticaTaulaWidgetForm.tsx';
+import { useDashboardPlantilla } from './dashboardPlantillaHook.ts';
+import { WidgetPreview } from './WidgetPreview.tsx';
+import { useTranslation } from 'react-i18next';
 
 export type DashboardWidgetType = 'SIMPLE' | 'GRAFIC' | 'TAULA';
 
@@ -69,7 +73,7 @@ const widgetTypeConfig: Record<
     {
         label: string;
         resourceName: string;
-        FormComponent: React.FC<{ mode?: 'full' | 'stats' | 'visual' }>;
+        FormComponent: React.FC<{ mode?: 'full' | 'stats' | 'visual', dashboardPlantilla?: any, destacat?: boolean}>;
     }
 > = {
     SIMPLE: {
@@ -122,6 +126,15 @@ const PersonalitzatBridge: React.FC<{ onChange: (v: boolean) => void }> = ({ onC
     return null;
 };
 
+/** Pont invisible que llegeix destacat del context del formulari dashboardItem i notifica el pare */
+const DestacatBridge: React.FC<{ onChange: (v: boolean) => void }> = ({ onChange }) => {
+    const { data } = useFormContext();
+    React.useEffect(() => {
+        onChange(!!data?.destacat);
+    }, [data?.destacat, onChange]);
+    return null;
+};
+
 const DashboardItemFormFields = () => {
     const { data, apiRef } = useFormContext();
     const isPersonalitzat = !!data?.personalitzat;
@@ -165,8 +178,9 @@ const DashboardItemFormFields = () => {
     );
 };
 
-const DashboardTitleFields = () => {
+const DashboardTitleFields = (dashboardPlantilla: any) => {
     const { data } = useFormContext();
+    // const { t } = useTranslation();
     return (
         <Stack spacing={2}>
             <PanelSection title="Configuració de dades">
@@ -177,6 +191,18 @@ const DashboardTitleFields = () => {
                 </Grid>
             </PanelSection>
             <PanelSection title="Configuració gràfica">
+                {/* <Box sx={{ p: 2 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                        {t($ => $.page.widget.form.preview)}
+                    </Typography>
+                    <Box sx={{ height: '120px' }}>
+                        <WidgetPreview
+                            widgetType="TITOL"
+                            widgetData={data}
+                            dashboardPlantilla={dashboardPlantilla}
+                        />
+                    </Box>
+                </Box> */}
                 <Grid container spacing={1.5}>
                     <Grid size={12}>
                         <FormField name="destacat" label="Mostrar com a destacat" type="checkbox" />
@@ -441,6 +467,8 @@ const WidgetEditor: React.FC<WidgetEditorProps> = ({
     const config = widgetType ? widgetTypeConfig[widgetType] : undefined;
     const FormComponent = config?.FormComponent;
     const [isPersonalitzat, setIsPersonalitzat] = React.useState(false);
+    const [destacat, setDestacat] = React.useState(false);
+    const { plantilla: dashboardPlantilla, loading: loadingPlantilla } = useDashboardPlantilla(dashboard?.plantilla?.id);
     return (
         <Stack spacing={2}>
             {selection.mode === 'create' && (
@@ -482,12 +510,21 @@ const WidgetEditor: React.FC<WidgetEditorProps> = ({
                                 componentProps={{ sx: { m: 0, mt: 0 } }}
                             >
                                 <PersonalitzatBridge onChange={setIsPersonalitzat} />
+                                <DestacatBridge onChange={setDestacat} />
                                 <DashboardItemFormFields />
                             </MuiForm>
                             {isPersonalitzat && (
                                 <>
                                     <Divider sx={{ my: 1.5 }} />
-                                    <FormComponent mode="visual" />
+                                    {loadingPlantilla ? (
+                                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 3 }}>
+                                            <CircularProgress size={24} />
+                                        </Box>
+                                    ) : (
+                                        <FormComponent mode="visual"
+                                            dashboardPlantilla={dashboardPlantilla}
+                                            destacat={destacat}/>
+                                    )}
                                 </>
                             )}
                         </PanelSection>
@@ -514,26 +551,31 @@ const TitleEditor: React.FC<TitleEditorProps> = ({
     dashboardId,
     selection,
     titleFormApiRef,
-}) => (
-    <MuiForm
-        resourceName="dashboardTitol"
-        id={selection.mode === 'edit' ? selection.dashboardTitolId : undefined}
-        additionalData={
-            selection.mode === 'create'
-                ? {
-                      dashboard: { id: dashboardId },
-                      plantilla: dashboard?.plantilla,
-                      ...titleDefaultData,
-                  }
-                : undefined
-        }
-        apiRef={titleFormApiRef}
-        hiddenToolbar
-        formBlockerDisabled
-        componentProps={{ sx: { m: 0, mt: 0 } }}
-    >
-        <DashboardTitleFields />
-    </MuiForm>
-);
+}) => {
+    const { plantilla: dashboardPlantilla } = useDashboardPlantilla(dashboard?.plantilla?.id);
+    const [destacat, setDestacat] = React.useState(false);
+    return (
+        <MuiForm
+            resourceName="dashboardTitol"
+            id={selection.mode === 'edit' ? selection.dashboardTitolId : undefined}
+            additionalData={
+                selection.mode === 'create'
+                    ? {
+                          dashboard: { id: dashboardId },
+                          plantilla: dashboard?.plantilla,
+                          ...titleDefaultData,
+                      }
+                    : undefined
+            }
+            apiRef={titleFormApiRef}
+            hiddenToolbar
+            formBlockerDisabled
+            componentProps={{ sx: { m: 0, mt: 0 } }}
+        >
+            <DestacatBridge onChange={setDestacat} />
+            <DashboardTitleFields dashboardPlantilla={dashboardPlantilla} destacat={destacat} />
+        </MuiForm>
+    );
+};
 
 export default DashboardEditorSidePanel;

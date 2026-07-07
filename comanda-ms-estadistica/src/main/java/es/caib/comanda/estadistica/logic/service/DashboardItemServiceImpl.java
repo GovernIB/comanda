@@ -93,7 +93,6 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
 
     @Override
     protected void afterUpdateSave(DashboardItemEntity entity, DashboardItem resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
-        super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
         estadisticaWidgetHelper.clearDashboardWidgetCache(entity.getId());
     }
 

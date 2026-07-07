@@ -15,20 +15,20 @@ import { SalutErrorBoundaryFallback } from '../salut/SalutErrorBoundaryFallback'
 
 const CustomGridLayout = WidthProvider(Responsive);
 
-const SimpleChartWrapper = React.memo<{ dashboardWidget: any }>(({ dashboardWidget }) => {
-    return <SimpleWidgetVisualization {...dashboardWidget} {...dashboardWidget.atributsVisuals} />;
+const SimpleChartWrapper = React.memo<{ dashboardWidget: any, dashboardEntornCodi?: string |undefined }>(({ dashboardWidget, dashboardEntornCodi }) => {
+    return <SimpleWidgetVisualization {...dashboardWidget} {...dashboardWidget.atributsVisuals} dashboardEntornCodi={dashboardEntornCodi} />;
 });
 
-const GraficChartWrapper = React.memo<{ dashboardWidget: any }>(({ dashboardWidget }) => {
-    return <GraficWidgetVisualization {...dashboardWidget} {...dashboardWidget.atributsVisuals} />;
+const GraficChartWrapper = React.memo<{ dashboardWidget: any, dashboardEntornCodi?: string |undefined }>(({ dashboardWidget, dashboardEntornCodi }) => {
+    return <GraficWidgetVisualization {...dashboardWidget} {...dashboardWidget.atributsVisuals} dashboardEntornCodi={dashboardEntornCodi} />;
 });
 
-const TaulaChartWrapper = React.memo<{ dashboardWidget: any }>(({ dashboardWidget }) => {
-    return <TaulaWidgetVisualization {...dashboardWidget} {...dashboardWidget.atributsVisuals} />;
+const TaulaChartWrapper = React.memo<{ dashboardWidget: any, dashboardEntornCodi?: string |undefined }>(({ dashboardWidget, dashboardEntornCodi }) => {
+    return <TaulaWidgetVisualization {...dashboardWidget} {...dashboardWidget.atributsVisuals} dashboardEntornCodi={dashboardEntornCodi} />;
 });
 
-const TitolChartWrapper = React.memo<{ dashboardTitol: any }>(({ dashboardTitol }) => {
-    return <TitolWidgetVisualization {...dashboardTitol} {...dashboardTitol.atributsVisuals} />;
+const TitolChartWrapper = React.memo<{ dashboardTitol: any}>(({ dashboardTitol}) => {
+    return <TitolWidgetVisualization {...dashboardTitol} {...dashboardTitol.atributsVisuals}/>;
 });
 
 const CustomGridItemComponent = React.forwardRef<HTMLDivElement, any>(
@@ -119,6 +119,7 @@ type DashboardReactGridLayoutProps = {
     onSelectItem?: (entity: any) => void;
     onClearSelection?: () => void;
     selectedItemId?: string | null;
+    dashboardEntornCodi?: string;
     editable: boolean;
 };
 
@@ -147,6 +148,7 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
     onSelectItem,
     onClearSelection,
     selectedItemId,
+    dashboardEntornCodi,
 }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const onLayoutChange = (_currentLayout: Layout[], allLayouts: Layouts) => {
@@ -303,29 +305,13 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                                     {(() => {
                                         switch (item.type) {
                                             case 'SIMPLE':
-                                                return (
-                                                    <SimpleChartWrapper
-                                                        dashboardWidget={dashboardWidget}
-                                                    />
-                                                );
+                                                return (<SimpleChartWrapper dashboardWidget={dashboardWidget} dashboardEntornCodi={dashboardEntornCodi} />);
                                             case 'GRAFIC':
-                                                return (
-                                                    <GraficChartWrapper
-                                                        dashboardWidget={dashboardWidget}
-                                                    />
-                                                );
+                                                return (<GraficChartWrapper dashboardWidget={dashboardWidget} dashboardEntornCodi={dashboardEntornCodi} />);
                                             case 'TAULA':
-                                                return (
-                                                    <TaulaChartWrapper
-                                                        dashboardWidget={dashboardWidget}
-                                                    />
-                                                );
+                                                return (<TaulaChartWrapper dashboardWidget={dashboardWidget} dashboardEntornCodi={dashboardEntornCodi} />);
                                             case 'TITOL':
-                                                return (
-                                                    <TitolChartWrapper
-                                                        dashboardTitol={dashboardTitol}
-                                                    />
-                                                );
+                                                return (<TitolChartWrapper dashboardTitol={dashboardTitol} />);
                                         }
                                     })()}
                                 </ErrorBoundary>

@@ -4,24 +4,28 @@ import {FormField, useFormContext} from "reactlib";
 import * as React from "react";
 import { useMemo, useEffect, useRef} from "react";
 import EstadisticaWidgetFormFields from "./EstadisticaWidgetFormFields";
-import GraficWidgetVisualization from "./GraficWidgetVisualization";
 import VisualAttributesPanel from "./VisualAttributesPanel";
 import { columnesIndicador } from '../sharedAdvancedSearch/advancedSearchColumns';
 import { useTranslation } from "react-i18next";
 import ColorPaletteSelector from "../ColorPaletteSelector";
 import ColumnesTable from "./ColumnesTable.tsx";
 import FormFieldCustomAdvancedSearch from '../FormFieldCustomAdvancedSearch';
+import { WidgetPreview } from "./WidgetPreview.tsx";
 
 type EstadisticaGraficWidgetFormProps = {
     mode?: 'full' | 'stats' | 'visual';
+    dashboardPlantilla?: any;
+    destacat?: boolean;
 };
 
-const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = ({ mode = 'full' }) => {
+const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = ({ mode = 'full', dashboardPlantilla, destacat }) => {
     const { data, apiRef } = useFormContext();
     const { t } = useTranslation();
     const previewData = useMemo(() =>({
+        entornCodi: 'ENT',
         titol: data.titol || 'Títol del gràfic',
         descripcio: data.descripcio,
+        destacat: data.destacat || destacat,
         colorText: data.colorText,
         colorFons: data.colorFons,
         mostrarVora: data.mostrarVora,
@@ -195,10 +199,11 @@ const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = 
             <Box sx={{ p: 2 }}>
                 <Typography variant="subtitle2" sx={{ mb: 2 }}>{t($ => $.page.widget.form.preview)}</Typography>
                 <Box sx={{ height: '240px' }}>
-                    <GraficWidgetVisualization
-                        preview={true}
-                        {...previewData}
-                    />
+                    <WidgetPreview
+                            widgetType="GRAFIC"
+                            widgetData={previewData}
+                            dashboardPlantilla={dashboardPlantilla}
+                        />
                 </Box>
                 {renderGraficFormFields()}
             </Box>
