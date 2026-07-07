@@ -13,8 +13,11 @@ import es.caib.comanda.configuracio.persist.repository.*;
 import es.caib.comanda.ms.logic.helper.*;
 import es.caib.comanda.model.v1.log.FitxerInfo;
 import es.caib.comanda.model.v1.salut.AppInfo;
+import es.caib.comanda.ms.logic.intf.event.EntornAppEsborratEvent;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
+import es.caib.comanda.ms.sse.ComandaSseEventTypes;
+import es.caib.comanda.ms.sse.ComandaSsePublishRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
@@ -89,6 +93,11 @@ public class EntornAppServiceImplTest {
         @Override
         public void afterUpdateSave(EntornAppEntity entity, EntornApp resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
             super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
+        }
+
+        @Override
+        public void afterDelete(EntornAppEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
+            super.afterDelete(entity, answers);
         }
 
         public String exposedAdditionalSpringFilter() {
@@ -274,11 +283,72 @@ public class EntornAppServiceImplTest {
     void testAfterUpdateSave() {
         // Setup test data
         Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
-        
+
         // Call the method to test
         entornAppService.afterUpdateSave(entornAppEntity, entornAppResource, answers, false);
 
         verify(cacheHelper).evictCacheItem(ENTORN_APP_CACHE, entornAppEntity.getId().toString());
+
+        ArgumentCaptor<ComandaSsePublishRequest> captor = ArgumentCaptor.forClass(ComandaSsePublishRequest.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertEquals(ComandaSseEventTypes.ENTORN_APP_CHANGED, captor.getValue().getEvent().getType());
+        assertEquals(entornAppEntity.getId(), captor.getValue().getEvent().getPayload());
+    }
+
+    @Test
+    void toogleActivaAction_quanSexecuta_inverteixActivaIPublicaEsdevenimentSse() throws Exception {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        when(entornAppRepository.findOne(any(Specification.class))).thenReturn(Optional.of(entornAppEntity));
+        when(resourceEntityMappingHelper.entityToResource(entornAppEntity, EntornApp.class))
+                .thenReturn(entornAppResource);
+        ReflectionTestUtils.setField(entornAppService, "entityRepository", entornAppRepository);
+        entornAppService.init();
+        boolean activaAbans = entornAppEntity.isActiva();
+
+        Object result = entornAppService.artifactActionExec(
+                1L,
+                EntornApp.ENTORN_APP_TOOGLE_ACTIVA,
+                null);
+
+        assertEquals(!activaAbans, entornAppEntity.isActiva());
+        assertSame(entornAppResource, result);
+        verify(cacheHelper).evictCacheItem(ENTORN_APP_CACHE, entornAppEntity.getId().toString());
+
+        ArgumentCaptor<ComandaSsePublishRequest> captor = ArgumentCaptor.forClass(ComandaSsePublishRequest.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertEquals(ComandaSseEventTypes.ENTORN_APP_CHANGED, captor.getValue().getEvent().getType());
+        assertEquals(entornAppEntity.getId(), captor.getValue().getEvent().getPayload());
+    }
+
+    @Test
+    void testAfterCreateSave_publicaEsdevenimentSseDeCanviDeLlistaEntornApp() {
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+
+        entornAppService.afterCreateSave(entornAppEntity, entornAppResource, answers, false);
+
+        ArgumentCaptor<ComandaSsePublishRequest> captor = ArgumentCaptor.forClass(ComandaSsePublishRequest.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertEquals(ComandaSseEventTypes.ENTORN_APP_CHANGED, captor.getValue().getEvent().getType());
+        assertEquals(entornAppEntity.getId(), captor.getValue().getEvent().getPayload());
+    }
+
+    @Test
+    void testAfterDelete_evictaCacheIPublicaEsborratIEsdevenimentSse() {
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+
+        entornAppService.afterDelete(entornAppEntity, answers);
+
+        verify(cacheHelper).evictCacheItem(ENTORN_APP_CACHE, entornAppEntity.getId().toString());
+
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+        verify(eventPublisher, times(2)).publishEvent(captor.capture());
+        List<Object> publishedEvents = captor.getAllValues();
+        assertTrue(publishedEvents.stream().anyMatch(event ->
+                event instanceof EntornAppEsborratEvent
+                        && entornAppEntity.getId().equals(((EntornAppEsborratEvent) event).getEntornAppId())));
+        assertTrue(publishedEvents.stream().anyMatch(event ->
+                event instanceof ComandaSsePublishRequest
+                        && ComandaSseEventTypes.ENTORN_APP_CHANGED.equals(((ComandaSsePublishRequest) event).getEvent().getType())));
     }
 
     @Test

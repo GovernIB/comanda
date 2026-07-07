@@ -1,25 +1,26 @@
 package es.caib.comanda.configuracio.logic.service;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
-import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
 import es.caib.comanda.configuracio.logic.intf.model.*;
-import es.caib.comanda.configuracio.logic.intf.model.EntornApp.EntornAppPingAction;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.EntornAppExistsParameterAction;
-import es.caib.comanda.configuracio.logic.intf.model.EntornApp.PingUrlResponse;
+import es.caib.comanda.configuracio.logic.intf.model.EntornApp.EntornAppPingAction;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.ExistsParameterResponse;
+import es.caib.comanda.configuracio.logic.intf.model.EntornApp.PingUrlResponse;
 import es.caib.comanda.configuracio.logic.intf.service.EntornAppService;
 import es.caib.comanda.configuracio.logic.intf.util.AuthHeaderUtil;
 import es.caib.comanda.configuracio.persist.entity.*;
 import es.caib.comanda.configuracio.persist.repository.*;
 import es.caib.comanda.model.v1.log.FitxerContingut;
 import es.caib.comanda.model.v1.log.FitxerInfo;
-import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
+import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
+import es.caib.comanda.ms.logic.intf.event.EntornAppEsborratEvent;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
@@ -28,8 +29,10 @@ import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
 import es.caib.comanda.ms.logic.intf.model.ReportFileType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
-import es.caib.comanda.ms.logic.intf.event.EntornAppEsborratEvent;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
+import es.caib.comanda.ms.sse.ComandaSseEvent;
+import es.caib.comanda.ms.sse.ComandaSseEventTypes;
+import es.caib.comanda.ms.sse.ComandaSsePublishRequest;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -38,12 +41,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -55,14 +53,9 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.util.Arrays;
 import java.net.URI;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Comparator;
-import java.util.Collections;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
@@ -113,29 +106,29 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         register(EntornApp.PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS, new IntegracionsSubsistemesContextsPerspectiveApplicator());
     }
 
-	@Override
-	protected String additionalSpringFilter(
-			String currentSpringFilter,
-			String[] namedQueries) {
-		if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
-				|| authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
-			return null;
-		}
-		Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP);
-		Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP);
-		String appFilter = buildOrFilter("app.id", appPermissionIds);
-		String entornAppFilter = buildOrFilter("id", entornAppPermissionIds);
-		if (appFilter == null && entornAppFilter == null) {
-			return "id:0";
-		}
-		if (appFilter == null) {
-			return entornAppFilter;
-		}
-		if (entornAppFilter == null) {
-			return appFilter;
-		}
-		return appFilter + " or " + entornAppFilter;
-	}
+    @Override
+    protected String additionalSpringFilter(
+        String currentSpringFilter,
+        String[] namedQueries) {
+        if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
+            || authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
+            return null;
+        }
+        Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP);
+        Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP);
+        String appFilter = buildOrFilter("app.id", appPermissionIds);
+        String entornAppFilter = buildOrFilter("id", entornAppPermissionIds);
+        if (appFilter == null && entornAppFilter == null) {
+            return "id:0";
+        }
+        if (appFilter == null) {
+            return entornAppFilter;
+        }
+        if (entornAppFilter == null) {
+            return appFilter;
+        }
+        return appFilter + " or " + entornAppFilter;
+    }
 
     private Set<Serializable> getAllowedIds(ResourceType resourceType) {
         return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
@@ -144,7 +137,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                 authenticationHelper.getCurrentUserName(),
                 Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
                 httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
-                .orElse(Collections.emptySet());
+            .orElse(Collections.emptySet());
     }
 
     private String buildOrFilter(String fieldName, Set<Serializable> ids) {
@@ -152,15 +145,17 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             return null;
         }
         return ids.stream()
-                .sorted(Comparator.comparingLong(id -> Long.parseLong(String.valueOf(id))))
-                .map(String::valueOf)
-                .map(id -> fieldName + ":" + id)
-                .collect(Collectors.joining(" or "));
+            .sorted(Comparator.comparingLong(id -> Long.parseLong(String.valueOf(id))))
+            .map(String::valueOf)
+            .map(id -> fieldName + ":" + id)
+            .collect(Collectors.joining(" or "));
     }
 
     @Override
     protected void afterCreateSave(EntornAppEntity entity, EntornApp resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
         super.afterCreateSave(entity, resource, answers, anyOrderChanged);
+
+        publishEntornAppChanged(entity.getId());
     }
 
     @Override
@@ -168,6 +163,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
 
         cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entity.getId().toString());
+        publishEntornAppChanged(entity.getId());
     }
 
     @Override
@@ -176,6 +172,18 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
         cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entity.getId().toString());
         eventPublisher.publishEvent(new EntornAppEsborratEvent(entity.getId()));
+        publishEntornAppChanged(entity.getId());
+    }
+
+    /**
+     * Notifica als clients SSE connectats que la llista d'entorns-app ha canviat (alta, baixa,
+     * modificació o activació/desactivació), ja sigui d'una app nova o d'una ja existent, perquè
+     * puguin refer la llista sencera (a diferència de salut.changed, que només actualitza un
+     * entorn-app ja mostrat).
+     */
+    private void publishEntornAppChanged(Long entornAppId) {
+        eventPublisher.publishEvent(new ComandaSsePublishRequest(
+            new ComandaSseEvent(ComandaSseEventTypes.ENTORN_APP_CHANGED, entornAppId, LocalDateTime.now())));
     }
 
     // ACCIONS
@@ -187,7 +195,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         private final String statsAuthPassword;
         private final Environment environment;
 
-        public PingUrlAction(RestTemplate restTemplate, Validator validator,  String statsAuthUser, String statsAuthPassword, Environment environment) {
+        public PingUrlAction(RestTemplate restTemplate, Validator validator, String statsAuthUser, String statsAuthPassword, Environment environment) {
             this.restTemplate = restTemplate;
             this.validator = validator;
             this.statsAuthUser = statsAuthUser;
@@ -236,9 +244,9 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                             if (!violations.isEmpty()) {
                                 pingUrlResponse.setValidationError(true);
                                 message = i18nUtil.getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.incorrectValidate") +
-                                        " " + violations.stream()
-                                        .map(v -> "[" + v.getPropertyPath() + ": " + v.getMessage() + "]")
-                                        .collect(Collectors.joining(",\n "));
+                                    " " + violations.stream()
+                                    .map(v -> "[" + v.getPropertyPath() + ": " + v.getMessage() + "]")
+                                    .collect(Collectors.joining(",\n "));
                             } else {
                                 pingUrlResponse.setSuccess(true);
                                 message = i18nUtil.getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.correctBody");
@@ -277,20 +285,26 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                 return null;
             }
             return AuthHeaderUtil.buildAuthHttpEntity(
-                    statsAuthUser, statsAuthPassword,
-                    params.getFormData().getNomUsuariAuth(),
-                    params.getFormData().getContrasenyaAuth(),
-                    params.getFormData().isParametreAuth(),
-                    environment
+                statsAuthUser, statsAuthPassword,
+                params.getFormData().getNomUsuariAuth(),
+                params.getFormData().getContrasenyaAuth(),
+                params.getFormData().isParametreAuth(),
+                environment
             );
         }
+
         private String getMessageForStatusCode(int statusCode) {
             switch (statusCode) {
-                case 401: return I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.401");
-                case 403: return I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.403");
-                case 404: return I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.404");
-                case 500: return I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.500");
-                default: return I18nUtil.getInstance().getI18nMessage(
+                case 401:
+                    return I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.401");
+                case 403:
+                    return I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.403");
+                case 404:
+                    return I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.404");
+                case 500:
+                    return I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.500");
+                default:
+                    return I18nUtil.getInstance().getI18nMessage(
                         "es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.PingUrlAction.default",
                         statusCode, "HTTP Error");
             }
@@ -302,7 +316,8 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         private final Environment environment;
 
         @Override
-        public void onChange(Serializable id, EntornAppExistsParameterAction previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, EntornAppExistsParameterAction target) {}
+        public void onChange(Serializable id, EntornAppExistsParameterAction previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, EntornAppExistsParameterAction target) {
+        }
 
         @Override
         public ExistsParameterResponse exec(String code, EntornAppEntity entity, EntornAppExistsParameterAction params) throws ActionExecutionException {
@@ -320,12 +335,16 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         private final ResourceEntityMappingHelper resourceEntityMappingHelper;
 
         @Override
-        public void onChange(Serializable id, String previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, String target) {}
+        public void onChange(Serializable id, String previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, String target) {
+        }
 
         @Override
         public EntornApp exec(String code, EntornAppEntity entity, String params) throws ActionExecutionException {
             entity.setActiva(!entity.isActiva());
             cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entity.getId().toString());
+            // No passa per afterUpdateSave (l'acció no fa servir el flux normal d'actualització),
+            // cal notificar-ho explícitament perquè el dashboard de Salut es refresqui via SSE.
+            publishEntornAppChanged(entity.getId());
             return resourceEntityMappingHelper.entityToResource(entity, EntornApp.class);
         }
     }
@@ -335,13 +354,14 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         private final ResourceEntityMappingHelper resourceEntityMappingHelper;
 
         @Override
-        public void onChange(Serializable id, String previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, String target) {}
+        public void onChange(Serializable id, String previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, String target) {
+        }
 
         @Override
         public EntornApp exec(String code, EntornAppEntity entity, String params) throws ActionExecutionException {
             var appInfoProjection = new AppInfoHelper.AppInfoEntornAppProjection(entity.getId(), entity.getInfoUrl(),
-                    entity.isSalutAuth(), entity.getApp().getNom(), entity.getEntorn().getNom(),
-                    entity.isParametreAuth(), entity.getNomUsuariAuth(), entity.getContrasenyaAuth());
+                entity.isSalutAuth(), entity.getApp().getNom(), entity.getEntorn().getNom(),
+                entity.isParametreAuth(), entity.getNomUsuariAuth(), entity.getContrasenyaAuth());
             appInfoHelper.refreshAppInfo(appInfoProjection);
             return resourceEntityMappingHelper.entityToResource(entity, EntornApp.class);
         }
@@ -357,23 +377,25 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         @Override
         public List<FitxerInfo> generateData(String code, EntornAppEntity entornAppEntity, Long params) throws ReportGenerationException {
             HttpEntity<Void> httpEntity = AuthHeaderUtil.buildAuthHttpEntity(
-                    statsAuthUser, statsAuthPassword,
-                    entornAppEntity.getNomUsuariAuth(),
-                    entornAppEntity.getContrasenyaAuth(),
-                    entornAppEntity.isParametreAuth(),
-                    environment
+                statsAuthUser, statsAuthPassword,
+                entornAppEntity.getNomUsuariAuth(),
+                entornAppEntity.getContrasenyaAuth(),
+                entornAppEntity.isParametreAuth(),
+                environment
             );
 
             String logsUrl = entornAppEntity.getLogsUrl();
             URI uri = URI.create(logsUrl);
             ResponseEntity<List<FitxerInfo>> response = restTemplate
-                    .exchange(uri, HttpMethod.GET, httpEntity, new ParameterizedTypeReference<List<FitxerInfo>>() {});
+                .exchange(uri, HttpMethod.GET, httpEntity, new ParameterizedTypeReference<List<FitxerInfo>>() {
+                });
 
             return response.getBody();
         }
 
         @Override
-        public void onChange(Serializable id, Long previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Long target) {}
+        public void onChange(Serializable id, Long previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Long target) {
+        }
     }
 
     @RequiredArgsConstructor
@@ -401,16 +423,16 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             DescarregarLogParams params = (DescarregarLogParams) data.get(0);
             EntornAppEntity entornAppEntity = entornAppRepository.findById(params.getEntornAppId()).get();
             HttpEntity<Void> httpEntity = AuthHeaderUtil.buildAuthHttpEntity(
-                    statsAuthUser, statsAuthPassword,
-                    entornAppEntity.getNomUsuariAuth(),
-                    entornAppEntity.getContrasenyaAuth(),
-                    entornAppEntity.isParametreAuth(),
-                    environment
+                statsAuthUser, statsAuthPassword,
+                entornAppEntity.getNomUsuariAuth(),
+                entornAppEntity.getContrasenyaAuth(),
+                entornAppEntity.isParametreAuth(),
+                environment
             );
 
             String baseUrl = entornAppEntity.getLogsUrl();
             String logsUrl = baseUrl + (baseUrl.endsWith("/") ? "" : "/")
-                    + params.getNomFitxer();
+                + params.getNomFitxer();
             String logsUrlDirecte = logsUrl + "/directe";
 
             // Provem si existeix el mètode /directe (per evitar carregar en memòria base64)
@@ -429,7 +451,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                             }
                         }
                         String contentType = response.getHeaders().getContentType() != null ?
-                                response.getHeaders().getContentType().toString() : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+                            response.getHeaders().getContentType().toString() : MediaType.APPLICATION_OCTET_STREAM_VALUE;
 
                         byte[] buffer = new byte[8192];
                         int read;
@@ -446,14 +468,15 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                 log.debug("No s'ha pogut descarregar el log via /directe, provem el mètode actual: " + e.getMessage());
                 URI uri = URI.create(logsUrl);
                 ResponseEntity<FitxerContingut> response = restTemplate
-                        .exchange(uri, HttpMethod.GET, httpEntity, FitxerContingut.class);
+                    .exchange(uri, HttpMethod.GET, httpEntity, FitxerContingut.class);
 
                 return new DownloadableFile(response.getBody().getNom(), response.getBody().getMimeType(), response.getBody().getContingut());
             }
         }
 
         @Override
-        public void onChange(Serializable id, String previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, String target) {}
+        public void onChange(Serializable id, String previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, String target) {
+        }
     }
 
     @RequiredArgsConstructor
@@ -466,26 +489,28 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         @Override
         public List<EntornApp.PrevisualitzarLogResponse> generateData(String code, EntornAppEntity entornAppEntity, EntornApp.PrevisualitzarLogParams params) throws ReportGenerationException {
             HttpEntity<Void> httpEntity = AuthHeaderUtil.buildAuthHttpEntity(
-                    statsAuthUser, statsAuthPassword,
-                    entornAppEntity.getNomUsuariAuth(),
-                    entornAppEntity.getContrasenyaAuth(),
-                    entornAppEntity.isParametreAuth(),
-                    environment
+                statsAuthUser, statsAuthPassword,
+                entornAppEntity.getNomUsuariAuth(),
+                entornAppEntity.getContrasenyaAuth(),
+                entornAppEntity.isParametreAuth(),
+                environment
             );
 
             String baseUrl = entornAppEntity.getLogsUrl();
             String logsUrl = baseUrl + (baseUrl.endsWith("/") ? "" : "/") + params.getFileName() + "/linies/" + params.getLineCount();
             URI uri = URI.create(logsUrl);
             ResponseEntity<List<String>> response = restTemplate
-                    .exchange(uri, HttpMethod.GET, httpEntity, new ParameterizedTypeReference<List<String>>() {});
+                .exchange(uri, HttpMethod.GET, httpEntity, new ParameterizedTypeReference<List<String>>() {
+                });
 
             return response.getBody().stream()
-                    .map(EntornApp.PrevisualitzarLogResponse::new)
-                    .collect(Collectors.toList());
+                .map(EntornApp.PrevisualitzarLogResponse::new)
+                .collect(Collectors.toList());
         }
 
         @Override
-        public void onChange(Serializable id, EntornApp.PrevisualitzarLogParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, EntornApp.PrevisualitzarLogParams target) {}
+        public void onChange(Serializable id, EntornApp.PrevisualitzarLogParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, EntornApp.PrevisualitzarLogParams target) {
+        }
     }
 
     public class IntegracionsSubsistemesContextsPerspectiveApplicator implements PerspectiveApplicator<EntornAppEntity, EntornApp> {
@@ -494,33 +519,33 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             List<AppIntegracioEntity> integracions = appIntegracioRepository.findByEntornApp(entity);
             if (!integracions.isEmpty()) {
                 resource.setIntegracions(
-                        integracions.stream().map(i -> new AppIntegracio(
-                                ResourceReference.toResourceReference(i.getIntegracio().getId(), i.getIntegracio().getNom()),
-                                null,
-                                i.getIntegracio().getCodi(),
-                                i.getIntegracio().getLogo(),
-                                i.isActiva())).collect(Collectors.toList()));
+                    integracions.stream().map(i -> new AppIntegracio(
+                        ResourceReference.toResourceReference(i.getIntegracio().getId(), i.getIntegracio().getNom()),
+                        null,
+                        i.getIntegracio().getCodi(),
+                        i.getIntegracio().getLogo(),
+                        i.isActiva())).collect(Collectors.toList()));
             }
             List<AppSubsistemaEntity> subsistemes = subsistemaRepository.findByEntornApp(entity);
             if (!subsistemes.isEmpty()) {
                 resource.setSubsistemes(
-                        subsistemes.stream().map(s -> new AppSubsistema(
-                                s.getCodi(),
-                                s.getNom(),
-                                s.isActiu(),
-                                null)).collect(Collectors.toList()));
+                    subsistemes.stream().map(s -> new AppSubsistema(
+                        s.getCodi(),
+                        s.getNom(),
+                        s.isActiu(),
+                        null)).collect(Collectors.toList()));
             }
             List<AppContextEntity> contexts = contextRepository.findByEntornApp(entity);
             if (!contexts.isEmpty()) {
                 resource.setContexts(
-                        contexts.stream().map(s -> new AppContext(
-                                s.getCodi(),
-                                s.getNom(),
-                                s.getPath(),
-                                (s.getManuals() != null ? s.getManuals().stream().map(m -> new AppManual(m.getNom(), m.getPath(), null)).collect(Collectors.toList()) : null),
-                                s.getApi(),
-                                s.isActiu(),
-                                null)).collect(Collectors.toList()));
+                    contexts.stream().map(s -> new AppContext(
+                        s.getCodi(),
+                        s.getNom(),
+                        s.getPath(),
+                        (s.getManuals() != null ? s.getManuals().stream().map(m -> new AppManual(m.getNom(), m.getPath(), null)).collect(Collectors.toList()) : null),
+                        s.getApi(),
+                        s.isActiu(),
+                        null)).collect(Collectors.toList()));
             }
         }
     }
@@ -539,11 +564,11 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         public void applySingle(String code, EntornAppEntity entity, EntornApp resource) throws PerspectiveApplicationException {
             List<EntornAppHistEntity> entornAppHistEntities = entornAppHistRepository.findByEntornAppOrderByDataDesc(entity);
             resource.setEntornAppHistorics(
-                    entornAppHistEntities.stream()
-                            .map(s -> objectMappingHelper.newInstanceMap(
-                                    s,
-                                    EntornAppHist.class))
-                            .collect(Collectors.toList()));
+                entornAppHistEntities.stream()
+                    .map(s -> objectMappingHelper.newInstanceMap(
+                        s,
+                        EntornAppHist.class))
+                    .collect(Collectors.toList()));
         }
     }
 

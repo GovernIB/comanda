@@ -1,4 +1,4 @@
-import { Activity, FunctionComponent, useCallback, useEffect, useRef, useState } from 'react';
+import { Activity, FunctionComponent, useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { SalutEstatEnum, SalutModel } from '../../types/salut.model';
 import { springFilterBuilder, useResourceApiService } from 'reactlib';
 import dayjs from 'dayjs';
@@ -242,6 +242,7 @@ const useSalutData = ({
         loading: boolean;
         error?: unknown;
     }>({ groups: [], initialized: false, loading: false });
+    const [, startTransition] = useTransition();
     const requestSequence = useRef<number>(0);
     const filterDataApp = filterData?.app;
     const filterDataEntorn = filterData?.entorn;
@@ -377,35 +378,43 @@ const useSalutData = ({
 
             if (sequence !== requestSequence.current) return;
 
-            setSalutData({
-                lastRefresh: new Date(),
-                apps,
-                entorns,
-                groups: splitSalutDataIntoGroups({
-                    estats,
-                    salutLastItems,
-                    groupBy,
+            // S'aplica com a transició perquè el canvi de dades (que pot afegir/llevar grups sencers
+            // en crear/eliminar entorns-app) no bloquegi ni faci parpellejar la interfície: React manté
+            // el contingut anterior visible fins que el nou està preparat.
+            startTransition(() => {
+                setSalutData({
+                    lastRefresh: new Date(),
                     apps,
                     entorns,
-                    entornApps: visibleEntornApps,
-                }),
-                grupsDates: (grupsDatesResponse as { data: string }[]).map(item => item.data),
-                agrupacio,
-                error: undefined,
-                initialized: true,
-                loading: false,
+                    groups: splitSalutDataIntoGroups({
+                        estats,
+                        salutLastItems,
+                        groupBy,
+                        apps,
+                        entorns,
+                        entornApps: visibleEntornApps,
+                    }),
+                    grupsDates: (grupsDatesResponse as { data: string }[]).map(item => item.data),
+                    agrupacio,
+                    error: undefined,
+                    initialized: true,
+                    loading: false,
+                });
             });
         } catch (e) {
             if (sequence !== requestSequence.current) return;
 
             // TODO Mostrar error en la UI
-            setSalutData({
+            // No es reinicialitzen groups/apps/entorns: si ja hi havia dades carregades (p.ex. un
+            // refresc en segon pla per un canvi d'entorn-app), es mantenen visibles en lloc de
+            // deixar la pantalla en blanc per un error puntual.
+            setSalutData(prevState => ({
+                ...prevState,
                 lastRefresh: new Date(),
-                groups: [],
                 error: e,
                 initialized: true,
                 loading: false,
-            });
+            }));
         }
     }, [
         additionalFilter,
@@ -497,6 +506,7 @@ const useSalutData = ({
 };
 
 const SALUT_CHANGED_EVENT_TYPE = 'salut.changed';
+const ENTORN_APP_CHANGED_EVENT_TYPE = 'entornApp.changed';
 const SSE_FALLBACK_INTERVAL_MS = 60 * 1000;
 
 const Salut: FunctionComponent = () => {
@@ -565,6 +575,28 @@ const Salut: FunctionComponent = () => {
             }
         };
     }, [subscribe, flushPendingUpdates, id, appInfoDataRefresh]);
+
+    // Alta/baixa d'un entorn-app (d'una app nova o ja existent): un pedaç puntual no basta
+    // perquè pot fer aparèixer o desaparèixer un grup sencer, cal refer tota la llista.
+    const entornAppChangedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(() => {
+        const unsubscribe = subscribe(ENTORN_APP_CHANGED_EVENT_TYPE, () => {
+            if (entornAppChangedTimeoutRef.current !== null) {
+                clearTimeout(entornAppChangedTimeoutRef.current);
+            }
+            entornAppChangedTimeoutRef.current = setTimeout(() => {
+                refreshAll();
+                entornAppChangedTimeoutRef.current = null;
+            }, DEBOUNCE_MS);
+        });
+        return () => {
+            unsubscribe();
+            if (entornAppChangedTimeoutRef.current !== null) {
+                clearTimeout(entornAppChangedTimeoutRef.current);
+                entornAppChangedTimeoutRef.current = null;
+            }
+        };
+    }, [subscribe, refreshAll]);
 
     useEffect(() => {
         if (sseStatus !== 'disconnected') return;

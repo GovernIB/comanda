@@ -16,6 +16,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -73,6 +74,9 @@ public class AppInfoHelperTest {
     @Mock
     private Environment environment;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     @Captor
     private ArgumentCaptor<IntegracioEntity> integracioEntityCaptor;
 
@@ -98,7 +102,7 @@ public class AppInfoHelperTest {
     @BeforeEach
     void setUp() {
         // Instantiate real helpers with mocked repositories
-	    appInfoEntornAppHelper = spy(new AppInfoEntornAppHelper(entornAppRepository, entornAppHistRepository));
+	    appInfoEntornAppHelper = spy(new AppInfoEntornAppHelper(entornAppRepository, entornAppHistRepository, eventPublisher));
 	    appInfoIntegracionsHelper = spy(new AppInfoIntegracionsHelper(entornAppRepository, appIntegracioRepository, integracioRepository));
 	    appInfoSubsistemesHelper = spy(new AppInfoSubsistemesHelper(entornAppRepository, subsistemaRepository));
 	    appInfoContextsHelper = spy(new AppInfoContextsHelper(entornAppRepository, contextRepository, manualRepository));

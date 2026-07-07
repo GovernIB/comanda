@@ -16,14 +16,18 @@ import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
+import es.caib.comanda.ms.sse.ComandaSseEventTypes;
+import es.caib.comanda.ms.sse.ComandaSsePublishRequest;
 import es.caib.comanda.configuracio.persist.repository.AppRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,9 +56,10 @@ public class AppServiceImplTest {
                                       EntornAppRepository entornAppRepository,
                                       AuthenticationHelper authenticationHelper,
                                       HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
-                                      AclServiceClient aclServiceClient) {
+                                      AclServiceClient aclServiceClient,
+                                      ApplicationEventPublisher eventPublisher) {
             super(cacheHelper, objectMapper, appExportMapper, appRepository, entornRepository, entornAppRepository,
-                    authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient);
+                    authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient, eventPublisher);
         }
         
         @Override
@@ -99,6 +104,9 @@ public class AppServiceImplTest {
     @Mock
     private AclServiceClient aclServiceClient;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     private TestableAppServiceImpl appService;
 
     private AppEntity appEntity;
@@ -118,7 +126,8 @@ public class AppServiceImplTest {
                 entornAppRepository,
                 authenticationHelper,
                 httpAuthorizationHeaderHelper,
-                aclServiceClient);
+                aclServiceClient,
+                eventPublisher);
         
         // Setup test data
         appEntity = new AppEntity();
@@ -179,6 +188,11 @@ public class AppServiceImplTest {
 
         // Verify that cacheHelper.evictCacheItem was called for the App
         verify(cacheHelper, times(1)).evictCacheItem(APP_CACHE, appEntity.getId().toString());
+
+        ArgumentCaptor<ComandaSsePublishRequest> captor = ArgumentCaptor.forClass(ComandaSsePublishRequest.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertEquals(ComandaSseEventTypes.ENTORN_APP_CHANGED, captor.getValue().getEvent().getType());
+        assertEquals(appEntity.getId(), captor.getValue().getEvent().getPayload());
     }
 
     @Test

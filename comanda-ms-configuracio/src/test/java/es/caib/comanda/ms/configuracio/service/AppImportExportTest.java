@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.ReflectionUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -51,7 +52,8 @@ public class AppImportExportTest {
                                       EntornAppRepository entornAppRepository,
                                       AuthenticationHelper authenticationHelper,
                                       HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
-                                      AclServiceClient aclServiceClient) {
+                                      AclServiceClient aclServiceClient,
+                                      ApplicationEventPublisher eventPublisher) {
             super(cacheHelper,
                     objectMapper,
                     appExportMapper,
@@ -60,7 +62,8 @@ public class AppImportExportTest {
                     entornAppRepository,
                     authenticationHelper,
                     httpAuthorizationHeaderHelper,
-                    aclServiceClient);
+                    aclServiceClient,
+                    eventPublisher);
         }
         // Simplify mapping to avoid needing ObjectMappingHelper in unit tests
         @Override
@@ -82,6 +85,7 @@ public class AppImportExportTest {
     @Mock private AuthenticationHelper authenticationHelper;
     @Mock private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     @Mock private AclServiceClient aclServiceClient;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     private ObjectMapper realObjectMapper;
     private TestableAppServiceImpl service;
@@ -98,7 +102,8 @@ public class AppImportExportTest {
                 entornAppRepository,
                 authenticationHelper,
                 httpAuthorizationHeaderHelper,
-                aclServiceClient);
+                aclServiceClient,
+                eventPublisher);
     }
 
     // ---------- EXPORT TESTS ----------

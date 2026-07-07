@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({
     refreshSalutMock: vi.fn(),
     refreshAppInfoMock: vi.fn(),
     sseMock: {
-        subscribe: vi.fn(() => vi.fn()),
+        subscribe: vi.fn((_eventType: string, _listener: (event: { type?: string; payload?: unknown }) => void) => vi.fn()),
         status: 'connected' as const,
         connected: true,
     },
@@ -409,6 +409,51 @@ describe('Salut', () => {
         });
     });
 
+    it('Salut_quanRebEsdevenimentEntornAppChanged_refrescaLesDadesIActualitzaElNombreDeGrups', async () => {
+        // Comprova que l'alta d'un entorn-app (encara que sigui d'una app nova) es reflecteix
+        // al llistat (i per tant al donut d'estats de cada grup) sense necessitat de refrescar manualment.
+        render(<Salut />);
+
+        await waitFor(() => {
+            expect(screen.getByText('SalutLlistat 1')).toBeInTheDocument();
+        });
+
+        const entornAppChangedCall = mocks.sseMock.subscribe.mock.calls.find(
+            ([eventType]) => eventType === 'entornApp.changed'
+        );
+        expect(entornAppChangedCall).toBeDefined();
+        const entornAppChangedListener = entornAppChangedCall![1];
+
+        mocks.findEntornAppMock.mockResolvedValue({
+            rows: [
+                {
+                    id: 7,
+                    app: { id: 1, description: 'App Demo' },
+                    entorn: { id: 2, description: 'PRO' },
+                },
+                {
+                    id: 8,
+                    app: { id: 2, description: 'Nova App' },
+                    entorn: { id: 2, description: 'PRO' },
+                },
+            ],
+        });
+        mocks.findAppMock.mockResolvedValue({
+            rows: [
+                { id: 1, description: 'App Demo' },
+                { id: 2, description: 'Nova App' },
+            ],
+        });
+
+        act(() => {
+            entornAppChangedListener({ type: 'entornApp.changed', payload: 8 });
+        });
+
+        await waitFor(() => {
+            expect(screen.getByText('SalutLlistat 2')).toBeInTheDocument();
+        });
+    });
+
     it('Salut_quanFallaLaCarregaInicial_mostraLaVistaBuidaiPermetRefrescar', async () => {
         // Verifica que una errada en la càrrega inicial deixa la pantalla estable i permet reintentar el refresh.
         mocks.findEntornAppMock.mockRejectedValueOnce(new Error('boom'));
@@ -439,5 +484,27 @@ describe('Salut', () => {
         await waitFor(() => {
             expect(mocks.findEntornAppMock).toHaveBeenCalledTimes(2);
         });
+    });
+
+    it('Salut_quanFallaUnRefrescEnSegonPla_mantéLesDadesJaCarregadesSenseDeixarLaPantallaEnBlanc', async () => {
+        // Un refresc posterior al càrrega inicial (p.ex. disparat per un canvi d'entorn-app) que falla
+        // no ha de fer desaparèixer el llistat ja mostrat.
+        render(<Salut />);
+
+        await waitFor(() => {
+            expect(screen.getByText('SalutLlistat 1')).toBeInTheDocument();
+        });
+
+        mocks.findEntornAppMock.mockRejectedValueOnce(new Error('boom'));
+
+        act(() => {
+            screen.getByRole('button', { name: 'Refrescar' }).click();
+        });
+
+        await waitFor(() => {
+            expect(mocks.findEntornAppMock).toHaveBeenCalledTimes(2);
+        });
+
+        expect(screen.getByText('SalutLlistat 1')).toBeInTheDocument();
     });
 });
