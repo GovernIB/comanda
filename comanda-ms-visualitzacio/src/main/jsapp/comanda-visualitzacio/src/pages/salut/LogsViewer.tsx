@@ -1,9 +1,19 @@
-import { dateFormatLocale, useCloseDialogButtons, useResourceApiService } from 'reactlib';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {Box, Button, FormControlLabel, Switch, ToggleButton, Tooltip, Typography} from '@mui/material';
+import { debounce } from 'lodash';
+import {
+    dateFormatLocale,
+    useCloseDialogButtons,
+    useDebounce,
+    useResourceApiService,
+} from 'reactlib';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {Box, Button, FormControlLabel, Switch, ToggleButton, Tooltip, Typography, TextField, InputAdornment} from '@mui/material';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import WrapTextIcon from '@mui/icons-material/WrapText';
 import VerticalAlignBottomIcon from '@mui/icons-material/VerticalAlignBottom';
+import SearchIcon from '@mui/icons-material/Search';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import CloseIcon from '@mui/icons-material/Close';
 import Divider from '@mui/material/Divider';
 import MenuIcon from '@mui/icons-material/Menu';
 import IconButton from '@mui/material/IconButton';
@@ -30,6 +40,15 @@ const PrevisualitzarLogResponseSchema = z.array(
         linia: z.string(),
     })
 );
+
+const MIN_LOG_LINE_COUNT = 100;
+const MAX_LOG_LINE_COUNT = 10000;
+const DEFAULT_LOG_LINE_COUNT = 1000;
+
+const normalizeLogLineCount = (value: number) => {
+    if (!Number.isFinite(value)) return MIN_LOG_LINE_COUNT;
+    return Math.min(MAX_LOG_LINE_COUNT, Math.max(MIN_LOG_LINE_COUNT, Math.trunc(value)));
+};
 /**
  * Informació de la llista de fitxers de log.
  */
@@ -203,16 +222,22 @@ const getLineNumber = (virtualizerLineIndex: number) =>
  * Component per visualitzar el text del log de forma eficient utilitzant virtualització.
  * Permet navegar per milers de línies sense penalització de rendiment.
  */
-const Virtualizer = ({
+const Virtualizer = memo(({
     lines,
     scrollToBottom,
     onScrollToBottomChange,
     softWrap,
+    searchTerm,
+    currentMatchIndex,
+    matches,
 }: {
     lines: string[];
     scrollToBottom: boolean;
     onScrollToBottomChange: (value: boolean) => void;
     softWrap: boolean;
+    searchTerm: string;
+    currentMatchIndex: number;
+    matches: number[];
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const rowVirtualizer = useVirtualizer({
@@ -226,6 +251,13 @@ const Virtualizer = ({
         }
     }, [scrollToBottom, lines]);
 
+    useEffect(() => {
+        if (currentMatchIndex !== -1 && matches[currentMatchIndex] !== undefined) {
+            onScrollToBottomChange(false);
+            rowVirtualizer.scrollToIndex(matches[currentMatchIndex], { align: 'center' });
+        }
+    }, [currentMatchIndex, matches, rowVirtualizer, onScrollToBottomChange]);
+
     // Manejador del desplaçament per detectar si l'usuari surt del final del fitxer.
     const handleScroll = useCallback(() => {
         if (!scrollToBottom || !containerRef.current) return;
@@ -237,6 +269,31 @@ const Virtualizer = ({
             onScrollToBottomChange(false);
         }
     }, [scrollToBottom, onScrollToBottomChange]);
+
+    const highlight = useCallback((text: string, highlightText: string, isActive: boolean) => {
+        if (!highlightText) return text;
+        const parts = text.split(new RegExp(`(${highlightText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'));
+        return (
+            <>
+                {parts.map((part, i) =>
+                    part.toLowerCase() === highlightText.toLowerCase() ? (
+                        <mark
+                            key={i}
+                            style={{
+                                backgroundColor: isActive ? '#ff9800' : '#616161',
+                                color: 'inherit',
+                                borderRadius: '2px',
+                            }}
+                        >
+                            {part}
+                        </mark>
+                    ) : (
+                        part
+                    )
+                )}
+            </>
+        );
+    }, []);
 
     const virtualRows = rowVirtualizer.getVirtualItems();
     return (
@@ -308,14 +365,18 @@ const Virtualizer = ({
                             ref={rowVirtualizer.measureElement}
                         >
                             <span className="lineNumber">{getLineNumber(virtualRow.index)}</span>
-                            {lines[virtualRow.index]}
+                            {highlight(
+                                lines[virtualRow.index],
+                                searchTerm,
+                                matches[currentMatchIndex] === virtualRow.index
+                            )}
                         </p>
                     ))}
                 </div>
             </div>
         </Box>
     );
-};
+});
 
 /**
  * Component intermediari per carregar o visualitzar la previsualització en directe.
@@ -325,11 +386,17 @@ const LivePreview = ({
     scrollToBottom,
     onScrollToBottomChange,
     softWrap,
+    searchTerm,
+    currentMatchIndex,
+    matches,
 }: {
     lines?: string[] | null;
     scrollToBottom: boolean;
     onScrollToBottomChange: (value: boolean) => void;
     softWrap: boolean;
+    searchTerm: string;
+    currentMatchIndex: number;
+    matches: number[];
 }) => {
     if (lines == null) {
         return (
@@ -356,6 +423,9 @@ const LivePreview = ({
             scrollToBottom={scrollToBottom}
             onScrollToBottomChange={onScrollToBottomChange}
             softWrap={softWrap}
+            searchTerm={searchTerm}
+            currentMatchIndex={currentMatchIndex}
+            matches={matches}
         />
     );
 };
@@ -368,6 +438,8 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
     const { t } = useTranslation();
     const [selected, setSelected] = useState<string | null>(preselectedLog);
     const [lines, setLines] = useState<string[] | null>(null);
+    const [lineFetchCount, setLineFetchCount] = useState(DEFAULT_LOG_LINE_COUNT);
+    const [lineFetchCountInput, setLineFetchCountInput] = useState(String(DEFAULT_LOG_LINE_COUNT));
     const [isRefreshLoading, setIsRefreshLoading] = useState<boolean>(false);
     const [isDownloadLoading, setIsDownloadLoading] = useState<boolean>(false);
     const closeDialogButtons = useCloseDialogButtons();
@@ -378,9 +450,9 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
 
     /**
      * Actualitza el contingut del log actualment seleccionat.
-     * Només recupera les últimes 1000 línies i les fusiona amb les ja existents.
+     * Recupera les últimes línies configurades i les fusiona amb les ja existents.
      */
-    const refreshPreview = useCallback(async () => {
+    const refreshPreview = useCallback(async (lineCount: number) => {
         if (!selected) {
             return;
         }
@@ -391,7 +463,7 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
                 code: 'previsualitzar_log',
                 data: {
                     fileName: selected,
-                    lineCount: 1000,
+                    lineCount,
                 },
             });
             const list = PrevisualitzarLogResponseSchema.parse(reportResponse);
@@ -413,9 +485,10 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
         }
         setLines(null);
         if (selected) {
-            refreshPreview();
+            refreshPreview(lineFetchCount);
         }
-    }, [isReady, artifactReport, entornAppId, selected, refreshPreview]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isReady, entornAppId, selected]);
 
     /**
      * Funció per descarregar un fitxer de log directament des de l'API.
@@ -462,19 +535,61 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
     const [softWrap, setSoftWrap] = useState(false);
     const [scrollToBottom, setScrollToBottom] = useState(true);
     const [autoRefresh, setAutoRefresh] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const debouncedSearchTerm = useDebounce(searchTerm, undefined, true);
+    const [currentMatchIndex, setCurrentMatchIndex] = useState(-1);
+
+    const debouncedOnLineFetchCountChange = useMemo(
+        () => debounce((value: number) => {
+            const normalizedValue = normalizeLogLineCount(value);
+            setLineFetchCount(normalizedValue);
+            refreshPreview(normalizedValue);
+        }, 500),
+        [refreshPreview]
+    );
+
+    const matches = useMemo(() => {
+        if (!debouncedSearchTerm || !lines) return [];
+        const lowerSearchTerm = debouncedSearchTerm.toLowerCase();
+        const result: number[] = [];
+        lines.forEach((line, index) => {
+            if (line.toLowerCase().includes(lowerSearchTerm)) {
+                result.push(index);
+            }
+        });
+        return result;
+    }, [lines, debouncedSearchTerm]);
+
+    useEffect(() => {
+        if (debouncedSearchTerm && matches.length > 0) {
+            setCurrentMatchIndex(0);
+        } else {
+            setCurrentMatchIndex(-1);
+        }
+    }, [matches, debouncedSearchTerm]);
+
+    const handleNextMatch = useCallback(() => {
+        if (matches.length === 0) return;
+        setCurrentMatchIndex(prev => (prev + 1) % matches.length);
+    }, [matches]);
+
+    const handlePrevMatch = useCallback(() => {
+        if (matches.length === 0) return;
+        setCurrentMatchIndex(prev => (prev - 1 + matches.length) % matches.length);
+    }, [matches]);
 
     useEffect(() => {
         let intervalId: ReturnType<typeof setInterval> | null = null;
 
         if (autoRefresh) {
-            intervalId = setInterval(refreshPreview, 10000);
+            intervalId = setInterval(() => refreshPreview(lineFetchCount), 10000);
         }
         return () => {
             if (intervalId) {
                 clearInterval(intervalId);
             }
         };
-    }, [autoRefresh, refreshPreview]);
+    }, [autoRefresh, lineFetchCount, refreshPreview]);
 
     return (
         <Box
@@ -483,7 +598,7 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
                 width: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 2,
+                gap: 1,
                 '& p': {
                     m: 0,
                 },
@@ -541,11 +656,6 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
                     </Button>
                     {selected && (
                         <>
-                            <Tooltip title={t($ => $.page.salut.logs.refresh)}>
-                                <IconButton loading={isRefreshLoading} onClick={() => refreshPreview()} disabled={autoRefresh}>
-                                    <RefreshIcon />
-                                </IconButton>
-                            </Tooltip>
                             <Tooltip title={t($ => $.page.salut.logs.download)}>
                                 <IconButton
                                     loading={isDownloadLoading}
@@ -554,16 +664,105 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
                                     <DownloadIcon />
                                 </IconButton>
                             </Tooltip>
+                            <Tooltip title={t($ => $.page.salut.logs.refresh)}>
+                                <IconButton loading={isRefreshLoading} onClick={() => refreshPreview(lineFetchCount)} disabled={autoRefresh}>
+                                    <RefreshIcon />
+                                </IconButton>
+                            </Tooltip>
                             <Tooltip title={t($ => $.page.salut.logs.autoRefresh)}>
                                 <FormControlLabel control={<Switch
                                     checked={autoRefresh}
                                     onChange={(_event, checked) => setAutoRefresh(checked)}
                                 />} label={t($ => $.page.salut.logs.autoRefresh)} />
                             </Tooltip>
+                            <TextField
+                                size="small"
+                                type="number"
+                                label={t($ => $.page.salut.logs.lineFetchCount)}
+                                value={lineFetchCountInput}
+                                onChange={e => {
+                                    setLineFetchCountInput(e.target.value);
+                                    debouncedOnLineFetchCountChange(Number(e.target.value));
+                                }}
+                                sx={{
+                                    width: '120px',
+                                    '& .MuiInputBase-root': {
+                                        height: '32px',
+                                        fontSize: '0.875rem',
+                                    },
+                                    '& .MuiInputLabel-root': {
+                                        fontSize: '0.875rem',
+                                    },
+                                }}
+                                slotProps={{
+                                    htmlInput: {
+                                        min: MIN_LOG_LINE_COUNT,
+                                        max: MAX_LOG_LINE_COUNT,
+                                        step: 100,
+                                    },
+                                }}
+                            />
+
                         </>
                     )}
                 </Box>
-                <Box sx={{ display: 'flex', gap: 1 }}>
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    {selected && (
+                        <TextField
+                            size="small"
+                            variant="outlined"
+                            placeholder={t($ => $.page.salut.logs.search)}
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            onKeyDown={e => {
+                                if (e.key === 'Enter') {
+                                    if (e.shiftKey) {
+                                        handlePrevMatch();
+                                    } else {
+                                        handleNextMatch();
+                                    }
+                                }
+                            }}
+                            sx={{
+                                '& .MuiInputBase-root': {
+                                    height: '32px',
+                                    fontSize: '0.875rem',
+                                },
+                            }}
+                            slotProps={{
+                                input: {
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <SearchIcon fontSize="small" />
+                                        </InputAdornment>
+                                    ),
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            {debouncedSearchTerm && (
+                                                <>
+                                                    <Typography variant="caption" sx={{ mr: 1, whiteSpace: 'nowrap' }}>
+                                                        {t($ => $.page.salut.logs.matches, {
+                                                            current: matches.length > 0 ? currentMatchIndex + 1 : 0,
+                                                            total: matches.length,
+                                                        })}
+                                                    </Typography>
+                                                    <IconButton size="small" onClick={handlePrevMatch} disabled={matches.length === 0}>
+                                                        <KeyboardArrowUpIcon fontSize="small" />
+                                                    </IconButton>
+                                                    <IconButton size="small" onClick={handleNextMatch} disabled={matches.length === 0}>
+                                                        <KeyboardArrowDownIcon fontSize="small" />
+                                                    </IconButton>
+                                                    <IconButton size="small" onClick={() => setSearchTerm('')}>
+                                                        <CloseIcon fontSize="small" />
+                                                    </IconButton>
+                                                </>
+                                            )}
+                                        </InputAdornment>
+                                    ),
+                                }
+                            }}
+                        />
+                    )}
                     <Tooltip title={t($ => $.page.salut.logs.softWrap)}>
                         <ToggleButton
                             value="wrapText"
@@ -572,6 +771,10 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
                             color="primary"
                             onChange={() => setSoftWrap(prevSelected => !prevSelected)}
                             disabled={!selected}
+                            sx={{
+                                height: '32px',
+                                fontSize: '0.875rem',
+                            }}
                         >
                             <WrapTextIcon />
                         </ToggleButton>
@@ -584,13 +787,17 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
                             color="primary"
                             onChange={() => setScrollToBottom(prevSelected => !prevSelected)}
                             disabled={!selected}
+                            sx={{
+                                height: '32px',
+                                fontSize: '0.875rem',
+                            }}
                         >
                             <VerticalAlignBottomIcon />
                         </ToggleButton>
                     </Tooltip>
                 </Box>
             </Box>
-            <Divider sx={{ mb: 2 }} />
+            <Divider sx={{ mb: 1 }} />
             {selected ? (
                 <LivePreview
                     key={selected + entornAppId}
@@ -598,6 +805,9 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
                     scrollToBottom={scrollToBottom}
                     onScrollToBottomChange={setScrollToBottom}
                     softWrap={softWrap}
+                    searchTerm={debouncedSearchTerm}
+                    currentMatchIndex={currentMatchIndex}
+                    matches={matches}
                 />
             ) : (
                 <Box

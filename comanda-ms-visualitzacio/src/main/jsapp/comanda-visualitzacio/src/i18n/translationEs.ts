@@ -357,6 +357,11 @@ const translationEs: translationResourcesType = {
                 noPreview: "No hay previsualización",
                 softWrap: "Ajustar texto",
                 scrollToBottom: "Ir al final",
+                lineFetchCount: "Líneas",
+                search: "Buscar",
+                next: "Siguiente",
+                previous: "Anterior",
+                matches: "{{current}} de {{total}}",
                 logsList: {
                     title: "Logs",
                     nom: "Nombre",

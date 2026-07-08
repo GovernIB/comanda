@@ -357,6 +357,11 @@ const translationEn: translationResourcesType = {
                 noPreview: "No preview available",
                 softWrap: "Soft wrap",
                 scrollToBottom: "Scroll to bottom",
+                lineFetchCount: "Lines",
+                search: "Search",
+                next: "Next",
+                previous: "Previous",
+                matches: "{{current}} of {{total}}",
                 logsList: {
                     title: "Logs",
                     nom: "Name",

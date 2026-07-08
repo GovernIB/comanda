@@ -357,6 +357,11 @@ const translationCa = {
                 noPreview: "No hi ha previsualització",
                 softWrap: "Ajustar text",
                 scrollToBottom: "Anar al final",
+                lineFetchCount: "Línies",
+                search: "Cercar",
+                next: "Següent",
+                previous: "Anterior",
+                matches: "{{current}} de {{total}}",
                 logsList: {
                     title: "Logs",
                     nom: "Nom",
