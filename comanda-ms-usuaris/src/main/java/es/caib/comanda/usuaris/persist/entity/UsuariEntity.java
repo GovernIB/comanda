@@ -69,7 +69,7 @@ public class UsuariEntity extends BaseAuditableEntity<Usuari> {
 	private boolean alarmaMailAgrupar;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "alarma", length = 12, columnDefinition = "VARCHAR(12) DEFAULT 'SOUND_16'")
+    @Column(name = "alarma", length = 12)
     @Comment("Número de elementos por página")
     private AlarmaSoundEnum alarma;
 }
