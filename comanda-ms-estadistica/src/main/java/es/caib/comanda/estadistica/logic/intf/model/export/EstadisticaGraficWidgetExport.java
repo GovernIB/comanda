@@ -33,5 +33,5 @@ public class EstadisticaGraficWidgetExport extends EstadisticaWidgetExport imple
     private String llegendaX;
     private String llegendaY;
     private AtributsVisualsGrafic atributsVisuals;
-    private PeriodeUnitat unitatAgregacio;
+//    private PeriodeUnitat unitatAgregacio;
 }

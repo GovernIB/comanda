@@ -406,6 +406,11 @@ const translationEn: translationResourcesType = {
                     title: "Add title",
                 },
                 export: "Export dashboard",
+                import: {
+                    label: "Import dashboard",
+                    title: "Import dashboard",
+                    success: "Dashboard imported successfully",
+                },
             },
             alert: {
                 tornarLlistat: "Return to list",

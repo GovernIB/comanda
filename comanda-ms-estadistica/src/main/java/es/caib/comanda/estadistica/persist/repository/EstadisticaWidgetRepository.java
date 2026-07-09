@@ -13,5 +13,5 @@ import es.caib.comanda.ms.persist.repository.BaseRepository;
  * Autor: Límit Tecnologies
  */
 public interface EstadisticaWidgetRepository extends BaseRepository<EstadisticaWidgetEntity, Long> {
-
+    EstadisticaWidgetEntity findByAppIdAndTitol(Long appId, String titol);
 }

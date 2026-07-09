@@ -18,6 +18,8 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -48,6 +50,26 @@ public class EstadisticaClientHelper {
 			if (app != null) {
 				return app.getContent();
 			}
+		} catch (FeignException.NotFound e) {
+			return null;
+		}
+		return null;
+	}
+
+	@Cacheable(value = APP_CACHE, key = "#appCodi?.toString()")
+	public App appFindByCodi(String appCodi) {
+		try {
+			List<EntityModel<App>> apps = new ArrayList(appServiceClient.find(
+                    null,
+                    "codi:'" + appCodi + "'",
+                    null,
+                    null,
+                    "0",
+                    1,
+                    httpAuthorizationHeaderHelper.getAuthorizationHeader()).getContent());
+            if (!apps.isEmpty()) {
+                return apps.get(0).getContent();
+            }
 		} catch (FeignException.NotFound e) {
 			return null;
 		}
@@ -147,6 +169,26 @@ public class EstadisticaClientHelper {
 					httpAuthorizationHeaderHelper.getAuthorizationHeader());
 			if (entorn != null) {
 				return entorn.getContent();
+			}
+		} catch (FeignException.NotFound e) {
+			return null;
+		}
+		return null;
+	}
+
+	@Cacheable(value = ENTORN_CACHE, key = "#entornCodi?.toString()")
+	public Entorn entornByCodi(String entornCodi) {
+		try {
+            List<EntityModel<Entorn>> entorns = new ArrayList<>(entornServiceClient.find(
+                    null,
+                    "codi:'" + entornCodi + "'",
+                    null,
+                    null,
+                    "0",
+                    1,
+                    httpAuthorizationHeaderHelper.getAuthorizationHeader()).getContent());
+			if (!entorns.isEmpty()) {
+				return entorns.get(0).getContent();
 			}
 		} catch (FeignException.NotFound e) {
 			return null;

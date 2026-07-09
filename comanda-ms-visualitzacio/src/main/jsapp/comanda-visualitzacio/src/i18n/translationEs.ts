@@ -406,6 +406,11 @@ const translationEs: translationResourcesType = {
                     title: "Añadir título",
                 },
                 export: "Exportar tablero",
+                import: {
+                    label: "Importar panel",
+                    title: "Importar panel",
+                    success: "Panel importado correctamente",
+                },
             },
             alert: {
                 tornarLlistat: "Volver al listado",
