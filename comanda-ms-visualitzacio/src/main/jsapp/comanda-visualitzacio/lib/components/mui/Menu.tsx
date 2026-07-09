@@ -440,6 +440,7 @@ export const Menu: React.FC<MenuProps> = (props) => {
                                     backgroundColor: theme.palette.background.paper,
                                     borderBottom: `1px solid ${theme.palette.divider}`,
                                     minHeight: submenuTitleHeight,
+                                    overflowWrap: 'anywhere',
                                 })}>
                                 <Typography
                                     variant="subtitle1"
