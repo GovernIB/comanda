@@ -46,13 +46,13 @@ public class DashboardStyleResolverHelper {
             return target;
         }
 
-        applyScope(target, template, groupType, WidgetStyleScope.COMMON);
         if (!WidgetStyleScope.COMMON.equals(scope)) {
             applyScope(target, template, groupType, scope);
         }
         if (target instanceof AtributsVisualsGrafic) {
             applyChartPalette((AtributsVisualsGrafic) target, template, groupType);
         }
+        applyScope(target, template, groupType, WidgetStyleScope.COMMON);
         return target;
     }
 

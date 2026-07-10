@@ -85,11 +85,10 @@ export const getRelativeLuminance = (color: string): number | null => {
     return 0.2126 * rl + 0.7152 * gl + 0.0722 * bl;
 };
 
-export const isLightColor = (color: string, threshold: number = 0.5): boolean => {
+export const isLightColor = (color: string, threshold: number = 0.179): boolean => {
     const luminance = getRelativeLuminance(color);
     if (luminance === null) {
         return isWhiteColor(color);
     }
-
     return luminance >= threshold;
 };

@@ -135,6 +135,15 @@ const DestacatBridge: React.FC<{ onChange: (v: boolean) => void }> = ({ onChange
     return null;
 };
 
+/** Pont invisible que llegeix la plantilla del context del formulari dashboardItem i notifica el pare */
+const PlantillaBridge: React.FC<{ onChange: (v: any) => void }> = ({ onChange }) => {
+    const { data } = useFormContext();
+    React.useEffect(() => {
+        onChange(data?.plantilla);
+    }, [data?.plantilla, onChange]);
+    return null;
+};
+
 const DashboardItemFormFields = () => {
     const { data, apiRef } = useFormContext();
     const isPersonalitzat = !!data?.personalitzat;
@@ -178,9 +187,9 @@ const DashboardItemFormFields = () => {
     );
 };
 
-const DashboardTitleFields = (dashboardPlantilla: any) => {
+const DashboardTitleFields = ({ dashboardPlantilla }: { dashboardPlantilla: any }) => {
     const { data } = useFormContext();
-    // const { t } = useTranslation();
+    const { t } = useTranslation();
     return (
         <Stack spacing={2}>
             <PanelSection title="Configuració de dades">
@@ -191,7 +200,7 @@ const DashboardTitleFields = (dashboardPlantilla: any) => {
                 </Grid>
             </PanelSection>
             <PanelSection title="Configuració gràfica">
-                {/* <Box sx={{ p: 2 }}>
+                <Box sx={{ p: 2 }}>
                     <Typography variant="subtitle2" sx={{ mb: 2 }}>
                         {t($ => $.page.widget.form.preview)}
                     </Typography>
@@ -202,7 +211,7 @@ const DashboardTitleFields = (dashboardPlantilla: any) => {
                             dashboardPlantilla={dashboardPlantilla}
                         />
                     </Box>
-                </Box> */}
+                </Box>
                 <Grid container spacing={1.5}>
                     <Grid size={12}>
                         <FormField name="destacat" label="Mostrar com a destacat" type="checkbox" />
@@ -468,7 +477,9 @@ const WidgetEditor: React.FC<WidgetEditorProps> = ({
     const FormComponent = config?.FormComponent;
     const [isPersonalitzat, setIsPersonalitzat] = React.useState(false);
     const [destacat, setDestacat] = React.useState(false);
-    const { plantilla: dashboardPlantilla, loading: loadingPlantilla } = useDashboardPlantilla(dashboard?.plantilla?.id);
+    const [plantilla, setPlantilla] = React.useState<any>(null);
+    const plantillaId = plantilla?.id || dashboard?.plantilla?.id;
+    const { plantilla: plantillaToUse, loading: loadingPlantilla } = useDashboardPlantilla(plantillaId);
     return (
         <Stack spacing={2}>
             {selection.mode === 'create' && (
@@ -511,6 +522,7 @@ const WidgetEditor: React.FC<WidgetEditorProps> = ({
                             >
                                 <PersonalitzatBridge onChange={setIsPersonalitzat} />
                                 <DestacatBridge onChange={setDestacat} />
+                                <PlantillaBridge onChange={setPlantilla} />
                                 <DashboardItemFormFields />
                             </MuiForm>
                             {isPersonalitzat && (
@@ -522,7 +534,7 @@ const WidgetEditor: React.FC<WidgetEditorProps> = ({
                                         </Box>
                                     ) : (
                                         <FormComponent mode="visual"
-                                            dashboardPlantilla={dashboardPlantilla}
+                                            dashboardPlantilla={plantillaToUse}
                                             destacat={destacat}/>
                                     )}
                                 </>
@@ -553,7 +565,6 @@ const TitleEditor: React.FC<TitleEditorProps> = ({
     titleFormApiRef,
 }) => {
     const { plantilla: dashboardPlantilla } = useDashboardPlantilla(dashboard?.plantilla?.id);
-    const [destacat, setDestacat] = React.useState(false);
     return (
         <MuiForm
             resourceName="dashboardTitol"
@@ -572,8 +583,7 @@ const TitleEditor: React.FC<TitleEditorProps> = ({
             formBlockerDisabled
             componentProps={{ sx: { m: 0, mt: 0 } }}
         >
-            <DestacatBridge onChange={setDestacat} />
-            <DashboardTitleFields dashboardPlantilla={dashboardPlantilla} destacat={destacat} />
+            <DashboardTitleFields dashboardPlantilla={dashboardPlantilla} />
         </MuiForm>
     );
 };

@@ -32,7 +32,7 @@ export const WidgetPreview: React.FC<WidgetPreviewProps> = ({
         );
     }
     const plantillaToUse = dashboardItemPlantilla || dashboardPlantilla;
-    const resolvedStyles = resolveWidgetStyles(widgetData, plantillaToUse, temaFosc);
+    const resolvedStyles = resolveWidgetStyles(widgetData, widgetType, plantillaToUse, temaFosc);
     const finalData = {
         ...widgetData,
         ...resolvedStyles,

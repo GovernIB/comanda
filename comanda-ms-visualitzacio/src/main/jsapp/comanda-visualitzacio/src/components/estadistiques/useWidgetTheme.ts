@@ -36,7 +36,7 @@ export const useWidgetTheme = (options: WidgetThemeOptions): WidgetThemeColors =
         const textColor = colorText || theme.palette.text.primary;
         const backgroundColor = colorFons || theme.palette.background.paper;
         const voraColor = colorVora || theme.palette.divider;
-        const isWhiteBackground = !colorFons || isLightColor(backgroundColor);
+        const isWhiteBackground = isLightColor(backgroundColor);
         const contrastTextColor = isWhiteBackground ? '#000000' : '#FFFFFF';
         
         const bgColor = isWhiteBackground ? backgroundColor + ' !important' : 'transparent';

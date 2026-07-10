@@ -49,6 +49,7 @@ interface Plantilla {
 /** Retorna els estils combinats de plantilla del dashboard amb els propis del widget. **/
 export const resolveWidgetStyles = (
     widget: any,
+    widgetType: WidgetType,
     plantilla: Plantilla | null | undefined,
     temaFosc: boolean = false,
 ): Record<string, any> => {
@@ -56,9 +57,9 @@ export const resolveWidgetStyles = (
     if (!plantilla) {
         return widgetAtributs;
     }
-    const widgetType = widget.tipus as WidgetType;
     const themeGroup = calculateThemeGroup(temaFosc, widget?.destacat);
-    const plantillaStyles = getPlantillaStylesForWidget(plantilla, widgetType, themeGroup);
+    const scopes = getRelevantScopes(widgetType, widget?.tipusTitol);
+    const plantillaStyles = getPlantillaStylesForWidget(plantilla, scopes, themeGroup);
     const finalStyles = { ...plantillaStyles };
     Object.keys(widgetAtributs).forEach(key => {
         const widgetValue = widgetAtributs[key];
@@ -80,15 +81,14 @@ const calculateThemeGroup = (temaFosc: boolean, widgetDestacat: boolean): Palett
 
 const getPlantillaStylesForWidget = (
     plantilla: Plantilla,
-    widgetType: WidgetType,
+    relevantScopes: string[],
     themeGroup: PaletteGroupType
 ): Record<string, any> => {
     const styles: Record<string, any> = {};
     const styleProperties = plantilla.styleProperties || [];
     const paletes = plantilla.paletes || [];
     const paletteGroups = plantilla.paletteGroups || [];
-    const relevantScopes = getRelevantScopes(widgetType);
-    const relevantProperties = styleProperties.filter(prop => 
+    const relevantProperties = styleProperties.filter(prop =>
         relevantScopes.includes(prop.scope)
     );
     relevantProperties.forEach(prop => {
@@ -97,7 +97,7 @@ const getPlantillaStylesForWidget = (
             styles[prop.propertyName] = value;
         }
     });
-    if (widgetType === 'GRAFIC') {
+    if (relevantScopes.includes('GRAFIC')) {
         const chartColors = getChartColors(themeGroup, paletes, paletteGroups);
         if (chartColors.length > 0) {
             styles.colorsPaleta = chartColors.join(',');
@@ -106,7 +106,16 @@ const getPlantillaStylesForWidget = (
     return styles;
 };
 
-const getRelevantScopes = (widgetType: WidgetType): string[] => {
+const mapTipusTitolToScope = (tipusTitol?: string): string => {
+    switch (tipusTitol) {
+        case 'TIPUS_1': return 'TITOL_1';
+        case 'TIPUS_2': return 'TITOL_2';
+        case 'TIPUS_3': return 'TITOL_3';
+        default: return 'TITOL_1';
+    }
+};
+
+export const getRelevantScopes = (widgetType: WidgetType, tipusTitol?: string): string[] => {
     switch (widgetType) {
         case 'SIMPLE':
             return ['COMMON', 'SIMPLE'];
@@ -115,7 +124,8 @@ const getRelevantScopes = (widgetType: WidgetType): string[] => {
         case 'TAULA':
             return ['COMMON', 'TAULA'];
         case 'TITOL':
-            return ['COMMON', 'TITOL_1', 'TITOL_2', 'TITOL_3'];
+            const scope = mapTipusTitolToScope(tipusTitol);
+            return ['COMMON', scope];
         default:
             return ['COMMON'];
     }
