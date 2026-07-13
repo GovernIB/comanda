@@ -2,6 +2,7 @@ package es.caib.comanda.estadistica.logic.intf.model.dashboard;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisuals;
+import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.Plantilla;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaSimpleWidget;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
@@ -53,7 +54,7 @@ import javax.validation.constraints.NotNull;
                 )
         },
         artifacts = {
-                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = DashboardItem.WIDGET_REPORT, requiresId = true),
+                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = DashboardItem.WIDGET_REPORT, requiresId = true, formClass=InformeWidgetParams.class),
         }
 )
 public class DashboardItem extends BaseResource<Long> {

@@ -620,22 +620,16 @@ public class ConsultaEstadisticaHelper {
                 .build();
     }
 
-    private AtributsVisuals resolveAtributsVisuals(DashboardItemEntity dashboardItem, boolean temaFosc) {
-        if (Boolean.TRUE.equals(dashboardItem.getPersonalitzat())) {
-            // Mode personalitzat: s'apliquen directament els estils del widget
-            AtributsVisuals atributsVisualsWidget = atributsVisualsHelper.getAtributsVisuals(dashboardItem.getWidget());
-            return ensureAtributsVisualsType(dashboardItem, atributsVisualsWidget);
+    public AtributsVisuals resolveAtributsVisuals(DashboardItemEntity dashboardItem, boolean temaFosc) {
+        AtributsVisuals resolved = ensureAtributsVisualsType(dashboardItem, null);
+        AtributsVisuals atributsVisualsDash = atributsVisualsHelper.getAtributsVisuals(dashboardItem);
+        if (atributsVisualsDash != null) {
+            resolved = resolved.merge(atributsVisualsDash);
         }
-        // Mode plantilla: s'apliquen els estils de la plantilla seleccionada (o la del dashboard)
-        var atributsVisualsWidget = atributsVisualsHelper.getAtributsVisuals(dashboardItem.getWidget());
-        var atributsVisualsDash = atributsVisualsHelper.getAtributsVisuals(dashboardItem);
-        AtributsVisuals resolved;
-        if (atributsVisualsWidget != null && atributsVisualsDash != null) {
-            resolved = atributsVisualsDash.merge(atributsVisualsWidget);
-        } else {
-            resolved = atributsVisualsDash != null ? atributsVisualsDash : atributsVisualsWidget;
+        AtributsVisuals atributsVisualsWidget = atributsVisualsHelper.getAtributsVisuals(dashboardItem.getWidget());
+        if (atributsVisualsWidget != null) {
+            resolved = resolved.merge(atributsVisualsWidget);
         }
-        resolved = ensureAtributsVisualsType(dashboardItem, resolved);
         PlantillaEntity plantilla = dashboardItem.getPlantilla() != null
                 ? dashboardItem.getPlantilla()
                 : dashboardItem.getDashboard() != null ? dashboardItem.getDashboard().getPlantilla() : null;
@@ -644,13 +638,9 @@ public class ConsultaEstadisticaHelper {
             PaletteGroupType groupType = temaFosc
                     ? (destacat ? PaletteGroupType.DARK_HIGHLIGHTED : PaletteGroupType.DARK)
                     : (destacat ? PaletteGroupType.LIGHT_HIGHLIGHTED : PaletteGroupType.LIGHT);
-            dashboardStyleResolverHelper.applyTemplateDefaults(
-                    resolved,
-                    plantilla,
-                    groupType,
-                    widgetStyleScope(dashboardItem));
+            dashboardStyleResolverHelper.applyTemplateDefaults(resolved, plantilla, groupType, widgetStyleScope(dashboardItem));
         }
-        return resolved;
+        return ensureAtributsVisualsType(dashboardItem, resolved);
     }
 
     private AtributsVisuals ensureAtributsVisualsType(DashboardItemEntity dashboardItem, AtributsVisuals current) {

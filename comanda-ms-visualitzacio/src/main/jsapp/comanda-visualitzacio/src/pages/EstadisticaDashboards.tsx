@@ -16,6 +16,8 @@ import {iniciaDescargaJSON} from "../util/commonsActions.ts";
 import FormActionDialog from '../components/FormActionDialog.tsx';
 import { findOptions } from '../util/requestUtils.ts';
 import PageTitle from '../components/PageTitle.tsx';
+import IconButton from "@mui/material/IconButton";
+import Icon from "@mui/material/Icon";
 
 const EstadisticaDashboardForm: React.FC = () => {
     const { data } = useFormContext();
@@ -87,6 +89,41 @@ const useCloneDashboardAction = (refresh?: () => void) => {
     }
 }
 
+const useImportDashboardAction = (refresh?: () => void) => {
+    const { t } = useTranslation();
+    const apiRef = React.useRef<MuiFormDialogApi>(null);
+    const {temporalMessageShow} = useBaseAppContext();
+    const handleShow = () :void => {
+        apiRef.current?.show?.(undefined)
+    }
+    const onSuccess = () :void => {
+        refresh?.();
+        temporalMessageShow(null, t($ => $.page.dashboards.action.import.success), 'success');
+    }
+    const formulario =
+        <FormActionDialog
+            resourceName={"dashboard"}
+            action={"dashboard_import"}
+            apiRef={apiRef}
+            title={t($ => $.page.dashboards.action.import.title)}
+            onSuccess={onSuccess}
+            initialOnChange={false}
+        >
+            <Grid container spacing={2}>
+                <Grid size={12}>
+                    <FormField name="file" type={"file"} />
+                </Grid>
+                <Grid size={12}>
+                    <FormField name="overwrite" />
+                </Grid>
+            </Grid>
+        </FormActionDialog>;
+    return {
+        handleShow,
+        content: formulario
+    }
+}
+
 const useActions = () => {
     const { artifactReport: apiReport } = useResourceApiService('dashboard');
     const { temporalMessageShow } = useBaseAppContext();
@@ -136,6 +173,7 @@ const EstadisticaDashboards: React.FC = () => {
     }
     const { dashboardExport } = useActions();
     const {handleShow: showCloneDashboard, content: contentCloneDashboard} = useCloneDashboardAction(refresh);
+    const {handleShow: showImport, content: contentImport} = useImportDashboardAction(refresh);
     return (
         <GridPage>
             <PageTitle title={t($ => $.page.dashboards.title)} />
@@ -149,6 +187,17 @@ const EstadisticaDashboards: React.FC = () => {
                 rowHideUpdateButton
                 popupEditActive
                 popupEditFormContent={<EstadisticaDashboardForm/>}
+                toolbarElementsWithPositions={[
+                    {
+                        position: 2,
+                        element: <IconButton
+                            title={t($ => $.page.dashboards.action.import.label)}
+                            onClick={showImport}
+                        >
+                            <Icon>download</Icon>
+                        </IconButton>
+                    }
+                ]}
                 rowAdditionalActions={[
                     {
                         label: t($ => $.page.dashboards.edit),
@@ -177,6 +226,7 @@ const EstadisticaDashboards: React.FC = () => {
                 ]}
             />
             {contentCloneDashboard}
+            {contentImport}
         </GridPage>
     );
 };

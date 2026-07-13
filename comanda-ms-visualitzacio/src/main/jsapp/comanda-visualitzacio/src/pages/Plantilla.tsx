@@ -559,21 +559,27 @@ const propertiesForPreview = (data: TemplateData, groupType: PaletteGroupType, s
             }
         });
 
+    props.entornCodi = props.entornCodi || "DEV";
     if (scope === "GRAFIC") {
         const chartPalette = paletteForGroup(normalized, groupType, "CHART");
         props.colorsPaleta = normalizeColors(chartPalette?.colors || [])
             .map((color) => color.valor)
             .join(",");
         props.tipusGrafic = data.tipusGrafic || "BAR_CHART";
+        props.titol = props.titol || "Títol del gràfic";
         props.descripcio = props.descripcio || "Descripció del gràfic";
         props.llegendaX = props.llegendaX || "Eix X";
     }
     if (scope === "SIMPLE" || scope === "COMMON") {
+        props.titol = props.titol || "Titol simple";
+        props.valor = 1234;
         props.icona = "AcUnit";
         props.unitat = props.unitat || "u";
         props.canviPercentual = props.canviPercentual || "12.5";
+        props.descripcio = props.descripcio || "Descripció simple";
     }
     if (scope === "TAULA") {
+        props.titol = props.titol || "Titol de la taula";
         props.descripcio = props.descripcio || "Descripció de la taula";
     }
     return props;

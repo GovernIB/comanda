@@ -1,9 +1,11 @@
 package es.caib.comanda.estadistica.logic.intf.model.dashboard;
 
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.Plantilla;
 import es.caib.comanda.estadistica.logic.intf.model.widget.AppResource;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EntornResource;
+import es.caib.comanda.estadistica.logic.service.DashboardServiceImpl;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
@@ -15,7 +17,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.List;
@@ -54,8 +55,9 @@ import java.util.List;
                 )
         },
         artifacts = {
+                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Dashboard.DASHBOARD_IMPORT, formClass = DashboardServiceImpl.DashboardImportParams.class),
                 @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Dashboard.CLONE_ACTION, requiresId = true, formClass = Dashboard.class),
-                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Dashboard.WIDGETS_REPORT, requiresId = true),
+                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Dashboard.WIDGETS_REPORT, requiresId = true, formClass= InformeWidgetParams.class),
                 @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Dashboard.DASHBOARD_EXPORT, requiresId = true)
         }
 )

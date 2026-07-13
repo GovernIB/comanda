@@ -90,4 +90,71 @@ describe('TaulaWidgetVisualization', () => {
 
         expect(onClick).toHaveBeenCalledTimes(1);
     });
+
+    it('TaulaWidgetVisualization_quanEstaEnModeLoading_mostraSkeletons', () => {
+        renderComponent(
+            <TaulaWidgetVisualization
+                titol="Resum"
+                columnes={[{ id: 'name', label: 'Nom' }]}
+                files={[{ name: 'Fila A', dimensio: 'fila-a' }]}
+                loading={true}
+            />
+        );
+
+        expect(screen.queryByText('Resum')).not.toBeInTheDocument();
+        expect(screen.queryByText('Nom')).not.toBeInTheDocument();
+        expect(screen.queryByText('Fila A')).not.toBeInTheDocument();
+    });
+
+    it('TaulaWidgetVisualization_quanMostrarCapcaleraEsFals_noRenderitzaLaCapcalera', () => {
+        renderComponent(
+            <TaulaWidgetVisualization
+                columnes={[{ id: 'name', label: 'Nom' }]}
+                files={[{ name: 'Fila A', dimensio: 'fila-a' }]}
+                mostrarCapcalera={false}
+            />
+        );
+
+        expect(screen.queryByText('Nom')).not.toBeInTheDocument();
+        expect(screen.getByText('Fila A')).toBeInTheDocument();
+    });
+
+    it('TaulaWidgetVisualization_quanColumnaTeFormat_aplicaElFormat', () => {
+        renderComponent(
+            <TaulaWidgetVisualization
+                columnes={[
+                    { id: 'name', label: 'Nom' },
+                    { id: 'valor', label: 'Valor', format: (v) => `${v}€` },
+                ]}
+                files={[{ name: 'Fila A', dimensio: 'fila-a', valor: 42 }]}
+            />
+        );
+
+        expect(screen.getByText('42€')).toBeInTheDocument();
+    });
+
+    it('TaulaWidgetVisualization_quanNoTeFiles_noRenderitzaFiles', () => {
+        renderComponent(
+            <TaulaWidgetVisualization
+                columnes={[{ id: 'name', label: 'Nom' }]}
+                files={[]}
+            />
+        );
+
+        expect(screen.getByText('Nom')).toBeInTheDocument();
+        const rows = screen.queryAllByRole('row');
+        expect(rows.length).toBe(1);
+    });
+
+    it('TaulaWidgetVisualization_quanUsaDadesPerDefecte_renderitzaCorrectament', () => {
+        renderComponent(
+            <TaulaWidgetVisualization
+                titol="Taula per defecte"
+            />
+        );
+
+        expect(screen.getByText('Taula per defecte')).toBeInTheDocument();
+        expect(screen.getByText('Nom')).toBeInTheDocument();
+        expect(screen.getByText('Valor 1')).toBeInTheDocument();
+    });
 });

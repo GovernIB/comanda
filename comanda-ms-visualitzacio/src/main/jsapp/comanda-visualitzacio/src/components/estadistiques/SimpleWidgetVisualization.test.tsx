@@ -89,4 +89,57 @@ describe('SimpleWidgetVisualization', () => {
 
         expect(onClick).toHaveBeenCalledTimes(1);
     });
+
+    it('SimpleWidgetVisualization_quanEstaEnModeLoading_mostraSkeletons', () => {
+        mocks.useBaseAppContextMock.mockReturnValue({
+            currentLanguage: 'ca',
+        });
+
+        renderComponent(
+            <SimpleWidgetVisualization
+                titol="Peticions"
+                valor={42}
+                unitat="ms"
+                loading={true}
+            />
+        );
+
+        expect(screen.queryByText('fmt:42')).not.toBeInTheDocument();
+        expect(screen.queryByText('ms')).not.toBeInTheDocument();
+    });
+
+    it('SimpleWidgetVisualization_quanNoHiHaIcona_noRenderitzaLElementIcon', () => {
+        mocks.useBaseAppContextMock.mockReturnValue({
+            currentLanguage: 'ca',
+        });
+
+        renderComponent(
+            <SimpleWidgetVisualization
+                titol="Peticions"
+                valor={42}
+            />
+        );
+
+        expect(screen.getByText('fmt:42')).toBeInTheDocument();
+
+        const icons = screen.queryAllByRole('img');
+        expect(icons.length).toBe(0);
+    });
+
+    it('SimpleWidgetVisualization_quanValorEsInvalid_mostraElValorOriginal', () => {
+        mocks.useBaseAppContextMock.mockReturnValue({
+            currentLanguage: 'ca',
+        });
+
+        renderComponent(
+            <SimpleWidgetVisualization
+                titol="Peticions"
+                valor="invalid"
+                unitat="ms"
+            />
+        );
+
+        expect(screen.getByText('invalid')).toBeInTheDocument();
+    });
+
 });

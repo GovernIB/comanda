@@ -1,5 +1,8 @@
 package es.caib.comanda.estadistica.logic.mapper;
 
+import es.caib.comanda.client.model.App;
+import es.caib.comanda.client.model.Entorn;
+import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.helper.AtributsVisualsHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.intf.model.export.DashboardExport;
@@ -10,17 +13,23 @@ import es.caib.comanda.estadistica.logic.intf.model.export.EstadisticaSimpleWidg
 import es.caib.comanda.estadistica.logic.intf.model.export.EstadisticaTaulaWidgetExport;
 import es.caib.comanda.estadistica.logic.intf.model.export.EstadisticaWidgetExport;
 import es.caib.comanda.estadistica.logic.intf.model.export.IndicadorTaulaExport;
+import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
+import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.SubclassMapping;
+import es.caib.comanda.estadistica.persist.repository.DimensioRepository;
+import es.caib.comanda.estadistica.persist.repository.DimensioValorRepository;
+import es.caib.comanda.estadistica.persist.repository.IndicadorRepository;
+import es.caib.comanda.estadistica.persist.repository.PlantillaRepository;
+import org.mapstruct.*;
 
 import java.util.List;
 
@@ -41,11 +50,30 @@ public interface DashboardExportMapper {
      * @param dashboardEntity El dashboard entity a convertir
      * @return El DashboardExport resultant
      */
-    @Mapping(target = "entornCodi", ignore = true)
-    @Mapping(target = "appCodi", ignore = true)
-    @Mapping(target = "items", expression = "java(toDashboardItemExport(dashboardEntity.getItems(), estadisticaClientHelper, atributsVisualsHelper))")
-    DashboardExport toDashboardExport(DashboardEntity dashboardEntity, EstadisticaClientHelper estadisticaClientHelper, AtributsVisualsHelper atributsVisualsHelper);
-    
+    @Mapping(target = "entornCodi", source = "entornId", qualifiedByName = "toEntornExport")
+    @Mapping(target = "appCodi", source = "appId", qualifiedByName = "toAppExport")
+    @Mapping(target = "plantilla", source = "plantilla", qualifiedByName = "toPlantillaExport")
+    DashboardExport toDashboardExport(DashboardEntity dashboardEntity,
+                                      @Context EstadisticaClientHelper estadisticaClientHelper,
+                                      @Context AtributsVisualsHelper atributsVisualsHelper);
+
+    @Named("toAppExport")
+    default String toAppExport(Long appId, @Context EstadisticaClientHelper estadisticaClientHelper) {
+        if (appId == null) return null;
+        App app = estadisticaClientHelper.appFindById(appId);
+        return app != null ?app.getCodi() :null;
+    }
+    @Named("toEntornExport")
+    default String toEntornExport(Long entornId, @Context EstadisticaClientHelper estadisticaClientHelper) {
+        if (entornId == null) return null;
+        Entorn entorn = estadisticaClientHelper.entornById(entornId);
+        return entorn != null ?entorn.getCodi() :null;
+    }
+    @Named("toPlantillaExport")
+    default String toPlantillaExport(PlantillaEntity plantillaEntity) {
+        return plantillaEntity != null ?plantillaEntity.getNom() :null;
+    }
+
     /**
      * Converteix una llista de DashboardEntity a una llista de DashboardExport.
      * 
@@ -71,23 +99,13 @@ public interface DashboardExportMapper {
      * @param dashboardItemEntity El DashboardItemEntity a convertir
      * @return El DashboardItemExport resultant
      */
-    @Mapping(target = "entornCodi", expression = "java(estadisticaClientHelper.entornById(dashboardItemEntity.getEntornId()).getCodi())")
-    @Mapping(target = "appCodi", expression = "java(estadisticaClientHelper.appFindById(dashboardItemEntity.getWidget().getAppId()).getCodi())")
-    @Mapping(target = "widget", expression = "java(toWidgetExport(dashboardItemEntity.getWidget(), atributsVisualsHelper))")
+    @Mapping(target = "entornCodi", source = "entornId", qualifiedByName = "toEntornExport")
+    @Mapping(target = "appCodi", source = "widget.appId", qualifiedByName = "toAppExport")
+    @Mapping(target = "widget", source = "widget", qualifiedByName = "toWidgetExport")
     @Mapping(target = "atributsVisuals", expression = "java(atributsVisualsHelper.getAtributsVisuals(dashboardItemEntity))")
-    DashboardItemExport toDashboardItemExport(DashboardItemEntity dashboardItemEntity, EstadisticaClientHelper estadisticaClientHelper, AtributsVisualsHelper atributsVisualsHelper);
-
-    default List<DashboardItemExport> toDashboardItemExport(List<DashboardItemEntity> dashboardItemsEntity, EstadisticaClientHelper estadisticaClientHelper, AtributsVisualsHelper atributsVisualsHelper) {
-        if (dashboardItemsEntity == null) {
-            return null;
-        }
-        
-        List<DashboardItemExport> result = new java.util.ArrayList<>(dashboardItemsEntity.size());
-        for (DashboardItemEntity dashboardItemEntity : dashboardItemsEntity) {
-            result.add(toDashboardItemExport(dashboardItemEntity, estadisticaClientHelper, atributsVisualsHelper));
-        }
-        return result;
-    }
+    DashboardItemExport toDashboardItemExport(DashboardItemEntity dashboardItemEntity,
+                                              @Context EstadisticaClientHelper estadisticaClientHelper,
+                                              @Context AtributsVisualsHelper atributsVisualsHelper);
 
     @SubclassMapping(source = EstadisticaSimpleWidgetEntity.class, target = EstadisticaSimpleWidgetExport.class)
     @SubclassMapping(source = EstadisticaGraficWidgetEntity.class, target = EstadisticaGraficWidgetExport.class)
@@ -101,7 +119,8 @@ public interface DashboardExportMapper {
      * @param atributsVisualsHelper Helper per obtenir els atributs visuals
      * @return El EstadisticaWidgetExport resultant amb els atributs visuals emplenats
      */
-    default EstadisticaWidgetExport toWidgetExport(EstadisticaWidgetEntity widget, AtributsVisualsHelper atributsVisualsHelper) {
+    @Named("toWidgetExport")
+    default EstadisticaWidgetExport toWidgetExport(EstadisticaWidgetEntity widget, @Context AtributsVisualsHelper atributsVisualsHelper) {
         if (widget == null) {
             return null;
         }
@@ -112,16 +131,24 @@ public interface DashboardExportMapper {
             ((EstadisticaSimpleWidgetExport) result).setAtributsVisuals(
                 (es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple) atributsVisualsHelper.getAtributsVisuals(widget)
             );
+            result.setTipus(WidgetTipus.SIMPLE);
         } else if (result instanceof EstadisticaGraficWidgetExport) {
-            // TODO: afegir mapeig de indicadorInfo, descomposicioDimensioCodi, unitatAgregacio?
+            // TODO: afegir mapeig de unitatAgregacio?
             ((EstadisticaGraficWidgetExport) result).setAtributsVisuals(
                 (es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic) atributsVisualsHelper.getAtributsVisuals(widget)
             );
+            EstadisticaGraficWidgetEntity grafic = (EstadisticaGraficWidgetEntity) widget;
+            if (grafic.getDescomposicioDimensio() != null) {
+                ((EstadisticaGraficWidgetExport) result).setDescomposicioDimensioCodi(grafic.getDescomposicioDimensio().getCodi());
+            }
+            result.setTipus(WidgetTipus.GRAFIC);
         } else if (result instanceof EstadisticaTaulaWidgetExport) {
-            // TODO: afegir mapeig de dimensioAgrupacioCodi?
             ((EstadisticaTaulaWidgetExport) result).setAtributsVisuals(
                 (es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTaula) atributsVisualsHelper.getAtributsVisuals(widget)
             );
+            ((EstadisticaTaulaWidgetExport) result).setDimensioAgrupacioCodi(
+                    ((EstadisticaTaulaWidgetEntity) widget).getDimensioAgrupacio().getCodi());
+            result.setTipus(WidgetTipus.TAULA);
         }
         
         return result;
@@ -132,5 +159,153 @@ public interface DashboardExportMapper {
 
     @Mapping(target = "indicadorCodi", source = "indicador.codi")
     IndicadorTaulaExport toIndicadorTaulaExport(IndicadorTaulaEntity indicadorTaulaEntity);
-    
+
+
+    // ============================================================================
+    // CONVERSIÓ INVERSA: Export → Entity
+    // ============================================================================
+
+    /**
+     * Converteix un DashboardExport a un DashboardEntity.
+     * Nota: Requereix repositories/helpers per fer lookup de codi → ID
+     */
+    @Mapping(target = "entornId", source = "entornCodi", qualifiedByName = "toEntornId")
+    @Mapping(target = "appId", source = "appCodi", qualifiedByName = "toAppId")
+    @Mapping(target = "plantilla", source = "plantilla", qualifiedByName = "toPlantillaEntity")
+    DashboardEntity toDashboardEntity(DashboardExport dashboardExport,
+                                      @Context EstadisticaClientHelper estadisticaClientHelper,
+                                      @Context AtributsVisualsHelper atributsVisualsHelper,
+                                      @Context PlantillaRepository plantillaRepository,
+                                      @Context IndicadorRepository indicadorRepository,
+                                      @Context DimensioRepository dimensioRepository,
+                                      @Context DimensioValorRepository dimensioValorRepository);
+
+    List<DashboardEntity> toDashboardEntity(List<DashboardExport> dashboardEntities,
+                                            @Context EstadisticaClientHelper estadisticaClientHelper,
+                                            @Context AtributsVisualsHelper atributsVisualsHelper,
+                                            @Context PlantillaRepository plantillaRepository,
+                                            @Context IndicadorRepository indicadorRepository,
+                                            @Context DimensioRepository dimensioRepository,
+                                            @Context DimensioValorRepository dimensioValorRepository);
+
+    @Named("toAppId")
+    default Long toAppId(String appCodi, @Context EstadisticaClientHelper helper) {
+        if (appCodi == null) return null;
+        App app = helper.appFindByCodi(appCodi);
+        return app != null ? app.getId() : null;
+    }
+
+    @Named("toEntornId")
+    default Long toEntornId(String entornCodi, @Context EstadisticaClientHelper helper) {
+        if (entornCodi == null) return null;
+        Entorn entorn = helper.entornByCodi(entornCodi);
+        return entorn != null ? entorn.getId() : null;
+    }
+
+    @Named("toPlantillaEntity")
+    default PlantillaEntity toPlantillaEntity(String plantillaNom, @Context PlantillaRepository repository) {
+        if (plantillaNom == null) return null;
+        return repository.findByNom(plantillaNom).orElse(null);
+    }
+
+    @Mapping(target = "entornId", source = "entornCodi", qualifiedByName = "toEntornId")
+    @Mapping(target = "widget", source = ".", qualifiedByName = "toWidgetEntity")
+    DashboardItemEntity toDashboardItemEntity(DashboardItemExport dashboardItemExport,
+                                              @Context EstadisticaClientHelper estadisticaClientHelper,
+                                              @Context AtributsVisualsHelper atributsVisualsHelper,
+                                              @Context IndicadorRepository indicadorRepository,
+                                              @Context DimensioRepository dimensioRepository,
+                                              @Context DimensioValorRepository dimensioValorRepository);
+
+    EstadisticaSimpleWidgetEntity toSimpleWidgetEntity(EstadisticaSimpleWidgetExport dto,
+                                                       @Context Long entornAppId,
+                                                       @Context IndicadorRepository indicadorRepository,
+                                                       @Context DimensioRepository dimensioRepository,
+                                                       @Context DimensioValorRepository dimensioValorRepository);
+
+    @Mapping(target = "descomposicioDimensio", source = "descomposicioDimensioCodi", qualifiedByName = "toDimensioEntity")
+    EstadisticaGraficWidgetEntity toGraficWidgetEntity(EstadisticaGraficWidgetExport dto,
+                                                       @Context Long entornAppId,
+                                                       @Context IndicadorRepository indicadorRepository,
+                                                       @Context DimensioRepository dimensioRepository,
+                                                       @Context DimensioValorRepository dimensioValorRepository);
+
+    @Mapping(target = "dimensioAgrupacio", source = "dimensioAgrupacioCodi", qualifiedByName = "toDimensioEntity")
+    EstadisticaTaulaWidgetEntity toTaulaWidgetEntity(EstadisticaTaulaWidgetExport dto,
+                                                     @Context Long entornAppId,
+                                                     @Context IndicadorRepository indicadorRepository,
+                                                     @Context DimensioRepository dimensioRepository,
+                                                     @Context DimensioValorRepository dimensioValorRepository);
+
+    @Named("toWidgetEntity")
+    default EstadisticaWidgetEntity toWidgetEntity(DashboardItemExport dashboardItemExport,
+                                                   @Context EstadisticaClientHelper estadisticaClientHelper,
+                                                   @Context AtributsVisualsHelper atributsVisualsHelper,
+                                                   @Context IndicadorRepository indicadorRepository,
+                                                   @Context DimensioRepository dimensioRepository,
+                                                   @Context DimensioValorRepository dimensioValorRepository) {
+        if (dashboardItemExport == null) return null;
+        EstadisticaWidgetExport widgetExport = dashboardItemExport.getWidget();
+        if (widgetExport == null) return null;
+
+        Long entornId = toEntornId(dashboardItemExport.getEntornCodi(), estadisticaClientHelper);
+        Long appId = toAppId(dashboardItemExport.getAppCodi(), estadisticaClientHelper);
+        EntornApp entornApp = estadisticaClientHelper.entornAppFindByAppAndEntorn(appId, entornId);
+        Long entornAppId = entornApp != null ?entornApp.getId() :null;
+
+        EstadisticaWidgetEntity entity = null;
+        if (widgetExport instanceof EstadisticaSimpleWidgetExport) {
+            entity = toSimpleWidgetEntity((EstadisticaSimpleWidgetExport) widgetExport, entornAppId, indicadorRepository, dimensioRepository, dimensioValorRepository);
+            entity.setAtributsVisualsJson(
+                    atributsVisualsHelper.getAtributsVisualsJson(((EstadisticaSimpleWidgetExport) widgetExport).getAtributsVisuals())
+            );
+        } if (widgetExport instanceof EstadisticaGraficWidgetExport) {
+            entity = toGraficWidgetEntity((EstadisticaGraficWidgetExport) widgetExport, entornAppId, indicadorRepository, dimensioRepository, dimensioValorRepository);
+            entity.setAtributsVisualsJson(
+                    atributsVisualsHelper.getAtributsVisualsJson(((EstadisticaGraficWidgetExport) widgetExport).getAtributsVisuals())
+            );
+        } if (widgetExport instanceof EstadisticaTaulaWidgetExport) {
+            entity = toTaulaWidgetEntity((EstadisticaTaulaWidgetExport) widgetExport, entornAppId, indicadorRepository, dimensioRepository, dimensioValorRepository);
+            entity.setAtributsVisualsJson(
+                    atributsVisualsHelper.getAtributsVisualsJson(((EstadisticaTaulaWidgetExport) widgetExport).getAtributsVisuals())
+            );
+        }
+
+        if (entity != null) {
+            entity.setAppId(appId);
+        }
+
+        return entity;
+    }
+
+    @Mapping(target = "indicador", source = ".", qualifiedByName = "toIndicadorEntity")
+    IndicadorTaulaEntity toIndicadorTaulaEntity(IndicadorTaulaExport indicadorTaulaExport,
+                                                @Context Long entornAppId,
+                                                @Context IndicadorRepository indicadorRepository);
+
+    @Named("toIndicadorEntity")
+    public default IndicadorEntity toIndicadorEntity(IndicadorTaulaExport indicadorTaulaExport,
+                                              @Context Long entornAppId,
+                                              @Context IndicadorRepository indicadorRepository) {
+        if (indicadorTaulaExport == null || indicadorTaulaExport.getIndicadorCodi() == null || entornAppId == null) return null;
+        return indicadorRepository.findByCodiAndEntornAppId(indicadorTaulaExport.getIndicadorCodi(), entornAppId).orElse(null);
+    }
+
+    @Named("toDimensioEntity")
+    public default DimensioEntity toDimensioEntity(String dimensioCodi,
+                                                   @Context Long entornAppId,
+                                                   @Context DimensioRepository dimensioRepository) {
+        if (dimensioCodi == null || entornAppId == null) return null;
+        return dimensioRepository.findByCodiAndEntornAppId(dimensioCodi, entornAppId).orElse(null);
+    }
+
+    default DimensioValorEntity toDimensioValorEntity(DimensioValorExport dimensioValorExport,
+                                                      @Context Long entornAppId,
+                                                      @Context DimensioRepository dimensioRepository,
+                                                      @Context DimensioValorRepository dimensioValorRepository) {
+        if (dimensioValorExport == null) return null;
+        DimensioEntity dimensio = this.toDimensioEntity(dimensioValorExport.getDimensioCodi(), entornAppId, dimensioRepository);
+        if (dimensio == null) return null;
+        return dimensioValorRepository.findByDimensioAndValor(dimensio, dimensioValorExport.getValor()).orElse(null);
+    }
 }

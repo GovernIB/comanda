@@ -16,6 +16,7 @@ import {useTranslation} from "react-i18next";
 import PageTitle from '../components/PageTitle.tsx';
 import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
 import { FooterHeightPlaceholder } from '../components/ComandaFooter.tsx';
+import { useEntornCodi } from '../components/estadistiques/dashboardPlantillaHook.ts';
 
 const LAST_VIEWED_STORAGE_KEY = 'lastViewedDashboardId';
 const NO_DASHBOARD_FOUND = 'NO_DASHBOARD_FOUND';
@@ -87,6 +88,7 @@ const EstadisticaDashboardView = () => {
         loading: loadingDashboard,
         exception: dashboardException,
     } = useDashboard(dashboardId);
+    const { entornCodi: dashboardEntornCodi, loading: loadingEntornCodi } = useEntornCodi(dashboard?.entorn?.id);
     const { dashboardWidgets, loadingWidgetPositions } = useDashboardWidgets(dashboardId, temaFosc);
     const { isReady: apiDashboardIsReady, find: findDashboard } =
         useResourceApiService('dashboard');
@@ -95,7 +97,7 @@ const EstadisticaDashboardView = () => {
         useDashboardSelect(dashboardId);
     const navigate = useNavigate();
 
-    const loading = loadingDashboard || loadingWidgetPositions;
+    const loading = loadingDashboard || loadingWidgetPositions || loadingEntornCodi;
 
     useEffect(() => {
         if (
@@ -195,6 +197,7 @@ const EstadisticaDashboardView = () => {
                         editable={false}
                         dashboardWidgets={dashboardWidgets}
                         gridLayoutItems={mappedDashboardItems}
+                        dashboardEntornCodi={dashboardEntornCodi}
                     />
                 )}
                 <FooterHeightPlaceholder />

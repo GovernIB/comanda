@@ -60,8 +60,12 @@ vi.mock('./EstadisticaWidgetFormFields', () => ({
     default: ({ children }: { children: React.ReactNode }) => <div data-testid="widget-form-fields">{children}</div>,
 }));
 
-vi.mock('./GraficWidgetVisualization', () => ({
-    default: (props: Record<string, unknown>) => <div data-testid="grafic-preview">{String(props.tipusGrafic)}</div>,
+vi.mock('./WidgetPreview', () => ({
+    WidgetPreview: ({ widgetType, widgetData }: { widgetType: string; widgetData: any }) => (
+        <div data-testid="widget-preview">
+            {widgetType} - {widgetData.titol}
+        </div>
+    ),
 }));
 
 vi.mock('./VisualAttributesPanel', () => ({
@@ -123,7 +127,7 @@ describe('EstadisticaGraficWidgetForm', () => {
         expect(screen.getByTestId('field-barHorizontal')).toBeInTheDocument();
         expect(screen.getByTestId('field-colorVora')).toBeInTheDocument();
         expect(screen.getByTestId('field-unitatAgregacio')).toHaveAttribute('data-disabled', 'true');
-        expect(screen.getByTestId('grafic-preview')).toHaveTextContent('BAR_CHART');
+        expect(screen.getByTestId('widget-preview')).toHaveTextContent('GRAFIC - Títol del gràfic');
     });
 
     it('EstadisticaGraficWidgetForm_quanEsVarisIndicadors_mostraLaTaulaDIndicadors', () => {

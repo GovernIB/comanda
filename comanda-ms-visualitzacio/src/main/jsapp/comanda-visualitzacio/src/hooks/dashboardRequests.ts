@@ -77,7 +77,7 @@ export const useDashboardWidgets = (dashboardId: any, temaFosc = false) => {
                 }));
 
                 const widgetsPositionResponse = (await artifactReport(dashboardId, {
-                    code: 'widgets_data',
+                    code: 'widgets_data', data: { temaFosc }
                 })) as any[];
                 if (cancelRequests) return;
                 setRequestState((prevState) => ({

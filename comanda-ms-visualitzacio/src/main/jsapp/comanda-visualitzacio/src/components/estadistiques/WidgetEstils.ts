@@ -3,7 +3,7 @@ import { Theme } from "@mui/material/styles";
 export const estils = {
     /*styles.paperContainer(bgColor, bg, colors.textColor, mostrarVora, voraAmple, colors.voraColor, onClick, theme)*/
     paperContainer: (bgColor: string, bg: string, textColor: string,
-                     mostrarVora: boolean, voraAmple: number, voraColor: string,
+                     mostrarVora: boolean | undefined, voraAmple: number, voraColor: string,
                      onClick: (() => void) | undefined, theme: Theme) => ({
         position: 'relative',
         display: 'flex',

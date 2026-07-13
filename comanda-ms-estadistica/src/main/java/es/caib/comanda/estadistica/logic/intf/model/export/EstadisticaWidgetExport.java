@@ -1,5 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.model.export;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeAbsolutTipus;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeAlineacio;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeAnchor;
@@ -7,6 +9,7 @@ import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeEspecificAny;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeMode;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PresetPeriode;
+import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,10 +26,22 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "tipus",
+        visible = true
+)
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = EstadisticaSimpleWidgetExport.class, name = "SIMPLE"),
+        @JsonSubTypes.Type(value = EstadisticaGraficWidgetExport.class, name = "GRAFIC"),
+        @JsonSubTypes.Type(value = EstadisticaTaulaWidgetExport.class, name = "TAULA")
+})
 public class EstadisticaWidgetExport implements Serializable {
 
     protected String titol;
     protected String descripcio;
+    protected WidgetTipus tipus;
 
     // Dimensions per les que filtrar
     protected List<DimensioValorExport> dimensionsValor;

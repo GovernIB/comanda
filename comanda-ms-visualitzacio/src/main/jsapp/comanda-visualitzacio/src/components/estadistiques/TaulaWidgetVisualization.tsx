@@ -1,26 +1,21 @@
 import React from 'react';
-import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Icon from '@mui/material/Icon';
-import {useTheme} from '@mui/material/styles';
-import {createTransparentColor, isLightColor} from "../../util/colorUtil";
+import {
+    Box,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Icon,
+    Skeleton,
+} from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import estils from './WidgetEstils';
-import Chip from "@mui/material/Chip";
-import Skeleton from '@mui/material/Skeleton';
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import { useWidgetTheme } from './useWidgetTheme';
+import { WidgetContainer, WidgetHeader, WidgetFooter, WidgetErrorDisplay } from './WidgetLayout';
 
-// Define the column style interface
+// Interfaces
 interface ColumnaEstil {
     codiColumna: string;
     colorText?: string;
@@ -30,7 +25,6 @@ interface ColumnaEstil {
     rangsValors?: RangValor[];
 }
 
-// Define the value range interface
 interface RangValor {
     valorMin: number;
     valorMax: number;
@@ -40,7 +34,6 @@ interface RangValor {
     cursiva?: boolean;
 }
 
-// Define the highlighted cell interface
 interface CellaDestacada {
     codiColumna: string;
     valorDimensio: string;
@@ -52,38 +45,22 @@ interface CellaDestacada {
     iconaSufix?: string;
 }
 
-interface TaulaWidgetColors {
-    textColor: string;
-    backgroundColor: string;
-    voraColor: string;
-    textTaulaColor: string;
-    taulaBgColor: string;
-    textHeaderColor: string;
-    headerBgColor?: string;
-    alternanciaColor: string;
-    voraTaulaColor: string;
-    horDividerColor: string;
-    verDividerColor: string;
-    isWhiteBackground: boolean;
-}
-
-// Define the props for the TaulaWidgetVisualization component
 export interface TaulaWidgetVisualizationProps {
     // Widget data
     entornCodi?: string;
     titol?: string;
     descripcio?: string;
-
     columnes?: { id: string; label: string; format?: (value: any) => string }[];
     files?: any[];
+    destacat?: boolean,
 
     // Atributs visuals
-    // Contenidor
     colorText?: string;
     colorFons?: string;
     mostrarVora?: boolean;
     colorVora?: string;
     ampleVora?: number;
+
     // Taula
     colorTextTaula?: string;
     colorFonsTaula?: string;
@@ -114,124 +91,73 @@ export interface TaulaWidgetVisualizationProps {
     errorTrace?: string;
     onClick?: () => void;
 
-    midaFontTitol?: number,
-    midaFontDescripcio?: number,
+    midaFontTitol?: number;
+    midaFontDescripcio?: number;
+
+    // Dashboard context
+    dashboardEntornCodi?: string;
 }
 
-const useWidgetColors = (props: TaulaWidgetVisualizationProps, theme: any): TaulaWidgetColors => {
-    const {
-        colorText,
-        colorFons,
-        colorVora,
-        colorTextTaula,
-        colorFonsTaula,
-        colorCapcalera,
-        colorFonsCapcalera,
-        colorAlternancia,
-        colorVoraTaula,
-        colorSeparadorHoritzontal,
-        colorSeparadorVertical
-    } = props;
-
-    const colors = {
-        text: colorText || theme.palette.text.primary,
-        background: colorFons || theme.palette.background.paper,
-        vora: colorVora || theme.palette.divider,
-        textTaula: colorTextTaula || colorText || theme.palette.text.primary,
-        taulaBg: colorFonsTaula || colorFons || 'transparent',
-        textHeader: colorCapcalera || colorTextTaula || colorText || theme.palette.text.primary,
-        headerBg: colorFonsCapcalera || colorFonsTaula || colorFons,
-        alternancia: colorAlternancia || colorFonsTaula || colorFons || 'transparent',
-        voraTaula: colorVoraTaula || theme.palette.divider,
-        horDivider: colorSeparadorHoritzontal || colorVoraTaula || theme.palette.divider,
-        verDivider: colorSeparadorVertical || colorVoraTaula || theme.palette.divider,
-    };
-
-    return {
-        textColor: colors.text,
-        backgroundColor: colors.background,
-        voraColor: colors.vora,
-        textTaulaColor: colors.textTaula,
-        taulaBgColor: colors.taulaBg,
-        textHeaderColor: colors.textHeader,
-        headerBgColor: colors.headerBg,
-        alternanciaColor: colors.alternancia,
-        voraTaulaColor: colors.voraTaula,
-        horDividerColor: colors.horDivider,
-        verDividerColor: colors.verDivider,
-        isWhiteBackground: !colorFons || isLightColor(colors.background),
-    };
-};
-
-/**
- * Component for visualizing a table widget with configurable visual attributes.
- * Can be used both for dashboard display and for preview in configuration forms.
- */
 const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props) => {
     const {
-        // Widget data
-        titol = 'Títol de la taula',
+        titol,
         descripcio,
         columnes = generateSampleColumns(),
         files = generateSampleData(),
-        entornCodi = 'DEV',
-
-        // Atributs visuals
-        // Contenidor
-        // colorText,
-        // colorFons,
+        entornCodi,
         mostrarVora = false,
-        // colorVora,
         ampleVora = 1,
-        // Taula
-        // colorTextTaula,
-        // colorFonsTaula,
         mostrarCapcalera = true,
-        // colorCapcalera,
-        // colorFonsCapcalera,
         mostrarAlternancia = false,
         colorAlternancia,
         mostrarVoraTaula = false,
-        // colorVoraTaula,
         ampleVoraTaula = 1,
         mostrarSeparadorHoritzontal = true,
-        // colorSeparadorHoritzontal,
         ampleSeparadorHoritzontal = 1,
         mostrarSeparadorVertical = false,
-        // colorSeparadorVertical,
         ampleSeparadorVertical = 1,
-        // paginada = false,
-        // colorAlternancia = '#f5f5f5',
         columnesEstils = [],
         cellesDestacades = [],
-
-        // Additional props
         loading = false,
         preview = false,
         error = false,
         errorMsg,
         errorTrace,
         onClick,
-
-        midaFontTitol,
-        midaFontDescripcio,
-    }
-        = props;
+        dashboardEntornCodi,
+    } = props;
 
     const theme = useTheme();
-    const colors: TaulaWidgetColors = useWidgetColors(props, theme);
 
-    const bgColor = colors.isWhiteBackground ? colors.backgroundColor + ' !important' : 'transparent';
-    const bg = colors.isWhiteBackground ? 'none' : `linear-gradient(to bottom, ${colors.backgroundColor}, ${createTransparentColor(colors.backgroundColor, 0.75)})`;
-    const voraAmple = ampleVora || (mostrarVora ? 1 : 0);
+    const {
+        textColor,
+        backgroundColor,
+        voraColor,
+        isWhiteBackground,
+        contrastTextColor,
+        bgColor,
+        bg,
+        voraAmple,
+    } = useWidgetTheme({
+        colorText: props.colorText,
+        colorFons: props.colorFons,
+        colorVora: props.colorVora,
+        mostrarVora,
+        ampleVora,
+    });
 
-    // Function to get cell style based on column styles, value ranges, and highlighted cells
+    const textTaulaColor = props.colorTextTaula || props.colorText || theme.palette.text.primary;
+    const taulaBgColor = props.colorFonsTaula || props.colorFons || 'transparent';
+    const textHeaderColor = props.colorCapcalera || props.colorTextTaula || props.colorText || theme.palette.text.primary;
+    const headerBgColor = props.colorFonsCapcalera || props.colorFonsTaula || props.colorFons;
+    const voraTaulaColor = props.colorVoraTaula || theme.palette.divider;
+    const horDividerColor = props.colorSeparadorHoritzontal || props.colorVoraTaula || theme.palette.divider;
+    const verDividerColor = props.colorSeparadorVertical || props.colorVoraTaula || theme.palette.divider;
+
     const getCellStyle = (columnId: string, rowIndex: number, value: any, rowData: any) => {
         let style: React.CSSProperties = {};
 
-        // Find column style
         const columnStyle = columnesEstils.find(col => col.codiColumna === columnId);
-
         if (columnStyle) {
             // Aplicar estils de columnes
             if (columnStyle.colorText) style.color = columnStyle.colorText;
@@ -244,7 +170,6 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
                 const matchingRange = columnStyle.rangsValors.find(
                     range => value >= range.valorMin && value <= range.valorMax
                 );
-
                 if (matchingRange) {
                     if (matchingRange.colorText) style.color = matchingRange.colorText;
                     if (matchingRange.colorFons) style.backgroundColor = matchingRange.colorFons;
@@ -299,95 +224,67 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
         return value;
     };
 
-    const titleEstils = {
-        ...estils.titleText,
-        fontSize: midaFontTitol ?`${midaFontTitol}px` :estils.titleText.fontSize
-    }
-    const descEstils = {
-        ...estils.descText(colors.textColor),
-        fontSize: midaFontDescripcio ?`${midaFontDescripcio}px` :estils.descText(colors.textColor).fontSize
-    }
-    const contrastTextColor = colors.isWhiteBackground ? '#000000' : '#FFFFFF';
-    const entornChipSx = {
-        ...estils.entornCodi,
-        color: contrastTextColor,
-        backgroundColor: colors.isWhiteBackground ? theme.palette.grey[200] : createTransparentColor(colors.backgroundColor, 0.35),
-        border: `1px solid ${colors.voraColor}`,
-    };
-
     return (
-        <Paper elevation={2} onClick={onClick} sx={estils.paperContainer(bgColor, bg, colors.textColor, mostrarVora, voraAmple, colors.voraColor, onClick, theme)}>
-            {/* Titol */}
-            <Box sx={estils.titleContainer} >
-                {loading ? (
-                    <>
-                        <Skeleton width="70%" height={32} />
-                        <Box sx={estils.iconContainer}>
-                            <Skeleton width={40} height={24} />
-                        </Box>
-                    </>
-                ) : (
-                    <>
-                        <Typography sx={titleEstils} >{titol}</Typography>
-                        <Box sx={estils.iconContainer}>
-                            <Chip sx={entornChipSx} label={entornCodi} size={"small"} />
-                        </Box>
-                    </>
-                )}
-            </Box>
+        <WidgetContainer
+            bgColor={bgColor}
+            bg={bg}
+            textColor={textColor}
+            mostrarVora={mostrarVora}
+            voraAmple={voraAmple}
+            voraColor={voraColor}
+            onClick={onClick}
+        >
+            <WidgetHeader
+                titol={titol}
+                entornCodi={entornCodi}
+                loading={loading}
+                isWhiteBackground={isWhiteBackground}
+                backgroundColor={backgroundColor}
+                voraColor={voraColor}
+                contrastTextColor={contrastTextColor}
+                dashboardEntornCodi={dashboardEntornCodi}
+            />
 
             {error ? (
-                // Error content
-                <Box sx={{ flex: 1, p: 2, overflow: "auto" }}>
-                    <Accordion sx={{...estils.errorAccordion, pointerEvents: "auto"}} onMouseDown={(event) => {
-                        event.stopPropagation(); // Evita que React-Grid-Layout bloquegi el clic
-                    }}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={estils.errorSummary(theme)}>
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                <ErrorOutlineIcon sx={estils.errorIcon(theme)} />
-                                <Typography sx={{fontSize: '0.75rem'}}>{errorMsg || 'Error'}</Typography>
-                            </Box>
-                        </AccordionSummary>
-                        <AccordionDetails sx={estils.errorDetails(theme)}>
-                            {errorTrace || 'No error trace available'}
-                        </AccordionDetails>
-                    </Accordion>
-                </Box>
+                <WidgetErrorDisplay errorMsg={errorMsg} errorTrace={errorTrace} />
             ) : (
-                // Normal content
                 <>
-                    {/* Table */}
-                    <Box sx={ estils.tableContainerBox } >
+                    <Box sx={estils.tableContainerBox}>
                         {loading ? (
                             <Box sx={{ width: '100%', height: '100%', minHeight: 200 }}>
-                                {/* Table header skeleton */}
                                 <Skeleton variant="rectangular" width="100%" height={40} sx={{ mb: 1 }} />
-
-                                {/* Table rows skeletons */}
                                 {[...Array(5)].map((_, index) => (
                                     <Skeleton key={index} variant="rectangular" width="100%" height={30} sx={{ mb: 1 }} />
                                 ))}
                             </Box>
                         ) : (
-                            <TableContainer sx={{height: '100%'}}>
+                            <TableContainer sx={{ height: '100%' }}>
                                 <Table
                                     stickyHeader
                                     size={preview ? "small" : "medium"}
-                                    sx={ estils.tableContainer(mostrarVoraTaula, ampleVoraTaula, colors.voraTaulaColor, colors.taulaBgColor) }
+                                    sx={estils.tableContainer(mostrarVoraTaula, ampleVoraTaula, voraTaulaColor, taulaBgColor)}
                                 >
                                     {mostrarCapcalera && (
                                         <TableHead>
-                                            <TableRow sx={estils.tableHeader(colors.textHeaderColor, colors.headerBgColor,
-                                                colors.horDividerColor, mostrarSeparadorHoritzontal ? Number(ampleSeparadorHoritzontal) + 1 : 1,
-                                                mostrarSeparadorVertical, colors.verDividerColor, ampleSeparadorVertical)}>
+                                            <TableRow
+                                                sx={estils.tableHeader(
+                                                    textHeaderColor,
+                                                    headerBgColor,
+                                                    horDividerColor,
+                                                    mostrarSeparadorHoritzontal ? Number(ampleSeparadorHoritzontal) + 1 : 1,
+                                                    mostrarSeparadorVertical,
+                                                    verDividerColor,
+                                                    ampleSeparadorVertical
+                                                )}
+                                            >
                                                 {columnes.map((column) => (
                                                     <TableCell
                                                         key={column.id}
                                                         align="left"
                                                         sx={{
                                                             fontWeight: '600',
-                                                            color: colors.textHeaderColor,
-                                                            backgroundColor: colors.headerBgColor,
+                                                            color: textHeaderColor,
+                                                            backgroundColor: headerBgColor,
                                                         }}
                                                     >
                                                         {column.label}
@@ -398,10 +295,19 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
                                     )}
                                     <TableBody>
                                         {files.map((row, rowIndex) => (
-                                            <TableRow key={rowIndex}
-                                                    sx={estils.tableRow(colors.textTaulaColor, colors.taulaBgColor,
-                                                        mostrarSeparadorHoritzontal, colors.horDividerColor, ampleSeparadorHoritzontal,
-                                                        mostrarSeparadorVertical, colors.verDividerColor, ampleSeparadorVertical)}>
+                                            <TableRow
+                                                key={rowIndex}
+                                                sx={estils.tableRow(
+                                                    textTaulaColor,
+                                                    taulaBgColor,
+                                                    mostrarSeparadorHoritzontal,
+                                                    horDividerColor,
+                                                    ampleSeparadorHoritzontal,
+                                                    mostrarSeparadorVertical,
+                                                    verDividerColor,
+                                                    ampleSeparadorVertical
+                                                )}
+                                            >
                                                 {columnes.map((column) => {
                                                     const value = row[column.id];
                                                     const formattedValue = column.format ? column.format(value) : value;
@@ -410,9 +316,11 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
                                                         <TableCell
                                                             key={column.id}
                                                             align="left"
-                                                            sx={{color:colors.textTaulaColor,
-                                                                backgroundColor:colors.taulaBgColor,
-                                                                ...getCellStyle(column.id, rowIndex, value, row)}}
+                                                            sx={{
+                                                                color: textTaulaColor,
+                                                                backgroundColor: taulaBgColor,
+                                                                ...getCellStyle(column.id, rowIndex, value, row),
+                                                            }}
                                                         >
                                                             {renderCellContent(column.id, formattedValue, row)}
                                                         </TableCell>
@@ -426,21 +334,17 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
                         )}
                     </Box>
 
-                    {/*Peu*/}
-                    <Box sx={estils.footerContainer}>
-                        {loading ? (
-                            <Skeleton width="60%" height={24} />
-                        ) : (
-                            <Typography sx={descEstils}>{descripcio}</Typography>
-                        )}
-                    </Box>
+                    <WidgetFooter
+                        descripcio={descripcio}
+                        textColor={textColor}
+                        loading={loading}
+                    />
                 </>
             )}
-        </Paper>
+        </WidgetContainer>
     );
 };
 
-// Helper function to generate sample columns
 const generateSampleColumns = (): { id: string; label: string; format?: (value: any) => string }[] => {
     return [
         {id: 'name', label: 'Nom'},
@@ -450,7 +354,6 @@ const generateSampleColumns = (): { id: string; label: string; format?: (value: 
     ];
 };
 
-// Helper function to generate sample data
 const generateSampleData = () => {
     return [
         {name: 'Fila 1', dimensio: 'dim1', valor1: 100, valor2: 200, valor3: 300},

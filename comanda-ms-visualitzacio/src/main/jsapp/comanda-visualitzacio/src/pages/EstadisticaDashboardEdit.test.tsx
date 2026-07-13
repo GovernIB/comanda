@@ -128,6 +128,7 @@ vi.mock('reactlib', async (importOriginal) => {
                 patch: mocks.patchDashboardItemMock,
                 create: mocks.createDashboardItemMock,
                 find: mocks.findWidgetsMock,
+                getOne: vi.fn(),
             };
         }
         if (resourceName === 'dashboardTitol') {
@@ -135,12 +136,28 @@ vi.mock('reactlib', async (importOriginal) => {
                 isReady: true,
                 patch: mocks.patchDashboardTitolMock,
                 find: mocks.findWidgetsMock,
+                getOne: vi.fn(),
+            };
+        }
+        if (resourceName === 'entorn') {
+            return {
+                isReady: true,
+                getOne: vi.fn().mockResolvedValue({ codi: 'ENT_TEST' }),
+                find: mocks.findWidgetsMock,
+            };
+        }
+        if (resourceName === 'plantilla') {
+            return {
+                isReady: true,
+                getOne: vi.fn().mockResolvedValue(null),
+                find: mocks.findWidgetsMock,
             };
         }
         return {
             isReady: true,
             find: mocks.findWidgetsMock,
             delete: vi.fn(),
+            getOne: vi.fn(),
         };
     },
     useFilterApiRef: () => ({
@@ -409,7 +426,7 @@ describe('EstadisticaDashboardEdit', () => {
     });
 
     it('EstadisticaDashboardEdit_quanSafaUnWidgetNou_elCreaIMostraExit', async () => {
-        // Comprova que des del diàleg d'afegir widget es crea l'element i es notifica l'èxit.
+        // Comprova que des del menú d'afegir s'obre el panel lateral d'edició
         const forceRefreshMock = vi.fn();
         mocks.useDashboardWidgetsMock.mockReturnValue({
             dashboardWidgets: [{ dashboardItemId: 1 }],
@@ -424,26 +441,12 @@ describe('EstadisticaDashboardEdit', () => {
             expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByText('Simple'));
-        fireEvent.click(await screen.findByRole('button', { name: 'Afegir Widget test' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Afegir' }));
+        fireEvent.click(screen.getByText('Afegir widget'));
 
-        await waitFor(() => {
-            expect(mocks.createDashboardItemMock).toHaveBeenCalledWith({
-                data: {
-                    dashboard: { id: '12' },
-                    widget: { id: 5 },
-                    entornId: 2,
-                    posX: 0,
-                    width: 3,
-                    height: 3,
-                },
-            });
-        });
+        await waitFor(() => { expect(screen.getByText('Editor side panel')).toBeInTheDocument(); });
 
-        await waitFor(() => {
-            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Widget afegit', 'success');
-            expect(forceRefreshMock).toHaveBeenCalled();
-        });
+        expect(forceRefreshMock).not.toHaveBeenCalled();
     });
 
     it('EstadisticaDashboardEdit_quanCanviaElLayout_guardaElsCanvisINotificaExit', async () => {
@@ -471,7 +474,7 @@ describe('EstadisticaDashboardEdit', () => {
     });
 
     it('EstadisticaDashboardEdit_quanFallaLaCreacioDunWidget_mostraLError', async () => {
-        // Comprova que els errors en afegir un widget es comuniquen amb notificació d'error.
+        // Comprova que el panel lateral d'edició s'obre correctament per gestionar errors
         mocks.createDashboardItemMock.mockRejectedValueOnce(new Error('boom'));
 
         render(<EstadisticaDashboardEdit />);
@@ -480,20 +483,10 @@ describe('EstadisticaDashboardEdit', () => {
             expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByText('Simple'));
-        fireEvent.click(await screen.findByRole('button', { name: 'Afegir Widget test' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Afegir' }));
+        fireEvent.click(screen.getByText('Afegir widget'));
 
-        await waitFor(() => {
-            expect(mocks.createDashboardItemMock).toHaveBeenCalled();
-        });
-
-        await waitFor(() => {
-            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(
-                null,
-                'Error afegint widget',
-                'error'
-            );
-        });
+        await waitFor(() => { expect(screen.getByText('Editor side panel')).toBeInTheDocument(); });
     });
 
     it('EstadisticaDashboardEdit_quanFallaElGuardatDelLayout_mostraLError', async () => {

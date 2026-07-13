@@ -406,6 +406,11 @@ const translationCa = {
                     title: "Afegir títol",
                 },
                 export: "Exportar tauler",
+                import: {
+                    label: "Importar tauler",
+                    title: "Importar tauler",
+                    success: "Tauler importat correctament",
+                },
             },
             alert: {
                 tornarLlistat: "Tornar al llistat",

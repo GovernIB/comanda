@@ -91,11 +91,16 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', () => ({
     DashboardReactGridLayout: ({
         dashboardId,
         gridLayoutItems,
+        dashboardEntornCodi,
     }: {
         dashboardId: number;
         gridLayoutItems: unknown[];
+        dashboardEntornCodi?: string;
     }) => (
-        <div>{`Grid ${dashboardId} (${gridLayoutItems.length})`}</div>
+        <div>
+            {`Grid ${dashboardId} (${gridLayoutItems.length})`}
+            {dashboardEntornCodi && <span data-testid="entorn-codi">{dashboardEntornCodi}</span>}
+        </div>
     ),
     useMapDashboardItems: (widgets: unknown[]) => mocks.useMapDashboardItemsMock(widgets),
 }));
@@ -120,6 +125,15 @@ vi.mock('../components/PageTitle.tsx', () => ({
 
 vi.mock('../components/CenteredCircularProgress.tsx', () => ({
     default: () => <div>Carregant dashboard</div>,
+}));
+
+vi.mock('../components/estadistiques/dashboardPlantillaHook.ts', () => ({
+    useEntornCodi: (entornId: number | undefined) => {
+        return {
+            entornCodi: entornId ? `ENT-${entornId}` : undefined,
+            loading: false,
+        };
+    },
 }));
 
 describe('EstadisticaDashboardView', () => {
@@ -152,7 +166,12 @@ describe('EstadisticaDashboardView', () => {
     });
 
     it('EstadisticaDashboardView_quanHiHaDashboard_mostraLaToolbarIElGrid', async () => {
-        // Comprova que la vista principal renderitza el dashboard seleccionat i desa l'últim id visitat.
+        mocks.useDashboardMock.mockReturnValue({
+            dashboard: { id: 12, titol: 'Dashboard 12', entorn: { id: 5 } },
+            loading: false,
+            exception: null,
+        });
+
         render(<EstadisticaDashboardView />);
 
         await waitFor(() => {
@@ -161,7 +180,24 @@ describe('EstadisticaDashboardView', () => {
 
         expect(screen.getByRole('button', { name: /Dashboard 12/i })).toBeInTheDocument();
         expect(screen.getByText('Grid 12 (1)')).toBeInTheDocument();
+        expect(screen.getByTestId('entorn-codi')).toHaveTextContent('ENT-5');
         expect(mocks.setItemMock).toHaveBeenCalledWith('lastViewedDashboardId', '12');
+    });
+
+    it('EstadisticaDashboardView_quanNoHiHaEntorn_noPassaEntornCodi', async () => {
+        mocks.useDashboardMock.mockReturnValue({
+            dashboard: { id: 12, titol: 'Dashboard 12' },
+            loading: false,
+            exception: null,
+        });
+
+        render(<EstadisticaDashboardView />);
+
+        await waitFor(() => {
+            expect(screen.getByText('Grid 12 (1)')).toBeInTheDocument();
+        });
+
+        expect(screen.queryByTestId('entorn-codi')).not.toBeInTheDocument();
     });
 
     it('EstadisticaDashboardView_quanEsPremLaToolbar_obreElDialegDeSeleccioAmbFiltre', async () => {

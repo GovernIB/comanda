@@ -18,6 +18,11 @@ const mocks = vi.hoisted(() => ({
                     dashboardView: 'Veure dashboard',
                     action: {
                         export: 'Exportar',
+                        import: {
+                            label: 'Importar',
+                            title: 'Importar dashboard',
+                            success: 'Dashboard importat',
+                        },
                     },
                     cloneDashboard: {
                         title: 'Clonar dashboard',
@@ -78,13 +83,20 @@ vi.mock('reactlib', () => ({
         title,
         rowAdditionalActions,
         popupEditFormContent,
+        toolbarElementsWithPositions,
     }: {
         title: string;
         rowAdditionalActions?: Array<{ label: string; onClick?: (id: number) => void }>;
         popupEditFormContent?: React.ReactNode;
+        toolbarElementsWithPositions?: Array<{ position: number; element: React.ReactNode }>;
     }) => (
         <section>
             <h2>{title}</h2>
+            {toolbarElementsWithPositions?.map((item) => (
+                <div key={item.position} data-testid={`toolbar-${item.position}`}>
+                    {item.element}
+                </div>
+            ))}
             {popupEditFormContent}
             {rowAdditionalActions?.map((action) => (
                 <button
@@ -160,5 +172,14 @@ describe('EstadisticaDashboards', () => {
             'Exportar',
             'success'
         );
+    });
+
+    it('EstadisticaDashboards_quanEsRenderitza_mostraElBotoDImportarAlToolbar', () => {
+        // Comprova que el botó d'importar del toolbar es renderitza correctament.
+        render(<EstadisticaDashboards />);
+
+        const importButton = screen.getByTitle('Importar');
+        expect(importButton).toBeInTheDocument();
+        expect(importButton.tagName).toBe('BUTTON');
     });
 });

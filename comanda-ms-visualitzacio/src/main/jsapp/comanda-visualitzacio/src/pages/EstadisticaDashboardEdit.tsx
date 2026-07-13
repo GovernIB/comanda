@@ -13,8 +13,6 @@ import {
     useMuiDataGridApiRef,
     MuiDataGridColDef,
     useFilterApiRef,
-    MuiFormDialog,
-    useMuiFormDialogApiRef,
 } from 'reactlib';
 import { useNavigate, useParams } from 'react-router-dom';
 import {useCallback, useEffect, useRef, useState} from 'react';
@@ -59,12 +57,9 @@ import PageTitle from '../components/PageTitle.tsx';
 import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
 import {SimpleTreeView, TreeItem} from "@mui/x-tree-view";
 import Divider from "@mui/material/Divider";
-import EstadisticaSimpleWidgetForm from "../components/estadistiques/EstadisticaSimpleWidgetForm.tsx";
-import EstadisticaGraficWidgetForm from "../components/estadistiques/EstadisticaGraficWidgetForm.tsx";
-import EstadisticaTaulaWidgetForm from "../components/estadistiques/EstadisticaTaulaWidgetForm.tsx";
-import {FooterHeightPlaceholder} from "../components/ComandaFooter.tsx";
 import Menu from "@mui/material/Menu";
 import { useTheme } from '@mui/material/styles';
+import { useEntornCodi } from '../components/estadistiques/dashboardPlantillaHook.ts';
 
 type WidgetsErrorAlertProps = {
     errorWidgets: Array<{
@@ -79,12 +74,7 @@ function WidgetsErrorAlert({ errorWidgets }: WidgetsErrorAlertProps) {
     const openDialog = () => {
         showDialog(
             null,
-            <TableContainer
-                component={Paper}
-                sx={{
-                    mt: 3,
-                }}
-            >
+            <TableContainer component={Paper} sx={{ mt: 3, }} >
                 <Table sx={{ width: 500 }} aria-label="simple table">
                     <TableHead>
                         <TableRow>
@@ -177,12 +167,7 @@ const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseC
     };
 
     return (
-        <Box
-            sx={{
-                mt: 2,
-                width: '900px',
-            }}
-        >
+        <Box sx={{ mt: 2, width: '900px', }} >
             <MuiDataGrid
                 title={title}
                 apiRef={gridApiRef}
@@ -309,6 +294,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
         loading: loadingDashboard,
         exception: dashboardException,
     } = useDashboard(dashboardId);
+    const { entornCodi: dashboardEntornCodi, loading: loadingEntornCodi } = useEntornCodi(dashboard?.entorn?.id);
     const {
         dashboardWidgets,
         errorDashboardWidgets,
@@ -474,7 +460,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
             });
     };
 
-    const loading = loadingDashboard || loadingWidgetPositions;
+    const loading = loadingDashboard || loadingWidgetPositions || loadingEntornCodi;
 
     if (dashboardException) {
         if (dashboardException.status === 404) {
@@ -525,12 +511,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                         >
                             <Icon>arrow_back</Icon>
                         </IconButton>
-                        <Typography
-                            sx={{
-                                display: 'inline',
-                                mx: 2,
-                            }}
-                        >
+                        <Typography sx={{ display: 'inline', mx: 2, }} >
                             {dashboard.titol}
                         </Typography>
                     </Box>
@@ -696,6 +677,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                     onSelectItem={selectDashboardElement}
                                     onClearSelection={() => setEditorSelection({ kind: 'none' })}
                                     selectedItemId={selectedGridItemId}
+                                    dashboardEntornCodi={dashboardEntornCodi}
                                     editable
                                 />
                             )}
@@ -773,7 +755,6 @@ const EstadisticaDashboardEdit: React.FC = () => {
                         </Box>
                     </Box>
                 </Box>
-                <FooterHeightPlaceholder />
             </>)}
         </Box>
     );
@@ -810,7 +791,6 @@ const SideMenu = ({ dashboard, addWidget, createWidget, dashboardWidgets, onSele
     } = useResourceApiService('estadisticaTaulaWidget');
 
     useEffect(() => {
-        // console.log("springFilter", springFilter)
         if (apiSimpleIsReady && apiGraficIsReady && apiTaulaIsReady) {
             apiSimpleFind({filter: springFilter, unpaged:true})
                 .then((response) => setSimpleWidgets(response.rows))
@@ -989,72 +969,7 @@ const WidgetMenu = ({createWidget, entornId, aplicacio}:any) => {
         </MyButtonMenu>
     </>
 }
-export const useSimpleWidgetFormDialog = () => {
-    const formApiRef = useMuiFormDialogApiRef();
 
-    const handleOpen = (id?:any) => {
-        return formApiRef?.current?.show(id)
-    }
-
-    const dialog = <>
-        <MuiFormDialog
-            resourceName={'estadisticaSimpleWidget'}
-            dialogComponentProps={{ fullWidth: true, maxWidth: 'xl' }}
-            apiRef={formApiRef}
-        >
-            <EstadisticaSimpleWidgetForm/>
-        </MuiFormDialog>
-    </>
-
-    return {
-        handleOpen,
-        dialog,
-    }
-}
-export const useGraficWidgetFormDialog = () => {
-    const formApiRef = useMuiFormDialogApiRef();
-
-    const handleOpen = (id?:any) => {
-        return formApiRef?.current?.show(id)
-    }
-
-    const dialog = <>
-        <MuiFormDialog
-            resourceName={'estadisticaGraficWidget'}
-            dialogComponentProps={{ fullWidth: true, maxWidth: 'xl' }}
-            apiRef={formApiRef}
-        >
-            <EstadisticaGraficWidgetForm/>
-        </MuiFormDialog>
-    </>
-
-    return {
-        handleOpen,
-        dialog,
-    }
-}
-export const useTaulaWidgetFormDialog = () => {
-    const formApiRef = useMuiFormDialogApiRef();
-
-    const handleOpen = (id?:any) => {
-        return formApiRef?.current?.show(id)
-    }
-
-    const dialog = <>
-        <MuiFormDialog
-            resourceName={'estadisticaTaulaWidget'}
-            dialogComponentProps={{ fullWidth: true, maxWidth: 'xl' }}
-            apiRef={formApiRef}
-        >
-            <EstadisticaTaulaWidgetForm/>
-        </MuiFormDialog>
-    </>
-
-    return {
-        handleOpen,
-        dialog,
-    }
-}
 
 
 const MyButtonMenu = ({ buttonProps, title, disabled, children }:any) => {
@@ -1087,136 +1002,5 @@ const MyButtonMenu = ({ buttonProps, title, disabled, children }:any) => {
         </>
     );
 };
-
-// type DashboardSideMenuProps = {
-//     dashboard: any;
-//     addAction: (widgetId: any, entornId: any) => void;
-// };
-// const DashboardSideMenu = ({dashboard, addAction}: DashboardSideMenuProps) => {
-//     const { t } = useTranslation()
-//
-//     const [open, setOpen] = React.useState<boolean>(false);
-//     const handelOpen = () => setOpen(true)
-//     const handelClose = () => setOpen(false)
-//
-//     const [filterData, setFilterData] = useState<any>(null);
-//     const [filterString, setFilterString] = useState<string>('');
-//     const [widgetsSimple, setWidgetsSimple] = useState<any[]>([]);
-//     const [widgetsGrafic, setWidgetsGrafic] = useState<any[]>([]);
-//     const [widgetsTaula , setWidgetsTaula ] = useState<any[]>([]);
-//
-//     const { isReady: isReadySimple , find: findSimple } = useResourceApiService('estadisticaSimpleWidget');
-//     const { isReady: isReadyGrafic , find: findGrafic } = useResourceApiService('estadisticaGraficWidget');
-//     const { isReady: isReadyTaula  , find: findTaula  } = useResourceApiService('estadisticaTaulaWidget');
-//
-//     const refreshSimple = () => {
-//         if(isReadySimple) {
-//             findSimple({unpaged: true, filter: filterString})
-//                 .then((data:any) => setWidgetsSimple(data?.rows ?? []))
-//         }
-//     }
-//     const refreshGrafic = () => {
-//         if(isReadyGrafic) {
-//             findGrafic({unpaged: true, filter: filterString})
-//                 .then((data:any) => setWidgetsGrafic(data?.rows ?? []))
-//         }
-//     }
-//     const refreshTaula = () => {
-//         if(isReadyTaula) {
-//             findTaula({unpaged: true, filter: filterString})
-//                 .then((data:any) => setWidgetsTaula(data?.rows ?? []))
-//         }
-//     }
-//
-//     useEffect(() => {
-//         if (filterString) {
-//             refreshSimple()
-//             refreshGrafic()
-//             refreshTaula()
-//         }
-//     }, [filterString]);
-//
-//     const width = 400
-//     return (
-//         <>
-//             <IconButton
-//                 color="inherit"
-//                 aria-label="open menu"
-//                 onClick={handelOpen}
-//                 edge="start"
-//                 sx={{ mr: 2 }}
-//             >
-//                 <Icon sx={{ fontSize: '24px'}} fontSize={'medium'}>menu</Icon>
-//             </IconButton>
-//             {open && <ShrinkableDrawer
-//                 className={"side-menu"}
-//                 variant={'permanent'}
-//                 open={true}
-//                 {...{ width: width }}
-//                 sx={{
-//                     '& .MuiDrawer-paper': { right: 0, left: 'auto', backgroundColor: '#ef955e', color: '#fff', pt: '64px' },
-//                 }}>
-//                 <SideWrapper style={{width: `calc(100% - ${width}px)`}} onOutsideClick={handelClose}>
-//                     <Box sx={{p: 1}}>
-//                         <Typography variant={'h5'} color={'white'}>{t($ => $.page.dashboards.action.addWidget.title)}</Typography>
-//
-//                         <EntornAppFilter
-//                             onDataChange={setFilterData}
-//                             onSpringFilterChange={(filter) => setFilterString(filter ?? "")}
-//                             initialData={{
-//                                 app: dashboard?.aplicacio,
-//                                 entorn: dashboard?.entorn
-//                             }}
-//                         />
-//
-//                         <List hidden={!filterData?.entorn?.id}>
-//                             <ExpandElementList label={t($ => $.page.widget.simple.tab.title)} icon={'border_clear'}>
-//                                 {widgetsSimple.map((widget:any) => <Box key={`simple-${widget?.id}`} sx={{ p: 1 }} onDoubleClick={()=>{addAction(widget?.id, filterData.entorn.id)}}>
-//                                     <SimpleWidgetVisualization {...widget}/>
-//                                 </Box>)}
-//                             </ExpandElementList>
-//                             <ExpandElementList label={t($ => $.page.widget.grafic.tab.title)} icon={'align_vertical_bottom'}>
-//                                 {widgetsGrafic.map((widget:any) => <Box key={`grafic-${widget?.id}`} sx={{ p: 1 }} onDoubleClick={()=>{addAction(widget?.id, filterData.entorn.id)}}>
-//                                     <GraficWidgetVisualization {...widget}/>
-//                                 </Box>)}
-//                             </ExpandElementList>
-//                             <ExpandElementList label={t($ => $.page.widget.taula.tab.title)} icon={'table_view'}>
-//                                 {widgetsTaula.map((widget:any) => <Box key={`taula-${widget?.id}`} sx={{ p: 1 }} onDoubleClick={()=>{addAction(widget?.id, filterData.entorn.id)}}>
-//                                     <TaulaWidgetVisualization {...widget}/>
-//                                 </Box>)}
-//                             </ExpandElementList>
-//                         </List>
-//                     </Box>
-//                 </SideWrapper>
-//             </ShrinkableDrawer>}
-//         </>
-//     );
-// }
-
-// type ExpandElementListProps = {
-//     label: string;
-//     icon?: string;
-//     children: React.ReactNode;
-// };
-//
-// const ExpandElementList = ({label, icon, children}: ExpandElementListProps) => {
-//     const [open, setOpen] = React.useState(false);
-//
-//     const handleClick = () => {
-//         setOpen(!open);
-//     };
-//     return <>
-//         <ListItemButton onClick={handleClick}>
-//             {icon && <Icon sx={{mr: 1}}>{icon}</Icon>}
-//             <ListItemText primary={label} />
-//             {open ? <Icon>expand_less</Icon> : <Icon>expand_more</Icon>}
-//         </ListItemButton>
-//         <Collapse in={open} timeout="auto" unmountOnExit>
-//             <Box sx={{ ml: 2 }}>
-//                 {children}
-//             </Box>
-//         </Collapse>
-//     </>
-// }
 
 export default EstadisticaDashboardEdit;
