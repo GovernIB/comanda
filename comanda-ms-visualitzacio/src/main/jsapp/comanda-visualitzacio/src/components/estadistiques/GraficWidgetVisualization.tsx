@@ -333,7 +333,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
     const renderPieChart = () => {
         const pieData = dades.map((item, index) => ({
             id: index,
-            label: item.label as string | undefined,
+            label: (labels?.find(label => label.id === item.label)?.label || item.label) as string | undefined,
             value: typeof item.value === 'number' ? item.value : 0,
             color: paletaColors[index % paletaColors.length],
         }));
