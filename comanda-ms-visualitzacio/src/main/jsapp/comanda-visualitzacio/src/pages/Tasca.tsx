@@ -467,7 +467,7 @@ const Tasca = () => {
                 );
             },
         });
-    const columns = [
+    const columns = React.useMemo<MuiDataGridColDef[]>(() => [
         ...(!treeView
             ? [
                 {
@@ -505,7 +505,7 @@ const Tasca = () => {
         ...(filter?.includes('dataFi is null')
             ? dataGridCommonColumns.slice(0, -1)
             : dataGridCommonColumns),
-    ];
+    ], [apps, filter, treeView]);
 
     const rowAdditionalActions = React.useMemo(() => {
         const additionalActions: DataCommonAdditionalAction[] = [{
@@ -557,7 +557,8 @@ const Tasca = () => {
                 toolbarElementsWithPositions={[{ position: 1, element: treeViewSwitch }]}
                 toolbarAdditionalRow={filterElement}
                 rowAdditionalActions={rowAdditionalActions}
-                autoFindDisabled={!isFilterDataReady}
+                // autoFindDisabled no es pot usar si el filtre està buit, ja que només es farà una única petició inicial i aquesta serà cancelada pel autoFindDisabled
+                autoFindDisabled={!(isFilterDataReady && !filter.length)}
                 {...treeDataGridProps}
                 initialState={{
                     columns: {

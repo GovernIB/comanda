@@ -540,7 +540,8 @@ const Avis = () => {
                 toolbarElementsWithPositions={toolbarAdditionalActions}
                 toolbarAdditionalRow={filterElement}
                 rowAdditionalActions={actions}
-                autoFindDisabled={!isFilterDataReady}
+                // autoFindDisabled no es pot usar si el filtre està buit, ja que només es farà una única petició inicial i aquesta serà cancelada pel autoFindDisabled
+                autoFindDisabled={!(isFilterDataReady && !filter.length)}
                 {...treeDataGridProps}
                 initialState={{
                     columns: {
