@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { IconButton, Icon, CircularProgress } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { ExistsParameterResult } from '../pages/Apps';
 
 interface ParameterExistsAdornmentProps {
@@ -11,22 +12,24 @@ interface ParameterExistsAdornmentProps {
 type VerificationStatus = 'idle' | 'loading' | 'exists' | 'notExists';
 
 const StatusIcon = ({ status }: { status: VerificationStatus }) => {
+    const { t } = useTranslation();
     switch (status) {
         case 'exists':
-            return <Icon fontSize="small" color="success">check_circle</Icon>;
+            return <Icon title={t($ => $.page.apps.fields.parameterExists)} fontSize="small" color="success">check_circle</Icon>;
         case 'notExists':
-            return <Icon fontSize="small" color="error">cancel</Icon>;
+            return <Icon title={t($ => $.page.apps.fields.parameterNotExists)} fontSize="small" color="error">cancel</Icon>;
         default:
             return null;
     }
 };
 
 const ParameterExistsAdornment: React.FC<ParameterExistsAdornmentProps> = ({ value, onClick, disabled }) => {
+    const { t } = useTranslation();
     const [status, setStatus] = useState<VerificationStatus>('idle');
 
     useEffect(() => {
         setStatus('idle');
-    }, [value]);
+    }, [value, disabled]);
 
     const handleOnClick = async () => {
         if (!value) return;
@@ -34,7 +37,7 @@ const ParameterExistsAdornment: React.FC<ParameterExistsAdornmentProps> = ({ val
         try {
             const exists = await onClick(value);
             setStatus(exists ? 'exists' : 'notExists');
-        } catch (error) {
+        } catch {
             setStatus('notExists');
         }
     };
@@ -46,9 +49,10 @@ const ParameterExistsAdornment: React.FC<ParameterExistsAdornmentProps> = ({ val
             ) : (
                 <StatusIcon status={status} />
             )}
-            <IconButton 
-                disabled={!value || status === 'loading' || disabled} // ⬅️ Añadida condición
+            <IconButton
+                disabled={!value || status === 'loading' || disabled}
                 onClick={handleOnClick}
+                title={t($ => $.page.apps.fields.checkParameter)}
             >
                 <Icon fontSize="small">fact_check</Icon>
             </IconButton>
