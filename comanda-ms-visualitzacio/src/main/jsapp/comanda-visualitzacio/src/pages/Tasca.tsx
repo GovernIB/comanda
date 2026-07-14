@@ -559,6 +559,8 @@ const Tasca = () => {
                 rowAdditionalActions={rowAdditionalActions}
                 // autoFindDisabled no es pot usar si el filtre està buit, ja que només es farà una única petició inicial i aquesta serà cancelada pel autoFindDisabled
                 autoFindDisabled={!(isFilterDataReady && !filter.length)}
+                // s'usa loading per a que el grid no es mostri buit fins que no s'ha fet la primera petició
+                loading
                 {...treeDataGridProps}
                 initialState={{
                     columns: {
