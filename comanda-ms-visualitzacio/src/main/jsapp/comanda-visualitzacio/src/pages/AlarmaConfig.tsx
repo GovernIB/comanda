@@ -547,9 +547,7 @@ export const AlarmaConfigForm: React.FC<{
     const dialogModeProps: Partial<MuiFormProps> = dialogMode
         ? {
               hiddenToolbar: true,
-              // Si estamos haciendo un update, no debemos setear initialData nunca.
-              // Si lo hacemos, base-react no hará la petición getOne inicial
-              initialData: id ? undefined : {
+              initialData: {
                   entornAppId: entornAppIdProp,
               },
               goBackLink: undefined,
