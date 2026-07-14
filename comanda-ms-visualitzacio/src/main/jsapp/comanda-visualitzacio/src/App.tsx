@@ -348,8 +348,8 @@ export const App: React.FC = () => {
             // appbarBackgroundImg={headerBackground}
             defaultMuiComponentProps={{
                 dataGrid: {
-                    pageSizeOptions: [10, 20, 50, 100],
-                    paginationModel:
+                    pageSizeOptions: [-1, 10, 20, 50, 100],
+                    defaultPaginationModel:
                         user?.numElementsPagina != null && user.numElementsPagina !== 'AUTOMATIC'
                             ? {
                                   page: 0,
