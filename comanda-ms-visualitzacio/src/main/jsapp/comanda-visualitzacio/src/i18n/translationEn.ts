@@ -621,6 +621,8 @@ const translationEn: translationResourcesType = {
                 estadisticaAuthLegend: "Authenticate statistics requests",
                 nomUsuariAuthPlaceholder: "Global user will be used",
                 contrasenyaAuthPlaceholder: "Global password will be used",
+                showPassword: "Show password",
+                hidePassword: "Hide password",
                 salutDivider: "Health",
                 estadistiquesDivider: "Statistics",
                 authDivider: "Custom authentication user",

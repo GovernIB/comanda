@@ -621,6 +621,8 @@ const translationCa = {
                 estadisticaAuthLegend: "Autenticació a les consultes d'estadístiques",
                 nomUsuariAuthPlaceholder: "S'utilitzarà l'usuari global",
                 contrasenyaAuthPlaceholder: "S'utilitzarà la contrasenya global",
+                showPassword: "Mostrar la contrasenya",
+                hidePassword: "Ocultar la contrasenya",
                 salutDivider: "Salut",
                 estadistiquesDivider: "Estadístiques",
                 authDivider: "Usuari d'autenticació personalitzat",

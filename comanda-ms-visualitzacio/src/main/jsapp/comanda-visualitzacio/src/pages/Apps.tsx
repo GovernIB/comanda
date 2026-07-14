@@ -20,7 +20,16 @@ import {
     useMuiDataGridApiRef,
     useResourceApiService,
 } from 'reactlib';
-import { FormControl, FormControlLabel, FormGroup, FormLabel, Radio, RadioGroup, Typography } from '@mui/material';
+import {
+    FormControl,
+    FormControlLabel,
+    FormGroup,
+    FormLabel,
+    IconButton,
+    Radio,
+    RadioGroup,
+    Typography,
+} from '@mui/material';
 import LogoUpload from "../components/LogoUpload";
 import { ReactElementWithPosition } from '../../lib/util/reactNodePosition.ts';
 import BlockIcon from "@mui/icons-material/Block";
@@ -42,6 +51,9 @@ import * as z from 'zod';
 import { AppType } from '../models/app.schema';
 import ParameterExistsAdornment from '../components/ParameterExistsAdornment.tsx';
 import Divider from '@mui/material/Divider';
+import InputAdornment from '@mui/material/InputAdornment';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const PingUrlActionResponse = z.object({
     success: z.boolean(),
@@ -139,6 +151,49 @@ const useActions = (refresh?: () => void) => {
     };
 };
 
+const CustomPasswordFormField: React.FC<{
+    name: string;
+    additionalEndAdornment?: React.ReactNode;
+    disablePasswordMode?: boolean;
+}> = ({ name, additionalEndAdornment, disablePasswordMode }) => {
+    const { t } = useTranslation();
+    const [showPassword, setShowPassword] = React.useState(false);
+
+    const handleClickShowPassword = () => setShowPassword(show => !show);
+    return (
+        <FormField
+            name={name}
+            componentProps={{
+                type: disablePasswordMode || showPassword ? 'text' : 'password',
+                placeholder: t($ => $.page.apps.fields.contrasenyaAuthPlaceholder),
+                slotProps: {
+                    inputLabel: { shrink: true },
+                    input: {
+                        endAdornment: (
+                            <InputAdornment position="end">
+                                {additionalEndAdornment}
+                                {!disablePasswordMode && (
+                                    <IconButton
+                                        aria-label={
+                                            showPassword
+                                                ? t($ => $.page.apps.fields.hidePassword)
+                                                : t($ => $.page.apps.fields.showPassword)
+                                        }
+                                        onClick={handleClickShowPassword}
+                                        edge="end"
+                                    >
+                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                    </IconButton>
+                                )}
+                            </InputAdornment>
+                        ),
+                    },
+                },
+            }}
+        />
+    );
+};
+
 const AppEntornForm: React.FC = () => {
     const { t } = useTranslation();
     const isCurrentUserAdmin = useIsUserAdmin();
@@ -227,11 +282,11 @@ const AppEntornForm: React.FC = () => {
             <Grid size={9}>
                 <FormField
                     name="nomUsuariAuth"
-                    componentProps={
-                        isCurrentUserAdmin && {
-                            placeholder: t($ => $.page.apps.fields.nomUsuariAuthPlaceholder),
-                            slotProps: {
-                                inputLabel: { shrink: true },
+                    componentProps={{
+                        placeholder: t($ => $.page.apps.fields.nomUsuariAuthPlaceholder),
+                        slotProps: {
+                            inputLabel: { shrink: true },
+                            ...(isCurrentUserAdmin && {
                                 input: {
                                     endAdornment: (
                                         <ParameterExistsAdornment
@@ -241,33 +296,26 @@ const AppEntornForm: React.FC = () => {
                                         />
                                     ),
                                 },
-                            },
-                        }
-                    }
+                            }),
+                        },
+                    }}
                 />
             </Grid>
             <Grid size={3}>
                 <FormField name="parametreAuth" />
             </Grid>
             <Grid size={12}>
-                <FormField
+                <CustomPasswordFormField
                     name="contrasenyaAuth"
-                    componentProps={
-                        isCurrentUserAdmin && {
-                            placeholder: t($ => $.page.apps.fields.contrasenyaAuthPlaceholder),
-                            slotProps: {
-                                inputLabel: { shrink: true },
-                                input: {
-                                    endAdornment: (
-                                        <ParameterExistsAdornment
-                                            value={data?.contrasenyaAuth}
-                                            onClick={existsParameter}
-                                            disabled={!data?.parametreAuth}
-                                        />
-                                    ),
-                                },
-                            },
-                        }
+                    disablePasswordMode={data?.parametreAuth}
+                    additionalEndAdornment={
+                        isCurrentUserAdmin ? (
+                            <ParameterExistsAdornment
+                                value={data?.contrasenyaAuth}
+                                onClick={existsParameter}
+                                disabled={!data?.parametreAuth}
+                            />
+                        ) : null
                     }
                 />
             </Grid>

@@ -621,6 +621,8 @@ const translationEs: translationResourcesType = {
                 estadisticaAuthLegend: "Autenticar las consultas de estadísticas",
                 nomUsuariAuthPlaceholder: "Se usará el usuario global",
                 contrasenyaAuthPlaceholder: "Se usará la contraseña global",
+                showPassword: "Mostrar contraseña",
+                hidePassword: "Ocultar contraseña",
                 salutDivider: "Salud",
                 estadistiquesDivider: "Estadísticas",
                 authDivider: "Usuario de autenticación personalizado",
