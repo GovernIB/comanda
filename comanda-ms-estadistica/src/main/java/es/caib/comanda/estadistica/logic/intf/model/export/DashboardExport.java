@@ -23,7 +23,7 @@ public class DashboardExport implements Serializable {
     private String descripcio;
     private String entornCodi;
     private String appCodi;
-    private String plantilla;
+    private PlantillaExport plantilla;
     private List<DashboardItemExport> items;
     private List<DashboardTitolExport> titols;
 

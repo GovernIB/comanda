@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
 import {
     GridPage,
     MuiDataGrid,
@@ -89,6 +91,88 @@ const useCloneDashboardAction = (refresh?: () => void) => {
     }
 }
 
+type Conflicte = { titol: string; overwrite?: string; nouNom?: string };
+
+const ImportConflictRow: React.FC<{
+    index: number;
+    conflict: any;
+    onChange: (changes: object) => void;
+}> = ({ index, conflict, onChange }) => {
+    const { fields } = useFormContext();
+
+    const fieldOverwrite = fields?.filter(i=>i.name=='overwrite')[0];
+    const fieldNouNom = fields?.filter(i=>i.name=='nouNom')[0];
+
+    return (
+        <Grid container spacing={1} alignItems="center" sx={{ mb: 1 }}>
+            <Grid size={4} sx={{display: 'flex', alignItems: 'center'}}>
+                {conflict.tipo == "DashboardExport" && <Icon>dashboard</Icon>}
+                {conflict.tipo == "EstadisticaWidgetExport" && <Icon>widgets</Icon>}
+                {conflict.tipo == "PlantillaExport" && <Icon>palette</Icon>}
+                {conflict.tipo == "PaletaExport" && <Icon>format_color_fill</Icon>}
+                <Typography variant="body2" sx={{ml: 2}}>{conflict.titol}</Typography>
+            </Grid>
+            <Grid size={4}>
+                <FormField
+                    name={`conflicts[${index}].overwrite`}
+                    value={conflict.overwrite}
+                    field={fieldOverwrite}
+                    onChange={(value)=> onChange({overwrite: value})}
+                    componentProps={{ size: "small" }}
+                    required
+                />
+            </Grid>
+            {conflict.overwrite === 'CREAR_AMB_ALTRE_NOM' && (
+                <Grid size={4}>
+                    <FormField
+                        name={`conflicts[${index}].nouNom`}
+                        field={fieldNouNom}
+                        value={conflict.nouNom}
+                        onChange={(value) => onChange({nouNom: value})}
+                    />
+                </Grid>
+            )}
+        </Grid>
+    );
+};
+
+const DashboardImportConflictsForm: React.FC = () => {
+    const { t } = useTranslation();
+    const { data, apiRef } = useFormContext();
+    const conflicts: Conflicte[] = data?.conflicts ?? [];
+
+    const updateConflict = (index: number, changes: Partial<Conflicte>) => {
+        const updated = conflicts.map((c, i) => (i === index ? { ...c, ...changes } : c));
+        apiRef.current?.setFieldValue('conflicts', updated);
+    };
+
+    return (
+        <>
+            {conflicts.length > 0 && (<>
+                <Grid size={12}>
+                    <FormField name="overwrite" onChange={(value) => {
+                        const updated = conflicts.map((c) => ({ ...c, overwrite: value }));
+                        apiRef.current?.setFieldValue('conflicts', updated)
+                    }} />
+                </Grid>
+                <Box sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2">
+                        {t($ => $.page.dashboards.action.import.dashboardConflicts)}
+                    </Typography>
+                    {conflicts.map((c, i) => (
+                        <ImportConflictRow
+                            key={i + c.titol}
+                            index={i}
+                            conflict={c}
+                            onChange={(changes) => updateConflict(i, changes)}
+                        />
+                    ))}
+                </Box>
+            </>)}
+        </>
+    );
+};
+
 const useImportDashboardAction = (refresh?: () => void) => {
     const { t } = useTranslation();
     const apiRef = React.useRef<MuiFormDialogApi>(null);
@@ -114,7 +198,7 @@ const useImportDashboardAction = (refresh?: () => void) => {
                     <FormField name="file" type={"file"} />
                 </Grid>
                 <Grid size={12}>
-                    <FormField name="overwrite" />
+                    <DashboardImportConflictsForm />
                 </Grid>
             </Grid>
         </FormActionDialog>;

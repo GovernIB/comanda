@@ -1,44 +1,36 @@
 package es.caib.comanda.estadistica.logic.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import es.caib.comanda.estadistica.logic.helper.AtributsVisualsHelper;
-import es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper;
-import es.caib.comanda.estadistica.logic.helper.DashboardStyleResolverHelper;
-import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
-import es.caib.comanda.estadistica.logic.helper.DashboardHelper;
+import es.caib.comanda.client.model.App;
+import es.caib.comanda.estadistica.logic.helper.*;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTitol;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetItem;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetTitolItem;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
-import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardTitolTipus;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.OverwriteEnum;
 import es.caib.comanda.estadistica.logic.intf.model.export.DashboardExport;
+import es.caib.comanda.estadistica.logic.intf.model.export.DashboardItemExport;
+import es.caib.comanda.estadistica.logic.intf.model.export.EstadisticaWidgetExport;
+import es.caib.comanda.estadistica.logic.intf.model.export.PlantillaExport;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
-import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaSimpleWidget;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.logic.intf.service.DashboardService;
-import es.caib.comanda.estadistica.logic.intf.service.EstadisticaGraficWidgetService;
-import es.caib.comanda.estadistica.logic.intf.service.EstadisticaSimpleWidgetService;
-import es.caib.comanda.estadistica.logic.intf.service.EstadisticaTaulaWidgetService;
+import es.caib.comanda.estadistica.logic.intf.validation.ValidConflict;
 import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
-import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
-import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
-import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
-import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.*;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
 import es.caib.comanda.ms.logic.intf.model.FileReference;
 import es.caib.comanda.ms.logic.intf.model.ReportFileType;
-import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.AllArgsConstructor;
@@ -46,10 +38,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -76,9 +70,6 @@ import java.util.stream.Collectors;
 public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, Long, DashboardEntity> implements DashboardService {
 
     private final ConsultaEstadisticaHelper consultaEstadisticaHelper;
-    private final EstadisticaSimpleWidgetService estadisticaSimpleWidgetService;
-    private final EstadisticaGraficWidgetService estadisticaGraficWidgetService;
-    private final EstadisticaTaulaWidgetService estadisticaTaulaWidgetService;
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final AtributsVisualsHelper atributsVisualsHelper;
     private final DashboardExportMapper dashboardExportMapper;
@@ -88,11 +79,9 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     private final DashboardTitolRepository dashboardTitolRepository;
     private final DashboardItemRepository dashboardItemRepository;
     private final DashboardStyleResolverHelper dashboardStyleResolverHelper;
-    private final PlantillaRepository plantillaRepository;
-    private final IndicadorRepository indicadorRepository;
+    private final DashboardImportHelper dashboardImportHelper;
     private final EstadisticaWidgetRepository estadisticaWidgetRepository;
-    private final DimensioRepository dimensioRepository;
-    private final DimensioValorRepository dimensioValorRepository;
+    private final PlantillaRepository plantillaRepository;
 
     @PostConstruct
     public void init() {
@@ -278,9 +267,41 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
+    @FieldNameConstants
     public static class DashboardImportParams implements Serializable {
-        @NotNull private FileReference file;
+        @NotNull @ResourceField(onChangeActive = true)
+        private FileReference file;
+        @Valid
+        private List<Conflict> conflicts;
+
+        private String nouNom;
+        private OverwriteEnum overwrite;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @FieldNameConstants
+    @ValidConflict
+    public static class Conflict implements Serializable {
+        @NotNull private String titol;
         @NotNull private OverwriteEnum overwrite = OverwriteEnum.EMPRAR_EXISTENT;
+        private String nouNom;
+        @NotNull private String tipo;
+
+        private Long appId;
+
+        public Conflict(String titol, String tipo) {
+            this.titol = titol;
+            this.tipo = tipo;
+        }
+
+        public Conflict(String titol, Long appId, String tipo) {
+            this.titol = titol;
+            this.appId = appId;
+            this.tipo = tipo;
+        }
     }
 
     /**
@@ -299,17 +320,6 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
      * Aquesta classe permet importar dashboards i els seus elements relacionats.
      */
     public class DashboardImportActionExecutor implements ActionExecutor<DashboardEntity, DashboardImportParams, DashboardImportResult> {
-        private String getRecursNom(Long appId, String nomEntrada) {
-            int contador = 0;
-            String temp = nomEntrada;
-            EstadisticaWidgetEntity existWidget = estadisticaWidgetRepository.findByAppIdAndTitol(appId, temp);
-            while (existWidget != null) {
-                contador++;
-                temp = nomEntrada + " (" + contador + ")";
-                existWidget = estadisticaWidgetRepository.findByAppIdAndTitol(appId, temp);
-            }
-            return temp;
-        }
 
         @Override
         public DashboardImportResult exec(String code, DashboardEntity entity, DashboardImportParams params) {
@@ -319,60 +329,8 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                 List<DashboardExport> dashboards = objectMapper.readValue(jsonString,
                         objectMapper.getTypeFactory().constructCollectionType(List.class, DashboardExport.class));
 
-                List<DashboardEntity> dashboardsToImport = dashboardExportMapper.toDashboardEntity(
-                        dashboards,
-                        estadisticaClientHelper,
-                        atributsVisualsHelper,
-                        plantillaRepository,
-                        indicadorRepository,
-                        dimensioRepository,
-                        dimensioValorRepository);
-
                 List<Dashboard> importedDashboards = new ArrayList<>();
-                for (DashboardEntity dashboardEntity: dashboardsToImport) {
-                    dashboardRepository.saveAndFlush(dashboardEntity);
-                    dashboardEntity.getTitols().forEach(t->t.setDashboard(dashboardEntity));
-                    dashboardTitolRepository.saveAllAndFlush(dashboardEntity.getTitols());
-                    dashboardEntity.getItems().forEach(t -> {
-                        EstadisticaWidgetEntity existWidget = estadisticaWidgetRepository.findByAppIdAndTitol(t.getWidget().getAppId(), t.getWidget().getTitol());
-
-                        if (existWidget != null) {
-                            switch (params.getOverwrite()) {
-                                case EMPRAR_EXISTENT:
-                                    t.setWidget(existWidget);
-                                    break;
-                                case CREAR_AMB_ALTRE_NOM:
-                                    t.getWidget().setTitol(
-                                            getRecursNom(
-                                                    t.getWidget().getAppId(),
-                                                    t.getWidget().getTitol()
-                                            )
-                                    );
-                                    break;
-                            }
-                        }
-
-                        EstadisticaWidgetEntity widget = t.getWidget();
-                        if (widget instanceof EstadisticaSimpleWidgetEntity) {
-                            ((EstadisticaSimpleWidgetEntity) widget).getIndicadorInfo().setWidget(widget);
-                        }
-                        if (widget instanceof EstadisticaGraficWidgetEntity) {
-                            ((EstadisticaGraficWidgetEntity) widget).getIndicadorsInfo().forEach(c -> {
-                                c.setWidget(widget);
-                            });
-                        }
-                        if (widget instanceof EstadisticaTaulaWidgetEntity) {
-                            ((EstadisticaTaulaWidgetEntity) widget).getColumnes().forEach(c -> {
-                                c.setWidget(widget);
-                            });
-                        }
-
-                        estadisticaWidgetRepository.saveAndFlush(widget);
-                        t.setDashboard(dashboardEntity);
-                    });
-                    dashboardItemRepository.saveAllAndFlush(dashboardEntity.getItems());
-                }
-
+                dashboardImportHelper.importDashboardFromExport(dashboards, params.getConflicts());
                 return new DashboardImportResult(importedDashboards);
             } catch (Exception e) {
                 log.error("Error importing dashboards from JSON", e);
@@ -384,52 +342,31 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
             }
         }
 
-        /**
-         * Verifica si els widgets referenciats en un dashboard existeixen.
-         *
-         * Nota: Aquesta implementació només verifica si els widgets existeixen, però no els crea si no existeixen.
-         * Per crear widgets durant la importació, necessitaríem tenir la informació completa del widget,
-         * no només una referència. Això requeriria modificar l'exportació per incloure la informació completa
-         * dels widgets, i modificar la importació per crear els widgets si no existeixen.
-         *
-         * @param dashboard El dashboard a verificar
-         */
-        private void checkWidgetsExistence(Dashboard dashboard) {
-            if (dashboard.getItems() != null) {
-                for (DashboardItem item : dashboard.getItems()) {
-                    if (item.getWidget() != null) {
-                        ResourceReference<EstadisticaSimpleWidget, Long> widgetRef = item.getWidget();
-                        Long widgetId = widgetRef.getId();
-
-                        if (widgetId != null) {
-                            try {
-                                // Intentem obtenir el widget per comprovar si existeix
-                                estadisticaSimpleWidgetService.getOne(widgetId, null);
-                                log.debug("Widget with id {} exists", widgetId);
-                            } catch (Exception e) {
-                                try {
-                                    // Provem amb altres tipus de widgets
-                                    estadisticaGraficWidgetService.getOne(widgetId, null);
-                                    log.debug("GraficWidget with id {} exists", widgetId);
-                                } catch (Exception e2) {
-                                    try {
-                                        estadisticaTaulaWidgetService.getOne(widgetId, null);
-                                        log.debug("TaulaWidget with id {} exists", widgetId);
-                                    } catch (Exception e3) {
-                                        // Si no podem trobar el widget, registrem un avís
-                                        log.warn("Widget with id {} does not exist. It will need to be created manually.", widgetId);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
         @Override
         public void onChange(Serializable id, DashboardImportParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, DashboardImportParams target) {
-            // No es necessari implementar aquest mètode
+            if (DashboardImportParams.Fields.file.equals(fieldName)) {
+                FileReference file = (FileReference) fieldValue;
+                if (file == null || file.getContent() == null) {
+                    target.setConflicts(new ArrayList<>());
+                    return;
+                }
+                try {
+                    String jsonString = new String(file.getContent(), StandardCharsets.UTF_8);
+                    List<DashboardExport> dashboards = objectMapper.readValue(jsonString,
+                            objectMapper.getTypeFactory().constructCollectionType(List.class, DashboardExport.class));
+
+                    List<Conflict> dashboardConflicts = new ArrayList<>();
+                    dashboardImportHelper.checkDashboardConflicts(dashboards, dashboardConflicts);
+                    target.setConflicts(dashboardConflicts);
+                } catch (AnswerRequiredException a) {
+                    if (!answers.containsKey(a.getAnswerCode())) {
+                        throw a;
+                    }
+//                    throw new RuntimeException(a.getQuestion());
+                } catch (Exception e) {
+                    log.warn("Error parsing JSON content in onChange", e);
+                }
+            }
         }
     }
 }

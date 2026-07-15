@@ -47,9 +47,6 @@ class DashboardExportMapperTest {
     private AtributsVisualsHelper atributsVisualsHelper;
 
     @Mock
-    private PlantillaRepository plantillaRepository;
-
-    @Mock
     private IndicadorRepository indicadorRepository;
 
     @Mock
@@ -107,7 +104,7 @@ class DashboardExportMapperTest {
         assertEquals("Dashboard Test", result.getTitol());
         assertEquals("ENTORN001", result.getEntornCodi());
         assertEquals("APP001", result.getAppCodi());
-        assertEquals("Plantilla Test", result.getPlantilla());
+        assertEquals("Plantilla Test", result.getPlantilla().getNom());
 
         verify(estadisticaClientHelper).entornById(10L);
         verify(estadisticaClientHelper).appFindById(20L);
@@ -320,24 +317,21 @@ class DashboardExportMapperTest {
         export.setTitol("Dashboard Test");
         export.setEntornCodi(entorn.getCodi());
         export.setAppCodi(app.getCodi());
-        export.setPlantilla("Plantilla Test");
 
-        PlantillaEntity plantilla = new PlantillaEntity();
-        plantilla.setId(30L);
-        plantilla.setNom("Plantilla Test");
-
-        when(plantillaRepository.findByNom("Plantilla Test")).thenReturn(Optional.of(plantilla));
+        PlantillaExport plantillaExport = new PlantillaExport();
+        plantillaExport.setNom("Plantilla Test");
+        export.setPlantilla(plantillaExport);
 
         // When
         DashboardEntity result = mapper.toDashboardEntity(export, estadisticaClientHelper, atributsVisualsHelper,
-                plantillaRepository, indicadorRepository, dimensioRepository, dimensioValorRepository);
+                indicadorRepository, dimensioRepository, dimensioValorRepository);
 
         // Then
         assertNotNull(result);
         assertEquals(export.getTitol(), result.getTitol());
         assertEquals(entorn.getId(), result.getEntornId());
         assertEquals(app.getId(), result.getAppId());
-        assertEquals(plantilla, result.getPlantilla());
+        assertEquals("Plantilla Test", result.getPlantilla().getNom());
     }
 
     @Test
@@ -349,7 +343,7 @@ class DashboardExportMapperTest {
 
         // When
         DashboardEntity result = mapper.toDashboardEntity(export, estadisticaClientHelper, atributsVisualsHelper,
-                plantillaRepository, indicadorRepository, dimensioRepository, dimensioValorRepository);
+                indicadorRepository, dimensioRepository, dimensioValorRepository);
 
         // Then
         assertNotNull(result);
@@ -371,7 +365,7 @@ class DashboardExportMapperTest {
 
         // When
         DashboardEntity result = mapper.toDashboardEntity(export, estadisticaClientHelper, atributsVisualsHelper,
-                plantillaRepository, indicadorRepository, dimensioRepository, dimensioValorRepository);
+                indicadorRepository, dimensioRepository, dimensioValorRepository);
 
         // Then
         assertNotNull(result);
@@ -453,9 +447,9 @@ class DashboardExportMapperTest {
 
         // Then
         assertNotNull(result);
-        assertTrue(result instanceof EstadisticaTaulaWidgetEntity);
+        assertInstanceOf(EstadisticaTaulaWidgetEntity.class, result);
         EstadisticaTaulaWidgetEntity taulaEntity = (EstadisticaTaulaWidgetEntity) result;
-        assertEquals(20L, taulaEntity.getAppId());
+        assertEquals(app.getId(), taulaEntity.getAppId());
         assertEquals(dimensio, taulaEntity.getDimensioAgrupacio());
         assertEquals("{\"taula\":true}", taulaEntity.getAtributsVisualsJson());
     }
@@ -472,8 +466,6 @@ class DashboardExportMapperTest {
 
     @Test
     void testToDimensioEntity_Success() {
-        // Given
-
         // When
         DimensioEntity result = mapper.toDimensioEntity(dimensio.getCodi(), entornApp.getId(), dimensioRepository);
 

@@ -9,6 +9,12 @@ const mocks = vi.hoisted(() => ({
     appFindMock: vi.fn(),
     entornFindMock: vi.fn(),
     downloadJsonMock: vi.fn(),
+    setFieldValueMock: vi.fn(),
+    formContextData: {
+        entorn: { id: 7 },
+        aplicacio: { id: 3 },
+        conflicts: [] as Array<{ tipo: string; titol: string; overwrite?: string; nouNom?: string }>,
+    },
     tMock: vi.fn((selector: any) =>
         selector({
             page: {
@@ -22,6 +28,13 @@ const mocks = vi.hoisted(() => ({
                             label: 'Importar',
                             title: 'Importar dashboard',
                             success: 'Dashboard importat',
+                            selectDecision: 'Selecciona una opció',
+                            mantenir: "Mantenir l'existent",
+                            sobreescriure: 'Sobreescriure',
+                            crearNou: 'Crear nou',
+                            nouNom: 'Nom nou',
+                            dashboardConflicts: 'Conflictes de tauler',
+                            widgetConflicts: 'Conflictes de widget',
                         },
                     },
                     cloneDashboard: {
@@ -42,12 +55,18 @@ vi.mock('react-i18next', () => ({
 
 vi.mock('reactlib', () => ({
     GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    FormField: ({ name }: { name: string }) => <div data-testid={`field-${name}`}>{name}</div>,
+    FormField: ({ name, value, onChange, componentProps }: { name: string; value?: any; onChange?: (value: any) => void; componentProps?: any }) => (
+        <input
+            data-testid={`field-${name}`}
+            name={name}
+            value={value ?? ''}
+            onChange={(e) => onChange?.(e.target.value)}
+            {...componentProps}
+        />
+    ),
     useFormContext: () => ({
-        data: {
-            entorn: { id: 7 },
-            aplicacio: { id: 3 },
-        },
+        data: mocks.formContextData,
+        apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
     }),
     springFilterBuilder: {
         and: (...values: string[]) => values.join(' AND '),
@@ -72,6 +91,18 @@ vi.mock('reactlib', () => ({
             return {
                 isReady: true,
                 find: mocks.appFindMock,
+            };
+        }
+        if (resourceName === 'entorn') {
+            return {
+                isReady: true,
+                find: mocks.entornFindMock,
+            };
+        }
+        if (resourceName === 'plantilla') {
+            return {
+                isReady: true,
+                find: vi.fn(),
             };
         }
         return {
@@ -135,10 +166,10 @@ vi.mock('../components/PageTitle.tsx', () => ({
 describe('EstadisticaDashboards', () => {
     afterEach(() => {
         vi.clearAllMocks();
+        mocks.formContextData.conflicts = [];
     });
 
     it('EstadisticaDashboards_quanEsRenderitza_mostraLesAccionsIElDialegDeClonat', () => {
-        // Comprova que la pàgina exposa les accions de fila principals i el formulari del clonat.
         render(<EstadisticaDashboards />);
 
         expect(screen.getByRole('heading', { level: 1, name: 'Dashboards' })).toBeInTheDocument();
@@ -147,12 +178,13 @@ describe('EstadisticaDashboards', () => {
         expect(screen.getByRole('button', { name: 'Exportar' })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Clonar dashboard' })).toBeInTheDocument();
         expect(screen.getByRole('heading', { name: 'Clonar dashboard' })).toBeInTheDocument();
+
+        // Comprova que els camps es renderitzen tant al formulari d'edició com al de clonatge
         expect(screen.getAllByTestId('field-titol')).toHaveLength(2);
         expect(screen.getAllByTestId('field-aplicacio')).toHaveLength(2);
     });
 
     it('EstadisticaDashboards_quanSexportaUnDashboard_descarregaElJsonINotificaExit', async () => {
-        // Verifica que l'acció d'exportació invoca l'artefacte del dashboard i mostra el missatge d'èxit.
         mocks.artifactReportMock.mockResolvedValue({ ok: true });
 
         render(<EstadisticaDashboards />);
@@ -175,11 +207,43 @@ describe('EstadisticaDashboards', () => {
     });
 
     it('EstadisticaDashboards_quanEsRenderitza_mostraElBotoDImportarAlToolbar', () => {
-        // Comprova que el botó d'importar del toolbar es renderitza correctament.
         render(<EstadisticaDashboards />);
 
-        const importButton = screen.getByTitle('Importar');
+        // Utilitzar getByRole és més robust que getByTitle per a elements interactius
+        const importButton = screen.getByRole('button', { name: 'Importar' });
         expect(importButton).toBeInTheDocument();
-        expect(importButton.tagName).toBe('BUTTON');
+    });
+
+    it('EstadisticaDashboards_quanHiHaConflictesDeTauler_esMostrenIPermetenTriarUnaDecisio', () => {
+        mocks.formContextData.conflicts = [{ tipo: 'DashboardExport', titol: 'Tauler X', overwrite: undefined, nouNom: undefined }];
+
+        render(<EstadisticaDashboards />);
+
+        expect(screen.getByText('Conflictes de tauler')).toBeInTheDocument();
+        expect(screen.getByText('Tauler X')).toBeInTheDocument();
+
+        const overwriteField = screen.getByTestId('field-conflicts[0].overwrite');
+        fireEvent.change(overwriteField, { target: { value: 'Sobreescriure' } });
+
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('conflicts', [
+            { tipo: 'DashboardExport', titol: 'Tauler X', overwrite: 'Sobreescriure', nouNom: undefined },
+        ]);
+    });
+
+    it('EstadisticaDashboards_quanElConflicteDeWidgetTeDecisioCrearNou_mostraElCampDeNomNouIPermetEditarLo', () => {
+        mocks.formContextData.conflicts = [
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget X', overwrite: 'CREAR_AMB_ALTRE_NOM', nouNom: '' },
+        ];
+
+        render(<EstadisticaDashboards />);
+
+        expect(screen.getByText('Widget X')).toBeInTheDocument();
+
+        const nouNomInput = screen.getByTestId('field-conflicts[0].nouNom');
+        fireEvent.change(nouNomInput, { target: { value: 'Widget X (2)' } });
+
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('conflicts', [
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget X', overwrite: 'CREAR_AMB_ALTRE_NOM', nouNom: 'Widget X (2)' },
+        ]);
     });
 });

@@ -27,6 +27,9 @@ public class DashboardItemExport implements Serializable {
     private int posY;
     private int width;
     private int height;
+    private Boolean destacat;
+    private Boolean personalitzat;
+    private PlantillaExport plantilla;
     private AtributsVisuals atributsVisuals;
 
 }

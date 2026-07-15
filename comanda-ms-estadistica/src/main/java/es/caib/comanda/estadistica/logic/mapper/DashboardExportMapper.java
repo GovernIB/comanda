@@ -5,22 +5,16 @@ import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.helper.AtributsVisualsHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
-import es.caib.comanda.estadistica.logic.intf.model.export.DashboardExport;
-import es.caib.comanda.estadistica.logic.intf.model.export.DashboardItemExport;
-import es.caib.comanda.estadistica.logic.intf.model.export.DimensioValorExport;
-import es.caib.comanda.estadistica.logic.intf.model.export.EstadisticaGraficWidgetExport;
-import es.caib.comanda.estadistica.logic.intf.model.export.EstadisticaSimpleWidgetExport;
-import es.caib.comanda.estadistica.logic.intf.model.export.EstadisticaTaulaWidgetExport;
-import es.caib.comanda.estadistica.logic.intf.model.export.EstadisticaWidgetExport;
-import es.caib.comanda.estadistica.logic.intf.model.export.IndicadorTaulaExport;
+import es.caib.comanda.estadistica.logic.intf.model.export.*;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
+import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
-import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
+import es.caib.comanda.estadistica.persist.entity.paleta.*;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
@@ -28,10 +22,12 @@ import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity
 import es.caib.comanda.estadistica.persist.repository.DimensioRepository;
 import es.caib.comanda.estadistica.persist.repository.DimensioValorRepository;
 import es.caib.comanda.estadistica.persist.repository.IndicadorRepository;
-import es.caib.comanda.estadistica.persist.repository.PlantillaRepository;
 import org.mapstruct.*;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * Mapper per convertir un DashboardEntity a un DashboardExport.
@@ -52,10 +48,19 @@ public interface DashboardExportMapper {
      */
     @Mapping(target = "entornCodi", source = "entornId", qualifiedByName = "toEntornExport")
     @Mapping(target = "appCodi", source = "appId", qualifiedByName = "toAppExport")
-    @Mapping(target = "plantilla", source = "plantilla", qualifiedByName = "toPlantillaExport")
     DashboardExport toDashboardExport(DashboardEntity dashboardEntity,
                                       @Context EstadisticaClientHelper estadisticaClientHelper,
                                       @Context AtributsVisualsHelper atributsVisualsHelper);
+
+    /**
+     * Converteix una llista de DashboardEntity a una llista de DashboardExport.
+     *
+     * @param dashboardEntities La llista de dashboard entities a convertir
+     * @return La llista de DashboardExport resultant
+     */
+    List<DashboardExport> toDashboardExport(List<DashboardEntity> dashboardEntities,
+                                            @Context EstadisticaClientHelper estadisticaClientHelper,
+                                            @Context AtributsVisualsHelper atributsVisualsHelper);
 
     @Named("toAppExport")
     default String toAppExport(Long appId, @Context EstadisticaClientHelper estadisticaClientHelper) {
@@ -69,27 +74,25 @@ public interface DashboardExportMapper {
         Entorn entorn = estadisticaClientHelper.entornById(entornId);
         return entorn != null ?entorn.getCodi() :null;
     }
-    @Named("toPlantillaExport")
-    default String toPlantillaExport(PlantillaEntity plantillaEntity) {
-        return plantillaEntity != null ?plantillaEntity.getNom() :null;
-    }
 
-    /**
-     * Converteix una llista de DashboardEntity a una llista de DashboardExport.
-     * 
-     * @param dashboardEntities La llista de dashboard entities a convertir
-     * @return La llista de DashboardExport resultant
-     */
-    default List<DashboardExport> toDashboardExport(List<DashboardEntity> dashboardEntities, EstadisticaClientHelper estadisticaClientHelper, AtributsVisualsHelper atributsVisualsHelper) {
-        if (dashboardEntities == null) {
-            return null;
-        }
-        
-        List<DashboardExport> result = new java.util.ArrayList<>(dashboardEntities.size());
-        for (DashboardEntity dashboardEntity : dashboardEntities) {
-            result.add(toDashboardExport(dashboardEntity, estadisticaClientHelper, atributsVisualsHelper));
-        }
-        return result;
+    @Mapping(target = "plantilla", source = "plantilla")
+    DashboardTitolEntity toDashboardTitolEntity(DashboardTitolExport export);
+
+    PlantillaExport toPlantillaExport(PlantillaEntity plantillaEntity);
+    @Mapping(target = "ordre", source = "ordre")
+    PlantillaGrupPaletesExport toPlantillaGrupPaletesExport(PlantillaGrupPaletesEntity plantillaEntity);
+    @Mapping(target = "colors", source = "colors", qualifiedByName = "toColorsExport")
+    PaletaExport toPaletaExport(PaletaEntity plantillaEntity);
+    WidgetStylePropertyExport toWidgetStylePropertyExport(WidgetStylePropertyEntity widgetStylePropertyEntity);
+
+
+    @Named("toColorsExport")
+    default String toColorsExport(List<PaletaColorEntity> colors) {
+        if (colors == null || colors.isEmpty()) return null;
+//        colors.sort(e -> e.getPosicio());
+        return colors.stream()
+                .map(PaletaColorEntity::getValor)
+                .collect(Collectors.joining(","));
     }
     
     /**
@@ -103,6 +106,7 @@ public interface DashboardExportMapper {
     @Mapping(target = "appCodi", source = "widget.appId", qualifiedByName = "toAppExport")
     @Mapping(target = "widget", source = "widget", qualifiedByName = "toWidgetExport")
     @Mapping(target = "atributsVisuals", expression = "java(atributsVisualsHelper.getAtributsVisuals(dashboardItemEntity))")
+    @Mapping(target = "plantilla", source = "plantilla")
     DashboardItemExport toDashboardItemExport(DashboardItemEntity dashboardItemEntity,
                                               @Context EstadisticaClientHelper estadisticaClientHelper,
                                               @Context AtributsVisualsHelper atributsVisualsHelper);
@@ -171,11 +175,9 @@ public interface DashboardExportMapper {
      */
     @Mapping(target = "entornId", source = "entornCodi", qualifiedByName = "toEntornId")
     @Mapping(target = "appId", source = "appCodi", qualifiedByName = "toAppId")
-    @Mapping(target = "plantilla", source = "plantilla", qualifiedByName = "toPlantillaEntity")
     DashboardEntity toDashboardEntity(DashboardExport dashboardExport,
                                       @Context EstadisticaClientHelper estadisticaClientHelper,
                                       @Context AtributsVisualsHelper atributsVisualsHelper,
-                                      @Context PlantillaRepository plantillaRepository,
                                       @Context IndicadorRepository indicadorRepository,
                                       @Context DimensioRepository dimensioRepository,
                                       @Context DimensioValorRepository dimensioValorRepository);
@@ -183,7 +185,6 @@ public interface DashboardExportMapper {
     List<DashboardEntity> toDashboardEntity(List<DashboardExport> dashboardEntities,
                                             @Context EstadisticaClientHelper estadisticaClientHelper,
                                             @Context AtributsVisualsHelper atributsVisualsHelper,
-                                            @Context PlantillaRepository plantillaRepository,
                                             @Context IndicadorRepository indicadorRepository,
                                             @Context DimensioRepository dimensioRepository,
                                             @Context DimensioValorRepository dimensioValorRepository);
@@ -202,14 +203,9 @@ public interface DashboardExportMapper {
         return entorn != null ? entorn.getId() : null;
     }
 
-    @Named("toPlantillaEntity")
-    default PlantillaEntity toPlantillaEntity(String plantillaNom, @Context PlantillaRepository repository) {
-        if (plantillaNom == null) return null;
-        return repository.findByNom(plantillaNom).orElse(null);
-    }
-
     @Mapping(target = "entornId", source = "entornCodi", qualifiedByName = "toEntornId")
     @Mapping(target = "widget", source = ".", qualifiedByName = "toWidgetEntity")
+    @Mapping(target = "plantilla", source = "plantilla")
     DashboardItemEntity toDashboardItemEntity(DashboardItemExport dashboardItemExport,
                                               @Context EstadisticaClientHelper estadisticaClientHelper,
                                               @Context AtributsVisualsHelper atributsVisualsHelper,
@@ -250,7 +246,7 @@ public interface DashboardExportMapper {
 
         Long entornId = toEntornId(dashboardItemExport.getEntornCodi(), estadisticaClientHelper);
         Long appId = toAppId(dashboardItemExport.getAppCodi(), estadisticaClientHelper);
-        EntornApp entornApp = estadisticaClientHelper.entornAppFindByAppAndEntorn(appId, entornId);
+        EntornApp entornApp = (appId != null && entornId != null) ?estadisticaClientHelper.entornAppFindByAppAndEntorn(appId, entornId) :null;
         Long entornAppId = entornApp != null ?entornApp.getId() :null;
 
         EstadisticaWidgetEntity entity = null;
@@ -303,9 +299,35 @@ public interface DashboardExportMapper {
                                                       @Context Long entornAppId,
                                                       @Context DimensioRepository dimensioRepository,
                                                       @Context DimensioValorRepository dimensioValorRepository) {
-        if (dimensioValorExport == null) return null;
+        if (dimensioValorExport == null || entornAppId == null) return null;
         DimensioEntity dimensio = this.toDimensioEntity(dimensioValorExport.getDimensioCodi(), entornAppId, dimensioRepository);
         if (dimensio == null) return null;
         return dimensioValorRepository.findByDimensioAndValor(dimensio, dimensioValorExport.getValor()).orElse(null);
+    }
+
+    @Mapping(target = "plantilla", source = "plantilla")
+    DashboardTitolExport toDashboardTitolEntity(DashboardTitolEntity export);
+
+    PlantillaEntity toPlantillaEntity(PlantillaExport plantillaExport);
+    @Mapping(target = "ordre", source = "ordre")
+    PlantillaGrupPaletesEntity toPlantillaGrupPaletesEntity(PlantillaGrupPaletesExport plantillaGrupPaletesExport);
+    @Mapping(target = "colors", source = "colors", qualifiedByName = "toColorsEntity")
+    PaletaEntity toPaletaEntity(PaletaExport paletaExport);
+    WidgetStylePropertyEntity toWidgetStylePropertyEntity(WidgetStylePropertyExport widgetStylePropertyExport);
+
+    @Named("toColorsEntity")
+    public default List<PaletaColorEntity> toColorsEntity(String colors) {
+        if (colors == null || colors.isEmpty()) return null;
+        AtomicInteger index = new AtomicInteger(0);
+        return Arrays.stream(colors.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map((v) -> {
+                    PaletaColorEntity p = new PaletaColorEntity();
+                    p.setPosicio(index.getAndIncrement());
+                    p.setValor(v);
+                    return p;
+                })
+                .collect(Collectors.toList());
     }
 }

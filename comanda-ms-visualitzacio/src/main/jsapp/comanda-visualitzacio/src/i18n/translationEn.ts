@@ -410,6 +410,7 @@ const translationEn: translationResourcesType = {
                     label: "Import dashboard",
                     title: "Import dashboard",
                     success: "Dashboard imported successfully",
+                    dashboardConflicts: "Elements with these names already exist. Indicate what to do with each one:",
                 },
             },
             alert: {
