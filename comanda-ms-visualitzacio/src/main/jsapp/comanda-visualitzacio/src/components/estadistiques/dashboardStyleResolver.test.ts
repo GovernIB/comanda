@@ -106,7 +106,7 @@ describe('resolveWidgetStyles', () => {
             },
         };
 
-        const result = resolveWidgetStyles(widget, null, false);
+        const result = resolveWidgetStyles(widget, 'SIMPLE', null, false);
 
         expect(result).toEqual({
             colorFons: '#123456',
@@ -120,7 +120,7 @@ describe('resolveWidgetStyles', () => {
             colorFons: '#123456',
         };
 
-        const result = resolveWidgetStyles(widget, mockPlantilla as any, false);
+        const result = resolveWidgetStyles(widget, 'SIMPLE', mockPlantilla as any, false);
 
         expect(result.colorFons).toBe('#123456');
     });
@@ -132,7 +132,7 @@ describe('resolveWidgetStyles', () => {
             atributsVisuals: {},
         };
 
-        const result = resolveWidgetStyles(widget, mockPlantilla as any, false);
+        const result = resolveWidgetStyles(widget, 'SIMPLE', mockPlantilla as any, false);
 
         expect(result.colorFons).toBe('#FF0000');
         expect(result.midaFontTitol).toBe(16);
@@ -149,7 +149,7 @@ describe('resolveWidgetStyles', () => {
             },
         };
 
-        const result = resolveWidgetStyles(widget, mockPlantilla as any, false);
+        const result = resolveWidgetStyles(widget, 'SIMPLE', mockPlantilla as any, false);
 
         expect(result.colorFons).toBe('#CUSTOM');
         expect(result.midaFontTitol).toBe(24);
@@ -167,7 +167,7 @@ describe('resolveWidgetStyles', () => {
             },
         };
 
-        const result = resolveWidgetStyles(widget, mockPlantilla as any, false);
+        const result = resolveWidgetStyles(widget, 'SIMPLE', mockPlantilla as any, false);
 
         expect(result.colorFons).toBe('#FF0000');
         expect(result.midaFontTitol).toBe(16);
@@ -181,7 +181,7 @@ describe('resolveWidgetStyles', () => {
             atributsVisuals: {},
         };
 
-        const result = resolveWidgetStyles(widget, mockPlantilla as any, true);
+        const result = resolveWidgetStyles(widget, 'SIMPLE', mockPlantilla as any, true);
 
         expect(result.colorFons).toBe('#AA0000');
     });
@@ -193,7 +193,7 @@ describe('resolveWidgetStyles', () => {
             atributsVisuals: {},
         };
 
-        const result = resolveWidgetStyles(widget, mockPlantilla as any, false);
+        const result = resolveWidgetStyles(widget, 'SIMPLE', mockPlantilla as any, false);
 
         expect(result.colorFons).toBe('#FF0000');
     });
@@ -205,7 +205,7 @@ describe('resolveWidgetStyles', () => {
             atributsVisuals: {},
         };
 
-        const result = resolveWidgetStyles(widget, mockPlantilla as any, false);
+        const result = resolveWidgetStyles(widget, 'GRAFIC', mockPlantilla as any, false);
 
         expect(result.colorsPaleta).toBe('#0000FF,#FFFF00,#FF00FF');
         expect(result.lineWidth).toBe(2);
@@ -218,7 +218,7 @@ describe('resolveWidgetStyles', () => {
             atributsVisuals: {},
         };
 
-        const result = resolveWidgetStyles(widget, mockPlantilla as any, false);
+        const result = resolveWidgetStyles(widget, 'TAULA', mockPlantilla as any, false);
 
         expect(result.colorFons).toBe('#FF0000');
         expect(result.mostrarCapcalera).toBe(false);
@@ -231,7 +231,7 @@ describe('resolveWidgetStyles', () => {
             atributsVisuals: {},
         };
 
-        const result = resolveWidgetStyles(widget, mockPlantilla as any, false);
+        const result = resolveWidgetStyles(widget, 'TITOL', mockPlantilla as any, false);
 
         expect(result.tipusTitol).toBe('TIPUS_1');
         expect(result.colorFons).toBe('#FF0000');
@@ -249,7 +249,7 @@ describe('resolveWidgetStyles', () => {
             nom: 'Plantilla Buida',
         };
 
-        const result = resolveWidgetStyles(widget, plantillaBuida as any, false);
+        const result = resolveWidgetStyles(widget, 'SIMPLE', plantillaBuida as any, false);
 
         expect(result).toEqual({});
     });
@@ -284,7 +284,7 @@ describe('resolveWidgetStyles', () => {
             paletes: [],
         };
 
-        const result = resolveWidgetStyles(widget, plantillaSenseDark as any, true);
+        const result = resolveWidgetStyles(widget, 'SIMPLE', plantillaSenseDark as any, true);
 
         expect(result.colorFons).toBeUndefined();
     });

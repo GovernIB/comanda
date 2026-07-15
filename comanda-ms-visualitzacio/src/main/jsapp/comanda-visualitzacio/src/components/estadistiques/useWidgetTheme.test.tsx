@@ -10,6 +10,8 @@ vi.mock('../../util/colorUtil', () => ({
         return color.includes('light') || 
                color === '#FFFFFF' || 
                color === '#ffffff' ||
+               color === '#fff' ||
+               color === '#FFF' ||
                color === '#F5F5F5' ||
                color === '#EEEEEE';
     }),

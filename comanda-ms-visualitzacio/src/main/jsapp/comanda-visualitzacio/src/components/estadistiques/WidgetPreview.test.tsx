@@ -14,8 +14,8 @@ vi.mock('./dashboardPlantillaHook', () => ({
 }));
 
 vi.mock('./dashboardStyleResolver', () => ({
-    resolveWidgetStyles: (widgetData: any, plantilla: any, temaFosc: boolean) => 
-        mocks.resolveWidgetStylesMock(widgetData, plantilla, temaFosc),
+    resolveWidgetStyles: (widgetData: any, widgetType: any, plantilla: any, temaFosc: boolean) => 
+        mocks.resolveWidgetStylesMock(widgetData, widgetType, plantilla, temaFosc),
 }));
 
 vi.mock('./SimpleWidgetVisualization', () => ({
@@ -131,6 +131,7 @@ describe('WidgetPreview', () => {
 
         expect(mocks.resolveWidgetStylesMock).toHaveBeenCalledWith(
             expect.objectContaining({ titol: 'Amb Plantilla' }),
+            'SIMPLE',
             widgetPlantilla,
             expect.any(Boolean)
         );
@@ -153,6 +154,7 @@ describe('WidgetPreview', () => {
 
         expect(mocks.resolveWidgetStylesMock).toHaveBeenCalledWith(
             expect.objectContaining({ titol: 'Sense Plantilla' }),
+            'SIMPLE',
             dashboardPlantilla,
             expect.any(Boolean)
         );
@@ -173,6 +175,7 @@ describe('WidgetPreview', () => {
 
         expect(mocks.resolveWidgetStylesMock).toHaveBeenCalledWith(
             expect.objectContaining({ titol: 'Sense Cap Plantilla' }),
+            'SIMPLE',
             undefined,
             false
         );

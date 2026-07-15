@@ -27,6 +27,7 @@ const mocks = vi.hoisted(() => ({
                 error_dades_tooltip: 'No s han pogut carregar les dades',
                 dades_disponibles_tooltip: 'Ja hi ha dades disponibles',
                 obtenir_dades_tooltip: 'Encara no hi ha dades disponibles',
+                obtenir_dades_carregant: 'Obtenint dades',
                 seleccionar_entorn_app: 'Seleccionar entorn app',
                 seleccionar: 'Seleccionar',
                 seleccionar_entorn_app_primer: 'Selecciona primer l entorn',
@@ -333,7 +334,7 @@ describe('CalendarStatusButton', () => {
         render(<CalendarStatusButton hasError={false} isLoading esDisponible={false} />);
 
         expect(
-            screen.getByRole('button', { name: 'Carregant', })
+            screen.getByRole('button', { name: 'Obtenint dades', })
         ).toBeDisabled();
 
         consoleErrorSpy.mockRestore();
