@@ -15,6 +15,7 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(
@@ -72,4 +73,13 @@ public class UsuariEntity extends BaseAuditableEntity<Usuari> {
     @Column(name = "alarma", length = 12)
     @Comment("Número de elementos por página")
     private AlarmaSoundEnum alarma;
+
+    @Column(name = "inici_darrer_periode")
+    private LocalDateTime iniciDarrerPeriode;
+    @Column(name = "fi_darrer_periode")
+    private LocalDateTime fiDarrerPeriode;
+    @Column(name = "inici_periode_actual")
+    private LocalDateTime iniciPeriodeActual;
+    @Column(name = "darrera_activitat")
+    private LocalDateTime darreraActivitat;
 }
