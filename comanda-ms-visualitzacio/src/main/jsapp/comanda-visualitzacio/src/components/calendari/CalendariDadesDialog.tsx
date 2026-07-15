@@ -98,7 +98,10 @@ const CalendariDadesDialog: React.FC<CalendariDadesDialogProps> = ({
             {filteredData.map((fet: DadesDia, index: number) => (
               <TableRow
                 key={index}
-                sx={{ backgroundColor: index % 2 === 0 ? "background.default" : "grey.50",}}
+                sx={{
+                    backgroundColor: (theme: any) =>
+                    index % 2 === 0 ? theme.palette.background.paper : theme.palette.action.hover
+                 }}
               >
                 {dimensions.map((dim: any) => (
                   <TableCell key={`dim-val-${index}-${dim.codi}`}>
@@ -126,7 +129,6 @@ const CalendariDadesDialog: React.FC<CalendariDadesDialogProps> = ({
     <Dialog
       open={dadesDiaModalOpen}
       onClose={() => setDadesDiaModalOpen(false)}
-      maxWidth="xl"
       fullWidth
       fullScreen
     >

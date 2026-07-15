@@ -219,7 +219,7 @@ public class FetServiceImpl extends BaseMutableResourceService<Fet, Long, FetEnt
             LocalDate data = params.getDataInici();
             try {
                 log.info("Obtenint dades estadístiques per a la data {} i entornAppId: {}", data, entornAppId);
-                EntornApp entornApp = estadisticaClientHelper.entornAppFindById(params.getEntornAppId());
+                EntornApp entornApp = estadisticaClientHelper.entornAppFindById(entornAppId);
 
                 // Format de la data: dd-MM-yyyy
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");

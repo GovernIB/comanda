@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 interface UseCalendarEventsProps {
   currentViewMonth: number;
   currentViewYear: number;
-  entornAppId: number | '';
+  entornAppId: number | string;
   datesAmbDades: string[];
   emptyDates: string[];
   loadingDates: string[];

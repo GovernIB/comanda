@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import CalendariEstadistiques, { CalendarStatusButton, useEntornAppData } from './CalendariEstadistiques';
@@ -38,6 +38,7 @@ const mocks = vi.hoisted(() => ({
                 carregar: 'Carregar',
                 tancar: 'Tancar',
                 today: 'Avui',
+                carregant: "Carregant",
                 carregant_dades: 'Carregant dades',
                 success_obtenir_dades: 'Dades carregades',
                 error_obtenir_dades: 'Error obtenint dades',
@@ -332,9 +333,7 @@ describe('CalendarStatusButton', () => {
         render(<CalendarStatusButton hasError={false} isLoading esDisponible={false} />);
 
         expect(
-            screen.getByRole('button', {
-                name: 'Obtenir dades',
-            })
+            screen.getByRole('button', { name: 'Carregant', })
         ).toBeDisabled();
 
         consoleErrorSpy.mockRestore();
@@ -401,11 +400,10 @@ describe('CalendariEstadistiques', () => {
         expect(screen.getByTestId('calendar-events-count')).toHaveTextContent('1');
     });
 
-    it('CalendariEstadistiques_quanNoHiHaEntornSeleccionat_iEsPremCarregarMes_mostraUnAlert', async () => {
-        // Verifica que el botó de carregar el mes actual obliga primer a seleccionar un entorn-app.
+it('CalendariEstadistiques_quanNoHiHaEntornSeleccionat_mostraMissatgeAjudaIAmagaCalendari', async () => {
+        // Verifica que quan no hi ha un entorn seleccionat, es mostra el missatge d'ajuda
         mocks.entornAppFindMock.mockResolvedValue({ rows: [] });
         mocks.useCalendarEventsMock.mockReturnValue([]);
-        vi.stubGlobal('alert', mocks.alertMock);
 
         render(<CalendariEstadistiques />);
 
@@ -413,11 +411,10 @@ describe('CalendariEstadistiques', () => {
             expect(mocks.entornAppFindMock).toHaveBeenCalled();
         });
 
-        act(() => {
-            fireEvent.click(screen.getByRole('button', { name: 'Carregar mes actual' }));
-        });
+        expect(screen.getByText('Selecciona primer l entorn')).toBeInTheDocument();
 
-        expect(mocks.alertMock).toHaveBeenCalledWith('Selecciona primer l entorn');
+        expect(screen.queryByRole('button', { name: 'Carregar mes actual' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Carregar interval' })).not.toBeInTheDocument();
     });
 
     it('CalendariEstadistiques_quanEsPremUnDiaAmbDades_obriElDialegDelDia', async () => {
@@ -452,6 +449,12 @@ describe('CalendariEstadistiques', () => {
 
         fireEvent.change(screen.getByLabelText('Seleccionar entorn app'), {
             target: { value: '7' },
+        });
+        await waitFor(() => {
+            expect(mocks.fetReportMock).toHaveBeenCalledWith(null, {
+                code: 'dates_disponibles',
+                data: '7',
+            });
         });
         fireEvent.click(screen.getByRole('button', { name: 'Event disponible' }));
 
@@ -499,6 +502,12 @@ describe('CalendariEstadistiques', () => {
         fireEvent.change(screen.getByLabelText('Seleccionar entorn app'), {
             target: { value: '7' },
         });
+        await waitFor(() => {
+            expect(mocks.fetReportMock).toHaveBeenCalledWith(null, {
+                code: 'dates_disponibles',
+                data: '7',
+            });
+        });
         fireEvent.click(screen.getByRole('button', { name: 'Event buit' }));
 
         await waitFor(() => {
@@ -533,6 +542,12 @@ describe('CalendariEstadistiques', () => {
 
         fireEvent.change(screen.getByLabelText('Seleccionar entorn app'), {
             target: { value: '7' },
+        });
+        await waitFor(() => {
+            expect(mocks.fetReportMock).toHaveBeenCalledWith(null, {
+                code: 'dates_disponibles',
+                data: '7',
+            });
         });
         fireEvent.click(screen.getByRole('button', { name: 'Carregar mes actual' }));
 

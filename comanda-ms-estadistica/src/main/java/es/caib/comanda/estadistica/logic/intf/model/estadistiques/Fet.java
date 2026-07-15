@@ -102,7 +102,9 @@ public class Fet extends BaseResource<Long> {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class FetObtenirParamAction implements Serializable {
+        @NotNull
         private Long entornAppId;
+        @NotNull
         private LocalDate dataInici;
         private LocalDate dataFi;
     }

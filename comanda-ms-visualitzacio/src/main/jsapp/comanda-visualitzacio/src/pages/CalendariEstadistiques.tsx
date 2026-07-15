@@ -27,7 +27,6 @@ import DialogActions from "@mui/material/DialogActions";
 import ErrorIcon from '@mui/icons-material/Error';
 import {useTranslation} from "react-i18next";
 import * as React from "react";
-import ReactDOM from 'react-dom/client';
 import {useMessage} from "../components/MessageShow.tsx";
 import { useCalendarEvents } from '../components/calendari/UseCalendarEventsProps.ts';
 import { ErrorInfo, PerData, PerInterval, Temps, DadesDia, CalendarStatusButtonProps } from '../components/calendari/CalendariTypes.ts';
@@ -54,12 +53,16 @@ export const CalendarStatusButton: React.FC<CalendarStatusButtonProps> = ({
     ? t($ => $.calendari.error_dades)
     : esDisponible
     ? t($ => $.calendari.dades_disponibles)
+    : isLoading
+    ? t($ => $.calendari.obtenir_dades_carregant)
     : t($ => $.calendari.obtenir_dades);
 
   const tooltip = hasError
     ? t($ => $.calendari.error_dades_tooltip)
     : esDisponible
     ? t($ => $.calendari.dades_disponibles_tooltip)
+    : isLoading
+    ? t($ => $.calendari.obtenir_dades_carregant)
     : t($ => $.calendari.obtenir_dades_tooltip);
 
   const color: 'primary' | 'error' | 'success' = hasError
@@ -109,7 +112,8 @@ const CalendariEstadistiques: React.FC = () => {
     const [dataInici, setDataInici] = useState<Dayjs | null>(null);
     const [dataFi, setDataFi] = useState<Dayjs | null>(null);
     const [obrirDialog, setObrirDialog] = useState(false);
-    const [entornAppId, setEntornAppId] = useState<number | ''>('');
+    const [entornAppId, setEntornAppId] = useState<number | string>('');
+    const [isLoadingEntorn, setIsLoadingEntorn] = useState(false);
     const [datesAmbDades, setDatesAmbDades] = useState<string[]>([]);
     const [globalLoading, setGlobalLoading] = useState(false);
     const [loadingDates, setLoadingDates] = useState<string[]>([]);
@@ -161,49 +165,51 @@ const CalendariEstadistiques: React.FC = () => {
             } else {
                 setEmptyDates(prev => [...prev, additionalData.dataInici]);
             }
-
-            // Remove the date from loading dates array
-            setLoadingDates(prev => prev.filter(date => date !== additionalData.dataInici));
             return data.success;
         } catch (error: any) {
             temporalMessageShow(null, error.message, 'error');
-            // Remove the date from loading dates array in case of error
-            setLoadingDates(prev => prev.filter(date => date !== additionalData.dataInici));
             return false;
+        } finally {
+            // Remove the date from loading dates array
+            setLoadingDates(prev => prev.filter(date => date !== additionalData.dataInici));
         }
     }, [apiAction, temporalMessageShow, t]);
 
     // Obtenir dades estadístiques per un interval de dies
     const obtenirPerInterval = React.useCallback(async (additionalData: PerInterval): Promise<boolean> => {
         try {
-            // Set global loading to true to show blocking overlay
             setGlobalLoading(true);
 
             const data = await apiAction(null, { code: 'obtenir_per_interval', data: additionalData });
             if (data.success) {
                 showMessage(null, t($ => $.calendari.success_obtenir_dades), 'success');
-                // Actualitzar les dates disponibles després d'obtenir dades per interval
+
+                const datesInRange: string[] = [];
+                let currentDate = dayjs(additionalData.dataInici);
+                const stopDate = dayjs(additionalData.dataFi);
+                while (currentDate.isBefore(stopDate) || currentDate.isSame(stopDate, 'day')) {
+                    datesInRange.push(currentDate.format('YYYY-MM-DD'));
+                    currentDate = currentDate.add(1, 'day');
+                }
+                setLoadingDates(prev => prev.filter(date => !datesInRange.includes(date)));
+                setErrors(prev => prev.filter(error => !datesInRange.includes(error.date)));
+                setEmptyDates(prev => prev.filter(date => !datesInRange.includes(date)));
+                
                 obtenirDatesDisponibles(additionalData.entornAppId);
             } else {
                 showMessage(null, t($ => $.calendari.error_obtenir_dades) + ": " + data.message, 'error');
             }
-
-            // Set global loading to false when done
-            setGlobalLoading(false);
             return data.success;
         } catch (error: any) {
             showMessage(null, error.message, 'error');
-            // Set global loading to false in case of error
-            setGlobalLoading(false);
             return false;
+        } finally {
+            setGlobalLoading(false);
         }
     }, [apiAction, temporalMessageShow, t]);
 
     // Obtenir els dies en que es disposa de dades estadístiques
     const obtenirDatesDisponibles = React.useCallback(async (entornAppId: any): Promise<boolean> => {
-        setEmptyDates([]);
-        setLoadingDates([]);
-        setErrors([]);
         try {
             const data = (await apiReport(
                 null,
@@ -220,6 +226,20 @@ const CalendariEstadistiques: React.FC = () => {
         }
         return true;
     }, [apiReport, temporalMessageShow, t, setDatesDisponiblesError]);
+
+    const handleEntornAppChange = useCallback(async (newEntornAppId: number | '') => {
+        setEntornAppId(newEntornAppId);
+        setDatesAmbDades([]);
+        setEmptyDates([]);
+        setLoadingDates([]);
+        setErrors([]);
+        if (newEntornAppId !== '') {
+            setIsLoadingEntorn(true);
+            obtenirDatesDisponibles(newEntornAppId).finally(() => {
+                setIsLoadingEntorn(false);
+            });
+        }
+    }, [obtenirDatesDisponibles]);
 
     // Carregar les dades estadístiques de que disposem per un dia concret
     const obtenirDadesDia = React.useCallback(async (entornAppId: number, dataFormatada: string): Promise<boolean> => {
@@ -428,14 +448,7 @@ const CalendariEstadistiques: React.FC = () => {
                                 value={entornAppId}
                                 size={"small"}
                                 label={t($ => $.calendari.seleccionar_entorn_app)}
-                                onChange={(e) => {
-                                    const newEntornAppId = e.target.value as number | '';
-                                    setEntornAppId(newEntornAppId);
-                                    // Si s'ha seleccionat un entorn, carregar les dates disponibles
-                                    if (newEntornAppId !== '') {
-                                        obtenirDatesDisponibles(newEntornAppId);
-                                    }
-                                }}
+                                onChange={(e) => { handleEntornAppChange(e.target.value as number | '');}}                                
                             >
                                 <MenuItem value="">{t($ => $.calendari.seleccionar)}</MenuItem>
                                 {entornApps.map((entornApp) => (
@@ -481,6 +494,24 @@ const CalendariEstadistiques: React.FC = () => {
                     }
                 }}
             >
+            {entornAppId === '' ? (
+                <Box textAlign="center" p={4}>
+                    <Icon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }}>calendar_today</Icon>
+                    <Typography variant="h6" color="text.secondary">
+                        {t($ => $.calendari.seleccionar_entorn_app_primer)}
+                    </Typography>
+                    <Typography variant="body2" color="text.disabled" sx={{ mt: 1 }}>
+                        {t($ => $.calendari.seleccionar_entorn_app_description)}
+                    </Typography>
+                </Box>
+            ) : isLoadingEntorn ? (
+                <Box textAlign="center" p={4}>
+                    <CircularProgress size={48} sx={{ mb: 2, color: 'primary.main' }} />
+                    <Typography variant="h6" color="text.secondary">
+                        {t($ => $.calendari.carregant_entorn_app)}
+                    </Typography>
+                </Box>
+            ) : (
                 <FullCalendar
                     locale={currentLanguage}
                     firstDay={1}
@@ -494,21 +525,16 @@ const CalendariEstadistiques: React.FC = () => {
                     events={(entornAppId !== '' && !datesDisponiblesError) ? events.filter(event => event !== null) : []}
                     eventClick={handleEventClick}
                     eventContent={(arg) => {
-                        //If the event has hasContent true, render StatusButton
                         if (arg.event.extendedProps.hasContent) {
-                            const container = document.createElement('div');
-                            container.style.position = "absolute";
-                            container.style.bottom = "-20px";
-                            container.style.width = "100%";
-                            container.style.height = "100%";
-
-                            const root = ReactDOM.createRoot(container);
-                            root.render(<CalendarStatusButton
-                                hasError={arg.event.extendedProps.hasError}
-                                esDisponible={arg.event.extendedProps.esDisponible}
-                                isLoading={arg.event.extendedProps.isLoading}
-                            />);
-                            return { domNodes: [container] };
+                            return (
+                                <div style={{ position: "absolute", bottom: "-20px", width: "100%", height: "100%" }}>
+                                    <CalendarStatusButton
+                                        hasError={arg.event.extendedProps.hasError}
+                                        esDisponible={arg.event.extendedProps.esDisponible}
+                                        isLoading={arg.event.extendedProps.isLoading}
+                                    />
+                                </div>
+                            );
                         }
                         //If the event has HTML content, render it
                         if (arg.event.extendedProps.content) {
@@ -566,7 +592,7 @@ const CalendariEstadistiques: React.FC = () => {
                         center: 'title',
                         end: 'monthButton intervalButton'
                     }}
-                />
+                />)}
             </Box>
             {/* Dialog per carregar dades per interval */}
             <Dialog open={obrirDialog} onClose={() => setObrirDialog(false)}>
@@ -597,7 +623,7 @@ const CalendariEstadistiques: React.FC = () => {
                             setObrirDialog(false);
                         }}
                         variant="contained"
-                        disabled={!dataInici || !dataFi}
+                        disabled={!dataInici || !dataFi || dataFi.isBefore(dataInici)}
                     >
                         {t($ => $.calendari.carregar)}
                     </Button>
