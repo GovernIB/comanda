@@ -68,16 +68,8 @@ export const ParametresGrups: React.FC<{
 
             if (!isSelectionValid(selectedItemIdRef.current, tree) && tree.size > 0) {
                 const firstGrup = tree.keys().next().value!;
-                const firstSubGrups = tree.get(firstGrup)!;
-                let newId: string;
-                let newSubGrup: string | null;
-                if (firstSubGrups.length > 0) {
-                    newId = makeSubGrupId(firstGrup, firstSubGrups[0]);
-                    newSubGrup = firstSubGrups[0];
-                } else {
-                    newId = makeGrupId(firstGrup);
-                    newSubGrup = null;
-                }
+                const newId = makeGrupId(firstGrup);
+                const newSubGrup = null;
                 setSelectedItemId(newId);
                 onChangeRef.current(firstGrup, newSubGrup);
             }

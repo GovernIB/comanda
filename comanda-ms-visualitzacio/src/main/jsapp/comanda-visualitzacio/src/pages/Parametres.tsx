@@ -100,7 +100,7 @@ const Parametres: React.FC = () => {
                             flexGrow: 1,
                             overflowY: 'auto',
                             py: 2,
-                            bgcolor: 'grey.50',
+                            bgcolor: 'background.default',
                         }}
                     >
                         <ParametresItems
