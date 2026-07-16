@@ -111,6 +111,7 @@ const translationEs: translationResourcesType = {
         accessibilitat: "Accesibilidad",
         sitemap: "Mapa del sitio web",
         user: {
+            lastConnection: "Fecha y hora de la última conexión del usuario",
             options: {
                 profile: {
                     title: "Mi perfil",

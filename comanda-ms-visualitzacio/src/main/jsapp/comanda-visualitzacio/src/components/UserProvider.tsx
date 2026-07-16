@@ -44,7 +44,7 @@ const UserProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     }
     const refresh = () => {
         if (apiIsReady) {
-            apiFind({ page: 0, size: 1 }).
+            apiFind({ page: 0, size: 1, perspectives: ["DARRERA_CONNEXIO"] }).
             then((response) => {
                 const user = response.rows[0];
                 if (!isIUsuari(user))

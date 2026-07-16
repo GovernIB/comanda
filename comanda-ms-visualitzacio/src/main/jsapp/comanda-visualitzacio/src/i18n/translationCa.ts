@@ -111,6 +111,7 @@ const translationCa = {
         accessibilitat: "Accessibilitat",
         sitemap: "Mapa del lloc web",
         user: {
+            lastConnection: "Data i hora de la darrera connexió de l'usuari",
             options: {
                 profile: {
                     title: "El meu perfil",

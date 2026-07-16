@@ -111,6 +111,7 @@ const translationEn: translationResourcesType = {
         dimensio: "Dimensions",
         indicador: "Indicators",
         user: {
+            lastConnection: "Date and time of the user's last connection",
             options: {
                 profile: {
                     title: "My profile",
