@@ -234,8 +234,10 @@ const AvisFilter = (props: { onEntornAppFilterDataChange: (data: any) => void, o
                     gap: { xs: 1, sm: 0 },
                 }}>
                     <Grid container spacing={1} sx={{ flexGrow: 1, mr: 1 }}>
-                        <Grid size={6}><FormField name="app" /></Grid>
-                        <Grid size={6}><FormField name="entorn" /></Grid>
+                        <Grid size={6}><FormField name="app"
+                            advancedSearchColumns={[{ field: 'codi', flex: 1, }, { field: 'nom', flex: 2, },]}/></Grid>
+                        <Grid size={6}><FormField name="entorn"
+                            advancedSearchColumns={[{ field: 'codi', flex: 1, }, { field: 'nom', flex: 2, },]}/></Grid>
                     </Grid>
                     <Box sx={{
                             display: 'flex',

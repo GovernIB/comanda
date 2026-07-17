@@ -220,8 +220,10 @@ const MonitorFilter: React.FC<MonitorFilterProps> = ({ onAppChange, onEntornChan
                 gap: { xs: 1, sm: 0 },
             }}>
                 <Grid container spacing={1} sx={{ flexGrow: 1, mr: 1 }}>
-                    <Grid size={{ xs: 12, sm: 6 }}><FormField name={'app'} /></Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}><FormField name={'entorn'} /></Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}><FormField name={'app'}
+                        advancedSearchColumns={[{ field: 'codi', flex: 1, }, { field: 'nom', flex: 2, },]}/></Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}><FormField name={'entorn'}
+                        advancedSearchColumns={[{ field: 'codi', flex: 1, }, { field: 'nom', flex: 2, },]}/></Grid>
                 </Grid>
                 <Box sx={{
                     display: 'flex',
