@@ -33,6 +33,7 @@ import { ErrorInfo, PerData, PerInterval, Temps, DadesDia, CalendarStatusButtonP
 import CalendariDadesDialog from '../components/calendari/CalendariDadesDialog.tsx';
 import { EntornAppModel } from '../types/app.model';
 import PageTitle from '../components/PageTitle.tsx';
+import { StacktraceBlock } from '../components/RickTextDetail.tsx';
 
 export const CalendarStatusButton: React.FC<CalendarStatusButtonProps> = ({
   hasError,
@@ -180,33 +181,66 @@ const CalendariEstadistiques: React.FC = () => {
         try {
             setGlobalLoading(true);
 
+            const datesInRange: string[] = [];
+            let currentDate = dayjs(additionalData.dataInici);
+            const stopDate = dayjs(additionalData.dataFi);
+            while (currentDate.isBefore(stopDate) || currentDate.isSame(stopDate, 'day')) {
+                datesInRange.push(currentDate.format('YYYY-MM-DD'));
+                currentDate = currentDate.add(1, 'day');
+            }
+
             const data = await apiAction(null, { code: 'obtenir_per_interval', data: additionalData });
+
+            setLoadingDates(prev => prev.filter(date => !datesInRange.includes(date)));
+            setErrors(prev => {
+                const keptErrors = prev.filter(e => !datesInRange.includes(e.date));
+                if (data.diesAmbErrors) {
+                    Object.entries(data.diesAmbErrors).forEach(([date, trace]) => {
+                        if (datesInRange.includes(date)) {
+                            keptErrors.push({date,
+                                message: t($ => $.calendari.error_processar_dades_dia),
+                                trace: trace as string | undefined
+                             });
+                        }
+                    });
+                }
+                return keptErrors;
+            });
+            setDatesAmbDades(prev => {
+                const keptDates = prev.filter(date => !datesInRange.includes(date));
+                if (data.diesAmbDades) {
+                    Object.entries(data.diesAmbDades).forEach(([date, hasData]) => {
+                        if (datesInRange.includes(date) && hasData === true) {
+                            keptDates.push(date);
+                        }
+                    });
+                }
+                return keptDates;
+            });
+            setEmptyDates(prev => {
+                const keptEmpty = prev.filter(date => !datesInRange.includes(date));
+                if (data.diesAmbDades) {
+                    Object.entries(data.diesAmbDades).forEach(([date, hasData]) => {
+                        if (datesInRange.includes(date) && hasData === false) {
+                            keptEmpty.push(date);
+                        }
+                    });
+                }
+                return keptEmpty;
+            });
             if (data.success) {
                 showMessage(null, t($ => $.calendari.success_obtenir_dades), 'success');
-
-                const datesInRange: string[] = [];
-                let currentDate = dayjs(additionalData.dataInici);
-                const stopDate = dayjs(additionalData.dataFi);
-                while (currentDate.isBefore(stopDate) || currentDate.isSame(stopDate, 'day')) {
-                    datesInRange.push(currentDate.format('YYYY-MM-DD'));
-                    currentDate = currentDate.add(1, 'day');
-                }
-                setLoadingDates(prev => prev.filter(date => !datesInRange.includes(date)));
-                setErrors(prev => prev.filter(error => !datesInRange.includes(error.date)));
-                setEmptyDates(prev => prev.filter(date => !datesInRange.includes(date)));
-                
-                obtenirDatesDisponibles(additionalData.entornAppId);
             } else {
-                showMessage(null, t($ => $.calendari.error_obtenir_dades) + ": " + data.message, 'error');
+                showMessage(null, data.message || t($ => $.calendari.error_obtenir_dades), 'error');
             }
             return data.success;
         } catch (error: any) {
-            showMessage(null, error.message, 'error');
+            showMessage(null, error.message || t($ => $.calendari.error_obtenir_dades), 'error');
             return false;
         } finally {
             setGlobalLoading(false);
         }
-    }, [apiAction, temporalMessageShow, t]);
+    }, [apiAction, showMessage, t]);
 
     // Obtenir els dies en que es disposa de dades estadístiques
     const obtenirDatesDisponibles = React.useCallback(async (entornAppId: any): Promise<boolean> => {
@@ -645,14 +679,10 @@ const CalendariEstadistiques: React.FC = () => {
                                 <strong>{t($ => $.calendari.missatge)}:</strong> {currentError.message}
                             </Typography>
                             {currentError.trace && (
-                                <Box sx={{ mt: 2 }}>
-                                    <Typography variant="subtitle1" gutterBottom>
-                                        <strong>{t($ => $.calendari.traca)}:</strong>
-                                    </Typography>
-                                    <Box className="error-trace-container">
-                                        <pre>{currentError.trace}</pre>
-                                    </Box>
-                                </Box>
+                                <StacktraceBlock
+                                    title={t($ => $.calendari.traca)+":"}
+                                    value={currentError.trace}
+                                />
                             )}
                         </>
                     )}

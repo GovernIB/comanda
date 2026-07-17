@@ -21,6 +21,7 @@ import es.caib.comanda.model.v1.estadistica.EstadistiquesInfo;
 import es.caib.comanda.model.v1.estadistica.IndicadorDesc;
 import es.caib.comanda.model.v1.estadistica.RegistreEstadistic;
 import es.caib.comanda.model.v1.estadistica.RegistresEstadistics;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -124,8 +125,7 @@ public class EstadisticaHelper {
 
         try {
             processEstadisticaInfo(entornApp, restTemplate, monitorEstadistica);
-            var result = processEstadisticaDades(entornApp, estadisticaUrl, restTemplate, monitorEstadistica, multiplesDies);
-            return FetObtenirResponse.builder().success(true).diesAmbDades(result).build();
+            return processEstadisticaDades(entornApp, estadisticaUrl, restTemplate, monitorEstadistica, multiplesDies);
         } catch (RestClientException ex) {
             handleEstadisticaException(entornApp, monitorEstadistica, ex);
             return FetObtenirResponse.builder().success(false).message(ex.getLocalizedMessage()).build();
@@ -168,9 +168,10 @@ public class EstadisticaHelper {
     }
 
     // Obtenir les dades estadístiques
-    private Map<String, Boolean> processEstadisticaDades(EntornApp entornApp, String estadisticaUrl, RestTemplate restTemplate, MonitorEstadistica monitorEstadistica, boolean multiplesDies) throws RestClientException {
+    private FetObtenirResponse processEstadisticaDades(EntornApp entornApp, String estadisticaUrl, RestTemplate restTemplate, MonitorEstadistica monitorEstadistica, boolean multiplesDies) throws RestClientException {
         Object lock = LOCKS.computeIfAbsent(entornApp.getId(), k -> new Object());
-        Map<String, Boolean> result = new HashMap<>();
+        Map<String, Boolean> diesAmbDates = new HashMap<>();
+        Map<String, String> diesAmbErrors = new HashMap<>();
 //        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         synchronized (lock) {
@@ -186,8 +187,12 @@ public class EstadisticaHelper {
                 monitorEstadistica.endDadesAction();
                 // Guardar les dades estadístiques
                 registresEstadistics.forEach(r -> {
-                    crearEstadistiques(r, entornApp.getId());
-                    result.put(r.getTemps().format(formatter), getRegistreEstadisticMessage(r));
+                    String savedBD = crearEstadistiques(r, entornApp.getId());
+                    if (Objects.isNull(savedBD)) {
+                        diesAmbDates.put(r.getTemps().format(formatter), getRegistreEstadisticMessage(r));
+                    } else {
+                        diesAmbErrors.put(r.getTemps().format(formatter), savedBD);
+                    }
                 });
             } else {
                 RegistresEstadistics registresEstadistics;
@@ -202,9 +207,22 @@ public class EstadisticaHelper {
                 }
                 monitorEstadistica.endDadesAction();
                 // Guardar les dades estadístiques
-                crearEstadistiques(registresEstadistics, entornApp.getId());
-                result.put(registresEstadistics.getTemps().format(formatter), getRegistreEstadisticMessage(registresEstadistics));
+                String savedBD = crearEstadistiques(registresEstadistics, entornApp.getId());
+                if (Objects.isNull(savedBD)) {
+                    diesAmbDates.put(registresEstadistics.getTemps().format(formatter), getRegistreEstadisticMessage(registresEstadistics));
+                } else {
+                    diesAmbErrors.put(registresEstadistics.getTemps().format(formatter), savedBD);
+                }
             }
+        }
+        FetObtenirResponse result = new FetObtenirResponse();
+        result.setDiesAmbDades(diesAmbDates);
+        result.setDiesAmbErrors(diesAmbErrors);
+        result.setSuccess(diesAmbErrors.isEmpty());
+        if (Boolean.FALSE.equals(result.getSuccess())) {
+            result.setMessage(I18nUtil.getInstance().getI18nMessage(
+                    "es.caib.comanda.estadistica.logic.helper.EstadisticaHelper.processEstadisticaDades.dies.amb.errors.message",
+                    diesAmbErrors.size()));
         }
         return result;
     }
@@ -381,9 +399,15 @@ public class EstadisticaHelper {
      * @param registresEstadistics Objecte que conté els registres estadístics, incloent-hi informació temporal i els fets a processar.
      * @param entornAppId Identificador de l'entorn d'aplicació amb el qual s'associen les estadístiques creades.
      */
-    private void crearEstadistiques(RegistresEstadistics registresEstadistics, Long entornAppId) {
-        TempsEntity temps = crearTemps(registresEstadistics.getTemps());
-        crearFets(registresEstadistics.getFets(), temps, entornAppId);
+    private String crearEstadistiques(RegistresEstadistics registresEstadistics, Long entornAppId) {
+        try {
+            TempsEntity temps = crearTemps(registresEstadistics.getTemps());
+            crearFets(registresEstadistics.getFets(), temps, entornAppId);
+            return null;
+        } catch (Exception ex) {
+            log.error("Error al crear estadistiques", ex);
+            return Objects.nonNull(ex.getMessage()) ? ex.getMessage() : "";
+        }
     }
 
     /**

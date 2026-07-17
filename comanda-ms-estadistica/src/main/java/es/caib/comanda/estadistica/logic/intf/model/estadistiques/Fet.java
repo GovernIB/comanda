@@ -119,5 +119,6 @@ public class Fet extends BaseResource<Long> {
         private Boolean success;
         private String message;
         private Map<String, Boolean> diesAmbDades;
+        private Map<String, String> diesAmbErrors;
     }
 }

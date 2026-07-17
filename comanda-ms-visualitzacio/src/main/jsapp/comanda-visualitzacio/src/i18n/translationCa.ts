@@ -1169,6 +1169,7 @@ const translationCa = {
         error_dades_disponibles: "Error al obtenir els dies amb dades estadístiques disponibles",
         error_dades_dia: "Error al obtenir les dades estadístiques del dia",
         error_obtenir_dates_mes: "No s'han pogut determinar les dates del mes actual",
+        error_processar_dades_dia: "Error al procesar les dades del día",
         carregant: "Carregant",
         carregant_dades: "Carregant dades estadístiques...",
         modal_dades_dia: "Dades disponibles del dia",

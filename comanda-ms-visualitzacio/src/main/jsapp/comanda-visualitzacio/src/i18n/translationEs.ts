@@ -1169,6 +1169,7 @@ const translationEs: translationResourcesType = {
         error_dades_disponibles: "Error al obtener los dias con datos estadísticos disponibles",
         error_dades_dia: "Error al obtener los datos estadísticos del dia",
         error_obtenir_dates_mes: "No se han podido determinar las fechas del mes actual",
+        error_processar_dades_dia: "Error al procesar los datos del día",
         carregant: "Cargando",
         carregant_dades: "Cargando datos estadísticos...",
         modal_dades_dia: "Datos disponibles del día",
