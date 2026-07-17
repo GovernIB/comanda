@@ -1117,6 +1117,25 @@ const AlarmaConfig: React.FC<{
                 position: 1,
                 element: loadingElement,
             },
+            isCurrentUserAdmin && adminView && otherUsers.length > 0
+                ? {
+                    position: 2,
+                    element: (
+                        <Button
+                            onClick={() => setShowUsersAlarms(!showUsersAlarms)}
+                            variant={showUsersAlarms ? 'contained' : 'outlined'}
+                            title={
+                                showUsersAlarms
+                                    ? t($ => $.page.alarmaConfig.filter.showUsersAlarmsDisabled)
+                                    : t($ => $.page.alarmaConfig.filter.showUsersAlarmsEnabled)
+                            }
+                            sx={{ mr: 2 }}
+                        >
+                            <Icon>group</Icon>
+                        </Button>
+                    ),
+                }
+                : null,
             isCurrentUserAdmin
                 ? {
                       position: 2,
@@ -1132,25 +1151,6 @@ const AlarmaConfig: React.FC<{
                               sx={{ mr: 2 }}
                           >
                               <Icon>{adminView ? 'admin_panel_settings' : 'account_circle'}</Icon>
-                          </Button>
-                      ),
-                  }
-                : null,
-            isCurrentUserAdmin && adminView && otherUsers.length > 0
-                ? {
-                      position: 2,
-                      element: (
-                          <Button
-                              onClick={() => setShowUsersAlarms(!showUsersAlarms)}
-                              variant={showUsersAlarms ? 'contained' : 'outlined'}
-                              title={
-                                  showUsersAlarms
-                                      ? t($ => $.page.alarmaConfig.filter.showUsersAlarmsDisabled)
-                                      : t($ => $.page.alarmaConfig.filter.showUsersAlarmsEnabled)
-                              }
-                              sx={{ mr: 2 }}
-                          >
-                              <Icon>group</Icon>
                           </Button>
                       ),
                   }
