@@ -30,7 +30,8 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @ResourceConfig(
-		descriptionField = "nom",
+		descriptionField = "missatge",
+        quickFilterFields = {"missatge"},
 		accessConstraints = {
 				@ResourceAccessConstraint(
 						type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,
