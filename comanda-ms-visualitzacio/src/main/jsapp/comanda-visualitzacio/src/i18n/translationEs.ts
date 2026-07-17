@@ -147,8 +147,8 @@ const translationEs: translationResourcesType = {
             senseFiltres: "Sin filtros",
             nd: "N/D",
             refresh: {
-                last: "Último refresco",
-                next: "Próximo refresco en",
+                last: "Última actualización",
+                next: "Próxima actualización en",
             },
             alarmes: {
                 configAlarmes: "Config. alarmas",
