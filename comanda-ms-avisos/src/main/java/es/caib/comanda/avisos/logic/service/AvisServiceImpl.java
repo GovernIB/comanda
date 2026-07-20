@@ -197,7 +197,11 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
         @Override
         public void applySingle(String code, AvisEntity entity, Avis resource) throws PerspectiveApplicationException {
             EntornApp entornApp = avisClientHelper.entornAppFindById(entity.getEntornAppId());
-            resource.setTreePath(new String[]{entornApp.getApp().getNom(), entornApp.getEntorn().getNom(), resource.getIdentificador()});
+            if (entornApp != null) {
+                resource.setTreePath(new String[]{entornApp.getApp().getNom(), entornApp.getEntorn().getNom(), resource.getIdentificador()});
+            } else {
+                resource.setTreePath(new String[]{"INVALID_ENTORNAPP " + entity.getEntornAppId(), resource.getIdentificador()});
+            }
         }
     }
 

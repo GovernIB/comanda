@@ -498,6 +498,7 @@ const translationEn: translationResourcesType = {
                         }
                     }
                 },
+                entornAppInvalid: "Deleted application environment",
             },
             action: {
                 obrir: "Open notice",

@@ -498,6 +498,7 @@ const translationCa = {
                         }
                     }
                 },
+                entornAppInvalid: "Entorn de l'aplicació esborrat",
             },
             action: {
                 obrir: "Obrir avís",

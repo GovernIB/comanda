@@ -311,6 +311,8 @@ const dataGridCommonColumns: MuiDataGridColDef[] = [{
 const dataGridPerspectives = ['PATH', 'ENTORN_APP', 'LLEGIT'];
 const dataGridSortModel: GridSortModel = [{ field: 'dataInici', sort: 'asc' }];
 
+const INVALID_ENTORNAPP = "INVALID_ENTORNAPP";
+
 const Avis = () => {
     const { t } = useTranslation();
     const { t: tLib } = useBaseAppContext();
@@ -338,6 +340,8 @@ const Avis = () => {
         }
     }, [apiIsReady]);
 
+    const treePathFormatInvalidEntornApp = (invalidPath: string) =>
+        t($ => $.page.avisos.grid.entornAppInvalid) + ` [ID: ${invalidPath.split(' ')[1]}]`;
     const {
         treeView,
         treeViewSwitch,
@@ -350,7 +354,7 @@ const Avis = () => {
         false,
         false,
         {
-            valueFormatter: (value: any, row: any) => row?.id ? row?.nom : value,
+            valueFormatter: (value: any, row: any) => row?.id ? row?.nom : value?.startsWith?.(INVALID_ENTORNAPP) ? treePathFormatInvalidEntornApp(value) : value,
             renderCell: (params: any) => {
                 const apiRef = useGridApiContext();
                 const rowTree = useGridSelector(apiRef, gridRowTreeSelector);

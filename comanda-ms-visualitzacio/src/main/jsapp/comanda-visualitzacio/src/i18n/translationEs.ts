@@ -498,6 +498,7 @@ const translationEs: translationResourcesType = {
                         }
                     }
                 },
+                entornAppInvalid: "Entorno de la aplicación eliminado",
             },
             action: {
                 obrir: "Abrir aviso",
