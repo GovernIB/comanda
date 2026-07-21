@@ -3,6 +3,7 @@ package es.caib.comanda.ms.configuracio.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
+import es.caib.comanda.configuracio.logic.helper.EntornAppHelper;
 import es.caib.comanda.configuracio.logic.intf.model.App;
 import es.caib.comanda.configuracio.logic.intf.model.App.AppImportForm;
 import es.caib.comanda.configuracio.logic.intf.model.export.AppExport;
@@ -50,6 +51,7 @@ public class AppImportExportTest {
                                       AppRepository appRepository,
                                       EntornRepository entornRepository,
                                       EntornAppRepository entornAppRepository,
+                                      EntornAppHelper entornAppHelper,
                                       AuthenticationHelper authenticationHelper,
                                       HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
                                       AclServiceClient aclServiceClient,
@@ -60,6 +62,7 @@ public class AppImportExportTest {
                     appRepository,
                     entornRepository,
                     entornAppRepository,
+                    entornAppHelper,
                     authenticationHelper,
                     httpAuthorizationHeaderHelper,
                     aclServiceClient,
@@ -82,6 +85,7 @@ public class AppImportExportTest {
     @Mock private AppRepository appRepository;
     @Mock private EntornRepository entornRepository;
     @Mock private EntornAppRepository entornAppRepository;
+    @Mock private EntornAppHelper entornAppHelper;
     @Mock private AuthenticationHelper authenticationHelper;
     @Mock private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     @Mock private AclServiceClient aclServiceClient;
@@ -100,6 +104,7 @@ public class AppImportExportTest {
                 appRepository,
                 entornRepository,
                 entornAppRepository,
+                entornAppHelper,
                 authenticationHelper,
                 httpAuthorizationHeaderHelper,
                 aclServiceClient,

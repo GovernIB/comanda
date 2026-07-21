@@ -5,6 +5,7 @@ import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
+import es.caib.comanda.configuracio.logic.helper.EntornAppHelper;
 import es.caib.comanda.configuracio.logic.intf.model.App;
 import es.caib.comanda.configuracio.logic.intf.model.App.AppImportForm;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
@@ -63,6 +64,7 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
     private final AppRepository appRepository;
     private final EntornRepository entornRepository;
     private final EntornAppRepository entornAppRepository;
+    private final EntornAppHelper entornAppHelper;
     private final AuthenticationHelper authenticationHelper;
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     private final AclServiceClient aclServiceClient;
@@ -410,6 +412,9 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
     protected void afterDelete(AppEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
         super.afterDelete(entity, answers);
         cacheHelper.evictCacheItem(APP_CACHE, entity.getId().toString());
+        for (EntornAppEntity entornApp : entity.getEntornApps()) {
+            entornAppHelper.logicAfterDelete(entornApp.getId());
+        }
     }
 
     public static class EntornAppsPerspectiveApplicator implements PerspectiveApplicator<AppEntity, App> {

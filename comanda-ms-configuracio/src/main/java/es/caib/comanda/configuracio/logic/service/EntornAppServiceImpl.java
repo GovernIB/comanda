@@ -5,6 +5,7 @@ import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
+import es.caib.comanda.configuracio.logic.helper.EntornAppHelper;
 import es.caib.comanda.configuracio.logic.intf.model.*;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.EntornAppExistsParameterAction;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp.EntornAppPingAction;
@@ -20,7 +21,6 @@ import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
-import es.caib.comanda.ms.logic.intf.event.EntornAppEsborratEvent;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
@@ -30,15 +30,11 @@ import es.caib.comanda.ms.logic.intf.model.ReportFileType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
-import es.caib.comanda.ms.sse.ComandaSseEvent;
-import es.caib.comanda.ms.sse.ComandaSseEventTypes;
-import es.caib.comanda.ms.sse.ComandaSsePublishRequest;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
 import org.springframework.http.*;
@@ -54,7 +50,6 @@ import javax.validation.Validator;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.net.URI;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -82,14 +77,13 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     private final EntornAppHistRepository entornAppHistRepository;
     private final AppInfoHelper appInfoHelper;
     private final CacheHelper cacheHelper;
-    private final ConfiguracioSchedulerService schedulerService;
+    private final EntornAppHelper entornAppHelper;
     private final AuthenticationHelper authenticationHelper;
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     private final AclServiceClient aclServiceClient;
     private final RestTemplate restTemplate;
     private final Validator validator;
     private final ResourceEntityMappingHelper resourceEntityMappingHelper;
-    private final ApplicationEventPublisher eventPublisher;
     private final Environment environment;
 
     @PostConstruct
@@ -155,7 +149,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     protected void afterCreateSave(EntornAppEntity entity, EntornApp resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
         super.afterCreateSave(entity, resource, answers, anyOrderChanged);
 
-        publishEntornAppChanged(entity.getId());
+        entornAppHelper.publishEntornAppChanged(entity.getId());
     }
 
     @Override
@@ -163,27 +157,13 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
 
         cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entity.getId().toString());
-        publishEntornAppChanged(entity.getId());
+        entornAppHelper.publishEntornAppChanged(entity.getId());
     }
 
     @Override
     protected void afterDelete(EntornAppEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
         super.afterDelete(entity, answers);
-
-        cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entity.getId().toString());
-        eventPublisher.publishEvent(new EntornAppEsborratEvent(entity.getId()));
-        publishEntornAppChanged(entity.getId());
-    }
-
-    /**
-     * Notifica als clients SSE connectats que la llista d'entorns-app ha canviat (alta, baixa,
-     * modificació o activació/desactivació), ja sigui d'una app nova o d'una ja existent, perquè
-     * puguin refer la llista sencera (a diferència de salut.changed, que només actualitza un
-     * entorn-app ja mostrat).
-     */
-    private void publishEntornAppChanged(Long entornAppId) {
-        eventPublisher.publishEvent(new ComandaSsePublishRequest(
-            new ComandaSseEvent(ComandaSseEventTypes.ENTORN_APP_CHANGED, entornAppId, LocalDateTime.now())));
+        entornAppHelper.logicAfterDelete(entity.getId());
     }
 
     // ACCIONS
@@ -344,7 +324,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entity.getId().toString());
             // No passa per afterUpdateSave (l'acció no fa servir el flux normal d'actualització),
             // cal notificar-ho explícitament perquè el dashboard de Salut es refresqui via SSE.
-            publishEntornAppChanged(entity.getId());
+            entornAppHelper.publishEntornAppChanged(entity.getId());
             return resourceEntityMappingHelper.entityToResource(entity, EntornApp.class);
         }
     }

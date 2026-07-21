@@ -3,10 +3,9 @@ package es.caib.comanda.ms.configuracio.service;
 import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
+import es.caib.comanda.configuracio.logic.helper.EntornAppHelper;
 import es.caib.comanda.configuracio.logic.intf.model.Entorn;
 import es.caib.comanda.configuracio.logic.service.EntornServiceImpl;
-import es.caib.comanda.configuracio.persist.entity.AppEntity;
-import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornEntity;
 import es.caib.comanda.configuracio.persist.projection.EntornPermissionQueryProjection;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
@@ -58,6 +57,9 @@ public class EntornServiceImplTest {
     @Mock
     private AclServiceClient aclServiceClient;
 
+    @Mock
+    private EntornAppHelper entornAppHelper;
+
     @InjectMocks
     private EntornServiceImpl entornService;
 
@@ -70,7 +72,7 @@ public class EntornServiceImplTest {
         entornEntity = new EntornEntity();
         entornEntity.setId(1L);
         entornEntity.setNom("Test Entorn");
-        
+
         entornResource = new Entorn();
         entornResource.setId(1L);
         entornResource.setNom("Test Entorn");
@@ -120,7 +122,7 @@ public class EntornServiceImplTest {
                 .thenReturn(ResponseEntity.ok(Set.of("1")));
         when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), eq(List.of(PermissionEnum.READ)), eq("anna"), eq(List.of("COM_USER")), eq("Bearer test")))
                 .thenReturn(ResponseEntity.ok(Collections.emptySet()));
-        
+
         EntornPermissionQueryProjection projection = mock(EntornPermissionQueryProjection.class);
         lenient().when(projection.getEntornAppId()).thenReturn(100L);
         lenient().when(projection.getAppId()).thenReturn(1L);
@@ -139,7 +141,7 @@ public class EntornServiceImplTest {
                 .thenReturn(ResponseEntity.ok(Collections.emptySet()));
         when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), eq(List.of(PermissionEnum.READ)), eq("anna"), eq(List.of("COM_USER")), eq("Bearer test")))
                 .thenReturn(ResponseEntity.ok(Set.of("100")));
-        
+
         EntornPermissionQueryProjection projection = mock(EntornPermissionQueryProjection.class);
         lenient().when(projection.getEntornAppId()).thenReturn(100L);
         lenient().when(projection.getAppId()).thenReturn(99L);

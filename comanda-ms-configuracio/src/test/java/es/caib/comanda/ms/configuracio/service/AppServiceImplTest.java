@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
+import es.caib.comanda.configuracio.logic.helper.EntornAppHelper;
 import es.caib.comanda.configuracio.logic.intf.model.App;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
 import es.caib.comanda.configuracio.logic.mapper.AppExportMapper;
@@ -47,21 +48,22 @@ public class AppServiceImplTest {
 
     // Test subclass to expose protected methods
     static class TestableAppServiceImpl extends AppServiceImpl {
-        
+
         public TestableAppServiceImpl(CacheHelper cacheHelper,
                                       ObjectMapper objectMapper,
                                       AppExportMapper appExportMapper,
                                       AppRepository appRepository,
                                       EntornRepository entornRepository,
                                       EntornAppRepository entornAppRepository,
+                                      EntornAppHelper entornAppHelper,
                                       AuthenticationHelper authenticationHelper,
                                       HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
                                       AclServiceClient aclServiceClient,
                                       ApplicationEventPublisher eventPublisher) {
             super(cacheHelper, objectMapper, appExportMapper, appRepository, entornRepository, entornAppRepository,
-                    authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient, eventPublisher);
+                entornAppHelper, authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient, eventPublisher);
         }
-        
+
         @Override
         public void afterConversion(AppEntity entity, App resource) {
             super.afterConversion(entity, resource);
@@ -79,7 +81,7 @@ public class AppServiceImplTest {
 
     @Mock
     private CacheHelper cacheHelper;
-    
+
     @Mock
     private ObjectMapper objectMapper;
 
@@ -94,6 +96,9 @@ public class AppServiceImplTest {
 
     @Mock
     private EntornAppRepository entornAppRepository;
+
+    @Mock
+    private EntornAppHelper entornAppHelper;
 
     @Mock
     private AuthenticationHelper authenticationHelper;
@@ -124,11 +129,12 @@ public class AppServiceImplTest {
                 appRepository,
                 entornRepository,
                 entornAppRepository,
+                entornAppHelper,
                 authenticationHelper,
                 httpAuthorizationHeaderHelper,
                 aclServiceClient,
                 eventPublisher);
-        
+
         // Setup test data
         appEntity = new AppEntity();
         appEntity.setId(1L);
@@ -206,6 +212,7 @@ public class AppServiceImplTest {
         appService.afterUpdateSave(appEntity, appResource, answers, false);
 
         verify(cacheHelper, times(1)).evictCacheItem(APP_CACHE, appEntity.getId().toString());
+        verify(eventPublisher).publishEvent(any(ComandaSsePublishRequest.class));
     }
 
     @Test

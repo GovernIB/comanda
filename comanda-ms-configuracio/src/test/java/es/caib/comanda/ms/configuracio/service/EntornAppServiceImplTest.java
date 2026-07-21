@@ -5,19 +5,16 @@ import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
+import es.caib.comanda.configuracio.logic.helper.EntornAppHelper;
 import es.caib.comanda.configuracio.logic.intf.model.*;
-import es.caib.comanda.configuracio.logic.service.ConfiguracioSchedulerService;
 import es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl;
 import es.caib.comanda.configuracio.persist.entity.*;
 import es.caib.comanda.configuracio.persist.repository.*;
 import es.caib.comanda.ms.logic.helper.*;
 import es.caib.comanda.model.v1.log.FitxerInfo;
 import es.caib.comanda.model.v1.salut.AppInfo;
-import es.caib.comanda.ms.logic.intf.event.EntornAppEsborratEvent;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
-import es.caib.comanda.ms.sse.ComandaSseEventTypes;
-import es.caib.comanda.ms.sse.ComandaSsePublishRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,11 +22,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.domain.Specification;
@@ -58,7 +53,7 @@ public class EntornAppServiceImplTest {
 
     // Test subclass to expose protected methods
     static class TestableEntornAppServiceImpl extends EntornAppServiceImpl {
-        
+
         public TestableEntornAppServiceImpl(AppIntegracioRepository appIntegracioRepository,
                                           SubsistemaRepository subsistemaRepository,
                                           ContextRepository contextRepository,
@@ -66,18 +61,17 @@ public class EntornAppServiceImplTest {
                                           EntornAppHistRepository entornAppHistRepository,
                                           AppInfoHelper appInfoHelper,
                                           CacheHelper cacheHeper,
-                                          ConfiguracioSchedulerService schedulerService,
+                                          EntornAppHelper entornAppHelper,
                                           AuthenticationHelper authenticationHelper,
                                           HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
                                           AclServiceClient aclServiceClient,
                                           RestTemplate restTemplate,
                                           Validator validator,
                                           ResourceEntityMappingHelper resourceEntityMappingHelper,
-                                          ApplicationEventPublisher eventPublisher,
                                           Environment environment) {
             super(appIntegracioRepository, subsistemaRepository, contextRepository, entornAppRepository, entornAppHistRepository, appInfoHelper,
-                    cacheHeper, schedulerService, authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient,
-                    restTemplate, validator, resourceEntityMappingHelper, eventPublisher, environment);
+                    cacheHeper, entornAppHelper, authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient,
+                    restTemplate, validator, resourceEntityMappingHelper, environment);
         }
 
         @Override
@@ -110,7 +104,7 @@ public class EntornAppServiceImplTest {
 
     @Mock
     private SubsistemaRepository subsistemaRepository;
-    
+
     @Mock
     private ContextRepository contextRepository;
 
@@ -133,7 +127,7 @@ public class EntornAppServiceImplTest {
     private AclServiceClient aclServiceClient;
 
     @Mock
-    private ConfiguracioSchedulerService schedulerService;
+    private EntornAppHelper entornAppHelper;
 
     @Mock
     private CacheHelper cacheHelper;
@@ -146,9 +140,6 @@ public class EntornAppServiceImplTest {
 
     @Mock
     private ResourceEntityMappingHelper resourceEntityMappingHelper;
-
-    @Mock
-    private ApplicationEventPublisher eventPublisher;
 
     @Mock
     private I18nUtil i18nUtil;
@@ -180,27 +171,26 @@ public class EntornAppServiceImplTest {
             entornAppHistRepository,
             appInfoHelper,
             cacheHelper,
-            schedulerService,
+            entornAppHelper,
             authenticationHelper,
             keycloakHelper,
             aclServiceClient,
             restTemplate,
             validator,
             resourceEntityMappingHelper,
-            eventPublisher,
             environment
         );
         ReflectionTestUtils.setField(entornAppService, "objectMappingHelper", objectMappingHelper);
-        
+
         // Setup test data
         AppEntity appEntity = new AppEntity();
         appEntity.setId(1L);
         appEntity.setNom("Test App");
-        
+
         EntornEntity entornEntity = new EntornEntity();
         entornEntity.setId(1L);
         entornEntity.setNom("Test Entorn");
-        
+
         entornAppEntity = new EntornAppEntity();
         entornAppEntity.setId(1L);
         entornAppEntity.setApp(appEntity);
@@ -208,10 +198,10 @@ public class EntornAppServiceImplTest {
         entornAppEntity.setInfoUrl("http://test.com/info");
         entornAppEntity.setVersio("1.0.0");
         entornAppEntity.setActiva(true);
-        
+
         entornAppResource = new EntornApp();
         entornAppResource.setId(1L);
-        
+
         // Setup integracions
         AppIntegracioEntity appIntegracio = new AppIntegracioEntity();
         IntegracioEntity integracio = new IntegracioEntity();
@@ -221,10 +211,10 @@ public class EntornAppServiceImplTest {
         appIntegracio.setIntegracio(integracio);
         appIntegracio.setActiva(true);
         appIntegracio.setEntornApp(entornAppEntity);
-        
+
         integracions = new ArrayList<>();
         integracions.add(appIntegracio);
-        
+
         // Setup subsistemes
         AppSubsistemaEntity subsistema = new AppSubsistemaEntity();
         subsistema.setId(1L);
@@ -232,7 +222,7 @@ public class EntornAppServiceImplTest {
         subsistema.setNom("Subsistema 1");
         subsistema.setActiu(true);
         subsistema.setEntornApp(entornAppEntity);
-        
+
         subsistemes = new ArrayList<>();
         subsistemes.add(subsistema);
 
@@ -259,18 +249,18 @@ public class EntornAppServiceImplTest {
         EntornAppServiceImpl.IntegracionsSubsistemesContextsPerspectiveApplicator applicator =
                 entornAppService.new IntegracionsSubsistemesContextsPerspectiveApplicator();
         applicator.applySingle(EntornApp.PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS, entornAppEntity, entornAppResource);
-        
+
         // Verify that the repositories were called
         verify(integracioRepository).findByEntornApp(entornAppEntity);
         verify(subsistemaRepository).findByEntornApp(entornAppEntity);
-        
+
         // Verify that the resource was updated correctly
         assertNotNull(entornAppResource.getIntegracions());
         assertEquals(1, entornAppResource.getIntegracions().size());
         AppIntegracio appIntegracio = entornAppResource.getIntegracions().get(0);
         assertEquals("INT1", appIntegracio.getCodi());
         assertTrue(appIntegracio.isActiva());
-        
+
         assertNotNull(entornAppResource.getSubsistemes());
         assertEquals(1, entornAppResource.getSubsistemes().size());
         AppSubsistema appSubsistema = entornAppResource.getSubsistemes().get(0);
@@ -288,11 +278,7 @@ public class EntornAppServiceImplTest {
         entornAppService.afterUpdateSave(entornAppEntity, entornAppResource, answers, false);
 
         verify(cacheHelper).evictCacheItem(ENTORN_APP_CACHE, entornAppEntity.getId().toString());
-
-        ArgumentCaptor<ComandaSsePublishRequest> captor = ArgumentCaptor.forClass(ComandaSsePublishRequest.class);
-        verify(eventPublisher).publishEvent(captor.capture());
-        assertEquals(ComandaSseEventTypes.ENTORN_APP_CHANGED, captor.getValue().getEvent().getType());
-        assertEquals(entornAppEntity.getId(), captor.getValue().getEvent().getPayload());
+        verify(entornAppHelper).publishEntornAppChanged(entornAppEntity.getId());
     }
 
     @Test
@@ -313,42 +299,7 @@ public class EntornAppServiceImplTest {
         assertEquals(!activaAbans, entornAppEntity.isActiva());
         assertSame(entornAppResource, result);
         verify(cacheHelper).evictCacheItem(ENTORN_APP_CACHE, entornAppEntity.getId().toString());
-
-        ArgumentCaptor<ComandaSsePublishRequest> captor = ArgumentCaptor.forClass(ComandaSsePublishRequest.class);
-        verify(eventPublisher).publishEvent(captor.capture());
-        assertEquals(ComandaSseEventTypes.ENTORN_APP_CHANGED, captor.getValue().getEvent().getType());
-        assertEquals(entornAppEntity.getId(), captor.getValue().getEvent().getPayload());
-    }
-
-    @Test
-    void testAfterCreateSave_publicaEsdevenimentSseDeCanviDeLlistaEntornApp() {
-        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
-
-        entornAppService.afterCreateSave(entornAppEntity, entornAppResource, answers, false);
-
-        ArgumentCaptor<ComandaSsePublishRequest> captor = ArgumentCaptor.forClass(ComandaSsePublishRequest.class);
-        verify(eventPublisher).publishEvent(captor.capture());
-        assertEquals(ComandaSseEventTypes.ENTORN_APP_CHANGED, captor.getValue().getEvent().getType());
-        assertEquals(entornAppEntity.getId(), captor.getValue().getEvent().getPayload());
-    }
-
-    @Test
-    void testAfterDelete_evictaCacheIPublicaEsborratIEsdevenimentSse() {
-        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
-
-        entornAppService.afterDelete(entornAppEntity, answers);
-
-        verify(cacheHelper).evictCacheItem(ENTORN_APP_CACHE, entornAppEntity.getId().toString());
-
-        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
-        verify(eventPublisher, times(2)).publishEvent(captor.capture());
-        List<Object> publishedEvents = captor.getAllValues();
-        assertTrue(publishedEvents.stream().anyMatch(event ->
-                event instanceof EntornAppEsborratEvent
-                        && entornAppEntity.getId().equals(((EntornAppEsborratEvent) event).getEntornAppId())));
-        assertTrue(publishedEvents.stream().anyMatch(event ->
-                event instanceof ComandaSsePublishRequest
-                        && ComandaSseEventTypes.ENTORN_APP_CHANGED.equals(((ComandaSsePublishRequest) event).getEvent().getType())));
+        verify(entornAppHelper).publishEntornAppChanged(entornAppEntity.getId());
     }
 
     @Test

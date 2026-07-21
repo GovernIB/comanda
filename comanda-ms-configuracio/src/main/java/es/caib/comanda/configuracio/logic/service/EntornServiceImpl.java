@@ -4,8 +4,10 @@ import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
+import es.caib.comanda.configuracio.logic.helper.EntornAppHelper;
 import es.caib.comanda.configuracio.logic.intf.model.Entorn;
 import es.caib.comanda.configuracio.logic.intf.service.EntornService;
+import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornEntity;
 import es.caib.comanda.configuracio.persist.projection.EntornPermissionQueryProjection;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
@@ -25,7 +27,6 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -47,6 +48,7 @@ public class EntornServiceImpl extends BaseMutableResourceService<Entorn, Long, 
     private final AuthenticationHelper authenticationHelper;
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     private final AclServiceClient aclServiceClient;
+    private final EntornAppHelper entornAppHelper;
 
     @Override
     protected String additionalSpringFilter(String currentSpringFilter, String[] namedQueries) {
@@ -100,4 +102,13 @@ public class EntornServiceImpl extends BaseMutableResourceService<Entorn, Long, 
         cacheHelper.evictCacheItem(ENTORN_CACHE, entity.getId().toString());
     }
 
+    @Override
+    protected void afterDelete(EntornEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        super.afterDelete(entity, answers);
+
+        cacheHelper.evictCacheItem(ENTORN_CACHE, entity.getId().toString());
+        for (EntornAppEntity entornApp : entity.getEntornAppEntities()) {
+            entornAppHelper.logicAfterDelete(entornApp.getId());
+        }
+    }
 }
