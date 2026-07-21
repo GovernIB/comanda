@@ -304,7 +304,8 @@ const useSalutEntornAppFilter = ({
         setOpen(false);
     };
     const netejar = () => {
-        filterRef?.current?.clear?.();
+        // S'usa reset enlloc de clear per a posar a null el filtre sencer, ignorant l'initialData donat
+        filterRef?.current?.reset?.();
     };
 
     const handleOpen = () => {

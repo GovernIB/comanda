@@ -140,13 +140,12 @@ export const useAppEntries = () => {
                 icon: 'storage',
                 resourceName: 'comandaCache',
             },
-            {
+            ...(isUserAdmin ? [{
                 id: 'broker',
                 title: t($ => $.menu.broker),
                 to: '/broker',
                 icon: 'send_time_extension',
-                resourceName: 'broker',
-            },
+            }] : []),
             {
                 id: 'tasquesBackground',
                 title: t($ => $.menu.tasquesBackground),
