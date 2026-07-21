@@ -850,6 +850,10 @@ const translationEn: translationResourcesType = {
                     reintentarSuccess: "Cleanup successfully re-queued",
                     reintentarError: "Error retrying cleanup",
                 },
+                operacioEnum: {
+                    netejaEntornApp: "Error while trying to delete data associated with application environment",
+                    netejaEntornAppCompletat: "Retry has been executed to delete data associated with the application environment.",
+                },
             },
             modulEnum: {
                 salut: "Health",

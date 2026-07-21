@@ -72,6 +72,12 @@ import java.time.LocalDateTime;
                 )
         },
         artifacts = {
+                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Monitor.MONITOR_DELETE_ENTORN_APP_BY_MODUL_ACTION, requiresId = true,
+                    accessConstraints = {
+                        @ResourceAccessConstraint(
+                            type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                            roles = { BaseConfig.ROLE_ADMIN }
+                        )}),
                 @ResourceArtifact(type = ResourceArtifactType.FILTER, code = Monitor.FILTER_MONITOR, formClass = Monitor.FrontFilter.class),
                 @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Monitor.PERSPECTIVE_ENTORN_APP),
         }
@@ -79,6 +85,7 @@ import java.time.LocalDateTime;
 @FieldNameConstants
 public class Monitor extends BaseResource<Long> {
 
+    public final static String MONITOR_DELETE_ENTORN_APP_BY_MODUL_ACTION = "delete_entorn_app_by_modul";
     public static final String FILTER_MONITOR = "FILTER";
     public static final String PERSPECTIVE_ENTORN_APP = "ENTORN_APP";
     public static final String FILTER_BY_APP_NAMEDFILTER = "filterByApp:";

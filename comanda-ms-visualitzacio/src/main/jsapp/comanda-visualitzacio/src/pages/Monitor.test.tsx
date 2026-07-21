@@ -8,6 +8,10 @@ const mocks = vi.hoisted(() => ({
     filterMock: vi.fn(),
     showDialogMock: vi.fn(),
     setFieldValueMock: vi.fn(),
+    temporalMessageShowMock: vi.fn(),
+    apiActionMock: vi.fn().mockResolvedValue(true),
+    getErrorMessageMock: vi.fn((error) => error?.message || 'Error desconocido'),
+
     tMock: vi.fn((selector: any) =>
         selector({
             page: {
@@ -23,6 +27,11 @@ const mocks = vi.hoisted(() => ({
                         errorDescripcio: 'Descripció error',
                         excepcioMessage: 'Missatge excepció',
                         excepcioStacktrace: 'Stacktrace',
+                        netejaEntornApp: {
+                            reintentarSuccess: 'Reintentament iniciat correctament',
+                            reintentarError: 'Error en reintentar',
+                            reintentarButton: 'Reintentar',
+                        }
                     },
                     modulEnum: {
                         salut: 'Salut',
@@ -43,7 +52,6 @@ const mocks = vi.hoisted(() => ({
                     filter: {
                         more: "Més camps",
                     },
-                    detailTipus: 'Tipus',
                 },
             },
             components: {
@@ -70,6 +78,8 @@ const mocks = vi.hoisted(() => ({
             'page.monitors.detail.tipusEnum.sortida': 'Sortida',
             'page.monitors.detail.tipusEnum.entrada': 'Entrada',
             'page.monitors.detail.tipusEnum.interna': 'Interna',
+            'page.monitors.detail.operacioEnum.netejaEntornApp': 'Neteja d\'entorn',
+            'page.monitors.detail.operacioEnum.netejaEntornAppCompletat': 'Neteja d\'entorn completada',
         };
         return translations[key] ?? key;
     }),
@@ -81,111 +91,143 @@ vi.mock('react-i18next', () => ({
     }),
 }));
 
-vi.mock('reactlib', () => ({
-    GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    MuiDataGrid: ({
-        title,
-        toolbarAdditionalRow,
-        onRowClick,
-        fixedFilter,
-        columns,
-    }: {
-        title: string;
-        toolbarAdditionalRow?: React.ReactNode;
-        onRowClick?: (params: { row: Record<string, unknown> }) => void;
-        fixedFilter?: string;
-        columns: Array<{ field: string; headerName?: string; renderCell?: (params: any) => React.ReactNode }>;
-    }) => {
-        const urlColumn = columns?.find(col => col.field === 'url');
-        const estatColumn = columns?.find(col => col.field === 'estat');
-        return (
-            <section>
-                <h2>{title}</h2>
-                <div data-testid="fixed-filter">{fixedFilter}</div>
-                <div>{toolbarAdditionalRow}</div>
-                {columns?.map((col) => (
-                    <div key={col.field} data-testid={`column-${col.field}`}>
-                        {col.headerName ?? col.field}
+vi.mock('reactlib', async () => {
+    const React = await import('react');
+    return {
+        GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+        MuiDataGrid: ({
+            title,
+            toolbarAdditionalRow,
+            onRowClick,
+            fixedFilter,
+            columns,
+        }: {
+            title: string;
+            toolbarAdditionalRow?: React.ReactNode;
+            onRowClick?: (params: { row: Record<string, unknown> }) => void;
+            fixedFilter?: string;
+            columns: Array<{ field: string; headerName?: string; renderCell?: (params: any) => React.ReactNode }>;
+        }) => {
+            const urlColumn = columns?.find(col => col.field === 'url');
+            const estatColumn = columns?.find(col => col.field === 'estat');
+            return (
+                <section>
+                    <h2>{title}</h2>
+                    <div data-testid="fixed-filter">{fixedFilter}</div>
+                    <div>{toolbarAdditionalRow}</div>
+                    {columns?.map((col) => (
+                        <div key={col.field} data-testid={`column-${col.field}`}>
+                            {col.headerName ?? col.field}
+                        </div>
+                    ))}
+                    <div data-testid="url-header">{urlColumn?.headerName ?? urlColumn?.field ?? 'url'}</div>
+                    <button data-testid="open-detail" onClick={() => onRowClick?.({ row: { estat: 'ERROR', tipus: 'SORTIDA', excepcioStacktrace: 'stack' } })}>
+                        Obre detall
+                    </button>
+                    <button
+                        data-testid="open-retry-detail"
+                        onClick={() => onRowClick?.({
+                            row: {
+                                id: 999,
+                                operacio: 'netejaEntornApp',
+                                estat: 'ERROR',
+                                app: { description: 'App Test' },
+                                entorn: { description: 'Entorn Test' }
+                            }
+                        })}
+                    >
+                        Obre detall Reintentar
+                    </button>
+                    <div data-testid="estat-cell">
+                        {estatColumn?.renderCell?.({ value: 'WARN', formattedValue: 'Avís' })}
                     </div>
-                ))}
-                <div data-testid="url-header">{urlColumn?.headerName ?? urlColumn?.field ?? 'url'}</div>
-                <button onClick={() => onRowClick?.({ row: { estat: 'ERROR', tipus: 'SORTIDA', excepcioStacktrace: 'stack' } })}>
-                    Obre detall
-                </button>
-                <div data-testid="estat-cell">
-                    {estatColumn?.renderCell?.({ value: 'WARN', formattedValue: 'Avís' })}
-                </div>
-            </section>
-        );
-    },
-    MuiFilter: ({ 
-        children, 
-        springFilterBuilder,
-        apiRef,
-        resourceName,
-    }: { 
-        children: React.ReactNode;
-        springFilterBuilder?: (data: any) => string;
-        apiRef?: { current: { clear: () => void } };
-        resourceName?: string;
-    }) => {
-        const [data, setData] = React.useState<any>({});
-        
-        const handleAppChange = (appId: number | undefined) => {
-            const newData = { ...data, app: appId ? { id: appId } : undefined };
-            setData(newData);
-            springFilterBuilder?.(newData);
-        };
-        
-        const handleEntornChange = (entornId: number | undefined) => {
-            const newData = { ...data, entorn: entornId ? { id: entornId } : undefined };
-            setData(newData);
-            springFilterBuilder?.(newData);
-        };
-        
-        return (
-            <div>
-                {children}
-                {resourceName === 'entornApp' && (
-                    <>
-                        <button data-testid="select-app" onClick={() => handleAppChange(1)}>Seleccionar App</button>
-                        <button data-testid="select-entorn" onClick={() => handleEntornChange(1)}>Seleccionar Entorn</button>
-                        <button data-testid="clear-filters" onClick={() => {
-                            setData({});
-                            apiRef?.current?.clear();
-                        }}>Limpiar Filtros</button>
-                    </>
-                )}
-            </div>
-        );
-    },
-    FormField: ({ name }: { name: string }) => <div data-testid={`field-${name}`}>{name}</div>,
-    dateFormatLocale: () => '13/03/2026 10:00',
-    useMuiContentDialog: () => [mocks.showDialogMock, <div key="dialog">Diàleg monitor</div>],
-    useCloseDialogButtons: () => <button>Tancar</button>,
-    useFilterApiRef: () => ({
-        current: {
-            clear: mocks.clearMock,
-            filter: mocks.filterMock,
-            setFieldValue: mocks.setFieldValueMock,
+                </section>
+            );
         },
-    }),
-    springFilterBuilder: {
-        and: (...parts: Array<string | undefined | false>) => parts.filter(Boolean).join(' && '),
-        like: (field: string, value: unknown) => `${field}~${String(value)}`,
-        between: (field: string, from: unknown, to: unknown) => `${field}[${String(from)},${String(to)}]`,
-        eq: (field: string, value: unknown) => `${field}=${String(value)}`,
-    },
-    useFormApiRef: () => ({ current: { setFieldValue: mocks.setFieldValueMock, }, }),
+        MuiFilter: ({
+            children,
+            springFilterBuilder,
+            apiRef,
+            resourceName,
+        }: {
+            children: React.ReactNode;
+            springFilterBuilder?: (data: any) => string;
+            apiRef?: { current: { clear: () => void } };
+            resourceName?: string;
+        }) => {
+            const [data, setData] = React.useState<any>({});
+            const handleAppChange = (appId: number | undefined) => {
+                const newData = { ...data, app: appId ? { id: appId } : undefined };
+                setData(newData);
+                springFilterBuilder?.(newData);
+            };
+            const handleEntornChange = (entornId: number | undefined) => {
+                const newData = { ...data, entorn: entornId ? { id: entornId } : undefined };
+                setData(newData);
+                springFilterBuilder?.(newData);
+            };
+            return (
+                <div>
+                    {children}
+                    {resourceName === 'entornApp' && (
+                        <>
+                            <button data-testid="select-app" onClick={() => handleAppChange(1)}>Seleccionar App</button>
+                            <button data-testid="select-entorn" onClick={() => handleEntornChange(1)}>Seleccionar Entorn</button>
+                            <button data-testid="clear-filters" onClick={() => {
+                                setData({});
+                                apiRef?.current?.clear();
+                            }}>Limpiar Filtros</button>
+                        </>
+                    )}
+                </div>
+            );
+        },
+        FormField: ({ name }: { name: string }) => <div data-testid={`field-${name}`}>{name}</div>,
+        dateFormatLocale: () => '13/03/2026 10:00',
+
+        useMuiContentDialog: () => {
+            const [content, setContent] = React.useState<React.ReactNode>(null);
+            const showDialog = (title: string, comp: React.ReactNode, buttons: any, options: any) => {
+                setContent(comp);
+                mocks.showDialogMock(title, comp, buttons, options);
+            };
+            return [
+                showDialog,
+                content ? <div data-testid="mock-dialog">{content}</div> : null
+            ];
+        },
+
+        useCloseDialogButtons: () => <button>Tancar</button>,
+        useFilterApiRef: () => ({
+            current: {
+                clear: mocks.clearMock,
+                filter: mocks.filterMock,
+                setFieldValue: mocks.setFieldValueMock,
+            },
+        }),
+        springFilterBuilder: {
+            and: (...parts: Array<string | undefined | false>) => parts.filter(Boolean).join(' && '),
+            like: (field: string, value: unknown) => `${field}~${String(value)}`,
+            between: (field: string, from: unknown, to: unknown) => `${field}[${String(from)},${String(to)}]`,
+            eq: (field: string, value: unknown) => `${field}=${String(value)}`,
+        },
+        useFormApiRef: () => ({ current: { setFieldValue: mocks.setFieldValueMock } }),
+        useBaseAppContext: () => ({ temporalMessageShow: mocks.temporalMessageShowMock }),
+        useResourceApiService: () => ({ artifactAction: mocks.apiActionMock }),
+    };
+});
+
+vi.mock('../util/exceptionUtils', () => ({
+    getErrorMessage: mocks.getErrorMessageMock,
 }));
 
 vi.mock('../components/ContentDetail', () => ({
     ContentDetail: ({ elements }: { elements: Array<{ label?: string; value?: unknown; contentValue?: React.ReactNode }> }) => (
         <div>
             {elements.map((element, index) => (
-                <div key={index}>
+                <div key={index} data-testid={`detail-row-${index}`}>
                     <span>{element.label}</span>
-                    <span>{element.contentValue ?? String(element.value ?? '')}</span>
+                    <span data-testid={`detail-value-${index}`}>{element.contentValue ?? String(element.value ?? '')}</span>
                 </div>
             ))}
         </div>
@@ -222,6 +264,7 @@ describe('translateEnumValue', () => {
 describe('Monitors', () => {
     afterEach(() => {
         vi.clearAllMocks();
+        mocks.apiActionMock.mockResolvedValue(true);
     });
 
     it('Monitors_quanEsRenderitza_mostraElFiltreInicialITotsElsControlsPrincipals', () => {
@@ -246,8 +289,7 @@ describe('Monitors', () => {
         render(<Monitors />);
 
         fireEvent.click(screen.getByRole('button', { name: 'Netejar' }));
-
-        expect(mocks.clearMock).toHaveBeenCalled();;
+        expect(mocks.clearMock).toHaveBeenCalled();
     });
 
     it('Monitors_quanCanviaLaPestanya_actualitzaElFiltreStaticIObreElDetall', () => {
@@ -257,7 +299,7 @@ describe('Monitors', () => {
         fireEvent.click(screen.getByRole('tab', { name: 'Estadística' }));
         expect(screen.getByTestId('fixed-filter')).toHaveTextContent("modul:'ESTADISTICA'");
 
-        fireEvent.click(screen.getByRole('button', { name: 'Obre detall' }));
+        fireEvent.click(screen.getByTestId('open-detail'));
         expect(mocks.showDialogMock).toHaveBeenCalledWith(
             'Detall monitor',
             expect.anything(),
@@ -268,7 +310,6 @@ describe('Monitors', () => {
 
     it('Monitors_quanSeleccionaEmail_mostraElModulAlarmesIElHeaderDeCorreu', () => {
         render(<Monitors />);
-
         fireEvent.click(screen.getByRole('tab', { name: 'EMAIL' }));
 
         expect(screen.getByTestId('fixed-filter')).toHaveTextContent("modul:'ALARMES'");
@@ -282,7 +323,6 @@ describe('Monitors', () => {
         await waitFor(() => {
             expect(screen.queryByTestId('column-app')).not.toBeInTheDocument();
         });
-
         expect(screen.queryByTestId('column-entorn')).toBeInTheDocument();
     });
 
@@ -293,8 +333,48 @@ describe('Monitors', () => {
         await waitFor(() => {
             expect(screen.queryByTestId('column-entorn')).not.toBeInTheDocument();
         });
-
         expect(screen.queryByTestId('column-app')).toBeInTheDocument();
     });
 
+        it('MonitorDetails_quanEsReintentaNetejaAmbExit_actualitzaLaOperacioIMostraMissatge', async () => {
+        render(<Monitors />);
+        fireEvent.click(screen.getByTestId('open-retry-detail'));
+
+        const retryButton = await screen.findByRole('button', { name: 'Reintentar' });
+        expect(retryButton).toBeInTheDocument();
+        fireEvent.click(retryButton);
+        await waitFor(() => {
+            expect(mocks.apiActionMock).toHaveBeenCalledWith(999, { code: 'delete_entorn_app_by_modul' });
+        });
+        expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(
+            null,
+            'Reintentament iniciat correctament',
+            'success'
+        );
+        await waitFor(() => {
+            expect(screen.getByText('Neteja d\'entorn completada')).toBeInTheDocument();
+        });
+        await waitFor(() => {
+            expect(screen.queryByRole('button', { name: 'Reintentar' })).not.toBeInTheDocument();
+        });
+    });
+
+    it('MonitorDetails_quanEsReintentaNetejaAmbError_mostraMissatgeDerrorUtilitzantGetErrorMessage', async () => {
+        mocks.apiActionMock.mockRejectedValueOnce(new Error('Fallo catastrófico del servidor'));
+        render(<Monitors />);
+        fireEvent.click(screen.getByTestId('open-retry-detail'));
+
+        const retryButton = await screen.findByRole('button', { name: 'Reintentar' });
+        fireEvent.click(retryButton);
+        await waitFor(() => {
+            expect(mocks.getErrorMessageMock).toHaveBeenCalledWith(expect.any(Error));
+            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(
+                'Error en reintentar',
+                'Fallo catastrófico del servidor',
+                'error'
+            );
+        });
+
+        expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+    });
 });

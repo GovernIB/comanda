@@ -49,34 +49,4 @@ public class MonitorController extends BaseMutableResourceController<Monitor, Lo
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/{id}/reintentarNeteja")
-    @PreAuthorize("hasRole(T(es.caib.comanda.base.config.BaseConfig).ROLE_ADMIN)")
-    public ResponseEntity<Void> reintentarNeteja(@PathVariable Long id) {
-        MonitorEntity monitorEntity = monitorRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Monitor no trobat: " + id));
-        if (!"netejaEntornApp".equals(monitorEntity.getOperacio())) {
-            return ResponseEntity.badRequest().build();
-        }
-        String cua = getCuaPerModul(monitorEntity.getModul());
-        if (cua == null) {
-            log.warn("No hi ha cua per al mòdul {}", monitorEntity.getModul());
-            return ResponseEntity.badRequest().build();
-        }
-        jmsTemplate.convertAndSend(cua, new NetejaEntornAppMessage(monitorEntity.getEntornAppId()));
-        log.info("Reintent de neteja encuat per entornApp {} mòdul {}", monitorEntity.getEntornAppId(), monitorEntity.getModul());
-        return ResponseEntity.ok().build();
-    }
-
-    private String getCuaPerModul(ModulEnum modul) {
-        if (modul == null) return null;
-        switch (modul) {
-            case SALUT: return Cues.CUA_NETEJA_SALUT;
-            case TASCA: return Cues.CUA_NETEJA_TASQUES;
-            case AVIS: return Cues.CUA_NETEJA_AVISOS;
-            case ALARMES: return Cues.CUA_NETEJA_ALARMES;
-            case ESTADISTICA: return Cues.CUA_NETEJA_ESTADISTICA;
-            default: return null;
-        }
-    }
-
 }

@@ -11,8 +11,8 @@ import {
     useFilterApiRef,
     springFilterBuilder as builder,
     MuiDataGridColDef,
-    useAuthContext,
     useBaseAppContext,
+    useResourceApiService,
 } from 'reactlib';
 import { GridRenderCellParams } from '@mui/x-data-grid';
 import { ContentDetail } from '../components/ContentDetail';
@@ -20,6 +20,7 @@ import { StacktraceBlock } from '../components/RickTextDetail';
 import { Tabs, Tab, Chip, Box, Icon, IconButton, Button, CircularProgress } from '@mui/material';
 import useTranslationStringKey from '../hooks/useTranslationStringKey';
 import PageTitle from '../components/PageTitle.tsx';
+import { getErrorMessage } from '../util/exceptionUtils.ts';
 
 const moduleOptions = [
     { value: 'SALUT', labelKey: 'page.monitors.modulEnum.salut' },
@@ -75,6 +76,10 @@ const tipusTranslationMap: Record<string, string> = {
   ENTRADA: 'page.monitors.detail.tipusEnum.entrada',
   INTERNA: 'page.monitors.detail.tipusEnum.interna',
 };
+const operacioTranslationMap: Record<string, string> = {
+    'netejaEntornApp': 'page.monitors.detail.operacioEnum.netejaEntornApp', 
+    'netejaEntornAppCompletat': 'page.monitors.detail.operacioEnum.netejaEntornAppCompletat', 
+  };
 
 const EstatBadge: React.FC<{ value: string, children?: string, }> = ({ value, children }) => {
   const { t } = useTranslationStringKey();
@@ -96,25 +101,34 @@ type MonitorDetailsProps = {
 const MonitorDetails: React.FC<MonitorDetailsProps> = (props) => {
     const { data, selectedModule } = props;
     const { t } = useTranslation();
+    const { t : tKey } = useTranslationStringKey();
     const { t: tStringKey } = useTranslationStringKey();
-    const { getToken } = useAuthContext();
     const { temporalMessageShow } = useBaseAppContext();
     const [retrying, setRetrying] = React.useState(false);
+    const {artifactAction: apiAction} = useResourceApiService('monitor');
+    const [operacioActual, setOperacioActual] = React.useState(data?.operacio);
 
-    const isNetejaError = data?.operacio === 'netejaEntornApp' && data?.estat === 'ERROR';
+    const isNetejaError = operacioActual === 'netejaEntornApp' && data?.estat === 'ERROR';
+
+    const actionDeleteEntornAppByModul = async (id: any): Promise<boolean> => {
+        try {
+            await apiAction(id, { code: 'delete_entorn_app_by_modul' });
+            return true;
+        } catch (error: any) {
+            throw new Error(error?.message || 'Error desconocido al reintentar la operación');
+        }
+    }
 
     const handleReintent = async () => {
         setRetrying(true);
         try {
-            const token = getToken?.();
-            const response = await fetch(`/api/v1/monitors/${data.id}/reintentarNeteja`, {
-                method: 'POST',
-                headers: token ? { 'Authorization': 'Bearer ' + token } : undefined,
-            });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            temporalMessageShow?.(null, t($ => $.page.monitors.detail.netejaEntornApp.reintentarSuccess), 'success');
-        } catch (err) {
-            temporalMessageShow?.(t($ => $.page.monitors.detail.netejaEntornApp.reintentarError), String(err), 'error');
+            const isOk = await actionDeleteEntornAppByModul(data.id);
+            if (isOk) {
+                temporalMessageShow?.(null, t($ => $.page.monitors.detail.netejaEntornApp.reintentarSuccess), 'success');
+                setOperacioActual("netejaEntornAppCompletat");
+            };
+        } catch (error: any) {
+            temporalMessageShow?.(t($ => $.page.monitors.detail.netejaEntornApp.reintentarError), getErrorMessage(error), 'error');
         } finally {
             setRetrying(false);
         }
@@ -124,7 +138,7 @@ const MonitorDetails: React.FC<MonitorDetailsProps> = (props) => {
         { label: t($ => $.page.monitors.detail.app), value: data?.app?.description },
         { label: t($ => $.page.monitors.detail.entorn), value: data?.entorn?.description },
         { label: t($ => $.page.monitors.detail.data), value: dateFormatLocale(data?.data, true) },
-        { label: t($ => $.page.monitors.detail.operacio), value: data?.operacio },
+        { label: t($ => $.page.monitors.detail.operacio), value: translateEnumValue(operacioActual, operacioTranslationMap, tKey) },
         {
             label: t($ => $.page.monitors.detail.tipus),
             value: translateEnumValue(data?.tipus, tipusTranslationMap, tStringKey),
@@ -271,6 +285,7 @@ const dataGridPerspectives = ['ENTORN_APP'];
 
 const Monitors: React.FC = () => {
     const { t } = useTranslation();
+    const { t : tKey } = useTranslationStringKey();
     const closeDialogButton = useCloseDialogButtons();
     const [selectedModule, setSelectedModule] = React.useState<string>('SALUT');
     const [detailDialogShow, detailDialogComponent] = useMuiContentDialog(closeDialogButton);
@@ -301,7 +316,7 @@ const Monitors: React.FC = () => {
         { field: 'app', flex: 1, sortable: false, valueFormatter: (value?: any) => value?.description },
         { field: 'entorn', flex: 1.5, sortable: false, valueFormatter: (value?: any) => value?.description },
         { field: 'data', flex: 1, minWidth: 150 },
-        { field: 'operacio', flex: 2, },
+        { field: 'operacio', flex: 2, valueFormatter: (value?: any) =>  translateEnumValue(value, operacioTranslationMap, tKey)},
         { field: 'tipus', flex: 1, },
         {
             field: 'url',

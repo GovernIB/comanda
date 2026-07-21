@@ -850,6 +850,10 @@ const translationCa = {
                     reintentarSuccess: "Neteja reiniciada correctament",
                     reintentarError: "Error en reintentar la neteja",
                 },
+                operacioEnum: {
+                    netejaEntornApp: "Error en intentar esborrar dades associades entorn d'aplicació",
+                    netejaEntornAppCompletat: "S'ha executat el reintent per a esborrar dades associades entorn d'aplicació",
+                },
             },
             modulEnum: {
                 salut: "Salut",

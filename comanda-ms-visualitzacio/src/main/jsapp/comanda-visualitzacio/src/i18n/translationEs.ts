@@ -850,6 +850,10 @@ const translationEs: translationResourcesType = {
                     reintentarSuccess: "Limpieza reiniciada correctamente",
                     reintentarError: "Error al reintentar la limpieza",
                 },
+                operacioEnum: {
+                    netejaEntornApp: "Error al intentar borrar datos asociados en torno a aplicación",
+                    netejaEntornAppCompletat: "Se ha ejecutado el reintento para borrar datos asociados en torno a aplicación",
+                },
             },
             modulEnum: {
                 salut: "Salud",

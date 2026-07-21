@@ -1,5 +1,9 @@
 package es.caib.comanda.monitor.logic.service;
 
+import es.caib.comanda.base.config.Cues;
+import es.caib.comanda.client.model.AppRef;
+import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.client.model.EntornRef;
 import es.caib.comanda.client.model.monitor.AccioTipusEnum;
 import es.caib.comanda.client.model.monitor.EstatEnum;
 import es.caib.comanda.client.model.monitor.ModulEnum;
@@ -10,7 +14,9 @@ import es.caib.comanda.monitor.persist.repository.MonitorRepository;
 import es.caib.comanda.ms.logic.helper.ObjectMappingHelper;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.helper.ResourceReferenceToEntityHelper;
+import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.jms.NetejaEntornAppMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,6 +32,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
@@ -55,6 +62,8 @@ public class MonitorServiceImplTest {
     private MonitorRepository entityRepository;
     @Mock
     private MonitorClientHelper monitorClientHelper;
+    @Mock
+    private JmsTemplate jmsTemplate;
 
     @InjectMocks
     private MonitorServiceImpl monitorService;
@@ -286,6 +295,107 @@ public class MonitorServiceImplTest {
         assertThatThrownBy(() -> monitorService.namedFilterToSpringFilter(namedFilter))
             .isInstanceOf(NumberFormatException.class)
             .as("Ha de llançar excepció quan el filtre conté un valor no numeric després de ':'");
+    }
+
+    @Test
+    @DisplayName("EntornAppPerspectiveApplicator: Aplica App y Entorn correctamente cuando entornAppId existe")
+    void testEntornAppPerspectiveApplicator_Success() throws Exception {
+        // Arrange
+        MonitorServiceImpl.EntornAppPerspectiveApplicator applicator =
+            new MonitorServiceImpl.EntornAppPerspectiveApplicator(monitorClientHelper);
+        AppRef appRef = new AppRef(1L, "APP");
+        EntornRef entornRef = new EntornRef(1L, "APP");
+        EntornApp mockEntornApp = new EntornApp();
+        mockEntornApp.setApp(appRef);
+        mockEntornApp.setEntorn(entornRef);
+        when(monitorClientHelper.entornAppFindById(1L)).thenReturn(mockEntornApp);
+
+        // Act
+        applicator.applySingle(Monitor.PERSPECTIVE_ENTORN_APP, monitorEntity, monitorResource);
+
+        // Assert
+        assertEquals(appRef, monitorResource.getApp());
+        assertEquals(entornRef, monitorResource.getEntorn());
+        verify(monitorClientHelper).entornAppFindById(1L);
+    }
+
+    @Test
+    @DisplayName("EntornAppPerspectiveApplicator: Si entornAppId es null no consulta el helper")
+    void testEntornAppPerspectiveApplicator_NullEntornAppId() throws Exception {
+        // Arrange
+        MonitorServiceImpl.EntornAppPerspectiveApplicator applicator =
+            new MonitorServiceImpl.EntornAppPerspectiveApplicator(monitorClientHelper);
+        monitorEntity.setEntornAppId(null);
+
+        // Act
+        applicator.applySingle(Monitor.PERSPECTIVE_ENTORN_APP, monitorEntity, monitorResource);
+
+        // Assert
+        verify(monitorClientHelper, org.mockito.Mockito.never()).entornAppFindById(any());
+    }
+
+    @Test
+    @DisplayName("DeleteAlarmaConfigAction: Lanza excepción si la operación no es 'netejaEntornApp'")
+    void testDeleteAlarmaConfigAction_OperacioInvalida_llancaExcepcio() {
+        // Arrange
+        monitorEntity.setOperacio("otraOperacion");
+        MonitorServiceImpl.DeleteAlarmaConfigAction action =
+            monitorService.new DeleteAlarmaConfigAction(jmsTemplate);
+
+        // Act & Assert
+        assertThatThrownBy(() -> action.exec(Monitor.MONITOR_DELETE_ENTORN_APP_BY_MODUL_ACTION, monitorEntity, null))
+            .isInstanceOf(ActionExecutionException.class)
+            .hasMessageContaining("El monitor enviat no pot executar la logica solicitada");
+    }
+
+    @Test
+    @DisplayName("DeleteAlarmaConfigAction: Lanza excepción si el módulo no tiene cola asociada")
+    void testDeleteAlarmaConfigAction_ModulSenseCua_llancaExcepcio() {
+        // Arrange
+        monitorEntity.setOperacio("netejaEntornApp");
+        monitorEntity.setModul(null);
+
+        MonitorServiceImpl.DeleteAlarmaConfigAction action =
+            monitorService.new DeleteAlarmaConfigAction(jmsTemplate);
+
+        // Act & Assert
+        assertThatThrownBy(() -> action.exec(Monitor.MONITOR_DELETE_ENTORN_APP_BY_MODUL_ACTION, monitorEntity, null))
+            .isInstanceOf(ActionExecutionException.class)
+            .hasMessageContaining("El modul associat no esta implementar al microservei de monitor");
+    }
+
+    @ParameterizedTest
+    @MethodSource("methodSourceModulsIQueues")
+    @DisplayName("DeleteAlarmaConfigAction: Envía mensaje JMS a la cola correcta según el módulo")
+    void testDeleteAlarmaConfigAction_Success(ModulEnum modul, String cuaEsperada) throws Exception {
+        // Arrange
+        monitorEntity.setOperacio("netejaEntornApp");
+        monitorEntity.setModul(modul);
+        monitorEntity.setEntornAppId(99L);
+
+        MonitorServiceImpl.DeleteAlarmaConfigAction action =
+            monitorService.new DeleteAlarmaConfigAction(jmsTemplate);
+
+        // Act
+        Monitor result = action.exec(Monitor.MONITOR_DELETE_ENTORN_APP_BY_MODUL_ACTION, monitorEntity, null);
+
+        // Assert
+        assertThat(result).isNull();
+        assertThat(monitorEntity.getOperacio()).isEqualTo("netejaEntornAppCompletat");
+        verify(jmsTemplate).convertAndSend(
+            org.mockito.ArgumentMatchers.eq(cuaEsperada),
+            any(NetejaEntornAppMessage.class)
+        );
+    }
+
+    private static Stream<Arguments> methodSourceModulsIQueues() {
+        return Stream.of(
+            Arguments.of(ModulEnum.SALUT, Cues.CUA_NETEJA_SALUT),
+            Arguments.of(ModulEnum.TASCA, Cues.CUA_NETEJA_TASQUES),
+            Arguments.of(ModulEnum.AVIS, Cues.CUA_NETEJA_AVISOS),
+            Arguments.of(ModulEnum.ALARMES, Cues.CUA_NETEJA_ALARMES),
+            Arguments.of(ModulEnum.ESTADISTICA, Cues.CUA_NETEJA_ESTADISTICA)
+        );
     }
 
 }
