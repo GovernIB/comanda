@@ -77,8 +77,8 @@ const tipusTranslationMap: Record<string, string> = {
   INTERNA: 'page.monitors.detail.tipusEnum.interna',
 };
 const operacioTranslationMap: Record<string, string> = {
-    'netejaEntornApp': 'page.monitors.detail.operacioEnum.netejaEntornApp', 
-    'netejaEntornAppCompletat': 'page.monitors.detail.operacioEnum.netejaEntornAppCompletat', 
+    'netejaEntornApp': 'page.monitors.detail.operacioEnum.netejaEntornApp',
+    'netejaEntornAppCompletat': 'page.monitors.detail.operacioEnum.netejaEntornAppCompletat',
   };
 
 const EstatBadge: React.FC<{ value: string, children?: string, }> = ({ value, children }) => {
@@ -109,6 +109,7 @@ const MonitorDetails: React.FC<MonitorDetailsProps> = (props) => {
     const [operacioActual, setOperacioActual] = React.useState(data?.operacio);
 
     const isNetejaError = operacioActual === 'netejaEntornApp' && data?.estat === 'ERROR';
+    const isNetejaCompletat = operacioActual === 'netejaEntornAppCompletat' && data?.estat === 'ERROR';
 
     const actionDeleteEntornAppByModul = async (id: any): Promise<boolean> => {
         try {
@@ -164,14 +165,14 @@ const MonitorDetails: React.FC<MonitorDetailsProps> = (props) => {
     return (
         <>
             <ContentDetail title={""} elements={elementsDetail} />
-            {isNetejaError && (
+            {(isNetejaError || isNetejaCompletat) && (
                 <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
                     <Button
                         variant="contained"
                         color="warning"
                         startIcon={retrying ? <CircularProgress size={16} color="inherit" /> : <Icon>refresh</Icon>}
                         onClick={handleReintent}
-                        disabled={retrying}
+                        disabled={retrying || isNetejaCompletat}
                     >
                         {t($ => $.page.monitors.detail.netejaEntornApp.reintentarButton)}
                     </Button>

@@ -852,7 +852,7 @@ const translationEn: translationResourcesType = {
                 },
                 operacioEnum: {
                     netejaEntornApp: "Error while trying to delete data associated with application environment",
-                    netejaEntornAppCompletat: "Retry has been executed to delete data associated with the application environment.",
+                    netejaEntornAppCompletat: "Error while trying to delete data associated with application environment (Already retried)",
                 },
             },
             modulEnum: {
