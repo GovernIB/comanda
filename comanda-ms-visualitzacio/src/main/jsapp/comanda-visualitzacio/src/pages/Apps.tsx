@@ -20,7 +20,16 @@ import {
     useMuiDataGridApiRef,
     useResourceApiService,
 } from 'reactlib';
-import { FormControl, FormControlLabel, FormGroup, FormLabel, Radio, RadioGroup, Typography } from '@mui/material';
+import {
+    FormControl,
+    FormControlLabel,
+    FormGroup,
+    FormLabel,
+    IconButton,
+    Radio,
+    RadioGroup,
+    Typography,
+} from '@mui/material';
 import LogoUpload from "../components/LogoUpload";
 import { ReactElementWithPosition } from '../../lib/util/reactNodePosition.ts';
 import BlockIcon from "@mui/icons-material/Block";
@@ -41,6 +50,10 @@ import { getErrorMessage } from '../util/exceptionUtils.ts';
 import * as z from 'zod';
 import { AppType } from '../models/app.schema';
 import ParameterExistsAdornment from '../components/ParameterExistsAdornment.tsx';
+import Divider from '@mui/material/Divider';
+import InputAdornment from '@mui/material/InputAdornment';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const PingUrlActionResponse = z.object({
     success: z.boolean(),
@@ -94,9 +107,9 @@ const useActions = (refresh?: () => void) => {
         parameterValue: string,
     ): Promise<ExistsParameterResult> => {
         try {
-            const actionResponse = await apiAction(null, { 
-                code: 'existsParameter', 
-                data: { parameterValue } 
+            const actionResponse = await apiAction(null, {
+                code: 'existsParameter',
+                data: { parameterValue }
             });
             return actionResponse?.exists;
         } catch (error) {
@@ -138,6 +151,49 @@ const useActions = (refresh?: () => void) => {
     };
 };
 
+const CustomPasswordFormField: React.FC<{
+    name: string;
+    additionalEndAdornment?: React.ReactNode;
+    disablePasswordMode?: boolean;
+}> = ({ name, additionalEndAdornment, disablePasswordMode }) => {
+    const { t } = useTranslation();
+    const [showPassword, setShowPassword] = React.useState(false);
+
+    const handleClickShowPassword = () => setShowPassword(show => !show);
+    return (
+        <FormField
+            name={name}
+            componentProps={{
+                type: disablePasswordMode || showPassword ? 'text' : 'password',
+                placeholder: t($ => $.page.apps.fields.contrasenyaAuthPlaceholder),
+                slotProps: {
+                    inputLabel: { shrink: true },
+                    input: {
+                        endAdornment: (
+                            <InputAdornment position="end">
+                                {additionalEndAdornment}
+                                {!disablePasswordMode && (
+                                    <IconButton
+                                        aria-label={
+                                            showPassword
+                                                ? t($ => $.page.apps.fields.hidePassword)
+                                                : t($ => $.page.apps.fields.showPassword)
+                                        }
+                                        onClick={handleClickShowPassword}
+                                        edge="end"
+                                    >
+                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                    </IconButton>
+                                )}
+                            </InputAdornment>
+                        ),
+                    },
+                },
+            }}
+        />
+    );
+};
+
 const AppEntornForm: React.FC = () => {
     const { t } = useTranslation();
     const isCurrentUserAdmin = useIsUserAdmin();
@@ -157,6 +213,9 @@ const AppEntornForm: React.FC = () => {
                 <FormField name="activa" />
             </Grid>
             <Grid size={12}>
+                <Divider sx={{ my: 1 }}>{t($ => $.page.apps.fields.salutDivider)}</Divider>
+            </Grid>
+            <Grid size={12}>
                 <FormField name="infoUrl" componentProps={isCurrentUserAdmin && {slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.infoUrl} formData={data} onClick={(formData) => pingUrl(formData, 'INFO')} dialogShow={detailDialogShow} />}}}} />
             </Grid>
             <Grid size={12}>
@@ -174,12 +233,15 @@ const AppEntornForm: React.FC = () => {
                 </FormControl>
             </Grid>
             <Grid size={12}>
+                <Divider sx={{ my: 1 }}>{t($ => $.page.apps.fields.estadistiquesDivider)}</Divider>
+            </Grid>
+            <Grid size={12}>
                 <FormField name="estadisticaInfoUrl" componentProps={isCurrentUserAdmin && {slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaInfoUrl} formData={data} onClick={(formData) => pingUrl(formData, 'ESTADISTICA_INFO')} dialogShow={detailDialogShow} />}}}} />
             </Grid>
             <Grid size={12}>
                 <FormField name="estadisticaUrl" componentProps={isCurrentUserAdmin && {slotProps: {input: {endAdornment: <UrlPingAdornment url={data?.estadisticaUrl} formData={data} onClick={(formData) => pingUrl(formData, 'ESTADISTICA')} dialogShow={detailDialogShow} />}}}} />
             </Grid>
-            <Grid size={6} sx={{ p: 1, pt: 0 }}>
+            <Grid size={5} sx={{ p: 1, pt: 0 }}>
                 <FormControl component="fieldset">
                     <FormLabel component="legend">{t($ => $.page.apps.fields.estadisticaAuthLegend)}</FormLabel>
                     <FormGroup aria-label="position" row>
@@ -187,22 +249,10 @@ const AppEntornForm: React.FC = () => {
                     </FormGroup>
                 </FormControl>
             </Grid>
-            <Grid size={6}>
+            <Grid size={4}>
                 <FormField name="estadisticaCron" />
             </Grid>
-            <Grid size={12}>
-                <FormField name="alarmesEmail" />
-            </Grid>
-            <Grid size={9}>
-                <FormField name="nomUsuariAuth" componentProps={isCurrentUserAdmin && {slotProps: {input: {endAdornment: ( <ParameterExistsAdornment  value={data?.nomUsuariAuth}  onClick={existsParameter} disabled={!data?.parametreAuth}/>)}}}} />
-            </Grid>
             <Grid size={3}>
-                <FormField name="parametreAuth" />
-            </Grid>
-            <Grid size={12}>
-                <FormField name="contrasenyaAuth" componentProps={isCurrentUserAdmin && {slotProps: {input: {endAdornment: ( <ParameterExistsAdornment  value={data?.contrasenyaAuth}  onClick={existsParameter} disabled={!data?.parametreAuth}/>)}}}} />
-            </Grid>
-            <Grid size={12}>
                 <FormField name="compactable" type="checkbox" label={t($ => $.page.apps.fields.compactable)} />
             </Grid>
             {data?.compactable === true && (
@@ -226,6 +276,55 @@ const AppEntornForm: React.FC = () => {
                     </Grid>
                 </>
             )}
+            <Grid size={12}>
+                <Divider sx={{ my: 1 }}>{t($ => $.page.apps.fields.authDivider)}</Divider>
+            </Grid>
+            <Grid size={9}>
+                <FormField
+                    name="nomUsuariAuth"
+                    componentProps={{
+                        placeholder: t($ => $.page.apps.fields.nomUsuariAuthPlaceholder),
+                        slotProps: {
+                            inputLabel: { shrink: true },
+                            ...(isCurrentUserAdmin && {
+                                input: {
+                                    endAdornment: (
+                                        <ParameterExistsAdornment
+                                            value={data?.nomUsuariAuth}
+                                            onClick={existsParameter}
+                                            disabled={!data?.parametreAuth}
+                                        />
+                                    ),
+                                },
+                            }),
+                        },
+                    }}
+                />
+            </Grid>
+            <Grid size={3}>
+                <FormField name="parametreAuth" />
+            </Grid>
+            <Grid size={12}>
+                <CustomPasswordFormField
+                    name="contrasenyaAuth"
+                    disablePasswordMode={data?.parametreAuth}
+                    additionalEndAdornment={
+                        isCurrentUserAdmin ? (
+                            <ParameterExistsAdornment
+                                value={data?.contrasenyaAuth}
+                                onClick={existsParameter}
+                                disabled={!data?.parametreAuth}
+                            />
+                        ) : null
+                    }
+                />
+            </Grid>
+            <Grid size={12}>
+                <Divider sx={{ my: 1 }}>{t($ => $.page.apps.fields.altresDivider)}</Divider>
+            </Grid>
+            <Grid size={12}>
+                <FormField name="alarmesEmail" />
+            </Grid>
         </Grid>
         {detailDialogComponent}</>
     );

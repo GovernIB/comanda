@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
+import es.caib.comanda.configuracio.logic.helper.EntornAppHelper;
 import es.caib.comanda.configuracio.logic.intf.model.App;
 import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
 import es.caib.comanda.configuracio.logic.mapper.AppExportMapper;
@@ -16,14 +17,18 @@ import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
+import es.caib.comanda.ms.sse.ComandaSseEventTypes;
+import es.caib.comanda.ms.sse.ComandaSsePublishRequest;
 import es.caib.comanda.configuracio.persist.repository.AppRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,28 +48,40 @@ public class AppServiceImplTest {
 
     // Test subclass to expose protected methods
     static class TestableAppServiceImpl extends AppServiceImpl {
-        
+
         public TestableAppServiceImpl(CacheHelper cacheHelper,
                                       ObjectMapper objectMapper,
                                       AppExportMapper appExportMapper,
                                       AppRepository appRepository,
                                       EntornRepository entornRepository,
                                       EntornAppRepository entornAppRepository,
+                                      EntornAppHelper entornAppHelper,
                                       AuthenticationHelper authenticationHelper,
                                       HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
-                                      AclServiceClient aclServiceClient) {
+                                      AclServiceClient aclServiceClient,
+                                      ApplicationEventPublisher eventPublisher) {
             super(cacheHelper, objectMapper, appExportMapper, appRepository, entornRepository, entornAppRepository,
-                    authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient);
+                entornAppHelper, authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient, eventPublisher);
         }
-        
+
         @Override
         public void afterConversion(AppEntity entity, App resource) {
             super.afterConversion(entity, resource);
         }
 
         @Override
+        public void afterCreateSave(AppEntity entity, App resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
+            super.afterCreateSave(entity, resource, answers, anyOrderChanged);
+        }
+
+        @Override
         public void afterUpdateSave(AppEntity entity, App resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
             super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
+        }
+
+        @Override
+        public void afterDelete(AppEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
+            super.afterDelete(entity, answers);
         }
 
         public String exposedAdditionalSpringFilter() {
@@ -74,7 +91,7 @@ public class AppServiceImplTest {
 
     @Mock
     private CacheHelper cacheHelper;
-    
+
     @Mock
     private ObjectMapper objectMapper;
 
@@ -91,6 +108,9 @@ public class AppServiceImplTest {
     private EntornAppRepository entornAppRepository;
 
     @Mock
+    private EntornAppHelper entornAppHelper;
+
+    @Mock
     private AuthenticationHelper authenticationHelper;
 
     @Mock
@@ -98,6 +118,9 @@ public class AppServiceImplTest {
 
     @Mock
     private AclServiceClient aclServiceClient;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     private TestableAppServiceImpl appService;
 
@@ -116,10 +139,12 @@ public class AppServiceImplTest {
                 appRepository,
                 entornRepository,
                 entornAppRepository,
+                entornAppHelper,
                 authenticationHelper,
                 httpAuthorizationHeaderHelper,
-                aclServiceClient);
-        
+                aclServiceClient,
+                eventPublisher);
+
         // Setup test data
         appEntity = new AppEntity();
         appEntity.setId(1L);
@@ -171,27 +196,45 @@ public class AppServiceImplTest {
     }
 
     @Test
+    void testAfterCreateSave() {
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+
+        appService.afterCreateSave(appEntity, appResource, answers, false);
+
+        ArgumentCaptor<ComandaSsePublishRequest> captor = ArgumentCaptor.forClass(ComandaSsePublishRequest.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertEquals(ComandaSseEventTypes.APP_CHANGED, captor.getValue().getEvent().getType());
+        assertEquals(appEntity.getId(), captor.getValue().getEvent().getPayload());
+    }
+
+    @Test
     void testAfterUpdateSave() {
-        // Test that afterUpdateSave schedules tasks for each EntornApp
         Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
 
         appService.afterUpdateSave(appEntity, appResource, answers, false);
 
         // Verify that cacheHelper.evictCacheItem was called for the App
         verify(cacheHelper, times(1)).evictCacheItem(APP_CACHE, appEntity.getId().toString());
+
+        ArgumentCaptor<ComandaSsePublishRequest> captor = ArgumentCaptor.forClass(ComandaSsePublishRequest.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertEquals(ComandaSseEventTypes.APP_CHANGED, captor.getValue().getEvent().getType());
+        assertEquals(appEntity.getId(), captor.getValue().getEvent().getPayload());
     }
 
     @Test
-    void testAfterUpdateSaveWithNoEntornApps() {
-        // Test that afterUpdateSave doesn't schedule tasks when there are no EntornApps
+    void testAfterDelete() {
         Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
 
-        // Set empty EntornApps list
-        appEntity.setEntornApps(new ArrayList<>());
-
-        appService.afterUpdateSave(appEntity, appResource, answers, false);
+        appService.afterDelete(appEntity, answers);
 
         verify(cacheHelper, times(1)).evictCacheItem(APP_CACHE, appEntity.getId().toString());
+        verify(entornAppHelper, times(1)).logicAfterDelete(entornAppEntity.getId());
+
+        ArgumentCaptor<ComandaSsePublishRequest> captor = ArgumentCaptor.forClass(ComandaSsePublishRequest.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertEquals(ComandaSseEventTypes.APP_CHANGED, captor.getValue().getEvent().getType());
+        assertEquals(appEntity.getId(), captor.getValue().getEvent().getPayload());
     }
 
     @Test

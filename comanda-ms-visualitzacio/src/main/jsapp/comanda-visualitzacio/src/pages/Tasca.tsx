@@ -278,8 +278,10 @@ const TascaFilter = (props: { onEntornAppFilterDataChange: (data: any) => void, 
                 gap: { xs: 1, sm: 0 },
             }}>
                 <Grid container spacing={1} sx={{ flexGrow: 1, mr: 1 }}>
-                    <Grid size={6}><FormField name={'app'} /></Grid>
-                    <Grid size={6}><FormField name={'entorn'} /></Grid>
+                    <Grid size={6}><FormField name={'app'}
+                        advancedSearchColumns={[{ field: 'codi', flex: 1, }, { field: 'nom', flex: 2, },]}/></Grid>
+                    <Grid size={6}><FormField name={'entorn'}
+                        advancedSearchColumns={[{ field: 'codi', flex: 1, }, { field: 'nom', flex: 2, },]}/></Grid>
                 </Grid>
                 <Box sx={{
                         display: 'flex',
@@ -467,7 +469,7 @@ const Tasca = () => {
                 );
             },
         });
-    const columns = [
+    const columns = React.useMemo<MuiDataGridColDef[]>(() => [
         ...(!treeView
             ? [
                 {
@@ -505,7 +507,7 @@ const Tasca = () => {
         ...(filter?.includes('dataFi is null')
             ? dataGridCommonColumns.slice(0, -1)
             : dataGridCommonColumns),
-    ];
+    ], [apps, filter, treeView]);
 
     const rowAdditionalActions = React.useMemo(() => {
         const additionalActions: DataCommonAdditionalAction[] = [{
@@ -557,7 +559,10 @@ const Tasca = () => {
                 toolbarElementsWithPositions={[{ position: 1, element: treeViewSwitch }]}
                 toolbarAdditionalRow={filterElement}
                 rowAdditionalActions={rowAdditionalActions}
-                autoFindDisabled={!isFilterDataReady}
+                // autoFindDisabled no es pot usar si el filtre està buit, ja que només es farà una única petició inicial i aquesta serà cancelada pel autoFindDisabled
+                autoFindDisabled={!(isFilterDataReady && !filter.length)}
+                // s'usa loading per a que el grid no es mostri buit fins que no s'ha fet la primera petició
+                loading
                 {...treeDataGridProps}
                 initialState={{
                     columns: {

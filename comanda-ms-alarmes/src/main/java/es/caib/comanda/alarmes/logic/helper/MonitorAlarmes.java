@@ -17,6 +17,9 @@ public class MonitorAlarmes {
     public static final String ENVIAMENT_CORREU_USUARI = "Enviar correu d'alarma a usuari";
     public static final String ENVIAMENT_CORREU_GENERIC = "Enviar correu generic d'alarma";
     public static final String ENVIAMENT_CORREU_AGRUPAT = "Enviar resum d'alarmes";
+    public static final String ACTIVACIO_ALARMA = "Activació d'alarma";
+    public static final String DESACTIVACIO_ALARMA = "Desactivació d'alarma";
+    public static final String NOTIFICA_CORREU_GENERIC = "notifica correu genèric";
     private static final String ERROR_PER_DEFECTE = "S'ha produït un error enviant el correu d'alarma";
 
     private final AlarmaClientHelper alarmaClientHelper;
@@ -29,10 +32,20 @@ public class MonitorAlarmes {
             String url,
             String codiUsuari,
             AlarmaClientHelper alarmaClientHelper) {
+        this(entornAppId, operacio, url, codiUsuari, AccioTipusEnum.SORTIDA, alarmaClientHelper);
+    }
+
+    public MonitorAlarmes(
+            Long entornAppId,
+            String operacio,
+            String url,
+            String codiUsuari,
+            AccioTipusEnum tipus,
+            AlarmaClientHelper alarmaClientHelper) {
         this.monitor = Monitor.builder()
                 .entornAppId(entornAppId)
                 .modul(ModulEnum.ALARMES)
-                .tipus(AccioTipusEnum.SORTIDA)
+                .tipus(tipus)
                 .url(url)
                 .operacio(operacio)
                 .codiUsuari(codiUsuari)

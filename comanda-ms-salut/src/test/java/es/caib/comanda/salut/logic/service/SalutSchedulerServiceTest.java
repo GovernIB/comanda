@@ -4,6 +4,7 @@ import es.caib.comanda.client.model.AppRef;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.EntornRef;
 import es.caib.comanda.ms.logic.helper.ParametresHelper;
+import es.caib.comanda.ms.logic.helper.SchedulerTaskRegistryService;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,6 +45,8 @@ class SalutSchedulerServiceTest {
 
     @Mock
     private TaskExecutor salutWorkerExecutor;
+    @Mock
+    private SchedulerTaskRegistryService schedulerTaskRegistry;
 
     private SalutSchedulerService schedulerService;
     private EntornApp entornApp;
@@ -55,7 +58,8 @@ class SalutSchedulerServiceTest {
                 salutClientHelper,
                 salutInfoHelper,
                 parametresHelper,
-                salutWorkerExecutor);
+                salutWorkerExecutor,
+                schedulerTaskRegistry);
         ReflectionTestUtils.setField(schedulerService, "schedulerLeader", true);
         ReflectionTestUtils.setField(schedulerService, "schedulerBack", true);
 
@@ -184,7 +188,8 @@ class SalutSchedulerServiceTest {
                 salutClientHelper,
                 salutInfoHelper,
                 parametresHelper,
-                executor);
+                executor,
+                schedulerTaskRegistry);
         ReflectionTestUtils.setField(service, "schedulerLeader", true);
         ReflectionTestUtils.setField(service, "schedulerBack", true);
         when(parametresHelper.getParametreBoolean(any(), eq(false))).thenReturn(true);

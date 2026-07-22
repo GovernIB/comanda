@@ -1,0 +1,33 @@
+databaseChangeLog:
+- changeSet:
+    id: conf-monitor-db-actiu-1
+    author: limit
+    comment: Afegir paràmetre per activar o ocultar el dashboard de base de dades
+    changes:
+      - insert:
+          tableName: COM_PARAMETRE
+          columns:
+            - column:
+                name: GRUP
+                value: "Monitor"
+            - column:
+                name: SUBGRUP
+                value: "Base de dades"
+            - column:
+                name: TIPUS
+                value: "BOOLEAN"
+            - column:
+                name: CODI
+                value: "es.caib.comanda.monitor.db.actiu"
+            - column:
+                name: NOM
+                value: "Monitor de base de dades actiu"
+            - column:
+                name: DESCRIPCIO
+                value: "Indica si el dashboard de base de dades és accessible. Desactivar si no s'han concedit permisos a les vistes DBA."
+            - column:
+                name: VALOR
+                value: "true"
+            - column:
+                name: EDITABLE
+                valueNumeric: 1

@@ -3,6 +3,9 @@ package es.caib.comanda.alarmes.logic.service.sse;
 import es.caib.comanda.alarmes.back.sse.ComandaSseService;
 import es.caib.comanda.alarmes.logic.intf.model.Alarma.AlarmaReduidaResource;
 import es.caib.comanda.alarmes.logic.intf.service.AlarmaService;
+import es.caib.comanda.ms.sse.ComandaSseEvent;
+import es.caib.comanda.ms.sse.ComandaSseEventTypes;
+import es.caib.comanda.ms.sse.ComandaSseSubscriberRegistry;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import lombok.AllArgsConstructor;
@@ -24,7 +27,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ComandaSseServiceImpl implements ComandaSseService {
+public class ComandaSseServiceImpl implements ComandaSseService, ComandaSseSubscriberRegistry {
 
     private static final long SSE_TIMEOUT_MS = 0L;
 
@@ -51,6 +54,11 @@ public class ComandaSseServiceImpl implements ComandaSseService {
                 null,
                 LocalDateTime.now()));
         return emitter;
+    }
+
+    @Override
+    public boolean hasActiveSubscribers() {
+        return !subscriptions.isEmpty();
     }
 
     public void publish(ComandaSseEvent event) {

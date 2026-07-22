@@ -23,6 +23,7 @@ public class HazelCastCacheConfig {
     public static final String PARAMETRE_CACHE = "parametreCache";
     public static final String ACL_CACHE = "aclCache";
 //    public static final String ACL_CHECK_CACHE = "aclCheckCache";
+    public static final String USUARI_CACHE = "usuariCache";
 
     @Bean
     public Config hazelcastConfig() {
@@ -42,6 +43,7 @@ public class HazelCastCacheConfig {
         config.addMapConfig(new MapConfig().setName(PARAMETRE_CACHE).setTimeToLiveSeconds(3600).setEvictionConfig(getEvictionConfig()));
         config.addMapConfig(new MapConfig().setName(ACL_CACHE).setTimeToLiveSeconds(900).setEvictionConfig(getEvictionConfig()));
 //        config.addMapConfig(new MapConfig().setName(ACL_CHECK_CACHE).setTimeToLiveSeconds(900).setEvictionConfig(getEvictionConfig()));
+        config.addMapConfig(new MapConfig().setName(USUARI_CACHE).setTimeToLiveSeconds(900).setEvictionConfig(getEvictionConfig()));
         return config;
     }
 

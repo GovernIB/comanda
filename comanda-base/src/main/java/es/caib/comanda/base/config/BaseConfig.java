@@ -59,6 +59,7 @@ public class BaseConfig {
 	public static final String PROP_ALARMA_MAIL_FROM_ADDRESS = PROPERTY_PREFIX + "alarma.mail.from.address";
 	public static final String PROP_ALARMA_MAIL_FROM_NAME = PROPERTY_PREFIX + "alarma.mail.from.name";
 	public static final String PROP_ALARMA_MAIL_DEFAULT_DOMAIN = PROPERTY_PREFIX + "alarma.mail.default.domain";
+	public static final String PROP_ALARMA_LOG_ACTIVACIO = PROPERTY_PREFIX + "alarma.log.activacio";
 
 	// Propietats de LDAP
 	public static final String[] PROPS_LDAP = new String[]{

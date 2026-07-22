@@ -73,6 +73,42 @@ public class ArtemisEmbeddedConfig {
                     .setRoutingType(RoutingType.ANYCAST)
                     .setDurable(true));
         }
+        if (!embedded.getActiveMQServer().queueQuery(new SimpleString(CUA_NETEJA_ENTORN_APP)).isExists()) {
+            embedded.getActiveMQServer().createQueue(new QueueConfiguration(CUA_NETEJA_ENTORN_APP)
+                    .setAddress(CUA_NETEJA_ENTORN_APP)
+                    .setRoutingType(RoutingType.ANYCAST)
+                    .setDurable(true));
+        }
+        if (!embedded.getActiveMQServer().queueQuery(new SimpleString(CUA_NETEJA_SALUT)).isExists()) {
+            embedded.getActiveMQServer().createQueue(new QueueConfiguration(CUA_NETEJA_SALUT)
+                    .setAddress(CUA_NETEJA_SALUT)
+                    .setRoutingType(RoutingType.ANYCAST)
+                    .setDurable(true));
+        }
+        if (!embedded.getActiveMQServer().queueQuery(new SimpleString(CUA_NETEJA_TASQUES)).isExists()) {
+            embedded.getActiveMQServer().createQueue(new QueueConfiguration(CUA_NETEJA_TASQUES)
+                    .setAddress(CUA_NETEJA_TASQUES)
+                    .setRoutingType(RoutingType.ANYCAST)
+                    .setDurable(true));
+        }
+        if (!embedded.getActiveMQServer().queueQuery(new SimpleString(CUA_NETEJA_AVISOS)).isExists()) {
+            embedded.getActiveMQServer().createQueue(new QueueConfiguration(CUA_NETEJA_AVISOS)
+                    .setAddress(CUA_NETEJA_AVISOS)
+                    .setRoutingType(RoutingType.ANYCAST)
+                    .setDurable(true));
+        }
+        if (!embedded.getActiveMQServer().queueQuery(new SimpleString(CUA_NETEJA_ALARMES)).isExists()) {
+            embedded.getActiveMQServer().createQueue(new QueueConfiguration(CUA_NETEJA_ALARMES)
+                    .setAddress(CUA_NETEJA_ALARMES)
+                    .setRoutingType(RoutingType.ANYCAST)
+                    .setDurable(true));
+        }
+        if (!embedded.getActiveMQServer().queueQuery(new SimpleString(CUA_NETEJA_ESTADISTICA)).isExists()) {
+            embedded.getActiveMQServer().createQueue(new QueueConfiguration(CUA_NETEJA_ESTADISTICA)
+                    .setAddress(CUA_NETEJA_ESTADISTICA)
+                    .setRoutingType(RoutingType.ANYCAST)
+                    .setDurable(true));
+        }
         // Configurar AddressSettings amb TTL per defecte
         AddressSettings addressSettings = new AddressSettings()
                 .setMaxSizeBytes(1048576L)          // 1MB límit
@@ -86,6 +122,16 @@ public class ArtemisEmbeddedConfig {
         embedded.getActiveMQServer()
                 .getAddressSettingsRepository()
                 .addMatch("#", addressSettings);
+        // Circuit breaker per a cues de neteja: màxim 5 intents (3 del listener + 2 de marge)
+        // Les adreces específiques tenen prioritat sobre el patró "#"
+        AddressSettings netejaSettings = new AddressSettings().setMaxDeliveryAttempts(5);
+        for (String cua : new String[]{
+                CUA_NETEJA_ENTORN_APP, CUA_NETEJA_SALUT, CUA_NETEJA_TASQUES,
+                CUA_NETEJA_AVISOS, CUA_NETEJA_ALARMES, CUA_NETEJA_ESTADISTICA}) {
+            embedded.getActiveMQServer()
+                    .getAddressSettingsRepository()
+                    .addMatch(cua, netejaSettings);
+        }
         // Defineix rols
         Role permissiu = new Role("any", true, true, true, true, true, true, true, true);
         Set<Role> rols = Set.of(permissiu);

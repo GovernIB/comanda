@@ -11,7 +11,7 @@ import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
 import Divider from '@mui/material/Divider';
 import {
-    GridPage,
+
     MuiDataGrid,
     MuiForm,
     MuiFilter,
@@ -31,7 +31,7 @@ import {
     MuiDataGridProps,
     useFormContext,
 } from 'reactlib';
-import { Box, Button, Icon, IconButton, Switch } from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Icon, IconButton, Switch, Typography } from '@mui/material';
 import { useIsUserAdmin, useUserContext } from '../components/UserContext';
 import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
 import notNull from '../util/arrayUtils';
@@ -445,7 +445,8 @@ export const AlarmaConfigForm: React.FC<{
     dialogMode?: boolean;
     dialogModeOnGoBack?: () => void;
     id?: number | string,
-}> = ({ id: idProp, entornAppId: entornAppIdProp, dialogMode, dialogModeOnGoBack }) => {
+    hideToolbarSave?: boolean;
+}> = ({ id: idProp, entornAppId: entornAppIdProp, dialogMode, dialogModeOnGoBack, hideToolbarSave }) => {
     const { t } = useTranslation();
     const { t: tLib } = useBaseAppContext();
     const { id: idFromPath } = useParams();
@@ -546,9 +547,7 @@ export const AlarmaConfigForm: React.FC<{
     const dialogModeProps: Partial<MuiFormProps> = dialogMode
         ? {
               hiddenToolbar: true,
-              // Si estamos haciendo un update, no debemos setear initialData nunca.
-              // Si lo hacemos, base-react no hará la petición getOne inicial
-              initialData: id ? undefined : {
+              initialData: {
                   entornAppId: entornAppIdProp,
               },
               goBackLink: undefined,
@@ -572,7 +571,7 @@ export const AlarmaConfigForm: React.FC<{
                                 sx: { mr: 1 },
                             }),
                         },
-                        {
+                        ...(!hideToolbarSave ? [{
                             position: 2,
                             element: toToolbarIcon('save', {
                                 title: tLib('form.create.title'),
@@ -580,7 +579,7 @@ export const AlarmaConfigForm: React.FC<{
                                     formApiRef.current?.save();
                                 },
                             }),
-                        },
+                        }] : []),
                     ]}
                     upperToolbar
                     sx={{ mb: 2, }}
@@ -873,6 +872,95 @@ export const AlarmaConfigDialog: React.FC<{
 
 const getTreeDataPath = (row: any) => ([row.entornAppId, row.id]);
 
+const AlarmaConfigUsuariGrid: React.FC<{
+    username: string;
+    entornApps: any[];
+    filterBy?: { entornAppId?: number | string };
+    userFilter?: string;
+}> = ({ username, entornApps, filterBy, userFilter }) => {
+    const { t } = useTranslation();
+    const [viewId, setViewId] = React.useState<string | number | null>(null);
+    const gridApiRef = useMuiDataGridApiRef();
+    const closeDialogButtons = useCloseDialogButtons();
+    const refresh = React.useCallback(() => gridApiRef.current?.refresh?.(), [gridApiRef]);
+    const { apiIsReady, apiDelete, tLib } = useAlarmaConfigAction(refresh);
+
+    const columns = React.useMemo(() => [
+        {
+            field: 'entornAppId',
+            valueFormatter: (value?: number) => {
+                if (value == null) return '';
+                const entornApp = entornApps.find((ea: any) => ea.id === value);
+                return entornApp?.entornAppDescription ?? '';
+            },
+            flex: 1,
+        },
+        { field: 'nom', flex: 1 },
+        { field: 'aturarAvaluacioPosteriors', flex: 0.5 },
+        { field: 'resumRegla', flex: 3 },
+    ], [entornApps]);
+
+    const filter = springFilterBuilder.and(
+        userFilter,
+        filterBy?.entornAppId
+            ? `entornAppId:${filterBy.entornAppId}`
+            : springFilterBuilder.inn('entornAppId', entornApps.map((e: any) => e?.id)),
+        springFilterBuilder.eq('createdBy', `'${username}'`),
+        'admin:false',
+    );
+
+    const rowActions = React.useMemo(() => [
+        {
+            label: t($ => $.page.alarmaConfig.update),
+            icon: 'visibility',
+            onClick: (id: string | number) => setViewId(id),
+        },
+        {
+            label: tLib('datacommon.delete.label'),
+            icon: 'delete',
+            showInMenu: true,
+            onClick: apiDelete,
+        },
+    ], [apiIsReady, apiDelete, t, tLib]);
+
+    return (
+        <>
+            <MuiDataGrid
+                resourceName="alarmaConfig"
+                columns={columns}
+                paginationActive
+                autoHeight
+                defaultPaginationModel={{ page: 0, pageSize: 10 }}
+                filter={filter}
+                disableColumnSorting
+                toolbarHide
+                apiRef={gridApiRef}
+                rowAdditionalActions={rowActions}
+                rowHideDeleteButton
+                rowHideUpdateButton
+            />
+            {viewId != null && (
+                <MuiDialog
+                    open
+                    buttonCallback={() => setViewId(null)}
+                    closeCallback={() => setViewId(null)}
+                    buttons={closeDialogButtons}
+                    componentProps={{ maxWidth: 'lg', fullWidth: true }}
+                >
+                    <Box sx={{ mt: 3, height: '500px' }}>
+                        <AlarmaConfigForm
+                            id={String(viewId)}
+                            dialogMode
+                            hideToolbarSave
+                            dialogModeOnGoBack={() => setViewId(null)}
+                        />
+                    </Box>
+                </MuiDialog>
+            )}
+        </>
+    );
+};
+
 const AlarmaConfig: React.FC<{
     filterBy?: { entornAppId?: number | string };
     dialogMode?: boolean;
@@ -931,10 +1019,13 @@ const AlarmaConfig: React.FC<{
           }
         : {};
     const [adminView, setAdminView] = React.useState<boolean>(false);
+    const [showUsersAlarms, setShowUsersAlarms] = React.useState<boolean>(false);
     const { user } = useUserContext();
     const isCurrentUserAdmin = useIsUserAdmin();
     const { isReady: apiIsReadyEntornApp, find: apiFindEntornApp } = useResourceApiService('entornApp');
+    const { isReady: configApiReady, find: findConfigs } = useResourceApiService('alarmaConfig');
     const [entornApps, setEntornApps] = React.useState<any[]>();
+    const [otherUsers, setOtherUsers] = React.useState<string[]>([]);
     const refresh = () => {
         apiRef.current?.refresh?.();
     }
@@ -943,6 +1034,8 @@ const AlarmaConfig: React.FC<{
     React.useEffect(() => {
         if (adminView && !isCurrentUserAdmin)
             setAdminView(false);
+        if (!adminView)
+            setShowUsersAlarms(false);
     }, [isCurrentUserAdmin, adminView])
 
     React.useEffect(() => {
@@ -952,6 +1045,18 @@ const AlarmaConfig: React.FC<{
             });
         }
     }, [apiIsReadyEntornApp]);
+
+    React.useEffect(() => {
+        if (!configApiReady || !isCurrentUserAdmin || !user?.codi) return;
+        findConfigs({ page: 0, size: 1000, filter: 'admin:false' }).then((response: any) => {
+            const uniqueUsers = [...new Set(
+                (response.rows as any[])
+                    .map((row: any) => row.createdBy as string)
+                    .filter((u: string) => u && u !== user.codi)
+            )] as string[];
+            setOtherUsers(uniqueUsers);
+        });
+    }, [configApiReady, findConfigs, isCurrentUserAdmin, user?.codi]);
 
     const columns = React.useMemo(() => {
         if (!entornApps) return [];
@@ -1012,6 +1117,25 @@ const AlarmaConfig: React.FC<{
                 position: 1,
                 element: loadingElement,
             },
+            isCurrentUserAdmin && adminView && otherUsers.length > 0
+                ? {
+                    position: 2,
+                    element: (
+                        <Button
+                            onClick={() => setShowUsersAlarms(!showUsersAlarms)}
+                            variant={showUsersAlarms ? 'contained' : 'outlined'}
+                            title={
+                                showUsersAlarms
+                                    ? t($ => $.page.alarmaConfig.filter.showUsersAlarmsDisabled)
+                                    : t($ => $.page.alarmaConfig.filter.showUsersAlarmsEnabled)
+                            }
+                            sx={{ mr: 2 }}
+                        >
+                            <Icon>group</Icon>
+                        </Button>
+                    ),
+                }
+                : null,
             isCurrentUserAdmin
                 ? {
                       position: 2,
@@ -1046,7 +1170,7 @@ const AlarmaConfig: React.FC<{
                   }
                 : null,
         ].filter(notNull);
-    }, [reorderDisabledWarning, loadingElement, isCurrentUserAdmin, adminView, t, dialogMode, tLib, onAdd]);
+    }, [reorderDisabledWarning, loadingElement, isCurrentUserAdmin, adminView, showUsersAlarms, otherUsers.length, t, dialogMode, tLib, onAdd]);
     const hideDeleteForRow = React.useCallback((row: any) => {
         if (isAutogeneratedRow(row)) return true;
         return !isCurrentUserAdmin && (row?.admin || row?.correuGeneric);
@@ -1088,33 +1212,54 @@ const AlarmaConfig: React.FC<{
         ) : springFilterBuilder.eq('admin', true),
     );
 
-    return (
-        <GridPage>
-            <PageTitle title={t(($) => $.page.alarma.snackbar.title)} />
-            <MuiDataGrid
-                apiRef={apiRef}
-                datagridApiRef={gridApiRef}
-                title={t($ => $.page.alarmaConfig.title)}
-                resourceName="alarmaConfig"
-                perspectives={perspectives}
-                columns={columns}
-                toolbarType="upper"
-                rowAdditionalActions={actions}
-                toolbarAdditionalRow={filterElement}
-                toolbarElementsWithPositions={toolbarElementsWithPositions}
-                filter={currentFilter}
-                toolbarCreateLink="form"
-                rowUpdateLink="form/{{id}}"
-                disableColumnSorting
-                rowHideDeleteButton
-                rowHideUpdateButton={row => dialogMode || hideDeleteForRow(row)}
-                toolbarHideCreate={dialogMode || undefined}
-                toolbarHideQuickFilter
-                {...treeDataGridProps}
-                {...reorderingDataGridProps}
-            />
-        </GridPage>
-    );
+    return (<>
+        <PageTitle title={t(($) => $.page.alarma.snackbar.title)} />
+        <MuiDataGrid
+            apiRef={apiRef}
+            datagridApiRef={gridApiRef}
+            title={t($ => $.page.alarmaConfig.title)}
+            resourceName="alarmaConfig"
+            perspectives={perspectives}
+            columns={columns}
+            toolbarType="upper"
+            rowAdditionalActions={actions}
+            toolbarAdditionalRow={filterElement}
+            toolbarElementsWithPositions={toolbarElementsWithPositions}
+            filter={currentFilter}
+            toolbarCreateLink="form"
+            rowUpdateLink="form/{{id}}"
+            disableColumnSorting
+            autoHeight
+            rowHideDeleteButton
+            rowHideUpdateButton={row => dialogMode || hideDeleteForRow(row)}
+            toolbarHideCreate={dialogMode || undefined}
+            toolbarHideQuickFilter
+            {...treeDataGridProps}
+            {...reorderingDataGridProps}
+        />
+        {!dialogMode && isCurrentUserAdmin && adminView && showUsersAlarms && otherUsers.length > 0 && (
+            <Box sx={{ mt: 2, pb: 2, px: 2 }}>
+                <Typography variant="h6" sx={{ mb: 1 }}>
+                    {t($ => $.page.alarma.userSection.header)}
+                </Typography>
+                {otherUsers.map(username => (
+                    <Accordion key={username} disableGutters>
+                        <AccordionSummary expandIcon={<Icon>expand_more</Icon>}>
+                            <Typography>{t($ => $.page.alarma.userSection.userTitle, { username })}</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <AlarmaConfigUsuariGrid
+                                username={username}
+                                entornApps={entornApps ?? []}
+                                filterBy={filterBy}
+                                userFilter={userFilter}
+                            />
+                        </AccordionDetails>
+                    </Accordion>
+                ))}
+            </Box>
+        )}
+    </>);
 }
 
 export default AlarmaConfig;

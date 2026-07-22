@@ -135,7 +135,6 @@ describe('useSalutToolbarState', () => {
         const { result } = renderHook(() => useSalutToolbarState());
 
         expect(result.current.dataRangeDuration).toBe('PT15M');
-        expect(result.current.refreshDuration).toBe('PT5M');
         expect(result.current.grouping).toBe(GroupingEnum.APPLICATION);
         expect(result.current.filterData).toEqual({});
     });
@@ -146,13 +145,11 @@ describe('useSalutToolbarState', () => {
 
         act(() => {
             result.current.setDataRangeDuration('P1D');
-            result.current.setRefreshDuration('PT10M');
             result.current.setGrouping(GroupingEnum.NONE);
             result.current.setFilterData({ app: [{ id: '5', description: 'APP' }] });
         });
 
         expect(localStorage.getItem('appDataRangeSelect')).toBe('P1D');
-        expect(localStorage.getItem('refreshTimeoutSelect')).toBe('PT10M');
         expect(localStorage.getItem('groupingForViewSelect')).toBe('NONE');
         expect(localStorage.getItem('filterDataSalut')).toBe('{"app":[{"id":"5","description":"APP"}]}');
     });
@@ -160,13 +157,11 @@ describe('useSalutToolbarState', () => {
     it('useSalutToolbarState_quanHiHaValorsPersistitsInvalits_recuperaElsDefaults', () => {
         // Comprova que els valors corruptes del localStorage no trenquen el hook i es substitueixen pels defaults.
         localStorage.setItem('appDataRangeSelect', 'INVALID');
-        localStorage.setItem('refreshTimeoutSelect', 'INVALID');
         localStorage.setItem('groupingForViewSelect', 'INVALID');
 
         const { result } = renderHook(() => useSalutToolbarState());
 
         expect(result.current.dataRangeDuration).toBe('PT15M');
-        expect(result.current.refreshDuration).toBe('PT5M');
         expect(result.current.grouping).toBe(GroupingEnum.APPLICATION);
     });
 });

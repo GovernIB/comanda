@@ -234,8 +234,10 @@ const AvisFilter = (props: { onEntornAppFilterDataChange: (data: any) => void, o
                     gap: { xs: 1, sm: 0 },
                 }}>
                     <Grid container spacing={1} sx={{ flexGrow: 1, mr: 1 }}>
-                        <Grid size={6}><FormField name="app" /></Grid>
-                        <Grid size={6}><FormField name="entorn" /></Grid>
+                        <Grid size={6}><FormField name="app"
+                            advancedSearchColumns={[{ field: 'codi', flex: 1, }, { field: 'nom', flex: 2, },]}/></Grid>
+                        <Grid size={6}><FormField name="entorn"
+                            advancedSearchColumns={[{ field: 'codi', flex: 1, }, { field: 'nom', flex: 2, },]}/></Grid>
                     </Grid>
                     <Box sx={{
                             display: 'flex',
@@ -309,6 +311,8 @@ const dataGridCommonColumns: MuiDataGridColDef[] = [{
 const dataGridPerspectives = ['PATH', 'ENTORN_APP', 'LLEGIT'];
 const dataGridSortModel: GridSortModel = [{ field: 'dataInici', sort: 'asc' }];
 
+const INVALID_ENTORNAPP = "INVALID_ENTORNAPP";
+
 const Avis = () => {
     const { t } = useTranslation();
     const { t: tLib } = useBaseAppContext();
@@ -336,6 +340,8 @@ const Avis = () => {
         }
     }, [apiIsReady]);
 
+    const treePathFormatInvalidEntornApp = (invalidPath: string) =>
+        t($ => $.page.avisos.grid.entornAppInvalid) + ` [ID: ${invalidPath.split(' ')[1]}]`;
     const {
         treeView,
         treeViewSwitch,
@@ -348,7 +354,7 @@ const Avis = () => {
         false,
         false,
         {
-            valueFormatter: (value: any, row: any) => row?.id ? row?.nom : value,
+            valueFormatter: (value: any, row: any) => row?.id ? row?.nom : value?.startsWith?.(INVALID_ENTORNAPP) ? treePathFormatInvalidEntornApp(value) : value,
             renderCell: (params: any) => {
                 const apiRef = useGridApiContext();
                 const rowTree = useGridSelector(apiRef, gridRowTreeSelector);
@@ -540,7 +546,10 @@ const Avis = () => {
                 toolbarElementsWithPositions={toolbarAdditionalActions}
                 toolbarAdditionalRow={filterElement}
                 rowAdditionalActions={actions}
-                autoFindDisabled={!isFilterDataReady}
+                // autoFindDisabled no es pot usar si el filtre està buit, ja que només es farà una única petició inicial i aquesta serà cancelada pel autoFindDisabled
+                autoFindDisabled={!(isFilterDataReady && !filter.length)}
+                // s'usa loading per a que el grid no es mostri buit fins que no s'ha fet la primera petició
+                loading
                 {...treeDataGridProps}
                 initialState={{
                     columns: {

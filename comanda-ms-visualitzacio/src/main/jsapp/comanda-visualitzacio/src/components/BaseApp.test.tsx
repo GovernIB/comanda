@@ -21,6 +21,9 @@ vi.mock('reactlib', () => ({
         return (
             <div data-testid="mui-base-app">
                 <div data-testid="menu-count">{((props.menuEntries as unknown[]) ?? []).length}</div>
+                <div data-testid="header-auth-components">
+                    {props.headerAdditionalAuthComponents as React.ReactNode}
+                </div>
                 {props.children as React.ReactNode}
             </div>
         );
@@ -220,5 +223,28 @@ describe('BaseApp', () => {
                 menuEntries: [{ id: 'a', title: 'A', to: '/a', icon: 'info' }],
             })
         );
+    });
+
+    it('BaseApp_mostraLaDarreraConnexio_quanElUserLaTeDefinida', () => {
+        mocks.useResourceApiContextMock.mockReturnValue({
+            isReady: true,
+            indexState: { links: { has: vi.fn() } },
+        });
+        mocks.useBaseAppContextMock.mockReturnValue({ currentLanguage: 'ca' });
+        const darreraConnexio = '2024-05-15T10:30:00';
+        mocks.useUserContextMock.mockReturnValue({
+            user: { id: 9, idioma: 'CA', darreraConnexio },
+            currentRole: 'COM_ADMIN',
+        });
+        mocks.useMediaQueryMock.mockReturnValue(false);
+        mocks.useTranslationMock.mockReturnValue({ t: (key: any) => (typeof key === 'function' ? 'translated-key' : key) });
+
+        render(
+            <MemoryRouter>
+                <BaseApp code="comanda" title="Comanda" version="1.0.0" />
+            </MemoryRouter>
+        );
+
+        expect(screen.getByText('15/05/24 10:30')).toBeInTheDocument();
     });
 });

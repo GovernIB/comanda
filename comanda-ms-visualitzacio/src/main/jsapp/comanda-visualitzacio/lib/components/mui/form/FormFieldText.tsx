@@ -120,6 +120,7 @@ const InnerFormFieldText: React.FC<
             {...componentProps}
             helperText={helperText ?? componentProps.helperText}
             slotProps={{
+                ...componentProps.slotProps,
                 input: inputProps,
                 htmlInput: htmlInputProps,
             }}

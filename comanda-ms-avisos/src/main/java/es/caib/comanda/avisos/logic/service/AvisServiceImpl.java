@@ -23,6 +23,7 @@ import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
@@ -52,6 +53,15 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
     private final AvisMapper avisMapper;
     private final AvisRepository avisRepository;
     private final AvisLlegitRepository avisLlegitRepository;
+
+    @Override
+    @Transactional
+    public void netejaPerEntornApp(Long entornAppId) {
+        List<AvisEntity> avisos = avisRepository.findByEntornAppId(entornAppId);
+        if (!avisos.isEmpty()) {
+            avisRepository.deleteAll(avisos);
+        }
+    }
 
     @PostConstruct
     public void init() {
@@ -187,7 +197,11 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
         @Override
         public void applySingle(String code, AvisEntity entity, Avis resource) throws PerspectiveApplicationException {
             EntornApp entornApp = avisClientHelper.entornAppFindById(entity.getEntornAppId());
-            resource.setTreePath(new String[]{entornApp.getApp().getNom(), entornApp.getEntorn().getNom(), resource.getIdentificador()});
+            if (entornApp != null) {
+                resource.setTreePath(new String[]{entornApp.getApp().getNom(), entornApp.getEntorn().getNom(), resource.getIdentificador()});
+            } else {
+                resource.setTreePath(new String[]{"INVALID_ENTORNAPP " + entity.getEntornAppId(), resource.getIdentificador()});
+            }
         }
     }
 

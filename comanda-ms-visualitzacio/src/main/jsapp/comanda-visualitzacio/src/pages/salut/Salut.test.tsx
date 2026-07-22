@@ -6,7 +6,11 @@ const mocks = vi.hoisted(() => ({
     useParamsMock: vi.fn(),
     refreshSalutMock: vi.fn(),
     refreshAppInfoMock: vi.fn(),
-    useIntervalMock: vi.fn(),
+    sseMock: {
+        subscribe: vi.fn((_eventType: string, _listener: (event: { type?: string; payload?: unknown }) => void) => vi.fn()),
+        status: 'connected' as const,
+        connected: true,
+    },
     tMock: vi.fn((selector: any) =>
         selector({
             page: {
@@ -89,7 +93,6 @@ vi.mock('../../components/salut/SalutToolbar', () => ({
     useSalutToolbarState: () => ({
         grouping: 'APPLICATION',
         dataRangeDuration: 'PT15M',
-        refreshDuration: 'PT5M',
         filterData: {},
         ...(typeof (globalThis as any).__salutToolbarStateMock === 'function'
             ? (globalThis as any).__salutToolbarStateMock()
@@ -129,8 +132,8 @@ vi.mock('../../components/PageTitle', () => ({
     default: ({ title }: { title: string }) => <h1>{title}</h1>,
 }));
 
-vi.mock('../../hooks/useInterval', () => ({
-    default: (args: unknown) => mocks.useIntervalMock(args),
+vi.mock('../../components/SseProvider', () => ({
+    useSseContext: () => mocks.sseMock,
 }));
 
 vi.mock('./dataFetching', () => ({
@@ -241,7 +244,7 @@ describe('Salut', () => {
 
         expect(screen.getByRole('heading', { name: 'Salut' })).toBeInTheDocument();
         expect(screen.getByTestId('salut-toolbar')).toHaveTextContent('Salut');
-        expect(mocks.useIntervalMock).toHaveBeenCalled();
+        expect(mocks.sseMock.subscribe).toHaveBeenCalled();
     });
 
     it('Salut_quanCarregaInicialment_activaElSkeletonDelLlistat', async () => {
@@ -272,25 +275,18 @@ describe('Salut', () => {
     });
 
     it('Salut_quanEsPremRefrescar_tornaADemanarLesDadesIGestionaElRefreshDelDetall', async () => {
-        // Comprova que el tick periòdic del component reactiva el refresh global i inclou el refresh del detall de l'app.
+        // Comprova que el botó de refresc manual executa el refresh global i inclou el detall de l'app.
         render(<Salut />);
 
         await waitFor(() => {
             expect(screen.getByText(/SalutLlistat/)).toBeInTheDocument();
         });
 
-        const intervalArgs = mocks.useIntervalMock.mock.calls[0]?.[0] as {
-            tick: () => void;
-            init: () => void;
-        };
-
         act(() => {
-            intervalArgs.init();
-            intervalArgs.tick();
+            screen.getByRole('button', { name: 'Refrescar' }).click();
         });
 
         expect(mocks.refreshAppInfoMock).toHaveBeenCalled();
-        expect(mocks.useIntervalMock).toHaveBeenCalled();
     });
 
     it('Salut_quanLaRutaDeDetallNoTeEntornApp_noMostraSubtitol', async () => {
@@ -413,6 +409,109 @@ describe('Salut', () => {
         });
     });
 
+    it('Salut_quanRebEsdevenimentEntornAppChanged_refrescaLesDadesIActualitzaElNombreDeGrups', async () => {
+        // Comprova que l'alta d'un entorn-app (encara que sigui d'una app nova) es reflecteix
+        // al llistat (i per tant al donut d'estats de cada grup) sense necessitat de refrescar manualment.
+        render(<Salut />);
+
+        await waitFor(() => {
+            expect(screen.getByText('SalutLlistat 1')).toBeInTheDocument();
+        });
+
+        const entornAppChangedCall = mocks.sseMock.subscribe.mock.calls.find(
+            ([eventType]) => eventType === 'entornApp.changed'
+        );
+        expect(entornAppChangedCall).toBeDefined();
+        const entornAppChangedListener = entornAppChangedCall![1];
+
+        mocks.findEntornAppMock.mockResolvedValue({
+            rows: [
+                {
+                    id: 7,
+                    app: { id: 1, description: 'App Demo' },
+                    entorn: { id: 2, description: 'PRO' },
+                },
+                {
+                    id: 8,
+                    app: { id: 2, description: 'Nova App' },
+                    entorn: { id: 2, description: 'PRO' },
+                },
+            ],
+        });
+        mocks.findAppMock.mockResolvedValue({
+            rows: [
+                { id: 1, description: 'App Demo' },
+                { id: 2, description: 'Nova App' },
+            ],
+        });
+
+        act(() => {
+            entornAppChangedListener({ type: 'entornApp.changed', payload: 8 });
+        });
+
+        await waitFor(() => {
+            expect(screen.getByText('SalutLlistat 2')).toBeInTheDocument();
+        });
+    });
+
+    it('Salut_quanRebEsdevenimentAppChanged_refrescaLesDades', async () => {
+        render(<Salut />);
+
+        await waitFor(() => {
+            expect(screen.getByText('SalutLlistat 1')).toBeInTheDocument();
+        });
+
+        const appChangedCall = mocks.sseMock.subscribe.mock.calls.find(
+            ([eventType]) => eventType === 'app.changed'
+        );
+        expect(appChangedCall).toBeDefined();
+        const appChangedListener = appChangedCall![1];
+
+        mocks.findAppMock.mockResolvedValue({
+            rows: [
+                { id: 1, description: 'App Demo' },
+                { id: 2, description: 'Nova App' },
+            ],
+        });
+
+        act(() => {
+            appChangedListener({ type: 'app.changed', payload: 2 });
+        });
+
+        await waitFor(() => {
+            expect(mocks.findAppMock).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    it('Salut_quanRebEsdevenimentEntornChanged_refrescaLesDades', async () => {
+        render(<Salut />);
+
+        await waitFor(() => {
+            expect(screen.getByText('SalutLlistat 1')).toBeInTheDocument();
+        });
+
+        const entornChangedCall = mocks.sseMock.subscribe.mock.calls.find(
+            ([eventType]) => eventType === 'entorn.changed'
+        );
+        expect(entornChangedCall).toBeDefined();
+        const entornChangedListener = entornChangedCall![1];
+
+        mocks.findEntornMock.mockResolvedValue({
+            rows: [
+                { id: 2, description: 'PRO' },
+                { id: 3, description: 'PRE' },
+            ],
+        });
+
+        act(() => {
+            entornChangedListener({ type: 'entorn.changed', payload: 3 });
+        });
+
+        await waitFor(() => {
+            expect(mocks.findEntornMock).toHaveBeenCalledTimes(2);
+        });
+    });
+
     it('Salut_quanFallaLaCarregaInicial_mostraLaVistaBuidaiPermetRefrescar', async () => {
         // Verifica que una errada en la càrrega inicial deixa la pantalla estable i permet reintentar el refresh.
         mocks.findEntornAppMock.mockRejectedValueOnce(new Error('boom'));
@@ -443,5 +542,27 @@ describe('Salut', () => {
         await waitFor(() => {
             expect(mocks.findEntornAppMock).toHaveBeenCalledTimes(2);
         });
+    });
+
+    it('Salut_quanFallaUnRefrescEnSegonPla_mantéLesDadesJaCarregadesSenseDeixarLaPantallaEnBlanc', async () => {
+        // Un refresc posterior al càrrega inicial (p.ex. disparat per un canvi d'entorn-app) que falla
+        // no ha de fer desaparèixer el llistat ja mostrat.
+        render(<Salut />);
+
+        await waitFor(() => {
+            expect(screen.getByText('SalutLlistat 1')).toBeInTheDocument();
+        });
+
+        mocks.findEntornAppMock.mockRejectedValueOnce(new Error('boom'));
+
+        act(() => {
+            screen.getByRole('button', { name: 'Refrescar' }).click();
+        });
+
+        await waitFor(() => {
+            expect(mocks.findEntornAppMock).toHaveBeenCalledTimes(2);
+        });
+
+        expect(screen.getByText('SalutLlistat 1')).toBeInTheDocument();
     });
 });

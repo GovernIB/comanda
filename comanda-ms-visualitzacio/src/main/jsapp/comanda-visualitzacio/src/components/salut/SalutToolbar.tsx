@@ -37,14 +37,11 @@ export type SalutToolbarProps = {
     appDataLoading?: boolean;
     dataRangeDuration: DataRangeDurationType;
     setDataRangeDuration: (duration: DataRangeDurationType) => void;
-    refreshDuration: RefreshDurationType;
-    setRefreshDuration: (duration: RefreshDurationType) => void;
     filterData: SalutFilterDataType;
     setFilterData: (data: SalutFilterDataType) => void;
     grouping: GroupingEnum;
     setGrouping: (grouping: GroupingEnum) => void;
     lastRefresh?: Date;
-    nextRefresh?: Date;
 }
 
 export const agrupacioFromMinutes = (
@@ -134,66 +131,6 @@ const GroupForViewSelect = (props: {
     );
 };
 
-const getInitialRefreshDuration = () => {
-    const storedValue = localStorage.getItem('refreshTimeoutSelect');
-    if (!storedValue || !isValidRefreshDuration(storedValue)) {
-        return 'PT5M';
-    }
-    return storedValue;
-};
-
-type RefreshDurationType = 'PT1M' | 'PT5M' | 'PT10M' | 'PT30M' | 'PT1H';
-const isValidRefreshDuration = (duration: string): duration is RefreshDurationType => {
-    return ['PT1M', 'PT5M', 'PT10M', 'PT30M', 'PT1H'].includes(duration);
-};
-
-const RefreshTimeoutSelect: React.FC<{
-    value: RefreshDurationType;
-    disabled?: boolean;
-    onChange: (duration: RefreshDurationType) => void;
-}> = (props) => {
-    const { value, onChange, disabled } = props;
-    const { t } = useTranslation();
-
-    const handleChange = (event: SelectChangeEvent) => {
-        const value = event.target.value;
-        if (isValidRefreshDuration(value)) {
-            onChange(value);
-        } else {
-            console.error('Invalid refresh duration:', value);
-        }
-    };
-
-    return (
-        <FormControl
-            title={t($ => $.page.salut.refreshperiod.title)}
-        >
-            <Select
-                value={value}
-                size="small"
-                disabled={disabled}
-                onChange={handleChange}
-                startAdornment={
-                    <InputAdornment position="start">
-                        <Icon>update</Icon>
-                    </InputAdornment>
-                }
-                sx={{ mr: 1 }}
-                slotProps={{
-                    input: {
-                        'aria-label': t($ => $.page.salut.refreshperiod.title)
-                    }
-                }}
-            >
-                <MenuItem value={'PT1M'}>{t($ => $.page.salut.refreshperiod.PT1M)}</MenuItem>
-                <MenuItem value={'PT5M'}>{t($ => $.page.salut.refreshperiod.PT5M)}</MenuItem>
-                <MenuItem value={'PT10M'}>{t($ => $.page.salut.refreshperiod.PT10M)}</MenuItem>
-                <MenuItem value={'PT30M'}>{t($ => $.page.salut.refreshperiod.PT30M)}</MenuItem>
-                <MenuItem value={'PT1H'}>{t($ => $.page.salut.refreshperiod.PT1H)}</MenuItem>
-            </Select>
-        </FormControl>
-    );
-};
 
 // Get the stored value from localStorage or use initialValue
 const getInitialDateRangeDuration = () => {
@@ -256,34 +193,6 @@ const AppDataRangeSelect = (props: {
     );
 };
 
-function formatTimeDifference(otherDate: Date) {
-    const now = new Date();
-    const diffInMs = Math.abs(now.getTime() - otherDate.getTime());
-    const diffInSeconds = Math.floor(diffInMs / 1000);
-
-    if (diffInSeconds < 60) {
-        return `${diffInSeconds} s`;
-    } else {
-        const diffInMinutes = Math.floor(diffInSeconds / 60);
-        return `${diffInMinutes} m`;
-    }
-}
-
-
-const useTimeUntilNextRefreshFormatted = (nextRefresh?: Date | null) => {
-    const [timeUntilNextRefreshFormatted, setTimeUntilNextRefreshFormatted] = React.useState<
-        string | null
-    >(null);
-    React.useEffect(() => {
-        if (nextRefresh != null) {
-            const intervalId = setInterval(() => {
-                setTimeUntilNextRefreshFormatted(formatTimeDifference(nextRefresh))
-            }, 1000);
-            return () => clearInterval(intervalId);
-        }
-    }, [nextRefresh]);
-    return timeUntilNextRefreshFormatted;
-};
 
 const SalutEntornAppFilterForm: React.FC = () => {
     const { data } = useFormContext();
@@ -395,7 +304,8 @@ const useSalutEntornAppFilter = ({
         setOpen(false);
     };
     const netejar = () => {
-        filterRef?.current?.clear?.();
+        // S'usa reset enlloc de clear per a posar a null el filtre sencer, ignorant l'initialData donat
+        filterRef?.current?.reset?.();
     };
 
     const handleOpen = () => {
@@ -455,18 +365,12 @@ export const useSalutToolbarState = () => {
     const [dataRangeDuration, setDataRangeDuration] = React.useState<DataRangeDurationType>(
         getInitialDateRangeDuration
     );
-    const [refreshDuration, setRefreshDuration] = React.useState<RefreshDurationType>(getInitialRefreshDuration);
     const [filterData, setFilterData] = React.useState<SalutFilterDataType>(getInitialFilterData);
     const [grouping, setGrouping] = React.useState<GroupingEnum>(getInitialGrouping());
 
     const handleSetDataRangeDuration = React.useCallback((duration: DataRangeDurationType) => {
         localStorage.setItem('appDataRangeSelect', duration);
         setDataRangeDuration(duration);
-    }, []);
-
-    const handleSetRefreshDuration = React.useCallback((duration: RefreshDurationType) => {
-        localStorage.setItem('refreshTimeoutSelect', duration);
-        setRefreshDuration(duration);
     }, []);
 
     const handleSetFilterData = React.useCallback((data: SalutFilterDataType) => {
@@ -482,8 +386,6 @@ export const useSalutToolbarState = () => {
     return {
         dataRangeDuration,
         setDataRangeDuration: handleSetDataRangeDuration,
-        refreshDuration,
-        setRefreshDuration: handleSetRefreshDuration,
         filterData,
         setFilterData: handleSetFilterData,
         grouping,
@@ -504,10 +406,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = React.memo((props) => {
         appDataLoading,
         dataRangeDuration,
         setDataRangeDuration,
-        refreshDuration,
-        setRefreshDuration,
         lastRefresh,
-        nextRefresh,
         filterData,
         setFilterData,
         grouping,
@@ -516,7 +415,6 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = React.memo((props) => {
     const { t } = useTranslation();
     const { goBack } = useBaseAppContext();
     const theme = useTheme();
-    const timeUntilNextRefreshFormatted = useTimeUntilNextRefreshFormatted(nextRefresh);
 
     const { handleOpen, dialog } = useSalutEntornAppFilter({ filterData, setFilterData });
     const springFilter = salutEntornAppFilterBuilder(filterData);
@@ -538,45 +436,24 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = React.memo((props) => {
         {
             position: 2,
             element: (
-                <Box sx={{ mr: 2, minWidth: { xs: '50px', sm: '135px' } }}>
+                <Box sx={{ mr: 2, minWidth: { xs: '50px', sm: '100px' } }}>
                     {lastRefresh != null && (
                         <Typography sx={{ display: 'block' }} variant="caption">
                             {t($ => $.page.salut.refresh.last)}:{' '}
                             <b>{lastRefresh.toLocaleTimeString()}</b>
                         </Typography>
                     )}
-                    {nextRefresh != null &&
-                        nextRefresh > new Date() &&
-                        timeUntilNextRefreshFormatted && (
-                            <Typography sx={{ display: 'block' }} variant="caption">
-                                {t($ => $.page.salut.refresh.next)}:{' '}
-                                <b>{timeUntilNextRefreshFormatted}</b>
-                            </Typography>
-                        )}
                 </Box>
             ),
         },
         {
             position: 2,
             element: (
-                <Box
-                    sx={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: 1,
-                    }}
-                >
-                    <RefreshTimeoutSelect
-                        value={refreshDuration}
-                        onChange={setRefreshDuration}
-                        disabled={!ready}
-                    />
-                    <AppDataRangeSelect
-                        value={dataRangeDuration}
-                        onChange={setDataRangeDuration}
-                        disabled={!ready}
-                    />
-                </Box>
+                <AppDataRangeSelect
+                    value={dataRangeDuration}
+                    onChange={setDataRangeDuration}
+                    disabled={!ready}
+                />
             ),
         },
         {

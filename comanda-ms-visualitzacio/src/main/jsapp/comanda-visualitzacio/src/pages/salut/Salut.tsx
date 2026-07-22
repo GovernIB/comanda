@@ -1,5 +1,5 @@
-import { Activity, FunctionComponent, useCallback, useEffect, useRef, useState } from 'react';
-import { SalutModel } from '../../types/salut.model';
+import { Activity, FunctionComponent, useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import { SalutEstatEnum, SalutModel } from '../../types/salut.model';
 import { springFilterBuilder, useResourceApiService } from 'reactlib';
 import dayjs from 'dayjs';
 import SalutToolbar, {
@@ -9,8 +9,8 @@ import SalutToolbar, {
     SalutFilterDataType,
     useSalutToolbarState,
 } from '../../components/salut/SalutToolbar';
-import useInterval from '../../hooks/useInterval';
 import { useTranslation } from 'react-i18next';
+import { useSseContext } from '../../components/SseProvider';
 import { SalutLlistat } from '../../components/salut/SalutPrincipalWidgets';
 import { useParams } from 'react-router-dom';
 import SalutAppInfo from './SalutAppInfo';
@@ -190,6 +190,29 @@ const splitSalutDataIntoGroups = ({
     return groups;
 };
 
+const DEBOUNCE_MS = 300;
+
+type SalutChangedPayload = {
+    entornAppId: number;
+    appEstat: SalutEstatEnum;
+    appLatencia?: number;
+    bdEstat: SalutEstatEnum;
+    bdLatencia?: number;
+    peticioError?: boolean;
+    integracioUpCount?: number;
+    integracioWarnCount?: number;
+    integracioDownCount?: number;
+    integracioDesconegutCount?: number;
+    subsistemaUpCount?: number;
+    subsistemaWarnCount?: number;
+    subsistemaDownCount?: number;
+    subsistemaDesconegutCount?: number;
+    missatgeErrorCount?: number;
+    missatgeWarnCount?: number;
+    missatgeInfoCount?: number;
+    estatItemsPerAgrupacio?: Record<string, SalutInformeEstatItem[]>;
+};
+
 const useSalutData = ({
     groupBy,
     dataRangeMinutes,
@@ -219,6 +242,7 @@ const useSalutData = ({
         loading: boolean;
         error?: unknown;
     }>({ groups: [], initialized: false, loading: false });
+    const [, startTransition] = useTransition();
     const requestSequence = useRef<number>(0);
     const filterDataApp = filterData?.app;
     const filterDataEntorn = filterData?.entorn;
@@ -354,35 +378,43 @@ const useSalutData = ({
 
             if (sequence !== requestSequence.current) return;
 
-            setSalutData({
-                lastRefresh: new Date(),
-                apps,
-                entorns,
-                groups: splitSalutDataIntoGroups({
-                    estats,
-                    salutLastItems,
-                    groupBy,
+            // S'aplica com a transició perquè el canvi de dades (que pot afegir/llevar grups sencers
+            // en crear/eliminar entorns-app) no bloquegi ni faci parpellejar la interfície: React manté
+            // el contingut anterior visible fins que el nou està preparat.
+            startTransition(() => {
+                setSalutData({
+                    lastRefresh: new Date(),
                     apps,
                     entorns,
-                    entornApps: visibleEntornApps,
-                }),
-                grupsDates: (grupsDatesResponse as { data: string }[]).map(item => item.data),
-                agrupacio,
-                error: undefined,
-                initialized: true,
-                loading: false,
+                    groups: splitSalutDataIntoGroups({
+                        estats,
+                        salutLastItems,
+                        groupBy,
+                        apps,
+                        entorns,
+                        entornApps: visibleEntornApps,
+                    }),
+                    grupsDates: (grupsDatesResponse as { data: string }[]).map(item => item.data),
+                    agrupacio,
+                    error: undefined,
+                    initialized: true,
+                    loading: false,
+                });
             });
         } catch (e) {
             if (sequence !== requestSequence.current) return;
 
             // TODO Mostrar error en la UI
-            setSalutData({
+            // No es reinicialitzen groups/apps/entorns: si ja hi havia dades carregades (p.ex. un
+            // refresc en segon pla per un canvi d'entorn-app), es mantenen visibles en lloc de
+            // deixar la pantalla en blanc per un error puntual.
+            setSalutData(prevState => ({
+                ...prevState,
                 lastRefresh: new Date(),
-                groups: [],
                 error: e,
                 initialized: true,
                 loading: false,
-            });
+            }));
         }
     }, [
         additionalFilter,
@@ -398,14 +430,86 @@ const useSalutData = ({
         salutApiReport,
     ]);
 
+    const applyBatchedSseUpdates = useCallback((payloads: Map<number, SalutChangedPayload>) => {
+        setSalutData(prevState => {
+            const agrupacio = prevState.agrupacio;
+            const newGroups = prevState.groups.map(group => {
+                const newSalutLastItems = [...group.salutLastItems];
+                let salutChanged = false;
+                const newEstats = { ...group.estats };
+                let estatsChanged = false;
+
+                for (const [entornAppId, payload] of payloads) {
+                    const itemIndex = newSalutLastItems.findIndex(
+                        item => item.entornAppId === entornAppId
+                    );
+                    if (itemIndex !== -1) {
+                        newSalutLastItems[itemIndex] = new SalutModel({
+                            ...newSalutLastItems[itemIndex],
+                            ...payload,
+                        } as SalutModel);
+                        salutChanged = true;
+                    }
+                    if (agrupacio && payload.estatItemsPerAgrupacio &&
+                            group.entornApps.some(ea => ea.id === entornAppId)) {
+                        const items = payload.estatItemsPerAgrupacio[agrupacio];
+                        if (items) {
+                            newEstats[entornAppId] = items;
+                            estatsChanged = true;
+                        }
+                    }
+                }
+                if (!salutChanged && !estatsChanged) return group;
+                return {
+                    ...group,
+                    ...(salutChanged && { salutLastItems: newSalutLastItems }),
+                    ...(estatsChanged && { estats: newEstats }),
+                };
+            });
+
+            let newGrupsDates = prevState.grupsDates;
+            if (agrupacio) {
+                for (const payload of payloads.values()) {
+                    if (payload.estatItemsPerAgrupacio) {
+                        const items = payload.estatItemsPerAgrupacio[agrupacio];
+                        if (items && items.length > 0) {
+                            const candidateDates = items.map(item => item.data as string);
+                            const prev = prevState.grupsDates;
+                            const changed = !prev
+                                || prev.length !== candidateDates.length
+                                || prev.some((d, i) => d !== candidateDates[i]);
+                            if (changed) {
+                                newGrupsDates = candidateDates;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return {
+                ...prevState,
+                lastRefresh: new Date(),
+                grupsDates: newGrupsDates,
+                groups: newGroups,
+            };
+        });
+    }, []);
+
     useEffect(() => {
         if (!ready) {
             return;
         }
         request();
     }, [ready, request]);
-    return { ...salutData, refresh: request, ready };
+    return { ...salutData, refresh: request, applyBatchedSseUpdates, ready };
 };
+
+const SALUT_CHANGED_EVENT_TYPE = 'salut.changed';
+const ENTORN_APP_CHANGED_EVENT_TYPE = 'entornApp.changed';
+const APP_CHANGED_EVENT_TYPE = 'app.changed';
+const ENTORN_CHANGED_EVENT_TYPE = 'entorn.changed';
+const SSE_FALLBACK_INTERVAL_MS = 60 * 1000;
 
 const Salut: FunctionComponent = () => {
     const { id } = useParams();
@@ -423,29 +527,91 @@ const Salut: FunctionComponent = () => {
     const appInfoData = useAppInfoData(id, dataRangeMinutes);
     const salutInitialLoading = !salutData.initialized;
 
-    const [nextRefresh, setNextRefresh] = useState<Date>();
-    const updateNextRefresh = () => {
-        const nextRequestDate = new Date();
-        nextRequestDate.setTime(
-            nextRequestDate.getTime() +
-                dayjs.duration(toolbarState.refreshDuration).asMilliseconds()
-        );
-        setNextRefresh(nextRequestDate);
-    };
     const salutDataRefresh = salutData.refresh;
     const appInfoDataRefresh = appInfoData.refresh;
     const refreshAll = useCallback(() => {
         salutDataRefresh();
         appInfoDataRefresh();
     }, [salutDataRefresh, appInfoDataRefresh]);
-    useInterval({
-        tick: () => {
-            updateNextRefresh();
-            refreshAll();
-        },
-        init: updateNextRefresh,
-        timeout: dayjs.duration(toolbarState.refreshDuration).asMilliseconds(),
-    });
+
+    const { subscribe, status: sseStatus } = useSseContext();
+    const applyBatchedSseUpdates = salutData.applyBatchedSseUpdates;
+
+    const pendingPayloads = useRef<Map<number, SalutChangedPayload>>(new Map());
+    const flushTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const pendingAppInfoRefresh = useRef(false);
+
+    const flushPendingUpdates = useCallback(() => {
+        if (pendingPayloads.current.size > 0) {
+            applyBatchedSseUpdates(new Map(pendingPayloads.current));
+            pendingPayloads.current.clear();
+        }
+    }, [applyBatchedSseUpdates]);
+
+    useEffect(() => {
+        const unsubscribe = subscribe(SALUT_CHANGED_EVENT_TYPE, event => {
+            const payload = event.payload as SalutChangedPayload | null;
+            if (payload?.entornAppId != null) {
+                pendingPayloads.current.set(payload.entornAppId, payload);
+                if (id != null && String(payload.entornAppId) === id) {
+                    pendingAppInfoRefresh.current = true;
+                }
+                if (flushTimeoutRef.current !== null) {
+                    clearTimeout(flushTimeoutRef.current);
+                }
+                flushTimeoutRef.current = setTimeout(() => {
+                    flushPendingUpdates();
+                    if (pendingAppInfoRefresh.current) {
+                        appInfoDataRefresh();
+                        pendingAppInfoRefresh.current = false;
+                    }
+                    flushTimeoutRef.current = null;
+                }, DEBOUNCE_MS);
+            }
+        });
+        return () => {
+            unsubscribe();
+            if (flushTimeoutRef.current !== null) {
+                clearTimeout(flushTimeoutRef.current);
+                flushTimeoutRef.current = null;
+            }
+        };
+    }, [subscribe, flushPendingUpdates, id, appInfoDataRefresh]);
+
+    // Alta/baixa/canvi d'un entorn-app, d'una app o d'un entorn: un pedaç puntual no basta
+    // perquè pot fer aparèixer o desaparèixer un grup sencer, cal refer tota la llista.
+    const fullRefreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(() => {
+        const handleRefreshEvent = () => {
+            if (fullRefreshTimeoutRef.current !== null) {
+                clearTimeout(fullRefreshTimeoutRef.current);
+            }
+            fullRefreshTimeoutRef.current = setTimeout(() => {
+                refreshAll();
+                fullRefreshTimeoutRef.current = null;
+            }, DEBOUNCE_MS);
+        };
+
+        const unsubscribeEntornApp = subscribe(ENTORN_APP_CHANGED_EVENT_TYPE, handleRefreshEvent);
+        const unsubscribeApp = subscribe(APP_CHANGED_EVENT_TYPE, handleRefreshEvent);
+        const unsubscribeEntorn = subscribe(ENTORN_CHANGED_EVENT_TYPE, handleRefreshEvent);
+
+        return () => {
+            unsubscribeEntornApp();
+            unsubscribeApp();
+            unsubscribeEntorn();
+            if (fullRefreshTimeoutRef.current !== null) {
+                clearTimeout(fullRefreshTimeoutRef.current);
+                fullRefreshTimeoutRef.current = null;
+            }
+        };
+    }, [subscribe, refreshAll]);
+
+    useEffect(() => {
+        if (sseStatus !== 'disconnected') return;
+        const interval = setInterval(refreshAll, SSE_FALLBACK_INTERVAL_MS);
+        return () => clearInterval(interval);
+    }, [sseStatus, refreshAll]);
 
     const isAppInfoRouteActive = id != null;
     const appInfoToolbarProps = isAppInfoRouteActive
@@ -485,7 +651,6 @@ const Salut: FunctionComponent = () => {
                 onRefreshClick={refreshAll}
                 appDataLoading={salutData.loading}
                 lastRefresh={salutData.lastRefresh}
-                nextRefresh={nextRefresh}
                 groupingActive
                 {...toolbarState}
                 {...appInfoToolbarProps}

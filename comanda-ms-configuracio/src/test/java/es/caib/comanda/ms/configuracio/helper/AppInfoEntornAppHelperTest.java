@@ -7,6 +7,8 @@ import es.caib.comanda.configuracio.persist.repository.EntornAppHistRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.model.v1.salut.AppInfo;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
+import es.caib.comanda.ms.sse.ComandaSseEventTypes;
+import es.caib.comanda.ms.sse.ComandaSsePublishRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,6 +16,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.OffsetDateTime;
 import java.util.Optional;
@@ -27,15 +30,17 @@ class AppInfoEntornAppHelperTest {
 
     @Mock private EntornAppRepository entornAppRepository;
     @Mock private EntornAppHistRepository entornAppHistRepository;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     @Captor private ArgumentCaptor<EntornAppHistEntity> histCaptor;
+    @Captor private ArgumentCaptor<ComandaSsePublishRequest> ssePublishCaptor;
 
     private AppInfoEntornAppHelper helper;
     private EntornAppEntity entornAppEntity;
 
     @BeforeEach
     void setUp() {
-        helper = new AppInfoEntornAppHelper(entornAppRepository, entornAppHistRepository);
+        helper = new AppInfoEntornAppHelper(entornAppRepository, entornAppHistRepository, eventPublisher);
 
         entornAppEntity = new EntornAppEntity();
         entornAppEntity.setId(1L);
@@ -56,6 +61,7 @@ class AppInfoEntornAppHelperTest {
         // Then
         verify(entornAppHistRepository, never()).save(any());
         assertEquals("1.0.0", entornAppEntity.getVersio());
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
@@ -75,6 +81,10 @@ class AppInfoEntornAppHelperTest {
         assertEquals("rev-abc", saved.getRevisio());
         assertTrue(saved.isCanviVersio());
         assertNotNull(saved.getData());
+
+        verify(eventPublisher).publishEvent(ssePublishCaptor.capture());
+        assertEquals(ComandaSseEventTypes.ENTORN_APP_CHANGED, ssePublishCaptor.getValue().getEvent().getType());
+        assertEquals(1L, ssePublishCaptor.getValue().getEvent().getPayload());
     }
 
     @Test
@@ -92,6 +102,8 @@ class AppInfoEntornAppHelperTest {
         EntornAppHistEntity saved = histCaptor.getValue();
         assertFalse(saved.isCanviVersio());
         assertEquals("rev-xyz", saved.getRevisio());
+
+        verify(eventPublisher).publishEvent(any(ComandaSsePublishRequest.class));
     }
 
     @Test
@@ -110,6 +122,8 @@ class AppInfoEntornAppHelperTest {
         assertTrue(saved.isCanviVersio());
         assertEquals("2.0.0", saved.getVersio());
         assertEquals("rev-new", saved.getRevisio());
+
+        verify(eventPublisher).publishEvent(any(ComandaSsePublishRequest.class));
     }
 
     @Test
@@ -120,6 +134,7 @@ class AppInfoEntornAppHelperTest {
         // When + Then
         assertDoesNotThrow(() -> helper.storeAppInfo(null, 1L));
         verify(entornAppHistRepository, never()).save(any());
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test

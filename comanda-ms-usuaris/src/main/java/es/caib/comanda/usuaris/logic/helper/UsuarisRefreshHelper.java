@@ -6,7 +6,6 @@ import es.caib.comanda.usuaris.logic.intf.model.*;
 import es.caib.comanda.usuaris.persist.entity.UsuariEntity;
 import es.caib.comanda.usuaris.persist.repository.UsuariRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,27 +13,59 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Component
 @RequiredArgsConstructor
-public class UsuarisAuthHelper {
+public class UsuarisRefreshHelper {
 
 	@Value("${" + WebSecurityConfig.MAPPABLE_ROLES_SOURCE + "}")
 	private String mappableRoles;
 
 	private final UsuariRepository usuariRepository;
 	private final AuthenticationHelper authenticationHelper;
+	private final Map<String, LocalDateTime> usuariLastDBRefresh = new ConcurrentHashMap<>();
+
+	private static final int REFRESH_THRESHOLD_MINUTES = 1;
+	private static final int SESSION_THRESHOLD_MINUTES = 30;
 
 	public void refreshCurrentUser() {
-		Optional<UsuariEntity> usuariEntityOptional = usuariRepository.findByCodi(
-				authenticationHelper.getCurrentUserName());
+		String codi = authenticationHelper.getCurrentUserName();
+		LocalDateTime now = LocalDateTime.now();
+
+		AtomicBoolean shouldRun = new AtomicBoolean(false);
+
+		usuariLastDBRefresh.compute(codi, (k, lastRefresh) -> {
+			if (lastRefresh == null ||
+				lastRefresh.plusMinutes(REFRESH_THRESHOLD_MINUTES).isBefore(now)) {
+				shouldRun.set(true);
+				return now;
+			}
+			return lastRefresh;
+		});
+
+		if (!shouldRun.get()) {
+			return;
+		}
+
+		Optional<UsuariEntity> usuariEntityOptional = usuariRepository.findByCodi(codi);
 		UsuariEntity usuariEntity;
 		Usuari usuariAuth = getUsuariFromAuth();
 		if (usuariEntityOptional.isPresent()) {
 			usuariEntity = usuariEntityOptional.get();
+
+			// Session logic
+			if (usuariEntity.getDarreraActivitat() != null &&
+				usuariEntity.getDarreraActivitat().plusMinutes(SESSION_THRESHOLD_MINUTES).isBefore(now)) {
+				// Closed session
+				usuariEntity.setIniciDarrerPeriode(usuariEntity.getIniciPeriodeActual());
+				usuariEntity.setFiDarrerPeriode(usuariEntity.getDarreraActivitat());
+				usuariEntity.setIniciPeriodeActual(now);
+			}
 		} else {
 			usuariEntity = new UsuariEntity();
 			usuariEntity.setCodi(usuariAuth.getCodi());
@@ -53,6 +84,12 @@ public class UsuarisAuthHelper {
 		usuariEntity.setNom(usuariAuth.getNom());
 		usuariEntity.setNif(usuariAuth.getNif());
 		usuariEntity.setEmail(usuariAuth.getEmail());
+
+		if (usuariEntity.getIniciPeriodeActual() == null) {
+			usuariEntity.setIniciPeriodeActual(now);
+		}
+		usuariEntity.setDarreraActivitat(now);
+
 		usuariRepository.save(usuariEntity);
 	}
 

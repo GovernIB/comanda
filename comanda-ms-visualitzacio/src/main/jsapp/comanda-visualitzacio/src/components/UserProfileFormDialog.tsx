@@ -219,6 +219,7 @@ const UserProfileForm = () => {
         <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
             <FormField
                 name={UsuariModel.NUM_ELEMENTS_PAGINA}
+                hiddenEnumValues={["_200"]}
                 componentProps={{ slotProps: { input: { endAdornment: (
                     <InputAdornment position="end" sx={{ mr: 2 }}>
                         <FormatListNumbered/>

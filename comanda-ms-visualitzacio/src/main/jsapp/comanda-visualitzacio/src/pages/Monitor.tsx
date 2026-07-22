@@ -11,21 +11,26 @@ import {
     useFilterApiRef,
     springFilterBuilder as builder,
     MuiDataGridColDef,
+    useBaseAppContext,
+    useResourceApiService,
 } from 'reactlib';
 import { GridRenderCellParams } from '@mui/x-data-grid';
 import { ContentDetail } from '../components/ContentDetail';
 import { StacktraceBlock } from '../components/RickTextDetail';
-import { Tabs, Tab, Chip, Box, Icon, IconButton } from '@mui/material';
+import { Tabs, Tab, Chip, Box, Icon, IconButton, Button, CircularProgress } from '@mui/material';
 import useTranslationStringKey from '../hooks/useTranslationStringKey';
 import PageTitle from '../components/PageTitle.tsx';
+import { getErrorMessage } from '../util/exceptionUtils.ts';
 
 const moduleOptions = [
     { value: 'SALUT', labelKey: 'page.monitors.modulEnum.salut' },
     { value: 'ESTADISTICA', labelKey: 'page.monitors.modulEnum.estadistica' },
     { value: 'CONFIGURACIO', labelKey: 'page.monitors.modulEnum.configuracio' },
-    { value: 'ALARMES', labelKey: 'page.monitors.tab.email' },
+    { value: 'ALARMES', labelKey: 'page.monitors.tab.alarmes', fixedFilter: `modul:'ALARMES' and tipus:'INTERNA'` },
+    { value: 'EMAIL', labelKey: 'page.monitors.tab.email', fixedFilter: `modul:'ALARMES' and tipus:'SORTIDA'` },
     { value: 'TASCA', labelKey: 'page.monitors.modulEnum.tasca' },
     { value: 'AVIS', labelKey: 'page.monitors.modulEnum.avis' },
+    { value: 'USUARIS', labelKey: 'page.monitors.modulEnum.usuaris' },
 ];
 
 type TabMonitorProps = {
@@ -71,6 +76,10 @@ const tipusTranslationMap: Record<string, string> = {
   ENTRADA: 'page.monitors.detail.tipusEnum.entrada',
   INTERNA: 'page.monitors.detail.tipusEnum.interna',
 };
+const operacioTranslationMap: Record<string, string> = {
+    'netejaEntornApp': 'page.monitors.detail.operacioEnum.netejaEntornApp',
+    'netejaEntornAppCompletat': 'page.monitors.detail.operacioEnum.netejaEntornAppCompletat',
+  };
 
 const EstatBadge: React.FC<{ value: string, children?: string, }> = ({ value, children }) => {
   const { t } = useTranslationStringKey();
@@ -92,12 +101,45 @@ type MonitorDetailsProps = {
 const MonitorDetails: React.FC<MonitorDetailsProps> = (props) => {
     const { data, selectedModule } = props;
     const { t } = useTranslation();
+    const { t : tKey } = useTranslationStringKey();
     const { t: tStringKey } = useTranslationStringKey();
+    const { temporalMessageShow } = useBaseAppContext();
+    const [retrying, setRetrying] = React.useState(false);
+    const {artifactAction: apiAction} = useResourceApiService('monitor');
+    const [operacioActual, setOperacioActual] = React.useState(data?.operacio);
+
+    const isNetejaError = operacioActual === 'netejaEntornApp' && data?.estat === 'ERROR';
+    const isNetejaCompletat = operacioActual === 'netejaEntornAppCompletat' && data?.estat === 'ERROR';
+
+    const actionDeleteEntornAppByModul = async (id: any): Promise<boolean> => {
+        try {
+            await apiAction(id, { code: 'delete_entorn_app_by_modul' });
+            return true;
+        } catch (error: any) {
+            throw new Error(error?.message || 'Error desconocido al reintentar la operación');
+        }
+    }
+
+    const handleReintent = async () => {
+        setRetrying(true);
+        try {
+            const isOk = await actionDeleteEntornAppByModul(data.id);
+            if (isOk) {
+                temporalMessageShow?.(null, t($ => $.page.monitors.detail.netejaEntornApp.reintentarSuccess), 'success');
+                setOperacioActual("netejaEntornAppCompletat");
+            };
+        } catch (error: any) {
+            temporalMessageShow?.(t($ => $.page.monitors.detail.netejaEntornApp.reintentarError), getErrorMessage(error), 'error');
+        } finally {
+            setRetrying(false);
+        }
+    };
+
     const elementsDetail = [
         { label: t($ => $.page.monitors.detail.app), value: data?.app?.description },
         { label: t($ => $.page.monitors.detail.entorn), value: data?.entorn?.description },
         { label: t($ => $.page.monitors.detail.data), value: dateFormatLocale(data?.data, true) },
-        { label: t($ => $.page.monitors.detail.operacio), value: data?.operacio },
+        { label: t($ => $.page.monitors.detail.operacio), value: translateEnumValue(operacioActual, operacioTranslationMap, tKey) },
         {
             label: t($ => $.page.monitors.detail.tipus),
             value: translateEnumValue(data?.tipus, tipusTranslationMap, tStringKey),
@@ -107,7 +149,8 @@ const MonitorDetails: React.FC<MonitorDetailsProps> = (props) => {
             contentValue: <EstatBadge value={data?.estat} />,
         },
         { label: t($ => $.page.monitors.detail.codiUsuari), value: data?.codiUsuari },
-        { label: t($ => $.page.monitors.column.mailAddress), value: selectedModule === 'ALARMES' ? data?.url : undefined },
+        { label: t($ => $.page.monitors.column.destinatari), value: selectedModule === 'ALARMES' ? data?.url : undefined },
+        { label: t($ => $.page.monitors.column.mailAddress), value: selectedModule === 'EMAIL' ? data?.url : undefined },
         { label: t($ => $.page.monitors.detail.errorDescripcio), value: data?.errorDescripcio },
         { label: t($ => $.page.monitors.detail.excepcioMessage), value: data?.excepcioMessage },
         {
@@ -119,7 +162,24 @@ const MonitorDetails: React.FC<MonitorDetailsProps> = (props) => {
             ),
         },
     ];
-    return <ContentDetail title={""} elements={elementsDetail} />;
+    return (
+        <>
+            <ContentDetail title={""} elements={elementsDetail} />
+            {(isNetejaError || isNetejaCompletat) && (
+                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button
+                        variant="contained"
+                        color="warning"
+                        startIcon={retrying ? <CircularProgress size={16} color="inherit" /> : <Icon>refresh</Icon>}
+                        onClick={handleReintent}
+                        disabled={retrying || isNetejaCompletat}
+                    >
+                        {t($ => $.page.monitors.detail.netejaEntornApp.reintentarButton)}
+                    </Button>
+                </Box>
+            )}
+        </>
+    );
 }
 
 type MonitorFilterProps = {
@@ -175,8 +235,10 @@ const MonitorFilter: React.FC<MonitorFilterProps> = ({ onAppChange, onEntornChan
                 gap: { xs: 1, sm: 0 },
             }}>
                 <Grid container spacing={1} sx={{ flexGrow: 1, mr: 1 }}>
-                    <Grid size={{ xs: 12, sm: 6 }}><FormField name={'app'} /></Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}><FormField name={'entorn'} /></Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}><FormField name={'app'}
+                        advancedSearchColumns={[{ field: 'codi', flex: 1, }, { field: 'nom', flex: 2, },]}/></Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}><FormField name={'entorn'}
+                        advancedSearchColumns={[{ field: 'codi', flex: 1, }, { field: 'nom', flex: 2, },]}/></Grid>
                 </Grid>
                 <Box sx={{
                     display: 'flex',
@@ -224,6 +286,7 @@ const dataGridPerspectives = ['ENTORN_APP'];
 
 const Monitors: React.FC = () => {
     const { t } = useTranslation();
+    const { t : tKey } = useTranslationStringKey();
     const closeDialogButton = useCloseDialogButtons();
     const [selectedModule, setSelectedModule] = React.useState<string>('SALUT');
     const [detailDialogShow, detailDialogComponent] = useMuiContentDialog(closeDialogButton);
@@ -248,18 +311,24 @@ const Monitors: React.FC = () => {
     const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
         setSelectedModule(newValue);
     };
-    const baseColumns: MuiDataGridColDef[] = React.useMemo(() => [
+    const currentModuleOption = moduleOptions.find(o => o.value === selectedModule);
+    const currentFixedFilter = currentModuleOption?.fixedFilter ?? `modul:'${selectedModule}'`;
+    const baseColumns = React.useMemo<MuiDataGridColDef[]>(() => [
         { field: 'app', flex: 1, sortable: false, valueFormatter: (value?: any) => value?.description },
         { field: 'entorn', flex: 1.5, sortable: false, valueFormatter: (value?: any) => value?.description },
         { field: 'data', flex: 1, minWidth: 150 },
-        { field: 'operacio', flex: 2 },
-        { field: 'tipus', flex: 1 },
+        { field: 'operacio', flex: 2, valueFormatter: (value?: any) =>  translateEnumValue(value, operacioTranslationMap, tKey)},
+        { field: 'tipus', flex: 1, },
         {
             field: 'url',
             flex: 2,
             headerName: selectedModule === 'ALARMES'
-                ? t($ => $.page.monitors.column.mailAddress)
-                : 'URL',
+                ? t($ => $.page.monitors.column.destinatari)
+                : selectedModule === 'EMAIL'
+                    ? t($ => $.page.monitors.column.mailAddress)
+                    : selectedModule === 'USUARIS'
+                        ? t($ => $.page.monitors.column.rolOUsuari)
+                        : 'URL',
         },
         { field: 'modul', flex: 1 },
         { field: 'tempsResposta', flex: 1.4 },
@@ -302,7 +371,7 @@ const Monitors: React.FC = () => {
                 paginationActive
                 readOnly
                 onRowClick={(params) => showDetail(params.row)}
-                fixedFilter={`modul:'${selectedModule}'`}
+                fixedFilter={currentFixedFilter}
                 namedQueries={namedQueries}
             />
             {detailDialogComponent}

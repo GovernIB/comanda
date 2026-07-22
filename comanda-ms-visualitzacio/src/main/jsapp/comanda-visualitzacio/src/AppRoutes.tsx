@@ -19,6 +19,7 @@ import EstadisticaDashboardEdit from './pages/EstadisticaDashboardEdit';
 import EstadisticaDashboardView from './pages/EstadisticaDashboardView';
 import VersionsEntorns from './pages/VersionsEntorns';
 import Broker from './pages/Broker';
+import TasquesBackground from './pages/TasquesBackground';
 import QueueMessages from './pages/QueueMessages';
 import CalendariEstadistiques from './pages/CalendariEstadistiques';
 import Tasca from './pages/Tasca';
@@ -34,6 +35,7 @@ import { useIsUserAdmin, useIsUserConsulta, useIsUserUsuari, useUserContext } fr
 import useStatsEnabled from './hooks/useStatsEnabled';
 import {Plantilla} from "./pages/Plantilla.tsx";
 import EntornAppHist from './pages/EntornsAppHistorics.tsx';
+import MonitorDb from './pages/MonitorDb.tsx';
 
 export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';
@@ -190,6 +192,9 @@ const AppRoutes: React.FC = () => {
                 <Route path="monitor">
                     <Route index element={<Monitors />} />
                 </Route>
+                <Route path="monitor-db">
+                    <Route index element={<MonitorDb />} />
+                </Route>
                 <Route path="cache">
                     <Route index element={<Caches />} />
                 </Route>
@@ -238,6 +243,9 @@ const AppRoutes: React.FC = () => {
                 <Route path="broker">
                     <Route index element={<Broker />} />
                     <Route path="queue/:queueName" element={<QueueMessages />} />
+                </Route>
+                <Route path="tasquesBackground">
+                    <Route index element={<TasquesBackground />} />
                 </Route>
                 <Route path="parametre">
                     <Route index element={<Parametres />} />

@@ -112,6 +112,7 @@ vi.mock('reactlib', () => ({
         }
         return {
             isReady: true,
+            find: vi.fn().mockResolvedValue({ rows: [] }),
         };
     },
     useResourceApiContext: () => mocks.resourceApiContextMock,
@@ -184,7 +185,7 @@ describe('App', () => {
         expect(props.headerMenuEntries).toBeUndefined();
         expect(props.menuEntries).toHaveLength(7);
         expect(props.menuAppearance).toBe('theme');
-        expect(props.defaultMuiComponentProps.dataGrid.paginationModel).toEqual({
+        expect(props.defaultMuiComponentProps.dataGrid.defaultPaginationModel).toEqual({
             page: 0,
             pageSize: 20,
         });

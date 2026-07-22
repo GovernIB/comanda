@@ -7,17 +7,19 @@ const mocks = vi.hoisted(() => ({
     dataGetFieldValueMock: vi.fn(),
 }));
 
+vi.mock('../util/muiIconAliases', () => ({
+    default: {
+        Add: ['add', 'afegir', 'sumar'],
+        Delete: ['borrar', 'delete', 'eliminar'],
+    },
+}));
+
 vi.mock('../../lib/components/form/FormContext', () => ({
     useFormContext: () => ({
         data: {},
         apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
         dataGetFieldValue: mocks.dataGetFieldValueMock,
     }),
-}));
-
-vi.mock('@mui/icons-material', () => ({
-    Add: () => <svg data-testid="icon-add" />,
-    Delete: () => <svg data-testid="icon-delete" />,
 }));
 
 vi.mock('react-window', () => ({
@@ -28,7 +30,7 @@ vi.mock('react-window', () => ({
         itemCount: number;
         children: (props: { index: number; style: React.CSSProperties }) => React.ReactNode;
     }) => (
-        <div>
+        <div data-testid="virtualized-list">
             {Array.from({ length: itemCount }).map((_, index) => (
                 <div key={index}>{children({ index, style: {} })}</div>
             ))}
@@ -39,20 +41,9 @@ vi.mock('react-window', () => ({
 describe('IconAutocompleteSelect', () => {
     beforeEach(() => {
         mocks.dataGetFieldValueMock.mockReturnValue(null);
-        vi.stubGlobal(
-            'fetch',
-            vi.fn().mockResolvedValue({
-                json: () =>
-                    Promise.resolve({
-                        Add: ['afegir'],
-                        Delete: ['esborrar'],
-                    }),
-            })
-        );
     });
 
     afterEach(() => {
-        vi.unstubAllGlobals();
         vi.restoreAllMocks();
         vi.clearAllMocks();
     });

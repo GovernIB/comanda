@@ -2,6 +2,8 @@ package es.caib.comanda.alarmes.logic.service.sse;
 
 import es.caib.comanda.alarmes.logic.intf.model.Alarma;
 import es.caib.comanda.alarmes.logic.intf.service.AlarmaService;
+import es.caib.comanda.ms.sse.ComandaSseEvent;
+import es.caib.comanda.ms.sse.ComandaSseEventTypes;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import org.junit.jupiter.api.AfterEach;

@@ -7,8 +7,8 @@ const mocks = vi.hoisted(() => ({
     showTemporalMock: vi.fn(),
     createObjectUrlMock: vi.fn(),
     revokeObjectUrlMock: vi.fn(),
-    tMock: vi.fn((selector: any) =>
-        selector({
+    tMock: vi.fn((selector: any, options?: any) => {
+        const translation = selector({
             page: {
                 salut: {
                     logs: {
@@ -19,6 +19,9 @@ const mocks = vi.hoisted(() => ({
                         softWrap: 'Ajustar text',
                         scrollToBottom: 'Anar al final',
                         preview: 'Previsualitzar',
+                        search: 'Cercar en els logs...',
+                        matches: '{{current}} / {{total}}',
+                        lineFetchCount: 'Línies a carregar',
                         logsList: {
                             title: 'Llistat de logs',
                             nom: 'Nom',
@@ -30,8 +33,12 @@ const mocks = vi.hoisted(() => ({
                     },
                 },
             },
-        })
-    ),
+        });
+        if (options && typeof translation === 'string') {
+            return translation.replace('{{current}}', options.current).replace('{{total}}', options.total);
+        }
+        return translation;
+    }),
 }));
 
 vi.mock('react-i18next', () => ({
@@ -47,6 +54,7 @@ vi.mock('reactlib', () => ({
         isReady: true,
         artifactReport: mocks.artifactReportMock,
     }),
+    useDebounce: (value: any) => value,
 }));
 
 vi.mock('../../components/MessageShow', () => ({
@@ -70,6 +78,25 @@ vi.mock('../../../lib/components/mui/Dialog', () => ({
         title: string;
         children: React.ReactNode;
     }) => (open ? <div><h2>{title}</h2>{children}</div> : null),
+}));
+
+vi.mock('../../../lib/components/mui/form/FormFieldNumber', () => ({
+    default: ({ label, value, onChange, overrideTextFieldProps }: any) => (
+        <input
+            aria-label={label}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            {...overrideTextFieldProps}
+        />
+    ),
+    FormFieldNumber: ({ label, value, onChange, overrideTextFieldProps }: any) => (
+        <input
+            aria-label={label}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            {...overrideTextFieldProps}
+        />
+    ),
 }));
 
 vi.mock('@mui/x-data-grid-pro', () => ({
@@ -118,6 +145,7 @@ vi.mock('@tanstack/react-virtual', () => ({
         getVirtualItems: () => [{ key: '0', index: 0, start: 0 }],
         getTotalSize: () => 20,
         measureElement: vi.fn(),
+        scrollToIndex: vi.fn(),
     }),
 }));
 
@@ -327,5 +355,54 @@ describe('LogsViewer', () => {
         setIntervalMock.mockRestore();
         clearIntervalMock.mockRestore();
         delete (globalThis as any).__autoRefreshCallback__;
+    });
+
+    it('LogsViewer_quanEsBuscaUnTerme_mostraElsResultats', async () => {
+        // Comprova que buscar un terme actualitza les coincidències i permet navegar entre elles.
+        render(<LogsViewer entornAppId={7} preselectedLog={null} />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Sense fitxer seleccionat' }));
+        fireEvent.click(await screen.findByRole('button', { name: 'Previsualitzar' }));
+
+        await waitFor(() => {
+            expect(screen.getByText('Línia 1')).toBeInTheDocument();
+        });
+
+        const searchInput = screen.getByPlaceholderText('Cercar en els logs...');
+        fireEvent.change(searchInput, { target: { value: 'Línia' } });
+
+        await waitFor(() => {
+            expect(screen.getByText('1 / 2')).toBeInTheDocument();
+        });
+
+        const nextButton = screen.getByTestId('KeyboardArrowDownIcon').closest('button') as HTMLButtonElement;
+        fireEvent.click(nextButton);
+
+        await waitFor(() => {
+            expect(screen.getByText('2 / 2')).toBeInTheDocument();
+        });
+    });
+
+    it('LogsViewer_quanSmodificaElCompteDeLinies_despresDeDebounce_esCarregaLaPrevisualitzacio', async () => {
+        render(<LogsViewer entornAppId={7} preselectedLog={null} />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Sense fitxer seleccionat' }));
+        fireEvent.click(await screen.findByRole('button', { name: 'Previsualitzar' }));
+
+        await waitFor(() => {
+            expect(screen.getByText('Línia 1')).toBeInTheDocument();
+        });
+
+        const input = screen.getByLabelText('Línies a carregar');
+        fireEvent.change(input, { target: { value: '2000' } });
+
+        await waitFor(() => {
+            expect(mocks.artifactReportMock).toHaveBeenCalledWith(7, expect.objectContaining({
+                code: 'previsualitzar_log',
+                data: expect.objectContaining({
+                    lineCount: 2000,
+                }),
+            }));
+        }, { timeout: 2000 });
     });
 });

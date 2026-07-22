@@ -31,6 +31,12 @@ import 'dayjs/locale/es';
 import { Theme, useTheme } from '@mui/material/styles';
 import { ROLE_ADMIN } from './UserProvider.tsx';
 import ComandaFooter, { comandaFooterHeight } from './ComandaFooter.tsx';
+import ListItemText from "@mui/material/ListItemText";
+import {formatDate} from "../util/dateUtils.ts";
+import MenuItem from '@mui/material/MenuItem';
+import Typography from '@mui/material/Typography';
+import { Divider, ListItemIcon } from '@mui/material';
+import AccessTime from '@mui/icons-material/AccessTime';
 
 export type MenuEntryWithResource = MenuEntry & {
     resourceName?: string;
@@ -220,6 +226,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         defaultMuiComponentProps,
         children
     } = props;
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
     const theme = useTheme();
@@ -245,6 +252,33 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         }
     }
     const showAlarms = indexState?.links?.has('alarma');
+    const lastConnectionMenuComponents = user?.darreraConnexio
+        ? [
+              <MenuItem
+                  title={t($ => $.menu.user.lastConnection)}
+                  disableRipple
+                  sx={{
+                      '&.MuiButtonBase-root:hover': {
+                          bgcolor: 'transparent',
+                          cursor: 'default',
+                      },
+                  }}
+                  key="darreraConnexio"
+              >
+                  <ListItemIcon>
+                      <AccessTime />
+                  </ListItemIcon>
+                  <ListItemText>
+                      <Typography color="textSecondary" variant={'body2'}>
+                          {formatDate(user?.darreraConnexio, 'DD/MM/YY HH:mm')}
+                      </Typography>
+                  </ListItemText>
+              </MenuItem>,
+            <Divider
+                key="darreraConnexioDivider"
+            ></Divider>,
+          ]
+        : [];
     const baseAppElement = <MuiBaseApp
         code={code}
         headerTitle={title}
@@ -261,10 +295,11 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
             ...generateLanguageItems(availableLanguages), // Idioma
         ]}
         headerAdditionalAuthComponents={[
+            ...lastConnectionMenuComponents,
             <UserProfileFormDialogButton key="userProfile" onClick={() => userDialogApiRef.current?.show(
                 user?.id,
             )} />,
-            <RoleSelector key="roleSelector" />
+            <RoleSelector key="roleSelector" />,
         ]}
         headerAuthBadgeIcon={currentRole === ROLE_ADMIN ? 'settings' : undefined}
         footer={<ComandaFooter />}

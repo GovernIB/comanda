@@ -3,6 +3,7 @@ package es.caib.comanda.salut.logic.service;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.ms.logic.helper.ParametresHelper;
+import es.caib.comanda.ms.logic.helper.SchedulerTaskRegistryService;
 import es.caib.comanda.ms.salut.helper.MonitorHelper;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.helper.SalutInfoHelper;
@@ -14,6 +15,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,10 +28,14 @@ import java.util.stream.Collectors;
 @Slf4j
 public class SalutSchedulerService {
 
+    private static final String TASK_ID_SALUT = "SALUT_COMPROVACIO";
+    private static final String TASK_ID_INFORME = "SALUT_INFORME";
+
     private final SalutClientHelper salutClientHelper;
     private final SalutInfoHelper salutInfoHelper;
     private final ParametresHelper parametresHelper;
     private final TaskExecutor salutWorkerExecutor;
+    private final SchedulerTaskRegistryService schedulerTaskRegistry;
 
     @Value("${" + BaseConfig.PROP_SCHEDULER_LEADER + ":#{true}}")
     private Boolean schedulerLeader;
@@ -42,28 +48,45 @@ public class SalutSchedulerService {
             SalutClientHelper salutClientHelper,
             SalutInfoHelper salutInfoHelper,
             ParametresHelper parametresHelper,
-            @Qualifier("salutWorkerExecutor") TaskExecutor salutWorkerExecutor) {
+            @Qualifier("salutWorkerExecutor") TaskExecutor salutWorkerExecutor,
+            SchedulerTaskRegistryService schedulerTaskRegistry) {
         this.salutClientHelper = salutClientHelper;
         this.salutInfoHelper = salutInfoHelper;
         this.parametresHelper = parametresHelper;
         this.salutWorkerExecutor = salutWorkerExecutor;
+        this.schedulerTaskRegistry = schedulerTaskRegistry;
+    }
+
+    @PostConstruct
+    public void registrarTasques() {
+        schedulerTaskRegistry.registerCron(TASK_ID_SALUT, "Comprovació de salut", "Consulta l'estat de salut de les aplicacions", "0 * * * * *", this::scheduledSalutTasks);
+        schedulerTaskRegistry.registerCron(TASK_ID_INFORME, "Informe periòdic de sistema", "Genera un informe de l'estat del sistema", "20 */5 * * * *", this::informePeriodicSistema);
     }
 
     @Scheduled(cron = "0 * * * * *")
     public void scheduledSalutTasks() {
+        schedulerTaskRegistry.recordStart(TASK_ID_SALUT);
         if (!isLeader()) {
             log.debug("Refresc de salut ignorat: aquesta instància no és leader per als schedulers");
+            schedulerTaskRegistry.recordSuccess(TASK_ID_SALUT);
             return;
         }
 
-        List<EntornApp> entornAppsActives = salutClientHelper.entornAppFindByActivaTrue();
-        if (entornAppsActives.isEmpty()) {
-            log.debug("No hi ha cap entorn-app activa per a les tasques de salut");
-            return;
+        try {
+            List<EntornApp> entornAppsActives = salutClientHelper.entornAppFindByActivaTrue();
+            if (entornAppsActives.isEmpty()) {
+                log.debug("No hi ha cap entorn-app activa per a les tasques de salut");
+                schedulerTaskRegistry.recordSuccess(TASK_ID_SALUT);
+                return;
+            }
+            var entornAppIds = entornAppsActives.stream().map(ea -> ea.getId().toString()).collect(Collectors.joining(", "));
+            log.debug("Es van a executar les tasques de salut per {} entorn-apps: {}", entornAppsActives.size(), entornAppIds);
+            entornAppsActives.forEach(this::executarProces);
+            schedulerTaskRegistry.recordSuccess(TASK_ID_SALUT);
+        } catch (Exception e) {
+            schedulerTaskRegistry.recordError(TASK_ID_SALUT);
+            throw e;
         }
-        var entornAppIds = entornAppsActives.stream().map(ea -> ea.getId().toString()).collect(Collectors.joining(", "));
-        log.debug("Es van a executar les tasques de salut per {} entorn-apps: {}", entornAppsActives.size(), entornAppIds);
-        entornAppsActives.forEach(this::executarProces);
     }
 
     private void executarProces(EntornApp entornApp) {
@@ -100,7 +123,9 @@ public class SalutSchedulerService {
     // Informe periòdic cada 5 minuts de l'estat del sistema i del worker
     @Scheduled(cron = "20 */5 * * * *")
     public void informePeriodicSistema() {
+        schedulerTaskRegistry.recordStart(TASK_ID_INFORME);
         if (!isLeader()) {
+            schedulerTaskRegistry.recordSuccess(TASK_ID_INFORME);
             return;
         }
         Boolean generarLogReport = parametresHelper.getParametreBoolean(BaseConfig.PROP_SALUT_LOG_REPORT, false);
@@ -150,8 +175,10 @@ public class SalutSchedulerService {
                     core != null && max != null ? (core + "/" + max) : null,
                     active,
                     queueSize);
+            schedulerTaskRegistry.recordSuccess(TASK_ID_INFORME);
         } catch (Throwable t) {
             log.warn("Error generant l'informe periòdic de sistema", t);
+            schedulerTaskRegistry.recordError(TASK_ID_INFORME);
         }
     }
 

@@ -3,6 +3,9 @@ package es.caib.comanda.estadistica.persist.repository;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,4 +30,8 @@ public interface DimensioValorRepository extends BaseRepository<DimensioValorEnt
     List<DimensioValorEntity> findByDimensioEntornAppId(Long entornAppId);
 
     List<DimensioValorEntity> findByDimensioEntornAppIdAndAgrupableTrueAndValorAgrupacioIsNotNull(Long entornAppId);
+
+    @Modifying
+    @Query("DELETE FROM DimensioValorEntity v WHERE v.dimensio IN (SELECT d FROM DimensioEntity d WHERE d.entornAppId = :entornAppId)")
+    void deleteByDimensioEntornAppId(@Param("entornAppId") Long entornAppId);
 }

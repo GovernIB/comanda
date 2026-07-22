@@ -5,6 +5,8 @@ import es.caib.comanda.estadistica.persist.entity.estadistiques.TempsEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.query.Procedure;
 import org.springframework.data.repository.query.Param;
 
@@ -63,6 +65,15 @@ public interface FetRepository extends BaseRepository<FetEntity, Long>, FetRepos
             @Param("p_data") String data,
             @Param("p_resultat") List<Object[]> resultat // Contingut del cursor
     );
+
+    /**
+     * Elimina tots els fets d'un entorn determinat.
+     * Útil per a la neteja quan s'esborra una aplicació-entorn.
+     * @param entornAppId identificador de l'entorn
+     */
+    @Modifying
+    @Query("DELETE FROM FetEntity f WHERE f.entornAppId = :entornAppId")
+    void deleteByEntornAppId(@Param("entornAppId") Long entornAppId);
 
     // Rendiment: mètodes auxiliars per processat paginat/gran volum
     long countByEntornAppId(Long entornAppId);

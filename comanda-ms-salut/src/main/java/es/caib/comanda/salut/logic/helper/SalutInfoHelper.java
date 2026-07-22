@@ -108,8 +108,8 @@ public class SalutInfoHelper {
             }
             OffsetDateTime dataTotal = OffsetDateTime.now().minus(31, ChronoUnit.DAYS);
 
-            String dp = dataPeriode == null ? null : dataPeriode.withOffsetSameInstant(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-            String dt = dataTotal == null ? null : dataTotal.withOffsetSameInstant(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+            String dp = dataPeriode.truncatedTo(ChronoUnit.MINUTES).withOffsetSameInstant(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+            String dt = dataTotal.truncatedTo(ChronoUnit.MINUTES).withOffsetSameInstant(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
 
             URI newUri = UriComponentsBuilder
                     .fromUri(uri)

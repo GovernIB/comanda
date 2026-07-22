@@ -1,7 +1,6 @@
 package es.caib.comanda.configuracio.logic.service;
 
 import es.caib.comanda.base.config.BaseConfig;
-import es.caib.comanda.client.EstadisticaServiceClient;
 import es.caib.comanda.client.MonitorServiceClient;
 import es.caib.comanda.configuracio.logic.intf.model.Parametre;
 import es.caib.comanda.configuracio.persist.entity.ParametreEntity;

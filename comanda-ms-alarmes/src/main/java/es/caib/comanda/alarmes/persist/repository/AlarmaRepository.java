@@ -6,6 +6,7 @@ import es.caib.comanda.alarmes.persist.entity.AlarmaEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -95,5 +96,9 @@ public interface AlarmaRepository extends BaseRepository<AlarmaEntity, Long> {
 			String createdBy,
 			AlarmaEstat estat,
 			AlarmaEstat nouEstat);
+
+    @Modifying
+    @Query("DELETE FROM AlarmaEntity a WHERE a.entornAppId = :entornAppId")
+    void deleteByEntornAppId(@Param("entornAppId") Long entornAppId);
 
 }

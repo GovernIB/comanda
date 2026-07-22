@@ -5,8 +5,8 @@ import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
+import es.caib.comanda.configuracio.logic.helper.EntornAppHelper;
 import es.caib.comanda.configuracio.logic.intf.model.*;
-import es.caib.comanda.configuracio.logic.service.ConfiguracioSchedulerService;
 import es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl;
 import es.caib.comanda.configuracio.persist.entity.*;
 import es.caib.comanda.configuracio.persist.repository.*;
@@ -25,7 +25,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.domain.Specification;
@@ -54,7 +53,7 @@ public class EntornAppServiceImplTest {
 
     // Test subclass to expose protected methods
     static class TestableEntornAppServiceImpl extends EntornAppServiceImpl {
-        
+
         public TestableEntornAppServiceImpl(AppIntegracioRepository appIntegracioRepository,
                                           SubsistemaRepository subsistemaRepository,
                                           ContextRepository contextRepository,
@@ -62,18 +61,17 @@ public class EntornAppServiceImplTest {
                                           EntornAppHistRepository entornAppHistRepository,
                                           AppInfoHelper appInfoHelper,
                                           CacheHelper cacheHeper,
-                                          ConfiguracioSchedulerService schedulerService,
+                                          EntornAppHelper entornAppHelper,
                                           AuthenticationHelper authenticationHelper,
                                           HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
                                           AclServiceClient aclServiceClient,
                                           RestTemplate restTemplate,
                                           Validator validator,
                                           ResourceEntityMappingHelper resourceEntityMappingHelper,
-                                          ApplicationEventPublisher eventPublisher,
                                           Environment environment) {
             super(appIntegracioRepository, subsistemaRepository, contextRepository, entornAppRepository, entornAppHistRepository, appInfoHelper,
-                    cacheHeper, schedulerService, authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient,
-                    restTemplate, validator, resourceEntityMappingHelper, eventPublisher, environment);
+                    cacheHeper, entornAppHelper, authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient,
+                    restTemplate, validator, resourceEntityMappingHelper, environment);
         }
 
         @Override
@@ -91,6 +89,11 @@ public class EntornAppServiceImplTest {
             super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
         }
 
+        @Override
+        public void afterDelete(EntornAppEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
+            super.afterDelete(entity, answers);
+        }
+
         public String exposedAdditionalSpringFilter() {
             return super.additionalSpringFilter(null, null);
         }
@@ -101,7 +104,7 @@ public class EntornAppServiceImplTest {
 
     @Mock
     private SubsistemaRepository subsistemaRepository;
-    
+
     @Mock
     private ContextRepository contextRepository;
 
@@ -124,7 +127,7 @@ public class EntornAppServiceImplTest {
     private AclServiceClient aclServiceClient;
 
     @Mock
-    private ConfiguracioSchedulerService schedulerService;
+    private EntornAppHelper entornAppHelper;
 
     @Mock
     private CacheHelper cacheHelper;
@@ -137,9 +140,6 @@ public class EntornAppServiceImplTest {
 
     @Mock
     private ResourceEntityMappingHelper resourceEntityMappingHelper;
-
-    @Mock
-    private ApplicationEventPublisher eventPublisher;
 
     @Mock
     private I18nUtil i18nUtil;
@@ -171,27 +171,26 @@ public class EntornAppServiceImplTest {
             entornAppHistRepository,
             appInfoHelper,
             cacheHelper,
-            schedulerService,
+            entornAppHelper,
             authenticationHelper,
             keycloakHelper,
             aclServiceClient,
             restTemplate,
             validator,
             resourceEntityMappingHelper,
-            eventPublisher,
             environment
         );
         ReflectionTestUtils.setField(entornAppService, "objectMappingHelper", objectMappingHelper);
-        
+
         // Setup test data
         AppEntity appEntity = new AppEntity();
         appEntity.setId(1L);
         appEntity.setNom("Test App");
-        
+
         EntornEntity entornEntity = new EntornEntity();
         entornEntity.setId(1L);
         entornEntity.setNom("Test Entorn");
-        
+
         entornAppEntity = new EntornAppEntity();
         entornAppEntity.setId(1L);
         entornAppEntity.setApp(appEntity);
@@ -199,10 +198,10 @@ public class EntornAppServiceImplTest {
         entornAppEntity.setInfoUrl("http://test.com/info");
         entornAppEntity.setVersio("1.0.0");
         entornAppEntity.setActiva(true);
-        
+
         entornAppResource = new EntornApp();
         entornAppResource.setId(1L);
-        
+
         // Setup integracions
         AppIntegracioEntity appIntegracio = new AppIntegracioEntity();
         IntegracioEntity integracio = new IntegracioEntity();
@@ -212,10 +211,10 @@ public class EntornAppServiceImplTest {
         appIntegracio.setIntegracio(integracio);
         appIntegracio.setActiva(true);
         appIntegracio.setEntornApp(entornAppEntity);
-        
+
         integracions = new ArrayList<>();
         integracions.add(appIntegracio);
-        
+
         // Setup subsistemes
         AppSubsistemaEntity subsistema = new AppSubsistemaEntity();
         subsistema.setId(1L);
@@ -223,7 +222,7 @@ public class EntornAppServiceImplTest {
         subsistema.setNom("Subsistema 1");
         subsistema.setActiu(true);
         subsistema.setEntornApp(entornAppEntity);
-        
+
         subsistemes = new ArrayList<>();
         subsistemes.add(subsistema);
 
@@ -250,18 +249,18 @@ public class EntornAppServiceImplTest {
         EntornAppServiceImpl.IntegracionsSubsistemesContextsPerspectiveApplicator applicator =
                 entornAppService.new IntegracionsSubsistemesContextsPerspectiveApplicator();
         applicator.applySingle(EntornApp.PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS, entornAppEntity, entornAppResource);
-        
+
         // Verify that the repositories were called
         verify(integracioRepository).findByEntornApp(entornAppEntity);
         verify(subsistemaRepository).findByEntornApp(entornAppEntity);
-        
+
         // Verify that the resource was updated correctly
         assertNotNull(entornAppResource.getIntegracions());
         assertEquals(1, entornAppResource.getIntegracions().size());
         AppIntegracio appIntegracio = entornAppResource.getIntegracions().get(0);
         assertEquals("INT1", appIntegracio.getCodi());
         assertTrue(appIntegracio.isActiva());
-        
+
         assertNotNull(entornAppResource.getSubsistemes());
         assertEquals(1, entornAppResource.getSubsistemes().size());
         AppSubsistema appSubsistema = entornAppResource.getSubsistemes().get(0);
@@ -274,11 +273,33 @@ public class EntornAppServiceImplTest {
     void testAfterUpdateSave() {
         // Setup test data
         Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
-        
+
         // Call the method to test
         entornAppService.afterUpdateSave(entornAppEntity, entornAppResource, answers, false);
 
         verify(cacheHelper).evictCacheItem(ENTORN_APP_CACHE, entornAppEntity.getId().toString());
+        verify(entornAppHelper).publishEntornAppChanged(entornAppEntity.getId());
+    }
+
+    @Test
+    void toogleActivaAction_quanSexecuta_inverteixActivaIPublicaEsdevenimentSse() throws Exception {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        when(entornAppRepository.findOne(any(Specification.class))).thenReturn(Optional.of(entornAppEntity));
+        when(resourceEntityMappingHelper.entityToResource(entornAppEntity, EntornApp.class))
+                .thenReturn(entornAppResource);
+        ReflectionTestUtils.setField(entornAppService, "entityRepository", entornAppRepository);
+        entornAppService.init();
+        boolean activaAbans = entornAppEntity.isActiva();
+
+        Object result = entornAppService.artifactActionExec(
+                1L,
+                EntornApp.ENTORN_APP_TOOGLE_ACTIVA,
+                null);
+
+        assertEquals(!activaAbans, entornAppEntity.isActiva());
+        assertSame(entornAppResource, result);
+        verify(cacheHelper).evictCacheItem(ENTORN_APP_CACHE, entornAppEntity.getId().toString());
+        verify(entornAppHelper).publishEntornAppChanged(entornAppEntity.getId());
     }
 
     @Test

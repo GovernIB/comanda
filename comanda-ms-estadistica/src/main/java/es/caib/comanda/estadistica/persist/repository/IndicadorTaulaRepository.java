@@ -2,6 +2,9 @@ package es.caib.comanda.estadistica.persist.repository;
 
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /**
  * Repositori per a la gestió d'operacions de persistència de l'entitat IndicadorTaulaEntity.
@@ -12,5 +15,9 @@ import es.caib.comanda.ms.persist.repository.BaseRepository;
  * @author Límit Tecnologies
  */
 public interface IndicadorTaulaRepository extends BaseRepository<IndicadorTaulaEntity, Long> {
+
+    @Modifying
+    @Query("DELETE FROM IndicadorTaulaEntity it WHERE it.indicador IN (SELECT i FROM IndicadorEntity i WHERE i.entornAppId = :entornAppId)")
+    void deleteByIndicadorEntornAppId(@Param("entornAppId") Long entornAppId);
 
 }

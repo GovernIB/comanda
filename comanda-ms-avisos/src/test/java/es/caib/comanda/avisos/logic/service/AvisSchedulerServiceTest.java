@@ -3,6 +3,7 @@ package es.caib.comanda.avisos.logic.service;
 import es.caib.comanda.avisos.persist.repository.AvisRepository;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.ms.logic.helper.ParametresHelper;
+import es.caib.comanda.ms.logic.helper.SchedulerTaskRegistryService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,9 +22,10 @@ class AvisSchedulerServiceTest {
 
     @Mock
     private ParametresHelper parametresHelper;
-
     @Mock
     private AvisRepository avisRepository;
+    @Mock
+    private SchedulerTaskRegistryService schedulerTaskRegistry;
 
     @InjectMocks
     private AvisSchedulerService avisSchedulerService;

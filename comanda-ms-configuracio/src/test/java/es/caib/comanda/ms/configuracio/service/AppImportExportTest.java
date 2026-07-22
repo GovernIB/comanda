@@ -3,6 +3,7 @@ package es.caib.comanda.ms.configuracio.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
+import es.caib.comanda.configuracio.logic.helper.EntornAppHelper;
 import es.caib.comanda.configuracio.logic.intf.model.App;
 import es.caib.comanda.configuracio.logic.intf.model.App.AppImportForm;
 import es.caib.comanda.configuracio.logic.intf.model.export.AppExport;
@@ -25,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.ReflectionUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -49,18 +51,22 @@ public class AppImportExportTest {
                                       AppRepository appRepository,
                                       EntornRepository entornRepository,
                                       EntornAppRepository entornAppRepository,
+                                      EntornAppHelper entornAppHelper,
                                       AuthenticationHelper authenticationHelper,
                                       HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
-                                      AclServiceClient aclServiceClient) {
+                                      AclServiceClient aclServiceClient,
+                                      ApplicationEventPublisher eventPublisher) {
             super(cacheHelper,
                     objectMapper,
                     appExportMapper,
                     appRepository,
                     entornRepository,
                     entornAppRepository,
+                    entornAppHelper,
                     authenticationHelper,
                     httpAuthorizationHeaderHelper,
-                    aclServiceClient);
+                    aclServiceClient,
+                    eventPublisher);
         }
         // Simplify mapping to avoid needing ObjectMappingHelper in unit tests
         @Override
@@ -79,9 +85,11 @@ public class AppImportExportTest {
     @Mock private AppRepository appRepository;
     @Mock private EntornRepository entornRepository;
     @Mock private EntornAppRepository entornAppRepository;
+    @Mock private EntornAppHelper entornAppHelper;
     @Mock private AuthenticationHelper authenticationHelper;
     @Mock private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     @Mock private AclServiceClient aclServiceClient;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     private ObjectMapper realObjectMapper;
     private TestableAppServiceImpl service;
@@ -96,9 +104,11 @@ public class AppImportExportTest {
                 appRepository,
                 entornRepository,
                 entornAppRepository,
+                entornAppHelper,
                 authenticationHelper,
                 httpAuthorizationHeaderHelper,
-                aclServiceClient);
+                aclServiceClient,
+                eventPublisher);
     }
 
     // ---------- EXPORT TESTS ----------

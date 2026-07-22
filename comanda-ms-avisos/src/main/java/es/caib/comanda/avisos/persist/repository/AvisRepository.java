@@ -15,6 +15,8 @@ public interface AvisRepository extends BaseRepository<AvisEntity, Long> {
 
 	Optional<AvisEntity> findByEntornAppIdAndIdentificador(Long entornAppId, String identificador);
 
+    List<AvisEntity> findByEntornAppId(Long entornAppId);
+
     @Modifying
     int deleteByLastModifiedDateBefore(LocalDateTime dataLimit);
 

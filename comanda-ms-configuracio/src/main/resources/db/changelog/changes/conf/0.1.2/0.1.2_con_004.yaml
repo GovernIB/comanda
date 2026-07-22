@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: con-change-0.1.2.004-1
+      author: limit
+      comment: Afegir paràmetre per activar logs detallats de comprovació i enviament de correus d'alarmes
+      changes:
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "Alarmes"
+              - column:
+                  name: SUBGRUP
+                  value: "Log"
+              - column:
+                  name: TIPUS
+                  value: "BOOLEAN"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.alarma.log.activacio"
+              - column:
+                  name: NOM
+                  value: "Activar logs detallats d'alarmes"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Activa logs de nivell INFO per a la comprovació d'alarmes i l'enviament de correus. Permet diagnosticar problemes d'activació i notificació."
+              - column:
+                  name: VALOR
+                  value: "false"
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 1

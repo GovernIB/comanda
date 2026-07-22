@@ -430,7 +430,7 @@ export const Form: React.FC<FormProps> = (props) => {
         setIsLoading(false);
         setModified(false);
         setExternalModified(false);
-        setRevertData(data);
+        setRevertData(joinedData);
         setApiFieldErrors(undefined);
         validateWithValidator(joinedData);
         setIsDataInitialized(isDataInitialized != null ? isDataInitialized : true);
