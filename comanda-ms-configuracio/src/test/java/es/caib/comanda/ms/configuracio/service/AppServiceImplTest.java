@@ -70,8 +70,18 @@ public class AppServiceImplTest {
         }
 
         @Override
+        public void afterCreateSave(AppEntity entity, App resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
+            super.afterCreateSave(entity, resource, answers, anyOrderChanged);
+        }
+
+        @Override
         public void afterUpdateSave(AppEntity entity, App resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
             super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
+        }
+
+        @Override
+        public void afterDelete(AppEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
+            super.afterDelete(entity, answers);
         }
 
         public String exposedAdditionalSpringFilter() {
@@ -186,8 +196,19 @@ public class AppServiceImplTest {
     }
 
     @Test
+    void testAfterCreateSave() {
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+
+        appService.afterCreateSave(appEntity, appResource, answers, false);
+
+        ArgumentCaptor<ComandaSsePublishRequest> captor = ArgumentCaptor.forClass(ComandaSsePublishRequest.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertEquals(ComandaSseEventTypes.APP_CHANGED, captor.getValue().getEvent().getType());
+        assertEquals(appEntity.getId(), captor.getValue().getEvent().getPayload());
+    }
+
+    @Test
     void testAfterUpdateSave() {
-        // Test that afterUpdateSave schedules tasks for each EntornApp
         Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
 
         appService.afterUpdateSave(appEntity, appResource, answers, false);
@@ -197,22 +218,23 @@ public class AppServiceImplTest {
 
         ArgumentCaptor<ComandaSsePublishRequest> captor = ArgumentCaptor.forClass(ComandaSsePublishRequest.class);
         verify(eventPublisher).publishEvent(captor.capture());
-        assertEquals(ComandaSseEventTypes.ENTORN_APP_CHANGED, captor.getValue().getEvent().getType());
+        assertEquals(ComandaSseEventTypes.APP_CHANGED, captor.getValue().getEvent().getType());
         assertEquals(appEntity.getId(), captor.getValue().getEvent().getPayload());
     }
 
     @Test
-    void testAfterUpdateSaveWithNoEntornApps() {
-        // Test that afterUpdateSave doesn't schedule tasks when there are no EntornApps
+    void testAfterDelete() {
         Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
 
-        // Set empty EntornApps list
-        appEntity.setEntornApps(new ArrayList<>());
-
-        appService.afterUpdateSave(appEntity, appResource, answers, false);
+        appService.afterDelete(appEntity, answers);
 
         verify(cacheHelper, times(1)).evictCacheItem(APP_CACHE, appEntity.getId().toString());
-        verify(eventPublisher).publishEvent(any(ComandaSsePublishRequest.class));
+        verify(entornAppHelper, times(1)).logicAfterDelete(entornAppEntity.getId());
+
+        ArgumentCaptor<ComandaSsePublishRequest> captor = ArgumentCaptor.forClass(ComandaSsePublishRequest.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+        assertEquals(ComandaSseEventTypes.APP_CHANGED, captor.getValue().getEvent().getType());
+        assertEquals(appEntity.getId(), captor.getValue().getEvent().getPayload());
     }
 
     @Test

@@ -454,6 +454,64 @@ describe('Salut', () => {
         });
     });
 
+    it('Salut_quanRebEsdevenimentAppChanged_refrescaLesDades', async () => {
+        render(<Salut />);
+
+        await waitFor(() => {
+            expect(screen.getByText('SalutLlistat 1')).toBeInTheDocument();
+        });
+
+        const appChangedCall = mocks.sseMock.subscribe.mock.calls.find(
+            ([eventType]) => eventType === 'app.changed'
+        );
+        expect(appChangedCall).toBeDefined();
+        const appChangedListener = appChangedCall![1];
+
+        mocks.findAppMock.mockResolvedValue({
+            rows: [
+                { id: 1, description: 'App Demo' },
+                { id: 2, description: 'Nova App' },
+            ],
+        });
+
+        act(() => {
+            appChangedListener({ type: 'app.changed', payload: 2 });
+        });
+
+        await waitFor(() => {
+            expect(mocks.findAppMock).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    it('Salut_quanRebEsdevenimentEntornChanged_refrescaLesDades', async () => {
+        render(<Salut />);
+
+        await waitFor(() => {
+            expect(screen.getByText('SalutLlistat 1')).toBeInTheDocument();
+        });
+
+        const entornChangedCall = mocks.sseMock.subscribe.mock.calls.find(
+            ([eventType]) => eventType === 'entorn.changed'
+        );
+        expect(entornChangedCall).toBeDefined();
+        const entornChangedListener = entornChangedCall![1];
+
+        mocks.findEntornMock.mockResolvedValue({
+            rows: [
+                { id: 2, description: 'PRO' },
+                { id: 3, description: 'PRE' },
+            ],
+        });
+
+        act(() => {
+            entornChangedListener({ type: 'entorn.changed', payload: 3 });
+        });
+
+        await waitFor(() => {
+            expect(mocks.findEntornMock).toHaveBeenCalledTimes(2);
+        });
+    });
+
     it('Salut_quanFallaLaCarregaInicial_mostraLaVistaBuidaiPermetRefrescar', async () => {
         // Verifica que una errada en la càrrega inicial deixa la pantalla estable i permet reintentar el refresh.
         mocks.findEntornAppMock.mockRejectedValueOnce(new Error('boom'));

@@ -399,13 +399,21 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
     }
 
     @Override
+    protected void afterCreateSave(AppEntity entity, App resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
+        super.afterCreateSave(entity, resource, answers, anyOrderChanged);
+
+        eventPublisher.publishEvent(new ComandaSsePublishRequest(
+            new ComandaSseEvent(ComandaSseEventTypes.APP_CHANGED, entity.getId(), LocalDateTime.now())));
+    }
+
+    @Override
     protected void afterUpdateSave(AppEntity entity, App resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
         super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
         cacheHelper.evictCacheItem(APP_CACHE, entity.getId().toString());
         // Una app activada/desactivada afecta la visibilitat dels seus entorns-app al dashboard
         // de Salut (filtre app.activa:true), cal notificar-ho perquè es refresqui via SSE.
         eventPublisher.publishEvent(new ComandaSsePublishRequest(
-            new ComandaSseEvent(ComandaSseEventTypes.ENTORN_APP_CHANGED, entity.getId(), LocalDateTime.now())));
+            new ComandaSseEvent(ComandaSseEventTypes.APP_CHANGED, entity.getId(), LocalDateTime.now())));
     }
 
     @Override
@@ -415,6 +423,8 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
         for (EntornAppEntity entornApp : entity.getEntornApps()) {
             entornAppHelper.logicAfterDelete(entornApp.getId());
         }
+        eventPublisher.publishEvent(new ComandaSsePublishRequest(
+            new ComandaSseEvent(ComandaSseEventTypes.APP_CHANGED, entity.getId(), LocalDateTime.now())));
     }
 
     public static class EntornAppsPerspectiveApplicator implements PerspectiveApplicator<AppEntity, App> {

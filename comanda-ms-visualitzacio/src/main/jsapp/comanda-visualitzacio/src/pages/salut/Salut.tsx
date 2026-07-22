@@ -507,6 +507,8 @@ const useSalutData = ({
 
 const SALUT_CHANGED_EVENT_TYPE = 'salut.changed';
 const ENTORN_APP_CHANGED_EVENT_TYPE = 'entornApp.changed';
+const APP_CHANGED_EVENT_TYPE = 'app.changed';
+const ENTORN_CHANGED_EVENT_TYPE = 'entorn.changed';
 const SSE_FALLBACK_INTERVAL_MS = 60 * 1000;
 
 const Salut: FunctionComponent = () => {
@@ -576,24 +578,31 @@ const Salut: FunctionComponent = () => {
         };
     }, [subscribe, flushPendingUpdates, id, appInfoDataRefresh]);
 
-    // Alta/baixa d'un entorn-app (d'una app nova o ja existent): un pedaç puntual no basta
+    // Alta/baixa/canvi d'un entorn-app, d'una app o d'un entorn: un pedaç puntual no basta
     // perquè pot fer aparèixer o desaparèixer un grup sencer, cal refer tota la llista.
-    const entornAppChangedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const fullRefreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     useEffect(() => {
-        const unsubscribe = subscribe(ENTORN_APP_CHANGED_EVENT_TYPE, () => {
-            if (entornAppChangedTimeoutRef.current !== null) {
-                clearTimeout(entornAppChangedTimeoutRef.current);
+        const handleRefreshEvent = () => {
+            if (fullRefreshTimeoutRef.current !== null) {
+                clearTimeout(fullRefreshTimeoutRef.current);
             }
-            entornAppChangedTimeoutRef.current = setTimeout(() => {
+            fullRefreshTimeoutRef.current = setTimeout(() => {
                 refreshAll();
-                entornAppChangedTimeoutRef.current = null;
+                fullRefreshTimeoutRef.current = null;
             }, DEBOUNCE_MS);
-        });
+        };
+
+        const unsubscribeEntornApp = subscribe(ENTORN_APP_CHANGED_EVENT_TYPE, handleRefreshEvent);
+        const unsubscribeApp = subscribe(APP_CHANGED_EVENT_TYPE, handleRefreshEvent);
+        const unsubscribeEntorn = subscribe(ENTORN_CHANGED_EVENT_TYPE, handleRefreshEvent);
+
         return () => {
-            unsubscribe();
-            if (entornAppChangedTimeoutRef.current !== null) {
-                clearTimeout(entornAppChangedTimeoutRef.current);
-                entornAppChangedTimeoutRef.current = null;
+            unsubscribeEntornApp();
+            unsubscribeApp();
+            unsubscribeEntorn();
+            if (fullRefreshTimeoutRef.current !== null) {
+                clearTimeout(fullRefreshTimeoutRef.current);
+                fullRefreshTimeoutRef.current = null;
             }
         };
     }, [subscribe, refreshAll]);
