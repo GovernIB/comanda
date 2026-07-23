@@ -35,7 +35,7 @@ const toSortedVersions = (versions: string[]) =>
 const Entorns: React.FC = () => {
     const { t } = useTranslation();
     const { isReady: entornApiIsReady, find: entornApiFind } = useResourceApiService('entorn');
-    const [entorns, setEntorns] = React.useState<any[]>([]);
+    const [entorns, setEntorns] = React.useState<Array<{ id: number | string; codi: string; nom: string }>>([]);
     React.useEffect(() => {
         if (entornApiIsReady)
             entornApiFind({
@@ -58,14 +58,14 @@ const Entorns: React.FC = () => {
                 flex: 1,
                 minWidth: 165,
                 valueGetter: (_value, row) =>
-                    row.entornApps?.find((entornApp: any) => entornApp.entorn.id === entorn.id)?.versio,
+                    row.entornApps?.find((entornApp: { entorn?: { id?: number | string }; versio?: string }) => entornApp.entorn?.id === entorn.id)?.versio,
                 renderCell: ({ formattedValue: versioValue, row }) => {
-                    const entornApp = row.entornApps?.find((ea: any) => ea.entorn.id === entorn.id);
+                    const entornApp = row.entornApps?.find((ea: { entorn?: { id?: number | string }; revisio?: string }) => ea.entorn?.id === entorn.id);
                     const revisioValue = entornApp?.revisio;
                     const versioColor = versioValue != null
                         ? (() => {
                             const sortedVersions = toSortedVersions(
-                                row.entornApps.map((ea: any) => ea.versio).filter(Boolean)
+                                row.entornApps.map((ea: { versio?: string }) => ea.versio).filter(Boolean)
                             );
                             return versioValue !== sortedVersions[0]?.unformatted ? 'warning' : 'success';
                         })()

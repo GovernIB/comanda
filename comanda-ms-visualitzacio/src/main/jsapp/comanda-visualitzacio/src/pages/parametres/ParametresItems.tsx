@@ -28,7 +28,7 @@ export enum ParamTipus {
     SELECT = 'SELECT',
 }
 
-const ParametreValue: React.FC<{ tipus: ParamTipus; valor: any }> = ({ tipus, valor }) => {
+const ParametreValue: React.FC<{ tipus: ParamTipus; valor: React.ReactNode }> = ({ tipus, valor }) => {
     const { t } = useTranslation();
     if (valor === null || valor === undefined) {
         return (
@@ -55,9 +55,9 @@ const ParametreValue: React.FC<{ tipus: ParamTipus; valor: any }> = ({ tipus, va
 };
 
 const ParametreRow: React.FC<{
-    item: any;
+    item: Record<string, any>;
     highlight?: string;
-    apiPatch: (id: any, args: any) => Promise<any>;
+    apiPatch: (id: string | number, args: { data: Record<string, unknown> }) => Promise<unknown>;
 }> = ({ item, highlight, apiPatch }) => {
     const { t } = useTranslation();
     const { temporalMessageShow } = useBaseAppContext();
@@ -137,7 +137,7 @@ const ParametreRow: React.FC<{
                             )}
                         </>
                     ) : (
-                        <ParametreValue tipus={item.tipus} valor={item.valorBoolean ?? item.valor} />
+                        <ParametreValue tipus={item.tipus as ParamTipus} valor={item.valorBoolean ?? item.valor} />
                     )}
                 </Box>
             </Grid>
@@ -145,10 +145,10 @@ const ParametreRow: React.FC<{
     );
 };
 
-const groupBySubGrup = (items: any[]): Map<string, any[]> => {
-    const map = new Map<string, any[]>();
+const groupBySubGrup = (items: Array<Record<string, unknown>>): Map<string, Array<Record<string, unknown>>> => {
+    const map = new Map<string, Array<Record<string, unknown>>>();
     items.forEach((item) => {
-        const key = item.subGrup ?? '';
+        const key = (item.subGrup as string) ?? '';
         if (!map.has(key)) map.set(key, []);
         map.get(key)!.push(item);
     });
@@ -162,7 +162,7 @@ export const ParametresItems: React.FC<{
 }> = ({ grup, subGrup, quickFilter }) => {
     const { t } = useTranslation();
     const { isReady, find, patch } = useResourceApiService('parametre');
-    const [parametres, setParametres] = React.useState<any[]>([]);
+    const [parametres, setParametres] = React.useState<Array<Record<string, unknown>>>([]);
     const [loading, setLoading] = React.useState(false);
 
     React.useEffect(() => {
@@ -181,7 +181,7 @@ export const ParametresItems: React.FC<{
             sorts: ['subGrup,asc', 'codi,asc'],
             unpaged: true,
         })
-            .then((response) => setParametres(response.rows as any[]))
+            .then((response) => setParametres(response.rows as Array<Record<string, unknown>>))
             .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isReady, grup, subGrup, quickFilter]);
@@ -219,10 +219,10 @@ export const ParametresItems: React.FC<{
                                 </ListSubheader>
                             )}
                             {items.map((item) => (
-                                <ListItem key={item.id} disablePadding divider>
+                                <ListItem key={String(item.id)} disablePadding divider>
                                     <ListItemButton disableRipple sx={{ py: 1.5 }}>
                                         <ParametreRow
-                                            key={item.id}
+                                            key={String(item.id)}
                                             item={item}
                                             highlight={quickFilter}
                                             apiPatch={patch}
@@ -233,10 +233,10 @@ export const ParametresItems: React.FC<{
                         </React.Fragment>
                     ))
                     : parametres.map((item) => (
-                        <ListItem key={item.id} disablePadding divider>
+                        <ListItem key={String(item.id)} disablePadding divider>
                             <ListItemButton disableRipple sx={{ py: 1.5 }}>
                                 <ParametreRow
-                                    key={item.id}
+                                    key={String(item.id)}
                                     item={item}
                                     highlight={quickFilter}
                                     apiPatch={patch}

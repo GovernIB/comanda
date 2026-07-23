@@ -110,10 +110,10 @@ const useActions = (refresh?: () => void) => {
     const {isReady: apiIsReady, artifactAction: apiAction} = useResourceApiService('avis')
     const { temporalMessageShow } = useBaseAppContext();
 
-    const marcarLlegit = (id:any) => {
+    const marcarLlegit = (id: string | number) => {
         marcarLlegitMassive([id])
     }
-    const marcarLlegitMassive = (ids:any[]) => {
+    const marcarLlegitMassive = (ids: Array<string | number>) => {
         apiAction(undefined, {code: 'MARCAR_AVIS_LLEGIT', data: {ids, llegit: true}})
             .then(() => {
                 refresh?.();
@@ -126,11 +126,11 @@ const useActions = (refresh?: () => void) => {
             });
     }
 
-    const marcarNoLlegit = (id:any) => {
+    const marcarNoLlegit = (id: string | number) => {
         marcarNoLlegitMassive([id])
     }
 
-    const marcarNoLlegitMassive = (ids:any[]) => {
+    const marcarNoLlegitMassive = (ids: Array<string | number>) => {
         apiAction(undefined, {code: 'MARCAR_AVIS_LLEGIT', data: {ids, llegit: false}})
             .then(() => {
                 refresh?.();
@@ -192,12 +192,12 @@ const avisFilterBuilder = (data: any, currentUserCodi: string | null) => springF
     springFilterBuilder.like('nom', data?.nom),
     springFilterBuilder.like('descripcio', data?.descripcio),
     springFilterBuilder.eq('tipus', data?.tipus),
-    data?.dataInici1 && springFilterBuilder.gte('dataInici', `'${formatStartOfDay(data?.dataInici1)}'`),
-    data?.dataInici2 && springFilterBuilder.lte('dataInici', `'${formatEndOfDay(data?.dataInici2)}'`),
+    data?.dataInici1 && springFilterBuilder.gte('dataInici', `'${formatStartOfDay(data?.dataInici1 as string)}'`),
+    data?.dataInici2 && springFilterBuilder.lte('dataInici', `'${formatEndOfDay(data?.dataInici2 as string)}'`),
     data?.avisPropi && currentUserCodi && springFilterBuilder.eq('responsable', `'${currentUserCodi}'`),
 )
 
-const AvisFilter = (props: { onEntornAppFilterDataChange: (data: any) => void, onExpandedFilterDataChange: (data: any) => void }) => {
+const AvisFilter = (props: { onEntornAppFilterDataChange: (data: Record<string, unknown>) => void, onExpandedFilterDataChange: (data: Record<string, unknown>) => void }) => {
     const { onEntornAppFilterDataChange, onExpandedFilterDataChange } = props;
     const { t } = useTranslation();
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
@@ -284,14 +284,14 @@ const AvisFilter = (props: { onEntornAppFilterDataChange: (data: any) => void, o
     );
 }
 
-const StyledLlegit = ({llegit, children}:any) => {
+const StyledLlegit = ({llegit, children}: { llegit?: boolean; children?: React.ReactNode }) => {
     return llegit ?<i>{children}</i> :<strong>{children}</strong>
 }
 
 const dataGridCommonColumns: MuiDataGridColDef[] = [{
     field: 'descripcio',
     flex: 1,
-    renderCell: (params: any) => <StyledLlegit llegit={params?.row?.llegit}>{params?.formattedValue}</StyledLlegit>,
+    renderCell: (params: { row?: { llegit?: boolean }; formattedValue?: React.ReactNode }) => <StyledLlegit llegit={params?.row?.llegit}>{params?.formattedValue}</StyledLlegit>,
 }, {
     field: 'tipus',
     flex: 0.8,
@@ -306,7 +306,7 @@ const dataGridCommonColumns: MuiDataGridColDef[] = [{
 }, {
     field: 'responsable',
     flex: 1,
-    renderCell: (params: any) => <StyledLlegit llegit={params?.row?.llegit}>{params?.formattedValue}</StyledLlegit>,
+    renderCell: (params: { row?: { llegit?: boolean }; formattedValue?: React.ReactNode }) => <StyledLlegit llegit={params?.row?.llegit}>{params?.formattedValue}</StyledLlegit>,
 }];
 const dataGridPerspectives = ['PATH', 'ENTORN_APP', 'LLEGIT'];
 const dataGridSortModel: GridSortModel = [{ field: 'dataInici', sort: 'asc' }];
@@ -320,14 +320,14 @@ const Avis = () => {
     const currentUserCodi = user?.codi;
     // Guardamos los datos de los 2 <Filter /> por separado, después al construir el filtro se juntarán
     const [filterData, setFilterData] = React.useState<{
-        entornAppFilter: any;
-        expandedFilter: any;
+        entornAppFilter: Record<string, unknown> | undefined;
+        expandedFilter: Record<string, unknown> | undefined;
     }>({ entornAppFilter: undefined, expandedFilter: undefined });
     const noLlegit = filterData?.entornAppFilter?.noLlegit;
     // Ambos filtros deberían inicializar su estado de alguna manera, si no, consideramos que no se ha inicializado aún
     const isFilterDataReady = filterData?.entornAppFilter && filterData?.expandedFilter;
     const filter = avisFilterBuilder({...filterData?.entornAppFilter, ...filterData?.expandedFilter}, currentUserCodi ?? null);
-    const [apps, setApps] = React.useState<any[]>();
+    const [apps, setApps] = React.useState<Array<{ id?: string | number; nom?: string; logo?: string }>>();
     const apiRef = useMuiDataGridApiRef();
     const gridApiRef = useGridApiRef();
     const isAdmin = currentRole === ROLE_ADMIN;
@@ -354,7 +354,7 @@ const Avis = () => {
         false,
         false,
         {
-            valueFormatter: (value: any, row: any) => row?.id ? row?.nom : value?.startsWith?.(INVALID_ENTORNAPP) ? treePathFormatInvalidEntornApp(value) : value,
+            valueFormatter: (value: unknown, row: { id?: unknown; nom?: string }) => row?.id ? row?.nom : (typeof value === 'string' && value.startsWith(INVALID_ENTORNAPP)) ? treePathFormatInvalidEntornApp(value) : (value as React.ReactNode),
             renderCell: (params: any) => {
                 const apiRef = useGridApiContext();
                 const rowTree = useGridSelector(apiRef, gridRowTreeSelector);
@@ -422,14 +422,14 @@ const Avis = () => {
                         );
                     },
                 },
-                { field: 'app', flex: 0.5, valueFormatter: (value: any) => value?.description,
-                    renderCell: (params: any) => <StyledLlegit llegit={params?.row?.llegit}>{params?.formattedValue}</StyledLlegit>,
+                { field: 'app', flex: 0.5, valueFormatter: (value?: { description?: string }) => value?.description,
+                    renderCell: (params: { row?: { llegit?: boolean }; formattedValue?: React.ReactNode }) => <StyledLlegit llegit={params?.row?.llegit}>{params?.formattedValue}</StyledLlegit>,
                 },
-                { field: 'entorn', flex: 1, valueFormatter: (value: any) => value?.description,
-                    renderCell: (params: any) => <StyledLlegit llegit={params?.row?.llegit}>{params?.formattedValue}</StyledLlegit>,
+                { field: 'entorn', flex: 1, valueFormatter: (value?: { description?: string }) => value?.description,
+                    renderCell: (params: { row?: { llegit?: boolean }; formattedValue?: React.ReactNode }) => <StyledLlegit llegit={params?.row?.llegit}>{params?.formattedValue}</StyledLlegit>,
                 },
                 { field: 'nom', flex: 1,
-                    renderCell: (params: any) => <StyledLlegit llegit={params?.row?.llegit}>{params?.formattedValue}</StyledLlegit>,
+                    renderCell: (params: { row?: { llegit?: boolean }; formattedValue?: React.ReactNode }) => <StyledLlegit llegit={params?.row?.llegit}>{params?.formattedValue}</StyledLlegit>,
                 },
               ]
             : []),
@@ -454,27 +454,27 @@ const Avis = () => {
                 showInMenu: false,
                 linkTo: (row: any) => row?.url,
                 linkTarget: '_blank',
-                onClick: (id: any, row: any) => {
+                onClick: (id: string | number, row: { llegit?: boolean }) => {
                     if (!row?.llegit) {
                         marcarLlegit(id);
                     }
                 },
-                disabled: (row: any) => !row?.url,
-                hidden: (row: any) => !row?.url,
+                disabled: (row: { url?: string }) => !row?.url,
+                hidden: (row: { url?: string }) => !row?.url,
             },
             {
                 icon: 'drafts',
                 label: t($ => $.page.avisos.action.llegit.label),
                 showInMenu: false,
                 onClick: marcarLlegit,
-                hidden: (row: any) => isAutogeneratedRow(row) || row?.llegit,
+                hidden: (row: { llegit?: boolean; [key: string]: unknown }) => isAutogeneratedRow(row) || Boolean(row?.llegit),
             },
             {
                 icon: 'mail',
                 label: t($ => $.page.avisos.action.nollegit.label),
                 showInMenu: false,
                 onClick: marcarNoLlegit,
-                hidden: (row: any) => isAutogeneratedRow(row) || !row?.llegit,
+                hidden: (row: { llegit?: boolean; [key: string]: unknown }) => isAutogeneratedRow(row) || !row?.llegit,
             },
         ];
         if (isAdmin) {
@@ -498,8 +498,8 @@ const Avis = () => {
         />
     );
 
-    const selectedRows = useRef<string[]>([])
-    const toolbarAdditionalActions:any[] = [
+    const selectedRows = useRef<Array<string | number>>([])
+    const toolbarAdditionalActions = [
         { position: 1, element: treeViewSwitch },
         {
             position: 2,
@@ -559,8 +559,8 @@ const Avis = () => {
                     },
                 }}
                 selectionActive
-                onRowSelectionModelChange={(rowSelectionModel: any) => {
-                    selectedRows.current = Array.from(rowSelectionModel?.ids) ?? []
+                onRowSelectionModelChange={(rowSelectionModel: { ids?: Iterable<string | number> }) => {
+                    selectedRows.current = Array.from(rowSelectionModel?.ids ?? [])
                 }}
             />
         </Box>

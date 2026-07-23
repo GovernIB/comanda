@@ -100,7 +100,7 @@ const Alarmes: React.FC<{ filterBy?: { entornAppId?: number | string }; }> = ({ 
             icon: 'check',
             showInMenu: false,
             onClick: execEsborrar,
-            hidden: (row: any) => !row?.id || row?.dataEsborrat,
+            hidden: (row: { id?: unknown; dataEsborrat?: unknown }) => !row?.id || Boolean(row?.dataEsborrat),
         },
         {
             label: t($ => $.page.alarma.action.reactivate.label),
@@ -108,7 +108,7 @@ const Alarmes: React.FC<{ filterBy?: { entornAppId?: number | string }; }> = ({ 
             icon: 'restore',
             showInMenu: false,
             onClick: execReactivar,
-            hidden: (row: any) => !row?.id || !row?.dataEsborrat,
+            hidden: (row: { id?: unknown; dataEsborrat?: unknown }) => !row?.id || !row?.dataEsborrat,
         },
     ], [t, execEsborrar, execReactivar]);
 
@@ -119,7 +119,7 @@ const Alarmes: React.FC<{ filterBy?: { entornAppId?: number | string }; }> = ({ 
             { field: 'dataFinalitzacio', flex: 0.5 },
             {
                 field: 'estat',
-                renderCell: (params: any) => {
+                renderCell: (params: { row?: { dataFinalitzacio?: unknown; estat?: string } }) => {
                     if (params.row?.dataFinalitzacio != null) {
                         if (params.row?.estat === 'ESBORRADA')
                             return t($ => $.page.alarma.estats.finalitzadaEsborrada);

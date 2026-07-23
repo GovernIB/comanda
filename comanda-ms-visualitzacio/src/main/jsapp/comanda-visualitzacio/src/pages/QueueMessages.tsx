@@ -54,7 +54,7 @@ interface MessageInfo {
     durable: boolean;
     priority: number;
     size: number;
-    properties: Record<string, any>;
+    properties: Record<string, unknown>;
     content: string;
     redelivered: boolean;
     deliveryCount: number;
@@ -137,7 +137,7 @@ const MessageDetails: React.FC<{ data: MessageInfo }> = ({ data }) => {
         return date.toLocaleString();
     };
 
-    const formatProperties = (properties: Record<string, any>): string => {
+    const formatProperties = (properties: Record<string, unknown>): string => {
         if (!properties) return '';
         return Object.entries(properties)
             .map(([key, value]) => `${key}: ${value}`)
@@ -334,8 +334,8 @@ const QueueMessages: React.FC = () => {
             field: 'timestamp',
             headerName: t($ => $.page.message.grid.timestamp),
             flex: 1,
-            valueFormatter: (params: any) => {
-                return new Date(params.value).toLocaleString();
+            valueFormatter: (value: unknown) => {
+                return value ? new Date(value as string | number).toLocaleString() : '';
             },
         },
         {
@@ -352,15 +352,15 @@ const QueueMessages: React.FC = () => {
             field: 'size',
             headerName: t($ => $.page.message.grid.size),
             flex: 0.5,
-            valueFormatter: (params: any) => {
-                return `${params.value} bytes`;
+            valueFormatter: (value: unknown) => {
+                return value != null ? `${value} bytes` : '';
             },
         },
         {
             field: 'actions',
             headerName: t($ => $.page.message.grid.actions),
             flex: 1,
-            renderCell: (params: any) => (
+            renderCell: (params: { row: { messageID: string } }) => (
                 <Button
                     variant="outlined"
                     color="error"

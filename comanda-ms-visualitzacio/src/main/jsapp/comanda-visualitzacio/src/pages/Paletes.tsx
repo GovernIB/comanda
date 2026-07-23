@@ -57,7 +57,7 @@ const columns = [
         field: "colors",
         headerName: "Colors",
         flex: 1,
-        renderCell: (params: any) => <PaletteMiniature colors={params.row?.colors} />,
+        renderCell: (params: { row?: { colors?: PaletteColor[] } }) => <PaletteMiniature colors={params.row?.colors} />,
         sortable: false,
     },
 ];
@@ -79,7 +79,7 @@ const Paletes = () => {
                 popupEditFormContent={<PaletaForm />}
                 popupEditFormDialogResourceTitle={t($ => $.menu.paleta)}
                 popupEditFormDialogComponentProps={{fullWidth: true, maxWidth: "md"}}
-                formAdditionalData={(row: any) => !row?.id ? {colors: defaultColors} : {}}
+                formAdditionalData={(row: { id?: unknown }) => !row?.id ? {colors: defaultColors} : {}}
             />
         </GridPage>
     );
