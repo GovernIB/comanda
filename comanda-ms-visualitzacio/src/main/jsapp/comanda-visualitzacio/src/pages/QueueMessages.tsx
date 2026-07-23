@@ -256,6 +256,7 @@ const QueueMessages: React.FC = () => {
             const token = getToken?.();
             const response = await fetch(`/api/broker/queues/${queueName}/messages/${messageID}`, {
                 method: 'DELETE',
+                credentials: 'include',
                 headers: token ? {
                     'Authorization': 'Bearer ' + token
                 } : undefined,
@@ -281,6 +282,7 @@ const QueueMessages: React.FC = () => {
             const token = getToken?.();
             const response = await fetch(`/api/broker/queues/${queueName}/messages`, {
                 method: 'DELETE',
+                credentials: 'include',
                 headers: token ? {
                     'Authorization': 'Bearer ' + token
                 } : undefined,

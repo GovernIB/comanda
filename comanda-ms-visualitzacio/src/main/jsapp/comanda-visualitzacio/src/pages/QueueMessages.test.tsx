@@ -285,6 +285,7 @@ describe('QueueMessages', () => {
         await waitFor(() => {
             expect(fetch).toHaveBeenCalledWith('/api/broker/queues/queue-a/messages/m-1', {
                 method: 'DELETE',
+                credentials: 'include',
                 headers: {
                     Authorization: 'Bearer token-123',
                 },
@@ -305,6 +306,7 @@ describe('QueueMessages', () => {
         await waitFor(() => {
             expect(fetch).toHaveBeenCalledWith('/api/broker/queues/queue-a/messages', {
                 method: 'DELETE',
+                credentials: 'include',
                 headers: {
                     Authorization: 'Bearer token-123',
                 },
@@ -384,6 +386,7 @@ describe('QueueMessages', () => {
         await waitFor(() => {
             expect(fetch).toHaveBeenCalledWith('/api/broker/queues/queue-a/messages/m-1', {
                 method: 'DELETE',
+                credentials: 'include',
                 headers: undefined,
             });
         });
