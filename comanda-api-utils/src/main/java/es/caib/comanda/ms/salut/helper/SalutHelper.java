@@ -1,5 +1,6 @@
 package es.caib.comanda.ms.salut.helper;
 
+import es.caib.comanda.ms.exception.ComandaApiException;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -35,6 +36,9 @@ public class SalutHelper {
         MonitorHelper.SystemInfo systemInfo = MonitorHelper.getSystemInfo();
 
         try (InputStream in = SalutHelper.class.getClassLoader().getResourceAsStream("git.properties")) {
+            if (in == null) {
+                throw new ComandaApiException("Error generant BuildInfo: No s'ha trobat el fitxer 'git.properties'. Es requereix la configuració i execució del 'git-commit-id-maven-plugin' al pom.xml.");
+            }
             Properties props = new Properties();
             props.load(in);
             commitId = props.getProperty("git.commit.id");
@@ -43,7 +47,9 @@ public class SalutHelper {
             if (buildTime != null && !buildTime.isEmpty()) {
                 buildDate = parseGitBuildTime(buildTime);
             }
-        } catch (Exception e) {}
+        } catch (ComandaApiException e) {
+            throw e;
+        } catch (Exception ignored) {}
 
         return BuildInfo.builder()
                 .buildDate(buildDate)
