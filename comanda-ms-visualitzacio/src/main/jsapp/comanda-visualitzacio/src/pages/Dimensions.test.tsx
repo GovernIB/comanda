@@ -5,6 +5,8 @@ import Dimensions from './Dimensions';
 const mocks = vi.hoisted(() => ({
     clearMock: vi.fn(),
     findMock: vi.fn(),
+    artifactActionMock: vi.fn(), // NUEVO: Para mockear artifactAction de 'dimensio'
+    temporalMessageShowMock: vi.fn(), // NUEVO: Para mockear temporalMessageShow
     tMock: vi.fn((selector: any) =>
         selector({
             page: {
@@ -32,24 +34,31 @@ vi.mock('react-i18next', () => ({
 vi.mock('reactlib', () => ({
     GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     MuiDataGrid: ({
-        title,
-        filter,
-        toolbarAdditionalRow,
-        rowAdditionalActions,
-        columns,
-    }: {
+                      title,
+                      filter,
+                      toolbarAdditionalRow,
+                      rowAdditionalActions,
+                      columns,
+                  }: {
         title: string;
         filter?: string;
         toolbarAdditionalRow?: React.ReactNode;
-        rowAdditionalActions?: Array<{ label: string; linkTo?: string }>;
+        rowAdditionalActions?: Array<{ label: string; linkTo?: string; onClick?: (id: string) => void; hidden?: (row: any) => boolean }>;
         columns: Array<{ field: string }>;
     }) => (
         <section>
             <h2>{title}</h2>
             <div data-testid="filter-value">{filter}</div>
             <div data-testid="columns">{columns.map((column) => column.field).join(',')}</div>
-            <div data-testid="row-link">{rowAdditionalActions?.[0]?.linkTo}</div>
+            {/* CORREGIDO: Buscamos la acción que tiene linkTo, en lugar de asumir que es la primera */}
+            <div data-testid="row-link">{rowAdditionalActions?.find(a => a.linkTo)?.linkTo}</div>
             <div>{toolbarAdditionalRow}</div>
+            {/* Renderizamos las acciones con onClick para poder testearlas */}
+            {rowAdditionalActions?.filter(a => a.onClick).map((action) => (
+                <button key={action.label} onClick={() => action.onClick?.('15')} type="button">
+                    {action.label}
+                </button>
+            ))}
         </section>
     ),
     MuiFilter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -74,10 +83,31 @@ vi.mock('reactlib', () => ({
         },
     }),
     useFormApiRef: () => ({ current: {} }),
-    useResourceApiService: () => ({
-        isReady: true,
-        find: mocks.findMock,
+
+    // NUEVO: Mock para useMuiDataGridApiRef
+    useMuiDataGridApiRef: () => ({
+        current: {
+            refresh: vi.fn(),
+        },
     }),
+
+    // NUEVO: Mock para useBaseAppContext
+    useBaseAppContext: () => ({
+        temporalMessageShow: mocks.temporalMessageShowMock,
+    }),
+
+    // MODIFICADO: Diferenciamos el mock según el recurso solicitado
+    useResourceApiService: (resourceName: string) => {
+        if (resourceName === 'dimensio') {
+            return {
+                artifactAction: mocks.artifactActionMock,
+            };
+        }
+        return {
+            isReady: true,
+            find: mocks.findMock,
+        };
+    },
 }));
 
 vi.mock('../components/PageTitle.tsx', () => ({
@@ -138,5 +168,47 @@ describe('Dimensions', () => {
         fireEvent.click(screen.getByTitle('Netejar'));
 
         expect(mocks.clearMock).toHaveBeenCalled();
+    });
+
+    // NUEVO TEST: Para cubrir la nueva funcionalidad de cambio de tipo a ORGAN_GESTOR
+    it('Dimensions_quanEsPremAccioORGAN_GESTOR_cridaApiActionIMostraMissatgeExit', async () => {
+        mocks.artifactActionMock.mockResolvedValue({});
+
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'ORGAN_GESTOR' })).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'ORGAN_GESTOR' }));
+
+        await waitFor(() => {
+            expect(mocks.artifactActionMock).toHaveBeenCalledWith('15', {
+                code: 'CHANGE_TIPUS',
+                data: { tipus: 'ORGAN_GESTOR' }
+            });
+            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Tipus cambiat a ORGAN_GESTOR', 'success');
+        });
+    });
+
+    // NUEVO TEST: Para cubrir la nueva funcionalidad de cambio de tipo a null (NO_ORGAN_GESTOR)
+    it('Dimensions_quanEsPremAccioNO_ORGAN_GESTOR_cridaApiActionIMostraMissatgeExit', async () => {
+        mocks.artifactActionMock.mockResolvedValue({});
+
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'NO_ORGAN_GESTOR' })).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'NO_ORGAN_GESTOR' }));
+
+        await waitFor(() => {
+            expect(mocks.artifactActionMock).toHaveBeenCalledWith('15', {
+                code: 'CHANGE_TIPUS',
+                data: { tipus: null }
+            });
+            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Tipus cambiat a null', 'success');
+        });
     });
 });

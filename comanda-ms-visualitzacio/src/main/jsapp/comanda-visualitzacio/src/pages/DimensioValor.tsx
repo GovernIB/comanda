@@ -13,7 +13,7 @@ import {
     MuiFilter,
     useFilterApiRef,
     useResourceApiService,
-    useBaseAppContext,
+    useBaseAppContext, useMuiDataGridApiRef,
 } from 'reactlib';
 import PageTitle from '../components/PageTitle.tsx';
 import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
@@ -32,7 +32,7 @@ import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
 //     );
 // };
 
-const DimensioValorFilter: React.FC<{ onSpringFilterChange: (f?: string) => void } > = ({ onSpringFilterChange }) => {
+const DimensioValorFilter: React.FC<{ onSpringFilterChange?: (f?: string) => void; onDataChange?: (f?: any) => void }> = ({ onSpringFilterChange, onDataChange }) => {
     const { t } = useTranslation();
     const filterApiRef = useFilterApiRef();
 
@@ -48,6 +48,7 @@ const DimensioValorFilter: React.FC<{ onSpringFilterChange: (f?: string) => void
             commonFieldComponentProps={{ size: 'small' }}
             onSpringFilterChange={onSpringFilterChange}
             springFilterBuilder={(data) => {
+                onDataChange?.(data)
                 return springFilterBuilder.and(
                     data?.valor && springFilterBuilder.like('valor', data?.valor),
                     // data?.agrupable != null && springFilterBuilder.eq('agrupable', data?.agrupable),
@@ -75,18 +76,19 @@ const DimensioValor: React.FC = () => {
     const { id } = useParams();
     const { goBack, anyHistoryEntryExist } = useBaseAppContext();
     const { isReady, getOne: getDimensio } = useResourceApiService('dimensio');
+    const { artifactAction: apiAction } = useResourceApiService('dimensioValor');
+    const { temporalMessageShow } = useBaseAppContext();
 
-    const [dimensionName, setDimensionName] = React.useState<string>('');
-    const [filter, setFilter] = React.useState<string | undefined>(undefined);
+    const [dimension, setDimension] = React.useState<any>();
 
     React.useEffect(() => {
         if (id && isReady) {
-            getDimensio(id as string).then((d: { nom?: string; description?: string } | null) => setDimensionName(d?.nom ?? d?.description ?? ''));
+            getDimensio(id as string).then((d: { nom?: string; description?: string } | null) => setDimension(d));
         }
     }, [id, isReady, getDimensio]);
 
     const columns: MuiDataGridColDef[] = [
-        { field: 'valor', flex: 2 },
+        { field: 'codiNom', flex: 2 },
         // { field: 'agrupable', flex: 1 },
         // { field: 'valorAgrupacio', flex: 2 },
     ];
@@ -111,14 +113,25 @@ const DimensioValor: React.FC = () => {
         ];
     }, [anyHistoryEntryExist, goBack, t]);
 
-    const filterElement = <DimensioValorFilter onSpringFilterChange={setFilter} />;
+    const [quickfilter, setQuickfilter] = React.useState<string | undefined>();
+    const filterElement = <DimensioValorFilter onDataChange={(data) => setQuickfilter(data.valor) } />;
+    const namedQueries = React.useMemo(() => {
+        const queries: string[] = [];
+        if (quickfilter) queries.push(`filterByUONom:${quickfilter}`);
+        return queries.length > 0 ? queries : undefined;
+    }, [quickfilter]);
 
-    const gridTitle = `Valors dimensió ${dimensionName ?? ''}`;
+    const gridTitle = `Valors dimensió ${dimension?.nom ?? dimension?.description ?? ''}`;
 
+    const gridApiRef = useMuiDataGridApiRef();
+    const refresh = () => {
+        gridApiRef?.current?.refresh?.();
+    }
     return (
         <>
             <PageTitle title={gridTitle} />
             <MuiDataGrid
+                apiRef={gridApiRef}
                 title={gridTitle}
                 resourceName="dimensioValor"
                 columns={columns}
@@ -129,9 +142,26 @@ const DimensioValor: React.FC = () => {
                 toolbarElementsWithPositions={toolbarElementsWithPositions}
                 toolbarHideCreate
                 fixedFilter={fixedFilter}
-                filter={filter}
+                namedQueries={namedQueries}
                 popupEditActive={false}
                 rowHideDeleteButton={gestorReadOnly}
+                rowAdditionalActions={[
+                    {
+                        label: t($ => $.page.dimensions.action.sincronitzar.label),
+                        icon: 'refresh',
+                        showInMenu: false,
+                        action: 'UO_DIR3',
+                        onClick: (id) => {
+                            apiAction(id, {code: 'UO_DIR3'})
+                                .then(() => {
+                                    refresh()
+                                    temporalMessageShow(null, t($ => $.page.dimensions.action.sincronitzar.ok), 'success')
+                                })
+                                .catch(error => temporalMessageShow(null, error.message, 'error'))
+                        },
+                        hidden: !dimension?.tipus
+                    }
+                ]}
                 // popupEditFormContent={<DimensioValorForm />}
             />
         </>

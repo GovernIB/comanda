@@ -7,17 +7,22 @@ import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio;
 import es.caib.comanda.estadistica.logic.intf.service.DimensioService;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
-import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
+import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
+import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -40,9 +45,14 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class DimensioServiceImpl  extends BaseReadonlyResourceService<Dimensio, Long, DimensioEntity> implements DimensioService {
+public class DimensioServiceImpl  extends BaseMutableResourceService<Dimensio, Long, DimensioEntity> implements DimensioService {
     private final SpringFilterHelper springFilterHelper;
     private final EstadisticaClientHelper estadisticaClientHelper;
+
+    @PostConstruct
+    public void init() {
+        register(Dimensio.ACTION_CHANGE_TIPUS, new ChangeTipusActionExecutor());
+    }
 
     @Override
     protected Specification<DimensioEntity> namedFilterToSpecification(String name) {
@@ -98,5 +108,26 @@ public class DimensioServiceImpl  extends BaseReadonlyResourceService<Dimensio, 
         return result.isEmpty() ? null : FilterBuilder.and(result).generate();
     }
 
+    public class ChangeTipusActionExecutor implements ActionExecutor<DimensioEntity, Dimensio.ChangeTipusActionForm, Dimensio> {
+        @Override
+        public Dimensio exec(String code, DimensioEntity entity, Dimensio.ChangeTipusActionForm params) throws ActionExecutionException {
+            try {
+                entity.setTipus(params.getTipus());
+                return resourceEntityMappingHelper.entityToResource(entity, Dimensio.class);
+            } catch (ActionExecutionException a) {
+                throw a;
+            } catch (Exception e) {
+                throw new ActionExecutionException(
+                    Dimensio.class,
+                    null,
+                    code,
+                    e.getMessage());
+            }
+        }
 
+        @Override
+        public void onChange(Serializable id, Dimensio.ChangeTipusActionForm previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Dimensio.ChangeTipusActionForm target) {
+
+        }
+    }
 }

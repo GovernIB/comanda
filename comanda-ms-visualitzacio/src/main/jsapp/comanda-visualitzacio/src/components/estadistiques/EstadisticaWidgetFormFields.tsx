@@ -13,6 +13,14 @@ const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ 
     const { t } = useTranslation();
     const { isReady: appIsReady, find: appFind } = useResourceApiService("app");
 
+    const [quickfilter, setQuickfilter] = React.useState<string | undefined>();
+    const namedQueries = React.useMemo(() => {
+        const queries: string[] = [];
+        if (data?.aplicacio?.id) queries.push(`filterByAppGroupByValor:${data?.aplicacio?.id}`);
+        if (quickfilter) queries.push(`filterByUONom:${quickfilter}`);
+        return queries.length > 0 ? queries : undefined;
+    }, [quickfilter, data?.aplicacio?.id]);
+
     // Get the current values for conditional rendering
     const periodeMode = data?.periodeMode;
     const presetPeriode = data?.presetPeriode;
@@ -69,6 +77,14 @@ const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ 
                                             componentProps={{
                                                 size: 'small',
                                             }}
+                                            name="text"
+                                            type={'text'}
+                                            onChange={setQuickfilter}
+                                        />
+                                        <FormField
+                                            componentProps={{
+                                                size: 'small',
+                                            }}
                                             name="dimensio"
                                             namedQueries={[`filterByAppGroupByNom:${data.aplicacio.id}`]}
                                         />
@@ -79,13 +95,13 @@ const EstadisticaWidgetFormFields: React.FC<{ children: React.ReactNode }> = ({ 
                                 }
                                 advancedSearchDataGridProps={{
                                     rowHeight: 30,
+                                    toolbarHide: true,
+                                    toolbarHideQuickFilter: true,
                                 }}
                                 advancedSearchDialogHeight={500}
                                 multiple
                                 advancedSearchColumns={columnesDimensioValor}
-                                namedQueries={[
-                                    `filterByAppGroupByValor:${data.aplicacio.id}`,
-                                ]}
+                                namedQueries={namedQueries}
                             />
                         </Grid>
 

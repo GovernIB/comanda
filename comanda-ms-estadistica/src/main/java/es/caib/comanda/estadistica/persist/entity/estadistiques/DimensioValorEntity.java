@@ -2,18 +2,14 @@ package es.caib.comanda.estadistica.persist.entity.estadistiques;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.DimensioValor;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum;
 import es.caib.comanda.ms.persist.entity.BaseEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JoinFormula;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.ForeignKey;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  * Entitat que representa un valor associat a una dimensió en el sistema.

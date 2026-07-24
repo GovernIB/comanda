@@ -32,7 +32,7 @@ export const columnesDimensio = [
 ];
 export const columnesDimensioValor = [
     {
-        field: 'valor',
+        field: 'codiNom',
         flex: 1,
     },
     {

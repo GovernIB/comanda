@@ -1,7 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.service;
 
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio;
-import es.caib.comanda.ms.logic.intf.service.ReadonlyResourceService;
+import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
 
 /**
  * Servei que gestiona les operacions relacionades amb les dimensions d'una aplicació.
@@ -16,5 +16,5 @@ import es.caib.comanda.ms.logic.intf.service.ReadonlyResourceService;
  *
  * @author Límit Tecnologies
  */
-public interface DimensioService extends ReadonlyResourceService<Dimensio, Long> {
+public interface DimensioService extends MutableResourceService<Dimensio, Long> {
 }

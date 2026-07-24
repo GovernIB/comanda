@@ -24,7 +24,7 @@ describe('advancedSearchColumns', () => {
             ])
         );
         expect(columnesDimensioValor).toEqual([
-            { field: 'valor', flex: 1 },
+            { field: 'codiNom', flex: 1 },
             { field: 'dimensio.description', headerName: 'Dimensio', flex: 2 },
         ]);
     });

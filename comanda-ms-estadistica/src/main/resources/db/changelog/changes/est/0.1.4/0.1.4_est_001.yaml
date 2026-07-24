@@ -1,0 +1,148 @@
+databaseChangeLog:
+  - changeSet:
+      id: plugin-uo-dir3-1
+      author: Limit
+      changes:
+        - createTable:
+            tableName: ${db_prefix}unitat_org
+            columns:
+              - column:
+                  name: id
+                  type: NUMBER(38,0)
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}unitat_org_pk
+              - column:
+                  name: codi
+                  type: VARCHAR(64)
+                  constraints: { nullable: false }
+              - column:
+                  name: denominacio_es
+                  type: VARCHAR(255)
+                  constraints: { nullable: false }
+              - column:
+                  name: denominacio_ca
+                  type: VARCHAR(255)
+                  constraints: { nullable: false }
+              - column:
+                  name: nif_cif
+                  type: VARCHAR(16)
+                  constraints: { nullable: false }
+              - column:
+                  name: codi_unitat_superior
+                  type: VARCHAR(64)
+                  constraints: { nullable: false }
+              - column:
+                  name: codi_unitat_arrel
+                  type: VARCHAR(64)
+                  constraints: { nullable: false }
+              - column:
+                  name: estat
+                  type: VARCHAR(1)
+                  constraints: { nullable: false }
+              - column:
+                  name: created_by
+                  type: VARCHAR(64)
+                  constraints: { nullable: false }
+              - column:
+                  name: created_date
+                  type: TIMESTAMP
+                  constraints: { nullable: false }
+              - column:
+                  name: lastmod_by
+                  type: VARCHAR(64)
+              - column:
+                  name: lastmod_date
+                  type: TIMESTAMP
+              - column:
+                  name: v
+                  type: NUMBER(38,0)
+  - changeSet:
+      id: plugin-uo-dir3-2
+      author: Limit
+      comment: Afegir paràmetre del plugin d'unitats organitzatives dir3
+      changes:
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "Plugins"
+              - column:
+                  name: SUBGRUP
+                  value: "Unitats Organitzatives"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.plugin.unitats.organitzatives.dir3.service.url"
+              - column:
+                  name: NOM
+                  value: "Url"
+              - column:
+                  name: VALOR
+                  value: ""
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "Plugins"
+              - column:
+                  name: SUBGRUP
+                  value: "Unitats Organitzatives"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.plugin.unitats.organitzatives.dir3.service.username"
+              - column:
+                  name: NOM
+                  value: "Usuari"
+              - column:
+                  name: VALOR
+                  value: ""
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "Plugins"
+              - column:
+                  name: SUBGRUP
+                  value: "Unitats Organitzatives"
+              - column:
+                  name: TIPUS
+                  value: "PASSWORD"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.plugin.unitats.organitzatives.dir3.service.password"
+              - column:
+                  name: NOM
+                  value: "Contrasenya"
+              - column:
+                  name: VALOR
+                  value: ""
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+  - changeSet:
+      id: plugin-uo-dir3-3
+      author: Limit
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}est_dimensio
+            columns:
+              - column:
+                  name: tipus
+                  type: varchar(16)

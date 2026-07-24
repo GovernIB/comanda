@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
@@ -65,14 +66,24 @@ import java.io.Serializable;
                 )
         },
         artifacts = {
-                @ResourceArtifact(type = ResourceArtifactType.FILTER, code = DimensioValor.DIMENSIO_VALOR_FILTER, formClass = DimensioValor.DimensioValorFilter.class)
+                @ResourceArtifact(type = ResourceArtifactType.FILTER, code = DimensioValor.DIMENSIO_VALOR_FILTER, formClass = DimensioValor.DimensioValorFilter.class),
+                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = DimensioValor.ACTION_UO, requiresId = true,
+                            accessConstraints = {
+                                    @ResourceAccessConstraint(
+                                            type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                                            roles = { BaseConfig.ROLE_ADMIN },
+                                            grantedPermissions = { PermissionEnum.WRITE }
+                                    )
+                            }),
         }
 )
 public class DimensioValor extends BaseResource<Long> {
 
     public static final String NAMED_FILTER_BY_APP_GROUP_BY_VALOR = "filterByAppGroupByValor";
+    public static final String NAMED_FILTER_BY_UO_NOM = "filterByUONom";
     public static final String FILTER_BY_APP_NAMEDFILTER = "filterByApp";
     public static final String DIMENSIO_VALOR_FILTER = "dimensioValorFilter";
+    public static final String ACTION_UO = "UO_DIR3";
 
     @NotNull
     @Size(max = 255)
@@ -84,8 +95,18 @@ public class DimensioValor extends BaseResource<Long> {
     private Boolean agrupable;
     private String valorAgrupacio;
 
+    private TipusDimensioEnum tipus;
+    @Transient private ResourceReference<UnitatOrganitzativa, Long> unitatOrganitzativa;
+
     public String getDesc() {
-        return dimensio.getDescription() + " [" + valor + "]";
+        return dimensio.getDescription() + " [" + this.getCodiNom() + "]";
+    }
+
+    public String getCodiNom() {
+        return valor +
+            (unitatOrganitzativa != null
+                ?" - " + unitatOrganitzativa.getDescription()
+                :"");
     }
 
     @Getter

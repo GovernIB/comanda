@@ -712,6 +712,20 @@ const translationCa = {
                 descripcio: "Descripció",
                 agrupacions: "Té agrupacions",
             },
+            action: {
+                marcarOrgan: {
+                    label: "Marcar com organ gestor",
+                    ok: "La dimensió s'ha marcat com ha organ gestor",
+                },
+                desmarcar: {
+                    label: "Desmarcar com organ gestor",
+                    ok: "La dimensió s'ha desmarcat com ha organ gestor",
+                },
+                sincronitzar: {
+                    label: "Sincronitzar",
+                    ok: "L'organ gestor s'ha sincronitzat correctament",
+                }
+            },
         },
         indicadors: {
             title: "Indicadors",

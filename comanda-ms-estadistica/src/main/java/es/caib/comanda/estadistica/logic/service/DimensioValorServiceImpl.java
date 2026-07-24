@@ -2,24 +2,36 @@ package es.caib.comanda.estadistica.logic.service;
 
 import com.turkraft.springfilter.FilterBuilder;
 import com.turkraft.springfilter.parser.Filter;
+import es.caib.comanda.estadistica.logic.dir3.SistemaExternException;
+import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesPlugin;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.DimensioValor;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.UnitatOrganitzativa;
 import es.caib.comanda.estadistica.logic.intf.service.DimensioValorService;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.UnitatOrganitzativaEntity;
+import es.caib.comanda.estadistica.persist.repository.UnitatOrganitzativaRepository;
+import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
+import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.util.Strings;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Subquery;
-import java.util.ArrayList;
-import java.util.List;
+import javax.annotation.PostConstruct;
+import javax.persistence.criteria.*;
+import java.io.Serializable;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Classe d'implementació del servei per a la gestió de la lògica de negoci relacionada amb l'entitat DimensioValor.
@@ -44,6 +56,13 @@ import java.util.stream.Collectors;
 public class DimensioValorServiceImpl extends BaseMutableResourceService<DimensioValor, Long, DimensioValorEntity> implements DimensioValorService {
     private final SpringFilterHelper springFilterHelper;
     private final EstadisticaClientHelper estadisticaClientHelper;
+    private final UnitatOrganitzativaRepository unitatOrganitzativaRepository;
+    private final UnitatsOrganitzativesPlugin unitatsOrganitzativesPlugin;
+
+    @PostConstruct
+    public void init() {
+        register(DimensioValor.ACTION_UO, new UOActionExecutor());
+    }
 
     @Override
     protected Specification<DimensioValorEntity> namedFilterToSpecification(String name) {
@@ -54,6 +73,14 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
                 idsEntornApp = estadisticaClientHelper.getEntornAppsIdByAppId(Long.valueOf(parts[1]));
             }
             return uniqueValorByMinEntornAppId(idsEntornApp);
+        }
+        if (name != null && name.startsWith(DimensioValor.NAMED_FILTER_BY_UO_NOM)) {
+            String searchTerm = null;
+            String[] parts = name.split(":", 2);
+            if (parts.length == 2 && !parts[1].isBlank()) {
+                searchTerm = parts[1];
+            }
+            return filterByUnitatOrganitzativaNom(searchTerm);
         }
         return null;
     }
@@ -80,6 +107,36 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
         };
     }
 
+    /**
+     * Filtro para DimensioValor por nombre de UnitatOrganitzativa.
+     * Solo aplica cuando la dimensión es de tipo ORGAN_GESTOR (codi = "ORG"),
+     * ya que en ese caso el campo 'valor' contiene el 'codi' de la unidad.
+     */
+    private static Specification<DimensioValorEntity> filterByUnitatOrganitzativaNom(String searchTerm) {
+        return (root, query, cb) -> {
+            if (searchTerm == null || searchTerm.trim().isEmpty()) {
+                return cb.conjunction();
+            }
+
+            String pattern = "%" + searchTerm.toLowerCase() + "%";
+
+            Subquery<UnitatOrganitzativaEntity> subquery = query.subquery(UnitatOrganitzativaEntity.class);
+            Root<UnitatOrganitzativaEntity> uoRoot = subquery.from(UnitatOrganitzativaEntity.class);
+            subquery.select(uoRoot);
+
+            Predicate nomCa = cb.like(cb.lower(uoRoot.get("denominacioCa")), pattern);
+            Predicate nomEs = cb.like(cb.lower(uoRoot.get("denominacioEs")), pattern);
+            Predicate valorMatch = cb.equal(root.get("valor"), uoRoot.get("codi"));
+
+            subquery.where(cb.and(valorMatch, cb.or(nomCa, nomEs)));
+
+            Predicate matchByUnitName = cb.exists(subquery);
+            Predicate matchByDirectValor = cb.like(cb.lower(root.get("valor")), pattern);
+
+            return cb.or(matchByUnitName, matchByDirectValor);
+        };
+    }
+
     @Override
     protected String additionalSpringFilter(String currentSpringFilter, String[] namedQueries) {
         List<Filter> filters = new ArrayList<>();
@@ -98,5 +155,72 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
                 filter(f -> f != null && !String.valueOf(f).isEmpty()).
                 collect(Collectors.toList());
         return result.isEmpty() ? null : FilterBuilder.and(result).generate();
+    }
+
+    @Override
+    protected void afterConversion(List<DimensioValorEntity> entities, List<DimensioValor> resources) {
+        Map<String, UnitatOrganitzativaEntity> uoMap = entities.stream()
+            .filter(e -> TipusDimensioEnum.ORGAN_GESTOR.equals(e.getDimensio().getTipus()))
+            .map(DimensioValorEntity::getValor)
+            .filter(Objects::nonNull)
+            .distinct()
+            .collect(Collectors.collectingAndThen(
+                Collectors.toSet(),
+                codis -> codis.isEmpty() ? Map.of() :
+                    unitatOrganitzativaRepository.findByCodiIn(codis).stream()
+                        .collect(Collectors.toMap(UnitatOrganitzativaEntity::getCodi, Function.identity()))
+            ));
+
+        // 2. Asignar con forEach (más limpio que for-indexado)
+        IntStream.range(0, entities.size()).forEach(i -> {
+            var e = entities.get(i);
+            var r = resources.get(i);
+
+            if (TipusDimensioEnum.ORGAN_GESTOR.equals(e.getDimensio().getTipus())) {
+                Optional.ofNullable(uoMap.get(e.getValor()))
+                    .ifPresent(uo -> r.setUnitatOrganitzativa(
+                        ResourceReference.toResourceReference(uo.getId(), uo.getDenominacio())
+                    ));
+            }
+        });
+    }
+
+    public class UOActionExecutor implements ActionExecutor<DimensioValorEntity, Serializable, Serializable> {
+        @Override
+        public Serializable exec(String code, DimensioValorEntity entity, Serializable params) throws ActionExecutionException {
+            if (entity.getDimensio().getTipus() == null) return null;
+            try {
+                switch (entity.getDimensio().getTipus()) {
+                    case ORGAN_GESTOR:
+                        UnitatOrganitzativaEntity uo = unitatsOrganitzativesPlugin.findUnidad(entity.getValor());
+                        unitatOrganitzativaRepository.findByCodi(uo.getCodi())
+                                .ifPresentOrElse(
+                                        (u) -> {
+                                            u.setDenominacioEs(uo.getDenominacioEs());
+                                            u.setDenominacioCa(uo.getDenominacioCa());
+                                            u.setNifCif(uo.getNifCif());
+                                            u.setCodiUnitatArrel(uo.getCodiUnitatArrel());
+                                            u.setCodiUnitatSuperior(uo.getCodiUnitatSuperior());
+                                            u.setEstat(uo.getEstat());
+                                            unitatOrganitzativaRepository.save(u);
+                                        },
+                                        () -> unitatOrganitzativaRepository.save(uo)
+                                );
+                        return resourceEntityMappingHelper.entityToResource(uo, UnitatOrganitzativa.class);
+                    default: throw new SistemaExternException("Tipus de dimensió no trabada");
+                }
+            } catch (Exception e) {
+                throw new ActionExecutionException(
+                        DimensioValor.class,
+                        null,
+                        code,
+                        e.getMessage());
+            }
+        }
+
+        @Override
+        public void onChange(Serializable id, Serializable previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Serializable target) {
+
+        }
     }
 }

@@ -12,7 +12,7 @@ import {
     MuiFilter,
     FormField,
     useFilterApiRef,
-    useResourceApiService
+    useResourceApiService, useBaseAppContext, useMuiDataGridApiRef
 } from 'reactlib';
 import PageTitle from '../components/PageTitle.tsx';
 
@@ -104,6 +104,9 @@ const Dimensions: React.FC = () => {
     const { t } = useTranslation();
     const [filter, setFilter] = React.useState<string | undefined>(springFilterBuilder.eq('entornAppId', 0));
 
+    const { artifactAction: apiAction } = useResourceApiService('dimensio');
+    const { temporalMessageShow } = useBaseAppContext();
+
     const columns: MuiDataGridColDef[] = [
         { field: 'codi', flex: 1 },
         { field: 'nom', flex: 2 },
@@ -112,10 +115,15 @@ const Dimensions: React.FC = () => {
     ];
     const filterElement = <DimensionsFilter onSpringFilterChange={setFilter}/>;
 
+    const gridApiRef = useMuiDataGridApiRef();
+    const refresh = () => {
+        gridApiRef?.current?.refresh?.();
+    }
     return (
         <>
             <PageTitle title={t($ => $.page.dimensions.title)} />
             <MuiDataGrid
+                apiRef={gridApiRef}
                 title={t($ => $.page.dimensions.title)}
                 resourceName="dimensio"
                 columns={columns}
@@ -124,7 +132,38 @@ const Dimensions: React.FC = () => {
                 toolbarHideQuickFilter
                 toolbarAdditionalRow={filterElement}
                 filter={filter}
-                rowAdditionalActions={[{
+                rowAdditionalActions={[
+                    {
+                        label: t($ => $.page.dimensions.action.marcarOrgan.label),
+                        icon: 'check_box_outline_blank',
+                        showInMenu: false,
+                        action: 'CHANGE_TIPUS',
+                        onClick: (id) => {
+                            apiAction(id, {code: 'CHANGE_TIPUS', data: {tipus: 'ORGAN_GESTOR'}})
+                                .then(() => {
+                                    refresh()
+                                    temporalMessageShow(null, t($ => $.page.dimensions.action.marcarOrgan.ok), 'success')
+                                })
+                                .catch(error => temporalMessageShow(null, error.message, 'error'))
+                        },
+                        hidden: (row) => row?.tipus
+                    },
+                    {
+                        label: t($ => $.page.dimensions.action.desmarcar.label),
+                        icon: 'check_box',
+                        showInMenu: false,
+                        action: 'CHANGE_TIPUS',
+                        onClick: (id) => {
+                            apiAction(id, {code: 'CHANGE_TIPUS', data: {tipus: null}})
+                                .then(() => {
+                                    refresh()
+                                    temporalMessageShow(null, t($ => $.page.dimensions.action.desmarcar.ok), 'success')
+                                })
+                                .catch(error => temporalMessageShow(null, error.message, 'error'))
+                        },
+                        hidden: (row) => !row?.tipus
+                    },
+                    {
                     label: t($ => $.page.dimensions.values),
                     icon: 'list',
                     linkTo: 'valor/{{id}}'

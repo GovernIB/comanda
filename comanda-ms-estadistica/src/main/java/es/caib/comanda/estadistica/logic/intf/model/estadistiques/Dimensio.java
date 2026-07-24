@@ -66,7 +66,16 @@ import java.util.List;
         },
         artifacts = {
                 @ResourceArtifact(type = ResourceArtifactType.FILTER, code = Dimensio.DIMENSIO_FILTER, formClass = Dimensio.DimensioFilter.class),
-                @ResourceArtifact(type = ResourceArtifactType.FILTER, code = Dimensio.FILTER_BY_DIMENSIO, formClass = Dimensio.FilterByDimensio.class)
+                @ResourceArtifact(type = ResourceArtifactType.FILTER, code = Dimensio.FILTER_BY_DIMENSIO, formClass = Dimensio.FilterByDimensio.class),
+                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Dimensio.ACTION_CHANGE_TIPUS, requiresId = true,
+                    formClass = Dimensio.ChangeTipusActionForm.class,
+                    accessConstraints = {
+                        @ResourceAccessConstraint(
+                            type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                            roles = { BaseConfig.ROLE_ADMIN },
+                            grantedPermissions = { PermissionEnum.WRITE }
+                        )
+                    }),
         }
 )
 public class Dimensio extends BaseResource<Long> {
@@ -76,6 +85,7 @@ public class Dimensio extends BaseResource<Long> {
     public final static String DIMENSIO_FILTER = "dimensioFilter";
     public final static String FILTER_BY_DIMENSIO = "filterByDimensio";
     public final static String FILTER_BY_APP_NAMEDFILTER = "filterByApp";
+    public final static String ACTION_CHANGE_TIPUS = "CHANGE_TIPUS";
 
     @NotNull
     @Pattern(regexp = "^[a-zA-Z0-9_]*$", message = "El codi només pot contenir caràcters alfanumèrics")
@@ -91,6 +101,7 @@ public class Dimensio extends BaseResource<Long> {
     private List<DimensioValor> valors;
 
     private Integer agrupableCount;
+    private TipusDimensioEnum tipus;
 
     @Getter
     @Setter
@@ -110,5 +121,14 @@ public class Dimensio extends BaseResource<Long> {
     public static class FilterByDimensio implements Serializable {
         @ResourceField(descriptionField = Dimensio.Fields.nom) // El description field es força a usar el nom, ja que al frontal s'aprofita per a generar els filtres del DataGrid
         protected ResourceReference<Dimensio, Long> dimensio;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @FieldNameConstants
+    public static class ChangeTipusActionForm implements Serializable {
+        private TipusDimensioEnum tipus;
     }
 }
