@@ -712,6 +712,20 @@ const translationEs: translationResourcesType = {
                 descripcio: "Descripción",
                 agrupacions: "Tiene agrupaciones",
             },
+            action: {
+                marcarOrgan: {
+                    label: "Marcar como órgano gestor",
+                    ok: "La dimensión se ha marcado como órgano gestor",
+                },
+                desmarcar: {
+                    label: "Desmarcar como órgano gestor",
+                    ok: "La dimensión se ha desmarcado como órgano gestor",
+                },
+                sincronitzar: {
+                    label: "Sincronizar",
+                    ok: "El órgano gestor se ha sincronizado correctamente",
+                }
+            },
         },
         indicadors: {
             title: "Indicadores",

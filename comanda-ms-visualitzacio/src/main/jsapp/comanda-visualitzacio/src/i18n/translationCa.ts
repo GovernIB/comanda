@@ -714,16 +714,16 @@ const translationCa = {
             },
             action: {
                 marcarOrgan: {
-                    label: "Marcar com organ gestor",
-                    ok: "La dimensió s'ha marcat com ha organ gestor",
+                    label: "Marcar com a òrgan gestor",
+                    ok: "La dimensió s'ha marcat com a òrgan gestor",
                 },
                 desmarcar: {
-                    label: "Desmarcar com organ gestor",
-                    ok: "La dimensió s'ha desmarcat com ha organ gestor",
+                    label: "Desmarcar com a òrgan gestor",
+                    ok: "La dimensió s'ha desmarcat com a òrgan gestor",
                 },
                 sincronitzar: {
                     label: "Sincronitzar",
-                    ok: "L'organ gestor s'ha sincronitzat correctament",
+                    ok: "L'òrgan gestor s'ha sincronitzat correctament",
                 }
             },
         },

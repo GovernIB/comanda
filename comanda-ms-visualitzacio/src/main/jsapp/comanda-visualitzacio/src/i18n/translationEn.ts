@@ -712,6 +712,20 @@ const translationEn: translationResourcesType = {
                 descripcio: "Description",
                 agrupacions: "Has groupings",
             },
+            action: {
+                marcarOrgan: {
+                    label: "Mark as managing body",
+                    ok: "The dimension has been marked as the managing body",
+                },
+                desmarcar: {
+                    label: "Unmark as managing body",
+                    ok: "The dimension has been unmarked as the managing body",
+                },
+                sincronitzar: {
+                    label: "Synchronize",
+                    ok: "The managing body has been synchronized successfully",
+                }
+            },
         },
         indicadors: {
             title: "Indicators",
