@@ -135,7 +135,7 @@ const ListWidgetDialogContent = ({ title, resourceName, form, dashboardId, baseC
     const { messageDialogShow, temporalMessageShow, t: tLib } = useBaseAppContext();
     const confirmDialogButtons = useConfirmDialogButtons();
     const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
-    const onDeleteClick = (id: any) => {
+    const onDeleteClick = (id: string | number) => {
         messageDialogShow(
             tLib('datacommon.delete.single.label'),
             tLib('datacommon.delete.single.confirm'),
@@ -356,11 +356,11 @@ const EstadisticaDashboardEdit: React.FC = () => {
         setEditorSelection({ kind: 'title', mode: 'create' });
     };
 
-    const openCreateWidgetForm = (widgetType?: DashboardWidgetType, entornId?: any, aplicacio?: any) => {
+    const openCreateWidgetForm = (widgetType?: DashboardWidgetType, entornId?: string | number, aplicacio?: { id?: string | number; description?: string }) => {
         setEditorSelection({ kind: 'widget', mode: 'create', widgetType, entornId, aplicacio });
     };
 
-    const addWidget = (widgetId: any, entornId: any, widgetType?: DashboardWidgetType) => {
+    const addWidget = (widgetId: string | number, entornId: string | number, widgetType?: DashboardWidgetType) => {
         createDashboardItem({
             data: {
                 dashboard: { id: dashboardId },
@@ -369,7 +369,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                 ...defaultSizeAndPosition,
             },
         })
-            .then(async (createdItem: any) => {
+            .then(async (createdItem: { id?: string | number }) => {
                 temporalMessageShow(null, t($ => $.page.dashboards.action.addWidget.success), 'success');
                 forceRefreshDashboardWidgets();
                 if (createdItem?.id && widgetType) {
@@ -400,7 +400,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
         return null;
     }, [editorSelection]);
 
-    const selectDashboardElement = (entity: any) => {
+    const selectDashboardElement = (entity: { tipus?: string; id?: string | number; dashboardTitolId?: string | number; dashboardItemId?: string | number; widgetId?: string | number } | null | undefined) => {
         if (!entity) {
             setEditorSelection({ kind: 'none' });
             return;
@@ -417,7 +417,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
             setEditorSelection({
                 kind: 'widget',
                 mode: 'edit',
-                widgetType: entity.tipus,
+                widgetType: entity.tipus as DashboardWidgetType,
                 dashboardItemId: entity.dashboardItemId ?? entity.id,
                 widgetId: entity.widgetId,
             });
@@ -425,7 +425,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
     };
 
     const onGridLayoutItemsChange = (newLayoutItems: GridLayoutItem[]) => {
-        const promises: Promise<any>[] = [];
+        const promises: Promise<unknown>[] = [];
         mappedDashboardItems.forEach((oldDashboardItem: GridLayoutItem) => {
             const newDashboardItem = newLayoutItems.find(
                 (newLayoutItem: GridLayoutItem) => newLayoutItem.id === oldDashboardItem.id
@@ -767,15 +767,22 @@ const TIPUS_ICON: Record<string, string> = {
     TITOL: 'title',
 };
 
-const SideMenu = ({ dashboard, addWidget, createWidget, dashboardWidgets, onSelectItem, selectedItemId }:any) => {
+const SideMenu = ({ dashboard, addWidget, createWidget, dashboardWidgets, onSelectItem, selectedItemId }:{
+    dashboard?: any;
+    addWidget: (widgetId: string | number, entornId: string | number, widgetType?: DashboardWidgetType) => void;
+    createWidget: (widgetType?: DashboardWidgetType, entornId?: string | number, aplicacio?: Record<string, unknown>) => void;
+    dashboardWidgets: Array<Record<string, unknown>>;
+    onSelectItem?: (item: Record<string, unknown>) => void;
+    selectedItemId?: string | null;
+}) => {
     // const { t } = useTranslation();
     const appEntornFilterApiRef = useFilterApiRef();
     const [springFilter, setSpringFilter] = useState<string>()
-    const [entornId, setEntornId] = useState<string>(dashboard?.entorn?.id)
-    const [aplicacio, setAplicacio] = useState<any>(dashboard?.aplicacio)
-    const [simpleWidgets, setSimpleWidgets] = useState<any[]>()
-    const [graficWidgets, setGraficWidgets] = useState<any[]>()
-    const [taulaWidgets, setTaulaWidgets] = useState<any[]>()
+    const [entornId, setEntornId] = useState<string>(dashboard?.entorn?.id as string)
+    const [aplicacio, setAplicacio] = useState<Record<string, unknown> | undefined>(dashboard?.aplicacio as Record<string, unknown> | undefined)
+    const [simpleWidgets, setSimpleWidgets] = useState<Array<{ id?: string | number; titol?: string }>>()
+    const [graficWidgets, setGraficWidgets] = useState<Array<{ id?: string | number; titol?: string }>>()
+    const [taulaWidgets, setTaulaWidgets] = useState<Array<{ id?: string | number; titol?: string }>>()
 
     const {
         isReady: apiSimpleIsReady,
@@ -801,7 +808,7 @@ const SideMenu = ({ dashboard, addWidget, createWidget, dashboardWidgets, onSele
         }
     }, [springFilter, apiSimpleIsReady, apiGraficIsReady, apiTaulaIsReady]);
 
-    const WidgetTreeItem = ({widget, widgetType}:any) => <TreeItem key={widget?.id} itemId={widget?.id} label={<Box
+    const WidgetTreeItem = ({widget, widgetType}:{ widget: { id?: string | number; titol?: string }; widgetType: DashboardWidgetType }) => <TreeItem key={widget?.id} itemId={String(widget?.id)} label={<Box
         display={'flex'}
         flexDirection={'row'}
         justifyContent={'space-between'}
@@ -812,7 +819,7 @@ const SideMenu = ({ dashboard, addWidget, createWidget, dashboardWidgets, onSele
             <IconButton
                 size={'small'}
                 aria-label={`Afegir ${widget?.titol}`}
-                onClick={() => addWidget(widget?.id, entornId, widgetType)}
+                onClick={() => widget?.id != null && addWidget(widget.id, entornId, widgetType)}
             >
                 <Icon sx={{ fontSize: '0.875rem' }}>add</Icon>
             </IconButton>
@@ -840,7 +847,7 @@ const SideMenu = ({ dashboard, addWidget, createWidget, dashboardWidgets, onSele
                     setEntornId(data?.entorn?.id);
                     setAplicacio(data?.app);
                 }}
-            springFilterBuilder={(data:any) => springFilterBuilder.and(
+            springFilterBuilder={(data: any) => springFilterBuilder.and(
                 springFilterBuilder.eq("appId", data?.app?.id)
             )}
             onSpringFilterChange={setSpringFilter}>
@@ -929,7 +936,7 @@ const SideMenu = ({ dashboard, addWidget, createWidget, dashboardWidgets, onSele
     </Paper>
 }
 
-const WidgetMenu = ({createWidget, entornId, aplicacio}:any) => {
+const WidgetMenu = ({createWidget, entornId, aplicacio}:{ createWidget: (widgetType?: DashboardWidgetType, entornId?: string | number, aplicacio?: Record<string, unknown>) => void; entornId?: string | number; aplicacio?: Record<string, unknown> }) => {
     return <>
         <MyButtonMenu
             title={'Nou Widget'}
@@ -972,7 +979,7 @@ const WidgetMenu = ({createWidget, entornId, aplicacio}:any) => {
 
 
 
-const MyButtonMenu = ({ buttonProps, title, disabled, children }:any) => {
+const MyButtonMenu = ({ buttonProps, title, disabled, children }: { buttonProps?: Record<string, unknown>; title: string; disabled?: boolean; children?: React.ReactNode }) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {

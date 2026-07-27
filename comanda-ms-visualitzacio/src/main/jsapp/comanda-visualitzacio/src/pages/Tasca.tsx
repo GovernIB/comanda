@@ -157,7 +157,7 @@ const TascaEstatChip = (props: { estat?: TascaEstatEnum }) => {
 };
 
 
-const TascaDataCaducitatChip = (props: { row: any, formattedValue: any }) => {
+const TascaDataCaducitatChip = (props: { row?: { diesPerCaducar?: number | null }; formattedValue?: React.ReactNode }) => {
     const { row, formattedValue } = props;
     const { t } = useTranslation();
     const backgroundColor =
@@ -232,17 +232,17 @@ const tascaFilterBuilder = (data: any, currentUserCodi: string | null) => spring
     springFilterBuilder.like('numeroExpedient', data?.numeroExpedient),
     springFilterBuilder.like('tipus', data?.tipus),
     springFilterBuilder.eq('prioritat', `'${data?.prioritat}'`),
-    data?.dataInici1 && springFilterBuilder.gte('dataInici', `'${formatStartOfDay(data?.dataInici1)}'`),
-    data?.dataInici2 && springFilterBuilder.lte('dataInici', `'${formatEndOfDay(data?.dataInici2)}'`),
-    data?.dataFi1 && springFilterBuilder.gte('dataFi', `'${formatStartOfDay(data?.dataFi1)}'`),
-    data?.dataFi2 && springFilterBuilder.lte('dataFi', `'${formatEndOfDay(data?.dataFi2)}'`),
-    data?.dataCaducitat1 && springFilterBuilder.gte('dataCaducitat', `'${formatStartOfDay(data?.dataCaducitat1)}'`),
-    data?.dataCaducitat2 && springFilterBuilder.gte('dataCaducitat', `'${formatEndOfDay(data?.dataCaducitat2)}'`),
+    data?.dataInici1 && springFilterBuilder.gte('dataInici', `'${formatStartOfDay(data?.dataInici1 as string)}'`),
+    data?.dataInici2 && springFilterBuilder.lte('dataInici', `'${formatEndOfDay(data?.dataInici2 as string)}'`),
+    data?.dataFi1 && springFilterBuilder.gte('dataFi', `'${formatStartOfDay(data?.dataFi1 as string)}'`),
+    data?.dataFi2 && springFilterBuilder.lte('dataFi', `'${formatEndOfDay(data?.dataFi2 as string)}'`),
+    data?.dataCaducitat1 && springFilterBuilder.gte('dataCaducitat', `'${formatStartOfDay(data?.dataCaducitat1 as string)}'`),
+    data?.dataCaducitat2 && springFilterBuilder.gte('dataCaducitat', `'${formatEndOfDay(data?.dataCaducitat2 as string)}'`),
     data?.finalitzada && springFilterBuilder.eq('dataFi', null),
     data?.tascaPropia && currentUserCodi && springFilterBuilder.eq('responsable', `'${currentUserCodi}'`),
 )
 
-const TascaFilter = (props: { onEntornAppFilterDataChange: (data: any) => void, onExpandedFilterDataChange: (data: any) => void }) => {
+const TascaFilter = (props: { onEntornAppFilterDataChange: (data: Record<string, unknown>) => void, onExpandedFilterDataChange: (data: Record<string, unknown>) => void }) => {
     const { onEntornAppFilterDataChange, onExpandedFilterDataChange } = props;
     const { t } = useTranslation();
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
@@ -401,13 +401,13 @@ const Tasca = () => {
     const currentUserCodi = user?.codi;
     // Guardamos los datos de los 2 <Filter /> por separado, después al construir el filtro se juntarán
     const [filterData, setFilterData] = React.useState<{
-        entornAppFilter: any;
-        expandedFilter: any;
+        entornAppFilter: Record<string, unknown> | undefined;
+        expandedFilter: Record<string, unknown> | undefined;
     }>({ entornAppFilter: undefined, expandedFilter: undefined });
     // Ambos filtros deberían inicializar su estado de alguna manera, si no, consideramos que no se ha inicializado aún
     const isFilterDataReady = filterData?.entornAppFilter && filterData?.expandedFilter;
     const filter = tascaFilterBuilder({...filterData?.entornAppFilter, ...filterData?.expandedFilter}, currentUserCodi ?? null);
-    const [apps, setApps] = React.useState<any[]>();
+    const [apps, setApps] = React.useState<Array<{ id?: string | number; nom?: string; logo?: string }>>();
     const gridApiRef = useGridApiRef();
     const isAdmin = currentRole === ROLE_ADMIN;
 
@@ -433,7 +433,7 @@ const Tasca = () => {
         false,
         false,
         {
-            valueFormatter: (value: any, row: any) => row?.id ? row?.nom : value?.startsWith?.(INVALID_ENTORNAPP) ? treePathFormatInvalidEntornApp(value) : value,
+            valueFormatter: (value: unknown, row: { id?: unknown; nom?: string }) => row?.id ? row?.nom : (typeof value === 'string' && value.startsWith(INVALID_ENTORNAPP)) ? treePathFormatInvalidEntornApp(value) : (value as React.ReactNode),
             renderCell: (params: any) => {
                 const apiRef = useGridApiContext();
                 const rowTree = useGridSelector(apiRef, gridRowTreeSelector);
@@ -499,8 +499,8 @@ const Tasca = () => {
                         );
                     },
                 },
-                { field: 'app', flex: 1, valueFormatter: (value: any) => value?.description, },
-                { field: 'entorn', flex: 1, valueFormatter: (value: any) => value?.description, },
+                { field: 'app', flex: 1, valueFormatter: (value?: { description?: string }) => value?.description, },
+                { field: 'entorn', flex: 1, valueFormatter: (value?: { description?: string }) => value?.description, },
                 { field: 'nom', flex: 1 },
               ]
             : []),
@@ -516,8 +516,8 @@ const Tasca = () => {
             showInMenu: false,
             linkTo: (row: any) => row?.url,
             linkTarget: '_blank',
-            disabled: (row: any) => !row?.url,
-            hidden: (row: any) => !row?.id,
+            disabled: (row: { url?: string }) => !row?.url,
+            hidden: (row: { id?: unknown }) => !row?.id,
         }];
         if (isAdmin) {
             additionalActions.push({

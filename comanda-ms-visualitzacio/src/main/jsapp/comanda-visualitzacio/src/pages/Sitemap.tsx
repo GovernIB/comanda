@@ -29,7 +29,7 @@ const Sitemap: React.FC = () => {
 
     const {caibMenuEntries} = useAppEntries();
 
-    const sitemap:any[] = useMemo(()=> {
+    const sitemap: MenuEntry[] = useMemo(()=> {
         return [
             ...caibMenuEntries,
             // additional

@@ -24,7 +24,7 @@ const TasquesBackground: React.FC = () => {
     const confirmDialogButtons = useConfirmDialogButtons();
     const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
 
-    const onReiniciarClick = (id: any) => {
+    const onReiniciarClick = (id: string | number) => {
         messageDialogShow(
             t($ => $.page.tasquesBackground.reiniciar.titol),
             t($ => $.page.tasquesBackground.reiniciar.confirm, { nom: id }),

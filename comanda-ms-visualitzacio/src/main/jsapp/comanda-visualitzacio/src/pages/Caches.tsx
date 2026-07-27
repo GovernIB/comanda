@@ -25,7 +25,7 @@ const Caches: React.FC = () => {
     } = useBaseAppContext();
     const confirmDialogButtons = useConfirmDialogButtons();
     const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
-    const onDeleteClick = (id: any) =>  {
+    const onDeleteClick = (id: string | number) =>  {
         messageDialogShow(
             t($ => $.page.caches.buidar.titol),
             t($ => $.page.caches.buidar.confirm),

@@ -18,7 +18,7 @@ const Integracions: React.FC = () => {
         {
             field: 'logo',
             flex: 1,
-            renderCell: (params: any) => {
+            renderCell: (params: { value?: string }) => {
                 const value = params.value; // Obtenir el valor de la cel·la
                 return value ? (
                     <img
