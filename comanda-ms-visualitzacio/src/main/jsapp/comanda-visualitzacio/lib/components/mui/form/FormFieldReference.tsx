@@ -373,7 +373,6 @@ export const FormFieldReference: React.FC<FormFieldRefProps> = (props) => {
                 options={options}
                 multiple={multiple}
                 readOnly={readOnly}
-                disableCloseOnSelect={multiple}
                 open={open}
                 onOpen={() => !disabled && !readOnly && setOpen(true)}
                 onClose={(event: Event, reason) => {
