@@ -17,6 +17,7 @@ import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnu
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Temps;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
@@ -32,7 +33,9 @@ import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidget
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
+import es.caib.comanda.estadistica.persist.repository.DimensioRepository;
 import es.caib.comanda.estadistica.persist.repository.FetRepository;
+import es.caib.comanda.estadistica.persist.repository.UnitatOrganitzativaRepository;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,11 +47,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -73,6 +72,8 @@ public class ConsultaEstadisticaHelper {
     private final DashboardItemRepository dashboardItemRepository;
 
     private static DateTimeFormatter DMYYYY_FORMATTER = DateTimeFormatter.ofPattern("d/M/yyyy");
+    private final UnitatOrganitzativaRepository unitatOrganitzativaRepository;
+    private final DimensioRepository dimensioRepository;
 
 
     // CONSULTA ESTADISTIQUES
@@ -509,6 +510,17 @@ public class ConsultaEstadisticaHelper {
                 dimensionsFiltre,
                 indicadorsAgregacio,
                 dimensioAgrupacioCodi);
+
+        DimensioEntity dimensioEntity = dimensioRepository.findByCodiAndEntornAppId(dimensioAgrupacioCodi, dadesComunsConsulta.getEntornAppId()).orElse(null);
+        if (dimensioEntity != null && TipusDimensioEnum.TIPUS_AMB_UNITAT_ORG.contains(dimensioEntity.getTipus())) {
+            files = files.stream().peek(c -> {
+                if (c.containsKey("agrupacio")) {
+                    unitatOrganitzativaRepository.findByCodi(c.get("agrupacio")).ifPresent(u ->
+                        c.put("agrupacio", u.getCodiNom())
+                    );
+                }
+            }).collect(Collectors.toList());
+        }
 
         return InformeWidgetTaulaItem.builder()
                 .dashboardItemId(dashboardItem.getId())

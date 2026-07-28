@@ -721,6 +721,11 @@ const translationEn: translationResourcesType = {
                     label: "Unmark as managing body",
                     ok: "The dimension has been unmarked as the managing body",
                 },
+                refreshCons: {
+                    label: "Refresh ministry data",
+                    title: "Do you want to refresh the ministry data?",
+                    ok: "Ministry data refreshed successfully",
+                },
                 sincronitzar: {
                     label: "Synchronize",
                     ok: "The managing body has been synchronized successfully",

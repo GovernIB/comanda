@@ -721,6 +721,11 @@ const translationCa = {
                     label: "Desmarcar com a òrgan gestor",
                     ok: "La dimensió s'ha desmarcat com a òrgan gestor",
                 },
+                refreshCons: {
+                    label: "Refrescar dades de la conselleria",
+                    title: "Vols refrescar les dades de la conselleria?",
+                    ok: "Les dades de la conselleria s'han refrescat correctament",
+                },
                 sincronitzar: {
                     label: "Sincronitzar",
                     ok: "L'òrgan gestor s'ha sincronitzat correctament",

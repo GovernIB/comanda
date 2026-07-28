@@ -2,16 +2,22 @@ package es.caib.comanda.estadistica.logic.service;
 
 import com.turkraft.springfilter.FilterBuilder;
 import com.turkraft.springfilter.parser.Filter;
+import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesPlugin;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum;
 import es.caib.comanda.estadistica.logic.intf.service.DimensioService;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
+import es.caib.comanda.estadistica.persist.repository.DimensioRepository;
+import es.caib.comanda.estadistica.persist.repository.FetRepository;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -48,10 +54,17 @@ import java.util.stream.Collectors;
 public class DimensioServiceImpl  extends BaseMutableResourceService<Dimensio, Long, DimensioEntity> implements DimensioService {
     private final SpringFilterHelper springFilterHelper;
     private final EstadisticaClientHelper estadisticaClientHelper;
+    private final FetRepository fetRepository;
+    private final UnitatsOrganitzativesPlugin unitatsOrganitzativesPlugin;
+    private final DimensioRepository dimensioRepository;
+
+    @Value("${es.caib.comanda.estadistica.dir3.govern.codi.arrel:}")
+    private String codiArrel;
 
     @PostConstruct
     public void init() {
         register(Dimensio.ACTION_CHANGE_TIPUS, new ChangeTipusActionExecutor());
+        register(Dimensio.ACTION_FET_CONS, new FetConsActionExecutor());
     }
 
     @Override
@@ -112,6 +125,12 @@ public class DimensioServiceImpl  extends BaseMutableResourceService<Dimensio, L
         @Override
         public Dimensio exec(String code, DimensioEntity entity, Dimensio.ChangeTipusActionForm params) throws ActionExecutionException {
             try {
+                if (params.getTipus() != null) {
+                    List<DimensioEntity> dimensioEntityList = dimensioRepository.findByEntornAppId(entity.getEntornAppId());
+                    if (dimensioEntityList.stream().anyMatch(c -> c.getTipus() == params.getTipus())) {
+                        throw new RuntimeException("Tipus ja assignat");
+                    }
+                }
                 entity.setTipus(params.getTipus());
                 return resourceEntityMappingHelper.entityToResource(entity, Dimensio.class);
             } catch (ActionExecutionException a) {
@@ -127,6 +146,53 @@ public class DimensioServiceImpl  extends BaseMutableResourceService<Dimensio, L
 
         @Override
         public void onChange(Serializable id, Dimensio.ChangeTipusActionForm previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Dimensio.ChangeTipusActionForm target) {
+
+        }
+    }
+
+    public class FetConsActionExecutor implements ActionExecutor<DimensioEntity, Serializable, Dimensio> {
+
+        @Override
+        public Dimensio exec(String code, DimensioEntity entity, Serializable params) throws ActionExecutionException {
+            try {
+                if (TipusDimensioEnum.ORGAN_GESTOR.equals(entity.getTipus())) {
+                    // Crear dimensió conselleria (si no existeix)
+                    List<DimensioEntity> dimensioEntityList = dimensioRepository.findByEntornAppId(entity.getEntornAppId());
+                    if (dimensioEntityList.stream().noneMatch(c -> c.getTipus() == TipusDimensioEnum.CONSELLERIA)) {
+                        DimensioEntity dEntity = new DimensioEntity();
+                        dEntity.setCodi("CONS");
+                        dEntity.setNom("Conselleria");
+                        dEntity.setEntornAppId(entity.getEntornAppId());
+                        dEntity.setTipus(TipusDimensioEnum.CONSELLERIA);
+                        dimensioRepository.save(dEntity);
+                    }
+
+                    // Cambiar només els que no tenen "CONS"
+                    List<FetEntity> fetEntityList = fetRepository.findByEntornAppIdAddCons(entity.getEntornAppId(), entity.getCodi(), "CONS", codiArrel);
+                    fetEntityList = fetEntityList.stream()
+                        .peek(f -> {
+                            String c = unitatsOrganitzativesPlugin.getConsergeria(f.getDimensionsJson().get(entity.getCodi()));
+                            if (c != null) f.getDimensionsJson().put("CONS", c);
+                        })
+                        .filter(f -> f.getDimensionsJson().containsKey("CONS"))
+                        .collect(Collectors.toList());
+                    if (!fetEntityList.isEmpty())
+                        fetRepository.saveAll(fetEntityList);
+                }
+                return resourceEntityMappingHelper.entityToResource(entity, Dimensio.class);
+            } catch (ActionExecutionException a) {
+                throw a;
+            } catch (Exception e) {
+                throw new ActionExecutionException(
+                    Dimensio.class,
+                    null,
+                    code,
+                    e.getMessage());
+            }
+        }
+
+        @Override
+        public void onChange(Serializable id, Serializable previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Serializable target) {
 
         }
     }

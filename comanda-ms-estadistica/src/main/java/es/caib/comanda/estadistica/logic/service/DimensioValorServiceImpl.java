@@ -3,15 +3,14 @@ package es.caib.comanda.estadistica.logic.service;
 import com.turkraft.springfilter.FilterBuilder;
 import com.turkraft.springfilter.parser.Filter;
 import es.caib.comanda.estadistica.logic.dir3.SistemaExternException;
-import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesPlugin;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
+import es.caib.comanda.estadistica.logic.helper.UnitatOrganitzativaHelper;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.DimensioValor;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.UnitatOrganitzativa;
 import es.caib.comanda.estadistica.logic.intf.service.DimensioValorService;
-import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.UnitatOrganitzativaEntity;
 import es.caib.comanda.estadistica.persist.repository.UnitatOrganitzativaRepository;
@@ -21,7 +20,6 @@ import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.util.Strings;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -54,10 +52,11 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 @Service
 public class DimensioValorServiceImpl extends BaseMutableResourceService<DimensioValor, Long, DimensioValorEntity> implements DimensioValorService {
+
     private final SpringFilterHelper springFilterHelper;
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final UnitatOrganitzativaRepository unitatOrganitzativaRepository;
-    private final UnitatsOrganitzativesPlugin unitatsOrganitzativesPlugin;
+    private final UnitatOrganitzativaHelper unitatOrganitzativaHelper;
 
     @PostConstruct
     public void init() {
@@ -160,7 +159,7 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
     @Override
     protected void afterConversion(List<DimensioValorEntity> entities, List<DimensioValor> resources) {
         Map<String, UnitatOrganitzativaEntity> uoMap = entities.stream()
-            .filter(e -> TipusDimensioEnum.ORGAN_GESTOR.equals(e.getDimensio().getTipus()))
+            .filter(e -> TipusDimensioEnum.TIPUS_AMB_UNITAT_ORG.contains(e.getDimensio().getTipus()))
             .map(DimensioValorEntity::getValor)
             .filter(Objects::nonNull)
             .distinct()
@@ -171,12 +170,11 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
                         .collect(Collectors.toMap(UnitatOrganitzativaEntity::getCodi, Function.identity()))
             ));
 
-        // 2. Asignar con forEach (más limpio que for-indexado)
         IntStream.range(0, entities.size()).forEach(i -> {
             var e = entities.get(i);
             var r = resources.get(i);
 
-            if (TipusDimensioEnum.ORGAN_GESTOR.equals(e.getDimensio().getTipus())) {
+            if (TipusDimensioEnum.TIPUS_AMB_UNITAT_ORG.contains(e.getDimensio().getTipus())) {
                 Optional.ofNullable(uoMap.get(e.getValor()))
                     .ifPresent(uo -> r.setUnitatOrganitzativa(
                         ResourceReference.toResourceReference(uo.getId(), uo.getDenominacio())
@@ -191,21 +189,9 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
             if (entity.getDimensio().getTipus() == null) return null;
             try {
                 switch (entity.getDimensio().getTipus()) {
+                    case CONSELLERIA:
                     case ORGAN_GESTOR:
-                        UnitatOrganitzativaEntity uo = unitatsOrganitzativesPlugin.findUnidad(entity.getValor());
-                        unitatOrganitzativaRepository.findByCodi(uo.getCodi())
-                                .ifPresentOrElse(
-                                        (u) -> {
-                                            u.setDenominacioEs(uo.getDenominacioEs());
-                                            u.setDenominacioCa(uo.getDenominacioCa());
-                                            u.setNifCif(uo.getNifCif());
-                                            u.setCodiUnitatArrel(uo.getCodiUnitatArrel());
-                                            u.setCodiUnitatSuperior(uo.getCodiUnitatSuperior());
-                                            u.setEstat(uo.getEstat());
-                                            unitatOrganitzativaRepository.save(u);
-                                        },
-                                        () -> unitatOrganitzativaRepository.save(uo)
-                                );
+                        UnitatOrganitzativaEntity uo = unitatOrganitzativaHelper.updateByCodi(entity.getValor());
                         return resourceEntityMappingHelper.entityToResource(uo, UnitatOrganitzativa.class);
                     default: throw new SistemaExternException("Tipus de dimensió no trabada");
                 }

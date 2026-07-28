@@ -13,7 +13,7 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants
 @ResourceConfig(
         quickFilterFields = { "codi", "denominacio" },
-        descriptionField = "codi"
+        descriptionField = "codiNom"
 )
 public class UnitatOrganitzativa extends BaseResource<Long> {
 
@@ -22,6 +22,9 @@ public class UnitatOrganitzativa extends BaseResource<Long> {
     private String nifCif;
     private String codiUnitatSuperior;
     private String codiUnitatArrel;
+    private String codiConselleria;
     private UOEstatEnum estat;
+
+    private String codiNom;
 
 }

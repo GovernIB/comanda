@@ -43,6 +43,9 @@ public class UnitatOrganitzativaEntity extends BaseAuditableEntity<UnitatOrganit
     @Column(name = "codi_unitat_arrel")
     private String codiUnitatArrel;
 
+    @Column(name = "codi_conselleria")
+    private String codiConselleria;
+
     @Column(name = "estat")
     private UOEstatEnum estat;
 
@@ -55,5 +58,12 @@ public class UnitatOrganitzativaEntity extends BaseAuditableEntity<UnitatOrganit
             return denominacioEs;
         }
         return denominacioCa;
+    }
+
+    @Transient
+    private String codiNom;
+
+    public String getCodiNom() {
+        return codi + " - " + this.getDenominacio();
     }
 }
