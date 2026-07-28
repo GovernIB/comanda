@@ -168,13 +168,28 @@ public class DimensioServiceImpl  extends BaseMutableResourceService<Dimensio, L
                     }
 
                     // Cambiar només els que no tenen "CONS"
-                    List<FetEntity> fetEntityList = fetRepository.findByEntornAppIdAddCons(entity.getEntornAppId(), entity.getCodi(), "CONS", codiArrel);
+//                    List<FetEntity> fetEntityList = fetRepository.findByEntornAppIdAddCons(entity.getEntornAppId(), entity.getCodi(), "CONS", codiArrel);
+//                    fetEntityList = fetEntityList.stream()
+//                        .peek(f -> {
+//                            String c = unitatsOrganitzativesPlugin.getConsergeria(f.getDimensionsJson().get(entity.getCodi()));
+//                            if (c != null) f.getDimensionsJson().put("CONS", c);
+//                        })
+//                        .filter(f -> f.getDimensionsJson().containsKey("CONS"))
+//                        .collect(Collectors.toList());
+//                    if (!fetEntityList.isEmpty())
+//                        fetRepository.saveAll(fetEntityList);
+
+                    // Actualitzar tots els valors "CONS"
+                    List<FetEntity> fetEntityList = fetRepository.findByEntornAppIdAddCons(entity.getEntornAppId(), entity.getCodi(), codiArrel);
                     fetEntityList = fetEntityList.stream()
                         .peek(f -> {
                             String c = unitatsOrganitzativesPlugin.getConsergeria(f.getDimensionsJson().get(entity.getCodi()));
-                            if (c != null) f.getDimensionsJson().put("CONS", c);
+                            if (c != null) {
+                                f.getDimensionsJson().put("CONS", c);
+                            } else {
+                                f.getDimensionsJson().remove("CONS");
+                            }
                         })
-                        .filter(f -> f.getDimensionsJson().containsKey("CONS"))
                         .collect(Collectors.toList());
                     if (!fetEntityList.isEmpty())
                         fetRepository.saveAll(fetEntityList);

@@ -93,11 +93,11 @@ public interface FetRepository extends BaseRepository<FetEntity, Long>, FetRepos
     @Query("SELECT f FROM FetEntity f " +
         "WHERE f.entornAppId = :entornAppId" +
         " AND f.dimensionsJson LIKE CONCAT('%\"', :dimensioOrgan, '\"%')" +
-        " AND f.dimensionsJson NOT LIKE CONCAT('%\"', :dimensioOrgan, '\":\"', :codiArrel, '\"%')")
-    Page<FetEntity> findByEntornAppIdAddCons(
+        " AND f.dimensionsJson NOT LIKE CONCAT('%\"', :dimensioOrgan, '\":\"', :codiArrel, '\"%')" +
+        " ORDER BY f.id DESC")
+    List<FetEntity> findByEntornAppIdAddCons(
         @Param("entornAppId") Long entornAppId,
         @Param("dimensioOrgan") String dimensioOrgan,
-        @Param("codiArrel") String codiArrel,
-        Pageable pageable);
+        @Param("codiArrel") String codiArrel);
 
 }
