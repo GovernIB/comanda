@@ -8,6 +8,7 @@ import { SalutModel } from '../../types/salut.model';
 import { EntornAppModel, IAppContext, IAppIntegracio, IAppSubsistema } from '../../types/app.model';
 import { useIsUserAdmin } from '../../components/UserContext.ts';
 import { IBaseEntity } from '../../types/base-entity.model.ts';
+import { SalutInformeEstatItem } from './Salut.tsx';
 
 // es.caib.comanda.configuracio.logic.intf.model.EntornApp#PERSPECTIVE_DEFAULT_LOGS
 const PERSPECTIVE_DEFAULT_LOGS_NAME = 'default_logs';
@@ -51,11 +52,11 @@ export interface AppDataState {
     loading: boolean | null; // Null indica que no se ha hecho ninguna petición aún
     refreshInfoLoading: boolean;
     entornApp: (EntornAppModel & DefaultLogsPerspective & EntornAppHistPerspective) | null;
-    estats: Record<string, any> | null;
+    estats: { [entornAppId: number]: SalutInformeEstatItem[] } | null;
     latencies: SalutInformeLatenciaItem[] | null;
     salutCurrentApp: SalutModel | null;
     agrupacio?: string;
-    error?: any;
+    error?: unknown;
     grupsDates: string[] | null;
 }
 
@@ -69,7 +70,7 @@ const appDataStateInitialValue: AppDataState = {
     grupsDates: null,
 };
 
-export const useAppInfoData = (id: any, dataRangeMinutes: number) => {
+export const useAppInfoData = (id: number | string | null | undefined, dataRangeMinutes: number) => {
     const isUserAdmin = useIsUserAdmin();
     const {
         isReady: entornAppApiIsReady,
@@ -147,8 +148,8 @@ export const useAppInfoData = (id: any, dataRangeMinutes: number) => {
                     ...state,
                     loading: false,
                     entornApp,
-                    estats: { [entornAppId]: estatReportItems },
-                    latencies: latenciaReportItems as any[],
+                    estats: { [entornAppId as number]: estatReportItems as SalutInformeEstatItem[] },
+                    latencies: latenciaReportItems as SalutInformeLatenciaItem[],
                     salutCurrentApp,
                     agrupacio,
                     grupsDates: (grupDatesReportItems as { data: string }[]).map(item => item.data),

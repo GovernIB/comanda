@@ -13,6 +13,16 @@ const mocks = vi.hoisted(() => ({
     useReadOnlyGestorMock: vi.fn(() => false),
     tMock: vi.fn((selector: any) =>
         selector({
+            page: {
+                dimensions: {
+                    action: {
+                        sincronitzar: {
+                            label: 'UO',
+                            ok: 'Sincronitzat',
+                        }
+                    }
+                }
+            },
             components: {
                 clear: 'Netejar',
             },

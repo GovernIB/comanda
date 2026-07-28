@@ -2,9 +2,11 @@ package es.caib.comanda.estadistica.logic.helper;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesPluginDir3;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet.FetObtenirResponse;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Temps;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
@@ -72,6 +74,7 @@ public class EstadisticaHelper {
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final RestTemplate restTemplate;
     private final Environment environment;
+    private final UnitatsOrganitzativesPluginDir3 unitatsOrganitzativesPluginDir3;
 
     private static final ConcurrentHashMap<Long, Object> LOCKS = new ConcurrentHashMap<>();
 
@@ -347,6 +350,31 @@ public class EstadisticaHelper {
             }
             DimensioEntity dimensioSaved = dimensioRepository.save(dimensio);
 
+            if (TipusDimensioEnum.ORGAN_GESTOR.equals(dimensioSaved.getTipus())) {
+                if (dimensions.stream().noneMatch(dim->Objects.equals(dim.getCodi(), "CONS"))) {
+                    DimensioDesc dDesc = new DimensioDesc();
+                    dDesc.setCodi("CONS");
+                    dDesc.setNom("Conselleria");
+                    dDesc.setValors(dimensioSaved.getValors().stream()
+                        .map(DimensioValorEntity::getValor)
+                        .map(unitatsOrganitzativesPluginDir3::getConsergeria)
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .collect(Collectors.toList())
+                    );
+
+                    DimensioEntity dEntity = dimensioRepository.findByCodiAndEntornAppId(dDesc.getCodi(), entornAppId)
+                        .orElseGet(DimensioEntity::new);
+                    dEntity.setCodi(dDesc.getCodi());
+                    dEntity.setNom(dDesc.getNom());
+                    dEntity.setEntornAppId(entornAppId);
+                    dEntity.setTipus(TipusDimensioEnum.CONSELLERIA);
+                    dimensioRepository.save(dEntity);
+
+                    this.crearDimensions(List.of(dDesc), entornAppId);
+                }
+            }
+
             if (d.getValors() != null && !d.getValors().isEmpty()) {
                 Set<String> uniqueValues = new HashSet<>(d.getValors());
                 Set<String> existingValues = new HashSet<>();
@@ -474,6 +502,14 @@ public class EstadisticaHelper {
             Map<String, String> dimensionsMap = new HashMap<>();
             for (Dimensio d : re.getDimensions()) {
                 dimensionsMap.put(d.getCodi(), d.getValor());
+
+                DimensioEntity dimensioEntity = dimensioRepository.findByCodiAndEntornAppId(d.getCodi(), entornAppId).orElse(null);
+                if (dimensioEntity != null && TipusDimensioEnum.ORGAN_GESTOR.equals(dimensioEntity.getTipus())) {
+                    String conselleria = unitatsOrganitzativesPluginDir3.getConsergeria(d.getValor());
+                    if (conselleria != null) {
+                        dimensionsMap.put("CONS", conselleria);
+                    }
+                }
             }
 
             // Crear mapa per indicadors

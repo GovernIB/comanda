@@ -26,7 +26,7 @@ import { Box } from '@mui/material';
 import PageTitle from '../../components/PageTitle';
 
 // es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem
-type SalutInformeEstatItem = {
+export type SalutInformeEstatItem = {
     data: string;
     upPercent: number;
     warnPercent: number;

@@ -31,7 +31,7 @@ const isSelectionValid = (itemId: string, tree: GrupTree): boolean => {
     return true;
 };
 
-const buildGrupTree = (rows: any[]): GrupTree => {
+const buildGrupTree = (rows: Array<{ grup?: string; subGrup?: string }>): GrupTree => {
     const tree: GrupTree = new Map();
     rows.forEach((p) => {
         if (!p.grup) return;
@@ -63,7 +63,7 @@ export const ParametresGrups: React.FC<{
             sorts: ['grup,asc', 'subGrup,asc'],
             unpaged: true,
         }).then((response) => {
-            const tree = buildGrupTree(response.rows as any[]);
+            const tree = buildGrupTree(response.rows as Array<{ grup?: string; subGrup?: string }>);
             setGrupTree(tree);
 
             if (!isSelectionValid(selectedItemIdRef.current, tree) && tree.size > 0) {

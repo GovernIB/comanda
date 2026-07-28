@@ -21,7 +21,7 @@ import { useEntornCodi } from '../components/estadistiques/dashboardPlantillaHoo
 const LAST_VIEWED_STORAGE_KEY = 'lastViewedDashboardId';
 const NO_DASHBOARD_FOUND = 'NO_DASHBOARD_FOUND';
 
-function useDashboardSelect(currentDashboardId: any) {
+function useDashboardSelect(currentDashboardId: string | number | null) {
     const { t } = useTranslation();
     const buttons = useCloseDialogButtons();
     const [open, setOpen] = useState(false);
@@ -77,9 +77,9 @@ const EstadisticaDashboardView = () => {
     const theme = useTheme();
     const temaFosc = theme.palette.mode === 'dark';
     const routeParams = useParams();
-    const [firstDashboard, setFirstDashboard] = useState<any>(null);
+    const [firstDashboard, setFirstDashboard] = useState<Record<string, unknown> | string | null>(null);
     const idFromFirstDashboard: string | null =
-        firstDashboard?.id != null ? String(firstDashboard.id) : null;
+        (firstDashboard as { id?: string | number })?.id != null ? String((firstDashboard as { id?: string | number }).id) : null;
     const dashboardIdFromRouteAndLocalStorage =
         routeParams.id ?? localStorage.getItem(LAST_VIEWED_STORAGE_KEY);
     const dashboardId = dashboardIdFromRouteAndLocalStorage ?? idFromFirstDashboard;

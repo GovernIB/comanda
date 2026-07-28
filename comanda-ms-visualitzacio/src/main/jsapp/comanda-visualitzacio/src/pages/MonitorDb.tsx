@@ -469,7 +469,7 @@ const TabIndexos: React.FC = () => {
             const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
             try {
                 const resp = await fetch(`${apiUrl}/db-indexos/${id}/artifacts/action/REBUILD`, {
-                    method: 'POST', headers,
+                    method: 'POST', headers, credentials: 'include',
                 });
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 setRebuildMsg({ text: t($ => $.page.monitorDb.indexes.rebuildSuccess).replace('{name}', String(id)), ok: true });
@@ -519,7 +519,10 @@ const MonitorDb: React.FC = () => {
         const token = getToken?.();
         const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
         try {
-            const resp = await fetch(`${apiUrl}/db-metrics/overview`, { headers });
+            const resp = await fetch(`${apiUrl}/db-metrics/overview`, {
+                credentials: 'include',
+                headers,
+            });
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             setOverview(await resp.json());
         } catch (err) {

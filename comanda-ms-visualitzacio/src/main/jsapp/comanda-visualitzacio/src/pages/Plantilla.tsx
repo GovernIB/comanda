@@ -83,7 +83,7 @@ interface TemplateData {
     paletteGroups?: PaletteGroup[];
     styleProperties?: StyleProperty[];
     tipusGrafic?: string;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 const LABEL_TRANSLATIONS: Record<string, (t: ReturnType<typeof useTranslation>['t']) => string> = {
@@ -546,7 +546,7 @@ const scalarValue = (property: StyleProperty) => {
 
 const propertiesForPreview = (data: TemplateData, groupType: PaletteGroupType, scope: WidgetStyleScope) => {
     const normalized = normalizedTemplate(data);
-    const props: Record<string, any> = {};
+    const props: Record<string, unknown> = {};
     const activeScopes = scope === "COMMON" ? ["COMMON", "SIMPLE"] : ["COMMON", scope];
     normalized.styleProperties
         .filter((property) => activeScopes.includes(property.scope))
@@ -585,8 +585,8 @@ const propertiesForPreview = (data: TemplateData, groupType: PaletteGroupType, s
     return props;
 };
 
-const applyTemplateField = (apiRef: any, fieldName: string, value: any) => {
-    apiRef?.current?.setFieldValue(fieldName, value);
+const applyTemplateField = (apiRef: any, fieldName: string, value: unknown) => {
+    apiRef?.current?.setFieldValue?.(fieldName, value);
 };
 
 const PaletteBar = ({
@@ -1330,7 +1330,7 @@ const titlePreviewProps = (data: TemplateData, selectedGroup: PaletteGroupType, 
     return {
         ...props,
         midaFontSubtitol: Number(props.midaFontSubtitol ?? props.midaFontDescripcio) || undefined,
-        colorSubtitol: props.colorSubtitol || props.colorTextDestacat || props.colorText,
+        colorSubtitol: (props.colorSubtitol || props.colorTextDestacat || props.colorText) as string | undefined,
         titol: scope,
         subtitol: "",
         mostrarVora: Boolean(props.mostrarVora),
@@ -1344,7 +1344,7 @@ const Preview = ({tab, selectedGroup, paletteTheme}: { tab: number; selectedGrou
     const { t } = useTranslation();
     const { tGroup } = usePaletteGroupTranslation();
     const { tTitleScope } = useTitleScopeTranslation();
-    
+
     const isTitleTab = tab === 4;
     const scope: WidgetStyleScope = tab === 2 ? "GRAFIC" : tab === 3 ? "TAULA" : tab === 1 ? "SIMPLE" : "COMMON";
     const previewScope = scope === "COMMON" ? "SIMPLE" : scope;
@@ -1359,7 +1359,7 @@ const Preview = ({tab, selectedGroup, paletteTheme}: { tab: number; selectedGrou
         <Paper
             variant="outlined"
             sx={{
-                p: 1, minHeight: 320, bgcolor: paletteTheme.background, color: paletteTheme.text, 
+                p: 1, minHeight: 320, bgcolor: paletteTheme.background, color: paletteTheme.text,
                 borderColor: paletteTheme.border, position: "sticky", top: 8,
             }}
         >
@@ -1376,7 +1376,7 @@ const Preview = ({tab, selectedGroup, paletteTheme}: { tab: number; selectedGrou
                     <Stack spacing={1}>
                         {titleScopes.map((titleScope) => (
                             <Box key={titleScope} sx={{height: 76}}>
-                                <TitolWidgetVisualization 
+                                <TitolWidgetVisualization
                                     {...titlePreviewProps(data, selectedGroup, titleScope)}
                                     titol={tTitleScope(titleScope)}
                                     subtitol={t($ => $.page.plantilla.detail.previewSubtitle)}
@@ -1569,7 +1569,7 @@ export const Plantilla = () => (
                     },
                 },
             }}
-            formAdditionalData={(row: any) => ({
+            formAdditionalData={(row: Record<string, unknown> | null | undefined) => ({
                 ...(!row?.id ? templateDefaults() : {}),
                 tipusGrafic: row?.tipusGrafic || "BAR_CHART",
             })}

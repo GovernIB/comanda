@@ -355,7 +355,7 @@ describe('Monitors', () => {
             expect(screen.getByText('Neteja d\'entorn completada')).toBeInTheDocument();
         });
         await waitFor(() => {
-            expect(screen.queryByRole('button', { name: 'Reintentar' })).not.toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'Reintentar' })).toBeDisabled();
         });
     });
 
@@ -376,5 +376,31 @@ describe('Monitors', () => {
         });
 
         expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+    });
+
+    it('MonitorDetails_quanEsReintentaNeteja_elBotoEsDesactivaMentreEsCarrega', async () => {
+        let resolveRetry: (value: boolean) => void;
+        const retryPromise = new Promise<boolean>((resolve) => {
+            resolveRetry = resolve;
+        });
+        mocks.apiActionMock.mockReturnValueOnce(retryPromise);
+
+        render(<Monitors />);
+        fireEvent.click(screen.getByTestId('open-retry-detail'));
+
+        const retryButton = await screen.findByRole('button', { name: 'Reintentar' });
+        expect(retryButton).not.toBeDisabled();
+
+        fireEvent.click(retryButton);
+
+        await waitFor(() => {
+            expect(retryButton).toBeDisabled();
+        });
+
+        // Finalitzem la crida
+        resolveRetry!(true);
+        await waitFor(() => {
+            expect(retryButton).toBeDisabled(); // Continua desactivat perquè s'ha completat
+        });
     });
 });

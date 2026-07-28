@@ -79,4 +79,25 @@ public interface FetRepository extends BaseRepository<FetEntity, Long>, FetRepos
     long countByEntornAppId(Long entornAppId);
     Page<FetEntity> findByEntornAppId(Long entornAppId, Pageable pageable);
 
+    @Query("SELECT f FROM FetEntity f " +
+        "WHERE f.entornAppId = :entornAppId" +
+        " AND f.dimensionsJson LIKE CONCAT('%\"', :dimensioOrgan, '\"%')" +
+        " AND f.dimensionsJson NOT LIKE CONCAT('%\"', :dimensioCons, '\"%')" +
+        " AND f.dimensionsJson NOT LIKE CONCAT('%\"', :dimensioOrgan, '\":\"', :codiArrel, '\"%')")
+    List<FetEntity> findByEntornAppIdAddCons(
+        @Param("entornAppId") Long entornAppId,
+        @Param("dimensioOrgan") String dimensioOrgan,
+        @Param("dimensioCons") String dimensioCons,
+        @Param("codiArrel") String codiArrel);
+
+    @Query("SELECT f FROM FetEntity f " +
+        "WHERE f.entornAppId = :entornAppId" +
+        " AND f.dimensionsJson LIKE CONCAT('%\"', :dimensioOrgan, '\"%')" +
+        " AND f.dimensionsJson NOT LIKE CONCAT('%\"', :dimensioOrgan, '\":\"', :codiArrel, '\"%')" +
+        " ORDER BY f.id DESC")
+    List<FetEntity> findByEntornAppIdAddCons(
+        @Param("entornAppId") Long entornAppId,
+        @Param("dimensioOrgan") String dimensioOrgan,
+        @Param("codiArrel") String codiArrel);
+
 }

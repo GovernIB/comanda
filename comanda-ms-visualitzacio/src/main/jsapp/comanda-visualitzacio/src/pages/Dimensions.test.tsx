@@ -13,6 +13,16 @@ const mocks = vi.hoisted(() => ({
                 dimensions: {
                     title: 'Dimensions',
                     values: 'Valors',
+                    action: {
+                        marcarOrgan: {
+                            label: 'ORGAN_GESTOR',
+                            ok: 'Tipus cambiat a ORGAN_GESTOR',
+                        },
+                        desmarcar: {
+                            label: 'NO_ORGAN_GESTOR',
+                            ok: 'Tipus cambiat a null',
+                        }
+                    },
                     column: {
                         entornApp: 'Entorn app',
                     },

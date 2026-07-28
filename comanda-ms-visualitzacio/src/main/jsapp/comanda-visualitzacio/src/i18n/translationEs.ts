@@ -721,6 +721,11 @@ const translationEs: translationResourcesType = {
                     label: "Desmarcar como órgano gestor",
                     ok: "La dimensión se ha desmarcado como órgano gestor",
                 },
+                refreshCons: {
+                    label: "Actualizar datos de la consejería",
+                    title: "¿Desea actualizar los datos de la consejería?",
+                    ok: "Los datos de la consejería se han actualizado correctamente",
+                },
                 sincronitzar: {
                     label: "Sincronizar",
                     ok: "El órgano gestor se ha sincronizado correctamente",

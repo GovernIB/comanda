@@ -146,3 +146,41 @@ databaseChangeLog:
               - column:
                   name: tipus
                   type: varchar(16)
+  - changeSet:
+      id: plugin-uo-dir3-4
+      author: Limit
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}unitat_org
+            columns:
+              - column:
+                  name: codi_conselleria
+                  type: varchar(64)
+  - changeSet:
+      id: plugin-uo-dir3-5
+      author: Limit
+      changes:
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "Plugins"
+              - column:
+                  name: SUBGRUP
+                  value: "Unitats Organitzatives"
+              - column:
+                  name: TIPUS
+                  value: "TEXT"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.estadistica.dir3.govern.codi.arrel"
+              - column:
+                  name: NOM
+                  value: "Codi unitat arrel"
+              - column:
+                  name: VALOR
+                  value: ""
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0

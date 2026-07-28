@@ -20,12 +20,12 @@ import FormFieldCustomAdvancedSearch from '../components/FormFieldCustomAdvanced
 import PageTitle from '../components/PageTitle.tsx';
 import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
 
-const IndicadorsFilter = (props: any) => {
+const IndicadorsFilter = (props: { onSpringFilterChange: (springFilter?: string) => void }) => {
     const { onSpringFilterChange } = props;
     const { t } = useTranslation();
     const { isReady: entornAppApiIsReady, find: entornAppGetAll } = useResourceApiService('entornApp');
     const filterApiRef = useFilterApiRef();
-    const [entornApp, setEntornApp] = useState<any[] | null>([]);
+    const [entornApp, setEntornApp] = useState<Array<{ id?: number | string; entornAppDescription?: string }> | null>([]);
 
     // Al obrir la pàgina carreguem el llistat de EntornApp actius
     useEffect(() => {
@@ -74,7 +74,7 @@ const IndicadorsFilter = (props: any) => {
                             label={t($ => $.page.indicadors.column.entornApp)}
                             required={false}
                             optionsRequest={(q: string) => {
-                                const opts = (entornApp ?? []).map((ea: any) => ({
+                                const opts = (entornApp ?? []).map((ea: { id?: number | string; entornAppDescription?: string }) => ({
                                     id: ea?.id,
                                     description: ea.entornAppDescription,
                                 }));

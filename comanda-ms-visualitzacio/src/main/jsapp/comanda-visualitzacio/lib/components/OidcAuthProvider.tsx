@@ -56,7 +56,7 @@ export const AuthProvider = (props: AuthProviderProps) => {
         } else {
             tokenRef.current = undefined;
             tokenParsedRef.current = undefined;
-            setIsLoading(true);
+            setIsLoading(!!mandatory);
             setIsAuthenticated(false);
         }
     };

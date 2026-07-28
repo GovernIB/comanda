@@ -155,7 +155,9 @@ const InnerFormFieldTextDebounce: React.FC<FormFieldTextProps> = (props) => {
         }
     }, [value]);
     React.useEffect(() => {
-        onChange?.(changedValue);
+        if (value !== changedValue) {
+            onChange?.(changedValue);
+        }
     }, [changedValue]);
     return (
         <InnerFormFieldText
@@ -165,6 +167,12 @@ const InnerFormFieldTextDebounce: React.FC<FormFieldTextProps> = (props) => {
                 onChange: (e) => {
                     onUserInput();
                     setLocalValue(e.target.value === '' ? null : e.target.value);
+                },
+                onBlur: (e) => {
+                    if (value !== localValue) {
+                        onChange?.(localValue);
+                    }
+                    props.componentProps?.onBlur?.(e);
                 },
             }}
         />

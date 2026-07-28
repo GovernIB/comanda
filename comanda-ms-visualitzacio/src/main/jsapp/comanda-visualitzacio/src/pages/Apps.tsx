@@ -71,7 +71,7 @@ const useActions = (refresh?: () => void) => {
     const { t } = useTranslation();
 
     const pingUrl = React.useCallback(async (
-        additionalData: any,
+        additionalData: Record<string, unknown>,
         expectedResponseTypeEnum: string,
     ): Promise<PingUrlResult> => {
         try {
@@ -118,8 +118,8 @@ const useActions = (refresh?: () => void) => {
         }
     }, [apiAction, temporalMessageShow]);
 
-    const report = (id:any, code:any, mssg:any, fileType:any) => {
-        apiReport(id, {code, fileType})
+    const report = (id: string | number, code: string, mssg: string, fileType: string) => {
+        apiReport(id, {code, fileType: fileType as any})
             .then((result) => {
                 iniciaDescargaJSON(result);
                 temporalMessageShow(null, mssg, 'success');
@@ -128,9 +128,9 @@ const useActions = (refresh?: () => void) => {
                 temporalMessageShow(null, error.message, 'error');
             });
     }
-    const appExport = (id:any) => report(id, 'app_export', t($ => $.page.apps.action.export), 'JSON')
+    const appExport = (id: string | number) => report(id, 'app_export', t($ => $.page.apps.action.export), 'JSON')
 
-    const toogleActiva = (id:any) => {
+    const toogleActiva = (id: string | number) => {
         apiAction(id, { code: "toogle_activa" })
             .then(() => {
                 refresh?.();
@@ -370,14 +370,14 @@ const AppsEntorns: React.FC<{ appNom?: string }> = ({ appNom }) => {
         {
             label: t($ => $.page.appsEntorns.action.toolbarActiva.permisos),
             icon: "lock",
-            onClick: (id: any, row: any) => permissionShow(id, row.entorn.description)
+            onClick: (id: string | number, row: { entorn?: { description?: string } }) => permissionShow(id, row?.entorn?.description ?? '')
         },
         {
             label: t($ => $.page.appsEntorns.action.toolbarActiva.activar),
             icon: "check_circle",
             showInMenu: true,
             onClick: toogleActiva,
-            hidden: (row:any) => row?.activa || gestorReadOnly,
+            hidden: (row: any): boolean => Boolean(row?.activa || gestorReadOnly),
         },
         gestorReadOnly ? {
             label: t($ => $.components.details),
@@ -389,7 +389,7 @@ const AppsEntorns: React.FC<{ appNom?: string }> = ({ appNom }) => {
             icon: "cancel",
             showInMenu: true,
             onClick: toogleActiva,
-            hidden: (row:any) => !row?.activa || gestorReadOnly,
+            hidden: (row: any): boolean => Boolean(!row?.activa || gestorReadOnly),
         },
     ].filter(notNull);
     return (

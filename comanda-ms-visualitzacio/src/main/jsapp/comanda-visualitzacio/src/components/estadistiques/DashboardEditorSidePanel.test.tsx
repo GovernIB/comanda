@@ -23,7 +23,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('reactlib', () => ({
-    FormField: ({ name, type, label }: { name: string; type?: string; label?: string }) => (
+    FormField: ({ name, label }: { name: string; type?: string; label?: string }) => (
         <div data-testid={`field-${name}`}>{label || name}</div>
     ),
     useBaseAppContext: () => ({

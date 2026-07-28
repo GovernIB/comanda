@@ -76,6 +76,14 @@ import java.util.List;
                             grantedPermissions = { PermissionEnum.WRITE }
                         )
                     }),
+                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Dimensio.ACTION_FET_CONS, requiresId = true,
+                    accessConstraints = {
+                        @ResourceAccessConstraint(
+                            type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                            roles = { BaseConfig.ROLE_ADMIN },
+                            grantedPermissions = { PermissionEnum.WRITE }
+                        )
+                    }),
         }
 )
 public class Dimensio extends BaseResource<Long> {
@@ -86,6 +94,7 @@ public class Dimensio extends BaseResource<Long> {
     public final static String FILTER_BY_DIMENSIO = "filterByDimensio";
     public final static String FILTER_BY_APP_NAMEDFILTER = "filterByApp";
     public final static String ACTION_CHANGE_TIPUS = "CHANGE_TIPUS";
+    public final static String ACTION_FET_CONS = "FET_CONS";
 
     @NotNull
     @Pattern(regexp = "^[a-zA-Z0-9_]*$", message = "El codi només pot contenir caràcters alfanumèrics")

@@ -112,7 +112,7 @@ const EntornAppHist: React.FC = () => {
             field: 'data',
             flex: 1,
             minWidth: 150,
-            valueFormatter: (value: any) => dateFormatLocale(value, true),
+            valueFormatter: (value: unknown) => dateFormatLocale(value, true),
         },
         {
             field: 'versio',

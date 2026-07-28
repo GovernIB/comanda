@@ -1,7 +1,5 @@
 package es.caib.comanda.estadistica.logic.dir3;
 
-import es.caib.comanda.model.v1.estadistica.RegistresEstadistics;
-import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -19,6 +17,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UnitatsOrganitzativesRestClient {
 
+    @Value("${es.caib.comanda.estadistica.dir3.govern.codi.arrel:}")
+    private String codiArrel;
+
     @Value("${es.caib.comanda.plugin.unitats.organitzatives.dir3.service.url:}")
     private String baseUrl;
     @Value("${es.caib.comanda.plugin.unitats.organitzatives.dir3.service.username:}")
@@ -26,7 +27,6 @@ public class UnitatsOrganitzativesRestClient {
     @Value("${es.caib.comanda.plugin.unitats.organitzatives.dir3.service.password:}")
     private String password;
 
-    private final ParametresHelper parametresHelper;
     private final RestTemplate restTemplate;
 
     private String basicAuthHeader(String user, String password) {
@@ -51,7 +51,6 @@ public class UnitatsOrganitzativesRestClient {
             Map<String, Object> params = new HashMap<>();
             params.put("codigo", codigo);
             params.put("denominacionCooficial", denominacioCooficial);
-//            params.put("codigoEstadoEntidad", "E");
             if (fechaActualizacion != null) params.put("fechaActualizacion", fechaActualizacion);
             if (fechaSincronizacion != null) params.put("fechaSincronizacion", fechaSincronizacion);
 
@@ -71,14 +70,18 @@ public class UnitatsOrganitzativesRestClient {
         }
     }
 
-    public List<UnidadRest> findUnidad(String fechaActualizacion, String fechaSincronizacion, Boolean denominacioCooficial) {
+    public List<UnidadRest> findUnidadArrel(String fechaActualizacion, String fechaSincronizacion, Boolean denominacioCooficial) {
+        return this.findUnidad(codiArrel, fechaActualizacion, fechaSincronizacion, denominacioCooficial);
+    }
+
+    public List<UnidadRest> findUnidad(String codigo, String fechaActualizacion, String fechaSincronizacion, Boolean denominacioCooficial) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", basicAuthHeader(username, password));
             HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
 
             Map<String, Object> params = new HashMap<>();
-            params.put("codigo", "A99999999");
+            params.put("codigo", codigo);
             params.put("denominacionCooficial", denominacioCooficial);
             if (fechaActualizacion != null) params.put("fechaActualizacion", fechaActualizacion);
             if (fechaSincronizacion != null) params.put("fechaSincronizacion", fechaSincronizacion);
