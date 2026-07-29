@@ -1,37 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>es.caib.comanda</groupId>
-		<artifactId>comanda-bom-ms</artifactId>
-		<version>0.1.4</version>
-		<relativePath>../comanda-bom-ms/pom.xml</relativePath>
-	</parent>
-	<artifactId>comanda-ms-estadistica</artifactId>
-	<version>0.1.4</version>
-	<description>MS encarregat de gestionar la informació estadística</description>
-	<dependencies>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>comanda-ms-common</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>es.caib.comanda</groupId>
+        <artifactId>comanda-bom-ms</artifactId>
+        <version>0.1.4</version>
+        <relativePath>../comanda-bom-ms/pom.xml</relativePath>
+    </parent>
+    <artifactId>comanda-ms-estadistica</artifactId>
+    <version>0.1.4</version>
+    <description>MS encarregat de gestionar la informació estadística</description>
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>comanda-ms-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>es.caib.dir3caib</groupId>
             <artifactId>dir3caib-ws-api</artifactId>
-            <version>1.0.7</version>
+            <version>1.1.1</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>jakarta.xml.ws</groupId>-->
-<!--            <artifactId>jakarta.xml.ws-api</artifactId>-->
-<!--            <scope>provided</scope>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.sun.xml.ws</groupId>-->
-<!--            <artifactId>rt</artifactId>-->
-<!--            <version>2.3.1</version>-->
-<!--        </dependency>-->
-	</dependencies>
+    </dependencies>
 </project>

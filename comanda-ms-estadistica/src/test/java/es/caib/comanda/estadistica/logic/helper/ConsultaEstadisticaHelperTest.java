@@ -21,18 +21,16 @@ import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PresetPeriode;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
-import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
-import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
-import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
-import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
-import es.caib.comanda.estadistica.persist.entity.estadistiques.TempsEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.*;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
+import es.caib.comanda.estadistica.persist.repository.DimensioRepository;
 import es.caib.comanda.estadistica.persist.repository.FetRepository;
+import es.caib.comanda.estadistica.persist.repository.UnitatOrganitzativaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -55,11 +53,21 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class ConsultaEstadisticaHelperTest {
 
-    @Mock private FetRepository fetRepository;
-    @Mock private AtributsVisualsHelper atributsVisualsHelper;
-    @Mock private EstadisticaClientHelper estadisticaClientHelper;
-    @Mock private DashboardItemRepository dashboardItemRepository;
-    @Mock private DashboardStyleResolverHelper dashboardStyleResolverHelper;
+    @Mock
+    private FetRepository fetRepository;
+    @Mock
+    private DashboardItemRepository dashboardItemRepository;
+    @Mock
+    private UnitatOrganitzativaRepository unitatOrganitzativaRepository;
+    @Mock
+    private DimensioRepository dimensioRepository;
+
+    @Mock
+    private AtributsVisualsHelper atributsVisualsHelper;
+    @Mock
+    private EstadisticaClientHelper estadisticaClientHelper;
+    @Mock
+    private DashboardStyleResolverHelper dashboardStyleResolverHelper;
 
     @InjectMocks
     private ConsultaEstadisticaHelper consultaEstadisticaHelper;
@@ -75,26 +83,26 @@ public class ConsultaEstadisticaHelperTest {
 
         // Carregar dades de test
         fetEntities = objectMapper.readValue(
-                new ClassPathResource("es/caib/comanda/estadistica/logic/helper/fets.json").getInputStream(),
-                new TypeReference<List<FetEntity>>() {});
+            new ClassPathResource("es/caib/comanda/estadistica/logic/helper/fets.json").getInputStream(),
+            new TypeReference<List<FetEntity>>() {
+            });
 
         tempsEntities = objectMapper.readValue(
-                new ClassPathResource("es/caib/comanda/estadistica/logic/helper/temps.json").getInputStream(),
-                new TypeReference<List<TempsEntity>>() {});
+            new ClassPathResource("es/caib/comanda/estadistica/logic/helper/temps.json").getInputStream(),
+            new TypeReference<List<TempsEntity>>() {
+            });
 
         // Associar temps a fets
         for (FetEntity fet : fetEntities) {
             Long tempsId = fet.getTemps().getId();
             TempsEntity temps = tempsEntities.stream()
-                    .filter(t -> t.getId().equals(tempsId))
-                    .findFirst()
-                    .orElseThrow(() -> new RuntimeException("Temps not found with id: " + tempsId));
+                .filter(t -> t.getId().equals(tempsId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Temps not found with id: " + tempsId));
             fet.setTemps(temps);
         }
-        lenient().when(atributsVisualsHelper.getAtributsVisuals(any(DashboardItemEntity.class)))
-                .thenReturn(null);
-        lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class)))
-                .thenReturn(null);
+        lenient().when(atributsVisualsHelper.getAtributsVisuals(any(DashboardItemEntity.class))).thenReturn(null);
+        lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class))).thenReturn(null);
     }
 
     @Test
@@ -105,13 +113,13 @@ public class ConsultaEstadisticaHelperTest {
         LocalDate dataFi = LocalDate.of(2023, 3, 31);
 
         List<FetEntity> filteredFets = fetEntities.stream()
-                .filter(fet -> fet.getEntornAppId().equals(entornAppId) &&
-                        fet.getTemps().getData().isAfter(dataInici.minusDays(1)) &&
-                        fet.getTemps().getData().isBefore(dataFi.plusDays(1)))
-                .collect(Collectors.toList());
+            .filter(fet -> fet.getEntornAppId().equals(entornAppId) &&
+                fet.getTemps().getData().isAfter(dataInici.minusDays(1)) &&
+                fet.getTemps().getData().isBefore(dataFi.plusDays(1)))
+            .collect(Collectors.toList());
 
         when(fetRepository.findByEntornAppIdAndTempsDataBetween(entornAppId, dataInici, dataFi))
-                .thenReturn(filteredFets);
+            .thenReturn(filteredFets);
 
         // Act
         List<Fet> result = consultaEstadisticaHelper.getEstadistiquesPeriode(entornAppId, dataInici, dataFi);
@@ -131,19 +139,19 @@ public class ConsultaEstadisticaHelperTest {
         dimensionsFiltre.put("departament", List.of("RRHH"));
 
         List<FetEntity> filteredFets = fetEntities.stream()
-                .filter(fet -> fet.getEntornAppId().equals(entornAppId) &&
-                        fet.getTemps().getData().isAfter(dataInici.minusDays(1)) &&
-                        fet.getTemps().getData().isBefore(dataFi.plusDays(1)) &&
-                        fet.getDimensionsJson().get("departament").equals("RRHH"))
-                .collect(Collectors.toList());
+            .filter(fet -> fet.getEntornAppId().equals(entornAppId) &&
+                fet.getTemps().getData().isAfter(dataInici.minusDays(1)) &&
+                fet.getTemps().getData().isBefore(dataFi.plusDays(1)) &&
+                fet.getDimensionsJson().get("departament").equals("RRHH"))
+            .collect(Collectors.toList());
 
         when(fetRepository.findByEntornAppIdAndTempsDataBetweenAndDimensions(
-                eq(entornAppId), eq(dataInici), eq(dataFi), any()))
-                .thenReturn(filteredFets);
+            eq(entornAppId), eq(dataInici), eq(dataFi), any()))
+            .thenReturn(filteredFets);
 
         // Act
         List<Fet> result = consultaEstadisticaHelper.getEstadistiquesPeriodeAmbDimensions(
-                entornAppId, dataInici, dataFi, dimensionsFiltre);
+            entornAppId, dataInici, dataFi, dimensionsFiltre);
 
         // Assert
         assertNotNull(result);
@@ -159,16 +167,16 @@ public class ConsultaEstadisticaHelperTest {
         dashboardItem.setEntornId(1L);
 
         // Create widget hierarchy
-        es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity widget = 
-                new es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity();
+        es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity widget =
+            new es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity();
 
         // Create indicator info
-        es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity indicadorInfo = 
-                new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity();
+        es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity indicadorInfo =
+            new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity();
 
         // Create indicator
-        es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity indicador = 
-                new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity();
+        es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity indicador =
+            new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity();
         indicador.setCodi("visites");
 
         // Set up the hierarchy
@@ -186,14 +194,14 @@ public class ConsultaEstadisticaHelperTest {
 
         // Mock the estadisticaClientHelper
         when(estadisticaClientHelper.entornAppFindByAppAndEntorn(any(), any()))
-                .thenReturn(EntornApp.builder().id(1L).entorn(EntornRef.builder().id(2L).build()).build());
+            .thenReturn(EntornApp.builder().id(1L).entorn(EntornRef.builder().id(2L).build()).build());
         when(estadisticaClientHelper.entornById(any()))
-                .thenReturn(Entorn.builder().codi("DEV").build());
+            .thenReturn(Entorn.builder().codi("DEV").build());
 
         // Mock the fetRepository
         when(fetRepository.getValorSimpleAgregat(
-                any(), any(), any(), any(), any()))
-                .thenReturn("42.0");
+            any(), any(), any(), any(), any()))
+            .thenReturn("42.0");
 
         // Act
         InformeWidgetItem result = consultaEstadisticaHelper.getDadesWidget(dashboardItem, false);
@@ -201,8 +209,8 @@ public class ConsultaEstadisticaHelperTest {
         // Assert
         assertNotNull(result);
         assertInstanceOf(InformeWidgetSimpleItem.class, result);
-        es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetSimpleItem simpleItem = 
-                (es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetSimpleItem) result;
+        es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetSimpleItem simpleItem =
+            (es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetSimpleItem) result;
         assertEquals("42.0", simpleItem.getValor());
     }
 
@@ -211,21 +219,21 @@ public class ConsultaEstadisticaHelperTest {
         // Arrange
         Long entornAppId = 1L;
         PeriodeResolverHelper.PeriodeDates periodeConsulta = new PeriodeResolverHelper.PeriodeDates(
-                LocalDate.of(2023, 1, 1),
-                LocalDate.of(2023, 3, 31)
+            LocalDate.of(2023, 1, 1),
+            LocalDate.of(2023, 3, 31)
         );
 
         // Create widget hierarchy
-        es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity widget = 
-                new es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity();
+        es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity widget =
+            new es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity();
 
         // Create indicator info
-        es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity indicadorInfo = 
-                new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity();
+        es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity indicadorInfo =
+            new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity();
 
         // Create indicator
-        es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity indicador = 
-                new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity();
+        es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity indicador =
+            new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity();
         indicador.setCodi("visites");
 
         // Set up the hierarchy
@@ -235,7 +243,7 @@ public class ConsultaEstadisticaHelperTest {
         // Use reflection to set the indicadorInfo field in widget
         try {
             java.lang.reflect.Field field = es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity.class
-                    .getDeclaredField("indicadorInfo");
+                .getDeclaredField("indicadorInfo");
             field.setAccessible(true);
             field.set(widget, indicadorInfo);
         } catch (Exception e) {
@@ -244,21 +252,21 @@ public class ConsultaEstadisticaHelperTest {
 
         // Mock the repository call
         when(fetRepository.getValorSimpleAgregat(
-                eq(entornAppId), 
-                eq(periodeConsulta.start), 
-                eq(periodeConsulta.end), 
-                any(), 
-                any(IndicadorAgregacio.class)))
-                .thenReturn("33.0");
+            eq(entornAppId),
+            eq(periodeConsulta.start),
+            eq(periodeConsulta.end),
+            any(),
+            any(IndicadorAgregacio.class)))
+            .thenReturn("33.0");
 
         // Use reflection to access the private method
         java.lang.reflect.Method method;
         try {
             method = ConsultaEstadisticaHelper.class.getDeclaredMethod(
-                    "calculateValorSimple", 
-                    es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity.class,
-                    PeriodeResolverHelper.PeriodeDates.class,
-                    Long.class);
+                "calculateValorSimple",
+                es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity.class,
+                PeriodeResolverHelper.PeriodeDates.class,
+                Long.class);
             method.setAccessible(true);
 
             // Act
@@ -279,9 +287,9 @@ public class ConsultaEstadisticaHelperTest {
         java.lang.reflect.Method method;
         try {
             method = ConsultaEstadisticaHelper.class.getDeclaredMethod(
-                    "getPercentatgeComparacio", 
-                    double.class,
-                    double.class);
+                "getPercentatgeComparacio",
+                double.class,
+                double.class);
             method.setAccessible(true);
 
             // Act & Assert
@@ -373,7 +381,7 @@ public class ConsultaEstadisticaHelperTest {
             assertEquals(123.45, (Double) method.invoke(consultaEstadisticaHelper, "123.45"));
             assertEquals(-123.45, (Double) method.invoke(consultaEstadisticaHelper, "-123.45"));
             assertEquals(null, (Double) method.invoke(consultaEstadisticaHelper, "abc"));
-            assertEquals(null, (Double) method.invoke(consultaEstadisticaHelper, (Object )null));
+            assertEquals(null, (Double) method.invoke(consultaEstadisticaHelper, (Object) null));
             assertEquals(null, (Double) method.invoke(consultaEstadisticaHelper, ""));
             assertEquals(null, (Double) method.invoke(consultaEstadisticaHelper, " "));
 
@@ -465,7 +473,7 @@ public class ConsultaEstadisticaHelperTest {
         java.lang.reflect.Method method;
         try {
             method = ConsultaEstadisticaHelper.class.getDeclaredMethod(
-                    "convertToPieChartSeriesSimple", List.class, String.class, String.class);
+                "convertToPieChartSeriesSimple", List.class, String.class, String.class);
             method.setAccessible(true);
 
             // Arrange
@@ -482,7 +490,7 @@ public class ConsultaEstadisticaHelperTest {
             // Act
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> result = (List<Map<String, Object>>) method.invoke(
-                    consultaEstadisticaHelper, files, "departament", "valor");
+                consultaEstadisticaHelper, files, "departament", "valor");
 
             // Assert
             assertNotNull(result);
@@ -515,7 +523,7 @@ public class ConsultaEstadisticaHelperTest {
         java.lang.reflect.Method method;
         try {
             method = ConsultaEstadisticaHelper.class.getDeclaredMethod(
-                    "convertToChartSeriesSimple", List.class, String.class, String.class);
+                "convertToChartSeriesSimple", List.class, String.class, String.class);
             method.setAccessible(true);
 
             // Arrange
@@ -532,7 +540,7 @@ public class ConsultaEstadisticaHelperTest {
             // Act
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> result = (List<Map<String, Object>>) method.invoke(
-                    consultaEstadisticaHelper, files, "mes", "valor");
+                consultaEstadisticaHelper, files, "mes", "valor");
 
             // Assert
             assertNotNull(result);
@@ -585,7 +593,7 @@ public class ConsultaEstadisticaHelperTest {
             // Act
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> result = (List<Map<String, Object>>) method.invoke(
-                    consultaEstadisticaHelper, files, "departament", "valor");
+                consultaEstadisticaHelper, files, "departament", "valor");
 
             // Assert
             assertNotNull(result);
@@ -618,7 +626,7 @@ public class ConsultaEstadisticaHelperTest {
         java.lang.reflect.Method method;
         try {
             method = ConsultaEstadisticaHelper.class.getDeclaredMethod(
-                    "getLabelAgrupacioTemporal", PeriodeUnitat.class);
+                "getLabelAgrupacioTemporal", PeriodeUnitat.class);
             method.setAccessible(true);
 
             // Act & Assert
@@ -638,42 +646,42 @@ public class ConsultaEstadisticaHelperTest {
         java.lang.reflect.Method method;
         try {
             method = ConsultaEstadisticaHelper.class.getDeclaredMethod(
-                    "determineWidgetType", DashboardItemEntity.class);
+                "determineWidgetType", DashboardItemEntity.class);
             method.setAccessible(true);
 
             // Arrange
             DashboardItemEntity dashboardItem = new DashboardItemEntity();
 
             // Test with SimpleWidget
-            es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity simpleWidget = 
-                    new es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity();
+            es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity simpleWidget =
+                new es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity();
             dashboardItem.setWidget(simpleWidget);
 
             // Act & Assert
             assertEquals(
-                es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus.SIMPLE, 
+                es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus.SIMPLE,
                 method.invoke(consultaEstadisticaHelper, dashboardItem)
             );
 
             // Test with GraficWidget
-            es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity graficWidget = 
-                    new es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity();
+            es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity graficWidget =
+                new es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity();
             dashboardItem.setWidget(graficWidget);
 
             // Act & Assert
             assertEquals(
-                es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus.GRAFIC, 
+                es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus.GRAFIC,
                 method.invoke(consultaEstadisticaHelper, dashboardItem)
             );
 
             // Test with TaulaWidget
-            es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity taulaWidget = 
-                    new es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity();
+            es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity taulaWidget =
+                new es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity();
             dashboardItem.setWidget(taulaWidget);
 
             // Act & Assert
             assertEquals(
-                es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus.TAULA, 
+                es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus.TAULA,
                 method.invoke(consultaEstadisticaHelper, dashboardItem)
             );
 
@@ -688,7 +696,7 @@ public class ConsultaEstadisticaHelperTest {
         java.lang.reflect.Method method;
         try {
             method = ConsultaEstadisticaHelper.class.getDeclaredMethod(
-                    "getDadesComunsConsulta", DashboardItemEntity.class, boolean.class);
+                "getDadesComunsConsulta", DashboardItemEntity.class, boolean.class);
             method.setAccessible(true);
 
             // Arrange
@@ -696,16 +704,16 @@ public class ConsultaEstadisticaHelperTest {
             dashboardItem.setId(1L);
             dashboardItem.setEntornId(2L);
 
-            es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity widget = 
-                    new es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity();
+            es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity widget =
+                new es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity();
             widget.setPeriodeMode(PeriodeMode.PRESET);
             widget.setPresetPeriode(PresetPeriode.DARRERS_30_DIES);
             dashboardItem.setWidget(widget);
 
             when(estadisticaClientHelper.entornAppFindByAppAndEntorn(any(), any()))
-                    .thenReturn(EntornApp.builder().id(3L).entorn(EntornRef.builder().id(2L).build()).build());
+                .thenReturn(EntornApp.builder().id(3L).entorn(EntornRef.builder().id(2L).build()).build());
             when(estadisticaClientHelper.entornById(any()))
-                    .thenReturn(Entorn.builder().codi("DEV").build());
+                .thenReturn(Entorn.builder().codi("DEV").build());
 
             // Act
             Object result = method.invoke(consultaEstadisticaHelper, dashboardItem, false);
@@ -713,8 +721,8 @@ public class ConsultaEstadisticaHelperTest {
             // Assert
             assertNotNull(result);
             assertInstanceOf(DadesComunsWidgetConsulta.class, result);
-            es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta dades = 
-                    (es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta) result;
+            es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta dades =
+                (es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta) result;
             assertEquals(3L, dades.getEntornAppId());
             assertEquals("DEV", dades.getEntornCodi());
             assertNotNull(dades.getPeriodeDates());
@@ -765,11 +773,11 @@ public class ConsultaEstadisticaHelperTest {
             assertInstanceOf(AtributsVisualsGrafic.class, result);
 
             // Test with TaulaWidget
-            es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity taulaWidget = 
-                    new es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity();
+            es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity taulaWidget =
+                new es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity();
             dashboardItem.setWidget(taulaWidget);
 
-            AtributsVisualsTaula atributsTaula =  new AtributsVisualsTaula();
+            AtributsVisualsTaula atributsTaula = new AtributsVisualsTaula();
             when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class))).thenReturn(atributsTaula);
 
             // Act
@@ -836,34 +844,34 @@ public class ConsultaEstadisticaHelperTest {
         java.lang.reflect.Method method;
         try {
             method = ConsultaEstadisticaHelper.class.getDeclaredMethod(
-                    "createDimensionsFiltre", List.class);
+                "createDimensionsFiltre", List.class);
             method.setAccessible(true);
 
             // Arrange
             List<es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity> dimensioValors = new ArrayList<>();
 
-            es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity dimensioValor1 = 
-                    new es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity();
-            es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity dimensio1 = 
-                    new es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity();
+            es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity dimensioValor1 =
+                new es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity();
+            es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity dimensio1 =
+                new es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity();
             dimensio1.setCodi("departament");
             dimensioValor1.setDimensio(dimensio1);
             dimensioValor1.setValor("RRHH");
             dimensioValors.add(dimensioValor1);
 
-            es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity dimensioValor2 = 
-                    new es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity();
-            es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity dimensio2 = 
-                    new es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity();
+            es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity dimensioValor2 =
+                new es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity();
+            es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity dimensio2 =
+                new es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity();
             dimensio2.setCodi("departament");
             dimensioValor2.setDimensio(dimensio2);
             dimensioValor2.setValor("IT");
             dimensioValors.add(dimensioValor2);
 
-            es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity dimensioValor3 = 
-                    new es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity();
-            es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity dimensio3 = 
-                    new es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity();
+            es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity dimensioValor3 =
+                new es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity();
+            es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity dimensio3 =
+                new es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity();
             dimensio3.setCodi("ubicacio");
             dimensioValor3.setDimensio(dimensio3);
             dimensioValor3.setValor("Palma");
@@ -872,7 +880,7 @@ public class ConsultaEstadisticaHelperTest {
             // Act
             @SuppressWarnings("unchecked")
             Map<String, List<String>> result = (Map<String, List<String>>) method.invoke(
-                    consultaEstadisticaHelper, dimensioValors);
+                consultaEstadisticaHelper, dimensioValors);
 
             // Assert
             assertNotNull(result);
@@ -896,22 +904,22 @@ public class ConsultaEstadisticaHelperTest {
         java.lang.reflect.Method method;
         try {
             method = ConsultaEstadisticaHelper.class.getDeclaredMethod(
-                    "calculateCanviPercentual", 
-                    es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity.class,
-                    String.class,
-                    PeriodeResolverHelper.PeriodeDates.class,
-                    Long.class);
+                "calculateCanviPercentual",
+                es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity.class,
+                String.class,
+                PeriodeResolverHelper.PeriodeDates.class,
+                Long.class);
             method.setAccessible(true);
 
             // Arrange
-            es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity widget = 
-                    new es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity();
+            es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity widget =
+                new es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity();
 
-            es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity indicadorInfo = 
-                    new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity();
+            es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity indicadorInfo =
+                new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity();
 
-            es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity indicador = 
-                    new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity();
+            es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity indicador =
+                new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity();
             indicador.setCodi("visites");
 
             indicadorInfo.setIndicador(indicador);
@@ -919,34 +927,34 @@ public class ConsultaEstadisticaHelperTest {
 
             // Use reflection to set the indicadorInfo field in widget
             java.lang.reflect.Field field = es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity.class
-                    .getDeclaredField("indicadorInfo");
+                .getDeclaredField("indicadorInfo");
             field.setAccessible(true);
             field.set(widget, indicadorInfo);
 
             // Set compararPeriodeAnterior to true
             java.lang.reflect.Field compararField = es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity.class
-                    .getDeclaredField("compararPeriodeAnterior");
+                .getDeclaredField("compararPeriodeAnterior");
             compararField.setAccessible(true);
             compararField.set(widget, true);
 
             String valorConsulta = "100.0";
             PeriodeResolverHelper.PeriodeDates periodePrevi = new PeriodeResolverHelper.PeriodeDates(
-                    LocalDate.of(2023, 1, 1),
-                    LocalDate.of(2023, 1, 31)
+                LocalDate.of(2023, 1, 1),
+                LocalDate.of(2023, 1, 31)
             );
             Long entornAppId = 1L;
 
             when(fetRepository.getValorSimpleAgregat(
-                    eq(entornAppId), 
-                    eq(periodePrevi.start), 
-                    eq(periodePrevi.end), 
-                    any(), 
-                    any(IndicadorAgregacio.class)))
-                    .thenReturn("50.0");
+                eq(entornAppId),
+                eq(periodePrevi.start),
+                eq(periodePrevi.end),
+                any(),
+                any(IndicadorAgregacio.class)))
+                .thenReturn("50.0");
 
             // Act
             String result = (String) method.invoke(
-                    consultaEstadisticaHelper, widget, valorConsulta, periodePrevi, entornAppId);
+                consultaEstadisticaHelper, widget, valorConsulta, periodePrevi, entornAppId);
 
             // Assert
             assertNotNull(result);
@@ -963,9 +971,9 @@ public class ConsultaEstadisticaHelperTest {
         java.lang.reflect.Method method;
         try {
             method = ConsultaEstadisticaHelper.class.getDeclaredMethod(
-                    "getDadesWidgetSimple", 
-                    DashboardItemEntity.class,
-                    es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta.class);
+                "getDadesWidgetSimple",
+                DashboardItemEntity.class,
+                es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta.class);
             method.setAccessible(true);
 
             // Arrange
@@ -973,14 +981,14 @@ public class ConsultaEstadisticaHelperTest {
             dashboardItem.setId(1L);
             dashboardItem.setEntornId(1L);
 
-            es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity widget = 
-                    new es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity();
+            es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity widget =
+                new es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity();
 
-            es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity indicadorInfo = 
-                    new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity();
+            es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity indicadorInfo =
+                new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity();
 
-            es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity indicador = 
-                    new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity();
+            es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity indicador =
+                new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity();
             indicador.setCodi("visites");
 
             indicadorInfo.setIndicador(indicador);
@@ -988,25 +996,25 @@ public class ConsultaEstadisticaHelperTest {
 
             // Use reflection to set the indicadorInfo field in widget
             java.lang.reflect.Field field = es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity.class
-                    .getDeclaredField("indicadorInfo");
+                .getDeclaredField("indicadorInfo");
             field.setAccessible(true);
             field.set(widget, indicadorInfo);
 
             dashboardItem.setWidget(widget);
 
-            es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta dadesComunsConsulta = 
-                    es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta.builder()
+            es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta dadesComunsConsulta =
+                es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta.builder()
                     .entornAppId(1L)
                     .entornCodi("DEV")
                     .periodeDates(new PeriodeResolverHelper.PeriodeDates(
-                            LocalDate.of(2023, 1, 1),
-                            LocalDate.of(2023, 1, 31)
+                        LocalDate.of(2023, 1, 1),
+                        LocalDate.of(2023, 1, 31)
                     ))
                     .build();
 
             when(fetRepository.getValorSimpleAgregat(
-                    any(), any(), any(), any(), any(IndicadorAgregacio.class)))
-                    .thenReturn("42.0");
+                any(), any(), any(), any(), any(IndicadorAgregacio.class)))
+                .thenReturn("42.0");
 
             // Act
             Object result = method.invoke(consultaEstadisticaHelper, dashboardItem, dadesComunsConsulta);
@@ -1014,8 +1022,8 @@ public class ConsultaEstadisticaHelperTest {
             // Assert
             assertNotNull(result);
             assertInstanceOf(InformeWidgetSimpleItem.class, result);
-            es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetSimpleItem simpleItem = 
-                    (es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetSimpleItem) result;
+            es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetSimpleItem simpleItem =
+                (es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetSimpleItem) result;
             assertEquals("42.0", simpleItem.getValor());
 
         } catch (Exception e) {
@@ -1029,9 +1037,9 @@ public class ConsultaEstadisticaHelperTest {
         java.lang.reflect.Method method;
         try {
             method = ConsultaEstadisticaHelper.class.getDeclaredMethod(
-                    "getDadesWidgetGrafic", 
-                    DashboardItemEntity.class,
-                    es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta.class);
+                "getDadesWidgetGrafic",
+                DashboardItemEntity.class,
+                es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta.class);
             method.setAccessible(true);
 
             // Arrange
@@ -1060,14 +1068,14 @@ public class ConsultaEstadisticaHelperTest {
 
             dashboardItem.setWidget(widget);
 
-            DadesComunsWidgetConsulta dadesComunsConsulta =DadesComunsWidgetConsulta.builder()
-                    .entornAppId(1L)
-                    .entornCodi("DEV")
-                    .periodeDates(new PeriodeResolverHelper.PeriodeDates(
-                            LocalDate.of(2023, 1, 1),
-                            LocalDate.of(2023, 1, 31)
-                    ))
-                    .build();
+            DadesComunsWidgetConsulta dadesComunsConsulta = DadesComunsWidgetConsulta.builder()
+                .entornAppId(1L)
+                .entornCodi("DEV")
+                .periodeDates(new PeriodeResolverHelper.PeriodeDates(
+                    LocalDate.of(2023, 1, 1),
+                    LocalDate.of(2023, 1, 31)
+                ))
+                .build();
 
             // Mock repository response
             List<Map<String, String>> mockData = new ArrayList<>();
@@ -1089,8 +1097,8 @@ public class ConsultaEstadisticaHelperTest {
             // Assert
             assertNotNull(result);
             assertInstanceOf(InformeWidgetGraficItem.class, result);
-            es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetGraficItem graficItem = 
-                    (es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetGraficItem) result;
+            es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetGraficItem graficItem =
+                (es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetGraficItem) result;
             assertNotNull(graficItem.getDades());
             assertFalse(graficItem.getDades().isEmpty());
 
@@ -1112,7 +1120,7 @@ public class ConsultaEstadisticaHelperTest {
             dashboardItem.setId(1L);
             dashboardItem.setEntornId(1L);
 
-            EstadisticaTaulaWidgetEntity widget =new EstadisticaTaulaWidgetEntity();
+            EstadisticaTaulaWidgetEntity widget = new EstadisticaTaulaWidgetEntity();
 
             // Create indicator info list
             List<IndicadorTaulaEntity> indicadorsList = new ArrayList<>();
@@ -1138,13 +1146,13 @@ public class ConsultaEstadisticaHelperTest {
             dashboardItem.setWidget(widget);
 
             DadesComunsWidgetConsulta dadesComunsConsulta = DadesComunsWidgetConsulta.builder()
-                    .entornAppId(1L)
-                    .entornCodi("DEV")
-                    .periodeDates(new PeriodeResolverHelper.PeriodeDates(
-                            LocalDate.of(2023, 1, 1),
-                            LocalDate.of(2023, 1, 31)
-                    ))
-                    .build();
+                .entornAppId(1L)
+                .entornCodi("DEV")
+                .periodeDates(new PeriodeResolverHelper.PeriodeDates(
+                    LocalDate.of(2023, 1, 1),
+                    LocalDate.of(2023, 1, 31)
+                ))
+                .build();
 
             // Mock repository response
             List<Map<String, String>> mockData = new ArrayList<>();
@@ -1159,6 +1167,7 @@ public class ConsultaEstadisticaHelperTest {
             mockData.add(dataPoint2);
 
             when(fetRepository.getValorsTaulaAgregat(any(), any(), any(), any(), any(), any())).thenReturn(mockData);
+            when(dimensioRepository.findByCodiAndEntornAppId(any(), any())).thenReturn(Optional.empty());
 
             // Act
             Object result = method.invoke(consultaEstadisticaHelper, dashboardItem, dadesComunsConsulta);
@@ -1182,10 +1191,10 @@ public class ConsultaEstadisticaHelperTest {
         java.lang.reflect.Method method;
         try {
             method = ConsultaEstadisticaHelper.class.getDeclaredMethod(
-                    "filesToSeries", 
-                    List.class,
-                    es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum.class,
-                    es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum.class);
+                "filesToSeries",
+                List.class,
+                es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum.class,
+                es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum.class);
             method.setAccessible(true);
 
             // Arrange
@@ -1203,10 +1212,10 @@ public class ConsultaEstadisticaHelperTest {
             // Act - Test with LINE_CHART and UN_INDICADOR
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> result = (List<Map<String, Object>>) method.invoke(
-                    consultaEstadisticaHelper, 
-                    files, 
-                    es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum.LINE_CHART,
-                    es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum.UN_INDICADOR);
+                consultaEstadisticaHelper,
+                files,
+                es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum.LINE_CHART,
+                es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum.UN_INDICADOR);
 
             // Assert
             assertNotNull(result);
@@ -1215,10 +1224,10 @@ public class ConsultaEstadisticaHelperTest {
             // Act - Test with PIE_CHART and UN_INDICADOR
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> resultPie = (List<Map<String, Object>>) method.invoke(
-                    consultaEstadisticaHelper, 
-                    files, 
-                    es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum.PIE_CHART,
-                    es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum.UN_INDICADOR);
+                consultaEstadisticaHelper,
+                files,
+                es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum.PIE_CHART,
+                es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum.UN_INDICADOR);
 
             // Assert
             assertNotNull(resultPie);
@@ -1235,19 +1244,19 @@ public class ConsultaEstadisticaHelperTest {
         java.lang.reflect.Method method;
         try {
             method = ConsultaEstadisticaHelper.class.getDeclaredMethod(
-                    "getColumnNames", 
-                    List.class);
+                "getColumnNames",
+                List.class);
             method.setAccessible(true);
 
             // Arrange
-            List<es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity> indicadorsList = 
-                    new ArrayList<>();
+            List<es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity> indicadorsList =
+                new ArrayList<>();
 
-            es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity indicadorInfo1 = 
-                    new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity();
+            es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity indicadorInfo1 =
+                new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity();
 
-            es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity indicador1 = 
-                    new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity();
+            es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity indicador1 =
+                new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity();
             indicador1.setCodi("visites");
             indicador1.setNom("Visites");
 
@@ -1255,11 +1264,11 @@ public class ConsultaEstadisticaHelperTest {
             indicadorInfo1.setAgregacio(TableColumnsEnum.SUM);
             indicadorsList.add(indicadorInfo1);
 
-            es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity indicadorInfo2 = 
-                    new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity();
+            es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity indicadorInfo2 =
+                new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity();
 
-            es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity indicador2 = 
-                    new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity();
+            es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity indicador2 =
+                new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity();
             indicador2.setCodi("temps");
             indicador2.setNom("Temps");
 
@@ -1296,13 +1305,13 @@ public class ConsultaEstadisticaHelperTest {
         dashboardItem.setDashboard(dashboard);
 
         lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class)))
-                .thenReturn(new AtributsVisualsSimple());
+            .thenReturn(new AtributsVisualsSimple());
 
         consultaEstadisticaHelper.resolveAtributsVisuals(dashboardItem, true);
 
         ArgumentCaptor<PaletteGroupType> groupTypeCaptor = ArgumentCaptor.forClass(PaletteGroupType.class);
         verify(dashboardStyleResolverHelper).applyTemplateDefaults(
-                any(), eq(plantilla), groupTypeCaptor.capture(), any(WidgetStyleScope.class));
+            any(), eq(plantilla), groupTypeCaptor.capture(), any(WidgetStyleScope.class));
         assertEquals(PaletteGroupType.DARK, groupTypeCaptor.getValue());
     }
 
@@ -1320,13 +1329,13 @@ public class ConsultaEstadisticaHelperTest {
         dashboardItem.setDashboard(dashboard);
 
         lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class)))
-                .thenReturn(new AtributsVisualsSimple());
+            .thenReturn(new AtributsVisualsSimple());
 
         consultaEstadisticaHelper.resolveAtributsVisuals(dashboardItem, false);
 
         ArgumentCaptor<PaletteGroupType> groupTypeCaptor = ArgumentCaptor.forClass(PaletteGroupType.class);
         verify(dashboardStyleResolverHelper).applyTemplateDefaults(
-                any(), eq(plantilla), groupTypeCaptor.capture(), any(WidgetStyleScope.class));
+            any(), eq(plantilla), groupTypeCaptor.capture(), any(WidgetStyleScope.class));
         assertEquals(PaletteGroupType.LIGHT, groupTypeCaptor.getValue());
     }
 
@@ -1345,13 +1354,13 @@ public class ConsultaEstadisticaHelperTest {
         dashboardItem.setDashboard(dashboard);
 
         lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class)))
-                .thenReturn(new AtributsVisualsSimple());
+            .thenReturn(new AtributsVisualsSimple());
 
         consultaEstadisticaHelper.resolveAtributsVisuals(dashboardItem, true);
 
         ArgumentCaptor<PaletteGroupType> groupTypeCaptor = ArgumentCaptor.forClass(PaletteGroupType.class);
         verify(dashboardStyleResolverHelper).applyTemplateDefaults(
-                any(), eq(plantilla), groupTypeCaptor.capture(), any(WidgetStyleScope.class));
+            any(), eq(plantilla), groupTypeCaptor.capture(), any(WidgetStyleScope.class));
         assertEquals(PaletteGroupType.DARK_HIGHLIGHTED, groupTypeCaptor.getValue());
     }
 
@@ -1370,13 +1379,13 @@ public class ConsultaEstadisticaHelperTest {
         dashboardItem.setDashboard(dashboard);
 
         lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class)))
-                .thenReturn(new AtributsVisualsSimple());
+            .thenReturn(new AtributsVisualsSimple());
 
         consultaEstadisticaHelper.resolveAtributsVisuals(dashboardItem, false);
 
         ArgumentCaptor<PaletteGroupType> groupTypeCaptor = ArgumentCaptor.forClass(PaletteGroupType.class);
         verify(dashboardStyleResolverHelper).applyTemplateDefaults(
-                any(), eq(plantilla), groupTypeCaptor.capture(), any(WidgetStyleScope.class));
+            any(), eq(plantilla), groupTypeCaptor.capture(), any(WidgetStyleScope.class));
         assertEquals(PaletteGroupType.LIGHT_HIGHLIGHTED, groupTypeCaptor.getValue());
     }
 
@@ -1397,13 +1406,13 @@ public class ConsultaEstadisticaHelperTest {
         dashboardItem.setPlantilla(plantillaTitol);
 
         lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class)))
-                .thenReturn(new AtributsVisualsSimple());
+            .thenReturn(new AtributsVisualsSimple());
 
         consultaEstadisticaHelper.resolveAtributsVisuals(dashboardItem, false);
 
         ArgumentCaptor<PlantillaEntity> plantillaCaptor = ArgumentCaptor.forClass(PlantillaEntity.class);
         verify(dashboardStyleResolverHelper).applyTemplateDefaults(
-                any(), plantillaCaptor.capture(), any(), any());
+            any(), plantillaCaptor.capture(), any(), any());
         assertSame(plantillaTitol, plantillaCaptor.getValue());
     }
 
@@ -1416,7 +1425,7 @@ public class ConsultaEstadisticaHelperTest {
         dashboardItem.setWidget(widget);
 
         lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class)))
-                .thenReturn(new AtributsVisualsSimple());
+            .thenReturn(new AtributsVisualsSimple());
 
         Object result = consultaEstadisticaHelper.resolveAtributsVisuals(dashboardItem, false);
 
@@ -1438,13 +1447,13 @@ public class ConsultaEstadisticaHelperTest {
         dashboardItem.setDashboard(dashboard);
 
         lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class)))
-                .thenReturn(new AtributsVisualsGrafic());
+            .thenReturn(new AtributsVisualsGrafic());
 
         consultaEstadisticaHelper.resolveAtributsVisuals(dashboardItem, false);
 
         ArgumentCaptor<WidgetStyleScope> scopeCaptor = ArgumentCaptor.forClass(WidgetStyleScope.class);
         verify(dashboardStyleResolverHelper).applyTemplateDefaults(
-                any(), any(), any(), scopeCaptor.capture());
+            any(), any(), any(), scopeCaptor.capture());
         assertEquals(WidgetStyleScope.GRAFIC, scopeCaptor.getValue());
     }
 
@@ -1462,13 +1471,13 @@ public class ConsultaEstadisticaHelperTest {
         dashboardItem.setDashboard(dashboard);
 
         lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class)))
-                .thenReturn(new AtributsVisualsTaula());
+            .thenReturn(new AtributsVisualsTaula());
 
         consultaEstadisticaHelper.resolveAtributsVisuals(dashboardItem, false);
 
         ArgumentCaptor<WidgetStyleScope> scopeCaptor = ArgumentCaptor.forClass(WidgetStyleScope.class);
         verify(dashboardStyleResolverHelper).applyTemplateDefaults(
-                any(), any(), any(), scopeCaptor.capture());
+            any(), any(), any(), scopeCaptor.capture());
         assertEquals(WidgetStyleScope.TAULA, scopeCaptor.getValue());
     }
 }

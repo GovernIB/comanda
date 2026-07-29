@@ -33,16 +33,16 @@ import java.util.stream.Collectors;
 
 /**
  * Classe d'implementació del servei per a la gestió de la lògica de negoci relacionada amb l'entitat Dimensio.
- *
+ * <p>
  * Aquesta classe ofereix funcionalitats per a la manipulació i consulta de dades relatives a Dimensions,
  * i s'estén de BaseReadonlyResourceService per oferir operacions bàsiques de lògica empresarial en mode només lectura.
- *
+ * <p>
  * Les accions específiques que es realitzen en aquesta classe estan directament relacionades amb la interfície DimensioService
  * i amb l'accés a les dades mitjançant l'entitat DimensioEntity.
- *
+ * <p>
  * La classe utilitza el framework Spring per gestionar la injecció de dependències i s'anota com a servei (@Service),
  * a més d'utilitzar l'anotació @Slf4j per registrar informació de diagnòstic.
- *
+ * <p>
  * Aquesta implementació pot ser utilitzada per altres components del sistema per proporcionar funcionalitats específiques relacionades
  * amb l'entitat Dimensio.
  *
@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class DimensioServiceImpl  extends BaseMutableResourceService<Dimensio, Long, DimensioEntity> implements DimensioService {
+public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Long, DimensioEntity> implements DimensioService {
     private final SpringFilterHelper springFilterHelper;
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final FetRepository fetRepository;
@@ -80,7 +80,8 @@ public class DimensioServiceImpl  extends BaseMutableResourceService<Dimensio, L
         return null;
     }
 
-    /** Filtro para solo mostrar un resultado por nombre en la aplicación. Aprovechando el UK de entornAppId y nom.
+    /**
+     * Filtro para solo mostrar un resultado por nombre en la aplicación. Aprovechando el UK de entornAppId y nom.
      * Se requiere aplicar un filtro de entornApps, ya que si no se devolvería un resultado erróneo.
      **/
     private static Specification<DimensioEntity> uniqueNomByMinEntornAppId(List<Long> idsEntornApp) {
@@ -109,21 +110,23 @@ public class DimensioServiceImpl  extends BaseMutableResourceService<Dimensio, L
         }
         if (namedQueries != null) {
             for (String namedQuery : namedQueries) {
-                if (namedQuery.contains(Dimensio.FILTER_BY_APP_NAMEDFILTER)){
+                if (namedQuery.contains(Dimensio.FILTER_BY_APP_NAMEDFILTER)) {
                     long appId = Long.parseLong(namedQuery.split(":")[1]);
                     filters.add(springFilterHelper.filterByApp(appId, Dimensio.Fields.entornAppId));
                 }
             }
         }
         List<Filter> result = filters.stream().
-                filter(f -> f != null && !String.valueOf(f).isEmpty()).
-                collect(Collectors.toList());
+            filter(f -> f != null && !String.valueOf(f).isEmpty()).
+            collect(Collectors.toList());
         return result.isEmpty() ? null : FilterBuilder.and(result).generate();
     }
 
     public class ChangeTipusActionExecutor implements ActionExecutor<DimensioEntity, Dimensio.ChangeTipusActionForm, Dimensio> {
         @Override
-        public Dimensio exec(String code, DimensioEntity entity, Dimensio.ChangeTipusActionForm params) throws ActionExecutionException {
+        public Dimensio exec(String code,
+                             DimensioEntity entity,
+                             Dimensio.ChangeTipusActionForm params) throws ActionExecutionException {
             try {
                 if (params.getTipus() != null) {
                     List<DimensioEntity> dimensioEntityList = dimensioRepository.findByEntornAppId(entity.getEntornAppId());
@@ -145,7 +148,13 @@ public class DimensioServiceImpl  extends BaseMutableResourceService<Dimensio, L
         }
 
         @Override
-        public void onChange(Serializable id, Dimensio.ChangeTipusActionForm previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Dimensio.ChangeTipusActionForm target) {
+        public void onChange(Serializable id,
+                             Dimensio.ChangeTipusActionForm previous,
+                             String fieldName,
+                             Object fieldValue,
+                             Map<String, AnswerRequiredException.AnswerValue> answers,
+                             String[] previousFieldNames,
+                             Dimensio.ChangeTipusActionForm target) {
 
         }
     }
@@ -183,7 +192,7 @@ public class DimensioServiceImpl  extends BaseMutableResourceService<Dimensio, L
                     List<FetEntity> fetEntityList = fetRepository.findByEntornAppIdAddCons(entity.getEntornAppId(), entity.getCodi(), codiArrel);
                     fetEntityList = fetEntityList.stream()
                         .peek(f -> {
-                            String c = unitatsOrganitzativesPlugin.getConsergeria(f.getDimensionsJson().get(entity.getCodi()));
+                            String c = unitatsOrganitzativesPlugin.getConselleria(f.getDimensionsJson().get(entity.getCodi()));
                             if (c != null) {
                                 f.getDimensionsJson().put("CONS", c);
                             } else {
@@ -207,7 +216,13 @@ public class DimensioServiceImpl  extends BaseMutableResourceService<Dimensio, L
         }
 
         @Override
-        public void onChange(Serializable id, Serializable previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Serializable target) {
+        public void onChange(Serializable id,
+                             Serializable previous,
+                             String fieldName,
+                             Object fieldValue,
+                             Map<String, AnswerRequiredException.AnswerValue> answers,
+                             String[] previousFieldNames,
+                             Serializable target) {
 
         }
     }

@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
     findMock: vi.fn(),
     artifactActionMock: vi.fn(), // NUEVO: Para mockear artifactAction de 'dimensio'
     temporalMessageShowMock: vi.fn(), // NUEVO: Para mockear temporalMessageShow
+    messageDialogShowMock: vi.fn(),
     tMock: vi.fn((selector: any) =>
         selector({
             page: {
@@ -14,6 +15,11 @@ const mocks = vi.hoisted(() => ({
                     title: 'Dimensions',
                     values: 'Valors',
                     action: {
+                        refreshCons: {
+                            label: 'FET_CONS',
+                            ok: 'Consergeria actualitzada',
+                            title: 'Voleu actualitzar la consergeria?',
+                        },
                         marcarOrgan: {
                             label: 'ORGAN_GESTOR',
                             ok: 'Tipus cambiat a ORGAN_GESTOR',
@@ -104,7 +110,10 @@ vi.mock('reactlib', () => ({
     // NUEVO: Mock para useBaseAppContext
     useBaseAppContext: () => ({
         temporalMessageShow: mocks.temporalMessageShowMock,
+        messageDialogShow: mocks.messageDialogShowMock,
     }),
+
+    useConfirmDialogButtons: () => <button>Confirmar</button>,
 
     // MODIFICADO: Diferenciamos el mock según el recurso solicitado
     useResourceApiService: (resourceName: string) => {

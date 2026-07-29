@@ -23,6 +23,7 @@ public class UnitatOrganitzativaHelper {
         if (uo.getCodiConselleria() != null) this.updateByCodi(uo.getCodiConselleria());
         return this.update(uo);
     }
+
     public UnitatOrganitzativaEntity update(UnitatOrganitzativaEntity uo) {
         Optional<UnitatOrganitzativaEntity> uoExists = unitatOrganitzativaRepository.findByCodi(uo.getCodi());
 

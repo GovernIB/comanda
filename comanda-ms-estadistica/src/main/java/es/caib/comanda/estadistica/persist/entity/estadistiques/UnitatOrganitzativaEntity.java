@@ -8,10 +8,7 @@ import lombok.*;
 import net.minidev.json.annotate.JsonIgnore;
 import org.springframework.context.i18n.LocaleContextHolder;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+import javax.persistence.*;
 import java.util.Locale;
 
 @Entity
@@ -47,6 +44,7 @@ public class UnitatOrganitzativaEntity extends BaseAuditableEntity<UnitatOrganit
     private String codiConselleria;
 
     @Column(name = "estat")
+    @Enumerated(EnumType.STRING)
     private UOEstatEnum estat;
 
     @Transient

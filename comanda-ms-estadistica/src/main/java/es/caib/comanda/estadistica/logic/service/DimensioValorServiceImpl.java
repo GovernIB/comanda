@@ -24,25 +24,26 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import javax.persistence.criteria.*;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
 import java.io.Serializable;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
  * Classe d'implementació del servei per a la gestió de la lògica de negoci relacionada amb l'entitat DimensioValor.
- *
+ * <p>
  * Aquesta classe ofereix funcionalitats per a la manipulació i consulta de dades relatives als valors de dimensions,
  * i s'estén de BaseReadonlyResourceService per proporcionar operacions bàsiques en mode només lectura.
- *
+ * <p>
  * Les accions específiques d’aquesta implementació estan alineades amb la interfície `DimensioValorService`
  * i gestionen l'accés a les dades mitjançant l'entitat DimensioValorEntity.
- *
+ * <p>
  * La classe utilitza el framework Spring per a la gestió de dependències (@Service), i l’anotació @Slf4j per
  * registrar informació de diagnòstic i seguiment.
- *
+ * <p>
  * Aquesta implementació pot ser utilitzada per altres components del sistema per oferir serveis relacionats amb
  * els valors associats a dimensions dins del model d'aplicació.
  *
@@ -52,6 +53,8 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 @Service
 public class DimensioValorServiceImpl extends BaseMutableResourceService<DimensioValor, Long, DimensioValorEntity> implements DimensioValorService {
+
+    private static final int CODI_IN_QUERY_BATCH_SIZE = 900;
 
     private final SpringFilterHelper springFilterHelper;
     private final EstadisticaClientHelper estadisticaClientHelper;
@@ -84,7 +87,8 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
         return null;
     }
 
-    /** Filtro para solo mostrar un resultado por valor en la aplicación.
+    /**
+     * Filtro para solo mostrar un resultado por valor en la aplicación.
      * Se requiere aplicar un filtro de entornApps, ya que si no se devolvería un resultado erróneo.
      **/
     private Specification<DimensioValorEntity> uniqueValorByMinEntornAppId(List<Long> idsEntornApp) {
@@ -144,31 +148,29 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
         }
         if (namedQueries != null) {
             for (String namedQuery : namedQueries) {
-                if (namedQuery.contains(DimensioValor.FILTER_BY_APP_NAMEDFILTER)){
+                if (namedQuery.contains(DimensioValor.FILTER_BY_APP_NAMEDFILTER)) {
                     long appId = Long.parseLong(namedQuery.split(":")[1]);
                     filters.add(springFilterHelper.filterByApp(appId, DimensioValor.Fields.dimensio + "." + Dimensio.Fields.entornAppId));
                 }
             }
         }
         List<Filter> result = filters.stream().
-                filter(f -> f != null && !String.valueOf(f).isEmpty()).
-                collect(Collectors.toList());
+            filter(f -> f != null && !String.valueOf(f).isEmpty()).
+            collect(Collectors.toList());
         return result.isEmpty() ? null : FilterBuilder.and(result).generate();
     }
 
     @Override
     protected void afterConversion(List<DimensioValorEntity> entities, List<DimensioValor> resources) {
-        Map<String, UnitatOrganitzativaEntity> uoMap = entities.stream()
+        Set<String> codis = entities.stream()
+            .filter(e -> e.getDimensio() != null)
             .filter(e -> TipusDimensioEnum.TIPUS_AMB_UNITAT_ORG.contains(e.getDimensio().getTipus()))
             .map(DimensioValorEntity::getValor)
             .filter(Objects::nonNull)
             .distinct()
-            .collect(Collectors.collectingAndThen(
-                Collectors.toSet(),
-                codis -> codis.isEmpty() ? Map.of() :
-                    unitatOrganitzativaRepository.findByCodiIn(codis).stream()
-                        .collect(Collectors.toMap(UnitatOrganitzativaEntity::getCodi, Function.identity()))
-            ));
+            .collect(Collectors.toSet());
+
+        Map<String, UnitatOrganitzativaEntity> uoMap = findUnitatsOrganitzativesByCodiInBatches(codis);
 
         IntStream.range(0, entities.size()).forEach(i -> {
             var e = entities.get(i);
@@ -185,7 +187,9 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
 
     public class UOActionExecutor implements ActionExecutor<DimensioValorEntity, Serializable, Serializable> {
         @Override
-        public Serializable exec(String code, DimensioValorEntity entity, Serializable params) throws ActionExecutionException {
+        public Serializable exec(String code,
+                                 DimensioValorEntity entity,
+                                 Serializable params) throws ActionExecutionException {
             if (entity.getDimensio().getTipus() == null) return null;
             try {
                 switch (entity.getDimensio().getTipus()) {
@@ -193,20 +197,51 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
                     case ORGAN_GESTOR:
                         UnitatOrganitzativaEntity uo = unitatOrganitzativaHelper.updateByCodi(entity.getValor());
                         return resourceEntityMappingHelper.entityToResource(uo, UnitatOrganitzativa.class);
-                    default: throw new SistemaExternException("Tipus de dimensió no trabada");
+                    default:
+                        throw new SistemaExternException("Tipus de dimensió no trabada");
                 }
             } catch (Exception e) {
                 throw new ActionExecutionException(
-                        DimensioValor.class,
-                        null,
-                        code,
-                        e.getMessage());
+                    DimensioValor.class,
+                    null,
+                    code,
+                    e.getMessage());
             }
         }
 
         @Override
-        public void onChange(Serializable id, Serializable previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Serializable target) {
+        public void onChange(Serializable id,
+                             Serializable previous,
+                             String fieldName,
+                             Object fieldValue,
+                             Map<String, AnswerRequiredException.AnswerValue> answers,
+                             String[] previousFieldNames,
+                             Serializable target) {
 
         }
     }
+
+    // Evitar error si hi ha més de 1000 unitats organitzatives
+    private Map<String, UnitatOrganitzativaEntity> findUnitatsOrganitzativesByCodiInBatches(Set<String> codis) {
+        if (codis == null || codis.isEmpty()) {
+            return Map.of();
+        }
+
+        List<String> codiList = new ArrayList<>(codis);
+        Map<String, UnitatOrganitzativaEntity> result = new HashMap<>();
+
+        for (int fromIndex = 0; fromIndex < codiList.size(); fromIndex += CODI_IN_QUERY_BATCH_SIZE) {
+            int toIndex = Math.min(fromIndex + CODI_IN_QUERY_BATCH_SIZE, codiList.size());
+            List<String> batch = codiList.subList(fromIndex, toIndex);
+
+            unitatOrganitzativaRepository.findByCodiIn(batch).forEach(uo -> {
+                if (uo.getCodi() != null) {
+                    result.putIfAbsent(uo.getCodi(), uo);
+                }
+            });
+        }
+
+        return result;
+    }
+
 }

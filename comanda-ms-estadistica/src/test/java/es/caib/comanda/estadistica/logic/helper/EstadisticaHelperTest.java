@@ -1,8 +1,11 @@
 package es.caib.comanda.estadistica.logic.helper;
 
-import es.caib.comanda.client.model.*;
+import es.caib.comanda.client.model.AppRef;
+import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.client.model.EntornRef;
+import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesPluginDir3;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet.FetObtenirResponse;
-import es.caib.comanda.estadistica.persist.entity.estadistiques.*;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.TempsEntity;
 import es.caib.comanda.estadistica.persist.repository.*;
 import es.caib.comanda.model.v1.estadistica.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +25,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.Base64;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
@@ -31,14 +35,25 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class EstadisticaHelperTest {
 
-    @Mock private DimensioRepository dimensioRepository;
-    @Mock private DimensioValorRepository dimensioValorRepository;
-    @Mock private IndicadorRepository indicadorRepository;
-    @Mock private TempsRepository tempsRepository;
-    @Mock private FetRepository fetRepository;
-    @Mock private EstadisticaClientHelper estadisticaClientHelper;
-    @Mock private RestTemplate restTemplate;
-    @Mock private Environment environment;
+    @Mock
+    private DimensioRepository dimensioRepository;
+    @Mock
+    private DimensioValorRepository dimensioValorRepository;
+    @Mock
+    private IndicadorRepository indicadorRepository;
+    @Mock
+    private TempsRepository tempsRepository;
+    @Mock
+    private FetRepository fetRepository;
+
+    @Mock
+    private EstadisticaClientHelper estadisticaClientHelper;
+    @Mock
+    private RestTemplate restTemplate;
+    @Mock
+    private Environment environment;
+    @Mock
+    private UnitatsOrganitzativesPluginDir3 unitatsOrganitzativesPluginDir3;
 
     private EstadisticaHelper estadisticaHelper;
     private EntornApp entornApp;
@@ -49,9 +64,15 @@ class EstadisticaHelperTest {
     @BeforeEach
     void setUp() {
         estadisticaHelper = new EstadisticaHelper(
-                dimensioRepository, dimensioValorRepository, indicadorRepository,
-                tempsRepository, fetRepository, estadisticaClientHelper,
-                restTemplate, environment
+            dimensioRepository,
+            dimensioValorRepository,
+            indicadorRepository,
+            tempsRepository,
+            fetRepository,
+            estadisticaClientHelper,
+            restTemplate,
+            environment,
+            unitatsOrganitzativesPluginDir3
         );
 
         ReflectionTestUtils.setField(estadisticaHelper, "statsAuthUser", "staticUser");
@@ -78,6 +99,7 @@ class EstadisticaHelperTest {
         entornApp.setContrasenyaAuth("pass");
         mockEstadistiquesInfoResponse();
         mockRegistresEstadisticsResponse(false);
+        when(dimensioRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         // When
         estadisticaHelper.getEstadisticaInfoDades(entornApp);
         // Then
@@ -95,6 +117,7 @@ class EstadisticaHelperTest {
         entornApp.setContrasenyaAuth("secret");
         mockEstadistiquesInfoResponse();
         mockRegistresEstadisticsResponse(false);
+        when(dimensioRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         // When
         estadisticaHelper.getEstadisticaInfoDades(entornApp);
         // Then
@@ -119,6 +142,7 @@ class EstadisticaHelperTest {
         lenient().when(environment.getProperty("app.pass.key")).thenReturn("envPass");
         mockEstadistiquesInfoResponse();
         mockRegistresEstadisticsResponse(false);
+        when(dimensioRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         // When
         estadisticaHelper.getEstadisticaInfoDades(entornApp);
         // Then
@@ -141,6 +165,7 @@ class EstadisticaHelperTest {
         entornApp.setContrasenyaAuth(null);
         mockEstadistiquesInfoResponse();
         mockRegistresEstadisticsResponse(false);
+        when(dimensioRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         // When
         estadisticaHelper.getEstadisticaInfoDades(entornApp);
         // Then
@@ -162,6 +187,7 @@ class EstadisticaHelperTest {
         lenient().when(environment.getProperty("nonexistent.key")).thenReturn(null);
         mockEstadistiquesInfoResponse();
         mockRegistresEstadisticsResponse(false);
+        when(dimensioRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         // When
         estadisticaHelper.getEstadisticaInfoDades(entornApp);
         // Then
@@ -180,6 +206,7 @@ class EstadisticaHelperTest {
         entornApp.setContrasenyaAuth("");
         mockEstadistiquesInfoResponse();
         mockRegistresEstadisticsResponse(false);
+        when(dimensioRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         // When
         estadisticaHelper.getEstadisticaInfoDades(entornApp);
         // Then
@@ -196,7 +223,7 @@ class EstadisticaHelperTest {
         // Given
         entornApp.setEstadisticaAuth(false);
         when(restTemplate.getForObject(eq(INFO_URL), eq(EstadistiquesInfo.class)))
-                .thenThrow(new RestClientException("Connection refused"));
+            .thenThrow(new RestClientException("Connection refused"));
         // When
         FetObtenirResponse result = estadisticaHelper.getEstadisticaInfoDadesAmbUrl(entornApp, DADES_URL, false);
         // Then
@@ -213,10 +240,10 @@ class EstadisticaHelperTest {
         mockEstadistiquesInfoResponse();
         RegistresEstadistics registres = buildRegistresEstadistics();
         lenient().when(restTemplate.exchange(
-                eq(DADES_URL + "/7"),
-                eq(HttpMethod.GET),
-                isNull(),
-                any(ParameterizedTypeReference.class)
+            eq(DADES_URL + "/7"),
+            eq(HttpMethod.GET),
+            isNull(),
+            any(ParameterizedTypeReference.class)
         )).thenReturn(new ResponseEntity<>(List.of(registres), HttpStatus.OK));
         lenient().when(tempsRepository.findByData(any(LocalDate.class))).thenReturn(null);
         lenient().when(tempsRepository.save(any(TempsEntity.class))).thenAnswer(invocation -> {
@@ -224,14 +251,15 @@ class EstadisticaHelperTest {
             entity.setId(1L);
             return entity;
         });
+        when(dimensioRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         // When
         estadisticaHelper.getEstadisticaInfoDades(entornApp, 7);
         // Then
         verify(restTemplate).exchange(
-                eq(DADES_URL + "/7"),
-                eq(HttpMethod.GET),
-                isNull(),
-                any(ParameterizedTypeReference.class)
+            eq(DADES_URL + "/7"),
+            eq(HttpMethod.GET),
+            isNull(),
+            any(ParameterizedTypeReference.class)
         );
     }
 
@@ -274,28 +302,28 @@ class EstadisticaHelperTest {
         info.setIndicadors(List.of(buildIndicadorDesc("IND1", "Indicador 1")));
         info.setDimensions(List.of(buildDimensioDesc("DIM1", "Dimensio 1", List.of("valor1", "valor2"))));
         lenient().when(restTemplate.getForObject(eq(INFO_URL), eq(EstadistiquesInfo.class)))
-                .thenReturn(info);
+            .thenReturn(info);
         lenient().when(restTemplate.exchange(eq(INFO_URL), eq(HttpMethod.GET), any(), eq(EstadistiquesInfo.class)))
-                .thenReturn(new ResponseEntity<>(info, HttpStatus.OK));
+            .thenReturn(new ResponseEntity<>(info, HttpStatus.OK));
     }
 
     private void mockRegistresEstadisticsResponse(boolean multiplesDies) {
         RegistresEstadistics registres = buildRegistresEstadistics();
         if (multiplesDies) {
             lenient().when(restTemplate.exchange(
-                    eq(DADES_URL),
-                    eq(HttpMethod.GET),
-                    any(),
-                    any(ParameterizedTypeReference.class)
+                eq(DADES_URL),
+                eq(HttpMethod.GET),
+                any(),
+                any(ParameterizedTypeReference.class)
             )).thenReturn(new ResponseEntity<>(List.of(registres), HttpStatus.OK));
         } else {
             lenient().when(restTemplate.getForObject(eq(DADES_URL), eq(RegistresEstadistics.class)))
-                    .thenReturn(registres);
+                .thenReturn(registres);
             lenient().when(restTemplate.exchange(
-                    eq(DADES_URL),
-                    eq(HttpMethod.GET),
-                    any(),
-                    eq(RegistresEstadistics.class)
+                eq(DADES_URL),
+                eq(HttpMethod.GET),
+                any(),
+                eq(RegistresEstadistics.class)
             )).thenReturn(new ResponseEntity<>(registres, HttpStatus.OK));
         }
         lenient().when(tempsRepository.findByData(any(LocalDate.class))).thenReturn(null);

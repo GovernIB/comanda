@@ -5,12 +5,7 @@ import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisu
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTaula;
-import es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta;
-import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
-import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetGraficItem;
-import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetItem;
-import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetSimpleItem;
-import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetTaulaItem;
+import es.caib.comanda.estadistica.logic.intf.model.consulta.*;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum;
@@ -18,16 +13,16 @@ import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Temps;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum;
-import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
+import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
-import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
+import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
@@ -64,16 +59,18 @@ import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.DASHBOARD_WID
 @RequiredArgsConstructor
 public class ConsultaEstadisticaHelper {
 
+    private static final int CODI_IN_QUERY_BATCH_SIZE = 900;
+
     private final FetRepository fetRepository;
+    private final DashboardItemRepository dashboardItemRepository;
+    private final UnitatOrganitzativaRepository unitatOrganitzativaRepository;
+    private final DimensioRepository dimensioRepository;
 
     private final AtributsVisualsHelper atributsVisualsHelper;
     private final DashboardStyleResolverHelper dashboardStyleResolverHelper;
     private final EstadisticaClientHelper estadisticaClientHelper;
-    private final DashboardItemRepository dashboardItemRepository;
 
     private static DateTimeFormatter DMYYYY_FORMATTER = DateTimeFormatter.ofPattern("d/M/yyyy");
-    private final UnitatOrganitzativaRepository unitatOrganitzativaRepository;
-    private final DimensioRepository dimensioRepository;
 
 
     // CONSULTA ESTADISTIQUES
@@ -84,21 +81,21 @@ public class ConsultaEstadisticaHelper {
      * Els fets estadístics inclouen informació agregada relativa a dimensions, indicadors i temps associats.
      *
      * @param entornAppId Identificador de l'entorn d'aplicació pel qual es volen recuperar els fets estadístics.
-     * @param dataInici Data d'inici del període pel qual es volen recuperar els fets estadístics.
-     * @param dataFi Data de finalització del període pel qual es volen recuperar els fets estadístics.
+     * @param dataInici   Data d'inici del període pel qual es volen recuperar els fets estadístics.
+     * @param dataFi      Data de finalització del període pel qual es volen recuperar els fets estadístics.
      * @return Una llista d'objectes {@link Fet} que representen els fets estadístics associats al període i entorn especificats.
      */
     @Transactional(readOnly = true)
     public List<Fet> getEstadistiquesPeriode(
-            Long entornAppId,
-            LocalDate dataInici,
-            LocalDate dataFi) {
+        Long entornAppId,
+        LocalDate dataInici,
+        LocalDate dataFi) {
 
         // Get statistics directly from the database using JSON_VALUE and JSON_TABLE
         List<FetEntity> fets = fetRepository.findByEntornAppIdAndTempsDataBetween(
-                entornAppId,
-                dataInici,
-                dataFi);
+            entornAppId,
+            dataInici,
+            dataFi);
 //                nivellAgrupacio.name());
 
         // Convert to DTOs
@@ -110,20 +107,20 @@ public class ConsultaEstadisticaHelper {
      * tenint en compte un conjunt de dimensions filtrades. Si no es proporcionen filtres de dimensions, es fa una crida a la funcionalitat
      * estàndard que no té en compte dimensions (mètode {@link #getEstadistiquesPeriode}).
      *
-     * @param entornAppId Identificador de l'entorn d'aplicació pel qual es volen recuperar els fets estadístics.
-     * @param dataInici Data d'inici del període pel qual es volen recuperar els fets estadístics.
-     * @param dataFi Data de finalització del període pel qual es volen recuperar els fets estadístics.
+     * @param entornAppId      Identificador de l'entorn d'aplicació pel qual es volen recuperar els fets estadístics.
+     * @param dataInici        Data d'inici del període pel qual es volen recuperar els fets estadístics.
+     * @param dataFi           Data de finalització del període pel qual es volen recuperar els fets estadístics.
      * @param dimensionsFiltre Un mapa que conté les dimensions a filtrar, on la clau és el nom de la dimensió i el valor és
      *                         una llista de valors que s'han de considerar per aquesta dimensió.
      * @return Una llista d'objectes {@link Fet} que representen els fets estadístics associats al període, l'entorn i
-     *         les dimensions especificades en els filtres.
+     * les dimensions especificades en els filtres.
      */
     @Transactional(readOnly = true)
     public List<Fet> getEstadistiquesPeriodeAmbDimensions(
-            Long entornAppId,
-            LocalDate dataInici,
-            LocalDate dataFi,
-            Map<String, List<String>> dimensionsFiltre) {
+        Long entornAppId,
+        LocalDate dataInici,
+        LocalDate dataFi,
+        Map<String, List<String>> dimensionsFiltre) {
 
         // If no dimensions filter is provided, use the standard method
         if (dimensionsFiltre == null || dimensionsFiltre.isEmpty()) {
@@ -132,10 +129,10 @@ public class ConsultaEstadisticaHelper {
 
         // Get statistics directly from the database using JSON_VALUE and JSON_TABLE
         List<FetEntity> fets = fetRepository.findByEntornAppIdAndTempsDataBetweenAndDimensions(
-                entornAppId,
-                dataInici,
-                dataFi,
-                dimensionsFiltre);
+            entornAppId,
+            dataInici,
+            dataFi,
+            dimensionsFiltre);
 //                nivellAgrupacio.name());
 
         // Convert to DTOs
@@ -167,47 +164,49 @@ public class ConsultaEstadisticaHelper {
         throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, "Tipus de widget incorrecte");
     }
 
-    private InformeWidgetItem getDadesWidgetSimple(DashboardItemEntity dashboardItem, DadesComunsWidgetConsulta dadesComunsConsulta) {
+    private InformeWidgetItem getDadesWidgetSimple(DashboardItemEntity dashboardItem,
+                                                   DadesComunsWidgetConsulta dadesComunsConsulta) {
 
-        EstadisticaSimpleWidgetEntity widget = (EstadisticaSimpleWidgetEntity)dashboardItem.getWidget();
+        EstadisticaSimpleWidgetEntity widget = (EstadisticaSimpleWidgetEntity) dashboardItem.getWidget();
         TableColumnsEnum agregacio = widget.getIndicadorInfo().getAgregacio();
 //        Format format = widget.getIndicadorInfo().getIndicador().getFormat();
         boolean compararPeriodeAnterior = widget.isCompararPeriodeAnterior() && !TableColumnsEnum.FIRST_SEEN.equals(agregacio) && !TableColumnsEnum.LAST_SEEN.equals(agregacio);
         String valorConsulta = calculateValorSimple(widget, dadesComunsConsulta.getPeriodeDates(), dadesComunsConsulta.getEntornAppId());
         PeriodeDates periodePrevi = compararPeriodeAnterior
-                ? PeriodeResolverHelper.resolvePreviousPeriod(widget.getPeriode(), dadesComunsConsulta.getPeriodeDates())
-                : null;
+            ? PeriodeResolverHelper.resolvePreviousPeriod(widget.getPeriode(), dadesComunsConsulta.getPeriodeDates())
+            : null;
         String valorConsultaPrevia = compararPeriodeAnterior
-                ? calculateCanviPercentual(widget, valorConsulta, periodePrevi, dadesComunsConsulta.getEntornAppId())
-                : null;
+            ? calculateCanviPercentual(widget, valorConsulta, periodePrevi, dadesComunsConsulta.getEntornAppId())
+            : null;
 
         return InformeWidgetSimpleItem.builder()
-                .dashboardItemId(dashboardItem.getId())
-                .widgetId(dashboardItem.getWidget().getId())
-                .tipus(WidgetTipus.SIMPLE)
-                .entornCodi(dadesComunsConsulta.getEntornCodi())
-                .titol(widget.getTitol())
-                .valor(valorConsulta)
-                .unitat(widget.getUnitat())
-                .descripcio(widget.getDescripcio())
-                .canviPercentual(valorConsultaPrevia)
-                .atributsVisuals((AtributsVisualsSimple) dadesComunsConsulta.getAtributsVisuals())
-                .posX(dashboardItem.getPosX())
-                .posY(dashboardItem.getPosY())
-                .width(dashboardItem.getWidth())
-                .height(dashboardItem.getHeight())
-                .destacat(Boolean.TRUE.equals(dashboardItem.getDestacat()))
-                .build();
+            .dashboardItemId(dashboardItem.getId())
+            .widgetId(dashboardItem.getWidget().getId())
+            .tipus(WidgetTipus.SIMPLE)
+            .entornCodi(dadesComunsConsulta.getEntornCodi())
+            .titol(widget.getTitol())
+            .valor(valorConsulta)
+            .unitat(widget.getUnitat())
+            .descripcio(widget.getDescripcio())
+            .canviPercentual(valorConsultaPrevia)
+            .atributsVisuals((AtributsVisualsSimple) dadesComunsConsulta.getAtributsVisuals())
+            .posX(dashboardItem.getPosX())
+            .posY(dashboardItem.getPosY())
+            .width(dashboardItem.getWidth())
+            .height(dashboardItem.getHeight())
+            .destacat(Boolean.TRUE.equals(dashboardItem.getDestacat()))
+            .build();
     }
 
-    private InformeWidgetItem getDadesWidgetGrafic(DashboardItemEntity dashboardItem, DadesComunsWidgetConsulta dadesComunsConsulta) {
+    private InformeWidgetItem getDadesWidgetGrafic(DashboardItemEntity dashboardItem,
+                                                   DadesComunsWidgetConsulta dadesComunsConsulta) {
 
-        EstadisticaGraficWidgetEntity widget = (EstadisticaGraficWidgetEntity)dashboardItem.getWidget();
+        EstadisticaGraficWidgetEntity widget = (EstadisticaGraficWidgetEntity) dashboardItem.getWidget();
         PeriodeUnitat tempsAgrupacio = widget.getTempsAgrupacio();
         // Mapa de dimensions per filtrar la consulta
         Map<String, List<String>> dimensionsFiltre = widget.getDimensionsValor() != null && !widget.getDimensionsValor().isEmpty()
-                ? createDimensionsFiltre(widget.getDimensionsValor())
-                : new HashMap<>();
+            ? createDimensionsFiltre(widget.getDimensionsValor())
+            : new HashMap<>();
 
         List<Map<String, String>> labels = new ArrayList<>();
         List<Map<String, String>> files = new ArrayList<>();
@@ -216,23 +215,23 @@ public class ConsultaEstadisticaHelper {
 
             IndicadorTaulaEntity indicadorInfo = widget.getIndicadorsInfo() != null ? widget.getIndicadorsInfo().get(0) : null;
             IndicadorAgregacio indicadorAgregacio = indicadorInfo != null ?
-                    IndicadorAgregacio.builder()
-                            .indicadorCodi(indicadorInfo.getIndicador().getCodi())
-                            .agregacio(indicadorInfo.getAgregacio())
-                            .unitatAgregacio(indicadorInfo.getUnitatAgregacio())
-                            .build()
-                    : null;
+                IndicadorAgregacio.builder()
+                    .indicadorCodi(indicadorInfo.getIndicador().getCodi())
+                    .agregacio(indicadorInfo.getAgregacio())
+                    .unitatAgregacio(indicadorInfo.getUnitatAgregacio())
+                    .build()
+                : null;
 
             if (UN_INDICADOR.equals(widget.getTipusDades())) {
                 labels.add(Map.of("id", "agrupacio", "label", getLabelAgrupacioTemporal(tempsAgrupacio)));
                 labels.add(Map.of("id", indicadorAgregacio.getIndicadorCodi(), "label", indicadorInfo.getTitol()));
                 files = fetRepository.getValorsGraficUnIndicador(
-                        dadesComunsConsulta.getEntornAppId(),
-                        dadesComunsConsulta.getPeriodeDates().getStart(),
-                        dadesComunsConsulta.getPeriodeDates().getEnd(),
-                        dimensionsFiltre,
-                        indicadorAgregacio,
-                        tempsAgrupacio);
+                    dadesComunsConsulta.getEntornAppId(),
+                    dadesComunsConsulta.getPeriodeDates().getStart(),
+                    dadesComunsConsulta.getPeriodeDates().getEnd(),
+                    dimensionsFiltre,
+                    indicadorAgregacio,
+                    tempsAgrupacio);
                 // files: [{'agrupacio': '', 'indicadorAgregacio.getIndicadorCodi()': ''}]
 
             } else if (UN_INDICADOR_AMB_DESCOMPOSICIO.equals(widget.getTipusDades())) {
@@ -243,12 +242,12 @@ public class ConsultaEstadisticaHelper {
                     labels.add(Map.of("id", "agrupacio", "label", descomposicioDimensio.getNom()));
                     labels.add(Map.of("id", indicadorAgregacio.getIndicadorCodi(), "label", indicadorInfo.getTitol()));
                     files = fetRepository.getValorsGraficUnIndicadorAmdDescomposicio(
-                            dadesComunsConsulta.getEntornAppId(),
-                            dadesComunsConsulta.getPeriodeDates().getStart(),
-                            dadesComunsConsulta.getPeriodeDates().getEnd(),
-                            dimensionsFiltre,
-                            indicadorAgregacio,
-                            descomposicioDimensio.getCodi());
+                        dadesComunsConsulta.getEntornAppId(),
+                        dadesComunsConsulta.getPeriodeDates().getStart(),
+                        dadesComunsConsulta.getPeriodeDates().getEnd(),
+                        dimensionsFiltre,
+                        indicadorAgregacio,
+                        descomposicioDimensio.getCodi());
                     // files: [{'agrupacio': '', 'indicadorAgregacio.getIndicadorCodi()': ''}]
 
                 } else {
@@ -256,13 +255,13 @@ public class ConsultaEstadisticaHelper {
                     labels.add(Map.of("id", "descomposicio", "label", descomposicioDimensio.getNom()));
                     labels.add(Map.of("id", indicadorAgregacio.getIndicadorCodi(), "label", indicadorInfo.getTitol()));
                     files = fetRepository.getValorsGraficUnIndicadorAmdDescomposicio(
-                            dadesComunsConsulta.getEntornAppId(),
-                            dadesComunsConsulta.getPeriodeDates().getStart(),
-                            dadesComunsConsulta.getPeriodeDates().getEnd(),
-                            dimensionsFiltre,
-                            indicadorAgregacio,
-                            descomposicioDimensio.getCodi(),
-                            tempsAgrupacio);
+                        dadesComunsConsulta.getEntornAppId(),
+                        dadesComunsConsulta.getPeriodeDates().getStart(),
+                        dadesComunsConsulta.getPeriodeDates().getEnd(),
+                        dimensionsFiltre,
+                        indicadorAgregacio,
+                        descomposicioDimensio.getCodi(),
+                        tempsAgrupacio);
                     // files: [{'agrupacio': '', 'descomposicio': '', 'indicadorAgregacio.getIndicadorCodi()': ''}]
 
                 }
@@ -271,27 +270,27 @@ public class ConsultaEstadisticaHelper {
                 throw new NotImplementedException("La configuració de 2 indicadors encara no ha estat implementada");
             }
         } else if (VARIS_INDICADORS.equals(widget.getTipusDades())) {
-                List<IndicadorAgregacio> indicadorsAgregacio = widget.getIndicadorsInfo().stream()
-                        .map(columna -> IndicadorAgregacio.builder()
-                                .indicadorCodi(columna.getIndicador().getCodi())
-                                .agregacio(columna.getAgregacio())
-                                .unitatAgregacio(columna.getUnitatAgregacio())
-                                .build())
-                        .collect(Collectors.toList());
+            List<IndicadorAgregacio> indicadorsAgregacio = widget.getIndicadorsInfo().stream()
+                .map(columna -> IndicadorAgregacio.builder()
+                    .indicadorCodi(columna.getIndicador().getCodi())
+                    .agregacio(columna.getAgregacio())
+                    .unitatAgregacio(columna.getUnitatAgregacio())
+                    .build())
+                .collect(Collectors.toList());
 
-                labels.add(Map.of("id", "agrupacio", "label", getLabelAgrupacioTemporal(tempsAgrupacio)));
-                IntStream.range(0, widget.getIndicadorsInfo().size()).forEach(index -> {
-                    var indicador = widget.getIndicadorsInfo().get(index);
-                    labels.add(Map.of("id", "col" + (index + 1), "label", indicador.getTitol()));
-                });
+            labels.add(Map.of("id", "agrupacio", "label", getLabelAgrupacioTemporal(tempsAgrupacio)));
+            IntStream.range(0, widget.getIndicadorsInfo().size()).forEach(index -> {
+                var indicador = widget.getIndicadorsInfo().get(index);
+                labels.add(Map.of("id", "col" + (index + 1), "label", indicador.getTitol()));
+            });
 
             files = fetRepository.getValorsGraficVarisIndicadors(
-                    dadesComunsConsulta.getEntornAppId(),
-                    dadesComunsConsulta.getPeriodeDates().getStart(),
-                    dadesComunsConsulta.getPeriodeDates().getEnd(),
-                    dimensionsFiltre,
-                    indicadorsAgregacio,
-                    tempsAgrupacio);
+                dadesComunsConsulta.getEntornAppId(),
+                dadesComunsConsulta.getPeriodeDates().getStart(),
+                dadesComunsConsulta.getPeriodeDates().getEnd(),
+                dimensionsFiltre,
+                indicadorsAgregacio,
+                tempsAgrupacio);
 
             // files: [{'agrupacio': '', 'col1': '', .. , 'colN': ''}]
 
@@ -301,30 +300,32 @@ public class ConsultaEstadisticaHelper {
 
         String columnaAgrupacio = "agrupacio";
         return InformeWidgetGraficItem.builder()
-                .dashboardItemId(dashboardItem.getId())
-                .widgetId(dashboardItem.getWidget().getId())
-                .tipus(WidgetTipus.GRAFIC)
-                .entornCodi(dadesComunsConsulta.getEntornCodi())
-                .titol(widget.getTitol())
-                .descripcio(widget.getDescripcio())
-                .tipusGrafic(widget.getTipusGrafic())
-                .tipusDades(widget.getTipusDades())
-                .labels(labels)
-                .dades(filesToSeries(files, widget.getTipusGrafic(), widget.getTipusDades()))
-                .columnaAgregacio(columnaAgrupacio)
-                .llegendaX(widget.getLlegendaX())
+            .dashboardItemId(dashboardItem.getId())
+            .widgetId(dashboardItem.getWidget().getId())
+            .tipus(WidgetTipus.GRAFIC)
+            .entornCodi(dadesComunsConsulta.getEntornCodi())
+            .titol(widget.getTitol())
+            .descripcio(widget.getDescripcio())
+            .tipusGrafic(widget.getTipusGrafic())
+            .tipusDades(widget.getTipusDades())
+            .labels(labels)
+            .dades(filesToSeries(files, widget.getTipusGrafic(), widget.getTipusDades()))
+            .columnaAgregacio(columnaAgrupacio)
+            .llegendaX(widget.getLlegendaX())
 //                .llegendaY(widget.getLlegendaY())
 
-                .atributsVisuals((AtributsVisualsGrafic) dadesComunsConsulta.getAtributsVisuals())
-                .posX(dashboardItem.getPosX())
-                .posY(dashboardItem.getPosY())
-                .width(dashboardItem.getWidth())
-                .height(dashboardItem.getHeight())
-                .destacat(Boolean.TRUE.equals(dashboardItem.getDestacat()))
-                .build();
+            .atributsVisuals((AtributsVisualsGrafic) dadesComunsConsulta.getAtributsVisuals())
+            .posX(dashboardItem.getPosX())
+            .posY(dashboardItem.getPosY())
+            .width(dashboardItem.getWidth())
+            .height(dashboardItem.getHeight())
+            .destacat(Boolean.TRUE.equals(dashboardItem.getDestacat()))
+            .build();
     }
 
-    private List<Map<String, Object>> filesToSeries(List<Map<String, String>> files, TipusGraficEnum tipusGrafic, TipusGraficDataEnum tipusDades) {
+    private List<Map<String, Object>> filesToSeries(List<Map<String, String>> files,
+                                                    TipusGraficEnum tipusGrafic,
+                                                    TipusGraficDataEnum tipusDades) {
         if (files == null || files.isEmpty()) {
             return new ArrayList<>();
         }
@@ -333,7 +334,8 @@ public class ConsultaEstadisticaHelper {
         switch (tipusGrafic) {
             case BAR_CHART:
             case LINE_CHART:
-            case SPARK_LINE_CHART://Si se cambia la respuesta por el de una lista de valores en lugar de un mapa de {x: value, y: number} es necessario editar el front.
+            case
+                SPARK_LINE_CHART://Si se cambia la respuesta por el de una lista de valores en lugar de un mapa de {x: value, y: number} es necessario editar el front.
             case PIE_CHART:
             case GAUGE_CHART:
                 boolean isSimpleMapping = files.get(0).size() == 2;
@@ -351,18 +353,18 @@ public class ConsultaEstadisticaHelper {
                 }
 
                 List<String> keys = files.get(0).keySet().stream()
-                        .filter(k -> !k.equals(agrupacioKey))
-                        .collect(Collectors.toList());
+                    .filter(k -> !k.equals(agrupacioKey))
+                    .collect(Collectors.toList());
 
                 if (keys.contains("descomposicio")) {
                     String valueKey = keys.stream()
-                            .filter(k -> !"descomposicio".equals(k))
-                            .findFirst()
-                            .orElse(null);
+                        .filter(k -> !"descomposicio".equals(k))
+                        .findFirst()
+                        .orElse(null);
 
                     return tipusGrafic == TipusGraficEnum.PIE_CHART
-                            ? groupByAndAggregate(files, "descomposicio", valueKey)
-                            : groupByAndMapToSeries(files, agrupacioKey, "descomposicio", valueKey);
+                        ? groupByAndAggregate(files, "descomposicio", valueKey)
+                        : groupByAndMapToSeries(files, agrupacioKey, "descomposicio", valueKey);
                 }
 
                 return convertFilesToSeriesWithKeys(files, keys, agrupacioKey, tipusGrafic);
@@ -373,18 +375,22 @@ public class ConsultaEstadisticaHelper {
 
     private String extractKeyExcluding(Map<String, String> map, String excludedKey) {
         return map.keySet().stream()
-                .filter(k -> !k.equals(excludedKey))
-                .findFirst()
-                .orElse(null);
+            .filter(k -> !k.equals(excludedKey))
+            .findFirst()
+            .orElse(null);
     }
 
-    private List<Map<String, Object>> convertToPieChartSeriesSimple(List<Map<String, String>> files, String agrupacioKey, String valueKey) {
+    private List<Map<String, Object>> convertToPieChartSeriesSimple(List<Map<String, String>> files,
+                                                                    String agrupacioKey,
+                                                                    String valueKey) {
         return files.stream()
-                .map(f -> Map.of("label", f.get(agrupacioKey), "value", (Object) toDouble(f.get(valueKey))))
-                .collect(Collectors.toList());
+            .map(f -> Map.of("label", f.get(agrupacioKey), "value", (Object) toDouble(f.get(valueKey))))
+            .collect(Collectors.toList());
     }
 
-    private List<Map<String, Object>> convertToGaugeChartSeriesSimple(List<Map<String, String>> files, String agrupacioKey, String valueKey) {
+    private List<Map<String, Object>> convertToGaugeChartSeriesSimple(List<Map<String, String>> files,
+                                                                      String agrupacioKey,
+                                                                      String valueKey) {
         return files.stream()
             .map(file -> {
                 double total = file.entrySet().stream()
@@ -396,54 +402,62 @@ public class ConsultaEstadisticaHelper {
             .collect(Collectors.toList());
     }
 
-    private List<Map<String, Object>> convertToChartSeriesSimple(List<Map<String, String>> files, String agrupacioKey, String valueKey) {
+    private List<Map<String, Object>> convertToChartSeriesSimple(List<Map<String, String>> files,
+                                                                 String agrupacioKey,
+                                                                 String valueKey) {
         return files.stream()
-                .map(f -> Map.of(agrupacioKey, f.get(agrupacioKey), valueKey, (Object) toDouble(f.get(valueKey))))
-                .collect(Collectors.toList());
+            .map(f -> Map.of(agrupacioKey, f.get(agrupacioKey), valueKey, (Object) toDouble(f.get(valueKey))))
+            .collect(Collectors.toList());
     }
 
-    private List<Map<String, Object>> groupByAndAggregate(List<Map<String, String>> files, String groupByKey, String aggregateKey) {
+    private List<Map<String, Object>> groupByAndAggregate(List<Map<String, String>> files,
+                                                          String groupByKey,
+                                                          String aggregateKey) {
         return files.stream()
-                .collect(Collectors.groupingBy(
-                        f -> f.get(groupByKey),
-                        Collectors.summingDouble(f -> toDouble(f.get(aggregateKey)))
-                ))
-                .entrySet().stream()
-                .map(entry -> Map.<String, Object>of("label", entry.getKey(), "value", entry.getValue()))
-                .collect(Collectors.toList());
+            .collect(Collectors.groupingBy(
+                f -> f.get(groupByKey),
+                Collectors.summingDouble(f -> toDouble(f.get(aggregateKey)))
+            ))
+            .entrySet().stream()
+            .map(entry -> Map.<String, Object>of("label", entry.getKey(), "value", entry.getValue()))
+            .collect(Collectors.toList());
     }
 
-    private List<Map<String, Object>> groupByAndMapToSeries(List<Map<String, String>> files, String agrupacioKey, String descomposicioKey, String valueKey) {
+    private List<Map<String, Object>> groupByAndMapToSeries(List<Map<String, String>> files,
+                                                            String agrupacioKey,
+                                                            String descomposicioKey,
+                                                            String valueKey) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/yyyy");
         var agrupacioElement = files.get(0).get(agrupacioKey);
         var isNumeric = isNumeric(agrupacioElement);
         var isDate = isDate(agrupacioElement);
 
         return files.stream()
-                .collect(Collectors.groupingBy(f -> f.get(agrupacioKey)))
+            .collect(Collectors.groupingBy(f -> f.get(agrupacioKey)))
 //                        LinkedHashMap::new,
 //                        Collectors.toList()))
-                .entrySet().stream()
-                .sorted((e1, e2) -> {
-                    if (isDate)
-                        return LocalDate.parse(e1.getKey(), formatter).compareTo(LocalDate.parse(e2.getKey(), formatter));
-                    if (isNumeric)
-                        return toDouble(e1.getKey()).compareTo(toDouble(e2.getKey()));
-                    return e1.getKey().compareTo(e2.getKey());
-                })
-                .map(entry -> {
-                    Map<String, Object> mapped = new LinkedHashMap<>();
-                    mapped.put(agrupacioKey, entry.getKey());
-                    entry.getValue().forEach(f -> mapped.put(f.get(descomposicioKey), toDouble(f.get(valueKey))));
-                    return mapped;
-                })
-                .collect(Collectors.toList());
+            .entrySet().stream()
+            .sorted((e1, e2) -> {
+                if (isDate)
+                    return LocalDate.parse(e1.getKey(), formatter).compareTo(LocalDate.parse(e2.getKey(), formatter));
+                if (isNumeric)
+                    return toDouble(e1.getKey()).compareTo(toDouble(e2.getKey()));
+                return e1.getKey().compareTo(e2.getKey());
+            })
+            .map(entry -> {
+                Map<String, Object> mapped = new LinkedHashMap<>();
+                mapped.put(agrupacioKey, entry.getKey());
+                entry.getValue().forEach(f -> mapped.put(f.get(descomposicioKey), toDouble(f.get(valueKey))));
+                return mapped;
+            })
+            .collect(Collectors.toList());
     }
 
     private boolean isNumeric(String valor) {
         if (valor == null || valor.isEmpty()) return false;
         return valor.matches("-?\\d+(\\.\\d+)?");
     }
+
     private boolean isDate(String valor) {
         if (valor == null || valor.isEmpty()) return false;
         try {
@@ -456,43 +470,47 @@ public class ConsultaEstadisticaHelper {
 
     }
 
-    private List<Map<String, Object>> convertFilesToSeriesWithKeys(List<Map<String, String>> files, List<String> keys, String agrupacioKey, TipusGraficEnum tipusGrafic) {
+    private List<Map<String, Object>> convertFilesToSeriesWithKeys(List<Map<String, String>> files,
+                                                                   List<String> keys,
+                                                                   String agrupacioKey,
+                                                                   TipusGraficEnum tipusGrafic) {
         if (tipusGrafic == TipusGraficEnum.PIE_CHART) {
             return keys.stream()
-                    .map(key -> {
-                        double sum = files.stream()
-                                .mapToDouble(row -> toDouble(row.get(key)) != null ? toDouble(row.get(key)) : 0.0)
-                                .sum();
-                        return Map.<String, Object>of("label", key, "value", sum);
-                    })
-                    .collect(Collectors.toList());
+                .map(key -> {
+                    double sum = files.stream()
+                        .mapToDouble(row -> toDouble(row.get(key)) != null ? toDouble(row.get(key)) : 0.0)
+                        .sum();
+                    return Map.<String, Object>of("label", key, "value", sum);
+                })
+                .collect(Collectors.toList());
         }
 
         return files.stream()
-                .map(f -> {
-                    Map<String, Object> mapped = new LinkedHashMap<>();
-                    mapped.put(agrupacioKey, f.get(agrupacioKey));
-                    keys.forEach(k -> mapped.put(k, toDouble(f.get(k))));
-                    return mapped;
-                })
-                .collect(Collectors.toList());
+            .map(f -> {
+                Map<String, Object> mapped = new LinkedHashMap<>();
+                mapped.put(agrupacioKey, f.get(agrupacioKey));
+                keys.forEach(k -> mapped.put(k, toDouble(f.get(k))));
+                return mapped;
+            })
+            .collect(Collectors.toList());
     }
 
 
-    private InformeWidgetItem getDadesWidgetTaula(DashboardItemEntity dashboardItem, DadesComunsWidgetConsulta dadesComunsConsulta) throws ReportGenerationException {
-        EstadisticaTaulaWidgetEntity widget = (EstadisticaTaulaWidgetEntity)dashboardItem.getWidget();
+    private InformeWidgetItem getDadesWidgetTaula(DashboardItemEntity dashboardItem,
+                                                  DadesComunsWidgetConsulta dadesComunsConsulta) throws ReportGenerationException {
+        EstadisticaTaulaWidgetEntity widget = (EstadisticaTaulaWidgetEntity) dashboardItem.getWidget();
         // Mapa de dimensions per filtrar la consulta
         Map<String, List<String>> dimensionsFiltre = widget.getDimensionsValor() != null && !widget.getDimensionsValor().isEmpty()
-                ? createDimensionsFiltre(widget.getDimensionsValor())
-                : new HashMap<>();
+            ? createDimensionsFiltre(widget.getDimensionsValor())
+            : new HashMap<>();
         // Indicadors a calcular
         List<IndicadorAgregacio> indicadorsAgregacio = widget.getColumnes().stream()
-                .map(columna -> IndicadorAgregacio.builder()
-                        .indicadorCodi(columna.getIndicador().getCodi())
-                        .agregacio(columna.getAgregacio())
-                        .unitatAgregacio(columna.getUnitatAgregacio())
-                        .build())
-                .collect(Collectors.toList());
+            .map(columna -> IndicadorAgregacio.builder()
+                .indicadorCodi(columna.getIndicador().getCodi())
+                .agregacio(columna.getAgregacio())
+                .unitatAgregacio(columna.getUnitatAgregacio())
+                .build())
+            .collect(Collectors.toList());
         // Dimensió utilitzada per agrupar
         String dimensioAgrupacioCodi = widget.getDimensioAgrupacio() != null ? widget.getDimensioAgrupacio().getCodi() : null;
 
@@ -504,40 +522,66 @@ public class ConsultaEstadisticaHelper {
         });
 
         List<Map<String, String>> files = fetRepository.getValorsTaulaAgregat(
-                dadesComunsConsulta.getEntornAppId(),
-                dadesComunsConsulta.getPeriodeDates().getStart(),
-                dadesComunsConsulta.getPeriodeDates().getEnd(),
-                dimensionsFiltre,
-                indicadorsAgregacio,
-                dimensioAgrupacioCodi);
+            dadesComunsConsulta.getEntornAppId(),
+            dadesComunsConsulta.getPeriodeDates().getStart(),
+            dadesComunsConsulta.getPeriodeDates().getEnd(),
+            dimensionsFiltre,
+            indicadorsAgregacio,
+            dimensioAgrupacioCodi);
 
         DimensioEntity dimensioEntity = dimensioRepository.findByCodiAndEntornAppId(dimensioAgrupacioCodi, dadesComunsConsulta.getEntornAppId()).orElse(null);
         if (dimensioEntity != null && TipusDimensioEnum.TIPUS_AMB_UNITAT_ORG.contains(dimensioEntity.getTipus())) {
+            Set<String> codisAgrupacio = files.stream()
+                .map(c -> c.get("agrupacio"))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+            Map<String, String> codiNomPerCodi = findUnitatsOrganitzativesCodiNomByCodiInBatches(codisAgrupacio);
             files = files.stream().peek(c -> {
-                if (c.containsKey("agrupacio")) {
-                    unitatOrganitzativaRepository.findByCodi(c.get("agrupacio")).ifPresent(u ->
-                        c.put("agrupacio", u.getCodiNom())
-                    );
+                String codi = c.get("agrupacio");
+                if (codi != null && codiNomPerCodi.containsKey(codi)) {
+                    c.put("agrupacio", codiNomPerCodi.get(codi));
                 }
             }).collect(Collectors.toList());
         }
 
         return InformeWidgetTaulaItem.builder()
-                .dashboardItemId(dashboardItem.getId())
-                .widgetId(dashboardItem.getWidget().getId())
-                .tipus(WidgetTipus.TAULA)
-                .entornCodi(dadesComunsConsulta.getEntornCodi())
-                .titol(widget.getTitol())
-                .titolAgrupament(widget.getDimensioAgrupacio().getDescripcio())
-                .columnes(columnes)
-                .files(files)
-                .atributsVisuals((AtributsVisualsTaula) dadesComunsConsulta.getAtributsVisuals())
-                .posX(dashboardItem.getPosX())
-                .posY(dashboardItem.getPosY())
-                .width(dashboardItem.getWidth())
-                .height(dashboardItem.getHeight())
-                .destacat(Boolean.TRUE.equals(dashboardItem.getDestacat()))
-                .build();
+            .dashboardItemId(dashboardItem.getId())
+            .widgetId(dashboardItem.getWidget().getId())
+            .tipus(WidgetTipus.TAULA)
+            .entornCodi(dadesComunsConsulta.getEntornCodi())
+            .titol(widget.getTitol())
+            .titolAgrupament(widget.getDimensioAgrupacio().getDescripcio())
+            .columnes(columnes)
+            .files(files)
+            .atributsVisuals((AtributsVisualsTaula) dadesComunsConsulta.getAtributsVisuals())
+            .posX(dashboardItem.getPosX())
+            .posY(dashboardItem.getPosY())
+            .width(dashboardItem.getWidth())
+            .height(dashboardItem.getHeight())
+            .destacat(Boolean.TRUE.equals(dashboardItem.getDestacat()))
+            .build();
+    }
+
+    private Map<String, String> findUnitatsOrganitzativesCodiNomByCodiInBatches(Set<String> codis) {
+        if (codis == null || codis.isEmpty()) {
+            return Map.of();
+        }
+
+        List<String> codiList = new ArrayList<>(codis);
+        Map<String, String> result = new HashMap<>();
+
+        for (int fromIndex = 0; fromIndex < codiList.size(); fromIndex += CODI_IN_QUERY_BATCH_SIZE) {
+            int toIndex = Math.min(fromIndex + CODI_IN_QUERY_BATCH_SIZE, codiList.size());
+            List<String> batch = codiList.subList(fromIndex, toIndex);
+
+            unitatOrganitzativaRepository.findByCodiIn(batch).forEach(uo -> {
+                if (uo.getCodi() != null) {
+                    result.putIfAbsent(uo.getCodi(), uo.getCodiNom());
+                }
+            });
+        }
+
+        return result;
     }
 
     public static String[] getColumnNames(List indicadorsList) {
@@ -551,7 +595,9 @@ public class ConsultaEstadisticaHelper {
     }
 
 
-    private String calculateValorSimple(EstadisticaSimpleWidgetEntity widget, PeriodeDates periodeConsulta, Long entornAppId) {
+    private String calculateValorSimple(EstadisticaSimpleWidgetEntity widget,
+                                        PeriodeDates periodeConsulta,
+                                        Long entornAppId) {
         if (periodeConsulta == null || periodeConsulta.start == null || periodeConsulta.end == null) {
             return null;
         }
@@ -564,29 +610,32 @@ public class ConsultaEstadisticaHelper {
         PeriodeUnitat unitatAgregacio = widget.getIndicadorInfo().getUnitatAgregacio();
 
         IndicadorAgregacio indicadorAgregacio = IndicadorAgregacio.builder()
-                .indicadorCodi(indicadorCodi)
-                .agregacio(agregacio)
-                .unitatAgregacio(unitatAgregacio)
-                .build();
+            .indicadorCodi(indicadorCodi)
+            .agregacio(agregacio)
+            .unitatAgregacio(unitatAgregacio)
+            .build();
 
         // Mapa de dimensions per filtrar la consulta
         Map<String, List<String>> dimensionsFiltre = widget.getDimensionsValor() != null && !widget.getDimensionsValor().isEmpty()
-                ? createDimensionsFiltre(widget.getDimensionsValor())
-                : new HashMap<>();
+            ? createDimensionsFiltre(widget.getDimensionsValor())
+            : new HashMap<>();
 
 
         // Get the aggregated value directly from the database
         return fetRepository.getValorSimpleAgregat(
-                entornAppId,
-                periodeConsulta.start,
-                periodeConsulta.end,
-                dimensionsFiltre,
-                indicadorAgregacio);
+            entornAppId,
+            periodeConsulta.start,
+            periodeConsulta.end,
+            dimensionsFiltre,
+            indicadorAgregacio);
     }
 
-    private String calculateCanviPercentual(EstadisticaSimpleWidgetEntity widget, String valorConsulta, PeriodeDates periodePrevi, Long entornAppId) {
+    private String calculateCanviPercentual(EstadisticaSimpleWidgetEntity widget,
+                                            String valorConsulta,
+                                            PeriodeDates periodePrevi,
+                                            Long entornAppId) {
         if (!widget.isCompararPeriodeAnterior()
-                || periodePrevi == null || periodePrevi.start == null || periodePrevi.end == null) {
+            || periodePrevi == null || periodePrevi.start == null || periodePrevi.end == null) {
             return null;
         }
         Double resultatActual = toDouble(valorConsulta);
@@ -625,11 +674,11 @@ public class ConsultaEstadisticaHelper {
         AtributsVisuals atributsVisuals = resolveAtributsVisuals(dashboardItem, temaFosc);
 
         return DadesComunsWidgetConsulta.builder()
-                .entornAppId(entornApp.getId())
-                .entornCodi(entorn.getCodi())
-                .periodeDates(periodeDates)
-                .atributsVisuals(atributsVisuals)
-                .build();
+            .entornAppId(entornApp.getId())
+            .entornCodi(entorn.getCodi())
+            .periodeDates(periodeDates)
+            .atributsVisuals(atributsVisuals)
+            .build();
     }
 
     public AtributsVisuals resolveAtributsVisuals(DashboardItemEntity dashboardItem, boolean temaFosc) {
@@ -643,13 +692,13 @@ public class ConsultaEstadisticaHelper {
             resolved = resolved.merge(atributsVisualsWidget);
         }
         PlantillaEntity plantilla = dashboardItem.getPlantilla() != null
-                ? dashboardItem.getPlantilla()
-                : dashboardItem.getDashboard() != null ? dashboardItem.getDashboard().getPlantilla() : null;
+            ? dashboardItem.getPlantilla()
+            : dashboardItem.getDashboard() != null ? dashboardItem.getDashboard().getPlantilla() : null;
         if (plantilla != null) {
             boolean destacat = Boolean.TRUE.equals(dashboardItem.getDestacat());
             PaletteGroupType groupType = temaFosc
-                    ? (destacat ? PaletteGroupType.DARK_HIGHLIGHTED : PaletteGroupType.DARK)
-                    : (destacat ? PaletteGroupType.LIGHT_HIGHLIGHTED : PaletteGroupType.LIGHT);
+                ? (destacat ? PaletteGroupType.DARK_HIGHLIGHTED : PaletteGroupType.DARK)
+                : (destacat ? PaletteGroupType.LIGHT_HIGHLIGHTED : PaletteGroupType.LIGHT);
             dashboardStyleResolverHelper.applyTemplateDefaults(resolved, plantilla, groupType, widgetStyleScope(dashboardItem));
         }
         return ensureAtributsVisualsType(dashboardItem, resolved);
@@ -738,16 +787,17 @@ public class ConsultaEstadisticaHelper {
 
     private Fet toFet(FetEntity fetEntity) {
         return Fet.builder()
-                .entornAppId(fetEntity.getEntornAppId())
-                .temps(Temps.builder().data(fetEntity.getTemps().getData()).build())
-                .dimensionsJson(fetEntity.getDimensionsJson())
-                .indicadorsJson(fetEntity.getIndicadorsJson())
-                .build();
+            .entornAppId(fetEntity.getEntornAppId())
+            .temps(Temps.builder().data(fetEntity.getTemps().getData()).build())
+            .dimensionsJson(fetEntity.getDimensionsJson())
+            .indicadorsJson(fetEntity.getIndicadorsJson())
+            .build();
     }
+
     private List<Fet> toFets(List<FetEntity> fetEntities) {
         return fetEntities.stream().
-                map(this::toFet).
-                collect(Collectors.toList());
+            map(this::toFet).
+            collect(Collectors.toList());
     }
 
 }
