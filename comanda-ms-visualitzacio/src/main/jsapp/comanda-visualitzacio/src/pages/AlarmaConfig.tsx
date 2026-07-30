@@ -796,12 +796,12 @@ const AlarmaConfigFilter = (props: AlarmaConfigFilterProps) => {
                     <IconButton onClick={netejar} title={t($ => $.components.clear)}>
                         <Icon>filter_alt_off</Icon>
                     </IconButton>
-                    <IconButton
+                    {isCurrentUserAdmin && <IconButton
                         onClick={() => setMoreFields(mf => !mf)}
                         title={t($ => $.page.alarmaConfig.filter.more)}
                         color={moreFields ? 'primary' : 'default'}>
                         <Icon>filter_list</Icon>
-                    </IconButton>
+                    </IconButton>}
                 </Box>
             </Box>
         </MuiFilter>

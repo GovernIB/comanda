@@ -323,7 +323,7 @@ const Avis = () => {
         entornAppFilter: Record<string, unknown> | undefined;
         expandedFilter: Record<string, unknown> | undefined;
     }>({ entornAppFilter: undefined, expandedFilter: undefined });
-    const noLlegit = filterData?.entornAppFilter?.noLlegit;
+    const noLlegit = filterData?.expandedFilter?.noLlegit;
     // Ambos filtros deberían inicializar su estado de alguna manera, si no, consideramos que no se ha inicializado aún
     const isFilterDataReady = filterData?.entornAppFilter && filterData?.expandedFilter;
     const filter = avisFilterBuilder({...filterData?.entornAppFilter, ...filterData?.expandedFilter}, currentUserCodi ?? null);
