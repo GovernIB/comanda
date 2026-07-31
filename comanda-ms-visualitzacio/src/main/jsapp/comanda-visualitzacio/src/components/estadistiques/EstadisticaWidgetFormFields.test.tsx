@@ -1,7 +1,7 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import EstadisticaWidgetFormFields from './EstadisticaWidgetFormFields';
+import EstadisticaWidgetFormFields, { PersonalitzatFields, hasVisualOverridesTitol } from './EstadisticaWidgetFormFields';
 
 const mocks = vi.hoisted(() => ({
     useFormContextMock: vi.fn(),
@@ -154,5 +154,66 @@ describe('EstadisticaWidgetFormFields', () => {
         expect(screen.getByTestId('form-field-absolutPeriodeUnitat')).toBeInTheDocument();
         expect(screen.getByTestId('form-field-absolutPeriodeInici')).toBeInTheDocument();
         expect(screen.getByTestId('form-field-absolutPeriodeFi')).toBeInTheDocument();
+    });
+});
+
+describe('PersonalitzatFields', () => {
+    afterEach(() => {
+        vi.clearAllMocks();
+    });
+
+    const renderPersonalitzatFields = (hasOverrides: boolean) => {
+        mocks.useFormContextMock.mockReturnValue({ data: {}, apiRef: { current: { setFieldValue: vi.fn() } } });
+        return render(
+            <PersonalitzatFields
+                personalitzatLabel="Personalitzat"
+                personalitzatHelp="Ajuda"
+                personalitzatBadge="Hi ha elements personalitzats"
+                hasOverrides={hasOverrides}
+                onExpandedChange={vi.fn()}
+            />
+        );
+    };
+
+    it('PersonalitzatFields_quanNoHiHaCampsEmplenats_noMostraLaMarca', () => {
+        // Reprodueix el bug reportat: la marca no s'ha de mostrar si l'usuari no ha emplenat cap camp.
+        renderPersonalitzatFields(false);
+
+        expect(screen.queryByTestId('personalitzat-badge')).not.toBeInTheDocument();
+    });
+
+    it('PersonalitzatFields_quanHiHaCampsEmplenats_mostraLaMarca', () => {
+        // Verifica que la marca apareix quan el pare detecta valors que sobreescriuen la plantilla.
+        renderPersonalitzatFields(true);
+
+        expect(screen.getByTestId('personalitzat-badge')).toBeInTheDocument();
+    });
+
+    it('PersonalitzatFields_quanEsPlegaLaSeccio_laMarcaEsManteSiHiHaOverrides', () => {
+        // Comprova que plegar la secció de personalització no amaga la marca ni esborra els overrides.
+        renderPersonalitzatFields(true);
+
+        fireEvent.click(screen.getByRole('button', { name: /Personalitzat/i }));
+
+        expect(screen.getByTestId('personalitzat-badge')).toBeInTheDocument();
+    });
+});
+
+describe('hasVisualOverridesTitol', () => {
+    it('hasVisualOverridesTitol_senseCapCampEmplenat_retornaFals', () => {
+        expect(hasVisualOverridesTitol({})).toBe(false);
+        expect(hasVisualOverridesTitol({ titol: 'Text', tipusTitol: 'TIPUS_1', plantilla: { id: 1 } })).toBe(false);
+    });
+
+    it('hasVisualOverridesTitol_ambColorSubtitolEmplenat_retornaCert', () => {
+        expect(hasVisualOverridesTitol({ colorSubtitol: '#123456' })).toBe(true);
+    });
+
+    it('hasVisualOverridesTitol_ambMidaFontSubtitolEmplenat_retornaCert', () => {
+        expect(hasVisualOverridesTitol({ midaFontSubtitol: 16 })).toBe(true);
+    });
+
+    it('hasVisualOverridesTitol_ambMostrarVoraEmplenat_retornaCert', () => {
+        expect(hasVisualOverridesTitol({ mostrarVora: true })).toBe(true);
     });
 });

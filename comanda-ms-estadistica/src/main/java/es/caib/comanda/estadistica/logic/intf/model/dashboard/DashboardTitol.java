@@ -81,6 +81,7 @@ public class DashboardTitol extends BaseResource<Long> {
     private String colorVora;
     private Integer ampleVora;
     private Boolean destacat;
+    private Boolean personalitzat;
     private ResourceReference<Plantilla, Long> plantilla;
 
 }

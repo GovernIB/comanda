@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import EstadisticaDashboardEdit, { AfegirTitolFormContent } from './EstadisticaDashboardEdit';
+import EstadisticaDashboardEdit from './EstadisticaDashboardEdit';
 
 const mocks = vi.hoisted(() => ({
     useParamsMock: vi.fn(),
@@ -15,28 +15,27 @@ const mocks = vi.hoisted(() => ({
     createDashboardItemMock: vi.fn(),
     patchDashboardItemMock: vi.fn(),
     patchDashboardTitolMock: vi.fn(),
+    getOneDashboardItemMock: vi.fn(),
+    deleteDashboardItemMock: vi.fn(),
+    createDashboardTitolMock: vi.fn(),
+    getOneDashboardTitolMock: vi.fn(),
+    deleteDashboardTitolMock: vi.fn(),
+    getOneSimpleWidgetMock: vi.fn(),
+    createSimpleWidgetMock: vi.fn(),
+    messageDialogShowMock: vi.fn(),
     findWidgetsMock: vi.fn(),
     tMock: vi.fn((selector: any) =>
         selector({
             page: {
                 dashboards: {
                     title: 'Dashboards',
-                    components: {
-                        llistar: 'Llistar',
-                        afegir: 'Afegir',
-                    },
                     action: {
-                        llistarWidget: { label: 'Llistar widgets' },
-                        llistarTitle: { label: 'Llistar títols' },
                         addWidget: {
-                            title: 'Afegir widget',
-                            label: 'Afegir widget',
                             success: 'Widget afegit',
                             error: 'Error afegint widget',
                         },
-                        afegirTitle: {
-                            title: 'Afegir títol',
-                            label: 'Afegir títol',
+                        createComponent: {
+                            label: 'Crear component',
                         },
                         patchItem: {
                             success: 'Guardat',
@@ -118,6 +117,7 @@ vi.mock('reactlib', async (importOriginal) => {
     ),
     useBaseAppContext: () => ({
         temporalMessageShow: mocks.temporalMessageShowMock,
+        messageDialogShow: mocks.messageDialogShowMock,
         t: (key: string) => key,
         goBack: mocks.goBackMock,
     }),
@@ -128,15 +128,26 @@ vi.mock('reactlib', async (importOriginal) => {
                 patch: mocks.patchDashboardItemMock,
                 create: mocks.createDashboardItemMock,
                 find: mocks.findWidgetsMock,
-                getOne: vi.fn(),
+                getOne: mocks.getOneDashboardItemMock,
+                delete: mocks.deleteDashboardItemMock,
             };
         }
         if (resourceName === 'dashboardTitol') {
             return {
                 isReady: true,
                 patch: mocks.patchDashboardTitolMock,
+                create: mocks.createDashboardTitolMock,
                 find: mocks.findWidgetsMock,
-                getOne: vi.fn(),
+                getOne: mocks.getOneDashboardTitolMock,
+                delete: mocks.deleteDashboardTitolMock,
+            };
+        }
+        if (resourceName === 'estadisticaSimpleWidget') {
+            return {
+                isReady: true,
+                getOne: mocks.getOneSimpleWidgetMock,
+                create: mocks.createSimpleWidgetMock,
+                find: mocks.findWidgetsMock,
             };
         }
         if (resourceName === 'entorn') {
@@ -245,10 +256,14 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', () => ({
         dashboardId,
         editable,
         onGridLayoutItemsChange,
+        onDeleteItem,
+        onDuplicateItem,
     }: {
         dashboardId: number;
         editable: boolean;
         onGridLayoutItemsChange?: (items: Array<{ id: number; x: number; y: number; w: number; h: number; type?: string }>) => void;
+        onDeleteItem?: (entity: any) => void;
+        onDuplicateItem?: (entity: any) => void;
     }) => (
         <div>
             <div>{`DashboardGrid ${dashboardId} ${String(editable)}`}</div>
@@ -260,13 +275,21 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', () => ({
             >
                 Moure layout
             </button>
+            <button
+                type="button"
+                onClick={() => onDeleteItem?.({ tipus: 'SIMPLE', dashboardItemId: 1, widgetId: 5 })}
+            >
+                Eliminar element de test
+            </button>
+            <button
+                type="button"
+                onClick={() => onDuplicateItem?.({ tipus: 'SIMPLE', dashboardItemId: 1, widgetId: 5 })}
+            >
+                Duplicar element de test
+            </button>
         </div>
     ),
     useMapDashboardItems: (widgets: unknown[]) => mocks.useMapDashboardItemsMock(widgets),
-}));
-
-vi.mock('../components/estadistiques/TitolWidgetVisualization.tsx', () => ({
-    default: () => <div>Preview títol</div>,
 }));
 
 vi.mock('../components/PageTitle.tsx', () => ({
@@ -281,40 +304,27 @@ vi.mock('../components/estadistiques/DashboardEditorSidePanel.tsx', () => ({
     default: () => <div>Editor side panel</div>,
 }));
 
-vi.mock('../components/ButtonMenu.tsx', () => ({
+vi.mock('../components/estadistiques/WidgetCreationWizard.tsx', () => ({
     default: ({
-        title,
-        children,
+        open,
+        onCreated,
     }: {
-        title: string;
-        children: React.ReactNode;
-    }) => (
-        <div>
-            <button type="button">{title}</button>
-            <div>{children}</div>
-        </div>
-    ),
+        open: boolean;
+        onCreated?: () => void;
+    }) =>
+        open ? (
+            <div>
+                <div>Assistent de creació de widgets</div>
+                <button type="button" onClick={() => onCreated?.()}>
+                    Simular creació completada
+                </button>
+            </div>
+        ) : null,
 }));
 
 vi.mock('../AppRoutes.tsx', () => ({
     DASHBOARDS_PATH: 'dashboards',
 }));
-
-describe('AfegirTitolFormContent', () => {
-    afterEach(() => {
-        vi.clearAllMocks();
-    });
-
-    it('AfegirTitolFormContent_quanMostraVora_renderitzaElsCampsAddicionals', () => {
-        // Comprova que el formulari del títol mostra la previsualització i els camps de vora quan estan actius.
-        render(<AfegirTitolFormContent />);
-
-        expect(screen.getByText('Preview títol')).toBeInTheDocument();
-        expect(screen.getByTestId('field-titol')).toBeInTheDocument();
-        expect(screen.getByTestId('field-colorVora')).toHaveTextContent('colorVora:color');
-        expect(screen.getByTestId('field-ampleVora')).toBeInTheDocument();
-    });
-});
 
 describe('EstadisticaDashboardEdit', () => {
     beforeEach(() => {
@@ -334,6 +344,14 @@ describe('EstadisticaDashboardEdit', () => {
         mocks.createDashboardItemMock.mockResolvedValue(undefined);
         mocks.patchDashboardItemMock.mockResolvedValue(undefined);
         mocks.patchDashboardTitolMock.mockResolvedValue(undefined);
+        mocks.getOneDashboardItemMock.mockResolvedValue({ id: 1, posX: 0, posY: 3, width: 3, height: 3, entornId: 2, destacat: false });
+        mocks.deleteDashboardItemMock.mockResolvedValue(undefined);
+        mocks.createDashboardTitolMock.mockResolvedValue({ id: 99 });
+        mocks.getOneDashboardTitolMock.mockResolvedValue({ id: 2, titol: 'Títol', posX: 0, posY: 3, width: 6, height: 1 });
+        mocks.deleteDashboardTitolMock.mockResolvedValue(undefined);
+        mocks.getOneSimpleWidgetMock.mockResolvedValue({ id: 5, titol: 'Widget test', aplicacio: { id: 1 } });
+        mocks.createSimpleWidgetMock.mockResolvedValue({ id: 6 });
+        mocks.messageDialogShowMock.mockResolvedValue(true);
         mocks.findWidgetsMock.mockResolvedValue({ rows: [{ id: 5, titol: 'Widget test' }] });
         mocks.showContentDialogMock.mockImplementation(() => undefined);
         mocks.showFormDialogMock.mockResolvedValue(undefined);
@@ -370,8 +388,7 @@ describe('EstadisticaDashboardEdit', () => {
 
         expect(screen.getByRole('heading', { name: 'Dashboards' })).toBeInTheDocument();
         expect(screen.getByText('Dashboard 12')).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Llistar' })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Afegir' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Crear component' })).toBeInTheDocument();
     });
 
     it('EstadisticaDashboardEdit_quanHiHaErrorGeneric_mostraLalertaDeCarrega', () => {
@@ -387,21 +404,8 @@ describe('EstadisticaDashboardEdit', () => {
         expect(screen.getByText('Error de càrrega')).toBeInTheDocument();
     });
 
-    it('EstadisticaDashboardEdit_quanEsLlistenElsWidgets_obriElDialegDeContingut', async () => {
-        // Comprova que el menú de llistar obri el diàleg amb el contingut de widgets del dashboard.
-        render(<EstadisticaDashboardEdit />);
-
-        await waitFor(() => {
-            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
-        });
-
-        fireEvent.click(screen.getByText('Llistar widgets'));
-
-        expect(mocks.showContentDialogMock).toHaveBeenCalled();
-    });
-
-    it('EstadisticaDashboardEdit_quanSobraElFormulariDeTitol_obriElDialegIRefrescaEnTancar', async () => {
-        // Verifica que l'acció d'afegir títol obri l'editor lateral de títol sense errors de context extern.
+    it('EstadisticaDashboardEdit_quanEsPremCrearComponent_obreLAssistentIRefrescaEnCrear', async () => {
+        // Verifica que el botó "Crear component" obre l'assistent de creació i que en completar-se refresca els widgets.
         const forceRefreshMock = vi.fn();
         mocks.useDashboardWidgetsMock.mockReturnValue({
             dashboardWidgets: [{ dashboardItemId: 1 }],
@@ -416,37 +420,15 @@ describe('EstadisticaDashboardEdit', () => {
             expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByText('Afegir títol'));
+        fireEvent.click(screen.getByRole('button', { name: 'Crear component' }));
 
         await waitFor(() => {
-            expect(screen.getByText('Editor side panel')).toBeInTheDocument();
+            expect(screen.getByText('Assistent de creació de widgets')).toBeInTheDocument();
         });
 
-        expect(forceRefreshMock).not.toHaveBeenCalled();
-    });
+        fireEvent.click(screen.getByText('Simular creació completada'));
 
-    it('EstadisticaDashboardEdit_quanSafaUnWidgetNou_elCreaIMostraExit', async () => {
-        // Comprova que des del menú d'afegir s'obre el panel lateral d'edició
-        const forceRefreshMock = vi.fn();
-        mocks.useDashboardWidgetsMock.mockReturnValue({
-            dashboardWidgets: [{ dashboardItemId: 1 }],
-            errorDashboardWidgets: [],
-            loadingWidgetPositions: false,
-            forceRefresh: forceRefreshMock,
-        });
-
-        render(<EstadisticaDashboardEdit />);
-
-        await waitFor(() => {
-            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
-        });
-
-        fireEvent.click(screen.getByRole('button', { name: 'Afegir' }));
-        fireEvent.click(screen.getByText('Afegir widget'));
-
-        await waitFor(() => { expect(screen.getByText('Editor side panel')).toBeInTheDocument(); });
-
-        expect(forceRefreshMock).not.toHaveBeenCalled();
+        expect(forceRefreshMock).toHaveBeenCalled();
     });
 
     it('EstadisticaDashboardEdit_quanCanviaElLayout_guardaElsCanvisINotificaExit', async () => {
@@ -474,7 +456,7 @@ describe('EstadisticaDashboardEdit', () => {
     });
 
     it('EstadisticaDashboardEdit_quanFallaLaCreacioDunWidget_mostraLError', async () => {
-        // Comprova que el panel lateral d'edició s'obre correctament per gestionar errors
+        // Comprova que l'assistent de creació s'obre correctament tot i que la creació posterior pugui fallar
         mocks.createDashboardItemMock.mockRejectedValueOnce(new Error('boom'));
 
         render(<EstadisticaDashboardEdit />);
@@ -483,10 +465,11 @@ describe('EstadisticaDashboardEdit', () => {
             expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByRole('button', { name: 'Afegir' }));
-        fireEvent.click(screen.getByText('Afegir widget'));
+        fireEvent.click(screen.getByRole('button', { name: 'Crear component' }));
 
-        await waitFor(() => { expect(screen.getByText('Editor side panel')).toBeInTheDocument(); });
+        await waitFor(() => {
+            expect(screen.getByText('Assistent de creació de widgets')).toBeInTheDocument();
+        });
     });
 
     it('EstadisticaDashboardEdit_quanFallaElGuardatDelLayout_mostraLError', async () => {
@@ -508,5 +491,140 @@ describe('EstadisticaDashboardEdit', () => {
                 'error'
             );
         });
+    });
+
+    it('EstadisticaDashboardEdit_quanEsContrauUnPanell_esRecordaEntreMuntatges', async () => {
+        // L'estat de contret/expandit de cada panell s'ha de recordar entre sessions (localStorage).
+        localStorage.clear();
+        const { unmount } = render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
+        });
+
+        const leftToggle = screen.getAllByTitle('Compactar panell')[0];
+        fireEvent.click(leftToggle);
+
+        expect(localStorage.getItem('comanda.dashboardEdit.panelCollapsed.left')).toBe('true');
+        expect(localStorage.getItem('comanda.dashboardEdit.panelCollapsed.right')).not.toBe('true');
+
+        unmount();
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
+        });
+        // Només queda un botó "Compactar panell" (el dret), ja que l'esquerre s'ha quedat contret.
+        expect(screen.getAllByTitle('Compactar panell')).toHaveLength(1);
+        expect(screen.getByTitle('Expandir panell')).toBeInTheDocument();
+    });
+
+    it('EstadisticaDashboardEdit_quanEsRedimensionaElPanellDret_esGuardaLaMidaAlLocalStorage', async () => {
+        // La mida del panell (no només si està contret) també s'ha de recordar entre sessions.
+        localStorage.clear();
+        const { unmount } = render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
+        });
+
+        const handle = screen.getByTestId('right-panel-resize-handle');
+        fireEvent.mouseDown(handle, { clientX: 500 });
+        fireEvent.mouseMove(document, { clientX: 440 }); // arrossegar cap a l'esquerra: panell més ample
+        fireEvent.mouseUp(document);
+
+        expect(localStorage.getItem('comanda.dashboardEdit.panelWidth.right')).toBe('500');
+
+        unmount();
+        const { container } = render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
+        });
+        const restoredHandle = container.querySelector(
+            '[data-testid="right-panel-resize-handle"]'
+        )?.parentElement as HTMLElement;
+        expect(getComputedStyle(restoredHandle).width).toBe('500px');
+    });
+
+    it('EstadisticaDashboardEdit_quanEsConfirmaEliminarDesDelMenuContextual_esborraIRefrescaElDashboard', async () => {
+        // El menú contextual "Eliminar" ha de demanar confirmació abans d'esborrar.
+        const forceRefreshMock = vi.fn();
+        mocks.useDashboardWidgetsMock.mockReturnValue({
+            dashboardWidgets: [{ dashboardItemId: 1, titol: 'Widget test' }],
+            errorDashboardWidgets: [],
+            loadingWidgetPositions: false,
+            forceRefresh: forceRefreshMock,
+        });
+
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Eliminar element de test' }));
+
+        await waitFor(() => {
+            expect(mocks.deleteDashboardItemMock).toHaveBeenCalledWith(1);
+        });
+        expect(forceRefreshMock).toHaveBeenCalled();
+    });
+
+    it('EstadisticaDashboardEdit_quanEsCancelaLaConfirmacio_noEsborraRes', async () => {
+        mocks.messageDialogShowMock.mockResolvedValue(false);
+
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Eliminar element de test' }));
+
+        await waitFor(() => {
+            expect(mocks.messageDialogShowMock).toHaveBeenCalled();
+        });
+        expect(mocks.deleteDashboardItemMock).not.toHaveBeenCalled();
+    });
+
+    it('EstadisticaDashboardEdit_quanEsPremDuplicarDesDelMenuContextual_creaUnNouWidgetAmbTitolSeqüencial', async () => {
+        // "Duplicar" ha de crear un widget nou amb les mateixes dades, afegint un número seqüencial al títol.
+        mocks.useDashboardWidgetsMock.mockReturnValue({
+            dashboardWidgets: [{ dashboardItemId: 1, titol: 'Widget test' }],
+            errorDashboardWidgets: [],
+            loadingWidgetPositions: false,
+            forceRefresh: vi.fn(),
+        });
+
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Duplicar element de test' }));
+
+        await waitFor(() => {
+            expect(mocks.createSimpleWidgetMock).toHaveBeenCalledWith({
+                data: expect.objectContaining({ titol: 'Widget test (2)', aplicacio: { id: 1 } }),
+            });
+        });
+        expect(mocks.createSimpleWidgetMock.mock.calls[0][0].data.id).toBeUndefined();
+
+        await waitFor(() => {
+            expect(mocks.createDashboardItemMock).toHaveBeenCalledWith({
+                data: expect.objectContaining({
+                    posX: 0,
+                    width: 3,
+                    height: 3,
+                    entornId: 2,
+                    dashboard: { id: '12' },
+                    widget: { id: 6 },
+                }),
+            });
+        });
+        expect(mocks.createDashboardItemMock.mock.calls[0][0].data.posY).toBeUndefined();
+        expect(mocks.createDashboardItemMock.mock.calls[0][0].data.id).toBeUndefined();
     });
 });

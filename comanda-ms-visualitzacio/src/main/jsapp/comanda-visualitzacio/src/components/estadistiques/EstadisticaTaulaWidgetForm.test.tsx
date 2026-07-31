@@ -15,6 +15,9 @@ const mocks = vi.hoisted(() => ({
                         preview: 'Previsualització',
                         configGeneral: 'Configuració general',
                         configTaula: 'Configuració de taula',
+                        help: {
+                            dimensioAgrupacio: 'Ajuda agrupació',
+                        },
                     },
                     taula: {
                         tableCols: 'Columnes de taula',
@@ -53,6 +56,7 @@ vi.mock('react-i18next', () => ({
 
 vi.mock('./EstadisticaWidgetFormFields', () => ({
     default: ({ children }: { children: React.ReactNode }) => <div data-testid="widget-form-fields">{children}</div>,
+    FieldHelp: ({ text }: { text: string }) => <div data-testid="field-help">{text}</div>,
 }));
 
 vi.mock('./WidgetPreview', () => ({

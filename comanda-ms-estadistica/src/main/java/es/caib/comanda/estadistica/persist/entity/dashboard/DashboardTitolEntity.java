@@ -68,6 +68,8 @@ public class DashboardTitolEntity extends BaseAuditableEntity<DashboardTitol> {
     private Integer ampleVora;
     @Column(name = "destacat")
     private Boolean destacat;
+    @Column(name = "personalitzat")
+    private Boolean personalitzat;
     @ManyToOne
     @JoinColumn(
             name = "plantilla_id",

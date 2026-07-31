@@ -17,6 +17,13 @@ const mocks = vi.hoisted(() => ({
                         graficBar: 'Config barres',
                         graficLin: 'Config línies',
                         configFont: 'Configuració de fonts',
+                        help: {
+                            tipusDades: 'Ajuda tipus dades',
+                            tempsAgrupacio: 'Ajuda temps agrupació',
+                            agregacio: 'Ajuda agregació',
+                            unitatAgregacio: 'Ajuda unitat agregació',
+                            agruparPerDimensioDescomposicio: 'Ajuda agrupar per dimensió',
+                        },
                     },
                     atributsVisuals: {
                         colorText: 'Color text',
@@ -44,8 +51,12 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('reactlib', () => ({
-    FormField: ({ name, disabled }: { name: string; disabled?: boolean }) => (
-        <div data-testid={`field-${name}`} data-disabled={disabled ? 'true' : 'false'}>
+    FormField: ({ name, disabled, required }: { name: string; disabled?: boolean; required?: boolean }) => (
+        <div
+            data-testid={`field-${name}`}
+            data-disabled={disabled ? 'true' : 'false'}
+            data-required={required ? 'true' : 'false'}
+        >
             {name}
         </div>
     ),
@@ -58,11 +69,12 @@ vi.mock('react-i18next', () => ({
 
 vi.mock('./EstadisticaWidgetFormFields', () => ({
     default: ({ children }: { children: React.ReactNode }) => <div data-testid="widget-form-fields">{children}</div>,
+    FieldHelp: ({ text }: { text: string }) => <div data-testid="field-help">{text}</div>,
 }));
 
 vi.mock('./WidgetPreview', () => ({
     WidgetPreview: ({ widgetType, widgetData }: { widgetType: string; widgetData: any }) => (
-        <div data-testid="widget-preview">
+        <div data-testid="widget-preview" data-colors-paleta={widgetData.colorsPaleta ?? ''}>
             {widgetType} - {widgetData.titol}
         </div>
     ),
@@ -86,7 +98,11 @@ vi.mock('./ColumnesTable.tsx', () => ({
 }));
 
 vi.mock('../FormFieldCustomAdvancedSearch', () => ({
-    default: ({ name }: { name: string }) => <div data-testid={`advanced-search-${name}`}>{name}</div>,
+    default: ({ name, required }: { name: string; required?: boolean }) => (
+        <div data-testid={`advanced-search-${name}`} data-required={required ? 'true' : 'false'}>
+            {name}
+        </div>
+    ),
 }));
 
 describe('EstadisticaGraficWidgetForm', () => {
@@ -145,5 +161,91 @@ describe('EstadisticaGraficWidgetForm', () => {
 
         expect(screen.getByTestId('columnes-table-indicadorsInfo')).toBeInTheDocument();
         expect(screen.getByTestId('color-palette-selector')).toBeInTheDocument();
+    });
+
+    it('EstadisticaGraficWidgetForm_quanNoHiHaColorsPaletaPropia_noEnviaCapValorPerDefecteALaPrevisualitzacio', () => {
+        // La previsualització ha de poder aplicar els colors de la plantilla: si aquí s'enviàs un
+        // valor per defecte, resolveWidgetStyles el consideraria una sobreescriptura i mai es veurien
+        // els colors de la plantilla al gràfic (bug reportat: "no mostra correctament els colors").
+        mocks.useFormContextMock.mockReturnValue({
+            data: { aplicacio: { id: 7 }, tipusGrafic: 'BAR_CHART' },
+            apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
+        });
+
+        render(<EstadisticaGraficWidgetForm />);
+
+        expect(screen.getByTestId('widget-preview')).toHaveAttribute('data-colors-paleta', '');
+    });
+
+    it('EstadisticaGraficWidgetForm_quanEsUnIndicadorAmbDescomposicio_ordenaCampsEn3FilesIMarcaElsObligatoris', () => {
+        // Reprodueix l'ordre demanat: 1a fila (tipus gràfic, tipus dades), 2a fila (indicador, títol,
+        // agregació, unitat), 3a fila (temps agrupació, checkbox, dimensió de descomposició). A més,
+        // els camps que el backend només valida via el validador de creuament de camps (no @NotNull al
+        // model) han de mostrar-se igualment com a obligatoris quan calgui.
+        mocks.useFormContextMock.mockReturnValue({
+            data: {
+                aplicacio: { id: 7 },
+                tipusGrafic: 'LINE_CHART',
+                tipusDades: 'UN_INDICADOR_AMB_DESCOMPOSICIO',
+                agregacio: 'SUM',
+            },
+            apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
+        });
+
+        const { container } = render(<EstadisticaGraficWidgetForm />);
+
+        const relevantTestIds = new Set([
+            'field-tipusGrafic',
+            'field-tipusDades',
+            'advanced-search-indicador',
+            'field-titolIndicador',
+            'field-agregacio',
+            'field-unitatAgregacio',
+            'field-tempsAgrupacio',
+            'field-agruparPerDimensioDescomposicio',
+            'field-descomposicioDimensio',
+        ]);
+        const order = Array.from(container.querySelectorAll('[data-testid]'))
+            .map(el => el.getAttribute('data-testid'))
+            .filter((id): id is string => !!id && relevantTestIds.has(id));
+        expect(order).toEqual([
+            'field-tipusGrafic',
+            'field-tipusDades',
+            'advanced-search-indicador',
+            'field-titolIndicador',
+            'field-agregacio',
+            'field-unitatAgregacio',
+            'field-tempsAgrupacio',
+            'field-agruparPerDimensioDescomposicio',
+            'field-descomposicioDimensio',
+        ]);
+
+        expect(screen.getByTestId('field-tipusGrafic')).toHaveAttribute('data-required', 'true');
+        expect(screen.getByTestId('field-tipusDades')).toHaveAttribute('data-required', 'true');
+        expect(screen.getByTestId('advanced-search-indicador')).toHaveAttribute('data-required', 'true');
+        expect(screen.getByTestId('field-titolIndicador')).toHaveAttribute('data-required', 'false');
+        expect(screen.getByTestId('field-agregacio')).toHaveAttribute('data-required', 'true');
+        expect(screen.getByTestId('field-unitatAgregacio')).toHaveAttribute('data-required', 'false');
+        expect(screen.getByTestId('field-tempsAgrupacio')).toHaveAttribute('data-required', 'true');
+        expect(screen.getByTestId('field-descomposicioDimensio')).toHaveAttribute('data-required', 'true');
+    });
+
+    it('EstadisticaGraficWidgetForm_quanSActivaAgruparPerDimensio_tempsAgrupacioDeixaDeSerObligatoriIUnitatSiEsAverage', () => {
+        mocks.useFormContextMock.mockReturnValue({
+            data: {
+                aplicacio: { id: 7 },
+                tipusGrafic: 'LINE_CHART',
+                tipusDades: 'UN_INDICADOR_AMB_DESCOMPOSICIO',
+                agregacio: 'AVERAGE',
+                agruparPerDimensioDescomposicio: true,
+            },
+            apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
+        });
+
+        render(<EstadisticaGraficWidgetForm />);
+
+        expect(screen.getByTestId('field-unitatAgregacio')).toHaveAttribute('data-required', 'true');
+        expect(screen.getByTestId('field-tempsAgrupacio')).toHaveAttribute('data-required', 'false');
+        expect(screen.getByTestId('field-tempsAgrupacio')).toHaveAttribute('data-disabled', 'true');
     });
 });

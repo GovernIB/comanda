@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -62,7 +62,10 @@ vi.mock('reactlib', () => ({
 vi.mock('react-i18next', () => ({
     useTranslation: () => ({
         t: (selector: any) =>
-            selector({ page: { dashboards: { action: { llistarTitle: { label: 'Editar títol' } } } } }),
+            selector({
+                common: { modify: 'Modificar', duplicate: 'Duplicar', delete: 'Eliminar' },
+                page: { dashboards: { action: { llistarTitle: { label: 'Editar títol' } } } },
+            }),
     }),
 }));
 
@@ -166,5 +169,159 @@ describe('DashboardReactGridLayout', () => {
         expect(onGridLayoutItemsChange).toHaveBeenCalledWith([
             { id: '1', type: 'SIMPLE', x: 4, y: 5, w: 6, h: 7 },
         ]);
+    });
+
+    it('DashboardReactGridLayout_quanEsFaUnClicSenseMoviment_seleccionaLItem', async () => {
+        // Reprodueix el bug reportat: un simple clic (sense arrossegament) ha de seleccionar l'element.
+        // react-grid-layout no distingeix clic d'arrossegament pels seus propis mitjans: la detecció es
+        // fa comparant la posició del ratolí entre onDragStart i onDragStop (veure DashboardReactGridLayout.tsx).
+        // La selecció s'ajorna un tick (setTimeout) perquè no interfereixi amb la pròpia transició
+        // d'estat de ReactGridLayout, per això el test espera amb waitFor.
+        mocks.isEqualMock.mockReturnValue(true);
+        const onSelectItem = vi.fn();
+
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={true}
+                dashboardWidgets={[{ dashboardItemId: 1, titol: 'Widget simple', tipus: 'SIMPLE' }]}
+                gridLayoutItems={[{ id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
+                onSelectItem={onSelectItem}
+            />
+        );
+
+        const oldItem = { i: '1', x: 0, y: 0, w: 2, h: 2 };
+        act(() => {
+            mocks.responsiveProps.onDragStart([], oldItem, oldItem, oldItem, { clientX: 100, clientY: 100 });
+            mocks.responsiveProps.onDragStop([], oldItem, oldItem, oldItem, { clientX: 100, clientY: 100 });
+        });
+
+        await waitFor(() => {
+            expect(onSelectItem).toHaveBeenCalledWith(
+                expect.objectContaining({ dashboardItemId: 1 })
+            );
+        });
+    });
+
+    it('DashboardReactGridLayout_quanHiHaMovimentEntreOnDragStartIOnDragStop_noSelecciona', () => {
+        // Comprova que un arrossegament (moviment per sobre del llindar) no dispara la selecció.
+        mocks.isEqualMock.mockReturnValue(true);
+        const onSelectItem = vi.fn();
+
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={true}
+                dashboardWidgets={[{ dashboardItemId: 1, titol: 'Widget simple', tipus: 'SIMPLE' }]}
+                gridLayoutItems={[{ id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
+                onSelectItem={onSelectItem}
+            />
+        );
+
+        const oldItem = { i: '1', x: 0, y: 0, w: 2, h: 2 };
+        const newItem = { i: '1', x: 3, y: 0, w: 2, h: 2 };
+        act(() => {
+            mocks.responsiveProps.onDragStart([], oldItem, oldItem, oldItem, { clientX: 100, clientY: 100 });
+            mocks.responsiveProps.onDragStop([], oldItem, newItem, newItem, { clientX: 160, clientY: 100 });
+        });
+
+        expect(onSelectItem).not.toHaveBeenCalled();
+    });
+
+    it('DashboardReactGridLayout_quanEsFaClicDretSobreUnComponent_mostraElMenuContextualAmbLes3Opcions', () => {
+        // Verifica que el clic dret obre el menú contextual amb Modificar/Duplicar/Eliminar.
+        mocks.isEqualMock.mockReturnValue(true);
+
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={true}
+                dashboardWidgets={[{ dashboardItemId: 1, titol: 'Widget simple', tipus: 'SIMPLE' }]}
+                gridLayoutItems={[{ id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
+            />
+        );
+
+        fireEvent.contextMenu(screen.getByTestId('grid-item'), { clientX: 50, clientY: 60 });
+
+        expect(screen.getByText('Modificar')).toBeInTheDocument();
+        expect(screen.getByText('Duplicar')).toBeInTheDocument();
+        expect(screen.getByText('Eliminar')).toBeInTheDocument();
+    });
+
+    it('DashboardReactGridLayout_quanEsPremModificarAlMenuContextual_seleccionaLElement', () => {
+        mocks.isEqualMock.mockReturnValue(true);
+        const onSelectItem = vi.fn();
+
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={true}
+                dashboardWidgets={[{ dashboardItemId: 1, titol: 'Widget simple', tipus: 'SIMPLE' }]}
+                gridLayoutItems={[{ id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
+                onSelectItem={onSelectItem}
+            />
+        );
+
+        fireEvent.contextMenu(screen.getByTestId('grid-item'), { clientX: 50, clientY: 60 });
+        fireEvent.click(screen.getByText('Modificar'));
+
+        expect(onSelectItem).toHaveBeenCalledWith(expect.objectContaining({ dashboardItemId: 1 }));
+    });
+
+    it('DashboardReactGridLayout_quanEsPremDuplicarAlMenuContextual_cridaOnDuplicateItem', () => {
+        mocks.isEqualMock.mockReturnValue(true);
+        const onDuplicateItem = vi.fn();
+
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={true}
+                dashboardWidgets={[{ dashboardItemId: 1, titol: 'Widget simple', tipus: 'SIMPLE' }]}
+                gridLayoutItems={[{ id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
+                onDuplicateItem={onDuplicateItem}
+            />
+        );
+
+        fireEvent.contextMenu(screen.getByTestId('grid-item'), { clientX: 50, clientY: 60 });
+        fireEvent.click(screen.getByText('Duplicar'));
+
+        expect(onDuplicateItem).toHaveBeenCalledWith(expect.objectContaining({ dashboardItemId: 1 }));
+    });
+
+    it('DashboardReactGridLayout_quanEsPremEliminarAlMenuContextual_cridaOnDeleteItem', () => {
+        mocks.isEqualMock.mockReturnValue(true);
+        const onDeleteItem = vi.fn();
+
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={true}
+                dashboardWidgets={[{ dashboardItemId: 1, titol: 'Widget simple', tipus: 'SIMPLE' }]}
+                gridLayoutItems={[{ id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
+                onDeleteItem={onDeleteItem}
+            />
+        );
+
+        fireEvent.contextMenu(screen.getByTestId('grid-item'), { clientX: 50, clientY: 60 });
+        fireEvent.click(screen.getByText('Eliminar'));
+
+        expect(onDeleteItem).toHaveBeenCalledWith(expect.objectContaining({ dashboardItemId: 1 }));
+    });
+
+    it('DashboardReactGridLayout_quanNoEsEditable_noObreElMenuContextual', () => {
+        mocks.isEqualMock.mockReturnValue(true);
+
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={false}
+                dashboardWidgets={[{ dashboardItemId: 1, titol: 'Widget simple', tipus: 'SIMPLE' }]}
+                gridLayoutItems={[{ id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
+            />
+        );
+
+        fireEvent.contextMenu(screen.getByTestId('grid-item'), { clientX: 50, clientY: 60 });
+
+        expect(screen.queryByText('Modificar')).not.toBeInTheDocument();
     });
 });

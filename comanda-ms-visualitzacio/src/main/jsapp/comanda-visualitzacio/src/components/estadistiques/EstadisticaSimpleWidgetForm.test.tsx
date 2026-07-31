@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import EstadisticaSimpleWidgetForm from './EstadisticaSimpleWidgetForm';
+import EstadisticaSimpleWidgetForm, { hasVisualOverrides } from './EstadisticaSimpleWidgetForm';
 
 const mocks = vi.hoisted(() => ({
     useFormContextMock: vi.fn(),
@@ -14,6 +14,10 @@ const mocks = vi.hoisted(() => ({
                         preview: 'Previsualització',
                         configGeneral: 'Configuració general',
                         configFont: 'Configuració de fonts',
+                        help: {
+                            tipusIndicador: 'Ajuda tipus indicador',
+                            periodeIndicador: 'Ajuda període indicador',
+                        },
                     },
                     atributsVisuals: {
                         colorText: 'Color text',
@@ -52,6 +56,7 @@ vi.mock('react-i18next', () => ({
 
 vi.mock('./EstadisticaWidgetFormFields', () => ({
     default: ({ children }: { children: React.ReactNode }) => <div data-testid="widget-form-fields">{children}</div>,
+    FieldHelp: ({ text }: { text: string }) => <div data-testid="field-help">{text}</div>,
 }));
 
 vi.mock('./WidgetPreview', () => ({
@@ -117,5 +122,21 @@ describe('EstadisticaSimpleWidgetForm', () => {
         expect(screen.getByTestId('field-colorVora')).toBeInTheDocument();
         expect(screen.getByTestId('field-ampleVora')).toBeInTheDocument();
         expect(screen.getByTestId('field-periodeIndicador')).toHaveAttribute('data-disabled', 'false');
+    });
+});
+
+describe('hasVisualOverrides', () => {
+    it('hasVisualOverrides_quanNoHiHaCapCampVisualEmplenat_retornaFals', () => {
+        // Reprodueix el bug reportat: sense cap camp visual emplenat, no s'ha de considerar personalitzat.
+        expect(hasVisualOverrides({ aplicacio: { id: 7 }, titol: 'Resum', indicador: { id: 1 } })).toBe(false);
+    });
+
+    it('hasVisualOverrides_quanEsSeleccionaUnaIcona_retornaCert', () => {
+        // Triar una icona s'ha de considerar una personalització del widget.
+        expect(hasVisualOverrides({ icona: 'Add' })).toBe(true);
+    });
+
+    it('hasVisualOverrides_quanHiHaUnColorEmplenat_retornaCert', () => {
+        expect(hasVisualOverrides({ colorText: '#ff0000' })).toBe(true);
     });
 });

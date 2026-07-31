@@ -114,4 +114,41 @@ describe('useDashboardWidgets', () => {
             expect(mocks.dashboardService.artifactReport).toHaveBeenCalledTimes(2);
         });
     });
+
+    it('useDashboardWidgets_quanEsRefrescaUnWidget_nomesActualitzaAquellItemSenseRecarregarLesPosicions', async () => {
+        // Comprova que refreshWidget actualitza només el widget indicat, sense tornar a demanar les posicions.
+        mocks.dashboardService.artifactReport.mockResolvedValue([
+            { dashboardItemId: 1, tipus: 'SIMPLE', posX: 0, posY: 0 },
+            { dashboardItemId: 2, tipus: 'GRAFIC', posX: 1, posY: 0 },
+        ]);
+        mocks.dashboardItemService.artifactReport
+            .mockResolvedValueOnce([{ dashboardItemId: 1, titol: 'Widget 1 vell' }])
+            .mockResolvedValueOnce([{ dashboardItemId: 2, titol: 'Widget 2' }]);
+
+        const { result } = renderHook(() => useDashboardWidgets(20));
+
+        await waitFor(() => {
+            expect(result.current.dashboardWidgets?.map((widget: any) => widget.titol)).toEqual([
+                'Widget 1 vell',
+                'Widget 2',
+            ]);
+        });
+
+        mocks.dashboardItemService.artifactReport.mockResolvedValueOnce([
+            { dashboardItemId: 1, titol: 'Widget 1 actualitzat' },
+        ]);
+        mocks.dashboardService.artifactReport.mockClear();
+
+        act(() => {
+            result.current.refreshWidget(1);
+        });
+
+        await waitFor(() => {
+            expect(result.current.dashboardWidgets?.map((widget: any) => widget.titol)).toEqual([
+                'Widget 1 actualitzat',
+                'Widget 2',
+            ]);
+        });
+        expect(mocks.dashboardService.artifactReport).not.toHaveBeenCalled();
+    });
 });

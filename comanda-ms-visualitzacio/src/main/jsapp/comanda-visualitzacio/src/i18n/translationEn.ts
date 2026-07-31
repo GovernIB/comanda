@@ -10,6 +10,8 @@ const translationEn: translationResourcesType = {
         cancel: "Cancel",
         confirm: "Confirm",
         save: "Save",
+        modify: "Modify",
+        duplicate: "Duplicate",
     },
     enum: {
         appEstat: {
@@ -381,21 +383,9 @@ const translationEn: translationResourcesType = {
                 title: "Clone the dashboard",
                 success: "Dashboard cloned correctly",
             },
-            components: {
-                llistar: "List components",
-                afegir: "Add component",
-            },
             action: {
                 select: {
                     title: "Select the dashboard to display...",
-                },
-                llistarWidget: {
-                    label: "List widgets",
-                    title: "List widgets",
-                },
-                llistarTitle: {
-                    label: "List titles",
-                    title: "List titles",
                 },
                 patchItem: {
                     success: "Saved successfully",
@@ -404,14 +394,11 @@ const translationEn: translationResourcesType = {
                     saveError: "Save error",
                 },
                 addWidget: {
-                    label: "Add widget",
-                    title: "Add widget",
                     success: "Widget added successfully",
                     error: "Error while adding the widget",
                 },
-                afegirTitle: {
-                    label: "Add title",
-                    title: "Add title",
+                createComponent: {
+                    label: "Create component",
                 },
                 export: "Export dashboard",
                 import: {
@@ -899,10 +886,6 @@ const translationEn: translationResourcesType = {
         },
         widget: {
             title: "Statistic widgets",
-            grid: {
-                position: "Position",
-                size: "Size",
-            },
             form: {
                 periode: "Period",
                 simple: "Simple widget",
@@ -918,6 +901,29 @@ const translationEn: translationResourcesType = {
                 graficPst: "Pie chart",
                 graficGug: "Gauge chart",
                 graficMap: "Heatmap chart",
+                any: "Year",
+                help: {
+                    tipusIndicador: "If there is more than one value in the selected period, this indicates how they should be combined to get the final value (for example, by adding them up or averaging them).",
+                    periodeIndicador: "When calculating an average, this indicates how often a value is taken to compute the average (for example, daily or weekly).",
+                    tipusDades: "Indicates whether the chart will show a single data item, a data item broken down by another criterion, two data items to compare, or several data items at once.",
+                    tempsAgrupacio: "Indicates how often values are grouped to draw the chart (for example, daily, weekly or monthly).",
+                    agregacio: "If there is more than one value in the same interval, this indicates how they should be combined (for example, by adding them up or averaging them).",
+                    unitatAgregacio: "When calculating an average, this indicates how often a value is taken to compute the average.",
+                    descomposicioDimensio: "Choose a criterion (for example, department or procedure type) to break down the indicator into several series within the same chart.",
+                    agruparPerDimensioDescomposicio: "If enabled, the chart will show a single total value for each value of this criterion, with no time evolution. If disabled, the chart will show the indicator's evolution over time, with a separate series for each value of the breakdown criterion.",
+                    dimensioAgrupacio: "The table rows are generated based on this criterion: there will be one row for each distinct value (for example, one row per department). It is required.",
+                    relatiuPuntReferencia: "Indicates the point in time used as the reference to calculate the period (for example, today or the start of the current month).",
+                    relatiuCount: "Indicates how many time units (days, weeks, months...) are included, counting back from the reference point.",
+                    relatiueUnitat: "Indicates the time unit being counted (days, weeks, months, quarters, years...).",
+                    relatiuAlineacio: "Indicates whether the period should be aligned to the natural start or end of the unit (for example, the start of the week or month) or counted exactly from the reference point.",
+                    absolutTipus: "Indicates how you want to define the fixed period: a specific date range, or a specific period of a year (for example, the first quarter of 2024).",
+                    absolutDataInici: "Date on which the interval to be shown starts.",
+                    absolutDataFi: "Date on which the interval to be shown ends.",
+                    absolutAnyReferencia: "Indicates whether you want to use the current year or choose a specific year.",
+                    absolutPeriodeUnitat: "Indicates which type of period of that year to show (for example, a month, a quarter or a half-year).",
+                    absolutPeriodeInici: "Indicates which period number (according to the chosen unit) the interval starts at (for example, the 1st quarter).",
+                    absolutPeriodeFi: "Indicates which period number (according to the chosen unit) the interval ends at.",
+                },
             },
             simple: {
                 tab: {
@@ -1009,13 +1015,93 @@ const translationEn: translationResourcesType = {
                 empty: "There are no colors in the palette.",
                 exist: "This color already exists in the palette!",
             },
+            wizard: {
+                title: "Create a new component",
+                steps: {
+                    type: "Type",
+                    content: "Content",
+                    indicators: "Information to show",
+                    dimensions: "Filters",
+                    period: "Period",
+                    visual: "Visualization",
+                    position: "Position and size",
+                },
+                types: {
+                    titol: {
+                        label: "Title",
+                        description: "Highlighted text used to organize the dashboard into sections. It does not show data.",
+                    },
+                    simple: {
+                        label: "Simple",
+                        description: "Shows a single numeric value (for example, the total number of requests), with a title and, optionally, an icon.",
+                    },
+                    grafic: {
+                        label: "Chart",
+                        description: "Represents the evolution or distribution of the selected information using a chart (bar, line, pie, etc.).",
+                    },
+                    taula: {
+                        label: "Table",
+                        description: "Shows the data as a table, with configurable rows and columns.",
+                    },
+                },
+                help: {
+                    type: "Choose which type of component you want to add to the dashboard. Each type is displayed differently.",
+                    appEntorn: "Indicate which application and environment this component should be created for.",
+                    content: "Write the text to be shown as the title (and, optionally, a subtitle).",
+                    indicators: "Choose which statistical information you want to show in this component (for example, the number of requests).",
+                    dimensions: "You can limit the displayed information to a specific subset (for example, only one type of procedure or a department). If you do not apply any filter, all available data will be shown.",
+                    period: "Indicate which time period the statistical data should cover: a relative period (such as 'the last 30 days'), a preset one, or a specific date range.",
+                    visual: "By default the component will follow the dashboard's standard style (template). If you want to customize its appearance (colors, sizes, etc.) enable the 'Custom' option.",
+                },
+                visual: {
+                    personalitzat: "Custom",
+                    personalitzatHelp: "If enabled, you can configure colors, sizes and other visual details specific to this component. Otherwise, the dashboard's standard style (template) will be applied.",
+                    personalitzatBadge: "This component has custom elements that override the dashboard's visual configuration.",
+                },
+                actions: {
+                    cancel: "Cancel",
+                    back: "Back",
+                    next: "Next",
+                    finish: "Create",
+                    validationError: "There are fields with errors. Please review them on the indicated step before trying again.",
+                },
+            },
             action: {
                 add: {
                     label: "Add",
                 },
-                addColumn: {
-                    label: "Add column",
+                addIndicador: {
+                    label: "Add indicator",
                 },
+            },
+            editor: {
+                properties: "Properties",
+                configData: "Data configuration",
+                configVisual: "Visual configuration",
+                titleText: "Title text",
+                titleType: "Title type",
+                showDestacat: "Show as featured",
+                template: "Template",
+                textSize: "Text size",
+                textColor: "Text color",
+                subtitleSize: "Subtitle size",
+                subtitleColor: "Subtitle color",
+                backgroundColor: "Background color",
+                showBorder: "Show border",
+                borderColor: "Border color",
+                borderWidth: "Border width",
+                posX: "X position",
+                posY: "Y position",
+                width: "Width",
+                height: "Height",
+                widgetType: "Widget type",
+                empty: "Select a canvas element or create a new widget to edit its properties.",
+                selectWidgetType: "Select the widget type",
+                confirmTitle: "Confirmation",
+                confirmDelete: "Are you sure you want to delete this dashboard item?",
+                deleted: "Item deleted",
+                deleteError: "Could not delete",
+                selectType: "Select a type to view configurable properties.",
             },
         },
         caches: {

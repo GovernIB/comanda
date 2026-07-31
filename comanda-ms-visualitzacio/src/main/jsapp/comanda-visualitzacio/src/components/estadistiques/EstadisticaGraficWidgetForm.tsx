@@ -3,7 +3,7 @@ import {Divider, Box, Typography} from "@mui/material";
 import {FormField, useFormContext} from "reactlib";
 import * as React from "react";
 import { useMemo, useEffect, useRef} from "react";
-import EstadisticaWidgetFormFields from "./EstadisticaWidgetFormFields";
+import EstadisticaWidgetFormFields, { FieldHelp } from "./EstadisticaWidgetFormFields";
 import VisualAttributesPanel from "./VisualAttributesPanel";
 import { columnesIndicador } from '../sharedAdvancedSearch/advancedSearchColumns';
 import { useTranslation } from "react-i18next";
@@ -12,13 +12,29 @@ import ColumnesTable from "./ColumnesTable.tsx";
 import FormFieldCustomAdvancedSearch from '../FormFieldCustomAdvancedSearch';
 import { WidgetPreview } from "./WidgetPreview.tsx";
 
+/** Camps que sobreescriuen l'estil de la plantilla (excloent-ne `lineWidth`, que s'inicialitza sempre a 2 en muntar-se) */
+const GRAFIC_OVERRIDE_FIELDS = [
+    'colorText', 'colorFons', 'mostrarVora', 'colorVora', 'ampleVora',
+    'colorsPaleta', 'mostrarReticula', 'llegendaX',
+    'barStacked', 'barHorizontal', 'lineShowPoints', 'area', 'lineSmooth',
+    'outerRadius', 'pieDonut', 'innerRadius', 'pieShowLabels', 'labelSize',
+    'gaugeMin', 'gaugeMax', 'gaugeRangs', 'heatmapMinValue', 'heatmapMaxValue',
+    'midaFontTitol', 'midaFontDescripcio',
+];
+
+/** Indica si el widget té algun valor que sobreescrigui la plantilla (per mostrar l'indicador de "personalitzat") */
+export const hasVisualOverrides = (data: any): boolean =>
+    GRAFIC_OVERRIDE_FIELDS.some(field => data?.[field] !== undefined && data?.[field] !== null && data?.[field] !== '');
+
 type EstadisticaGraficWidgetFormProps = {
-    mode?: 'full' | 'stats' | 'visual';
+    mode?: 'full' | 'stats' | 'indicators' | 'visual';
     dashboardPlantilla?: any;
     destacat?: boolean;
+    /** Indica si s'han de mostrar els camps que sobreescriuen la plantilla (per defecte, sí). La previsualització es mostra sempre. */
+    showOverrideFields?: boolean;
 };
 
-const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = ({ mode = 'full', dashboardPlantilla, destacat }) => {
+const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = ({ mode = 'full', dashboardPlantilla, destacat, showOverrideFields = true }) => {
     const { data, apiRef } = useFormContext();
     const { t } = useTranslation();
     const previewData = useMemo(() =>({
@@ -34,7 +50,9 @@ const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = 
         tipusGrafic: data.tipusGrafic || 'BAR_CHART',
         llegendaX: data.llegendaX,
         // llegendaY: data.llegendaY || 'Eix Y',
-        colorsPaleta: data.colorsPaleta || '#1f77b4,#ff7f0e,#2ca02c,#d62728,#9467bd,#8c564b',
+        // Sense fallback fix: un valor per defecte aquí faria que sempre "sobreescrigués" els colors
+        // de la plantilla a resolveWidgetStyles (només s'aplica la plantilla si el camp és buit).
+        colorsPaleta: data.colorsPaleta,
         mostrarReticula: data.mostrarReticula !== undefined ? data.mostrarReticula : false,
         barStacked: data.barStacked || false,
         barHorizontal: data.barHorizontal || false,
@@ -56,7 +74,7 @@ const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = 
         heatmapMaxValue: data.heatmapMaxValue,
         midaFontTitol: data.midaFontTitol,
         midaFontDescripcio: data.midaFontDescripcio,
-    }), [data])
+    }), [data, destacat])
 
     const isMostrarVora: boolean = data?.mostrarVora;
     // Get current graphic type (BAR_CHART, LINE_CHART, PIE_CHART, SCATTER_CHART, SPARK_LINE_CHART, GAUGE_CHART, HEATMAP_CHART)
@@ -121,6 +139,10 @@ const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = 
         return renderStatsFields();
     }
 
+    if (mode === 'indicators') {
+        return <Grid container spacing={2}>{renderIndicatorFields()}</Grid>;
+    }
+
     if (mode === 'visual') {
         return renderVisualContent();
     }
@@ -141,12 +163,24 @@ const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = 
     function renderStatsFields() {
         return (
             <EstadisticaWidgetFormFields>
+                {renderIndicatorFields()}
+            </EstadisticaWidgetFormFields>
+        );
+    }
+
+    function renderIndicatorFields() {
+        return (
+            <>
                 <Grid size={12}><Divider sx={{ my: 1 }} >{t($ => $.page.widget.form.grafic)}</Divider></Grid>
-                <Grid size={4}><FormField name="tipusGrafic" /></Grid>
+                {/* 1a fila: tipus de gràfic i tipus de dades */}
+                <Grid size={6}><FormField name="tipusGrafic" required/></Grid>
                 { isChartTypeSelected && (
                     <>
-                        <Grid size={4}><FormField name="tipusDades" hiddenEnumValues={tipusDadesOcultar} required/></Grid>
-                        <Grid size={4}><FormField name="tempsAgrupacio" onChange={handleTempsAgrupacioChange} disabled={data.agruparPerDimensioDescomposicio === true}/></Grid>
+                        <Grid size={6}>
+                            <FormField name="tipusDades" hiddenEnumValues={tipusDadesOcultar} required/>
+                            <FieldHelp text={t($ => $.page.widget.form.help.tipusDades)} />
+                        </Grid>
+                        {/* 2a fila: indicador, títol, tipus i unitat d'agregació */}
                         { (isUnIndicador || isUnIndicadorAmbDescomposicio || isDosIndicadors) && (
                             <>
                                 <Grid size={4}>
@@ -156,17 +190,40 @@ const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = 
                                         advancedSearchColumns={columnesIndicador}
                                         advancedSearchDataGridProps={{ rowHeight: 30, }}
                                         advancedSearchDialogHeight={500}
+                                        required
                                     />
                                 </Grid>
-                                <Grid size={4}><FormField name="titolIndicador" /></Grid>
-                                <Grid size={2}><FormField name="agregacio" hiddenEnumValues={['FIRST_SEEN', 'LAST_SEEN']}/></Grid>
-                                <Grid size={2}><FormField name="unitatAgregacio" disabled={data.agregacio !== 'AVERAGE'}/></Grid>
+                                <Grid size={4}><FormField name="titolIndicador" required={false} /></Grid>
+                                <Grid size={2}>
+                                    <FormField name="agregacio" hiddenEnumValues={['FIRST_SEEN', 'LAST_SEEN']} required/>
+                                    <FieldHelp text={t($ => $.page.widget.form.help.agregacio)} />
+                                </Grid>
+                                <Grid size={2}>
+                                    <FormField name="unitatAgregacio" required={data.agregacio === 'AVERAGE'} disabled={data.agregacio !== 'AVERAGE'}/>
+                                    <FieldHelp text={t($ => $.page.widget.form.help.unitatAgregacio)} />
+                                </Grid>
                             </>
                         )}
+                        {/* 3a fila: agrupació temporal i, si escau, dimensió de descomposició */}
+                        <Grid size={isUnIndicadorAmbDescomposicio ? 4 : 12}>
+                            <FormField
+                                name="tempsAgrupacio"
+                                onChange={handleTempsAgrupacioChange}
+                                disabled={data.agruparPerDimensioDescomposicio === true}
+                                required={!(isUnIndicadorAmbDescomposicio && data.agruparPerDimensioDescomposicio === true)}
+                            />
+                            <FieldHelp text={t($ => $.page.widget.form.help.tempsAgrupacio)} />
+                        </Grid>
                         { isUnIndicadorAmbDescomposicio && (
                             <>
-                                <Grid size={6}><FormField name="descomposicioDimensio" namedQueries={indicadorDimensioNamedQueries} /></Grid>
-                                <Grid size={6}><FormField name="agruparPerDimensioDescomposicio" type={"checkbox"} onChange={handleAgruparPerDimensioChange} /></Grid>
+                                <Grid size={4}>
+                                    <FormField name="agruparPerDimensioDescomposicio" type={"checkbox"} onChange={handleAgruparPerDimensioChange} />
+                                    <FieldHelp text={t($ => $.page.widget.form.help.agruparPerDimensioDescomposicio)} />
+                                </Grid>
+                                <Grid size={4}>
+                                    <FormField name="descomposicioDimensio" namedQueries={indicadorDimensioNamedQueries} required/>
+                                    <FieldHelp text={t($ => $.page.widget.form.help.descomposicioDimensio)} />
+                                </Grid>
                             </>
                         )}
                         { isVarisIndicadors && (
@@ -183,14 +240,9 @@ const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = 
                             </Grid>
                         )}
                         {/*<Grid size={4}><FormField name="tipusValors" /></Grid>*/}
-
-                        { (isBarTypeVisible || isLineTypeVisible || isScatterTypeVisible) && (
-                            <Grid size={12}><FormField name="llegendaX" /></Grid>
-                        )}
-                        {/*<Grid size={6}><FormField name="llegendaY" /></Grid>*/}
                     </>
                 )}
-            </EstadisticaWidgetFormFields>
+            </>
         );
     }
 
@@ -205,7 +257,7 @@ const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = 
                             dashboardPlantilla={dashboardPlantilla}
                         />
                 </Box>
-                {renderGraficFormFields()}
+                {showOverrideFields && renderGraficFormFields()}
             </Box>
         );
     }
@@ -227,8 +279,11 @@ const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = 
                 {/*<Grid size={12} sx={{backgroundColor: 'background.paper'}}><FormField name="atributsVisuals.colorsPaleta" label="Colors de la paleta" type="color" /></Grid>*/}
                 <Grid size={12} sx={{backgroundColor: 'background.paper'}}><ColorPaletteSelector initialColors={data?.colorsPaleta} onPaletteChange={handlePaletteChange} /></Grid>
                 { (isBarTypeVisible || isLineTypeVisible || isScatterTypeVisible) && (
-                    <Grid size={12}><FormField name="mostrarReticula" label={t($ => $.page.widget.atributsVisuals.mostrarReticula)} type="checkbox" /></Grid>)
-                }
+                    <>
+                        <Grid size={12}><FormField name="mostrarReticula" label={t($ => $.page.widget.atributsVisuals.mostrarReticula)} type="checkbox" /></Grid>
+                        <Grid size={12}><FormField name="llegendaX" /></Grid>
+                    </>
+                )}
                 {isBarTypeVisible && (
                     <>
                         <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 1, mb: 1 }}>{t($ => $.page.widget.form.graficBar)}</Typography></Grid>

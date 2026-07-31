@@ -32,7 +32,7 @@ import javax.validation.constraints.Size;
  * - `titol`: Títol del widget. És un camp obligatori amb una longitud màxima de 64 caràcters.
  * - `descripcio`: Descripció del widget amb una longitud màxima de 1024 caràcters.
  * - `aplicacioCodi`: Codi que identifica l'aplicació associada. És un camp obligatori amb una longitud màxima de 16 caràcters.
- * - `dimensionsValor`: Llista de valors de dimensió filtrats. És un camp obligatori, no pot estar buit.
+ * - `dimensionsValor`: Llista de valors de dimensió filtrats. És opcional; si no se n'indica cap, es mostren totes les dades.
  * - `iniciUnitat`: Unitat temporal que defineix el punt d'inici del període (ex. DIA, SETMANA, MES).
  * - `inici`: Nombre d'unitats a retrocedir des de la data actual per establir l'inici del període.
  * - `duracioUnitat`: Unitat temporal que defineix la duració del període (ex. DIA, MES).
@@ -43,7 +43,6 @@ import javax.validation.constraints.Size;
  * Validacions:
  * - `titol` no pot ser nul i ha de complir la longitud màxima especificada.
  * - `aplicacioCodi` no pot ser nul i ha de complir la longitud màxima especificada.
- * - `dimensionsValor` no pot estar buit i ha d'incloure almenys una dimensió.
  * - `indicador` no pot ser nul i ha d'enllaçar amb una entitat Indicador vàlida.
  *
  * Ús:

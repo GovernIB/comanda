@@ -3,7 +3,7 @@ import { Box, Typography } from '@mui/material';
 import { FormField, useFormContext } from 'reactlib';
 import * as React from 'react';
 import { useEffect, useMemo, useRef } from 'react';
-import EstadisticaWidgetFormFields from './EstadisticaWidgetFormFields';
+import EstadisticaWidgetFormFields, { FieldHelp } from './EstadisticaWidgetFormFields';
 import VisualAttributesPanel from './VisualAttributesPanel';
 import { columnesDimensio } from '../sharedAdvancedSearch/advancedSearchColumns';
 import { useTranslation } from 'react-i18next';
@@ -14,13 +14,30 @@ import Divider from '@mui/material/Divider';
 import { WidgetPreview } from './WidgetPreview';
 import { TaulaWidgetVisualizationProps } from './TaulaWidgetVisualization';
 
+/** Camps que sobreescriuen l'estil de la plantilla (excloent `mostrarCapcalera`/`mostrarSeparadorHoritzontal`, que s'inicialitzen sempre a `true` en muntar-se) */
+const TAULA_OVERRIDE_FIELDS = [
+    'colorText', 'colorFons', 'mostrarVora', 'colorVora', 'ampleVora',
+    'colorTextTaula', 'colorFonsTaula', 'colorCapcalera', 'colorFonsCapcalera',
+    'mostrarAlternancia', 'colorAlternancia',
+    'mostrarVoraTaula', 'colorVoraTaula', 'ampleVoraTaula',
+    'colorSeparadorHoritzontal', 'ampleSeparadorHoritzontal',
+    'mostrarSeparadorVertical', 'colorSeparadorVertical', 'ampleSeparadorVertical',
+    'midaFontTitol', 'midaFontDescripcio',
+];
+
+/** Indica si el widget té algun valor que sobreescrigui la plantilla (per mostrar l'indicador de "personalitzat") */
+export const hasVisualOverrides = (data: any): boolean =>
+    TAULA_OVERRIDE_FIELDS.some(field => data?.[field] !== undefined && data?.[field] !== null && data?.[field] !== '');
+
 type EstadisticaTaulaWidgetFormProps = {
-    mode?: 'full' | 'stats' | 'visual';
+    mode?: 'full' | 'stats' | 'indicators' | 'visual';
     dashboardPlantilla?: any;
     destacat?: boolean;
+    /** Indica si s'han de mostrar els camps que sobreescriuen la plantilla (per defecte, sí). La previsualització es mostra sempre. */
+    showOverrideFields?: boolean;
 };
 
-const EstadisticaTaulaWidgetForm: React.FC<EstadisticaTaulaWidgetFormProps> = ({ mode = 'full', dashboardPlantilla, destacat }) => {
+const EstadisticaTaulaWidgetForm: React.FC<EstadisticaTaulaWidgetFormProps> = ({ mode = 'full', dashboardPlantilla, destacat, showOverrideFields = true }) => {
     const { data, apiRef } = useFormContext();
     const { t } = useTranslation();
     const previewData: TaulaWidgetVisualizationProps = useMemo(
@@ -61,7 +78,7 @@ const EstadisticaTaulaWidgetForm: React.FC<EstadisticaTaulaWidgetFormProps> = ({
             midaFontTitol: data.midaFontTitol,
             midaFontDescripcio: data.midaFontDescripcio,
         }),
-        [data]
+        [data, destacat]
     );
 
     // Get the current values for conditional rendering
@@ -92,6 +109,10 @@ const EstadisticaTaulaWidgetForm: React.FC<EstadisticaTaulaWidgetFormProps> = ({
         return renderStatsFields();
     }
 
+    if (mode === 'indicators') {
+        return <Grid container spacing={2}>{renderIndicatorFields()}</Grid>;
+    }
+
     if (mode === 'visual') {
         return renderVisualContent();
     }
@@ -115,18 +136,16 @@ const EstadisticaTaulaWidgetForm: React.FC<EstadisticaTaulaWidgetFormProps> = ({
     function renderStatsFields() {
         return (
             <EstadisticaWidgetFormFields>
+                {renderIndicatorFields()}
+            </EstadisticaWidgetFormFields>
+        );
+    }
+
+    function renderIndicatorFields() {
+        return (
+            <>
                 <Grid size={12}>
                     <Divider sx={{ my: 1 }}>{t($ => $.page.widget.form.taula)}</Divider>
-                </Grid>
-                <Grid size={6}>
-                    <FormField
-                        name="dimensioAgrupacio"
-                        namedQueries={dimensioNamedQueries}
-                        advancedSearchColumns={columnesDimensio}
-                    />
-                </Grid>
-                <Grid size={6}>
-                    <FormField name="titolAgrupament" />
                 </Grid>
                 <Grid size={12}>
                     <ColumnesTable
@@ -139,7 +158,21 @@ const EstadisticaTaulaWidgetForm: React.FC<EstadisticaTaulaWidgetFormProps> = ({
                         }}
                     />
                 </Grid>
-            </EstadisticaWidgetFormFields>
+                <Grid size={12}>
+                    <Divider sx={{ my: 1 }} />
+                </Grid>
+                <Grid size={6}>
+                    <FormField
+                        name="dimensioAgrupacio"
+                        namedQueries={dimensioNamedQueries}
+                        advancedSearchColumns={columnesDimensio}
+                    />
+                    <FieldHelp text={t($ => $.page.widget.form.help.dimensioAgrupacio)} />
+                </Grid>
+                <Grid size={6}>
+                    <FormField name="titolAgrupament" />
+                </Grid>
+            </>
         );
     }
 
@@ -156,7 +189,7 @@ const EstadisticaTaulaWidgetForm: React.FC<EstadisticaTaulaWidgetFormProps> = ({
                         dashboardPlantilla={dashboardPlantilla}
                     />
                 </Box>
-                {renderTaulaFormFields()}
+                {showOverrideFields && renderTaulaFormFields()}
             </Box>
         );
     }

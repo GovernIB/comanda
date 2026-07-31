@@ -10,6 +10,8 @@ const translationCa = {
         cancel: "Cancelar",
         confirm: "Confirmar",
         save: "Desar",
+        modify: "Modificar",
+        duplicate: "Duplicar",
     },
     enum: {
         appEstat: {
@@ -381,21 +383,9 @@ const translationCa = {
                 title: "Clonar el tauler de control",
                 success: "Tauler de controls clonat correctament",
             },
-            components: {
-                llistar: "Llistar components",
-                afegir: "Afegir component",
-            },
             action: {
                 select: {
                     title: "Seleccioni el tauler a mostrar...",
-                },
-                llistarWidget: {
-                    label: "Llistar widgets",
-                    title: "Llistar widgets",
-                },
-                llistarTitle: {
-                    label: "Llistar títols",
-                    title: "Llistar títols",
                 },
                 patchItem: {
                     success: "Desat correctament",
@@ -404,14 +394,11 @@ const translationCa = {
                     saveError: "Error en desar",
                 },
                 addWidget: {
-                    label: "Afegir widget",
-                    title: "Afegir widget",
                     success: "Widget afegit correctament",
                     error: "Error en afegir el widget",
                 },
-                afegirTitle: {
-                    label: "Afegir títol",
-                    title: "Afegir títol",
+                createComponent: {
+                    label: "Crear component",
                 },
                 export: "Exportar tauler",
                 import: {
@@ -899,10 +886,6 @@ const translationCa = {
         },
         widget: {
             title: "Widgets estadístics",
-            grid: {
-                position: "Posició",
-                size: "Mida",
-            },
             form: {
                 periode: "Període",
                 simple: "Widget simple",
@@ -918,6 +901,29 @@ const translationCa = {
                 graficPst: "Gràfic de pastís",
                 graficGug: "Gràfic de gauge",
                 graficMap: "Gràfic de heatmap",
+                any: "Any",
+                help: {
+                    tipusIndicador: "Si en el període seleccionat hi ha més d'un valor, indica com s'han de combinar per obtenir el valor final (per exemple, sumant-los o calculant-ne la mitjana).",
+                    periodeIndicador: "Quan es calcula una mitjana, indica cada quant de temps s'agafa un valor per fer-ne la mitjana (per exemple, cada dia o cada setmana).",
+                    tipusDades: "Indica si el gràfic mostrarà una única dada, una dada desglossada per un altre criteri, dues dades per comparar-les, o diverses dades alhora.",
+                    tempsAgrupacio: "Indica cada quant de temps s'agrupen els valors per dibuixar el gràfic (per exemple, per dia, per setmana o per mes).",
+                    agregacio: "Si en un mateix interval hi ha més d'un valor, indica com s'han de combinar (per exemple, sumant-los o calculant-ne la mitjana).",
+                    unitatAgregacio: "Quan es calcula una mitjana, indica cada quant de temps s'agafa un valor per fer-ne la mitjana.",
+                    descomposicioDimensio: "Trieu un criteri (per exemple, departament o tipus de tràmit) per desglossar l'indicador en diverses sèries dins el mateix gràfic.",
+                    agruparPerDimensioDescomposicio: "Si ho activau, el gràfic mostrarà un únic valor totalitzat per a cada valor d'aquest criteri, sense evolució temporal. Si no ho activau, el gràfic mostrarà l'evolució en el temps de l'indicador, amb una sèrie diferent per a cada valor del criteri de desglossament.",
+                    dimensioAgrupacio: "Les files de la taula es generaran segons aquest criteri: hi haurà una fila per a cada valor diferent (per exemple, una fila per cada departament). És obligatori.",
+                    relatiuPuntReferencia: "Indica el moment que es fa servir com a referència per calcular el període (per exemple, avui o l'inici del mes actual).",
+                    relatiuCount: "Indica quantes unitats de temps (dies, setmanes, mesos...) s'inclouen comptant enrere des del punt de referència.",
+                    relatiueUnitat: "Indica la unitat de temps que es compta (dies, setmanes, mesos, trimestres, anys...).",
+                    relatiuAlineacio: "Indica si el període s'ha d'ajustar a l'inici o el final natural de la unitat (per exemple, l'inici de la setmana o del mes) o comptar exactament des del punt de referència.",
+                    absolutTipus: "Indica com voleu definir el període fix: un interval concret de dates, o un període específic d'un any (per exemple, el primer trimestre de 2024).",
+                    absolutDataInici: "Data en què comença l'interval que es vol mostrar.",
+                    absolutDataFi: "Data en què acaba l'interval que es vol mostrar.",
+                    absolutAnyReferencia: "Indica si voleu utilitzar l'any actual o bé triar un any concret.",
+                    absolutPeriodeUnitat: "Indica quin tipus de període d'aquell any es vol mostrar (per exemple, un mes, un trimestre o un semestre).",
+                    absolutPeriodeInici: "Indica en quin número de període (segons la unitat escollida) comença l'interval (per exemple, el 1r trimestre).",
+                    absolutPeriodeFi: "Indica en quin número de període (segons la unitat escollida) acaba l'interval.",
+                },
             },
             simple: {
                 tab: {
@@ -1009,13 +1015,93 @@ const translationCa = {
                 empty: "No hi ha colors a la paleta.",
                 exist: "Aquest color ja existeix a la paleta!",
             },
+            wizard: {
+                title: "Crear un component nou",
+                steps: {
+                    type: "Tipus",
+                    content: "Contingut",
+                    indicators: "Informació a mostrar",
+                    dimensions: "Filtres",
+                    period: "Període",
+                    visual: "Visualització",
+                    position: "Posició i mida",
+                },
+                types: {
+                    titol: {
+                        label: "Títol",
+                        description: "Text destacat per organitzar el tauler en seccions. No mostra dades.",
+                    },
+                    simple: {
+                        label: "Simple",
+                        description: "Mostra un únic valor numèric (per exemple, el nombre total de tràmits), amb un títol i, opcionalment, una icona.",
+                    },
+                    grafic: {
+                        label: "Gràfic",
+                        description: "Representa l'evolució o la distribució de la informació seleccionada mitjançant un gràfic (barres, línies, pastís, etc.).",
+                    },
+                    taula: {
+                        label: "Taula",
+                        description: "Mostra les dades en forma de taula, amb files i columnes configurables.",
+                    },
+                },
+                help: {
+                    type: "Trieu quin tipus de component voleu afegir al tauler. Cada tipus es mostra de manera diferent.",
+                    appEntorn: "Indicau per a quina aplicació i entorn voleu crear aquest component.",
+                    content: "Escriviu el text que es mostrarà com a títol (i, opcionalment, un subtítol).",
+                    indicators: "Trieu quina informació estadística voleu mostrar en aquest component (per exemple, el nombre de sol·licituds).",
+                    dimensions: "Podeu limitar la informació mostrada a un subconjunt concret (per exemple, només un tipus de tràmit o un departament). Si no aplicau cap filtre, es mostraran totes les dades disponibles.",
+                    period: "Indicau de quin període de temps voleu mostrar les dades estadístiques: un període relatiu (com 'els darrers 30 dies'), predefinit o un interval de dates concret.",
+                    visual: "Per defecte el component es mostrarà seguint l'estil estàndard del tauler (plantilla). Si voleu personalitzar-ne l'aparença (colors, mides, etc.) activau l'opció 'Personalitzat'.",
+                },
+                visual: {
+                    personalitzat: "Personalitzat",
+                    personalitzatHelp: "Si ho activau, podreu configurar colors, mides i altres detalls visuals propis d'aquest component. Si no, s'aplicarà l'estil estàndard (plantilla) del tauler.",
+                    personalitzatBadge: "Aquest component té elements personalitzats que sobreescriuen la configuració visual del tauler.",
+                },
+                actions: {
+                    cancel: "Cancel·lar",
+                    back: "Enrere",
+                    next: "Següent",
+                    finish: "Crear",
+                    validationError: "Hi ha camps amb errors. Revisi'ls a la passa indicada abans de tornar a provar.",
+                },
+            },
             action: {
                 add: {
                     label: "Afegir",
                 },
-                addColumn: {
-                    label: "Afegir columna",
+                addIndicador: {
+                    label: "Afegir indicador",
                 }
+            },
+            editor: {
+                properties: "Propietats",
+                configData: "Configuració de dades",
+                configVisual: "Configuració visual",
+                titleText: "Text del títol",
+                titleType: "Tipus de títol",
+                showDestacat: "Mostrar com a destacat",
+                template: "Plantilla",
+                textSize: "Mida del text",
+                textColor: "Color del text",
+                subtitleSize: "Mida del subtítol",
+                subtitleColor: "Color del subtítol",
+                backgroundColor: "Color de fons",
+                showBorder: "Mostrar vora",
+                borderColor: "Color de vora",
+                borderWidth: "Amplada de vora",
+                posX: "Posició X",
+                posY: "Posició Y",
+                width: "Amplada",
+                height: "Alçada",
+                widgetType: "Tipus de widget",
+                empty: "Seleccionau un element del canvas o creau un widget nou per editar-ne les propietats.",
+                selectWidgetType: "Seleccionau el tipus de widget",
+                confirmTitle: "Confirmació",
+                confirmDelete: "Estau segur que voleu esborrar aquest element del dashboard?",
+                deleted: "Element eliminat",
+                deleteError: "No s’ha pogut eliminar",
+                selectType: "Seleccionau un tipus per veure les propietats configurables.",
             },
         },
         caches: {

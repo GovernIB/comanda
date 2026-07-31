@@ -7,11 +7,12 @@ import GraficWidgetVisualization from './GraficWidgetVisualization.tsx';
 import TaulaWidgetVisualization from './TaulaWidgetVisualization.tsx';
 import { useEffect, useMemo, useRef } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { Box } from '@mui/material';
+import { Box, Menu, MenuItem, ListItemIcon, ListItemText, Icon } from '@mui/material';
 import 'react-grid-layout/css/styles.css';
 import './react-resizable-custom.css';
 import TitolWidgetVisualization from "./TitolWidgetVisualization.tsx";
 import { SalutErrorBoundaryFallback } from '../salut/SalutErrorBoundaryFallback';
+import { useTranslation } from 'react-i18next';
 
 const CustomGridLayout = WidthProvider(Responsive);
 
@@ -33,11 +34,17 @@ const TitolChartWrapper = React.memo<{ dashboardTitol: any}>(({ dashboardTitol})
 
 const CustomGridItemComponent = React.forwardRef<HTMLDivElement, any>(
     (
-        { entity, style, className, onMouseDown, onMouseUp, onTouchEnd, editable, selected, onSelect, children },
+        { style, className, onMouseDown, onMouseUp, onTouchEnd, editable, selected, entity, onItemContextMenu, children },
         ref
     ) => {
-        return (<>
+        // onMouseDown/onMouseUp aquí són els mètodes propis de react-draggable (GridItem els injecta
+        // clonant l'element), no simples "pass-through": cal cridar-los perquè l'arrossegament
+        // continuï funcionant. La detecció de "clic vs arrossegament" es fa a un altre nivell
+        // (onDragStart/onDragStop de <CustomGridLayout>) perquè react-grid-layout re-renderitza la
+        // graella en cada mousedown/mouseup, cosa que faria perdre qualsevol estat local guardat aquí.
+        return (
             <div
+                data-testid="grid-item"
                 style={{
                     ...style,
                     cursor: editable ? 'pointer' : style?.cursor,
@@ -52,7 +59,13 @@ const CustomGridItemComponent = React.forwardRef<HTMLDivElement, any>(
                 onClick={(event) => {
                     if (editable) {
                         event.stopPropagation();
-                        onSelect?.(entity);
+                    }
+                }}
+                onContextMenu={(event) => {
+                    if (editable && entity) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        onItemContextMenu?.(event, entity);
                     }
                 }}
             >
@@ -68,7 +81,7 @@ const CustomGridItemComponent = React.forwardRef<HTMLDivElement, any>(
                     </div>
                 </div>
             </div>
-        </>);
+        );
     }
 );
 
@@ -117,6 +130,8 @@ type DashboardReactGridLayoutProps = {
     gridLayoutItems: GridLayoutItem[];
     onGridLayoutItemsChange?: (gridLayoutItems: GridLayoutItem[]) => void;
     onSelectItem?: (entity: any) => void;
+    onDeleteItem?: (entity: any) => void;
+    onDuplicateItem?: (entity: any) => void;
     onClearSelection?: () => void;
     selectedItemId?: string | null;
     dashboardEntornCodi?: string;
@@ -140,17 +155,93 @@ export const useMapDashboardItems = (dashboardWidgets: unknown[]) => {
 
 export const horizontalSubdivisions = 30;
 
+/** Distància màxima (en px) entre l'inici i el final d'un arrossegament perquè es consideri un simple clic */
+const CLICK_MOVEMENT_THRESHOLD = 5;
+
 export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> = ({
     dashboardWidgets,
     editable,
     gridLayoutItems,
     onGridLayoutItemsChange,
     onSelectItem,
+    onDeleteItem,
+    onDuplicateItem,
     onClearSelection,
     selectedItemId,
     dashboardEntornCodi,
 }) => {
+    const { t } = useTranslation();
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const findEntityById = (id: string) =>
+        dashboardWidgets.find((widget) => String(widget.dashboardItemId) === id) ??
+        dashboardWidgets.find((widget) => String(widget.dashboardTitolId) === id);
+
+    const [contextMenu, setContextMenu] = React.useState<{ mouseX: number; mouseY: number; entity: any } | null>(null);
+    const handleItemContextMenu = (event: React.MouseEvent, entity: any) => {
+        setContextMenu({ mouseX: event.clientX, mouseY: event.clientY, entity });
+    };
+    const closeContextMenu = () => setContextMenu(null);
+    const handleContextMenuModificar = () => {
+        if (contextMenu) onSelectItem?.(contextMenu.entity);
+        closeContextMenu();
+    };
+    const handleContextMenuDuplicar = () => {
+        if (contextMenu) onDuplicateItem?.(contextMenu.entity);
+        closeContextMenu();
+    };
+    const handleContextMenuEliminar = () => {
+        if (contextMenu) onDeleteItem?.(contextMenu.entity);
+        closeContextMenu();
+    };
+
+    // react-grid-layout no distingeix un clic simple d'un arrossegament: onDragStart/onDragStop es
+    // disparen sempre, fins i tot sense moviment. Comparem la posició del ratolí a l'inici i al final
+    // per decidir si s'ha de seleccionar l'element (clic) o no (arrossegament real).
+    // IMPORTANT: ReactGridLayout crida this.props.onDragStop(...) de manera síncrona i SENSE try/catch
+    // abans d'acabar la seva pròpia transició d'estat (setState + onLayoutMaybeChanged, vegeu
+    // node_modules/react-grid-layout/lib/ReactGridLayout.jsx). Si aquí llancem una excepció, o si
+    // onSelectItem provoca un re-render síncron del pare, es pot interrompre aquella transició i
+    // l'arrossegament deixa de reflectir-se. Per això aquest handler mai llança (try/catch) i la
+    // selecció es dispara al següent tick (setTimeout), un cop ReactGridLayout ja ha acabat.
+    const dragStartPosRef = useRef<{ x: number; y: number } | null>(null);
+    const onItemDragStart = (
+        _layout: Layout[],
+        _oldItem: Layout,
+        _newItem: Layout,
+        _placeholder: Layout,
+        event: MouseEvent
+    ) => {
+        try {
+            dragStartPosRef.current = { x: event.clientX, y: event.clientY };
+        } catch (error) {
+            dragStartPosRef.current = null;
+            console.error('Error registrant l\'inici de l\'arrossegament', error);
+        }
+    };
+    const onItemDragStop = (
+        _layout: Layout[],
+        oldItem: Layout,
+        _newItem: Layout,
+        _placeholder: Layout,
+        event: MouseEvent
+    ) => {
+        const startPos = dragStartPosRef.current;
+        dragStartPosRef.current = null;
+        try {
+            if (!editable || !startPos) return;
+            const dx = Math.abs(event.clientX - startPos.x);
+            const dy = Math.abs(event.clientY - startPos.y);
+            if (dx <= CLICK_MOVEMENT_THRESHOLD && dy <= CLICK_MOVEMENT_THRESHOLD) {
+                const entity = findEntityById(oldItem.i);
+                if (entity) {
+                    setTimeout(() => onSelectItem?.(entity), 0);
+                }
+            }
+        } catch (error) {
+            console.error('Error detectant si l\'acció era un clic o un arrossegament', error);
+        }
+    };
+
     const onLayoutChange = (_currentLayout: Layout[], allLayouts: Layouts) => {
         drawGrid();
         const mappedLayouts: (GridLayoutItem | undefined)[] = allLayouts.md.map((item) => {
@@ -283,6 +374,8 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                     isResizable={!isReadonly}
                     resizeHandle={<CustomHandle />}
                     resizeHandles={!isReadonly ? ['s', 'w', 'e', 'n', 'sw', 'nw', 'se', 'ne'] : []}
+                    onDragStart={onItemDragStart}
+                    onDragStop={onItemDragStop}
                 >
                     {gridLayoutItems.map((item) => {
                         const dashboardWidget = dashboardWidgets.find(
@@ -296,10 +389,10 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                         return (
                             <CustomGridItemComponent
                                 key={item.id}
-                                entity={dashboardWidget ?? dashboardTitol}
                                 editable={editable}
                                 selected={selectedItemId === item.id}
-                                onSelect={onSelectItem}
+                                entity={dashboardWidget ?? dashboardTitol}
+                                onItemContextMenu={handleItemContextMenu}
                             >
                                 <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
                                     {(() => {
@@ -320,6 +413,25 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                     })}
                 </CustomGridLayout>
             </Box>
+            <Menu
+                open={contextMenu !== null}
+                onClose={closeContextMenu}
+                anchorReference="anchorPosition"
+                anchorPosition={contextMenu ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined}
+            >
+                <MenuItem onClick={handleContextMenuModificar}>
+                    <ListItemIcon><Icon fontSize="small">edit</Icon></ListItemIcon>
+                    <ListItemText>{t($ => $.common.modify)}</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={handleContextMenuDuplicar}>
+                    <ListItemIcon><Icon fontSize="small">content_copy</Icon></ListItemIcon>
+                    <ListItemText>{t($ => $.common.duplicate)}</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={handleContextMenuEliminar}>
+                    <ListItemIcon><Icon fontSize="small">delete</Icon></ListItemIcon>
+                    <ListItemText>{t($ => $.common.delete)}</ListItemText>
+                </MenuItem>
+            </Menu>
         </>
     );
 };

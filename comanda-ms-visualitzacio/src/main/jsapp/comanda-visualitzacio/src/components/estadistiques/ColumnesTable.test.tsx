@@ -18,8 +18,8 @@ const mocks = vi.hoisted(() => ({
                         },
                     },
                     action: {
-                        addColumn: {
-                            label: 'Afegir columna',
+                        addIndicador: {
+                            label: 'Afegir indicador',
                         },
                     },
                 },
@@ -105,7 +105,7 @@ describe('ColumnesTable', () => {
 
         render(<ColumnesTable name="columnes" mostrarUnitat={true} onChange={mocks.onChangeMock} />);
 
-        fireEvent.click(screen.getByRole('button', { name: 'Afegir columna' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Afegir indicador' }));
 
         expect(screen.getByTestId('field-columnes.1.indicador')).toBeInTheDocument();
         expect(mocks.setFieldValueMock).toHaveBeenCalledWith('columnes', [

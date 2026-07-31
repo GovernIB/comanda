@@ -35,7 +35,7 @@ import java.util.List;
  * - `titol`: El títol del widget. És obligatori i té una longitud màxima de 64 caràcters.
  * - `descripcio`: La descripció del widget. És opcional i té una longitud màxima de 1024 caràcters.
  * - `aplicacioCodi`: El codi de l'aplicació associada al widget. És obligatori i té una longitud màxima de 16 caràcters.
- * - `dimensionsValor`: Llista de dimensions i els seus valors associats per filtrar les dades. És obligatori i no pot ser buit.
+ * - `dimensionsValor`: Llista de dimensions i els seus valors associats per filtrar les dades. És opcional; si no se n'indica cap, es mostren totes les dades.
  * - `iniciUnitat`: Unitats de temps del punt inicial del període (per exemple, MES, DIA). És opcional.
  * - `inici`: Nombre d'unitats de temps a retrocedir per calcular l'inici del període de temps mostrable. És opcional.
  * - `duracioUnitat`: Unitats de temps per especificar la duració del període. És opcional.
@@ -53,7 +53,7 @@ import java.util.List;
  * - La llista `dimensionsValor` conté objectes `DimensioValor` per aplicar filtres sobre els valors de dades.
  *
  * Validacions:
- * - Els camps obligatoris com `titol`, `aplicacioCodi`, `dimensionsValor` i `dimensioAgrupacio` han d'estar degudament completats.
+ * - Els camps obligatoris com `titol`, `aplicacioCodi` i `dimensioAgrupacio` han d'estar degudament completats.
  * - Els valors de mida màxima en camps com `titol` i `descripcio` no s’han de superar per respectar el format.
  *
  * Exemple de l'escenari:

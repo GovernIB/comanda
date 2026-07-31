@@ -17,7 +17,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
@@ -42,8 +41,7 @@ public class WidgetBaseResource<ID extends Serializable> extends BaseResource<ID
     protected ResourceReference<AppResource, Long> aplicacio;
     protected Long appId;
 
-    // Dimensions per les que filtrar
-    @NotEmpty
+    // Dimensions per les que filtrar (opcional: si no se n'indica cap, es mostren totes les dades)
     protected List<ResourceReference<DimensioValor, Long>> dimensionsValor;
 
     @NotNull

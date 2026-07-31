@@ -176,16 +176,21 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                 DashboardTitolEntity titol,
                 DashboardEntity dashboard,
                 boolean temaFosc) {
-            AtributsVisualsTitol atributsVisuals = AtributsVisualsTitol.builder()
-                    .colorTitol(titol.getColorTitol())
-                    .midaFontTitol(titol.getMidaFontTitol())
-                    .colorSubtitol(titol.getColorSubtitol())
-                    .midaFontSubtitol(titol.getMidaFontSubtitol())
-                    .colorFons(titol.getColorFons())
-                    .mostrarVora(titol.getMostrarVora())
-                    .colorVora(titol.getColorVora())
-                    .ampleVora(titol.getAmpleVora())
-                    .build();
+            // Els camps propis del títol només sobreescriuen la plantilla si l'usuari ha activat
+            // "personalitzat" explícitament; en cas contrari (encara que hi hagi valors residuals
+            // guardats) s'ha d'aplicar sempre la plantilla amb prioritat (i el seu tema destacat).
+            AtributsVisualsTitol atributsVisuals = Boolean.TRUE.equals(titol.getPersonalitzat())
+                    ? AtributsVisualsTitol.builder()
+                            .colorTitol(titol.getColorTitol())
+                            .midaFontTitol(titol.getMidaFontTitol())
+                            .colorSubtitol(titol.getColorSubtitol())
+                            .midaFontSubtitol(titol.getMidaFontSubtitol())
+                            .colorFons(titol.getColorFons())
+                            .mostrarVora(titol.getMostrarVora())
+                            .colorVora(titol.getColorVora())
+                            .ampleVora(titol.getAmpleVora())
+                            .build()
+                    : AtributsVisualsTitol.builder().build();
             PlantillaEntity plantilla = titol.getPlantilla() != null
                     ? titol.getPlantilla()
                     : (dashboard != null ? dashboard.getPlantilla() : null);

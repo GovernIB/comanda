@@ -18,6 +18,8 @@ import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
+import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
+import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaGrupPaletesEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
@@ -683,23 +685,42 @@ public class ConsultaEstadisticaHelper {
 
     public AtributsVisuals resolveAtributsVisuals(DashboardItemEntity dashboardItem, boolean temaFosc) {
         AtributsVisuals resolved = ensureAtributsVisualsType(dashboardItem, null);
-        AtributsVisuals atributsVisualsDash = atributsVisualsHelper.getAtributsVisuals(dashboardItem);
-        if (atributsVisualsDash != null) {
-            resolved = resolved.merge(atributsVisualsDash);
-        }
-        AtributsVisuals atributsVisualsWidget = atributsVisualsHelper.getAtributsVisuals(dashboardItem.getWidget());
-        if (atributsVisualsWidget != null) {
-            resolved = resolved.merge(atributsVisualsWidget);
+        // Els camps propis del widget/dashboardItem només sobreescriuen la plantilla si l'usuari ha
+        // activat "personalitzat" explícitament; en cas contrari (encara que hi hagi valors residuals
+        // guardats) s'ha d'aplicar sempre la plantilla amb prioritat (i el seu tema destacat).
+        if (Boolean.TRUE.equals(dashboardItem.getPersonalitzat())) {
+            AtributsVisuals atributsVisualsDash = atributsVisualsHelper.getAtributsVisuals(dashboardItem);
+            if (atributsVisualsDash != null) {
+                resolved = resolved.merge(atributsVisualsDash);
+            }
+            AtributsVisuals atributsVisualsWidget = atributsVisualsHelper.getAtributsVisuals(dashboardItem.getWidget());
+            if (atributsVisualsWidget != null) {
+                resolved = resolved.merge(atributsVisualsWidget);
+            }
         }
         PlantillaEntity plantilla = dashboardItem.getPlantilla() != null
             ? dashboardItem.getPlantilla()
             : dashboardItem.getDashboard() != null ? dashboardItem.getDashboard().getPlantilla() : null;
+        log.debug(
+                "resolveAtributsVisuals dashboardItem={} personalitzat={} destacat={} plantillaId={} plantillaNom={}",
+                dashboardItem.getId(), dashboardItem.getPersonalitzat(), dashboardItem.getDestacat(),
+                plantilla != null ? plantilla.getId() : null, plantilla != null ? plantilla.getNom() : null);
         if (plantilla != null) {
             boolean destacat = Boolean.TRUE.equals(dashboardItem.getDestacat());
             PaletteGroupType groupType = temaFosc
                 ? (destacat ? PaletteGroupType.DARK_HIGHLIGHTED : PaletteGroupType.DARK)
                 : (destacat ? PaletteGroupType.LIGHT_HIGHLIGHTED : PaletteGroupType.LIGHT);
+            log.debug(
+                    "resolveAtributsVisuals dashboardItem={} groupType={} paletteGroups={} styleProperties={}",
+                    dashboardItem.getId(), groupType,
+                    plantilla.getPaletteGroups() != null
+                            ? plantilla.getPaletteGroups().stream().map(PlantillaGrupPaletesEntity::getGroupType).collect(Collectors.toList())
+                            : null,
+                    plantilla.getStyleProperties() != null
+                            ? plantilla.getStyleProperties().stream().map(p -> p.getScope() + ":" + p.getPropertyName()).collect(Collectors.toList())
+                            : null);
             dashboardStyleResolverHelper.applyTemplateDefaults(resolved, plantilla, groupType, widgetStyleScope(dashboardItem));
+            log.debug("resolveAtributsVisuals dashboardItem={} resolved={}", dashboardItem.getId(), resolved);
         }
         return ensureAtributsVisualsType(dashboardItem, resolved);
     }

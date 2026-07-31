@@ -208,6 +208,68 @@ class DashboardServiceImplTest {
     }
 
     @Test
+    @DisplayName("InformeWidgets: sense personalitzat, s'ignoren els camps propis del títol (encara que hi hagi valors residuals)")
+    void informeWidgets_titolSensePersonalitzat_ignoraElsCampsPropis() throws Exception {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+
+        PlantillaEntity plantilla = new PlantillaEntity();
+        entity.setPlantilla(plantilla);
+
+        DashboardTitolEntity titol = new DashboardTitolEntity();
+        titol.setId(20L);
+        titol.setTitol("Títol amb residus");
+        titol.setPosX(0);
+        titol.setPosY(0);
+        titol.setWidth(12);
+        titol.setHeight(1);
+        titol.setTipusTitol(DashboardTitolTipus.TIPUS_1);
+        titol.setColorTitol("#AAAAAA");
+        titol.setColorFons("#BBBBBB");
+        titol.setPersonalitzat(false);
+        entity.setTitols(List.of(titol));
+
+        mockDashboardEntity(entity);
+
+        ReportGenerator<DashboardEntity, InformeWidgetParams, InformeWidgetItem> reportGenerator = createInformeWidgets();
+        List<InformeWidgetItem> result = reportGenerator.generateData(Dashboard.WIDGETS_REPORT, entity, null);
+
+        InformeWidgetTitolItem item = (InformeWidgetTitolItem) result.get(0);
+        assertThat(item.getAtributsVisuals().getColorTitol()).isNull();
+        assertThat(item.getAtributsVisuals().getColorFons()).isNull();
+    }
+
+    @Test
+    @DisplayName("InformeWidgets: amb personalitzat, s'apliquen els camps propis del títol")
+    void informeWidgets_titolAmbPersonalitzat_aplicaElsCampsPropis() throws Exception {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+
+        PlantillaEntity plantilla = new PlantillaEntity();
+        entity.setPlantilla(plantilla);
+
+        DashboardTitolEntity titol = new DashboardTitolEntity();
+        titol.setId(20L);
+        titol.setTitol("Títol personalitzat");
+        titol.setPosX(0);
+        titol.setPosY(0);
+        titol.setWidth(12);
+        titol.setHeight(1);
+        titol.setTipusTitol(DashboardTitolTipus.TIPUS_1);
+        titol.setColorTitol("#AAAAAA");
+        titol.setPersonalitzat(true);
+        entity.setTitols(List.of(titol));
+
+        mockDashboardEntity(entity);
+
+        ReportGenerator<DashboardEntity, InformeWidgetParams, InformeWidgetItem> reportGenerator = createInformeWidgets();
+        List<InformeWidgetItem> result = reportGenerator.generateData(Dashboard.WIDGETS_REPORT, entity, null);
+
+        InformeWidgetTitolItem item = (InformeWidgetTitolItem) result.get(0);
+        assertThat(item.getAtributsVisuals().getColorTitol()).isEqualTo("#AAAAAA");
+    }
+
+    @Test
     @DisplayName("InformeWidgets: títol amb tema clar aplica PaletteGroupType.LIGHT")
     void informeWidgets_titolAmbTemaClar_aplicaLightPalette() throws Exception {
         DashboardEntity entity = new DashboardEntity();

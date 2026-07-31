@@ -61,7 +61,7 @@ import java.util.List;
  * - titol: Obligatori, amb un màxim de 64 caràcters.
  * - descripcio: Opcional, amb un màxim de 1024 caràcters.
  * - aplicacioCodi: Obligatori, amb un màxim de 16 caràcters.
- * - dimensionsValor: No pot estar buit.
+ * - dimensionsValor: Opcional; si no se n'indica cap, es mostren totes les dades.
  * - inici, duracio: Opcional, però si estan presents, han d'estar en sintonia amb les unitats corresponents.
  * - indicador: Obligatori i ha de referenciar un objecte del tipus Indicador.
  * - tipusGrafic: Obligatori.

@@ -10,6 +10,8 @@ const translationEs: translationResourcesType = {
         cancel: "Cancelar",
         confirm: "Confirmar",
         save: "Guardar",
+        modify: "Modificar",
+        duplicate: "Duplicar",
     },
     enum: {
         appEstat: {
@@ -381,21 +383,9 @@ const translationEs: translationResourcesType = {
                 title: "Clonar el panel de control",
                 success: "Panel de control clonado correctamente",
             },
-            components: {
-                llistar: "Listar componentes",
-                afegir: "Añadir componente",
-            },
             action: {
                 select: {
                     title: "Seleccione el tablero a mostrar...",
-                },
-                llistarWidget: {
-                    label: "Listar widgets",
-                    title: "Listar widgets",
-                },
-                llistarTitle: {
-                    label: "Listar títulos",
-                    title: "Listar títulos",
                 },
                 patchItem: {
                     success: "Guardado correctamente",
@@ -404,14 +394,11 @@ const translationEs: translationResourcesType = {
                     saveError: "Error al guardar",
                 },
                 addWidget: {
-                    label: "Añadir widget",
-                    title: "Añadir widget",
                     success: "Widget añadido correctamente",
                     error: "Error al añadir el widget",
                 },
-                afegirTitle: {
-                    label: "Añadir título",
-                    title: "Añadir título",
+                createComponent: {
+                    label: "Crear componente",
                 },
                 export: "Exportar tablero",
                 import: {
@@ -899,10 +886,6 @@ const translationEs: translationResourcesType = {
         },
         widget: {
             title: "Widgets estadísticos",
-            grid: {
-                position: "Posición",
-                size: "Tamaño",
-            },
             form: {
                 periode: "Período",
                 simple: "Widget simple",
@@ -918,6 +901,29 @@ const translationEs: translationResourcesType = {
                 graficPst: "Gráfico de pastel",
                 graficGug: "Gráfico de gauge",
                 graficMap: "Gráfico de heatmap",
+                any: "Año",
+                help: {
+                    tipusIndicador: "Si en el período seleccionado hay más de un valor, indica cómo deben combinarse para obtener el valor final (por ejemplo, sumándolos o calculando su media).",
+                    periodeIndicador: "Cuando se calcula una media, indica cada cuánto tiempo se toma un valor para calcularla (por ejemplo, cada día o cada semana).",
+                    tipusDades: "Indica si el gráfico mostrará un único dato, un dato desglosado por otro criterio, dos datos para compararlos, o varios datos a la vez.",
+                    tempsAgrupacio: "Indica cada cuánto tiempo se agrupan los valores para dibujar el gráfico (por ejemplo, por día, por semana o por mes).",
+                    agregacio: "Si en un mismo intervalo hay más de un valor, indica cómo deben combinarse (por ejemplo, sumándolos o calculando su media).",
+                    unitatAgregacio: "Cuando se calcula una media, indica cada cuánto tiempo se toma un valor para calcularla.",
+                    descomposicioDimensio: "Elija un criterio (por ejemplo, departamento o tipo de trámite) para desglosar el indicador en varias series dentro del mismo gráfico.",
+                    agruparPerDimensioDescomposicio: "Si lo activa, el gráfico mostrará un único valor totalizado para cada valor de este criterio, sin evolución temporal. Si no lo activa, el gráfico mostrará la evolución en el tiempo del indicador, con una serie distinta para cada valor del criterio de desglose.",
+                    dimensioAgrupacio: "Las filas de la tabla se generarán según este criterio: habrá una fila por cada valor distinto (por ejemplo, una fila por cada departamento). Es obligatorio.",
+                    relatiuPuntReferencia: "Indica el momento que se utiliza como referencia para calcular el período (por ejemplo, hoy o el inicio del mes actual).",
+                    relatiuCount: "Indica cuántas unidades de tiempo (días, semanas, meses...) se incluyen contando hacia atrás desde el punto de referencia.",
+                    relatiueUnitat: "Indica la unidad de tiempo que se cuenta (días, semanas, meses, trimestres, años...).",
+                    relatiuAlineacio: "Indica si el período debe ajustarse al inicio o al final natural de la unidad (por ejemplo, el inicio de la semana o del mes) o contar exactamente desde el punto de referencia.",
+                    absolutTipus: "Indica cómo quiere definir el período fijo: un intervalo concreto de fechas, o un período específico de un año (por ejemplo, el primer trimestre de 2024).",
+                    absolutDataInici: "Fecha en la que empieza el intervalo que se quiere mostrar.",
+                    absolutDataFi: "Fecha en la que acaba el intervalo que se quiere mostrar.",
+                    absolutAnyReferencia: "Indica si quiere utilizar el año actual o bien elegir un año concreto.",
+                    absolutPeriodeUnitat: "Indica qué tipo de período de ese año se quiere mostrar (por ejemplo, un mes, un trimestre o un semestre).",
+                    absolutPeriodeInici: "Indica en qué número de período (según la unidad elegida) empieza el intervalo (por ejemplo, el 1r trimestre).",
+                    absolutPeriodeFi: "Indica en qué número de período (según la unidad elegida) acaba el intervalo.",
+                },
             },
             simple: {
                 tab: {
@@ -1009,13 +1015,93 @@ const translationEs: translationResourcesType = {
                 empty: "No hay colores en la paleta.",
                 exist: "¡Este color ya existe en la paleta!",
             },
+            wizard: {
+                title: "Crear un componente nuevo",
+                steps: {
+                    type: "Tipo",
+                    content: "Contenido",
+                    indicators: "Información a mostrar",
+                    dimensions: "Filtros",
+                    period: "Período",
+                    visual: "Visualización",
+                    position: "Posición y tamaño",
+                },
+                types: {
+                    titol: {
+                        label: "Título",
+                        description: "Texto destacado para organizar el tablero en secciones. No muestra datos.",
+                    },
+                    simple: {
+                        label: "Simple",
+                        description: "Muestra un único valor numérico (por ejemplo, el número total de trámites), con un título y, opcionalmente, un icono.",
+                    },
+                    grafic: {
+                        label: "Gráfico",
+                        description: "Representa la evolución o distribución de la información seleccionada mediante un gráfico (barras, líneas, tarta, etc.).",
+                    },
+                    taula: {
+                        label: "Tabla",
+                        description: "Muestra los datos en forma de tabla, con filas y columnas configurables.",
+                    },
+                },
+                help: {
+                    type: "Elija qué tipo de componente quiere añadir al tablero. Cada tipo se muestra de manera diferente.",
+                    appEntorn: "Indique para qué aplicación y entorno quiere crear este componente.",
+                    content: "Escriba el texto que se mostrará como título (y, opcionalmente, un subtítulo).",
+                    indicators: "Elija qué información estadística quiere mostrar en este componente (por ejemplo, el número de solicitudes).",
+                    dimensions: "Puede limitar la información mostrada a un subconjunto concreto (por ejemplo, solo un tipo de trámite o un departamento). Si no aplica ningún filtro, se mostrarán todos los datos disponibles.",
+                    period: "Indique de qué período de tiempo quiere mostrar los datos estadísticos: un período relativo (como 'los últimos 30 días'), predefinido o un intervalo de fechas concreto.",
+                    visual: "Por defecto el componente se mostrará siguiendo el estilo estándar del tablero (plantilla). Si quiere personalizar su apariencia (colores, tamaños, etc.) active la opción 'Personalizado'.",
+                },
+                visual: {
+                    personalitzat: "Personalizado",
+                    personalitzatHelp: "Si lo activa, podrá configurar colores, tamaños y otros detalles visuales propios de este componente. Si no, se aplicará el estilo estándar (plantilla) del tablero.",
+                    personalitzatBadge: "Este componente tiene elementos personalizados que sobrescriben la configuración visual del tablero.",
+                },
+                actions: {
+                    cancel: "Cancelar",
+                    back: "Atrás",
+                    next: "Siguiente",
+                    finish: "Crear",
+                    validationError: "Hay campos con errores. Revíselos en el paso indicado antes de volver a intentarlo.",
+                },
+            },
             action: {
                 add: {
                     label: "Añadir",
                 },
-                addColumn: {
-                    label: "Añadir columna",
+                addIndicador: {
+                    label: "Añadir indicador",
                 },
+            },
+            editor: {
+                properties: "Propiedades",
+                configData: "Configuración de datos",
+                configVisual: "Configuración visual",
+                titleText: "Texto del título",
+                titleType: "Tipo de título",
+                showDestacat: "Mostrar como destacado",
+                template: "Plantilla",
+                textSize: "Tamaño del texto",
+                textColor: "Color del texto",
+                subtitleSize: "Tamaño del subtítulo",
+                subtitleColor: "Color del subtítulo",
+                backgroundColor: "Color de fondo",
+                showBorder: "Mostrar borde",
+                borderColor: "Color de borde",
+                borderWidth: "Ancho de borde",
+                posX: "Posición X",
+                posY: "Posición Y",
+                width: "Ancho",
+                height: "Alto",
+                widgetType: "Tipo de widget",
+                empty: "Seleccione un elemento del canvas o cree un widget nuevo para editar sus propiedades.",
+                selectWidgetType: "Seleccione el tipo de widget",
+                confirmTitle: "Confirmación",
+                confirmDelete: "¿Está seguro de que desea eliminar este elemento del dashboard?",
+                deleted: "Elemento eliminado",
+                deleteError: "No se ha podido eliminar",
+                selectType: "Seleccione un tipo para ver las propiedades configurables.",
             },
         },
         caches: {

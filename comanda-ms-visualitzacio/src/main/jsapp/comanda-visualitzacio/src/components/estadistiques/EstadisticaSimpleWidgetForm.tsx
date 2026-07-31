@@ -2,7 +2,7 @@ import Grid from '@mui/material/Grid';
 import { FormField, useFormContext } from 'reactlib';
 import * as React from 'react';
 import { useMemo } from 'react';
-import EstadisticaWidgetFormFields from './EstadisticaWidgetFormFields';
+import EstadisticaWidgetFormFields, { FieldHelp } from './EstadisticaWidgetFormFields';
 import VisualAttributesPanel from './VisualAttributesPanel';
 import { columnesIndicador } from '../sharedAdvancedSearch/advancedSearchColumns';
 import { Divider, Box, Typography } from '@mui/material';
@@ -12,13 +12,26 @@ import FormFieldCustomAdvancedSearch from '../FormFieldCustomAdvancedSearch';
 import { WidgetPreview } from './WidgetPreview';
 import { SimpleWidgetVisualizationProps } from './SimpleWidgetVisualization';
 
+/** Camps que sobreescriuen l'estil de la plantilla */
+const SIMPLE_OVERRIDE_FIELDS = [
+    'icona', 'colorText', 'colorFons', 'colorIcona', 'colorFonsIcona', 'colorTextDestacat',
+    'mostrarVora', 'colorVora', 'ampleVora',
+    'midaFontTitol', 'midaFontDescripcio', 'midaFontValor', 'midaFontUnitats', 'midaFontCanviPercentual',
+];
+
+/** Indica si el widget té algun valor que sobreescrigui la plantilla (per mostrar l'indicador de "personalitzat") */
+export const hasVisualOverrides = (data: any): boolean =>
+    SIMPLE_OVERRIDE_FIELDS.some(field => data?.[field] !== undefined && data?.[field] !== null && data?.[field] !== '');
+
 type EstadisticaSimpleWidgetFormProps = {
-    mode?: 'full' | 'stats' | 'visual';
+    mode?: 'full' | 'stats' | 'indicators' | 'visual';
     dashboardPlantilla?: any;
     destacat?: boolean;
+    /** Indica si s'han de mostrar els camps que sobreescriuen la plantilla (per defecte, sí). La previsualització es mostra sempre. */
+    showOverrideFields?: boolean;
 };
 
-const EstadisticaSimpleWidgetForm: React.FC<EstadisticaSimpleWidgetFormProps> = ({ mode = 'full', dashboardPlantilla, destacat }) => {
+const EstadisticaSimpleWidgetForm: React.FC<EstadisticaSimpleWidgetFormProps> = ({ mode = 'full', dashboardPlantilla, destacat, showOverrideFields = true }) => {
     const { data } = useFormContext();
     const { t } = useTranslation();
     const previewData: SimpleWidgetVisualizationProps = useMemo(
@@ -45,7 +58,7 @@ const EstadisticaSimpleWidgetForm: React.FC<EstadisticaSimpleWidgetFormProps> = 
             midaFontUnitats: data.midaFontUnitats,
             midaFontCanviPercentual: data.midaFontCanviPercentual,
         }),
-        [data]
+        [data, destacat]
     );
 
     const isMostrarVora: boolean = data?.mostrarVora;
@@ -54,6 +67,10 @@ const EstadisticaSimpleWidgetForm: React.FC<EstadisticaSimpleWidgetFormProps> = 
 
     if (mode === 'stats') {
         return renderStatsFields();
+    }
+
+    if (mode === 'indicators') {
+        return <Grid container spacing={2}>{renderIndicatorFields()}</Grid>;
     }
 
     if (mode === 'visual') {
@@ -79,20 +96,16 @@ const EstadisticaSimpleWidgetForm: React.FC<EstadisticaSimpleWidgetFormProps> = 
     function renderStatsFields() {
         return (
             <EstadisticaWidgetFormFields>
+                {renderIndicatorFields()}
+            </EstadisticaWidgetFormFields>
+        );
+    }
+
+    function renderIndicatorFields() {
+        return (
+            <>
                 <Grid size={12}>
                     <Divider sx={{ my: 1 }}>{t($ => $.page.widget.form.simple)}</Divider>
-                </Grid>
-                <Grid size={12}>
-                    <IconAutocompleteSelect
-                        name="icona"
-                        label={t($ => $.page.widget.atributsVisuals.icona)}
-                    />
-                </Grid>
-                <Grid size={6}>
-                    <FormField name="unitat" />
-                </Grid>
-                <Grid size={6}>
-                    <FormField name="compararPeriodeAnterior" />
                 </Grid>
                 <Grid size={12}>
                     <FormFieldCustomAdvancedSearch
@@ -112,14 +125,25 @@ const EstadisticaSimpleWidgetForm: React.FC<EstadisticaSimpleWidgetFormProps> = 
                     <FormField
                         name="tipusIndicador"
                     />
+                    <FieldHelp text={t($ => $.page.widget.form.help.tipusIndicador)} />
                 </Grid>
                 <Grid size={6}>
                     <FormField
                         name="periodeIndicador"
                         disabled={data.tipusIndicador !== 'AVERAGE'}
                     />
+                    <FieldHelp text={t($ => $.page.widget.form.help.periodeIndicador)} />
                 </Grid>
-            </EstadisticaWidgetFormFields>
+                <Grid size={12}>
+                    <Divider sx={{ my: 1 }} />
+                </Grid>
+                <Grid size={6}>
+                    <FormField name="unitat" />
+                </Grid>
+                <Grid size={6}>
+                    <FormField name="compararPeriodeAnterior" />
+                </Grid>
+            </>
         );
     }
 
@@ -136,7 +160,7 @@ const EstadisticaSimpleWidgetForm: React.FC<EstadisticaSimpleWidgetFormProps> = 
                         dashboardPlantilla={dashboardPlantilla}
                     />
                 </Box>
-                {renderSimpleFormFields()}
+                {showOverrideFields && renderSimpleFormFields()}
             </Box>
         );
     }
@@ -149,6 +173,12 @@ const EstadisticaSimpleWidgetForm: React.FC<EstadisticaSimpleWidgetFormProps> = 
                     <Typography variant="subtitle2" sx={{ mt: 3, mb: 2 }}>
                         {t($ => $.page.widget.form.configGeneral)}
                     </Typography>
+                </Grid>
+                <Grid size={12}>
+                    <IconAutocompleteSelect
+                        name="icona"
+                        label={t($ => $.page.widget.atributsVisuals.icona)}
+                    />
                 </Grid>
                 <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                     <FormField

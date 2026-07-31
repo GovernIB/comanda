@@ -133,6 +133,24 @@ export const useDashboardWidgets = (dashboardId: any, temaFosc = false) => {
         effectFunction();
     }, [effectFunction]);
 
+    /** Refresca només un widget (no cal recarregar tot el dashboard quan només s'ha modificat un component existent) */
+    const refreshWidget = useCallback((dashboardItemId: any) => {
+        if (!apiDashboardItemIsReady || dashboardItemId == null) return;
+        artifactReportDashboardItem(dashboardItemId, { code: 'widget_data', data: { temaFosc } })
+            .then((dashboardItemData: any) => {
+                const firstDashboardItemData = (dashboardItemData as any[])?.[0];
+                if (!firstDashboardItemData) return;
+                setRequestState((prevState) => ({
+                    ...prevState,
+                    widgets: prevState.widgets?.map((item: any) =>
+                        String(item.dashboardItemId) === String(dashboardItemId)
+                            ? { ...firstDashboardItemData, loading: false }
+                            : item
+                    ),
+                }));
+            });
+    }, [apiDashboardItemIsReady, artifactReportDashboardItem, temaFosc]);
+
     const errorDashboardWidgets = useMemo(
         () => requestState.widgets?.filter((widget: any) => widget.error),
         [requestState.widgets]
@@ -143,5 +161,6 @@ export const useDashboardWidgets = (dashboardId: any, temaFosc = false) => {
         loadingWidgetPositions: requestState.loadingWidgetPositions,
         loadingWidgetData: requestState.loadingWidgetData,
         forceRefresh,
+        refreshWidget,
     };
 };

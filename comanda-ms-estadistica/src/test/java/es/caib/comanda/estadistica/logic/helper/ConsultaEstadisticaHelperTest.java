@@ -743,6 +743,7 @@ public class ConsultaEstadisticaHelperTest {
             // Arrange
             DashboardItemEntity dashboardItem = new DashboardItemEntity();
             dashboardItem.setId(1L);
+            dashboardItem.setPersonalitzat(true);
 
             // Test with SimpleWidget
             EstadisticaSimpleWidgetEntity simpleWidget = new EstadisticaSimpleWidgetEntity();
@@ -804,6 +805,7 @@ public class ConsultaEstadisticaHelperTest {
             // Arrange
             DashboardItemEntity dashboardItem = new DashboardItemEntity();
             dashboardItem.setId(1L);
+            dashboardItem.setPersonalitzat(true);
 
             // Create widget with visual attributes
             EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
@@ -836,6 +838,31 @@ public class ConsultaEstadisticaHelperTest {
         } catch (Exception e) {
             fail("Exception occurred: " + e.getMessage());
         }
+    }
+
+    @Test
+    void testResolveAtributsVisualsSensePersonalitzat_ignoraElsCampsPropisDelWidgetIDashboardItem() {
+        // Encara que el widget/dashboardItem tinguin valors guardats (p. ex. residuals d'una prova
+        // anterior), si `personalitzat` no és cert no s'han d'aplicar mai: han de venir sempre de la
+        // plantilla (regla 5). Això evita que un camp no-nul bloquegi per sempre el tema destacat.
+        DashboardItemEntity dashboardItem = new DashboardItemEntity();
+        dashboardItem.setId(1L);
+        dashboardItem.setPersonalitzat(false);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        dashboardItem.setWidget(widget);
+
+        AtributsVisualsSimple widgetAtributs = new AtributsVisualsSimple();
+        widgetAtributs.setColorText("#AAAAAA");
+        lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class)))
+                .thenReturn(widgetAtributs);
+
+        Object result = consultaEstadisticaHelper.resolveAtributsVisuals(dashboardItem, false);
+
+        assertInstanceOf(AtributsVisualsSimple.class, result);
+        assertNull(((AtributsVisualsSimple) result).getColorText());
+        verify(atributsVisualsHelper, never()).getAtributsVisuals(any(EstadisticaWidgetEntity.class));
+        verify(atributsVisualsHelper, never()).getAtributsVisuals(any(DashboardItemEntity.class));
     }
 
     @Test

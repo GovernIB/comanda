@@ -34,6 +34,7 @@ public class DashboardTitolExport implements Serializable {
     private String colorVora;
     private Integer ampleVora;
     private Boolean destacat;
+    private Boolean personalitzat;
     private PlantillaExport plantilla;
 
 }

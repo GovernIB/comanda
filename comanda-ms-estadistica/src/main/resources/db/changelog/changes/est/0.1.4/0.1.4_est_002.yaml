@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: est-dashboard-titol-personalitzat-0.1.4-001
+      author: limit
+      comment: Afegir camp personalitzat per títols de dashboard
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: ${db_prefix}est_dashboard_titol
+              columnName: personalitzat
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}est_dashboard_titol
+            columns:
+              - column:
+                  name: personalitzat
+                  type: boolean
+                  defaultValueBoolean: false
+      rollback:
+        - dropColumn:
+            tableName: ${db_prefix}est_dashboard_titol
+            columnName: personalitzat
