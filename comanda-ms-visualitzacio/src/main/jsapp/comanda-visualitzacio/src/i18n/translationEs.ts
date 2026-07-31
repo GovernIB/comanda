@@ -112,6 +112,7 @@ const translationEs: translationResourcesType = {
         sitemap: "Mapa del sitio web",
         user: {
             lastConnection: "Fecha y hora de la última conexión del usuario",
+            darreraConnexio: "Última conexión:",
             options: {
                 profile: {
                     title: "Mi perfil",
@@ -225,6 +226,8 @@ const translationEs: translationResourcesType = {
                 noInfo: 'No hay datos disponibles para este entorno',
                 downAlert: "La aplicación se encuentra caída. No se puede mostrar toda la información de salud.",
                 darreraDataInfo1: "La aplicación dejó de estar operativa el ",
+                darreraDataInfoHora: " a las ",
+                darreraDataInfoHores: " horas",
                 darreraDataInfo2: "Estado anterior: ",
             },
             latencia: {

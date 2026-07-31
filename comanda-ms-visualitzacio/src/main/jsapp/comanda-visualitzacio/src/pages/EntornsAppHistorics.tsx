@@ -104,19 +104,24 @@ const EntornAppHist: React.FC = () => {
     const [filter, setFilter] = React.useState<string | undefined>();
     const columns: MuiDataGridColDef[] = React.useMemo(() => ([
         {
-            field: 'entornApp',
-            flex: 1.5,
+            field: 'app',
+            flex: 0.2,
+            minWidth: 100,
+        },
+        {
+            field: 'entorn',
+            flex: 1,
             minWidth: 150,
         },
         {
             field: 'data',
-            flex: 1,
-            minWidth: 150,
+            flex: 0.5,
+            minWidth: 160,
             valueFormatter: (value: unknown) => dateFormatLocale(value, true),
         },
         {
             field: 'versio',
-            flex: 1,
+            flex: 0.5,
             headerName: t($ => $.page.entornAppHist.versioRevisio),
             sortable: false,
             minWidth: 165,

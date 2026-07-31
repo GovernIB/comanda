@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { GridPage, MuiDataGrid, MuiDataGridColDef, useResourceApiService } from 'reactlib';
+import { MuiDataGrid, MuiDataGridColDef, useResourceApiService } from 'reactlib';
 import { Chip, Stack, Tooltip } from '@mui/material';
 import PageTitle from '../components/PageTitle.tsx';
 import { truncateHashRevisio } from './salut/dataFetching.ts';
@@ -93,7 +93,7 @@ const Entorns: React.FC = () => {
     }, [entorns]);
 
     return (
-        <GridPage disableMargins>
+        <>
             <PageTitle title={t($ => $.page.versionsEntorns.title)} />
             <MuiDataGrid
                 title={t($ => $.page.versionsEntorns.title)}
@@ -104,7 +104,7 @@ const Entorns: React.FC = () => {
                 toolbarType="upper"
                 paginationActive
             />
-        </GridPage>
+        </>
     );
 };
 

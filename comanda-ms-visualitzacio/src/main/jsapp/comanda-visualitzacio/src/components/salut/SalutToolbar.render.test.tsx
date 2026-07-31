@@ -12,6 +12,11 @@ vi.mock('react-i18next', () => ({
         t: (selector: any) =>
             typeof selector === 'function'
                 ? selector({
+                      menu: {
+                          versions: 'Versions',
+                          versionsEntorn: 'Versions per entorn',
+                          entornAppHist: "Històric d'entorn d'aplicació",
+                      },
                       page: {
                           salut: {
                               filtrar: 'Filtrar',
@@ -52,6 +57,14 @@ vi.mock('react-i18next', () => ({
     ),
 }));
 
+vi.mock('../../pages/VersionsEntorns', () => ({
+    default: () => <div data-testid="versions-entorns-component">Versions Entorns Component</div>,
+}));
+
+vi.mock('../../pages/EntornsAppHistorics', () => ({
+    default: () => <div data-testid="entorns-app-hist-component">Entorns App Hist Component</div>,
+}));
+
 vi.mock('reactlib', () => ({
     Toolbar: ({
         title,
@@ -83,6 +96,7 @@ vi.mock('reactlib', () => ({
         inn: (field: string, values: any[]) => `${field} in (${values.join(',')})`,
     },
     useBaseAppContext: () => ({ goBack: mocks.goBackMock }),
+    useCloseDialogButtons: () => [{ value: 'close', text: 'Tancar' }],
     useFilterApiRef: () => ({ current: { filter: vi.fn(), clear: vi.fn() } }),
     useFormContext: () => ({ data: {} }),
     useResourceApiContext: () => ({ indexState: { links: { has: vi.fn(() => true) } } }),
@@ -269,6 +283,72 @@ describe('SalutToolbar render', () => {
             />
         );
 
-        expect(screen.getByText(/Darrer:/)).toBeInTheDocument();
+        expect(screen.getByTitle(/Refrescar/)).toHaveAttribute('title', expect.stringContaining('Darrer:'));
+    });
+
+    it('SalutToolbar_quanEsClicaElBotoDeVersions_mostraElMenuDApccions', () => {
+        render(
+            <SalutToolbar
+                title="Salut"
+                ready={true}
+                onRefreshClick={() => undefined}
+                dataRangeDuration="PT15M"
+                setDataRangeDuration={() => undefined}
+                filterData={{}}
+                setFilterData={() => undefined}
+                grouping={GroupingEnum.APPLICATION}
+                setGrouping={() => undefined}
+            />
+        );
+
+        const versionsButton = screen.getByRole('button', { name: 'Versions' });
+        expect(versionsButton).toBeInTheDocument();
+
+        fireEvent.click(versionsButton);
+
+        expect(screen.getByText('Versions per entorn')).toBeInTheDocument();
+        expect(screen.getByText("Històric d'entorn d'aplicació")).toBeInTheDocument();
+    });
+
+    it('SalutToolbar_quanSeSeleccionaVersionsPerEntorn_obreElDialogCorresponent', () => {
+        render(
+            <SalutToolbar
+                title="Salut"
+                ready={true}
+                onRefreshClick={() => undefined}
+                dataRangeDuration="PT15M"
+                setDataRangeDuration={() => undefined}
+                filterData={{}}
+                setFilterData={() => undefined}
+                grouping={GroupingEnum.APPLICATION}
+                setGrouping={() => undefined}
+            />
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: 'Versions' }));
+        fireEvent.click(screen.getByText('Versions per entorn'));
+
+        expect(screen.getByTestId('versions-entorns-component')).toBeInTheDocument();
+    });
+
+    it('SalutToolbar_quanSeSeleccionaEntornAppHist_obreElDialogCorresponent', () => {
+        render(
+            <SalutToolbar
+                title="Salut"
+                ready={true}
+                onRefreshClick={() => undefined}
+                dataRangeDuration="PT15M"
+                setDataRangeDuration={() => undefined}
+                filterData={{}}
+                setFilterData={() => undefined}
+                grouping={GroupingEnum.APPLICATION}
+                setGrouping={() => undefined}
+            />
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: 'Versions' }));
+        fireEvent.click(screen.getByText("Històric d'entorn d'aplicació"));
+
+        expect(screen.getByTestId('entorns-app-hist-component')).toBeInTheDocument();
     });
 });

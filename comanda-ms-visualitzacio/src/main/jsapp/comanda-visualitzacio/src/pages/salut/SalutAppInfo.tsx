@@ -20,7 +20,7 @@ import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
 import { useTheme } from '@mui/material/styles';
 import { MarkPlot } from '@mui/x-charts/LineChart';
-import { dateFormatLocale } from 'reactlib';
+import { dateFormatLocale, timeFormatLocale } from 'reactlib';
 import UpdownBarChart from '../../components/salut/UpdownBarChart';
 import { isDataInGroup, toXAxisDataGroups } from '../../util/dataGroup';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -1013,7 +1013,15 @@ const AlertUltimaDataActiva: React.FC<AlertUltimaDataActivaProps> = ({ salutCurr
         <Grid size={{ sm: 12, lg: 12 }}>
             <Alert severity="info">
                 {t($ => $.page.salut.info.darreraDataInfo1)}
-                <strong>{dateFormatLocale(ultimEstatInfo.data, true)}</strong>{' '}
+                <strong>
+                    {dateFormatLocale(ultimEstatInfo.data)}
+                </strong>
+                {t($ => $.page.salut.info.darreraDataInfoHora)}
+                <strong>
+                    {timeFormatLocale(ultimEstatInfo.data)}
+                </strong>
+                {t($ => $.page.salut.info.darreraDataInfoHores)}
+                {' '}
                 ({t($ => $.page.salut.info.darreraDataInfo2)}<strong>{tTitle(ultimEstatInfo.estat)}</strong>)
             </Alert>
         </Grid>
@@ -1213,7 +1221,7 @@ const TabHistoricVersions: React.FC<{
     dataLoaded: boolean;
 }> = ({ entornApp }) => {
     const { t } = useTranslation();
-    
+
     if (entornApp == null) {
         return (
             <Box
@@ -1255,8 +1263,8 @@ const TabHistoricVersions: React.FC<{
                                     <TableCell>{dateFormatLocale(historic.data, true)}</TableCell>
                                     <TableCell>
                                         {historic.versio != null && (
-                                            <Chip 
-                                                label={historic.versio} 
+                                            <Chip
+                                                label={historic.versio}
                                                 color={historic.canviVersio ? 'success' : 'secondary'}
                                             />
                                         )}
@@ -1565,9 +1573,9 @@ const SalutAppInfo: React.FC<{
                     />
                 )}
                 {selectedTab === 'historicVersions' && (
-                    <TabHistoricVersions 
-                        entornApp={entornApp as (EntornAppModel & EntornAppHistPerspective) | null} 
-                        dataLoaded={dataLoaded} 
+                    <TabHistoricVersions
+                        entornApp={entornApp as (EntornAppModel & EntornAppHistPerspective) | null}
+                        dataLoaded={dataLoaded}
                     />
                 )}
                 {selectedTab === 'logs' && <TabLogs entornApp={entornApp} />}

@@ -112,6 +112,7 @@ const translationCa = {
         sitemap: "Mapa del lloc web",
         user: {
             lastConnection: "Data i hora de la darrera connexió de l'usuari",
+            darreraConnexio: "Darrera connexió:",
             options: {
                 profile: {
                     title: "El meu perfil",
@@ -225,6 +226,8 @@ const translationCa = {
                 noInfo: 'No hi ha dades disponibles per a aquest entorn',
                 downAlert: "L'aplicació es troba caiguda. No es pot mostrar tota la informació de salut.",
                 darreraDataInfo1: "L'aplicació va deixar d'estar operativa el ",
+                darreraDataInfoHora: " a les ",
+                darreraDataInfoHores: " hores",
                 darreraDataInfo2: "Estat anterior: ",
             },
             latencia: {
