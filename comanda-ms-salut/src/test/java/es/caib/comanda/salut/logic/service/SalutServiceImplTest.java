@@ -338,7 +338,7 @@ class SalutServiceImplTest {
                 .build();
 
         when(salutIntegracioRepository.findBySalutOrderByCodiAsc(entity)).thenReturn(List.of(integracioEntity));
-        when(salutClientHelper.entornAppFindById(33L)).thenReturn(entornApp);
+        when(salutClientHelper.entornAppFindByIdWithIntegracionsSubsistemesContexts(33L)).thenReturn(entornApp);
         when(objectMappingHelper.newInstanceMap(integracioEntity, SalutIntegracio.class, "salut")).thenReturn(integracio);
 
         service.new PerspectiveIntegracions().applySingle(Salut.PERSP_INTEGRACIONS, entity, resource);
@@ -356,7 +356,7 @@ class SalutServiceImplTest {
         ReflectionTestUtils.setField(context, "codi", "ctx");
         ReflectionTestUtils.setField(context, "nom", "Context principal");
         EntornApp entornApp = EntornApp.builder().id(44L).contexts(List.of(context)).build();
-        when(salutClientHelper.entornAppFindById(44L)).thenReturn(entornApp);
+        when(salutClientHelper.entornAppFindByIdWithIntegracionsSubsistemesContexts(44L)).thenReturn(entornApp);
 
         service.new PerspectiveContexts().applySingle(Salut.PERSP_CONTEXTS, entity, resource);
 

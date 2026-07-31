@@ -145,7 +145,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	public class PerspectiveIntegracions implements PerspectiveApplicator<SalutEntity, Salut> {
 		@Override
 		public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
-			EntornApp entornAppForEntity = salutClientHelper.entornAppFindById(entity.getEntornAppId());
+			EntornApp entornAppForEntity = salutClientHelper.entornAppFindByIdWithIntegracionsSubsistemesContexts(entity.getEntornAppId());
 			List<SalutIntegracioEntity> salutIntegracions = salutIntegracioRepository.findBySalutOrderByCodiAsc(entity);
 			resource.setIntegracions(
 				salutIntegracions.stream().
@@ -171,7 +171,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	public class PerspectiveSubsistemes implements PerspectiveApplicator<SalutEntity, Salut> {
 		@Override
 		public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
-			EntornApp entornAppForEntity = salutClientHelper.entornAppFindById(entity.getEntornAppId());
+			EntornApp entornAppForEntity = salutClientHelper.entornAppFindByIdWithIntegracionsSubsistemesContexts(entity.getEntornAppId());
 			List<SalutSubsistemaEntity> salutSubsistemes = salutSubsistemaRepository.findBySalutOrderByCodiAsc(entity);
 			resource.setSubsistemes(
 				salutSubsistemes.stream().
@@ -194,7 +194,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	public class PerspectiveContexts implements PerspectiveApplicator<SalutEntity, Salut> {
 		@Override
 		public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
-			EntornApp entornAppForEntity = salutClientHelper.entornAppFindById(entity.getEntornAppId());
+			EntornApp entornAppForEntity = salutClientHelper.entornAppFindByIdWithIntegracionsSubsistemesContexts(entity.getEntornAppId());
 			resource.setContexts(entornAppForEntity.getContexts());
 		}
 	}

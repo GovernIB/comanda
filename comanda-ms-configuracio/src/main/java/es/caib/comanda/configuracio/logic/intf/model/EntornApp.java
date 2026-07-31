@@ -96,7 +96,7 @@ public class EntornApp extends BaseResource<Long> {
 	public final static String REPORT_LLISTAR_LOGS = "llistar_logs";
 	public final static String REPORT_DESCARREGAR_LOG = "descarregar_log";
 	public final static String REPORT_PREVISUALITZAR_LOG = "previsualitzar_log";
-    public static final String PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS = "integracions_subsistemes_contexts";
+    public static final String PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS = es.caib.comanda.client.model.EntornApp.PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS;
 	public final static String PERSPECTIVE_DEFAULT_LOGS = "default_logs";
     public static final String PERSPECTIVE_HISTORICS_VERSIONS = "historics_versions";
 

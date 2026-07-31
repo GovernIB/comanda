@@ -42,8 +42,6 @@ import javax.validation.Path;
 import javax.validation.Validator;
 import java.util.*;
 import java.util.stream.Stream;
-
-import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -277,7 +275,7 @@ public class EntornAppServiceImplTest {
         // Call the method to test
         entornAppService.afterUpdateSave(entornAppEntity, entornAppResource, answers, false);
 
-        verify(cacheHelper).evictCacheItem(ENTORN_APP_CACHE, entornAppEntity.getId().toString());
+        verify(cacheHelper).evictEntornAppCacheItem(entornAppEntity.getId());
         verify(entornAppHelper).publishEntornAppChanged(entornAppEntity.getId());
     }
 
@@ -298,7 +296,7 @@ public class EntornAppServiceImplTest {
 
         assertEquals(!activaAbans, entornAppEntity.isActiva());
         assertSame(entornAppResource, result);
-        verify(cacheHelper).evictCacheItem(ENTORN_APP_CACHE, entornAppEntity.getId().toString());
+        verify(cacheHelper).evictEntornAppCacheItem(entornAppEntity.getId());
         verify(entornAppHelper).publishEntornAppChanged(entornAppEntity.getId());
     }
 

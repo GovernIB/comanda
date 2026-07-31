@@ -53,8 +53,6 @@ import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
-
 /**
  * Implementació del servei de gestió d'aplicacions per entorn.
  *
@@ -156,7 +154,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     protected void afterUpdateSave(EntornAppEntity entity, EntornApp resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
         super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
 
-        cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entity.getId().toString());
+        cacheHelper.evictEntornAppCacheItem(entity.getId());
         entornAppHelper.publishEntornAppChanged(entity.getId());
     }
 
@@ -321,7 +319,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         @Override
         public EntornApp exec(String code, EntornAppEntity entity, String params) throws ActionExecutionException {
             entity.setActiva(!entity.isActiva());
-            cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entity.getId().toString());
+            cacheHelper.evictEntornAppCacheItem(entity.getId());
             // No passa per afterUpdateSave (l'acció no fa servir el flux normal d'actualització),
             // cal notificar-ho explícitament perquè el dashboard de Salut es refresqui via SSE.
             entornAppHelper.publishEntornAppChanged(entity.getId());

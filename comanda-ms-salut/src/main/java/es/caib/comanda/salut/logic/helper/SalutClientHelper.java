@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_INTEGRACIONS_SUBSISTEMES_CONTEXTS_CACHE;
 
 @Slf4j
 @Component
@@ -36,6 +37,22 @@ public class SalutClientHelper {
 			EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
 					entornAppId,
 					null,
+					httpAuthorizationHeaderHelper.getAuthorizationHeader());
+			if (entornApp != null) {
+				return entornApp.getContent();
+			}
+		} catch (FeignException.NotFound e) {
+			return null;
+		}
+		return null;
+	}
+
+	@Cacheable(value = ENTORN_APP_INTEGRACIONS_SUBSISTEMES_CONTEXTS_CACHE, key = "#entornAppId?.toString()")
+	public EntornApp entornAppFindByIdWithIntegracionsSubsistemesContexts(Long entornAppId) {
+		try {
+			EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
+					entornAppId,
+					new String[]{EntornApp.PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS},
 					httpAuthorizationHeaderHelper.getAuthorizationHeader());
 			if (entornApp != null) {
 				return entornApp.getContent();
