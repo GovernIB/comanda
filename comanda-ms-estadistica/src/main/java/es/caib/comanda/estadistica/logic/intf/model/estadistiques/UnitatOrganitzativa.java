@@ -1,7 +1,10 @@
 package es.caib.comanda.estadistica.logic.intf.model.estadistiques;
 
+import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
+import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,7 +16,14 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants
 @ResourceConfig(
         quickFilterFields = { "codi", "denominacio" },
-        descriptionField = "codiNom"
+        descriptionField = "codiNom",
+        accessConstraints = {
+            @ResourceAccessConstraint(
+                type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                roles = {BaseConfig.ROLE_ADMIN},
+                grantedPermissions = {PermissionEnum.READ}
+            ),
+        }
 )
 public class UnitatOrganitzativa extends BaseResource<Long> {
 

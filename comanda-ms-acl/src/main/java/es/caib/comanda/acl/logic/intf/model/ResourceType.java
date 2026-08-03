@@ -7,5 +7,7 @@ package es.caib.comanda.acl.logic.intf.model;
 public enum ResourceType {
     APP,
     ENTORN_APP,
-    DASHBOARD
+    DASHBOARD,
+    ENTITAT,
+    UNITAT,
 }

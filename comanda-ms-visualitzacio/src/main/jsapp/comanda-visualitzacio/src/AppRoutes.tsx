@@ -36,6 +36,7 @@ import useStatsEnabled from './hooks/useStatsEnabled';
 import {Plantilla} from "./pages/Plantilla.tsx";
 import EntornAppHist from './pages/EntornsAppHistorics.tsx';
 import MonitorDb from './pages/MonitorDb.tsx';
+import Entitats from "./pages/Entitats.tsx";
 
 export const DASHBOARDS_PATH = 'dashboard';
 export const ESTADISTIQUES_PATH = 'estadistiques';
@@ -142,6 +143,7 @@ const UserRoleRouteGuard: React.FC<{ children: React.ReactNode }> = ({ children 
             '/alarmes',
             '/sitemap',
             '/accessibilitat',
+            ...(statsEnabled ? ['/estadistiques', '/dashboard'] : []),
         ];
     const isAllowedPath = allowedPrefixes.some(path =>
         location.pathname === path || (path !== '/' && location.pathname.startsWith(path + '/'))
@@ -206,6 +208,10 @@ const AppRoutes: React.FC = () => {
                         <Route path="dimensio">
                             <Route index element={<Dimensions />} />
                             <Route path="valor/:id" element={<DimensioValor />} />
+                        </Route>
+                        <Route path="entitats">
+                            <Route index element={<Entitats />} />
+                            {/*<Route path="valor/:id" element={<DimensioValor />} />*/}
                         </Route>
                         <Route path="indicador">
                             <Route index element={<Indicadors />} />

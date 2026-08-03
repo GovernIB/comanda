@@ -379,6 +379,10 @@ const translationEn: translationResourcesType = {
             title: "Dashboards",
             edit: "Edit",
             dashboardView: "Go to dashboard",
+            acl: {
+                readAllowed: "View dashboards",
+                writeAllowed: "Design dashboards",
+            },
             cloneDashboard: {
                 title: "Clone the dashboard",
                 success: "Dashboard cloned correctly",
@@ -662,6 +666,11 @@ const translationEn: translationResourcesType = {
         appsEntorns: {
             title: "Environments",
             resourceTitle: "environment",
+            acl: {
+                readAllowed: "Health",
+                perm0Allowed: "View dashboards",
+                perm1Allowed: "Design dashboards",
+            },
             action: {
                 toolbarActiva: {
                     activar: "Activate",
@@ -689,6 +698,28 @@ const translationEn: translationResourcesType = {
                 logo: "Logo",
             },
         },
+        entitats: {
+            title: "Entities",
+            acl: {
+                perm0Allowed: "View statistical data for entities",
+            },
+            action: {
+                refreshUO: {
+                    label: "Refresh organizational units",
+                    ok: "Organizational units refreshed successfully",
+                },
+                organigrama: {
+                    label: "Organization chart",
+                    title: "Organizational unit chart",
+                    ko: "The organizational unit could not be retrieved",
+                },
+            },
+        },
+        unitatOrganitzativa: {
+            acl: {
+                perm0Allowed: "View statistical data for organizational bodies",
+            },
+        },
         dimensions: {
             title: "Dimensions",
             values: "Values",
@@ -700,13 +731,13 @@ const translationEn: translationResourcesType = {
                 agrupacions: "Has groupings",
             },
             action: {
-                marcarOrgan: {
-                    label: "Mark as managing body",
-                    ok: "The dimension has been marked as the managing body",
+                changeTipus: {
+                    label: "Change type",
+                    ok: "The dimension has been updated successfully",
                 },
                 desmarcar: {
-                    label: "Unmark as managing body",
-                    ok: "The dimension has been unmarked as the managing body",
+                    label: "Clear dimension type",
+                    ok: "The dimension type has been cleared successfully",
                 },
                 refreshCons: {
                     label: "Refresh ministry data",
@@ -714,9 +745,9 @@ const translationEn: translationResourcesType = {
                     ok: "Ministry data refreshed successfully",
                 },
                 sincronitzar: {
-                    label: "Synchronize",
+                    label: "Fetch/Refresh managing body names",
                     ok: "The managing body has been synchronized successfully",
-                }
+                },
             },
         },
         indicadors: {
@@ -875,6 +906,7 @@ const translationEn: translationResourcesType = {
                 tasca: "Task",
                 avis: "Notice",
                 usuaris: "Users",
+                dir3: "Dir3",
             },
             tab: {
                 alarmes: "ALARMES",

@@ -1,11 +1,15 @@
 package es.caib.comanda.estadistica.logic.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.estadistica.logic.helper.AtributsVisualsHelper;
 import es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper;
 import es.caib.comanda.estadistica.logic.helper.DashboardHelper;
+import es.caib.comanda.estadistica.logic.helper.DashboardImportHelper;
 import es.caib.comanda.estadistica.logic.helper.DashboardStyleResolverHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
+import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTitol;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetItem;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams;
@@ -16,9 +20,6 @@ import es.caib.comanda.estadistica.logic.intf.model.export.DashboardExport;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
-import es.caib.comanda.estadistica.logic.intf.service.EstadisticaGraficWidgetService;
-import es.caib.comanda.estadistica.logic.intf.service.EstadisticaSimpleWidgetService;
-import es.caib.comanda.estadistica.logic.intf.service.EstadisticaTaulaWidgetService;
 import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
@@ -28,7 +29,14 @@ import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardTitolRepository;
+import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
+import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
+import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
+import es.caib.comanda.ms.logic.intf.model.FileReference;
+import es.caib.comanda.ms.logic.intf.model.ReportFileType;
 import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService.ReportGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,19 +45,21 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -63,12 +73,13 @@ class DashboardServiceImplTest {
     @Mock private AtributsVisualsHelper atributsVisualsHelper;
     @Mock private DashboardExportMapper dashboardExportMapper;
     @Mock private ConsultaEstadisticaHelper consultaEstadisticaHelper;
-    @Mock private EstadisticaSimpleWidgetService estadisticaSimpleWidgetService;
-    @Mock private EstadisticaGraficWidgetService estadisticaGraficWidgetService;
-    @Mock private EstadisticaTaulaWidgetService estadisticaTaulaWidgetService;
     @Mock private DashboardHelper dashboardHelper;
     @Mock private ObjectMapper objectMapper;
     @Mock private DashboardStyleResolverHelper dashboardStyleResolverHelper;
+    @Mock private DashboardImportHelper dashboardImportHelper;
+    @Mock private AuthenticationHelper authenticationHelper;
+    @Mock private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
+    @Mock private AclServiceClient aclServiceClient;
 
     @InjectMocks
     private DashboardServiceImpl dashboardService;
@@ -102,6 +113,17 @@ class DashboardServiceImplTest {
         constructor.setAccessible(true);
         return (ReportGenerator<DashboardEntity, Serializable, DashboardExport>) constructor.newInstance(dashboardService);
     }
+
+    private DashboardServiceImpl.DashboardImportActionExecutor createDashboardImportActionExecutor() throws Exception {
+        Class<?> executorClass = Class.forName("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl$DashboardImportActionExecutor");
+        java.lang.reflect.Constructor<?> constructor = executorClass.getDeclaredConstructor(DashboardServiceImpl.class);
+        constructor.setAccessible(true);
+        return (DashboardServiceImpl.DashboardImportActionExecutor) constructor.newInstance(dashboardService);
+    }
+
+    // ==========================================
+    // Tests existents
+    // ==========================================
 
     @Test
     @DisplayName("completeResource delega a dashboardHelper")
@@ -649,5 +671,144 @@ class DashboardServiceImplTest {
         assertThat(result).hasSize(2);
         verify(dashboardRepository).findAll();
         verify(dashboardExportMapper).toDashboardExport(entities, estadisticaClientHelper, atributsVisualsHelper);
+    }
+
+    // ==========================================
+    // Tests per a la nova lògica
+    // ==========================================
+
+    @Test
+    @DisplayName("beforeUpdateEntity delega a dashboardHelper")
+    void beforeUpdateEntity_delegaAHelper() throws Exception {
+        DashboardEntity entity = new DashboardEntity();
+        Dashboard resource = new Dashboard();
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+        ReflectionTestUtils.invokeMethod(dashboardService, "beforeUpdateEntity", entity, resource, answers);
+        verify(dashboardHelper).beforeUpdateEntityLogic(entity, resource, answers);
+    }
+
+    @Test
+    @DisplayName("additionalSpringFilter: usuari ADMIN retorna el filtre actual sense modificar")
+    void additionalSpringFilter_usuariAdmin_retornaFiltreActual() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        String currentFilter = "nom:'test'";
+
+        String result = ReflectionTestUtils.invokeMethod(dashboardService, "additionalSpringFilter", currentFilter, new String[]{});
+
+        assertThat(result).isEqualTo(currentFilter);
+    }
+
+    @Test
+    @DisplayName("additionalSpringFilter: usuari CONSULTA retorna el filtre actual sense modificar")
+    void additionalSpringFilter_usuariConsulta_retornaFiltreActual() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(true);
+        String currentFilter = "nom:'test'";
+
+        String result = ReflectionTestUtils.invokeMethod(dashboardService, "additionalSpringFilter", currentFilter, new String[]{});
+
+        assertThat(result).isEqualTo(currentFilter);
+    }
+
+    @Test
+    @DisplayName("additionalSpringFilter: usuari normal sense permisos retorna id:0")
+    void additionalSpringFilter_usuariNormalSensePermisos_retornaId0() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("user");
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{});
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("auth");
+
+        ResponseEntity<Set<Serializable>> response = new ResponseEntity<>(Collections.emptySet(), HttpStatus.OK);
+        when(aclServiceClient.findIdsWithAnyPermission(any(), any(), any(), any(), any())).thenReturn(response);
+
+        try (MockedStatic<SpringFilterHelper> mockedStatic = mockStatic(SpringFilterHelper.class)) {
+            mockedStatic.when(() -> SpringFilterHelper.buildOrFilter(anyString(), any())).thenReturn("");
+            mockedStatic.when(() -> SpringFilterHelper.or(anyString(), anyString(), anyString())).thenReturn("");
+            mockedStatic.when(() -> SpringFilterHelper.and(eq("current"), eq("id:0"))).thenReturn("current AND id:0");
+
+            String result = ReflectionTestUtils.invokeMethod(dashboardService, "additionalSpringFilter", "current", new String[]{});
+
+            assertThat(result).isEqualTo("current AND id:0");
+            verify(aclServiceClient, times(3)).findIdsWithAnyPermission(any(), any(), any(), any(), any());
+        }
+    }
+
+    @Test
+    @DisplayName("DashboardExport: generateFile escriu JSON i retorna DownloadableFile")
+    void dashboardExport_generateFile_retornaDownloadableFile() throws Exception {
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        ReportGenerator<DashboardEntity, Serializable, DashboardExport> reportGenerator = createDashboardExportReportGenerator();
+
+        List<DashboardExport> data = List.of(new DashboardExport());
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        DownloadableFile file = reportGenerator.generateFile(Dashboard.DASHBOARD_EXPORT, data, ReportFileType.JSON, out);
+
+        assertThat(file).isNotNull();
+        assertThat(file.getName()).isEqualTo("dashboards.json");
+        assertThat(file.getContentType()).isEqualTo("application/json");
+        assertThat(out.toByteArray()).isNotEmpty();
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
+    @DisplayName("DashboardImport: exec importa dashboards correctament")
+    void dashboardImport_exec_importaCorrectament() throws Exception {
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+
+        String json = "[{\"titol\":\"Titol\"}]";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.DashboardImportParams params = new DashboardServiceImpl.DashboardImportParams();
+        params.setFile(fileRef);
+
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        DashboardServiceImpl.DashboardImportResult result = executor.exec(Dashboard.DASHBOARD_IMPORT, new DashboardEntity(), params);
+
+        assertThat(result).isNotNull();
+        verify(dashboardImportHelper).importDashboardFromExport(anyList(), any());
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
+    @DisplayName("DashboardImport: exec llança ActionExecutionException si falla la importació")
+    void dashboardImport_exec_llancaExcepcioSiFall() throws Exception {
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+
+        String invalidJson = "invalid json";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", invalidJson.getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.DashboardImportParams params = new DashboardServiceImpl.DashboardImportParams();
+        params.setFile(fileRef);
+
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        assertThatThrownBy(() -> executor.exec(Dashboard.DASHBOARD_IMPORT, new DashboardEntity(), params))
+            .isInstanceOf(ActionExecutionException.class);
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
+    @DisplayName("DashboardImport: onChange amb fitxer null buida els conflictes")
+    void dashboardImport_onChange_ambFitxerNull_buidaConflictes() throws Exception {
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+
+        DashboardServiceImpl.DashboardImportParams target = new DashboardServiceImpl.DashboardImportParams();
+        target.setConflicts(List.of(new DashboardServiceImpl.Conflict("t", "t")));
+
+        executor.onChange(null, null, DashboardServiceImpl.DashboardImportParams.Fields.file, null, new HashMap<>(), new String[]{}, target);
+
+        assertThat(target.getConflicts()).isEmpty();
     }
 }

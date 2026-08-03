@@ -343,6 +343,10 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 						return Class.forName("es.caib.comanda.client.model.EntornApp");
 					case DASHBOARD:
 						return Class.forName("es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard");
+                    case ENTITAT:
+						return Class.forName("es.caib.comanda.estadistica.logic.intf.model.estadistiques.Entitat");
+                    case UNITAT:
+						return Class.forName("es.caib.comanda.estadistica.logic.intf.model.estadistiques.UnitatOrganitzativa");
 				}
 			} catch (Exception ex) {
 				log.error("Couldn't find class for resource type " + resourceType);
@@ -359,6 +363,10 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 				return ResourceType.ENTORN_APP;
 			} else if (className.equals("es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard")) {
 				return ResourceType.DASHBOARD;
+			} else if (className.equals("es.caib.comanda.estadistica.logic.intf.model.estadistiques.Entitat")) {
+				return ResourceType.ENTITAT;
+			} else if (className.equals("es.caib.comanda.estadistica.logic.intf.model.estadistiques.UnitatOrganitzativa")) {
+				return ResourceType.UNITAT;
 			} else {
 				log.error("Couldn't find ResourceType for className " + className);
 			}

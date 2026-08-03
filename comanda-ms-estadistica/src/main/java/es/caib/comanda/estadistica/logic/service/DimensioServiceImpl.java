@@ -128,12 +128,6 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
                              DimensioEntity entity,
                              Dimensio.ChangeTipusActionForm params) throws ActionExecutionException {
             try {
-                if (params.getTipus() != null) {
-                    List<DimensioEntity> dimensioEntityList = dimensioRepository.findByEntornAppId(entity.getEntornAppId());
-                    if (dimensioEntityList.stream().anyMatch(c -> c.getTipus() == params.getTipus())) {
-                        throw new RuntimeException("Tipus ja assignat");
-                    }
-                }
                 entity.setTipus(params.getTipus());
                 return resourceEntityMappingHelper.entityToResource(entity, Dimensio.class);
             } catch (ActionExecutionException a) {

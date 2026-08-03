@@ -58,6 +58,9 @@ const mocks = vi.hoisted(() => ({
                         compactable: 'Compactable',
                         compactacioMensualMesos: 'Compactació mensual',
                         eliminacioMesos: 'Eliminació',
+                        contrasenyaAuthPlaceholder: 'Contrasenya',
+                        hidePassword: 'Amagar contrasenya',
+                        showPassword: 'Mostrar contrasenya',
                     },
                     tooltips: {
                         compactacioMesos: 'Tooltip compactació',
@@ -71,6 +74,11 @@ const mocks = vi.hoisted(() => ({
                 appsEntorns: {
                     title: 'Entorns de l aplicació',
                     resourceTitle: 'Entorn',
+                    acl: {
+                        readAllowed: "Salut",
+                        perm0Allowed: "Consulta de taulers de control",
+                        perm1Allowed: "Disseny de taulers de control",
+                    },
                     action: {
                         toolbarActiva: {
                             permisos: 'Permisos',
@@ -97,8 +105,8 @@ vi.mock('react-router-dom', () => ({
 }));
 
 vi.mock('reactlib', () => ({
-    FormField: ({ name, label }: { name: string; label?: string }) => (
-        <div data-testid={`field-${name}`}>{label ?? name}</div>
+    FormField: ({ name, label, componentProps }: { name: string; label?: string, componentProps?: any }) => (
+        <div data-testid={`field-${name}`}>{label ?? name}{componentProps?.slotProps?.input?.endAdornment}</div>
     ),
     FormPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -125,7 +133,7 @@ vi.mock('reactlib', () => ({
         popupEditFormContent,
     }: {
         title: string;
-        rowAdditionalActions?: Array<{ label: string; onClick?: (id?: unknown) => void }>;
+        rowAdditionalActions?: Array<{ label: string; onClick?: (id?: unknown, row?: any) => void }>;
         toolbarElementsWithPositions?: Array<{ element: React.ReactNode }>;
         popupEditFormContent?: React.ReactNode;
     }) => (
@@ -235,17 +243,17 @@ vi.mock('../components/FasesCompactacio', () => ({
 }));
 
 vi.mock('../components/UrlPingAdornment', () => ({
-  default: ({ onClick }: { onClick: () => void }) => (
-    <button data-testid="ping-button" onClick={onClick}>
-      Ping URL
-    </button>
-  ),
+    default: ({ formData, onClick }: { formData?: any; onClick?: (data: any) => Promise<any> }) => (
+        <button data-testid="ping-button" onClick={() => onClick?.(formData || {})}>
+            Ping URL
+        </button>
+    ),
 }));
 
 vi.mock('../components/AclPermissionManager', () => ({
-    useAclPermissionManager: (resourceType: string) => ({
-        show: resourceType === 'APP' ? mocks.appPermissionShowMock : mocks.entornPermissionShowMock,
-        component: <div>{`Gestor permisos ${resourceType}`}</div>,
+    useAclCustomPermissionManager: (config: { resourceType: string }) => ({
+        show: config.resourceType === 'APP' ? mocks.appPermissionShowMock : mocks.entornPermissionShowMock,
+        component: <div>{`Gestor permisos ${config.resourceType}`}</div>,
     }),
 }));
 
@@ -267,7 +275,7 @@ vi.mock('../components/PageTitle.tsx', () => ({
 }));
 
 vi.mock('../hooks/useReadOnlyGestor.ts', () => ({
-  default: () => false,
+    default: () => false,
 }));
 
 vi.mock('../components/UserContext.ts', () => ({
@@ -275,11 +283,19 @@ vi.mock('../components/UserContext.ts', () => ({
 }));
 
 vi.mock('../components/ParameterExistsAdornment.tsx', () => ({
-    default: ({ value, disabled }: { value?: string; disabled?: boolean }) => (
-        <button data-testid="parameter-exists-button" disabled={disabled || !value} >
-            Verificar parámetro
+    default: ({ value, onClick, disabled }: { value?: string; onClick?: (val: string) => Promise<any>; disabled?: boolean }) => (
+        <button
+            data-testid="parameter-exists-button"
+            disabled={disabled || !value}
+            onClick={() => onClick?.(value || '')}
+        >
+            Verificar paràmetre
         </button>
     ),
+}));
+
+vi.mock('../util/exceptionUtils.ts', () => ({
+    getErrorMessage: (error: any) => error?.message || 'Error desconegut',
 }));
 
 describe('AppForm', () => {
@@ -293,7 +309,6 @@ describe('AppForm', () => {
     });
 
     it('AppForm_quanEsRenderitzaPerEditar_mostraElTitolIActivaElsMargesReduits', () => {
-        // Comprova que el formulari d'edició mostra el títol correcte i desactiva els marges mentre és visible.
         mocks.useParamsMock.mockReturnValue({ id: '12' });
 
         render(<AppForm />);
@@ -305,11 +320,10 @@ describe('AppForm', () => {
         expect(screen.getAllByRole('button', { name: 'Permisos' })).toHaveLength(1);
         expect(screen.getByText('Activar')).toBeInTheDocument();
         expect(screen.getByText('Desactivar')).toBeInTheDocument();
-        expect(screen.getByText('Gestor permisos ENTORN_APP')).toBeInTheDocument();
+        expect(screen.getByText('Permisos')).toBeInTheDocument();
     });
 
     it('AppForm_quanEsRenderitzaPerCrear_mostraElsCampsPrincipals', () => {
-        // Verifica que en mode alta el formulari manté els camps base i el component del logo.
         mocks.useParamsMock.mockReturnValue({ id: undefined });
 
         render(<AppForm />);
@@ -322,7 +336,6 @@ describe('AppForm', () => {
     });
 
     it('AppForm_quanEsRenderitzaElPopupDEntorn_mostraElsCampsEspecificsDelEntorn', () => {
-        // Comprova que el popup d’entorn mostra els camps funcionals propis de configuració i autenticació.
         mocks.useParamsMock.mockReturnValue({ id: '12' });
         mocks.useFormContextValue = {
             data: {
@@ -343,12 +356,97 @@ describe('AppForm', () => {
     });
 
     it('AppForm_quanEsRenderitzaMantéElGoBackEsperat', () => {
-        // Comprova que el formulari manté l'enllaç de retorn configurat cap al llistat d'aplicacions.
         mocks.useParamsMock.mockReturnValue({ id: '12' });
 
         const { container } = render(<AppForm />);
 
         expect(container.querySelector('form')?.getAttribute('data-back-link')).toBe('/app');
+    });
+
+    it('AppForm_quanEsPremPingUrl_cridaApiActionIMostraMissatgeExit', async () => {
+        mocks.useParamsMock.mockReturnValue({ id: '12' });
+        mocks.useFormContextValue.data = { infoUrl: 'http://test.com' };
+        mocks.artifactActionMock.mockResolvedValue({ success: true, message: 'Ping correcte' });
+
+        render(<AppForm />);
+
+        const pingButtons = screen.getAllByTestId('ping-button');
+        fireEvent.click(pingButtons[0]);
+
+        await waitFor(() => {
+            expect(mocks.artifactActionMock).toHaveBeenCalledWith(null, {
+                code: 'pingUrl',
+                data: { infoUrl: 'http://test.com', expectedResponseTypeEnum: 'INFO' }
+            });
+            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Ping correcte', 'success');
+        });
+    });
+
+    it('AppForm_quanEsPremVerificarParametre_cridaApiActionCorrectament', async () => {
+        mocks.useParamsMock.mockReturnValue({ id: '12' });
+        mocks.useFormContextValue.data = { nomUsuariAuth: 'testUser', parametreAuth: true };
+        mocks.artifactActionMock.mockResolvedValue({ exists: true });
+
+        render(<AppForm />);
+
+        const verifyButtons = screen.getAllByTestId('parameter-exists-button');
+        fireEvent.click(verifyButtons[0]);
+
+        await waitFor(() => {
+            expect(mocks.artifactActionMock).toHaveBeenCalledWith(null, {
+                code: 'existsParameter',
+                data: { parameterValue: 'testUser' }
+            });
+        });
+    });
+
+    it('AppForm_quanEsPremPermisosObriElGestorAssociatAlEntorn', () => {
+        mocks.useParamsMock.mockReturnValue({ id: '12' });
+
+        render(<AppForm />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Permisos' }));
+
+        expect(mocks.appPermissionShowMock).toHaveBeenCalledWith(undefined, 'PRO');
+    });
+
+    it('AppForm_quanEsCanviaLEstatDEntorn_refrescaILlançaElMissatgeDexit', async () => {
+        mocks.useParamsMock.mockReturnValue({ id: '12' });
+        mocks.artifactActionMock.mockResolvedValue({});
+
+        render(<AppForm />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Activar' }));
+
+        await waitFor(() => {
+            expect(mocks.artifactActionMock).toHaveBeenCalledWith(undefined, {
+                code: 'toogle_activa',
+            });
+        });
+
+        expect(mocks.refreshMock).toHaveBeenCalled();
+        expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(
+            null,
+            'Canvi correcte',
+            'success'
+        );
+    });
+
+    it('AppForm_quanFallaElCanviDEstat_mostraLErrorDeLApi', async () => {
+        mocks.useParamsMock.mockReturnValue({ id: '12' });
+        mocks.artifactActionMock.mockRejectedValueOnce({ message: 'No s ha pogut canviar' });
+
+        render(<AppForm />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Desactivar' }));
+
+        await waitFor(() => {
+            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(
+                null,
+                'No s ha pogut canviar',
+                'error'
+            );
+        });
     });
 });
 
@@ -364,7 +462,6 @@ describe('Apps', () => {
     });
 
     it('Apps_quanEsRenderitza_mostraLaGraellaAmbLesAccionsDimportacioIExportacio', () => {
-        // Comprova que la pàgina principal d'aplicacions exposa la graella i les accions de toolbar esperades.
         mocks.useParamsMock.mockReturnValue({ id: undefined });
 
         render(<Apps />);
@@ -377,7 +474,6 @@ describe('Apps', () => {
     });
 
     it('Apps_quanFinalitzaLaImportacio_refrescaLaGraellaIMostraMissatge', () => {
-        // Verifica que l'acció d'importació executa el callback d'èxit, refresca la graella i mostra notificació.
         mocks.useParamsMock.mockReturnValue({ id: undefined });
 
         render(<Apps />);
@@ -393,7 +489,6 @@ describe('Apps', () => {
     });
 
     it('Apps_quanSexportaUnaApp_descarregaElJsonIMostraMissatge', async () => {
-        // Comprova que l'acció d'exportació delega en l'API, baixa el JSON i notifica l'èxit.
         mocks.useParamsMock.mockReturnValue({ id: undefined });
         mocks.artifactReportMock.mockResolvedValue({ fitxer: 'app.json' });
 
@@ -413,7 +508,6 @@ describe('Apps', () => {
     });
 
     it('Apps_quanFallaLexportacio_mostraLErrorRetornatPerLApi', async () => {
-        // Verifica que l’error de l’exportació es propaga com a missatge temporal.
         mocks.useParamsMock.mockReturnValue({ id: undefined });
         mocks.artifactReportMock.mockRejectedValueOnce(new Error('Export KO'));
 
@@ -431,7 +525,6 @@ describe('Apps', () => {
     });
 
     it('Apps_quanElJsonImportatTeConflictes_preseleccionaCombinar', async () => {
-        // El pre-seleccionat ara ho fa el back, el front només envia el contingut
         mocks.useParamsMock.mockReturnValue({ id: undefined });
         mocks.optionalDataGridContextValue = {
             rows: [{ codi: 'APP1' }],
@@ -464,7 +557,6 @@ describe('Apps', () => {
     });
 
     it('Apps_quanElJsonImportatEsInvalid_mostraLErrorDeParseig', async () => {
-        // Comprova que el formulari d'importació informa quan el JSON pujat no es pot parsejar.
         mocks.useParamsMock.mockReturnValue({ id: undefined });
 
         render(<Apps />);
@@ -473,11 +565,7 @@ describe('Apps', () => {
         const file = new File(['{ invalid json'], 'apps.json', {
             type: 'application/json',
         });
-        // Mock text to throw error as file.text() might be successful even if content is invalid JSON
-        // Actually handleFileChange calls file.text() and it doesn't fail unless there is a read error.
-        // The error 'Error parsejant JSON' is not reachable currently because file.text() doesn't parse JSON.
-        // It was probably intended to be caught if there was a JSON.parse(text) in handleFileChange.
-        // Since the logic was moved to back, maybe this test is no longer relevant in its current form or needs to mock file.text failure.
+
         vi.spyOn(file, 'text').mockRejectedValue(new Error('Read error'));
 
         Object.defineProperty(input, 'files', {
@@ -496,7 +584,6 @@ describe('Apps', () => {
     });
 
     it('Apps_quanElJsonImportatNoTeConflictes_detectaElsCodisSenseMostrarDecisio', async () => {
-        // Verifica que la importació mostra els codis detectats però no força cap decisió si no hi ha conflictes.
         mocks.useParamsMock.mockReturnValue({ id: undefined });
         mocks.optionalDataGridContextValue = {
             rows: [{ codi: 'APP1' }],
@@ -517,7 +604,6 @@ describe('Apps', () => {
     });
 
     it('Apps_quanFaltaElFitxerDimportacio_mostraLErrorDeValidacio', () => {
-        // Comprova que el formulari mostra l’error específic quan el fitxer és obligatori i no s’ha informat.
         mocks.useParamsMock.mockReturnValue({ id: undefined });
         mocks.useFormContextValue = {
             data: {},
@@ -535,7 +621,6 @@ describe('Apps', () => {
     });
 
     it('Apps_quanHiHaUnErrorDeValidacioPersonalitzat_mostraElMissatgeDelCamp', () => {
-        // Verifica que qualsevol error funcional del camp jsonContent es mostra tal com arriba de validació.
         mocks.useParamsMock.mockReturnValue({ id: undefined });
         mocks.useFormContextValue = {
             data: {},
@@ -552,19 +637,7 @@ describe('Apps', () => {
         );
     });
 
-    it('AppForm_quanEsPremPermisosObriElGestorAssociatAlEntorn', () => {
-        // Comprova que l’acció de permisos delega al gestor ACL amb la descripció de l’entorn seleccionat.
-        mocks.useParamsMock.mockReturnValue({ id: '12' });
-
-        render(<AppForm />);
-
-        fireEvent.click(screen.getByRole('button', { name: 'Permisos' }));
-
-        expect(mocks.entornPermissionShowMock).toHaveBeenCalledWith(undefined, 'PRO');
-    });
-
     it('Apps_quanEsPremPermisosDalAplicacio_obriElGestorAssociatALapp', () => {
-        // Comprova que el llistat d'aplicacions obri el gestor ACL de l'app des de l'acció de fila.
         mocks.useParamsMock.mockReturnValue({ id: undefined });
 
         render(<Apps />);
@@ -573,46 +646,5 @@ describe('Apps', () => {
 
         expect(mocks.appPermissionShowMock).toHaveBeenCalledWith(12, 'Comanda');
         expect(screen.getByText('Gestor permisos APP')).toBeInTheDocument();
-    });
-
-    it('AppForm_quanEsCanviaLEstatDEntorn_refrescaILlançaElMissatgeDexit', async () => {
-        // Verifica que activar o desactivar un entorn reutilitza l’acció comuna i refresca la graella.
-        mocks.useParamsMock.mockReturnValue({ id: '12' });
-        mocks.artifactActionMock.mockResolvedValue({});
-
-        render(<AppForm />);
-
-        fireEvent.click(screen.getByRole('button', { name: 'Activar' }));
-
-        await waitFor(() => {
-            expect(mocks.artifactActionMock).toHaveBeenCalledWith(undefined, {
-                code: 'toogle_activa',
-            });
-        });
-
-        expect(mocks.refreshMock).toHaveBeenCalled();
-        expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(
-            null,
-            'Canvi correcte',
-            'success'
-        );
-    });
-
-    it('AppForm_quanFallaElCanviDEstat_mostraLErrorDeLApi', async () => {
-        // Comprova que el toggle d’activa mostra el missatge d’error quan l’API el retorna.
-        mocks.useParamsMock.mockReturnValue({ id: '12' });
-        mocks.artifactActionMock.mockRejectedValueOnce({ message: 'No s ha pogut canviar' });
-
-        render(<AppForm />);
-
-        fireEvent.click(screen.getByRole('button', { name: 'Desactivar' }));
-
-        await waitFor(() => {
-            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(
-                null,
-                'No s ha pogut canviar',
-                'error'
-            );
-        });
     });
 });

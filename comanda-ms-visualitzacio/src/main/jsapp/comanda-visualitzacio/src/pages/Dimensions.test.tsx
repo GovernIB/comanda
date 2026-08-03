@@ -5,8 +5,9 @@ import Dimensions from './Dimensions';
 const mocks = vi.hoisted(() => ({
     clearMock: vi.fn(),
     findMock: vi.fn(),
-    artifactActionMock: vi.fn(), // NUEVO: Para mockear artifactAction de 'dimensio'
-    temporalMessageShowMock: vi.fn(), // NUEVO: Para mockear temporalMessageShow
+    showMock: vi.fn(), // Nou: per mockejar l'obertura del diàleg
+    artifactActionMock: vi.fn(),
+    temporalMessageShowMock: vi.fn(),
     messageDialogShowMock: vi.fn(),
     tMock: vi.fn((selector: any) =>
         selector({
@@ -20,9 +21,9 @@ const mocks = vi.hoisted(() => ({
                             ok: 'Consergeria actualitzada',
                             title: 'Voleu actualitzar la consergeria?',
                         },
-                        marcarOrgan: {
-                            label: 'ORGAN_GESTOR',
-                            ok: 'Tipus cambiat a ORGAN_GESTOR',
+                        changeTipus: {
+                            label: 'Canviar tipus',
+                            ok: 'Tipus cambiat',
                         },
                         desmarcar: {
                             label: 'NO_ORGAN_GESTOR',
@@ -59,33 +60,43 @@ vi.mock('reactlib', () => ({
         title: string;
         filter?: string;
         toolbarAdditionalRow?: React.ReactNode;
-        rowAdditionalActions?: Array<{ label: string; linkTo?: string; onClick?: (id: string) => void; hidden?: (row: any) => boolean }>;
+        rowAdditionalActions?: Array<{ label: string; linkTo?: string; onClick?: (id: string, row: any) => void }>;
         columns: Array<{ field: string }>;
-    }) => (
-        <section>
-            <h2>{title}</h2>
-            <div data-testid="filter-value">{filter}</div>
-            <div data-testid="columns">{columns.map((column) => column.field).join(',')}</div>
-            {/* CORREGIDO: Buscamos la acción que tiene linkTo, en lugar de asumir que es la primera */}
-            <div data-testid="row-link">{rowAdditionalActions?.find(a => a.linkTo)?.linkTo}</div>
-            <div>{toolbarAdditionalRow}</div>
-            {/* Renderizamos las acciones con onClick para poder testearlas */}
-            {rowAdditionalActions?.filter(a => a.onClick).map((action) => (
-                <button key={action.label} onClick={() => action.onClick?.('15')} type="button">
-                    {action.label}
-                </button>
-            ))}
-        </section>
-    ),
+    }) => {
+        // Simulem una fila per passar-la als onClick i poder provar lògica que depèn de 'row'
+        const mockRow = { id: '15', entornAppId: 99, tipus: 'ORGAN_GESTOR' };
+        return (
+            <section>
+                <h2>{title}</h2>
+                <div data-testid="filter-value">{filter}</div>
+                <div data-testid="columns">{columns.map((column) => column.field).join(',')}</div>
+                <div data-testid="row-link">{rowAdditionalActions?.find(a => a.linkTo)?.linkTo}</div>
+                <div>{toolbarAdditionalRow}</div>
+                {rowAdditionalActions?.filter(a => a.onClick).map((action) => (
+                    <button
+                        key={action.label}
+                        onClick={() => action.onClick?.(mockRow.id, mockRow)}
+                        type="button"
+                    >
+                        {action.label}
+                    </button>
+                ))}
+            </section>
+        )
+    },
     MuiFilter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     FormField: ({ name, label, optionsRequest }: { name: string; label?: string; optionsRequest?: (q: string) => Promise<{ options: Array<{ description?: string }> }> }) => (
         <div>
             <span data-testid={`field-${name}`}>{label ?? name}</span>
-            {optionsRequest ? <button onClick={async () => {
-                const result = await optionsRequest('entorn');
-                const descriptions = result.options.map((option) => option.description).join(',');
-                document.body.setAttribute('data-dimension-options', descriptions);
-            }}>Carrega opcions dimensions</button> : null}
+            {optionsRequest ? (
+                <button onClick={async () => {
+                    const result = await optionsRequest('entorn');
+                    const descriptions = result.options.map((option) => option.description).join(',');
+                    document.body.setAttribute('data-dimension-options', descriptions);
+                }}>
+                    Carrega opcions dimensions
+                </button>
+            ) : null}
         </div>
     ),
     springFilterBuilder: {
@@ -98,24 +109,21 @@ vi.mock('reactlib', () => ({
             clear: mocks.clearMock,
         },
     }),
-    useFormApiRef: () => ({ current: {} }),
-
-    // NUEVO: Mock para useMuiDataGridApiRef
     useMuiDataGridApiRef: () => ({
         current: {
             refresh: vi.fn(),
         },
     }),
-
-    // NUEVO: Mock para useBaseAppContext
+    useMuiFormDialogApiRef: () => ({
+        current: {
+            show: mocks.showMock,
+        },
+    }),
     useBaseAppContext: () => ({
         temporalMessageShow: mocks.temporalMessageShowMock,
         messageDialogShow: mocks.messageDialogShowMock,
     }),
-
     useConfirmDialogButtons: () => <button>Confirmar</button>,
-
-    // MODIFICADO: Diferenciamos el mock según el recurso solicitado
     useResourceApiService: (resourceName: string) => {
         if (resourceName === 'dimensio') {
             return {
@@ -127,6 +135,10 @@ vi.mock('reactlib', () => ({
             find: mocks.findMock,
         };
     },
+}));
+
+vi.mock('../components/FormActionDialog.tsx', () => ({
+    default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 vi.mock('../components/PageTitle.tsx', () => ({
@@ -147,7 +159,6 @@ describe('Dimensions', () => {
     });
 
     it('Dimensions_quanEsRenderitza_mostraElGridElFiltreIElLinkAlsValors', async () => {
-        // Comprova que la pàgina de dimensions mostra les columnes principals i l'acció per veure els valors.
         render(<Dimensions />);
 
         await waitFor(() => {
@@ -157,12 +168,12 @@ describe('Dimensions', () => {
         expect(screen.getByTestId('page-title')).toHaveTextContent('Dimensions');
         expect(screen.getByRole('heading', { name: 'Dimensions' })).toBeInTheDocument();
         expect(screen.getByTestId('filter-value')).toHaveTextContent('entornAppId=0');
-        expect(screen.getByTestId('columns')).toHaveTextContent('codi,nom,descripcio');
+        // Corregit: s'ha afegit 'tipus' a les columnes esperades
+        expect(screen.getByTestId('columns')).toHaveTextContent('codi,nom,descripcio,tipus');
         expect(screen.getByTestId('row-link')).toHaveTextContent('valor/{{id}}');
     });
 
     it('Dimensions_quanEsCarreguenLesOpcionsDelFiltre_utilitzaElsEntornsRecuperats', async () => {
-        // Verifica que el filtre de dimensions ofereix els entorns carregats del backend.
         render(<Dimensions />);
 
         await waitFor(() => {
@@ -177,7 +188,6 @@ describe('Dimensions', () => {
     });
 
     it('Dimensions_quanEsPremNetejar_esborraElFiltreActiu', async () => {
-        // Comprova que el botó de neteja del filtre crida el `clear` del filtre persistent.
         render(<Dimensions />);
 
         await waitFor(() => {
@@ -189,28 +199,40 @@ describe('Dimensions', () => {
         expect(mocks.clearMock).toHaveBeenCalled();
     });
 
-    // NUEVO TEST: Para cubrir la nueva funcionalidad de cambio de tipo a ORGAN_GESTOR
-    it('Dimensions_quanEsPremAccioORGAN_GESTOR_cridaApiActionIMostraMissatgeExit', async () => {
+    it('Dimensions_quanEsPremAccioFET_CONS_cridaApiActionIMostraMissatgeExit', async () => {
         mocks.artifactActionMock.mockResolvedValue({});
 
         render(<Dimensions />);
 
         await waitFor(() => {
-            expect(screen.getByRole('button', { name: 'ORGAN_GESTOR' })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'FET_CONS' })).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByRole('button', { name: 'ORGAN_GESTOR' }));
+        fireEvent.click(screen.getByRole('button', { name: 'FET_CONS' }));
 
         await waitFor(() => {
             expect(mocks.artifactActionMock).toHaveBeenCalledWith('15', {
-                code: 'CHANGE_TIPUS',
-                data: { tipus: 'ORGAN_GESTOR' }
+                code: 'FET_CONS',
             });
-            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Tipus cambiat a ORGAN_GESTOR', 'success');
+            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Consergeria actualitzada', 'success');
         });
     });
 
-    // NUEVO TEST: Para cubrir la nueva funcionalidad de cambio de tipo a null (NO_ORGAN_GESTOR)
+    it('Dimensions_quanEsPremAccioCanviarTipus_obreElDialog', async () => {
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'Canviar tipus' })).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Canviar tipus' }));
+
+        await waitFor(() => {
+            // Verifiquem que s'obre el diàleg passant l'id i l'entornAppId de la fila
+            expect(mocks.showMock).toHaveBeenCalledWith('15', { entornAppId: 99 });
+        });
+    });
+
     it('Dimensions_quanEsPremAccioNO_ORGAN_GESTOR_cridaApiActionIMostraMissatgeExit', async () => {
         mocks.artifactActionMock.mockResolvedValue({});
 

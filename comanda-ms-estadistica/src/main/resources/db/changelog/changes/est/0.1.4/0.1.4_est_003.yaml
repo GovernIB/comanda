@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: entitat-1
+      author: Limit
+      changes:
+        - createTable:
+            tableName: ${db_prefix}entitat
+            columns:
+              - column:
+                  name: id
+                  type: NUMBER(38,0)
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}entitat_pk
+              - column:
+                  name: codi
+                  type: VARCHAR(64)
+                  constraints: { nullable: false }
+              - column:
+                  name: nom
+                  type: VARCHAR(255)
+                  constraints: { nullable: false }
+              - column:
+                  name: codi_dir3
+                  type: VARCHAR(64)
+                  constraints: { nullable: false }

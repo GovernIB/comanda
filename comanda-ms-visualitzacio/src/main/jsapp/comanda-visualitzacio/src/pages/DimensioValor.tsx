@@ -159,7 +159,7 @@ const DimensioValor: React.FC = () => {
                                 })
                                 .catch(error => temporalMessageShow(null, error.message, 'error'))
                         },
-                        hidden: !dimension?.tipus
+                        hidden: !dimension?.tipus || (dimension?.tipus != 'ORGAN_GESTOR' && dimension?.tipus != 'CONSELLERIA')
                     }
                 ]}
                 // popupEditFormContent={<DimensioValorForm />}

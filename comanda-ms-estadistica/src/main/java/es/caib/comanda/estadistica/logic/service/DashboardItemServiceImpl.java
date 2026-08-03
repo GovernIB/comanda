@@ -4,15 +4,18 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import es.caib.comanda.estadistica.logic.helper.AtributsVisualsHelper;
-import es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper;
-import es.caib.comanda.estadistica.logic.helper.DashboardItemTitolHelper;
-import es.caib.comanda.estadistica.logic.helper.EstadisticaWidgetHelper;
+import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.client.AclServiceClient;
+import es.caib.comanda.client.model.acl.PermissionEnum;
+import es.caib.comanda.client.model.acl.ResourceType;
+import es.caib.comanda.estadistica.logic.helper.*;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetItem;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
 import es.caib.comanda.estadistica.logic.intf.service.DashboardItemService;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
+import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
@@ -25,9 +28,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Implementació del servei per gestionar la lògica de negoci relacionada amb els dashboards.
@@ -50,6 +51,9 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
     private final AtributsVisualsHelper atributsVisualsHelper;
     private final EstadisticaWidgetHelper estadisticaWidgetHelper;
     private final DashboardItemTitolHelper dashboardItemTitolHelper;
+    private final AuthenticationHelper authenticationHelper;
+    private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
+    private final AclServiceClient aclServiceClient;
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
     static {
@@ -62,6 +66,50 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
     @PostConstruct
     public void init() {
         register(DashboardItem.WIDGET_REPORT, new InformeWidget());
+    }
+
+    @Override
+    protected String additionalSpringFilter(
+        String currentSpringFilter,
+        String[] namedQueries) {
+        if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
+            || authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
+            return currentSpringFilter;
+        }
+        Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP,
+            List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
+        String appFilter = SpringFilterHelper.buildOrFilter("widget.appId", appPermissionIds);
+
+        Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP,
+            List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
+        String entornAppFilter = SpringFilterHelper.buildOrFilter("entornId", entornAppPermissionIds);
+
+        Set<Serializable> dashboardPermissionIds = getAllowedIds(ResourceType.DASHBOARD,
+            List.of(PermissionEnum.READ, PermissionEnum.WRITE));
+        String dashboardFilter = SpringFilterHelper.buildOrFilter("dashboard.id", dashboardPermissionIds);
+
+        String filter = SpringFilterHelper.or(
+            appFilter,
+            entornAppFilter,
+            dashboardFilter
+        );
+
+        return SpringFilterHelper.and(
+            currentSpringFilter,
+            (filter.isBlank())
+                ? "id:0"
+                : filter
+        );
+    }
+
+    public Set<Serializable> getAllowedIds(ResourceType resourceType, List<PermissionEnum> permissions) {
+        return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
+                resourceType,
+                permissions,
+                authenticationHelper.getCurrentUserName(),
+                Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
+                httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
+            .orElse(Collections.emptySet());
     }
 
     @Override

@@ -64,4 +64,17 @@ public class UnitatOrganitzativaEntity extends BaseAuditableEntity<UnitatOrganit
     public String getCodiNom() {
         return codi + " - " + this.getDenominacio();
     }
+
+    public void update(UnitatOrganitzativaEntity uo) {
+        if (uo.getDenominacioEs() != null)
+            this.denominacioEs = uo.getDenominacioEs();
+        if (uo.getDenominacioCa() != null)
+            this.denominacioCa = uo.getDenominacioCa();
+        this.nifCif = uo.getNifCif();
+        this.codiUnitatArrel = uo.getCodiUnitatArrel();
+        this.codiUnitatSuperior = uo.getCodiUnitatSuperior();
+        this.codiConselleria = uo.getCodiConselleria();
+        if (uo.getEstat() != null)
+            this.estat = uo.getEstat();
+    }
 }

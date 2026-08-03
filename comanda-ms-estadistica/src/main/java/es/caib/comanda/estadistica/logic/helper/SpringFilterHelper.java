@@ -11,8 +11,8 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Objects;
+import java.io.Serializable;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -38,5 +38,30 @@ public class SpringFilterHelper {
                 .map(id -> FilterBuilder.equal(entornAppIdField, id))
                 .collect(Collectors.toList());
         return FilterBuilder.or(idFilters);
+    }
+
+    public static String buildOrFilter(String fieldName, Set<Serializable> values) {
+        if (values == null || values.isEmpty()) {
+            return null;
+        }
+        return values.stream()
+            .sorted(Comparator.comparingLong(id -> Long.parseLong(String.valueOf(id))))
+            .map(String::valueOf)
+            .map(id -> fieldName + ":" + id)
+            .collect(Collectors.joining(" or "));
+    }
+
+    public static String and(Object... options) {
+        return Arrays.stream(options)
+            .filter(obj -> obj != null && !obj.toString().isBlank())
+            .map(Object::toString)
+            .collect(Collectors.joining(" and "));
+    }
+
+    public static String or(Object... options) {
+        return Arrays.stream(options)
+            .filter(obj -> obj != null && !obj.toString().isBlank())
+            .map(Object::toString)
+            .collect(Collectors.joining(" or "));
     }
 }

@@ -44,6 +44,10 @@ import java.util.List;
         descriptionField = "titol",
         accessConstraints = {
                 @ResourceAccessConstraint(
+                        type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,
+                        grantedPermissions = { PermissionEnum.READ }
+                ),
+                @ResourceAccessConstraint(
                         type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
                         roles = { BaseConfig.ROLE_ADMIN },
                         grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE, PermissionEnum.CREATE, PermissionEnum.DELETE }
@@ -57,8 +61,21 @@ import java.util.List;
         artifacts = {
                 @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Dashboard.DASHBOARD_IMPORT, formClass = DashboardServiceImpl.DashboardImportParams.class),
                 @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Dashboard.CLONE_ACTION, requiresId = true, formClass = Dashboard.class),
-                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Dashboard.WIDGETS_REPORT, requiresId = true, formClass= InformeWidgetParams.class),
-                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Dashboard.DASHBOARD_EXPORT, requiresId = true)
+                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Dashboard.WIDGETS_REPORT, requiresId = true, formClass= InformeWidgetParams.class,
+                    accessConstraints = {
+                        @ResourceAccessConstraint(
+                            type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,
+                            grantedPermissions = { PermissionEnum.READ }
+                        )
+                    }),
+                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Dashboard.DASHBOARD_EXPORT, requiresId = true,
+                    accessConstraints = {
+                        @ResourceAccessConstraint(
+                            type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                            roles = {BaseConfig.ROLE_ADMIN},
+                            grantedPermissions = {PermissionEnum.WRITE}
+                        )
+                    }),
         }
 )
 public class Dashboard extends BaseResource<Long> {

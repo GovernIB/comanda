@@ -15,5 +15,6 @@ public enum ModulEnum {
     ALARMES,
     TASCA,
     AVIS,
-    USUARIS
+    USUARIS,
+    DIR3
 }

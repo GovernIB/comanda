@@ -6,9 +6,7 @@ const mocks = vi.hoisted(() => ({
     anyHistoryEntryExistMock: vi.fn(),
     goBackMock: vi.fn(),
     getOneMock: vi.fn(),
-    // NUEVO: Mock para la acción de artefacto (UO_DIR3)
     artifactActionMock: vi.fn(),
-    // NUEVO: Mock para los mensajes temporales
     temporalMessageShowMock: vi.fn(),
     useReadOnlyGestorMock: vi.fn(() => false),
     tMock: vi.fn((selector: any) =>
@@ -59,7 +57,7 @@ vi.mock('reactlib', () => ({
         toolbarAdditionalRow?: React.ReactNode;
         columns: Array<{ field: string }>;
         rowHideDeleteButton?: boolean;
-        rowAdditionalActions?: Array<{ label: string; onClick?: (id: string) => void }>;
+        rowAdditionalActions?: Array<{ label: string; onClick?: (id: string) => void; hidden?: boolean }>;
     }) => (
         <section>
             <h2>{title}</h2>
@@ -70,7 +68,8 @@ vi.mock('reactlib', () => ({
                 <div key={index}>{entry.element}</div>
             ))}
             <div>{toolbarAdditionalRow}</div>
-            {rowAdditionalActions?.map((action) => (
+            {/* CORREGIT: Filtrem les accions ocultes per reflectir el comportament real del component */}
+            {rowAdditionalActions?.filter(action => !action.hidden).map((action) => (
                 <button key={action.label} onClick={() => action.onClick?.('15')} type="button">
                     {action.label}
                 </button>
@@ -90,14 +89,11 @@ vi.mock('reactlib', () => ({
         },
     }),
     useFormApiRef: () => ({ current: {} }),
-
-    // ✅ AÑADIDO: Mock para useMuiDataGridApiRef
     useMuiDataGridApiRef: () => ({
         current: {
             refresh: vi.fn(),
         },
     }),
-
     useResourceApiService: (resourceName: string) => {
         if (resourceName === 'dimensioValor') {
             return {
@@ -126,7 +122,8 @@ vi.mock('../hooks/useReadOnlyGestor.ts', () => ({
 
 describe('DimensioValor', () => {
     beforeEach(() => {
-        mocks.getOneMock.mockResolvedValue({ nom: 'Dimensió prova' });
+        // CORREGIT: Afegim 'tipus' perquè l'acció de sincronitzar no estigui oculta per defecte en les proves
+        mocks.getOneMock.mockResolvedValue({ nom: 'Dimensió prova', tipus: 'ORGAN_GESTOR' });
         mocks.anyHistoryEntryExistMock.mockReturnValue(true);
     });
 
@@ -144,13 +141,14 @@ describe('DimensioValor', () => {
 
         expect(screen.getByTestId('page-title')).toHaveTextContent('Valors dimensió Dimensió prova');
         expect(screen.getByTestId('fixed-filter')).toHaveTextContent('dimensio.id=15');
-
-        // CORREGIDO: La columna ahora es 'codiNom' en lugar de 'valor'
         expect(screen.getByTestId('columns')).toHaveTextContent('codiNom');
-
         expect(screen.getByTestId('hide-delete')).toHaveTextContent('false');
+
         expect(mocks.getOneMock).toHaveBeenCalledWith('15');
-        expect(screen.getAllByRole('button')[0]).toBeEnabled();
+
+        // MILLORA: Consultem el botó de tornar de manera més robusta buscant la icona
+        const backButton = screen.getAllByRole('button').find(btn => btn.textContent?.includes('arrow_back'));
+        expect(backButton).toBeEnabled();
     });
 
     it('DimensioValor_quanNoHiHaHistorial_deshabilitaElBotoDeTornada', async () => {
@@ -159,7 +157,8 @@ describe('DimensioValor', () => {
         render(<DimensioValor />);
 
         await waitFor(() => {
-            expect(screen.getAllByRole('button')[0]).toBeDisabled();
+            const backButton = screen.getAllByRole('button').find(btn => btn.textContent?.includes('arrow_back'));
+            expect(backButton).toBeDisabled();
         });
     });
 
@@ -175,7 +174,6 @@ describe('DimensioValor', () => {
         expect(screen.getByTestId('hide-delete')).toHaveTextContent('true');
     });
 
-    // NUEVO TEST: Para cubrir la nueva funcionalidad de sincronización UO
     it('DimensioValor_quanEsPremAccioUO_cridaApiActionIMostraMissatgeExit', async () => {
         mocks.artifactActionMock.mockResolvedValue({});
 

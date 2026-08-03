@@ -19,10 +19,9 @@ public interface UnitatsOrganitzativesPlugin {
      * @return La unitat organitzativa.
      * @throws SistemaExternException Si es produeix un error al consultar les unitats organitzatives.
      */
-    public UnitatOrganitzativaEntity findUnidad(
-        String codi) throws SistemaExternException;
+    public UnitatOrganitzativaEntity findUnidad(String codi) throws SistemaExternException;
 
-    public List<UnitatOrganitzativaEntity> findAll();
+    public List<UnitatOrganitzativaEntity> findAll(String codi) throws SistemaExternException;
 
     public String getConselleria(String codi);
 

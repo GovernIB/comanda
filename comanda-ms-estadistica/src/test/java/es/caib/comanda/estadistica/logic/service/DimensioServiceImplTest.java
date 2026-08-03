@@ -1,9 +1,16 @@
 package es.caib.comanda.estadistica.logic.service;
 
+import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesPlugin;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
+import es.caib.comanda.estadistica.persist.repository.DimensioRepository;
+import es.caib.comanda.estadistica.persist.repository.FetRepository;
+import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,12 +18,19 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -25,11 +39,29 @@ class DimensioServiceImplTest {
 
     @Mock
     private SpringFilterHelper springFilterHelper;
+
     @Mock
     private EstadisticaClientHelper estadisticaClientHelper;
 
+    @Mock
+    private FetRepository fetRepository;
+
+    @Mock
+    private UnitatsOrganitzativesPlugin unitatsOrganitzativesPlugin;
+
+    @Mock
+    private DimensioRepository dimensioRepository;
+
+    @Mock
+    private ResourceEntityMappingHelper resourceEntityMappingHelper;
+
     @InjectMocks
     private DimensioServiceImpl dimensioService;
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(dimensioService, "resourceEntityMappingHelper", resourceEntityMappingHelper);
+    }
 
     @Test
     @DisplayName("namedFilterToSpecification retorna null per a filtres desconeguts")
@@ -123,5 +155,152 @@ class DimensioServiceImplTest {
         // Assert
         assertThat(result).isNotNull();
         verify(springFilterHelper).filterByApp(eq(100L), anyString());
+    }
+
+    // ============================================================================
+    // TESTS PER A FET_CONS_ACTION_EXECUTOR
+    // ============================================================================
+
+    @Test
+    @DisplayName("FetConsActionExecutor crea dimensió CONS si no existeix i és ORGAN_GESTOR")
+    void fetConsActionExecutor_quanEsOrganGestorSenseCons_creaDimensioCons() {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+        entity.setTipus(TipusDimensioEnum.ORGAN_GESTOR);
+        entity.setEntornAppId(1L);
+        entity.setCodi("TEST_ORGAN");
+
+        when(dimensioRepository.findByEntornAppId(1L)).thenReturn(Collections.emptyList());
+        when(fetRepository.findByEntornAppIdAddCons(1L, "TEST_ORGAN", null)).thenReturn(Collections.emptyList());
+
+        // Act
+        Dimensio result = dimensioService.new FetConsActionExecutor().exec("FET_CONS", entity, null);
+
+        // Assert
+        verify(dimensioRepository).save(argThat(d ->
+            d.getCodi().equals("CONS") &&
+                d.getNom().equals("Conselleria") &&
+                d.getTipus() == TipusDimensioEnum.CONSELLERIA &&
+                d.getEntornAppId().equals(1L)
+        ));
+    }
+
+    @Test
+    @DisplayName("FetConsActionExecutor no crea dimensió CONS si ja existeix")
+    void fetConsActionExecutor_quanEsOrganGestorAmbCons_noCreaDimensio() {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+        entity.setTipus(TipusDimensioEnum.ORGAN_GESTOR);
+        entity.setEntornAppId(1L);
+        entity.setCodi("TEST_ORGAN");
+
+        DimensioEntity existingCons = new DimensioEntity();
+        existingCons.setTipus(TipusDimensioEnum.CONSELLERIA);
+        existingCons.setCodi("CONS");
+
+        when(dimensioRepository.findByEntornAppId(1L)).thenReturn(Arrays.asList(existingCons));
+        when(fetRepository.findByEntornAppIdAddCons(1L, "TEST_ORGAN", null)).thenReturn(Collections.emptyList());
+
+        // Act
+        Dimensio result = dimensioService.new FetConsActionExecutor().exec("FET_CONS", entity, null);
+
+        // Assert
+        verify(dimensioRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("FetConsActionExecutor actualitza CONS quan hi ha conselleria")
+    void fetConsActionExecutor_quanHiHaConselleria_actualitzaJson() {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+        entity.setTipus(TipusDimensioEnum.ORGAN_GESTOR);
+        entity.setEntornAppId(1L);
+        entity.setCodi("TEST_ORGAN");
+
+        DimensioEntity existingCons = new DimensioEntity();
+        existingCons.setTipus(TipusDimensioEnum.CONSELLERIA);
+        when(dimensioRepository.findByEntornAppId(1L)).thenReturn(Arrays.asList(existingCons));
+
+        FetEntity fet = new FetEntity();
+        Map<String, String> dimensionsJson = new HashMap<>();
+        dimensionsJson.put("TEST_ORGAN", "ORG123");
+        fet.setDimensionsJson(dimensionsJson);
+
+        when(fetRepository.findByEntornAppIdAddCons(1L, "TEST_ORGAN", null)).thenReturn(Arrays.asList(fet));
+        when(unitatsOrganitzativesPlugin.getConselleria("ORG123")).thenReturn("CONS456");
+
+        // Act
+        Dimensio result = dimensioService.new FetConsActionExecutor().exec("FET_CONS", entity, null);
+
+        // Assert
+        assertThat(fet.getDimensionsJson()).containsEntry("CONS", "CONS456");
+        verify(fetRepository).saveAll(anyList());
+    }
+
+    @Test
+    @DisplayName("FetConsActionExecutor elimina CONS quan no hi ha conselleria")
+    void fetConsActionExecutor_quanNoHiHaConselleria_eliminaCons() {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+        entity.setTipus(TipusDimensioEnum.ORGAN_GESTOR);
+        entity.setEntornAppId(1L);
+        entity.setCodi("TEST_ORGAN");
+
+        DimensioEntity existingCons = new DimensioEntity();
+        existingCons.setTipus(TipusDimensioEnum.CONSELLERIA);
+        when(dimensioRepository.findByEntornAppId(1L)).thenReturn(Arrays.asList(existingCons));
+
+        FetEntity fet = new FetEntity();
+        Map<String, String> dimensionsJson = new HashMap<>();
+        dimensionsJson.put("TEST_ORGAN", "ORG123");
+        dimensionsJson.put("CONS", "OLD_CONS");
+        fet.setDimensionsJson(dimensionsJson);
+
+        when(fetRepository.findByEntornAppIdAddCons(1L, "TEST_ORGAN", null)).thenReturn(Arrays.asList(fet));
+        when(unitatsOrganitzativesPlugin.getConselleria("ORG123")).thenReturn(null);
+
+        // Act
+        Dimensio result = dimensioService.new FetConsActionExecutor().exec("FET_CONS", entity, null);
+
+        // Assert
+        assertThat(fet.getDimensionsJson()).doesNotContainKey("CONS");
+        verify(fetRepository).saveAll(anyList());
+    }
+
+    @Test
+    @DisplayName("FetConsActionExecutor no fa res quan no és ORGAN_GESTOR")
+    void fetConsActionExecutor_quanNoEsOrganGestor_noFaRes() {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+        entity.setTipus(TipusDimensioEnum.CONSELLERIA);
+        entity.setEntornAppId(1L);
+        entity.setCodi("TEST_CONS");
+
+        // Act
+        Dimensio result = dimensioService.new FetConsActionExecutor().exec("FET_CONS", entity, null);
+
+        // Assert
+        verifyNoInteractions(dimensioRepository, fetRepository, unitatsOrganitzativesPlugin);
+    }
+
+    @Test
+    @DisplayName("FetConsActionExecutor no guarda quan no hi ha canvis")
+    void fetConsActionExecutor_quanNoHiHaCanvis_noGuarda() {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+        entity.setTipus(TipusDimensioEnum.ORGAN_GESTOR);
+        entity.setEntornAppId(1L);
+        entity.setCodi("TEST_ORGAN");
+
+        DimensioEntity existingCons = new DimensioEntity();
+        existingCons.setTipus(TipusDimensioEnum.CONSELLERIA);
+        when(dimensioRepository.findByEntornAppId(1L)).thenReturn(Arrays.asList(existingCons));
+        when(fetRepository.findByEntornAppIdAddCons(1L, "TEST_ORGAN", null)).thenReturn(Collections.emptyList());
+
+        // Act
+        Dimensio result = dimensioService.new FetConsActionExecutor().exec("FET_CONS", entity, null);
+
+        // Assert
+        verify(fetRepository, never()).saveAll(anyList());
     }
 }

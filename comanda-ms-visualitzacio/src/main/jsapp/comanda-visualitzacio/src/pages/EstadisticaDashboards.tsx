@@ -20,6 +20,9 @@ import { findOptions } from '../util/requestUtils.ts';
 import PageTitle from '../components/PageTitle.tsx';
 import IconButton from "@mui/material/IconButton";
 import Icon from "@mui/material/Icon";
+import {useAclCustomPermissionManager} from "../components/AclPermissionManager.tsx";
+import {useMemo} from "react";
+import {useIsUserAdmin, useIsUserUsuari} from "../components/UserContext.ts";
 
 const EstadisticaDashboardForm: React.FC = () => {
     const { data } = useFormContext();
@@ -249,9 +252,58 @@ const columns = [
     },
 ];
 
+const AclEntryForm: React.FC = () => {
+    const { t } = useTranslation();
+    return <Grid container spacing={2}>
+        <Grid size={4}>
+            <FormField name="subjectType" />
+        </Grid>
+        <Grid size={8}>
+            <FormField name="subjectValue" />
+        </Grid>
+        <Grid size={12}>
+            <FormField name="readAllowed" label={t($ => $.page.dashboards.acl.readAllowed)} />
+        </Grid>
+        <Grid size={12}>
+            <FormField name="writeAllowed" label={t($ => $.page.dashboards.acl.writeAllowed)} />
+        </Grid>
+    </Grid>;
+}
+
 const EstadisticaDashboards: React.FC = () => {
     const { t } = useTranslation();
     const gridApiRef = useMuiDataGridApiRef();
+    const isUserAdmin =  useIsUserAdmin()
+    const isUserUsuari =  useIsUserUsuari()
+
+    const aclColumns = useMemo(() => [{
+        field: 'subjectType',
+        sortable: false,
+        flex: 2
+    }, {
+        field: 'subjectValue',
+        sortable: false,
+        flex: 4
+    }, {
+        field: 'readAllowed',
+        headerName: t($ => $.page.dashboards.acl.readAllowed),
+        sortable: false,
+        flex: 1
+    }, {
+        field: 'writeAllowed',
+        headerName: t($ => $.page.dashboards.acl.writeAllowed),
+        sortable: false,
+        flex: 1
+    }], [t]);
+
+    const {
+        show: permissionShow,
+        component: permissionComponent
+    } = useAclCustomPermissionManager({
+        resourceType: 'DASHBOARD',
+        columns: aclColumns,
+        formContent: <AclEntryForm/>
+    });
     const refresh = () => {
         gridApiRef?.current?.refresh?.();
     }
@@ -267,11 +319,12 @@ const EstadisticaDashboards: React.FC = () => {
                 columns={columns}
                 apiRef={gridApiRef}
                 toolbarType="upper"
+                namedQueries={['WRITE']}
                 paginationActive
                 rowHideUpdateButton
                 popupEditActive
                 popupEditFormContent={<EstadisticaDashboardForm/>}
-                toolbarElementsWithPositions={[
+                toolbarElementsWithPositions={isUserAdmin ?[
                     {
                         position: 2,
                         element: <IconButton
@@ -281,8 +334,15 @@ const EstadisticaDashboards: React.FC = () => {
                             <Icon>download</Icon>
                         </IconButton>
                     }
-                ]}
+                ] :[]}
                 rowAdditionalActions={[
+                    {
+                        label: t($ => $.components.permisos.title),
+                        icon: "lock",
+                        showInMenu: true,
+                        onClick: (id: string | number, row: { titol?: string }) => permissionShow(id, row?.titol ?? ''),
+                        hidden: isUserUsuari,
+                    },
                     {
                         label: t($ => $.page.dashboards.edit),
                         icon: 'edit',
@@ -298,6 +358,7 @@ const EstadisticaDashboards: React.FC = () => {
                         label: t($ => $.page.dashboards.action.export),
                         icon: 'download',
                         showInMenu: true,
+                        report: 'dashboard_export',
                         onClick: dashboardExport,
                     },
                     {
@@ -311,6 +372,7 @@ const EstadisticaDashboards: React.FC = () => {
             />
             {contentCloneDashboard}
             {contentImport}
+            {permissionComponent}
         </GridPage>
     );
 };

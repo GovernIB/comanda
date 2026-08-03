@@ -379,6 +379,10 @@ const translationCa = {
             title: "Taulers de control",
             edit: "Editar",
             dashboardView: "Anar al taulers de control",
+            acl: {
+                readAllowed: "Consulta de taulers de control",
+                writeAllowed: "Disseny de taulers de control",
+            },
             cloneDashboard: {
                 title: "Clonar el tauler de control",
                 success: "Tauler de controls clonat correctament",
@@ -662,6 +666,11 @@ const translationCa = {
         appsEntorns: {
             title: "Entorns",
             resourceTitle: "entorn",
+            acl: {
+                readAllowed: "Salut",
+                perm0Allowed: "Consulta de taulers de control",
+                perm1Allowed: "Disseny de taulers de control",
+            },
             action: {
                 toolbarActiva: {
                     activar: "Activar",
@@ -689,6 +698,28 @@ const translationCa = {
                 logo: "Logo",
             },
         },
+        entitats: {
+            title: "Entitats",
+            acl: {
+                perm0Allowed: "Consulta de dades estadístiques d'entitats",
+            },
+            action: {
+                refreshUO: {
+                    label: "Refrescar unitats organitzatives",
+                    ok: "Unitats organitzatives recarregades correctament",
+                },
+                organigrama: {
+                    label: "Organigrama",
+                    title: "Organigrama de la unitat organitzativa",
+                    ko: "No s'ha pogut obtenir la unitat organitzativa",
+                },
+            },
+        },
+        unitatOrganitzativa: {
+            acl: {
+                perm0Allowed: "Consulta de dades estadístiques d'òrgans",
+            },
+        },
         dimensions: {
             title: "Dimensions",
             values: "Valors",
@@ -700,13 +731,13 @@ const translationCa = {
                 agrupacions: "Té agrupacions",
             },
             action: {
-                marcarOrgan: {
-                    label: "Marcar com a òrgan gestor",
-                    ok: "La dimensió s'ha marcat com a òrgan gestor",
+                changeTipus: {
+                    label: "Canviar tipus",
+                    ok: "La dimensió s'ha actualitzat correctament",
                 },
                 desmarcar: {
-                    label: "Desmarcar com a òrgan gestor",
-                    ok: "La dimensió s'ha desmarcat com a òrgan gestor",
+                    label: "Desmarcar tipus de dimensió",
+                    ok: "La dimensió s'ha desmarcat correctament",
                 },
                 refreshCons: {
                     label: "Refrescar dades de la conselleria",
@@ -714,9 +745,9 @@ const translationCa = {
                     ok: "Les dades de la conselleria s'han refrescat correctament",
                 },
                 sincronitzar: {
-                    label: "Sincronitzar",
+                    label: "Obtenir/refrescar noms d'òrgans gestors",
                     ok: "L'òrgan gestor s'ha sincronitzat correctament",
-                }
+                },
             },
         },
         indicadors: {
@@ -875,6 +906,7 @@ const translationCa = {
                 tasca: "Tasca",
                 avis: "Avís",
                 usuaris: "Usuaris",
+                dir3: "Dir3",
             },
             tab: {
                 alarmes: "ALARMES",

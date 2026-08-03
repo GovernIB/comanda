@@ -8,10 +8,7 @@ import es.caib.comanda.estadistica.persist.entity.estadistiques.UnitatOrganitzat
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -28,51 +25,33 @@ public class UnitatsOrganitzativesPluginDir3 implements UnitatsOrganitzativesPlu
     private volatile boolean mapInicialitzat = false;
 
     @Override
-    public UnitatOrganitzativaEntity findUnidad(String codi) throws SistemaExternException {
+    public UnitatOrganitzativaEntity findUnidad(String codi) {
         return this.findUnidad(codi, null, null);
     }
 
     //    @Override
     public UnitatOrganitzativaEntity findUnidad(String codi,
                                                 String fechaActualizacion,
-                                                String fechaSincronizacion) throws SistemaExternException {
+                                                String fechaSincronizacion) {
         try {
             UnidadRest unidad = unitatsOrganitzativesRestClient.obtenerUnidad(
                 codi, fechaActualizacion, fechaSincronizacion, false);
-            if (unidad != null) {
-                return toUnitatOrganitzativa(unidad);
-            } else {
-                throw new SistemaExternException("La unitat organitzativa no està vigent (" + "codi=" + codi + ")");
-            }
-        } catch (SistemaExternException ex) {
-            throw ex;
+            return toUnitatOrganitzativa(unidad);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private UnitatOrganitzativaEntity toUnitatOrganitzativa(UnidadRest unidad) {
-        String c = this.getConselleria(unidad.getCodigo());
-        UnitatOrganitzativaEntity unitat = UnitatOrganitzativaEntity.builder()
-            .codi(unidad.getCodigo())
-            .denominacioEs(unidad.getDenominacion())
-            .denominacioCa(unidad.getDenominacionCooficial())
-            .nifCif(unidad.getCodigo())
-            .estat(unidad.getCodigoEstadoEntidad() != null
-                ? UOEstatEnum.fromValue(unidad.getCodigoEstadoEntidad())
-                : null)
-            .codiUnitatSuperior(unidad.getCodUnidadSuperior())
-            .codiUnitatArrel(unidad.getCodUnidadRaiz())
-            .codiConselleria(!Objects.equals(c, unidad.getCodigo()) ? c : null)
-            .build();
-        return unitat;
-    }
-
     @Override
-    public List<UnitatOrganitzativaEntity> findAll() {
-        return unitatsOrganitzativesRestClient.findUnidadArrel(null, null, false).stream()
-            .map(this::toUnitatOrganitzativa)
-            .collect(Collectors.toList());
+    public List<UnitatOrganitzativaEntity> findAll(String codi) {
+        try {
+            List<UnidadRest> result = unitatsOrganitzativesRestClient.findUnidad(codi, null, null, false);
+            return result.stream()
+                .map(this::toUnitatOrganitzativa)
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Map<String, String> getMap() {
@@ -146,6 +125,23 @@ public class UnitatsOrganitzativesPluginDir3 implements UnitatsOrganitzativesPlu
         String conselleria = pare != null ? this.getConselleria(pare, unitatsPerCodi, cache) : null;
         cache.put(codi, conselleria);
         return conselleria;
+    }
+
+    private UnitatOrganitzativaEntity toUnitatOrganitzativa(UnidadRest unidad) {
+        String c = this.getConselleria(unidad.getCodigo());
+        UnitatOrganitzativaEntity unitat = UnitatOrganitzativaEntity.builder()
+            .codi(unidad.getCodigo())
+            .denominacioEs(unidad.getDenominacion())
+            .denominacioCa(unidad.getDenominacionCooficial())
+            .nifCif(unidad.getCodigo())
+            .estat(unidad.getCodigoEstadoEntidad() != null
+                ? UOEstatEnum.valueOf(unidad.getCodigoEstadoEntidad())
+                : null)
+            .codiUnitatSuperior(unidad.getCodUnidadSuperior())
+            .codiUnitatArrel(unidad.getCodUnidadRaiz())
+            .codiConselleria(!Objects.equals(c, unidad.getCodigo()) ? c : null)
+            .build();
+        return unitat;
     }
 
 }

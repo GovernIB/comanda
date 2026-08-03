@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
 import {
-    FormField,
+    FormField, MuiDataGridColDef,
     MuiDataGridDialog,
     MuiDataGridDialogApi,
 } from 'reactlib';
@@ -22,7 +22,26 @@ const AclEntryForm: React.FC = () => {
     </Grid>;
 }
 
-export const useAclPermissionManager = (resourceType: string) => {
+export const useAclPermissionManager = (resourceType: string) => useAclCustomPermissionManager({resourceType})
+export const useAclCustomPermissionManager = (
+    {
+        resourceType,
+        columns = [{
+            field: 'subjectType',
+            sortable: false,
+            flex: 2
+        }, {
+            field: 'subjectValue',
+            sortable: false,
+            flex: 5
+        }, {
+            field: 'readAllowed',
+            sortable: false,
+            flex: 1
+        }],
+        formContent = <AclEntryForm />
+    }: {resourceType: string, columns?:MuiDataGridColDef[], formContent?: any }
+) => {
     const { t } = useTranslation();
     const gestorReadOnly = useReadOnlyGestor();
     const dataGridDialogApiRef = React.useRef<MuiDataGridDialogApi | any>({});
@@ -45,7 +64,7 @@ export const useAclPermissionManager = (resourceType: string) => {
                         : {}),
                 }),
                 popupEditActive: true,
-                popupEditFormContent: <AclEntryForm />,
+                popupEditFormContent: formContent,
                 popupEditFormDialogResourceTitle: t($ => $.components.permisos.resourceTitle),
                 rowHideDeleteButton: gestorReadOnly,
             }
@@ -54,19 +73,7 @@ export const useAclPermissionManager = (resourceType: string) => {
     const close = () => dataGridDialogApiRef.current.close();
     const component = <MuiDataGridDialog
         resourceName="aclEntry"
-        columns={[{
-            field: 'subjectType',
-            sortable: false,
-            flex: 2
-        }, {
-            field: 'subjectValue',
-            sortable: false,
-            flex: 5
-        }, {
-            field: 'readAllowed',
-            sortable: false,
-            flex: 1
-        }]}
+        columns={columns}
         apiRef={dataGridDialogApiRef}
         dialogComponentProps={{
             fullWidth: true,

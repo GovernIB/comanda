@@ -2,13 +2,17 @@ package es.caib.comanda.estadistica.logic.helper;
 
 import es.caib.comanda.estadistica.logic.dir3.SistemaExternException;
 import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesPlugin;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.UOEstatEnum;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.UnitatOrganitzativaEntity;
 import es.caib.comanda.estadistica.persist.repository.UnitatOrganitzativaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
+import javax.transaction.Transactional;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -20,7 +24,8 @@ public class UnitatOrganitzativaHelper {
 
     public UnitatOrganitzativaEntity updateByCodi(String codi) throws SistemaExternException {
         UnitatOrganitzativaEntity uo = unitatsOrganitzativesPlugin.findUnidad(codi);
-        if (uo.getCodiConselleria() != null) this.updateByCodi(uo.getCodiConselleria());
+        if (uo.getCodiConselleria() != null && !unitatOrganitzativaRepository.existsByCodi(uo.getCodiConselleria()))
+            this.updateByCodi(uo.getCodiConselleria());
         return this.update(uo);
     }
 
@@ -29,15 +34,44 @@ public class UnitatOrganitzativaHelper {
 
         if (uoExists.isPresent()) {
             UnitatOrganitzativaEntity u = uoExists.get();
-            u.setDenominacioEs(uo.getDenominacioEs());
-            u.setDenominacioCa(uo.getDenominacioCa());
-            u.setNifCif(uo.getNifCif());
-            u.setCodiUnitatArrel(uo.getCodiUnitatArrel());
-            u.setCodiUnitatSuperior(uo.getCodiUnitatSuperior());
-            u.setCodiConselleria(uo.getCodiConselleria());
-            u.setEstat(uo.getEstat());
+            uoExists.get().update(uo);
             return unitatOrganitzativaRepository.save(u);
         }
         return unitatOrganitzativaRepository.save(uo);
+    }
+
+    @Transactional
+    public List<UnitatOrganitzativaEntity> updateAll(List<UnitatOrganitzativaEntity> unitats) {
+        if (unitats == null || unitats.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<String> codis = unitats.stream()
+            .map(UnitatOrganitzativaEntity::getCodi)
+            .filter(Objects::nonNull)
+            .distinct()
+            .collect(Collectors.toList());
+
+        List<UnitatOrganitzativaEntity> existingList = unitatOrganitzativaRepository.findByCodiIn(codis);
+        Map<String, UnitatOrganitzativaEntity> existingMap = existingList.stream()
+            .collect(Collectors.toMap(UnitatOrganitzativaEntity::getCodi, Function.identity()));
+
+        List<UnitatOrganitzativaEntity> result = new ArrayList<>(unitats.size());
+
+        for (UnitatOrganitzativaEntity input : unitats) {
+            UnitatOrganitzativaEntity target = existingMap.get(input.getCodi());
+
+            if (target != null) {
+                target.update(input);
+                result.add(target);
+            } else {
+                if (input.getEstat() == null)
+                    input.setEstat(UOEstatEnum.T);
+
+                result.add(input);
+            }
+        }
+
+        return unitatOrganitzativaRepository.saveAll(result);
     }
 }

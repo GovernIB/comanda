@@ -1,5 +1,7 @@
 package es.caib.comanda.estadistica.logic.dir3;
 
+import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
+import es.caib.comanda.estadistica.logic.helper.MonitorDir3;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -27,7 +29,12 @@ public class UnitatsOrganitzativesRestClient {
     @Value("${es.caib.comanda.plugin.unitats.organitzatives.dir3.service.password:}")
     private String password;
 
+    private final EstadisticaClientHelper estadisticaClientHelper;
     private final RestTemplate restTemplate;
+
+    private final String URL_GET_ONE = baseUrl + "/obtenerUnidad";
+    private final String URL_FIND = baseUrl + "/obtenerArbolUnidadesDestinatarias";
+
 
     private String basicAuthHeader(String user, String password) {
         String token = java.util.Base64.getEncoder().encodeToString((user + ":" + password).getBytes(java.nio.charset.StandardCharsets.UTF_8));
@@ -42,8 +49,16 @@ public class UnitatsOrganitzativesRestClient {
         return builder.build(true).toUri();
     }
 
-    public UnidadRest obtenerUnidad(String codigo, String fechaActualizacion, String fechaSincronizacion, Boolean denominacioCooficial) {
+    private MonitorDir3 initializeMonitor(String url) {
+        return new MonitorDir3(url, estadisticaClientHelper);
+    }
+
+    public UnidadRest obtenerUnidad(String codigo, String fechaActualizacion, String fechaSincronizacion, Boolean denominacioCooficial) throws SistemaExternException {
+        MonitorDir3 monitor = initializeMonitor(URL_GET_ONE);
+
         try {
+            monitor.startInfoAction();
+
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", basicAuthHeader(username, password));
             HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
@@ -55,27 +70,33 @@ public class UnitatsOrganitzativesRestClient {
             if (fechaSincronizacion != null) params.put("fechaSincronizacion", fechaSincronizacion);
 
             ResponseEntity<UnidadRest> response = restTemplate.exchange(
-                uriBuild(baseUrl + "obtenerUnidad", params),
+                uriBuild(URL_GET_ONE, params),
                 HttpMethod.GET,
                 httpEntity,
                 UnidadRest.class);
 
             if (response.getStatusCode() == HttpStatus.NO_CONTENT) {
-                return null;
+                throw new RuntimeException("La unitat organitzativa no està vigent (" + "codi=" + codigo + ")");
             }
 
+            monitor.endInfoAction();
             return response.getBody();
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            monitor.endInfoAction(ex);
+            throw new SistemaExternException(ex);
         }
     }
 
-    public List<UnidadRest> findUnidadArrel(String fechaActualizacion, String fechaSincronizacion, Boolean denominacioCooficial) {
+    public List<UnidadRest> findUnidadArrel(String fechaActualizacion, String fechaSincronizacion, Boolean denominacioCooficial) throws SistemaExternException {
         return this.findUnidad(codiArrel, fechaActualizacion, fechaSincronizacion, denominacioCooficial);
     }
 
-    public List<UnidadRest> findUnidad(String codigo, String fechaActualizacion, String fechaSincronizacion, Boolean denominacioCooficial) {
+    public List<UnidadRest> findUnidad(String codigo, String fechaActualizacion, String fechaSincronizacion, Boolean denominacioCooficial) throws SistemaExternException {
+        MonitorDir3 monitor = initializeMonitor(URL_FIND);
+
         try {
+            monitor.startOrganigramaAction();
+
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", basicAuthHeader(username, password));
             HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
@@ -87,18 +108,20 @@ public class UnitatsOrganitzativesRestClient {
             if (fechaSincronizacion != null) params.put("fechaSincronizacion", fechaSincronizacion);
 
             ResponseEntity<List<UnidadRest>> response = restTemplate.exchange(
-                uriBuild(baseUrl + "obtenerArbolUnidadesDestinatarias", params),
+                uriBuild(URL_FIND, params),
                 HttpMethod.GET,
                 httpEntity,
                 new ParameterizedTypeReference<List<UnidadRest>>() {});
 
             if (response.getStatusCode() == HttpStatus.NO_CONTENT) {
-                return null;
+                throw new RuntimeException("La unitat organitzativa no està vigent (" + "codi=" + codigo + ")");
             }
 
+            monitor.endOrganigramaAction();
             return response.getBody();
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            monitor.endOrganigramaAction(ex);
+            throw new SistemaExternException(ex);
         }
     }
 

@@ -351,26 +351,28 @@ public class EstadisticaHelper {
 
             if (TipusDimensioEnum.ORGAN_GESTOR.equals(dimensioSaved.getTipus())) {
                 if (dimensions.stream().noneMatch(dim -> Objects.equals(dim.getCodi(), "CONS"))) {
-                    DimensioDesc dDesc = new DimensioDesc();
-                    dDesc.setCodi("CONS");
-                    dDesc.setNom("Conselleria");
-                    dDesc.setValors(dimensioSaved.getValors().stream()
-                        .map(DimensioValorEntity::getValor)
-                        .map(unitatsOrganitzativesPluginDir3::getConselleria)
-                        .filter(Objects::nonNull)
-                        .distinct()
-                        .collect(Collectors.toList())
-                    );
+                    try {
+                        DimensioDesc dDesc = new DimensioDesc();
+                        dDesc.setCodi("CONS");
+                        dDesc.setNom("Conselleria");
+                        dDesc.setValors(dimensioSaved.getValors().stream()
+                            .map(DimensioValorEntity::getValor)
+                            .map(unitatsOrganitzativesPluginDir3::getConselleria)
+                            .filter(Objects::nonNull)
+                            .distinct()
+                            .collect(Collectors.toList())
+                        );
 
-                    DimensioEntity dEntity = dimensioRepository.findByCodiAndEntornAppId(dDesc.getCodi(), entornAppId)
-                        .orElseGet(DimensioEntity::new);
-                    dEntity.setCodi(dDesc.getCodi());
-                    dEntity.setNom(dDesc.getNom());
-                    dEntity.setEntornAppId(entornAppId);
-                    dEntity.setTipus(TipusDimensioEnum.CONSELLERIA);
-                    dimensioRepository.save(dEntity);
+                        DimensioEntity dEntity = dimensioRepository.findByCodiAndEntornAppId(dDesc.getCodi(), entornAppId)
+                            .orElseGet(DimensioEntity::new);
+                        dEntity.setCodi(dDesc.getCodi());
+                        dEntity.setNom(dDesc.getNom());
+                        dEntity.setEntornAppId(entornAppId);
+                        dEntity.setTipus(TipusDimensioEnum.CONSELLERIA);
+                        dimensioRepository.save(dEntity);
 
-                    this.crearDimensions(List.of(dDesc), entornAppId);
+                        this.crearDimensions(List.of(dDesc), entornAppId);
+                    } catch (Exception ignore) {}
                 }
             }
 
@@ -504,10 +506,12 @@ public class EstadisticaHelper {
 
                 DimensioEntity dimensioEntity = dimensioRepository.findByCodiAndEntornAppId(d.getCodi(), entornAppId).orElse(null);
                 if (dimensioEntity != null && TipusDimensioEnum.ORGAN_GESTOR.equals(dimensioEntity.getTipus())) {
-                    String conselleria = unitatsOrganitzativesPluginDir3.getConselleria(d.getValor());
-                    if (conselleria != null) {
-                        dimensionsMap.put("CONS", conselleria);
-                    }
+                    try {
+                        String conselleria = unitatsOrganitzativesPluginDir3.getConselleria(d.getValor());
+                        if (conselleria != null) {
+                            dimensionsMap.put("CONS", conselleria);
+                        }
+                    } catch (Exception ignore) {}
                 }
             }
 

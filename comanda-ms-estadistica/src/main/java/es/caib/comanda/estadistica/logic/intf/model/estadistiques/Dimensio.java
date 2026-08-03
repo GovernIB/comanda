@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.model.estadistiques;
 
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.estadistica.back.intf.validation.ValidDimensioCanviTipus;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
@@ -137,7 +138,9 @@ public class Dimensio extends BaseResource<Long> {
     @NoArgsConstructor
     @AllArgsConstructor
     @FieldNameConstants
+    @ValidDimensioCanviTipus
     public static class ChangeTipusActionForm implements Serializable {
         private TipusDimensioEnum tipus;
+        private Long entornAppId;
     }
 }

@@ -31,6 +31,7 @@ const moduleOptions = [
     { value: 'TASCA', labelKey: 'page.monitors.modulEnum.tasca' },
     { value: 'AVIS', labelKey: 'page.monitors.modulEnum.avis' },
     { value: 'USUARIS', labelKey: 'page.monitors.modulEnum.usuaris' },
+    { value: 'DIR3', labelKey: 'page.monitors.modulEnum.dir3' },
 ];
 
 type TabMonitorProps = {

@@ -379,6 +379,10 @@ const translationEs: translationResourcesType = {
             title: "Cuadros de control",
             edit: "Editar",
             dashboardView: "Ir al panel de control",
+            acl: {
+                readAllowed: "Consulta de paneles de control",
+                writeAllowed: "Diseño de paneles de control",
+            },
             cloneDashboard: {
                 title: "Clonar el panel de control",
                 success: "Panel de control clonado correctamente",
@@ -662,6 +666,11 @@ const translationEs: translationResourcesType = {
         appsEntorns: {
             title: "Entornos",
             resourceTitle: "entorno",
+            acl: {
+                readAllowed: "Salud",
+                perm0Allowed: "Consulta de paneles de control",
+                perm1Allowed: "Diseño de paneles de control",
+            },
             action: {
                 toolbarActiva: {
                     activar: "Activar",
@@ -689,6 +698,28 @@ const translationEs: translationResourcesType = {
                 logo: "Logo",
             },
         },
+        entitats: {
+            title: "Entidades",
+            acl: {
+                perm0Allowed: "Consulta de datos estadísticos de entidades",
+            },
+            action: {
+                refreshUO: {
+                    label: "Actualizar unidades organizativas",
+                    ok: "Unidades organizativas recargadas correctamente",
+                },
+                organigrama: {
+                    label: "Organigrama",
+                    title: "Organigrama de la unidad organizativa",
+                    ko: "No se ha podido obtener la unidad organizativa",
+                },
+            },
+        },
+        unitatOrganitzativa: {
+            acl: {
+                perm0Allowed: "Consulta de datos estadísticos de órganos",
+            },
+        },
         dimensions: {
             title: "Dimensiones",
             values: "Valores",
@@ -700,13 +731,13 @@ const translationEs: translationResourcesType = {
                 agrupacions: "Tiene agrupaciones",
             },
             action: {
-                marcarOrgan: {
-                    label: "Marcar como órgano gestor",
-                    ok: "La dimensión se ha marcado como órgano gestor",
+                changeTipus: {
+                    label: "Cambiar tipo",
+                    ok: "La dimensión se ha actualizado correctamente",
                 },
                 desmarcar: {
-                    label: "Desmarcar como órgano gestor",
-                    ok: "La dimensión se ha desmarcado como órgano gestor",
+                    label: "Desmarcar tipo de dimensión",
+                    ok: "La dimensión se ha desmarcado correctamente",
                 },
                 refreshCons: {
                     label: "Actualizar datos de la consejería",
@@ -714,9 +745,9 @@ const translationEs: translationResourcesType = {
                     ok: "Los datos de la consejería se han actualizado correctamente",
                 },
                 sincronitzar: {
-                    label: "Sincronizar",
+                    label: "Obtener/Actualizar nombres de órganos gestores",
                     ok: "El órgano gestor se ha sincronizado correctamente",
-                }
+                },
             },
         },
         indicadors: {
@@ -875,6 +906,7 @@ const translationEs: translationResourcesType = {
                 tasca: "Tarea",
                 avis: "Aviso",
                 usuaris: "Usuarios",
+                dir3: "Dir3",
             },
             tab: {
                 alarmes: "ALARMES",

@@ -1,7 +1,10 @@
 package es.caib.comanda.estadistica.logic.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import es.caib.comanda.client.model.App;
+import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.client.AclServiceClient;
+import es.caib.comanda.client.model.acl.PermissionEnum;
+import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.logic.helper.*;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTitol;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetItem;
@@ -11,9 +14,6 @@ import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardTitolTipus;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.OverwriteEnum;
 import es.caib.comanda.estadistica.logic.intf.model.export.DashboardExport;
-import es.caib.comanda.estadistica.logic.intf.model.export.DashboardItemExport;
-import es.caib.comanda.estadistica.logic.intf.model.export.EstadisticaWidgetExport;
-import es.caib.comanda.estadistica.logic.intf.model.export.PlantillaExport;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
@@ -24,6 +24,8 @@ import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.estadistica.persist.repository.*;
+import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
@@ -80,8 +82,9 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     private final DashboardItemRepository dashboardItemRepository;
     private final DashboardStyleResolverHelper dashboardStyleResolverHelper;
     private final DashboardImportHelper dashboardImportHelper;
-    private final EstadisticaWidgetRepository estadisticaWidgetRepository;
-    private final PlantillaRepository plantillaRepository;
+    private final AuthenticationHelper authenticationHelper;
+    private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
+    private final AclServiceClient aclServiceClient;
 
     @PostConstruct
     public void init() {
@@ -89,6 +92,51 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
         register(Dashboard.DASHBOARD_EXPORT, new DashboardExportReportGenerator());
         register(Dashboard.DASHBOARD_IMPORT, new DashboardImportActionExecutor());
         register(Dashboard.CLONE_ACTION, (ActionExecutor<DashboardEntity, ?, ?>) new DashboardHelper.CloneDashboardAction(estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository));
+    }
+
+    @Override
+    protected String additionalSpringFilter(
+        String currentSpringFilter,
+        String[] namedQueries) {
+        if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
+            || authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
+            return currentSpringFilter;
+        }
+        List<String> namedQueriesList = namedQueries!= null ? List.of(namedQueries) :Collections.emptyList();
+        Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP,
+            namedQueriesList.contains("WRITE") ?List.of(PermissionEnum.PERM1) :List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
+        String appFilter = SpringFilterHelper.buildOrFilter("appId", appPermissionIds);
+
+        Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP,
+            namedQueriesList.contains("WRITE") ?List.of(PermissionEnum.PERM1) :List.of(PermissionEnum.PERM0, PermissionEnum.PERM1) );
+        String entornAppFilter = SpringFilterHelper.buildOrFilter("entornId", entornAppPermissionIds);
+
+        Set<Serializable> dashboardPermissionIds = getAllowedIds(ResourceType.DASHBOARD,
+            namedQueriesList.contains("WRITE") ?List.of(PermissionEnum.WRITE) :List.of(PermissionEnum.READ, PermissionEnum.WRITE));
+        String dashboardFilter = SpringFilterHelper.buildOrFilter("id", dashboardPermissionIds);
+
+        String filter = SpringFilterHelper.or(
+            appFilter,
+            entornAppFilter,
+            dashboardFilter
+        );
+
+        return SpringFilterHelper.and(
+            currentSpringFilter,
+            (filter.isBlank())
+                ? "id:0"
+                : filter
+        );
+    }
+
+    public Set<Serializable> getAllowedIds(ResourceType resourceType, List<PermissionEnum> permissions) {
+        return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
+                resourceType,
+                permissions,
+                authenticationHelper.getCurrentUserName(),
+                Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
+                httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
+            .orElse(Collections.emptySet());
     }
 
     @Override

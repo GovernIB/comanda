@@ -35,7 +35,7 @@ import { ReactElementWithPosition } from '../../lib/util/reactNodePosition.ts';
 import BlockIcon from "@mui/icons-material/Block";
 import FasesCompactacio from "../components/FasesCompactacio";
 import UrlPingAdornment from '../components/UrlPingAdornment';
-import { useAclPermissionManager } from '../components/AclPermissionManager';
+import {useAclCustomPermissionManager} from '../components/AclPermissionManager';
 import {iniciaDescargaJSON} from "../util/commonsActions";
 import {DataCommonAdditionalAction} from "../../lib/components/mui/datacommon/MuiDataCommon";
 import Cancel from '@mui/icons-material/Cancel';
@@ -54,6 +54,7 @@ import Divider from '@mui/material/Divider';
 import InputAdornment from '@mui/material/InputAdornment';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import {useMemo} from "react";
 
 const PingUrlActionResponse = z.object({
     success: z.boolean(),
@@ -361,10 +362,40 @@ const AppsEntorns: React.FC<{ appNom?: string }> = ({ appNom }) => {
         apiRef?.current?.refresh?.()
     }
     const { toogleActiva } = useActions(refresh)
+
+    const aclColumns = useMemo(() => [{
+        field: 'subjectType',
+        sortable: false,
+        flex: 2
+    }, {
+        field: 'subjectValue',
+        sortable: false,
+        flex: 4
+    }, {
+        field: 'readAllowed',
+        headerName: t($ => $.page.appsEntorns.acl.readAllowed),
+        sortable: false,
+        flex: 1
+    }, {
+        field: 'perm0Allowed',
+        headerName: t($ => $.page.appsEntorns.acl.perm0Allowed),
+        sortable: false,
+        flex: 1
+    }, {
+        field: 'perm1Allowed',
+        headerName: t($ => $.page.appsEntorns.acl.perm1Allowed),
+        sortable: false,
+        flex: 1
+    }], [t]);
+
     const {
         show: permissionShow,
         component: permissionComponent
-    } = useAclPermissionManager('ENTORN_APP');
+    } = useAclCustomPermissionManager({
+        resourceType: 'APP',
+        columns: aclColumns,
+        formContent: <AppsAclEntryForm/>
+    });
     const gestorReadOnly = useReadOnlyGestor();
     const actions = [
         {
@@ -574,16 +605,67 @@ const AppImportFormContent = () => {
         )}</>
 }
 
+const AppsAclEntryForm: React.FC = () => {
+    const { t } = useTranslation();
+    return <Grid container spacing={2}>
+        <Grid size={4}>
+            <FormField name="subjectType" />
+        </Grid>
+        <Grid size={8}>
+            <FormField name="subjectValue" />
+        </Grid>
+        <Grid size={12}>
+            <FormField name="readAllowed" label={t($ => $.page.appsEntorns.acl.readAllowed)} />
+        </Grid>
+        <Grid size={12}>
+            <FormField name="perm0Allowed" label={t($ => $.page.appsEntorns.acl.perm0Allowed)} />
+        </Grid>
+        <Grid size={12}>
+            <FormField name="perm1Allowed" label={t($ => $.page.appsEntorns.acl.perm1Allowed)} />
+        </Grid>
+    </Grid>;
+}
+
 const Apps: React.FC = () => {
     const { t } = useTranslation();
     const { temporalMessageShow } = useBaseAppContext();
     const navigate = useNavigate();
     const gridApiRef = useMuiDataGridApiRef();
     const { appExport } = useActions();
+
+    const aclColumns = useMemo(() => [{
+        field: 'subjectType',
+        sortable: false,
+        flex: 2
+    }, {
+        field: 'subjectValue',
+        sortable: false,
+        flex: 4
+    }, {
+        field: 'readAllowed',
+        headerName: t($ => $.page.appsEntorns.acl.readAllowed),
+        sortable: false,
+        flex: 1
+    }, {
+        field: 'perm0Allowed',
+        headerName: t($ => $.page.appsEntorns.acl.perm0Allowed),
+        sortable: false,
+        flex: 1
+    }, {
+        field: 'perm1Allowed',
+        headerName: t($ => $.page.appsEntorns.acl.perm1Allowed),
+        sortable: false,
+        flex: 1
+    }], [t]);
+
     const {
         show: appPermissionShow,
         component: appPermissionComponent
-    } = useAclPermissionManager('APP');
+    } = useAclCustomPermissionManager({
+        resourceType: 'APP',
+        columns: aclColumns,
+        formContent: <AppsAclEntryForm/>
+    });
     const gestorReadOnly = useReadOnlyGestor();
     const appActions: DataCommonAdditionalAction[] = [
         {

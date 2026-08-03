@@ -97,6 +97,7 @@ public class DimensioValor extends BaseResource<Long> {
 
     private TipusDimensioEnum tipus;
     @Transient private ResourceReference<UnitatOrganitzativa, Long> unitatOrganitzativa;
+    @Transient private ResourceReference<Entitat, Long> entitat;
 
     public String getDesc() {
         return dimensio.getDescription() + " [" + this.getCodiNom() + "]";
@@ -106,6 +107,9 @@ public class DimensioValor extends BaseResource<Long> {
         return valor +
             (unitatOrganitzativa != null
                 ?" - " + unitatOrganitzativa.getDescription()
+                :"") +
+            (entitat != null
+                ?" - " + entitat.getDescription()
                 :"");
     }
 

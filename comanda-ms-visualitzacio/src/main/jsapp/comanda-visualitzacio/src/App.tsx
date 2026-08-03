@@ -163,6 +163,13 @@ export const useAppEntries = () => {
         icon: 'notifications',
         resourceName: 'alarmaConfig',
     };
+    const menuDashboard = {
+        id: 'dashboard',
+        title: t($ => $.menu.dashboard),
+        to: '/dashboard',
+        icon: 'dashboardCustomize',
+        resourceName: 'dashboard',
+    };
     const menuConfiguracio = {
         id: 'configuracio',
         title: t($ => $.menu.configuracio),
@@ -226,13 +233,7 @@ export const useAppEntries = () => {
                 icon: 'format_color_fill',
                 resourceName: 'paleta',
             } : null,
-            statsEnabled ? {
-                id: 'dashboard',
-                title: t($ => $.menu.dashboard),
-                to: '/dashboard',
-                icon: 'dashboardCustomize',
-                resourceName: 'dashboard',
-            } : null,
+            statsEnabled ? menuDashboard : null,
             statsEnabled ? {
                 id: 'calendari',
                 title: t($ => $.menu.calendari),
@@ -264,6 +265,8 @@ export const useAppEntries = () => {
         { ...menuTasca, resourceName: undefined },
         { ...menuAvis, resourceName: undefined },
         hasSalutAccess ? { ...menuAlarmaConfig, resourceName: undefined } : null,
+        (statsEnabled && hasSalutAccess) ? { ...menuEstadistiques, resourceName: undefined } : null,
+        (statsEnabled && hasSalutAccess) ? { ...menuDashboard, resourceName: undefined } : null,
     ].filter(notNull);
     const visibleMenuEntries = !isUserReady
         ? undefined

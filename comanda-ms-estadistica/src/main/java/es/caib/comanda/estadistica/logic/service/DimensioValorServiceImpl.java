@@ -12,7 +12,9 @@ import es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioE
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.UnitatOrganitzativa;
 import es.caib.comanda.estadistica.logic.intf.service.DimensioValorService;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.EntitatEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.UnitatOrganitzativaEntity;
+import es.caib.comanda.estadistica.persist.repository.EntitatRepository;
 import es.caib.comanda.estadistica.persist.repository.UnitatOrganitzativaRepository;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
@@ -60,6 +62,7 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final UnitatOrganitzativaRepository unitatOrganitzativaRepository;
     private final UnitatOrganitzativaHelper unitatOrganitzativaHelper;
+    private final EntitatRepository entitatRepository;
 
     @PostConstruct
     public void init() {
@@ -162,15 +165,25 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
 
     @Override
     protected void afterConversion(List<DimensioValorEntity> entities, List<DimensioValor> resources) {
-        Set<String> codis = entities.stream()
-            .filter(e -> e.getDimensio() != null)
-            .filter(e -> TipusDimensioEnum.TIPUS_AMB_UNITAT_ORG.contains(e.getDimensio().getTipus()))
-            .map(DimensioValorEntity::getValor)
-            .filter(Objects::nonNull)
-            .distinct()
-            .collect(Collectors.toSet());
+        Map<String, Set<String>> codisMap = entities.stream()
+            .filter(e -> e.getDimensio() != null && e.getDimensio().getTipus() != null && e.getValor() != null)
+            .collect(Collectors.groupingBy(
+                e -> e.getDimensio().getTipus().name(),
+                Collectors.mapping(
+                    DimensioValorEntity::getValor,
+                    Collectors.toSet()
+                )
+            ));
 
+        Set<String> codis = new HashSet<>();
+        Optional.ofNullable(codisMap.get(TipusDimensioEnum.ORGAN_GESTOR.name()))
+            .ifPresent(codis::addAll);
+        Optional.ofNullable(codisMap.get(TipusDimensioEnum.CONSELLERIA.name()))
+            .ifPresent(codis::addAll);
         Map<String, UnitatOrganitzativaEntity> uoMap = findUnitatsOrganitzativesByCodiInBatches(codis);
+
+        Set<String> codisE = codisMap.get(TipusDimensioEnum.ENTITAT.name());
+        Map<String, EntitatEntity> entitatMap = findEntitatsByCodiInBatches(codisE);
 
         IntStream.range(0, entities.size()).forEach(i -> {
             var e = entities.get(i);
@@ -180,6 +193,13 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
                 Optional.ofNullable(uoMap.get(e.getValor()))
                     .ifPresent(uo -> r.setUnitatOrganitzativa(
                         ResourceReference.toResourceReference(uo.getId(), uo.getDenominacio())
+                    ));
+            }
+
+            if (TipusDimensioEnum.ENTITAT.equals(e.getDimensio().getTipus())) {
+                Optional.ofNullable(entitatMap.get(e.getValor()))
+                    .ifPresent(uo -> r.setEntitat(
+                        ResourceReference.toResourceReference(uo.getId(), uo.getNom())
                     ));
             }
         });
@@ -235,6 +255,27 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
             List<String> batch = codiList.subList(fromIndex, toIndex);
 
             unitatOrganitzativaRepository.findByCodiIn(batch).forEach(uo -> {
+                if (uo.getCodi() != null) {
+                    result.putIfAbsent(uo.getCodi(), uo);
+                }
+            });
+        }
+
+        return result;
+    }
+    private Map<String, EntitatEntity> findEntitatsByCodiInBatches(Set<String> codis) {
+        if (codis == null || codis.isEmpty()) {
+            return Map.of();
+        }
+
+        List<String> codiList = new ArrayList<>(codis);
+        Map<String, EntitatEntity> result = new HashMap<>();
+
+        for (int fromIndex = 0; fromIndex < codiList.size(); fromIndex += CODI_IN_QUERY_BATCH_SIZE) {
+            int toIndex = Math.min(fromIndex + CODI_IN_QUERY_BATCH_SIZE, codiList.size());
+            List<String> batch = codiList.subList(fromIndex, toIndex);
+
+            entitatRepository.findByCodiIn(batch).forEach(uo -> {
                 if (uo.getCodi() != null) {
                     result.putIfAbsent(uo.getCodi(), uo);
                 }

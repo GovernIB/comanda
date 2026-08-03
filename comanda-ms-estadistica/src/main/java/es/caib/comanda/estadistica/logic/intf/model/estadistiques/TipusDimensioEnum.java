@@ -7,8 +7,9 @@ public enum TipusDimensioEnum {
     CONSELLERIA,
     ORGAN_GESTOR,
     ENTITAT,
-    PROCEDIMENT,
-    USUARI;
+//    PROCEDIMENT,
+//    USUARI,
+    ;
 
     public static final Set<TipusDimensioEnum> TIPUS_AMB_UNITAT_ORG =
         EnumSet.of(TipusDimensioEnum.ORGAN_GESTOR, TipusDimensioEnum.CONSELLERIA);

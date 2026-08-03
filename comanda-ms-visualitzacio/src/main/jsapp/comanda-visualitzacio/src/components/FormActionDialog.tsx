@@ -1,11 +1,12 @@
 import React, {MutableRefObject} from "react";
-import {useBaseAppContext, useMuiActionReportLogic} from "reactlib";
+import {DialogButton, useBaseAppContext, useMuiActionReportLogic} from "reactlib";
 
 type CommonProps = {
     title?: string | ((data:any) => string),
     resourceName: string,
+    formDialogButtons?: DialogButton[],
     formDialogComponentProps?: any,
-    initialOnChange: boolean,
+    initialOnChange?: boolean,
     children: React.ReactElement,
     apiRef?: MutableRefObject<any>,
     formDialogResultProcessor?: (result?: any) => React.ReactElement,
@@ -27,8 +28,9 @@ const FormActionDialog = (props:FormActionDialogProp) => {
         title,
         resourceName,
         action,
+        formDialogButtons,
         formDialogComponentProps,
-        initialOnChange,
+        initialOnChange = false,
         children,
         apiRef,
         formDialogResultProcessor,
@@ -57,7 +59,7 @@ const FormActionDialog = (props:FormActionDialogProp) => {
         children,
         undefined,
         undefined,
-        undefined,
+        formDialogButtons,
         formDialogComponentProps,
         formDialogResultProcessor,
         onSuccess,

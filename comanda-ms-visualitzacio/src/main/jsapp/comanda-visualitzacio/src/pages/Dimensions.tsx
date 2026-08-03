@@ -12,9 +12,51 @@ import {
     MuiFilter,
     FormField,
     useFilterApiRef,
-    useResourceApiService, useBaseAppContext, useMuiDataGridApiRef, useConfirmDialogButtons
+    useResourceApiService, useBaseAppContext, useMuiDataGridApiRef, useConfirmDialogButtons, useMuiFormDialogApiRef
 } from 'reactlib';
 import PageTitle from '../components/PageTitle.tsx';
+import FormActionDialog from "../components/FormActionDialog.tsx";
+
+const useChangeTipus = (refresh?: () => void, addConstToFet?: (id:any) => void) => {
+    const { t } = useTranslation();
+    const apiRef = useMuiFormDialogApiRef();
+    const { temporalMessageShow, messageDialogShow } = useBaseAppContext();
+    const confirmDialogButtons = useConfirmDialogButtons();
+    const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
+
+    const handleShow = (id:any, row:any) :void => {
+        apiRef.current?.show?.(id, {entornAppId: row.entornAppId})
+    }
+    const onSuccess = (response:any) :void => {
+        refresh?.()
+        temporalMessageShow(null, t($ => $.page.dimensions.action.changeTipus.ok), 'success')
+        if (response.tipus == 'ORGAN_GESTOR') {
+            messageDialogShow(
+                t($ => $.page.dimensions.action.refreshCons.title),
+                '',
+                confirmDialogButtons,
+                confirmDialogComponentProps
+            )
+                .then((value: any) => {
+                    if (value) {
+                        addConstToFet?.(response.id)
+                    }
+                })
+        }
+    }
+    return {
+        handleShow,
+        content: <FormActionDialog
+            resourceName={"dimensio"}
+            title={'Cambiar tipus dimensió'}
+            action={"CHANGE_TIPUS"}
+            apiRef={apiRef}
+            onSuccess={onSuccess}
+        >
+            <FormField name={'tipus'} hiddenEnumValues={["CONSELLERIA"]} required/>
+        </FormActionDialog>
+    }
+}
 
 type DimensionsFilterProps = { onSpringFilterChange: (springFilter?: string) => void };
 const DimensionsFilter = (props: DimensionsFilterProps) => {
@@ -105,14 +147,13 @@ const Dimensions: React.FC = () => {
     const [filter, setFilter] = React.useState<string | undefined>(springFilterBuilder.eq('entornAppId', 0));
 
     const { artifactAction: apiAction } = useResourceApiService('dimensio');
-    const { temporalMessageShow, messageDialogShow } = useBaseAppContext();
-    const confirmDialogButtons = useConfirmDialogButtons();
-    const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
+    const { temporalMessageShow } = useBaseAppContext();
 
     const columns: MuiDataGridColDef[] = [
         { field: 'codi', flex: 1 },
         { field: 'nom', flex: 2 },
         { field: 'descripcio', flex: 4 },
+        { field: 'tipus', flex: 2 },
         // { field: 'agrupableCount', headerName: t('page.dimensions.column.agrupacions'), flex: 1 },
     ];
     const filterElement = <DimensionsFilter onSpringFilterChange={setFilter}/>;
@@ -130,27 +171,6 @@ const Dimensions: React.FC = () => {
             })
             .catch(error => temporalMessageShow(null, error.message, 'error'))
     }
-    const changeTipus = (id:any) => {
-        apiAction(id, {code: 'CHANGE_TIPUS', data: {tipus: 'ORGAN_GESTOR'}})
-            .then((response:any) => {
-                refresh()
-                temporalMessageShow(null, t($ => $.page.dimensions.action.marcarOrgan.ok), 'success')
-                if (response.tipus == 'ORGAN_GESTOR') {
-                    messageDialogShow(
-                        t($ => $.page.dimensions.action.refreshCons.title),
-                        '',
-                        confirmDialogButtons,
-                        confirmDialogComponentProps
-                    )
-                        .then((value: any) => {
-                            if (value) {
-                                addConstToFet(id)
-                            }
-                        })
-                }
-            })
-            .catch(error => temporalMessageShow(null, error.message, 'error'))
-    }
     const clearTipus = (id:any) => {
         apiAction(id, {code: 'CHANGE_TIPUS', data: {tipus: null}})
             .then(() => {
@@ -159,6 +179,8 @@ const Dimensions: React.FC = () => {
             })
             .catch(error => temporalMessageShow(null, error.message, 'error'))
     }
+
+    const {handleShow, content} = useChangeTipus(refresh, addConstToFet);
 
     return (
         <>
@@ -180,14 +202,15 @@ const Dimensions: React.FC = () => {
                         showInMenu: false,
                         action: 'FET_CONS',
                         onClick: addConstToFet,
+                        // hidden: (row) => !row?.tipus || row?.tipus == 'CONSELLERIA'
                         hidden: (row) => row?.tipus != 'ORGAN_GESTOR'
                     },
                     {
-                        label: t($ => $.page.dimensions.action.marcarOrgan.label),
+                        label: t($ => $.page.dimensions.action.changeTipus.label),
                         icon: 'check_box_outline_blank',
                         showInMenu: false,
                         action: 'CHANGE_TIPUS',
-                        onClick: changeTipus,
+                        onClick: handleShow,
                         hidden: (row) => row?.tipus
                     },
                     {
@@ -196,7 +219,7 @@ const Dimensions: React.FC = () => {
                         showInMenu: false,
                         action: 'CHANGE_TIPUS',
                         onClick: clearTipus,
-                        disabled: (row) => row?.tipus != 'ORGAN_GESTOR',
+                        disabled: (row) => row?.tipus == 'CONSELLERIA',
                         hidden: (row) => !row?.tipus,
                     },
                     {
@@ -207,6 +230,7 @@ const Dimensions: React.FC = () => {
                 ]}
                 readOnly
             />
+            {content}
         </>
     );
 };

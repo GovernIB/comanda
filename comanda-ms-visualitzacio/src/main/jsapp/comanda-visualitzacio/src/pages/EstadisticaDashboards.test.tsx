@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
     entornFindMock: vi.fn(),
     downloadJsonMock: vi.fn(),
     setFieldValueMock: vi.fn(),
+    permissionShowMock: vi.fn(),
     formContextData: {
         entorn: { id: 7 },
         aplicacio: { id: 3 },
@@ -17,11 +18,20 @@ const mocks = vi.hoisted(() => ({
     },
     tMock: vi.fn((selector: any) =>
         selector({
+            components: {
+                permisos: {
+                    title: 'Permisos',
+                },
+            },
             page: {
                 dashboards: {
                     title: 'Dashboards',
                     edit: 'Editar',
                     dashboardView: 'Veure dashboard',
+                    acl: {
+                        readAllowed: 'Lectura permesa',
+                        writeAllowed: 'Escriptura permesa',
+                    },
                     action: {
                         export: 'Exportar',
                         import: {
@@ -117,7 +127,7 @@ vi.mock('reactlib', () => ({
         toolbarElementsWithPositions,
     }: {
         title: string;
-        rowAdditionalActions?: Array<{ label: string; onClick?: (id: number) => void }>;
+        rowAdditionalActions?: Array<{ label: string; onClick?: (id: number, row: any) => void }>;
         popupEditFormContent?: React.ReactNode;
         toolbarElementsWithPositions?: Array<{ position: number; element: React.ReactNode }>;
     }) => (
@@ -132,7 +142,7 @@ vi.mock('reactlib', () => ({
             {rowAdditionalActions?.map((action) => (
                 <button
                     key={action.label}
-                    onClick={() => action.onClick?.(9)}
+                    onClick={() => action.onClick?.(9, { titol: 'Dashboard Test' })}
                     type="button"
                 >
                     {action.label}
@@ -161,6 +171,18 @@ vi.mock('../util/commonsActions.ts', () => ({
 
 vi.mock('../components/PageTitle.tsx', () => ({
     default: ({ title }: { title: string }) => <h1>{title}</h1>,
+}));
+
+vi.mock('../components/UserContext.ts', () => ({
+    useIsUserAdmin: () => true,
+    useIsUserUsuari: () => false,
+}));
+
+vi.mock('../components/AclPermissionManager.tsx', () => ({
+    useAclCustomPermissionManager: () => ({
+        show: mocks.permissionShowMock,
+        component: <div>Gestor de permisos DASHBOARD</div>,
+    }),
 }));
 
 describe('EstadisticaDashboards', () => {
@@ -245,5 +267,14 @@ describe('EstadisticaDashboards', () => {
         expect(mocks.setFieldValueMock).toHaveBeenCalledWith('conflicts', [
             { tipo: 'EstadisticaWidgetExport', titol: 'Widget X', overwrite: 'CREAR_AMB_ALTRE_NOM', nouNom: 'Widget X (2)' },
         ]);
+    });
+
+    it('EstadisticaDashboards_quanEsPremPermisos_obriElGestorDePermisos', () => {
+        render(<EstadisticaDashboards />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Permisos' }));
+
+        expect(mocks.permissionShowMock).toHaveBeenCalledWith(9, 'Dashboard Test');
+        expect(screen.getByText('Gestor de permisos DASHBOARD')).toBeInTheDocument();
     });
 });
