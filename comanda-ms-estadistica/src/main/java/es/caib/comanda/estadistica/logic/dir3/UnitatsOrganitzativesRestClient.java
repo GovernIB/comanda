@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.annotation.PostConstruct;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
@@ -32,8 +33,14 @@ public class UnitatsOrganitzativesRestClient {
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final RestTemplate restTemplate;
 
-    private final String URL_GET_ONE = baseUrl + "/obtenerUnidad";
-    private final String URL_FIND = baseUrl + "/obtenerArbolUnidadesDestinatarias";
+    private String URL_GET_ONE;
+    private String URL_FIND;
+
+    @PostConstruct
+    public void init() {
+        this.URL_GET_ONE = baseUrl + "/obtenerUnidad";
+        this.URL_FIND = baseUrl + "/obtenerArbolUnidadesDestinatarias";
+    }
 
 
     private String basicAuthHeader(String user, String password) {
