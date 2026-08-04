@@ -22,7 +22,7 @@ const AclEntryForm: React.FC = () => {
     </Grid>;
 }
 
-export const useAclPermissionManager = (resourceType: string) => useAclCustomPermissionManager({resourceType})
+export const useAclPermissionManager = (resourceType: string) => useAclCustomPermissionManager({resourceType, additionalData: { readAllowed: true }})
 export const useAclCustomPermissionManager = (
     {
         resourceType,
@@ -39,8 +39,9 @@ export const useAclCustomPermissionManager = (
             sortable: false,
             flex: 1
         }],
-        formContent = <AclEntryForm />
-    }: {resourceType: string, columns?:MuiDataGridColDef[], formContent?: any }
+        formContent = <AclEntryForm />,
+        additionalData
+    }: {resourceType: string, columns?:MuiDataGridColDef[], formContent?: any, additionalData?: any }
 ) => {
     const { t } = useTranslation();
     const gestorReadOnly = useReadOnlyGestor();
@@ -59,7 +60,7 @@ export const useAclCustomPermissionManager = (
                     ...(action === 'create'
                         ? {
                             subjectType: 'ROLE',
-                            readAllowed: true,
+                            ...additionalData
                         }
                         : {}),
                 }),
