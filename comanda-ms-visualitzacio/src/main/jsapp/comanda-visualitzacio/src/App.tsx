@@ -248,6 +248,13 @@ export const useAppEntries = () => {
                 icon: 'settings',
                 resourceName: 'parametre',
             } : null,
+            {
+                id: 'entitat',
+                title: t($ => $.page.entitats.title),
+                to: '/entitats',
+                icon: 'all_inbox',
+                resourceName: 'entitat',
+            },
         ].filter(notNull))
     };
     const caibMenuEntries: MenuEntryWithResource[] = [
