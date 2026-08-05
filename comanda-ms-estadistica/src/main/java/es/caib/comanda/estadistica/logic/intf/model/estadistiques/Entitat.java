@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import org.springframework.data.annotation.Transient;
 
 @Getter
 @Setter
@@ -27,6 +28,7 @@ import lombok.experimental.FieldNameConstants;
             ),
         },
     artifacts = {
+        @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Entitat.PERSP_PERMIS_NUM),
         @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Entitat.ACTION_REFRESH_UO, requiresId = true,
             accessConstraints = {
                 @ResourceAccessConstraint(
@@ -40,9 +42,12 @@ import lombok.experimental.FieldNameConstants;
 public class Entitat extends BaseResource<Long> {
 
     public final static String ACTION_REFRESH_UO = "REFRESH_UO";
+    public static final String PERSP_PERMIS_NUM = "PERMIS_NUM";
 
     private String codi;
     private String nom;
     private String codiDir3;
 
+    @Transient
+    private int numPermisos;
 }

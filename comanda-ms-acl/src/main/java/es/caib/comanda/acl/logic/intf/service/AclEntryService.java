@@ -7,6 +7,7 @@ import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public interface AclEntryService extends MutableResourceService<AclEntry, String> {
@@ -23,5 +24,13 @@ public interface AclEntryService extends MutableResourceService<AclEntry, String
 			List<PermissionEnum> permissions,
 			String user,
 			List<String> roles);
+
+    Integer countSidsWithPermission(
+        ResourceType resourceType,
+        Serializable resourceId);
+
+    Map<Serializable, Integer> countAllSidsWithPermission(
+        ResourceType resourceType,
+        List<Serializable> resourcesIds);
 
 }

@@ -14,6 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import org.springframework.data.annotation.Transient;
 import org.springframework.hateoas.InputType;
 
 import javax.validation.constraints.NotNull;
@@ -53,12 +54,14 @@ import java.util.List;
 		},
 		artifacts = {
                 @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = App.PERSPECTIVE_ENTORN_APPS),
+                @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = App.PERSP_PERMIS_NUM),
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = App.APP_EXPORT, requiresId = true),
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = App.APP_IMPORT, formClass = App.AppImportForm.class)
 		})
 public class App extends BaseResource<Long> {
 
     public static final String PERSPECTIVE_ENTORN_APPS = "ENTORN_APPS";
+    public static final String PERSP_PERMIS_NUM = "PERMIS_NUM";
 	public final static String APP_EXPORT = "app_export";
 	public final static String APP_IMPORT = "app_import";
 
@@ -76,6 +79,9 @@ public class App extends BaseResource<Long> {
     private Long ordre;
 
 	private List<EntornApp> entornApps;
+
+    @Transient
+    private int numPermisos;
 
 	// Formulari per a la importació (HAL-FORMS)
 	@Getter

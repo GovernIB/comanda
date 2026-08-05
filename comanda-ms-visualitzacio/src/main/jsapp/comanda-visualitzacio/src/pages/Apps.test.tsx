@@ -128,42 +128,53 @@ vi.mock('reactlib', () => ({
     ),
     MuiDataGrid: ({
         title,
+        columns,
         rowAdditionalActions,
         toolbarElementsWithPositions,
         popupEditFormContent,
     }: {
         title: string;
+        columns?: Array<{ field: string; renderCell?: (params: any) => React.ReactNode }>;
         rowAdditionalActions?: Array<{ label: string; onClick?: (id?: unknown, row?: any) => void }>;
         toolbarElementsWithPositions?: Array<{ element: React.ReactNode }>;
         popupEditFormContent?: React.ReactNode;
-    }) => (
-        <section>
-            <h2>{title}</h2>
-            {rowAdditionalActions?.map((action) => (
-                <button
-                    key={action.label}
-                    type="button"
-                    onClick={() =>
-                        (action.onClick as any)?.(
-                            title === 'Aplicacions' ? 12 : undefined,
-                            title === 'Aplicacions'
-                                ? { nom: 'Comanda', activa: true }
-                                : {
-                                    entorn: { description: 'PRO' },
-                                    activa: false,
-                                }
-                        )
+    }) => {
+        const isAppList = title === 'Aplicacions';
+        const mockRow = isAppList
+            ? { id: 12, nom: 'Comanda', activa: true, numPermisos: 2 }
+            : { id: undefined, entorn: { description: 'PRO' }, activa: false, numPermisos: 1 };
+
+        return (
+            <section>
+                <h2>{title}</h2>
+                {columns?.map((col) => {
+                    if (col.renderCell) {
+                        return (
+                            <div key={col.field} data-testid={`column-render-${col.field}`}>
+                                {col.renderCell({ id: mockRow.id, row: mockRow })}
+                            </div>
+                        );
                     }
-                >
-                    {action.label}
-                </button>
-            ))}
-            {toolbarElementsWithPositions?.map((entry, index) => (
-                <div key={index}>{entry.element}</div>
-            ))}
-            {popupEditFormContent}
-        </section>
-    ),
+                    return null;
+                })}
+
+                {rowAdditionalActions?.map((action) => (
+                    <button
+                        key={action.label}
+                        type="button"
+                        onClick={() => (action.onClick as any)?.(mockRow.id, mockRow)}
+                    >
+                        {action.label}
+                    </button>
+                ))}
+
+                {toolbarElementsWithPositions?.map((entry, index) => (
+                    <div key={index}>{entry.element}</div>
+                ))}
+                {popupEditFormContent}
+            </section>
+        );
+    },
     MuiForm: ({
         title,
         children,
@@ -282,6 +293,32 @@ vi.mock('../components/UserContext.ts', () => ({
     useIsUserAdmin: () => true,
 }));
 
+vi.mock('@mui/material', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('@mui/material')>();
+    return {
+        ...actual,
+        IconButton: ({ children, title, onClick, ...props }: any) => (
+            <button
+                type="button"
+                title={title}
+                aria-label={title}
+                onClick={onClick}
+                {...props}
+            >
+                {children}
+            </button>
+        ),
+    };
+});
+
+vi.mock('@mui/material/Badge', () => ({
+    default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+vi.mock('@mui/material/Icon', () => ({
+    default: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+}));
+
 vi.mock('../components/ParameterExistsAdornment.tsx', () => ({
     default: ({ value, onClick, disabled }: { value?: string; onClick?: (val: string) => Promise<any>; disabled?: boolean }) => (
         <button
@@ -317,10 +354,13 @@ describe('AppForm', () => {
         expect(screen.getByTestId('page-title')).toHaveTextContent('Editar aplicació (Comanda)');
         expect(screen.getByText('General')).toBeInTheDocument();
         expect(screen.getByText('Entorns')).toBeInTheDocument();
+
         expect(screen.getAllByRole('button', { name: 'Permisos' })).toHaveLength(1);
+
         expect(screen.getByText('Activar')).toBeInTheDocument();
         expect(screen.getByText('Desactivar')).toBeInTheDocument();
-        expect(screen.getByText('Permisos')).toBeInTheDocument();
+
+        expect(screen.getByText('Gestor permisos ENTORN_APP')).toBeInTheDocument();
     });
 
     it('AppForm_quanEsRenderitzaPerCrear_mostraElsCampsPrincipals', () => {
@@ -407,7 +447,7 @@ describe('AppForm', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'Permisos' }));
 
-        expect(mocks.appPermissionShowMock).toHaveBeenCalledWith(undefined, 'PRO');
+        expect(mocks.entornPermissionShowMock).toHaveBeenCalledWith(undefined, 'PRO');
     });
 
     it('AppForm_quanEsCanviaLEstatDEntorn_refrescaILlançaElMissatgeDexit', async () => {

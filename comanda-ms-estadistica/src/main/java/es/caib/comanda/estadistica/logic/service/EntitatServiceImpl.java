@@ -1,15 +1,17 @@
 package es.caib.comanda.estadistica.logic.service;
 
+import es.caib.comanda.client.AclServiceClient;
+import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesPlugin;
 import es.caib.comanda.estadistica.logic.helper.UnitatOrganitzativaHelper;
-import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Entitat;
 import es.caib.comanda.estadistica.logic.intf.service.EntitatService;
-import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.EntitatEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.UnitatOrganitzativaEntity;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +21,7 @@ import javax.annotation.PostConstruct;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Classe d'implementació del servei per a la gestió de la lògica de negoci relacionada amb l'entitat Entitat.
@@ -44,10 +47,24 @@ public class EntitatServiceImpl extends BaseMutableResourceService<Entitat, Long
 
     private final UnitatsOrganitzativesPlugin unitatsOrganitzativesPlugin;
     private final UnitatOrganitzativaHelper unitatOrganitzativaHelper;
+    private final AclServiceClient aclServiceClient;
+    private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
 
     @PostConstruct
     public void init() {
         register(Entitat.ACTION_REFRESH_UO, new RefreshUOActionExecutor());
+        register(Entitat.PERSP_PERMIS_NUM, new PermisPerspective());
+    }
+
+    public class PermisPerspective implements PerspectiveApplicator<EntitatEntity, Entitat> {
+        @Override
+        public void applySingle(String code, EntitatEntity entity, Entitat resource) throws PerspectiveApplicationException {
+            resource.setNumPermisos(
+                Optional.ofNullable(aclServiceClient
+                        .countSidsWithPermission(ResourceType.ENTITAT, entity.getId(),
+                            httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
+                    .orElse(0));
+        }
     }
 
     public class RefreshUOActionExecutor implements ActionExecutor<EntitatEntity, Serializable, Entitat> {

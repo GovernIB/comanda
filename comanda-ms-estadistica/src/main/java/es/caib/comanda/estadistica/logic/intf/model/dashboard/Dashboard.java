@@ -16,6 +16,7 @@ import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.Transient;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -59,6 +60,7 @@ import java.util.List;
                 )
         },
         artifacts = {
+                @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Dashboard.PERSP_PERMIS_NUM),
                 @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Dashboard.DASHBOARD_IMPORT, formClass = DashboardServiceImpl.DashboardImportParams.class),
                 @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Dashboard.CLONE_ACTION, requiresId = true, formClass = Dashboard.class),
                 @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Dashboard.WIDGETS_REPORT, requiresId = true, formClass= InformeWidgetParams.class,
@@ -80,6 +82,7 @@ import java.util.List;
 )
 public class Dashboard extends BaseResource<Long> {
 
+    public static final String PERSP_PERMIS_NUM = "PERMIS_NUM";
     public final static String CLONE_ACTION = "clone_dashboard";
     public final static String WIDGETS_REPORT = "widgets_data";
     public final static String DASHBOARD_EXPORT = "dashboard_export";
@@ -99,4 +102,7 @@ public class Dashboard extends BaseResource<Long> {
     private List<DashboardTitol> titols;
 
     protected ResourceReference<Plantilla, Long> plantilla;
+
+    @Transient
+    private int numPermisos;
 }

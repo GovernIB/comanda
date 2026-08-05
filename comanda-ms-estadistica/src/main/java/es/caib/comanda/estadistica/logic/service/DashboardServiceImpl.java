@@ -27,13 +27,10 @@ import es.caib.comanda.estadistica.persist.repository.*;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
-import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
-import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
-import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
+import es.caib.comanda.ms.logic.intf.exception.*;
 import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
 import es.caib.comanda.ms.logic.intf.model.FileReference;
 import es.caib.comanda.ms.logic.intf.model.ReportFileType;
-import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -88,6 +85,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
 
     @PostConstruct
     public void init() {
+        register(Dashboard.PERSP_PERMIS_NUM, new PermisPerspective());
         register(Dashboard.WIDGETS_REPORT, new InformeWidgets());
         register(Dashboard.DASHBOARD_EXPORT, new DashboardExportReportGenerator());
         register(Dashboard.DASHBOARD_IMPORT, new DashboardImportActionExecutor());
@@ -264,6 +262,17 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
 
         @Override
         public void onChange(Serializable id, InformeWidgetParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, InformeWidgetParams target) {
+        }
+    }
+
+    public class PermisPerspective implements PerspectiveApplicator<DashboardEntity, Dashboard> {
+        @Override
+        public void applySingle(String code, DashboardEntity entity, Dashboard resource) throws PerspectiveApplicationException {
+            resource.setNumPermisos(
+                Optional.ofNullable(aclServiceClient
+                        .countSidsWithPermission(ResourceType.DASHBOARD, entity.getId(),
+                            httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
+                    .orElse(0));
         }
     }
 

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -36,5 +37,17 @@ public interface AclServiceClient {
 			@RequestParam("user") String user,
 			@RequestParam("roles") List<String> roles,
 			@RequestHeader("Authorization") final String authorizationHeader);
+
+    @GetMapping("/countSidsWithPermission")
+    ResponseEntity<Integer> countSidsWithPermission(
+        @RequestParam("resourceType") ResourceType resourceType,
+        @RequestParam("resourceId") Serializable resourceId,
+        @RequestHeader("Authorization") final String authorizationHeader);
+
+    @GetMapping("/countAllSidsWithPermission")
+    ResponseEntity<Map<Serializable, Integer>> countAllSidsWithPermission(
+        @RequestParam("resourceType") ResourceType resourceType,
+        @RequestParam("resourcesIds") String resourcesIds,
+        @RequestHeader("Authorization") final String authorizationHeader);
 
 }

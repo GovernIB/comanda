@@ -16,6 +16,7 @@ import Box from "@mui/material/Box";
 import {useAclCustomPermissionManager} from "../components/AclPermissionManager.tsx";
 import * as React from "react";
 import IconButton from "@mui/material/IconButton";
+import Badge from "@mui/material/Badge";
 
 const UoAclEntryForm: React.FC = () => {
     const { t } = useTranslation();
@@ -41,7 +42,7 @@ const EntitatOrganigrama = ({codi, permisos}:{codi:string, permisos?: (id:any, r
 
     useEffect(() => {
         if (apiIsReady && codi) {
-            apiFind({filter: springFilterBuilder.eq("codiUnitatArrel", `'${codi}'`), unpaged: true})
+            apiFind({filter: springFilterBuilder.eq("codiUnitatArrel", `'${codi}'`), perspectives: ['PERMIS_NUM'], unpaged: true})
                 .then(response => {
                     if (response.rows.length > 0) {
                         setUnitats(response.rows)
@@ -60,11 +61,15 @@ const EntitatOrganigrama = ({codi, permisos}:{codi:string, permisos?: (id:any, r
                 {node.codiNom}
 
                 {permisos != null &&
-                    <IconButton title={t($ => $.components.permisos.title)} onClick={(ev) => {
-                        ev.stopPropagation()
-                        permisos?.(node.id, node)
-                    }}>
-                        <Icon>lock</Icon>
+                    <IconButton title={t($ => $.components.permisos.title)}
+                                sx={{ ml: 'auto' }}
+                                onClick={(ev) => {
+                                    ev.stopPropagation()
+                                    permisos?.(node.id, node)
+                                }}>
+                        <Badge badgeContent={node.numPermisos} color={'primary'}>
+                            <Icon>lock</Icon>
+                        </Badge>
                     </IconButton>
                 }
             </Box>
@@ -181,6 +186,22 @@ const columns: MuiDataGridColDef[] = [
 const Entitats = () => {
     const { t } = useTranslation();
 
+    const additionalColumns:any = useMemo(() => [
+        ...columns,
+        {
+            field: 'numPermisos',
+            headerName: '',
+            sortable: false,
+            flex: 0.5,
+            renderCell: (params:any) => <IconButton
+                title={t($ => $.components.permisos.title)}
+                onClick={() => permissionShow(params.id, params.row?.codi ?? '')}
+            >
+                <Badge badgeContent={params.row.numPermisos} color={'primary'}><Icon>lock</Icon></Badge>
+            </IconButton>
+        }
+    ], [t, columns])
+
     const entitatAclColumns = useMemo(() => [{
         field: 'subjectType',
         sortable: false,
@@ -231,18 +252,14 @@ const Entitats = () => {
                 apiRef={gridApiRef}
                 title={t($ => $.page.entitats.title)}
                 resourceName="entitat"
-                columns={columns}
+                columns={additionalColumns}
+                perspectives={['PERMIS_NUM']}
                 toolbarType="upper"
                 popupEditCreateActive
                 popupEditActive
                 popupEditFormContent={<EntitatsFrom/>}
                 paginationActive
                 rowAdditionalActions={[
-                    {
-                        label: t($ => $.components.permisos.title),
-                        icon: "lock",
-                        onClick: (id: string | number, row: { codi?: string }) => permissionShow(id, row?.codi ?? '')
-                    },
                     {
                         label: t($ => $.page.entitats.action.refreshUO.label),
                         icon: 'refresh',

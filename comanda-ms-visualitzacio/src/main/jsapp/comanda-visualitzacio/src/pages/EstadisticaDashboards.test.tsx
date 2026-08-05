@@ -121,35 +121,52 @@ vi.mock('reactlib', () => ({
         };
     },
     MuiDataGrid: ({
-        title,
-        rowAdditionalActions,
-        popupEditFormContent,
-        toolbarElementsWithPositions,
-    }: {
+                      title,
+                      columns,
+                      rowAdditionalActions,
+                      popupEditFormContent,
+                      toolbarElementsWithPositions,
+                  }: {
         title: string;
+        columns?: Array<{ field: string; renderCell?: (params: any) => React.ReactNode }>;
         rowAdditionalActions?: Array<{ label: string; onClick?: (id: number, row: any) => void }>;
         popupEditFormContent?: React.ReactNode;
         toolbarElementsWithPositions?: Array<{ position: number; element: React.ReactNode }>;
-    }) => (
-        <section>
-            <h2>{title}</h2>
-            {toolbarElementsWithPositions?.map((item) => (
-                <div key={item.position} data-testid={`toolbar-${item.position}`}>
-                    {item.element}
-                </div>
-            ))}
-            {popupEditFormContent}
-            {rowAdditionalActions?.map((action) => (
-                <button
-                    key={action.label}
-                    onClick={() => action.onClick?.(9, { titol: 'Dashboard Test' })}
-                    type="button"
-                >
-                    {action.label}
-                </button>
-            ))}
-        </section>
-    ),
+    }) => {
+        const mockRow = { id: 9, titol: 'Dashboard Test', numPermisos: 2 };
+        return (
+            <section>
+                <h2>{title}</h2>
+
+                {columns?.map((col) => {
+                    if (col.renderCell) {
+                        return (
+                            <div key={col.field} data-testid={`column-render-${col.field}`}>
+                                {col.renderCell({ id: mockRow.id, row: mockRow })}
+                            </div>
+                        );
+                    }
+                    return null;
+                })}
+
+                {toolbarElementsWithPositions?.map((item) => (
+                    <div key={item.position} data-testid={`toolbar-${item.position}`}>
+                        {item.element}
+                    </div>
+                ))}
+                {popupEditFormContent}
+                {rowAdditionalActions?.map((action) => (
+                    <button
+                        key={action.label}
+                        onClick={() => action.onClick?.(mockRow.id, mockRow)}
+                        type="button"
+                    >
+                        {action.label}
+                    </button>
+                ))}
+            </section>
+        );
+    },
 }));
 
 vi.mock('../components/FormActionDialog.tsx', () => ({
@@ -183,6 +200,28 @@ vi.mock('../components/AclPermissionManager.tsx', () => ({
         show: mocks.permissionShowMock,
         component: <div>Gestor de permisos DASHBOARD</div>,
     }),
+}));
+
+vi.mock('@mui/material/IconButton', () => ({
+    default: ({ children, title, onClick, ...props }: any) => (
+        <button
+            type="button"
+            title={title}
+            aria-label={title}
+            onClick={onClick}
+            {...props}
+        >
+            {children}
+        </button>
+    ),
+}));
+
+vi.mock('@mui/material/Badge', () => ({
+    default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+vi.mock('@mui/material/Icon', () => ({
+    default: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
 }));
 
 describe('EstadisticaDashboards', () => {

@@ -98,6 +98,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         register(EntornApp.PERSPECTIVE_DEFAULT_LOGS, new DefaultLogsPerspectiveApplicator());
         register(EntornApp.PERSPECTIVE_HISTORICS_VERSIONS, new HistoricVersionsPerspectiveApplicator());
         register(EntornApp.PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS, new IntegracionsSubsistemesContextsPerspectiveApplicator());
+        register(EntornApp.PERSP_PERMIS_NUM, new PermisPerspective());
     }
 
     @Override
@@ -527,6 +528,17 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                         s.isActiu(),
                         null)).collect(Collectors.toList()));
             }
+        }
+    }
+
+    public class PermisPerspective implements PerspectiveApplicator<EntornAppEntity, EntornApp> {
+        @Override
+        public void applySingle(String code, EntornAppEntity entity, EntornApp resource) throws PerspectiveApplicationException {
+            resource.setNumPermisos(
+                Optional.ofNullable(aclServiceClient
+                        .countSidsWithPermission(ResourceType.ENTORN_APP, entity.getId(),
+                            httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
+                    .orElse(0));
         }
     }
 

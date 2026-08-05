@@ -55,6 +55,8 @@ import InputAdornment from '@mui/material/InputAdornment';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import {useMemo} from "react";
+import Badge from "@mui/material/Badge";
+import Icon from "@mui/material/Icon";
 
 const PingUrlActionResponse = z.object({
     success: z.boolean(),
@@ -363,6 +365,22 @@ const AppsEntorns: React.FC<{ appNom?: string }> = ({ appNom }) => {
     }
     const { toogleActiva } = useActions(refresh)
 
+    const additionalColumns:any = useMemo(() => [
+        ...entornAppColumns,
+        {
+            field: 'numPermisos',
+            headerName: '',
+            sortable: false,
+            flex: 0.25,
+            renderCell: (params:any) => <IconButton
+                title={t($ => $.page.appsEntorns.action.toolbarActiva.permisos)}
+                onClick={() => permissionShow(params.id, params.row?.entorn?.description ?? '')}
+            >
+                <Badge badgeContent={params.row.numPermisos} color={'primary'}><Icon>lock</Icon></Badge>
+            </IconButton>
+        }
+    ], [t, entornAppColumns])
+
     const aclColumns = useMemo(() => [{
         field: 'subjectType',
         sortable: false,
@@ -392,17 +410,12 @@ const AppsEntorns: React.FC<{ appNom?: string }> = ({ appNom }) => {
         show: permissionShow,
         component: permissionComponent
     } = useAclCustomPermissionManager({
-        resourceType: 'APP',
+        resourceType: 'ENTORN_APP',
         columns: aclColumns,
         formContent: <AppsAclEntryForm/>
     });
     const gestorReadOnly = useReadOnlyGestor();
     const actions = [
-        {
-            label: t($ => $.page.appsEntorns.action.toolbarActiva.permisos),
-            icon: "lock",
-            onClick: (id: string | number, row: { entorn?: { description?: string } }) => permissionShow(id, row?.entorn?.description ?? '')
-        },
         {
             label: t($ => $.page.appsEntorns.action.toolbarActiva.activar),
             icon: "check_circle",
@@ -430,7 +443,8 @@ const AppsEntorns: React.FC<{ appNom?: string }> = ({ appNom }) => {
                 title={t($ => $.page.appsEntorns.title)}
                 resourceName="entornApp"
                 fixedFilter={`app.id : ${appId}`}
-                columns={entornAppColumns}
+                columns={additionalColumns}
+                perspectives={['PERMIS_NUM']}
                 paginationActive
                 popupEditActive
                 popupEditFormContent={<AppEntornForm />}
@@ -633,6 +647,22 @@ const Apps: React.FC = () => {
     const gridApiRef = useMuiDataGridApiRef();
     const { appExport } = useActions();
 
+    const additionalColumns:any = useMemo(() => [
+        ...appColumns,
+        {
+            field: 'numPermisos',
+            headerName: '',
+            sortable: false,
+            flex: 0.5,
+            renderCell: (params:any) => <IconButton
+                title={t($ => $.components.permisos.title)}
+                onClick={() => appPermissionShow(params.id, params.row?.nom)}
+            >
+                <Badge badgeContent={params.row.numPermisos} color={'primary'}><Icon>lock</Icon></Badge>
+            </IconButton>
+        }
+    ], [t, appColumns])
+
     const aclColumns = useMemo(() => [{
         field: 'subjectType',
         sortable: false,
@@ -668,11 +698,6 @@ const Apps: React.FC = () => {
     });
     const gestorReadOnly = useReadOnlyGestor();
     const appActions: DataCommonAdditionalAction[] = [
-        {
-            label: t($ => $.components.permisos.title),
-            icon: 'lock',
-            onClick: (id: AppType['id'], row: AppType) => appPermissionShow(id, row.nom),
-        },
         gestorReadOnly ? {
             label: t($ => $.components.details),
             icon: 'info',
@@ -715,7 +740,8 @@ const Apps: React.FC = () => {
                 apiRef={gridApiRef}
                 title={t($ => $.page.apps.title)}
                 resourceName="app"
-                columns={appColumns}
+                columns={additionalColumns}
+                perspectives={['PERMIS_NUM']}
                 toolbarType="upper"
                 paginationActive
                 //readOnly

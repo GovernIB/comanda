@@ -236,6 +236,41 @@ public class AclHelper {
 				});
 	}
 
+    public Integer countSidsWithPermission(Class<?> resourceClass, Serializable resourceId) {
+        Map<Serializable, Integer> map = this.countAllSidsWithPermission(resourceClass, List.of(resourceId));
+        return map.get(resourceId);
+    }
+
+    public Map<Serializable, Integer> countAllSidsWithPermission(Class<?> resourceClass, List<? extends Serializable> resourceIds) {
+        if (resourceIds == null || resourceIds.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        Map<String, Object> paramsMap = new HashMap<>();
+        paramsMap.put("className", resourceClass.getName());
+        paramsMap.put("resourceIds", resourceIds.stream().map(Object::toString).collect(Collectors.toList()));
+        paramsMap.put("isTrue", true);
+
+        String sql = " SELECT o.object_id_identity, COUNT(DISTINCT e.sid)" +
+        " FROM com_acl_class c" +
+        " JOIN com_acl_object_identity o ON c.id = o.object_id_class" +
+        " JOIN com_acl_entry e ON o.id = e.acl_object_identity" +
+        " WHERE c.class = :className" +
+        "   AND o.object_id_identity IN (:resourceIds)" +
+        "   AND e.granting = :isTrue" +
+        " GROUP BY o.object_id_identity";
+
+        return jdbcTemplate.query(sql, paramsMap, rs -> {
+            Map<Serializable, Integer> result = new HashMap<>();
+            while (rs.next()) {
+                Serializable oid = (Serializable) rs.getObject(1);
+                int count = rs.getInt(2);
+                result.put(oid, count);
+            }
+            return result;
+        });
+    }
+
 	/**
 	 * Retorna la llista de SIDs de l'usuari autenticat.
 	 *

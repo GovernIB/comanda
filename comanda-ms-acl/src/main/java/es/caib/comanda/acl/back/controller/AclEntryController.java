@@ -13,8 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.Serializable;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -54,5 +54,25 @@ public class AclEntryController extends BaseMutableResourceController<AclEntry, 
 				roles);
 		return ResponseEntity.ok(ids);
 	}
+
+    @GetMapping("/countSidsWithPermission")
+    public ResponseEntity<Integer> countSidsWithPermission(
+        @RequestParam ResourceType resourceType,
+        @RequestParam Serializable resourceId) {
+        Integer sidsNum = aclEntryService.countSidsWithPermission(
+            resourceType,
+            resourceId);
+        return ResponseEntity.ok(Optional.ofNullable(sidsNum).orElse(0));
+    }
+
+    @GetMapping("/countAllSidsWithPermission")
+    public ResponseEntity<Map<Serializable, Integer>> countAllSidsWithPermission(
+        @RequestParam ResourceType resourceType,
+        @RequestParam String resourcesIds) {
+        Map<Serializable, Integer> map = aclEntryService.countAllSidsWithPermission(
+            resourceType,
+            Arrays.stream(resourcesIds.split(",")).collect(Collectors.toList()));
+        return ResponseEntity.ok(map);
+    }
 
 }

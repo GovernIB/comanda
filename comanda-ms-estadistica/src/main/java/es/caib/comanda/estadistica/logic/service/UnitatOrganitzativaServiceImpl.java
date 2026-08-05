@@ -1,18 +1,21 @@
 package es.caib.comanda.estadistica.logic.service;
 
+import es.caib.comanda.client.AclServiceClient;
+import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.UnitatOrganitzativa;
 import es.caib.comanda.estadistica.logic.intf.service.UnitatOrganitzativaService;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.UnitatOrganitzativaEntity;
-import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
-import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.Locale;
-import java.util.Map;
+import javax.annotation.PostConstruct;
+import java.io.Serializable;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Classe d'implementació del servei per a la gestió de la lògica de negoci relacionada amb l'entitat UnitatOrganitzativa.
@@ -36,9 +39,45 @@ import java.util.Map;
 @Service
 public class UnitatOrganitzativaServiceImpl extends BaseMutableResourceService<UnitatOrganitzativa, Long, UnitatOrganitzativaEntity> implements UnitatOrganitzativaService {
 
+    private final AclServiceClient aclServiceClient;
+    private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
+
+    @PostConstruct
+    public void init() {
+        register(UnitatOrganitzativa.PERSP_PERMIS_NUM, new PermisPerspective());
+    }
+
     @Override
     protected void afterConversion(UnitatOrganitzativaEntity entity, UnitatOrganitzativa resource) {
         resource.setDenominacio(entity.getDenominacio());
         resource.setCodiNom(entity.getCodiNom());
+    }
+
+    public class PermisPerspective implements PerspectiveApplicator<UnitatOrganitzativaEntity, UnitatOrganitzativa> {
+        @Override
+        public void applySingle(String code, UnitatOrganitzativaEntity entity, UnitatOrganitzativa resource) throws PerspectiveApplicationException {
+        }
+
+        @Override
+        public boolean applyMultiple(String code, List<UnitatOrganitzativaEntity> entities, List<UnitatOrganitzativa> resources) throws PerspectiveApplicationException {
+            if (entities == null || entities.isEmpty() || entities.size() != resources.size()) {
+                return false;
+            }
+
+            List<String> ids = entities.stream()
+                .map(b -> String.valueOf(b.getId()))
+                .collect(Collectors.toList());
+
+            Map<Serializable, Integer> counts = Optional.ofNullable(aclServiceClient.countAllSidsWithPermission(
+                ResourceType.UNITAT, String.join(",", ids),
+                httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody()).orElse(new HashMap<>());
+
+            for (int i = 0; i < resources.size(); i++) {
+                Serializable id = ids.get(i);
+                Integer count = counts.getOrDefault(id.toString(), 0);
+                resources.get(i).setNumPermisos(count);
+            }
+            return !counts.isEmpty();
+        }
     }
 }

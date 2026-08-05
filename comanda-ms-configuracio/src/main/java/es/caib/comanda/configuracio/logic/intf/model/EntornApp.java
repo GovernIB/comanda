@@ -80,6 +80,7 @@ import java.util.List;
                 @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = EntornApp.PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS),
 				@ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = EntornApp.PERSPECTIVE_DEFAULT_LOGS),
                 @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = EntornApp.PERSPECTIVE_HISTORICS_VERSIONS),
+                @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = EntornApp.PERSP_PERMIS_NUM),
 		}
 )
 @EntornAppExists
@@ -99,6 +100,7 @@ public class EntornApp extends BaseResource<Long> {
     public static final String PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS = "integracions_subsistemes_contexts";
 	public final static String PERSPECTIVE_DEFAULT_LOGS = "default_logs";
     public static final String PERSPECTIVE_HISTORICS_VERSIONS = "historics_versions";
+    public static final String PERSP_PERMIS_NUM = "PERMIS_NUM";
 
 	@NotNull
 	@Transient
@@ -188,6 +190,9 @@ public class EntornApp extends BaseResource<Long> {
 
 	// Camps calculats
 	private String entornAppDescription;
+
+    @Transient
+    private int numPermisos;
 
 	public String getRevisioSimplificat() {
 		return revisio != null ? revisio.substring(0, 7) : null;

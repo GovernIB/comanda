@@ -23,6 +23,7 @@ import Icon from "@mui/material/Icon";
 import {useAclCustomPermissionManager} from "../components/AclPermissionManager.tsx";
 import {useMemo} from "react";
 import {useIsUserAdmin, useIsUserUsuari} from "../components/UserContext.ts";
+import Badge from "@mui/material/Badge";
 
 const EstadisticaDashboardForm: React.FC = () => {
     const { data } = useFormContext();
@@ -276,6 +277,22 @@ const EstadisticaDashboards: React.FC = () => {
     const isUserAdmin =  useIsUserAdmin()
     const isUserUsuari =  useIsUserUsuari()
 
+    const additionalColumns:any = useMemo(() => [
+        ...columns,
+        ...(!isUserUsuari ?[{
+            field: 'numPermisos',
+            headerName: '',
+            sortable: false,
+            flex: 0.5,
+            renderCell: (params:any) => <IconButton
+                title={t($ => $.components.permisos.title)}
+                onClick={() => permissionShow(params.id, params.row?.titol ?? '')}
+            >
+                <Badge badgeContent={params.row.numPermisos} color={'primary'}><Icon>lock</Icon></Badge>
+            </IconButton>
+        }] :[])
+    ], [t, columns, isUserUsuari])
+
     const aclColumns = useMemo(() => [{
         field: 'subjectType',
         sortable: false,
@@ -316,8 +333,9 @@ const EstadisticaDashboards: React.FC = () => {
             <MuiDataGrid
                 title={t($ => $.page.dashboards.title)}
                 resourceName="dashboard"
-                columns={columns}
+                columns={additionalColumns}
                 apiRef={gridApiRef}
+                perspectives={['PERMIS_NUM']}
                 toolbarType="upper"
                 namedQueries={['WRITE']}
                 paginationActive
@@ -336,13 +354,6 @@ const EstadisticaDashboards: React.FC = () => {
                     }
                 ] :[]}
                 rowAdditionalActions={[
-                    {
-                        label: t($ => $.components.permisos.title),
-                        icon: "lock",
-                        showInMenu: true,
-                        onClick: (id: string | number, row: { titol?: string }) => permissionShow(id, row?.titol ?? ''),
-                        hidden: isUserUsuari,
-                    },
                     {
                         label: t($ => $.page.dashboards.edit),
                         icon: 'edit',

@@ -73,6 +73,7 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
     @PostConstruct
     public void init() {
         register(App.PERSPECTIVE_ENTORN_APPS, new EntornAppsPerspectiveApplicator());
+        register(App.PERSP_PERMIS_NUM, new PermisPerspective());
         register(App.APP_EXPORT, new AppExportReportGenerator());
         register(App.APP_IMPORT, new AppImportActionExecutor());
     }
@@ -425,6 +426,17 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
         }
         eventPublisher.publishEvent(new ComandaSsePublishRequest(
             new ComandaSseEvent(ComandaSseEventTypes.APP_CHANGED, entity.getId(), LocalDateTime.now())));
+    }
+
+    public class PermisPerspective implements PerspectiveApplicator<AppEntity, App> {
+        @Override
+        public void applySingle(String code, AppEntity entity, App resource) throws PerspectiveApplicationException {
+            resource.setNumPermisos(
+                Optional.ofNullable(aclServiceClient
+                        .countSidsWithPermission(ResourceType.APP, entity.getId(),
+                            httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
+                    .orElse(0));
+        }
     }
 
     public static class EntornAppsPerspectiveApplicator implements PerspectiveApplicator<AppEntity, App> {

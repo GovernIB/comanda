@@ -71,28 +71,38 @@ vi.mock('reactlib', () => ({
         title: string;
         rowAdditionalActions?: Array<{ label: string; onClick?: (id: unknown, row: any) => void }>;
         popupEditFormContent?: React.ReactNode;
-        columns: Array<{ field: string }>;
-    }) => (
-        <section>
-            <h2>{title}</h2>
-            <div data-testid="columns">{columns.map((c) => c.field).join(',')}</div>
-            {rowAdditionalActions?.map((action) => (
-                <button
-                    key={action.label}
-                    type="button"
-                    onClick={() =>
-                        action.onClick?.(
-                            15,
-                            { codi: 'E1', codiDir3: 'D3' }
-                        )
+        columns: Array<{ field: string; renderCell?: (params: any) => React.ReactNode }>;
+    }) => {
+        const mockRow = { id: 15, codi: 'E1', codiDir3: 'D3', numPermisos: 2 };
+        return (
+            <section>
+                <h2>{title}</h2>
+                <div data-testid="columns">{columns.map((c) => c.field).join(',')}</div>
+
+                {columns?.map((col) => {
+                    if (col.renderCell) {
+                        return (
+                            <div key={col.field} data-testid={`column-render-${col.field}`}>
+                                {col.renderCell({ id: mockRow.id, row: mockRow })}
+                            </div>
+                        );
                     }
-                >
-                    {action.label}
-                </button>
-            ))}
-            {popupEditFormContent}
-        </section>
-    ),
+                    return null;
+                })}
+
+                {rowAdditionalActions?.map((action) => (
+                    <button
+                        key={action.label}
+                        type="button"
+                        onClick={() => action.onClick?.(mockRow.id, mockRow)}
+                    >
+                        {action.label}
+                    </button>
+                ))}
+                {popupEditFormContent}
+            </section>
+        );
+    },
     MuiDialog: ({
                     open,
                     title,
@@ -138,6 +148,28 @@ vi.mock('reactlib', () => ({
             find: vi.fn(),
         };
     },
+}));
+
+vi.mock('@mui/material/IconButton', () => ({
+    default: ({ children, title, onClick, ...props }: any) => (
+        <button
+            type="button"
+            title={title}
+            aria-label={title}
+            onClick={onClick}
+            {...props}
+        >
+            {children}
+        </button>
+    ),
+}));
+
+vi.mock('@mui/material/Badge', () => ({
+    default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+vi.mock('@mui/material/Icon', () => ({
+    default: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
 }));
 
 vi.mock('../components/PageTitle.tsx', () => ({
@@ -252,7 +284,7 @@ describe('Entitats', () => {
     it('Entitats_quanEsPremPermisosDunNodeDeLOrganigrama_obreElGestorDeUnitats', async () => {
         mocks.findMock.mockResolvedValue({
             rows: [
-                { id: 1, codi: 'D3', codiNom: 'Unitat arrel', codiUnitatSuperior: null },
+                { id: 1, codi: 'D3', codiNom: 'Unitat arrel', codiUnitatSuperior: null, numPermisos: 1 },
             ],
         });
 
@@ -264,9 +296,11 @@ describe('Entitats', () => {
             expect(screen.getByTestId('tree-item-D3')).toBeInTheDocument();
         });
 
-        // El botó de permisos dins del node de l'arbre
-        const nodePermissionsButton = screen.getByTitle('Permisos');
-        fireEvent.click(nodePermissionsButton);
+        const dialog = screen.getByTestId('organigrama-dialog');
+        const nodePermissionsButton = dialog.querySelector('button[aria-label="Permisos"]');
+
+        expect(nodePermissionsButton).toBeInTheDocument();
+        fireEvent.click(nodePermissionsButton!);
 
         expect(mocks.unitatPermissionShowMock).toHaveBeenCalledWith(1, 'Unitat arrel');
     });

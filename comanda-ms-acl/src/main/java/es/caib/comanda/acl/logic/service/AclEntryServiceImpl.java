@@ -6,12 +6,15 @@ import es.caib.comanda.acl.logic.intf.model.ResourceType;
 import es.caib.comanda.acl.logic.intf.model.SubjectType;
 import es.caib.comanda.acl.logic.intf.service.AclEntryService;
 import es.caib.comanda.acl.persist.entity.AclEntryEntity;
+import es.caib.comanda.ms.logic.config.HazelCastCacheConfig;
+import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.permission.ExtendedPermission;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.*;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
@@ -35,8 +38,28 @@ import java.util.stream.Collectors;
 public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, String, AclEntryEntity> implements AclEntryService {
 
 	private final AclHelper aclHelper;
+    private final CacheHelper cacheHelper;
 
-	@Override
+    @Override
+    protected void afterCreate(AclEntryEntity entity, AclEntry resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        cacheHelper.evictCacheItemByPrefix(HazelCastCacheConfig.ACL_IDS_WITH_PERMISSION_CACHE, entity.getResource().getResourceType().name());
+        cacheHelper.evictCacheItemByPrefix(HazelCastCacheConfig.ACL_COUNT_CACHE, entity.getResource().getResourceType().name());
+    }
+    @Override
+    protected void afterUpdate(AclEntryEntity entity, AclEntry resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        cacheHelper.evictCacheItemByPrefix(HazelCastCacheConfig.ACL_HAS_PERMISSION_CACHE, entity.getResource().getResourceType().name() + "_" + entity.getResource().getResourceId());
+        cacheHelper.evictCacheItemByPrefix(HazelCastCacheConfig.ACL_IDS_WITH_PERMISSION_CACHE, entity.getResource().getResourceType().name());
+        cacheHelper.evictCacheItemByPrefix(HazelCastCacheConfig.ACL_COUNT_CACHE, entity.getResource().getResourceType().name());
+    }
+    @Override
+    protected void afterDelete(AclEntryEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        cacheHelper.evictCacheItemByPrefix(HazelCastCacheConfig.ACL_HAS_PERMISSION_CACHE, entity.getResource().getResourceType().name() + "_" + entity.getResource().getResourceId());
+        cacheHelper.evictCacheItemByPrefix(HazelCastCacheConfig.ACL_IDS_WITH_PERMISSION_CACHE, entity.getResource().getResourceType().name());
+        cacheHelper.evictCacheItemByPrefix(HazelCastCacheConfig.ACL_COUNT_CACHE, entity.getResource().getResourceType().name());
+    }
+
+    @Override
+    @Cacheable(value = HazelCastCacheConfig.ACL_HAS_PERMISSION_CACHE, key = "#resourceType?.name() + '_' + #resourceId?.toString() + '_' + (#permissions) + '_' + #user")
 	public boolean anyPermissionGranted(
 			ResourceType resourceType,
 			Serializable resourceId,
@@ -55,6 +78,7 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 	}
 
 	@Override
+    @Cacheable(value = HazelCastCacheConfig.ACL_IDS_WITH_PERMISSION_CACHE, key = "#resourceType?.name() + '_' + (#permissions) + '_' + #user")
 	public Set<Serializable> findIdsWithAnyPermission(
 			ResourceType resourceType,
 			List<PermissionEnum> permissions,
@@ -69,6 +93,18 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 				aclPermissions,
 				toSids(user, roles).toArray(new Sid[0]));
 	}
+
+    @Override
+    @Cacheable(value = HazelCastCacheConfig.ACL_COUNT_CACHE, key = "#resourceType?.name() + '_' + #resourceId?.toString()")
+    public Integer countSidsWithPermission(ResourceType resourceType, Serializable resourceId) {
+        return aclHelper.countSidsWithPermission(getClassFromResourceType(resourceType), resourceId);
+    }
+
+    @Override
+    @Cacheable(value = HazelCastCacheConfig.ACL_COUNT_CACHE, key = "#resourceType?.name() + '_' + #resourcedIds")
+    public Map<Serializable, Integer> countAllSidsWithPermission(ResourceType resourceType, List<Serializable> resourcedIds) {
+        return aclHelper.countAllSidsWithPermission(getClassFromResourceType(resourceType), resourcedIds);
+    }
 
 	private List<Sid> toSids(String user, List<String> roles) {
 		List<Sid> sids = new ArrayList<>();
