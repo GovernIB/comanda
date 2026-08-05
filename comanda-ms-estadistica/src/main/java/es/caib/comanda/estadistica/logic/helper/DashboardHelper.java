@@ -4,6 +4,7 @@ import es.caib.comanda.client.model.App;
 import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
+import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltre;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
@@ -11,6 +12,7 @@ import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardTitolRepository;
+import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
@@ -26,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -33,6 +36,7 @@ import java.util.Objects;
 public class DashboardHelper {
 
     private final EstadisticaClientHelper estadisticaClientHelper;
+    private final ResourceEntityMappingHelper resourceEntityMappingHelper;
 
     public static final String ANSWER_CODE_APP_ID = "appId";
     public static final String ANSWER_CODE_ENTORN_ID = "entornId";
@@ -45,6 +49,22 @@ public class DashboardHelper {
     public void afterConversionLogic(DashboardEntity entity, Dashboard resource) {
         afterConversionGetAppNom(entity, resource);
         afterConversionGetEntornNom(entity, resource);
+        afterConversionGetFiltres(entity, resource);
+    }
+
+    /**
+     * El mapeig genèric d'entitat a recurs (ObjectMappingHelper.map) no sap convertir camps de tipus
+     * List&lt;Entity&gt; (com filtres, items o titols) i sempre els deixa a null; per això cal fer la conversió
+     * manualment aquí, igual que ja es fa amb el nom de l'aplicació i de l'entorn. Sense això, el frontend mai
+     * rep els filtres de capçalera configurats (vegeu DashboardFiltreBar) encara que existeixin a la BD.
+     */
+    private void afterConversionGetFiltres(DashboardEntity entity, Dashboard resource) {
+        if (entity.getFiltres() != null) {
+            resource.setFiltres(
+                    entity.getFiltres().stream()
+                            .map(filtreEntity -> resourceEntityMappingHelper.entityToResource(filtreEntity, DashboardFiltre.class))
+                            .collect(Collectors.toList()));
+        }
     }
 
     /** Assigna el nom de l'aplicació a partir de l'appId **/

@@ -2,11 +2,12 @@ import React from 'react';
 import { Icon, Box, Typography, Skeleton } from '@mui/material';
 import { numberFormat, useBaseAppContext } from 'reactlib';
 import { useWidgetTheme } from './useWidgetTheme';
-import { 
-    WidgetContainer, 
-    WidgetHeader, 
-    WidgetFooter, 
-    WidgetErrorDisplay 
+import {
+    WidgetContainer,
+    WidgetHeader,
+    WidgetFooter,
+    WidgetErrorDisplay,
+    WidgetNoAccessDisplay
 } from './WidgetLayout';
 import estils from './WidgetEstils';
 import { camelToSnakeCase } from '../../util/stringUtils';
@@ -40,6 +41,7 @@ export interface SimpleWidgetVisualizationProps {
     error?: boolean;
     errorMsg?: string;
     errorTrace?: string;
+    senseAccesDades?: boolean;
     onClick?: () => void;
 
     midaFontTitol?: number;
@@ -67,6 +69,7 @@ const SimpleWidgetVisualization: React.FC<SimpleWidgetVisualizationProps> = (pro
         error = false,
         errorMsg,
         errorTrace,
+        senseAccesDades = false,
         onClick,
         midaFontTitol,
         midaFontDescripcio,
@@ -130,6 +133,8 @@ const SimpleWidgetVisualization: React.FC<SimpleWidgetVisualizationProps> = (pro
 
             {error ? (
                 <WidgetErrorDisplay errorMsg={errorMsg} errorTrace={errorTrace} />
+            ) : senseAccesDades ? (
+                <WidgetNoAccessDisplay />
             ) : (
                 <>
                     {/* Content */}

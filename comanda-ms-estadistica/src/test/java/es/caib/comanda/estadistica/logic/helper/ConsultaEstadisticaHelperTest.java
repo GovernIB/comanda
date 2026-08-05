@@ -68,6 +68,10 @@ public class ConsultaEstadisticaHelperTest {
     private EstadisticaClientHelper estadisticaClientHelper;
     @Mock
     private DashboardStyleResolverHelper dashboardStyleResolverHelper;
+    @Mock
+    private DashboardSeguretatHelper dashboardSeguretatHelper;
+    @Mock
+    private es.caib.comanda.ms.logic.helper.AuthenticationHelper authenticationHelper;
 
     @InjectMocks
     private ConsultaEstadisticaHelper consultaEstadisticaHelper;
@@ -200,11 +204,15 @@ public class ConsultaEstadisticaHelperTest {
 
         // Mock the fetRepository
         when(fetRepository.getValorSimpleAgregat(
-            any(), any(), any(), any(), any()))
+            any(), any(), any(), any(), any(), any()))
             .thenReturn("42.0");
 
+        // Mock dashboardSeguretatHelper: usuari exempt (sense restricció de seguretat)
+        when(dashboardSeguretatHelper.resoldre(any()))
+            .thenReturn(SeguretatDadesResultat.builder().exempt(true).build());
+
         // Act
-        InformeWidgetItem result = consultaEstadisticaHelper.getDadesWidget(dashboardItem, false);
+        InformeWidgetItem result = consultaEstadisticaHelper.getDadesWidget(dashboardItem, false, null);
 
         // Assert
         assertNotNull(result);
@@ -256,7 +264,8 @@ public class ConsultaEstadisticaHelperTest {
             eq(periodeConsulta.start),
             eq(periodeConsulta.end),
             any(),
-            any(IndicadorAgregacio.class)))
+            any(IndicadorAgregacio.class),
+            any()))
             .thenReturn("33.0");
 
         // Use reflection to access the private method
@@ -266,11 +275,13 @@ public class ConsultaEstadisticaHelperTest {
                 "calculateValorSimple",
                 es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity.class,
                 PeriodeResolverHelper.PeriodeDates.class,
-                Long.class);
+                Long.class,
+                es.caib.comanda.estadistica.logic.intf.model.consulta.DashboardFiltreSeleccio.class,
+                SeguretatFiltreSql.class);
             method.setAccessible(true);
 
             // Act
-            String result = (String) method.invoke(consultaEstadisticaHelper, widget, periodeConsulta, entornAppId);
+            String result = (String) method.invoke(consultaEstadisticaHelper, widget, periodeConsulta, entornAppId, null, null);
 
             // Assert
             assertNotNull(result);
@@ -696,7 +707,8 @@ public class ConsultaEstadisticaHelperTest {
         java.lang.reflect.Method method;
         try {
             method = ConsultaEstadisticaHelper.class.getDeclaredMethod(
-                "getDadesComunsConsulta", DashboardItemEntity.class, boolean.class);
+                "getDadesComunsConsulta", DashboardItemEntity.class, boolean.class,
+                es.caib.comanda.estadistica.logic.intf.model.consulta.DashboardFiltreSeleccio.class);
             method.setAccessible(true);
 
             // Arrange
@@ -716,7 +728,7 @@ public class ConsultaEstadisticaHelperTest {
                 .thenReturn(Entorn.builder().codi("DEV").build());
 
             // Act
-            Object result = method.invoke(consultaEstadisticaHelper, dashboardItem, false);
+            Object result = method.invoke(consultaEstadisticaHelper, dashboardItem, false, null);
 
             // Assert
             assertNotNull(result);
@@ -935,7 +947,9 @@ public class ConsultaEstadisticaHelperTest {
                 es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity.class,
                 String.class,
                 PeriodeResolverHelper.PeriodeDates.class,
-                Long.class);
+                Long.class,
+                es.caib.comanda.estadistica.logic.intf.model.consulta.DashboardFiltreSeleccio.class,
+                SeguretatFiltreSql.class);
             method.setAccessible(true);
 
             // Arrange
@@ -976,12 +990,13 @@ public class ConsultaEstadisticaHelperTest {
                 eq(periodePrevi.start),
                 eq(periodePrevi.end),
                 any(),
-                any(IndicadorAgregacio.class)))
+                any(IndicadorAgregacio.class),
+                any()))
                 .thenReturn("50.0");
 
             // Act
             String result = (String) method.invoke(
-                consultaEstadisticaHelper, widget, valorConsulta, periodePrevi, entornAppId);
+                consultaEstadisticaHelper, widget, valorConsulta, periodePrevi, entornAppId, null, null);
 
             // Assert
             assertNotNull(result);
@@ -1000,7 +1015,9 @@ public class ConsultaEstadisticaHelperTest {
             method = ConsultaEstadisticaHelper.class.getDeclaredMethod(
                 "getDadesWidgetSimple",
                 DashboardItemEntity.class,
-                es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta.class);
+                es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta.class,
+                es.caib.comanda.estadistica.logic.intf.model.consulta.DashboardFiltreSeleccio.class,
+                SeguretatFiltreSql.class);
             method.setAccessible(true);
 
             // Arrange
@@ -1040,11 +1057,11 @@ public class ConsultaEstadisticaHelperTest {
                     .build();
 
             when(fetRepository.getValorSimpleAgregat(
-                any(), any(), any(), any(), any(IndicadorAgregacio.class)))
+                any(), any(), any(), any(), any(IndicadorAgregacio.class), any()))
                 .thenReturn("42.0");
 
             // Act
-            Object result = method.invoke(consultaEstadisticaHelper, dashboardItem, dadesComunsConsulta);
+            Object result = method.invoke(consultaEstadisticaHelper, dashboardItem, dadesComunsConsulta, null, null);
 
             // Assert
             assertNotNull(result);
@@ -1066,7 +1083,9 @@ public class ConsultaEstadisticaHelperTest {
             method = ConsultaEstadisticaHelper.class.getDeclaredMethod(
                 "getDadesWidgetGrafic",
                 DashboardItemEntity.class,
-                es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta.class);
+                es.caib.comanda.estadistica.logic.intf.model.consulta.DadesComunsWidgetConsulta.class,
+                es.caib.comanda.estadistica.logic.intf.model.consulta.DashboardFiltreSeleccio.class,
+                SeguretatFiltreSql.class);
             method.setAccessible(true);
 
             // Arrange
@@ -1116,10 +1135,10 @@ public class ConsultaEstadisticaHelperTest {
             dataPoint2.put("visites", "150");
             mockData.add(dataPoint2);
 
-            when(fetRepository.getValorsGraficUnIndicador(any(), any(), any(), any(), any(), any())).thenReturn(mockData);
+            when(fetRepository.getValorsGraficUnIndicador(any(), any(), any(), any(), any(), any(), any())).thenReturn(mockData);
 
             // Act
-            Object result = method.invoke(consultaEstadisticaHelper, dashboardItem, dadesComunsConsulta);
+            Object result = method.invoke(consultaEstadisticaHelper, dashboardItem, dadesComunsConsulta, null, null);
 
             // Assert
             assertNotNull(result);
@@ -1139,7 +1158,8 @@ public class ConsultaEstadisticaHelperTest {
         // Use reflection to access the private method
         java.lang.reflect.Method method;
         try {
-            method = ConsultaEstadisticaHelper.class.getDeclaredMethod("getDadesWidgetTaula", DashboardItemEntity.class, DadesComunsWidgetConsulta.class);
+            method = ConsultaEstadisticaHelper.class.getDeclaredMethod("getDadesWidgetTaula", DashboardItemEntity.class, DadesComunsWidgetConsulta.class,
+                es.caib.comanda.estadistica.logic.intf.model.consulta.DashboardFiltreSeleccio.class, SeguretatFiltreSql.class);
             method.setAccessible(true);
 
             // Arrange
@@ -1193,11 +1213,11 @@ public class ConsultaEstadisticaHelperTest {
             dataPoint2.put("visites", "150");
             mockData.add(dataPoint2);
 
-            when(fetRepository.getValorsTaulaAgregat(any(), any(), any(), any(), any(), any())).thenReturn(mockData);
+            when(fetRepository.getValorsTaulaAgregat(any(), any(), any(), any(), any(), any(), any())).thenReturn(mockData);
             when(dimensioRepository.findByCodiAndEntornAppId(any(), any())).thenReturn(Optional.empty());
 
             // Act
-            Object result = method.invoke(consultaEstadisticaHelper, dashboardItem, dadesComunsConsulta);
+            Object result = method.invoke(consultaEstadisticaHelper, dashboardItem, dadesComunsConsulta, null, null);
 
             // Assert
             assertNotNull(result);

@@ -5,6 +5,7 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useTheme } from '@mui/material/styles';
 import estils from './WidgetEstils';
 import { createTransparentColor } from '../../util/colorUtil';
@@ -44,8 +45,8 @@ export const WidgetHeader: React.FC<WidgetHeaderProps> = React.memo(({
     const entornChipSx = {
         ...estils.entornCodi,
         color: contrastTextColor,
-        backgroundColor: isWhiteBackground 
-            ? theme.palette.grey[200] 
+        backgroundColor: isWhiteBackground
+            ? theme.palette.grey[200]
             : createTransparentColor(backgroundColor, 0.35),
         border: `1px solid ${voraColor}`,
     };
@@ -130,8 +131,8 @@ export const WidgetErrorDisplay: React.FC<WidgetErrorDisplayProps> = React.memo(
 
     return (
         <Box sx={{ flex: 1, p: 2, overflow: 'auto' }}>
-            <Accordion 
-                sx={{...estils.errorAccordion, pointerEvents: 'auto'}} 
+            <Accordion
+                sx={{...estils.errorAccordion, pointerEvents: 'auto'}}
                 onMouseDown={(event) => event.stopPropagation()}
             >
                 <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={estils.errorSummary(theme)}>
@@ -144,6 +145,21 @@ export const WidgetErrorDisplay: React.FC<WidgetErrorDisplayProps> = React.memo(
                     {errorTrace || 'No error trace available'}
                 </AccordionDetails>
             </Accordion>
+        </Box>
+    );
+});
+
+export const WidgetNoAccessDisplay: React.FC = React.memo(() => {
+    const theme = useTheme();
+
+    return (
+        <Box sx={{ flex: 1, p: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, textAlign: 'center' }}>
+                <LockOutlinedIcon sx={{ fontSize: '2rem', color: theme.palette.text.secondary }} />
+                <Typography sx={{ fontSize: '0.8rem', color: theme.palette.text.secondary }}>
+                    No teniu permisos per veure dades en aquest widget
+                </Typography>
+            </Box>
         </Box>
     );
 });
@@ -172,9 +188,9 @@ export const WidgetContainer: React.FC<WidgetContainerProps> = React.memo(({
     const theme = useTheme();
 
     return (
-        <Paper 
-            elevation={2} 
-            onClick={onClick} 
+        <Paper
+            elevation={2}
+            onClick={onClick}
             sx={estils.paperContainer(bgColor, bg, textColor, mostrarVora, voraAmple, voraColor, onClick, theme)}
         >
             {children}

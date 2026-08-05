@@ -1,0 +1,52 @@
+databaseChangeLog:
+  - changeSet:
+      id: est-entitat-valor-tipus-0.1.4-001
+      author: limit
+      comment: Indicar, per dimensió de tipus ENTITAT, si el valor és el codi intern o el codiDir3 de l'entitat
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: ${db_prefix}est_dimensio
+              columnName: entitat_valor_tipus
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}est_dimensio
+            columns:
+              - column:
+                  name: entitat_valor_tipus
+                  type: VARCHAR(16)
+      rollback:
+        - dropColumn:
+            tableName: ${db_prefix}est_dimensio
+            columnName: entitat_valor_tipus
+  - changeSet:
+      id: est-dimensio-valor-entitat-mapejada-0.1.4-001
+      author: limit
+      comment: Sobreescriptura manual de l'entitat corresponent a un valor de dimensió (quan no coincideix amb cap codi/codiDir3)
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: ${db_prefix}est_dimensio_valor
+              columnName: entitat_mapejada_id
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}est_dimensio_valor
+            columns:
+              - column:
+                  name: entitat_mapejada_id
+                  type: NUMBER(38,0)
+        - addForeignKeyConstraint:
+            baseTableName: ${db_prefix}est_dimensio_valor
+            baseColumnNames: entitat_mapejada_id
+            constraintName: ${db_prefix}dim_valor_entitat_fk
+            referencedTableName: ${db_prefix}entitat
+            referencedColumnNames: id
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: ${db_prefix}est_dimensio_valor
+            constraintName: ${db_prefix}dim_valor_entitat_fk
+        - dropColumn:
+            tableName: ${db_prefix}est_dimensio_valor
+            columnName: entitat_mapejada_id

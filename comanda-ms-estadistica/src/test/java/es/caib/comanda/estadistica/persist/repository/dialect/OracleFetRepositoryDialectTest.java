@@ -243,7 +243,7 @@ public class OracleFetRepositoryDialectTest {
     @MethodSource("provideGenerateDimensionConditionsTestCases")
     void testGenerateDimensionConditions_NullInput(String testName, Map<String, List<String>> dimensionsFiltre, String expectedConditions) {
         // Act
-        String conditions = removeConsecutiveSpaces(dialect.generateDimensionConditions(dimensionsFiltre));
+        String conditions = removeConsecutiveSpaces(OracleFetRepositoryDialect.generateDimensionConditions(dimensionsFiltre, null));
 
         // Assert
         assertNotNull(conditions);

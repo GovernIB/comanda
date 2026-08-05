@@ -98,6 +98,12 @@ public class DimensioValor extends BaseResource<Long> {
     private TipusDimensioEnum tipus;
     @Transient private ResourceReference<UnitatOrganitzativa, Long> unitatOrganitzativa;
     @Transient private ResourceReference<Entitat, Long> entitat;
+    /**
+     * Sobreescriptura manual de l'entitat corresponent a aquest valor (només rellevant si dimensio.tipus=ENTITAT),
+     * per als casos en què `valor` no coincideix exactament amb cap Entitat.codi/codiDir3. A diferència de `entitat`
+     * (calculat, només lectura), aquest camp és editable per un administrador.
+     */
+    private ResourceReference<Entitat, Long> entitatMapejada;
 
     public String getDesc() {
         return dimensio.getDescription() + " [" + this.getCodiNom() + "]";

@@ -165,7 +165,7 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
             InformeWidgetItem item;
             try {
                 boolean temaFosc = params != null && Boolean.TRUE.equals(params.getTemaFosc());
-                item = consultaEstadisticaHelper.getDadesWidget(dashboardItem, temaFosc);
+                item = consultaEstadisticaHelper.getDadesWidget(dashboardItem, temaFosc, params != null ? params.getFiltreSeleccio() : null);
             } catch (Exception e) {
                 log.error("Error generant informe widget. Item {}: {}", dashboardItem.getId(), e.getMessage(), e);
                 item = InformeWidgetItem.builder()

@@ -383,6 +383,12 @@ const translationEs: translationResourcesType = {
                 readAllowed: "Consulta de paneles de control",
                 writeAllowed: "Diseño de paneles de control",
             },
+            sideMenu: {
+                filtresTitle: "Filtros del panel de control",
+                addFiltre: "Añadir filtro",
+                noFiltres: "Ningún filtro configurado",
+                periode: "Periodo",
+            },
             cloneDashboard: {
                 title: "Clonar el panel de control",
                 success: "Panel de control clonado correctamente",
@@ -1134,6 +1140,13 @@ const translationEs: translationResourcesType = {
                 deleted: "Elemento eliminado",
                 deleteError: "No se ha podido eliminar",
                 selectType: "Seleccione un tipo para ver las propiedades configurables.",
+                filtre: {
+                    tipus: "Tipo de filtro",
+                    dimensio: "Dimensión",
+                    titol: "Etiqueta",
+                    multiple: "Selección múltiple",
+                    ordre: "Orden",
+                },
             },
         },
         caches: {

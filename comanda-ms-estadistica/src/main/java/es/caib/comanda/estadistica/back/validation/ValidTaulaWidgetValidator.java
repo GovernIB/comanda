@@ -35,8 +35,15 @@ public class ValidTaulaWidgetValidator extends ValidWidgetValidator implements C
 
         isValid = validatePeriode(widget, context) && isValid;
         isValid = validateColumnes(widget, context) && isValid;
+        isValid = validateDimensioAgrupacio(widget, context) && isValid;
 
         return isValid;
+    }
+
+    private boolean validateDimensioAgrupacio(EstadisticaTaulaWidget widget, ConstraintValidatorContext context) {
+        // ConsultaEstadisticaHelper.getDadesWidgetTaula sempre desreferencia dimensioAgrupacio; sense
+        // aquesta validació, un widget guardat sense agrupació provoca un NullPointerException en consultar-lo.
+        return validateField(widget.getDimensioAgrupacio() != null, context, "dimensioAgrupacio", "És obligatori emplenar aquest camp");
     }
 
     private boolean validateColumnes(EstadisticaTaulaWidget widget, ConstraintValidatorContext context) {
@@ -70,6 +77,28 @@ public class ValidTaulaWidgetValidator extends ValidWidgetValidator implements C
                             "columnes[" + widget.getColumnes().indexOf(ind) + "].unitatAgregacio"));
             isValid.set(false);
         }
+
+        // Una columna PERCENTAGE calcula el seu percentatge a partir d'una altra columna amb el mateix indicador
+        // (FetRepositoryCustomImpl.calculateDependentPercentages). Si aquesta columna base és FIRST_SEEN/LAST_SEEN
+        // (una data, no un número), el càlcul crema amb NullPointerException/NumberFormatException en temps de consulta.
+        Map<Long, List<IndicadorTaula>> columnesPerIndicador = widget.getColumnes().stream()
+                .filter(ind -> ind.getIndicador() != null)
+                .collect(Collectors.groupingBy(ind -> ind.getIndicador().getId()));
+        widget.getColumnes().stream()
+                .filter(ind -> ind.getIndicador() != null && TableColumnsEnum.PERCENTAGE.equals(ind.getAgregacio()))
+                .forEach(ind -> {
+                    List<IndicadorTaula> mateixIndicador = columnesPerIndicador.getOrDefault(ind.getIndicador().getId(), List.of());
+                    boolean baseNoNumerica = mateixIndicador.stream()
+                            .filter(altre -> !TableColumnsEnum.PERCENTAGE.equals(altre.getAgregacio()))
+                            .anyMatch(altre -> TableColumnsEnum.FIRST_SEEN.equals(altre.getAgregacio()) || TableColumnsEnum.LAST_SEEN.equals(altre.getAgregacio()));
+                    if (baseNoNumerica) {
+                        addConstraintViolation(context,
+                                "Una columna de tipus percentatge no es pot combinar amb una columna de primera/darrera aparició del mateix indicador",
+                                "columnes[" + widget.getColumnes().indexOf(ind) + "].agregacio");
+                        isValid.set(false);
+                    }
+                });
+
         return isValid.get();
     }
 

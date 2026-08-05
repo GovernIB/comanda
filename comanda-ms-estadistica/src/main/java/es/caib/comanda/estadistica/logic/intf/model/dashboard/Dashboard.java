@@ -100,6 +100,7 @@ public class Dashboard extends BaseResource<Long> {
 
     private List<DashboardItem> items;
     private List<DashboardTitol> titols;
+    private List<DashboardFiltre> filtres;
 
     protected ResourceReference<Plantilla, Long> plantilla;
 

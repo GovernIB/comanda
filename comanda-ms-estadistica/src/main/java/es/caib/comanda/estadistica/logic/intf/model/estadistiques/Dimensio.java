@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 
+import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
@@ -112,6 +113,13 @@ public class Dimensio extends BaseResource<Long> {
 
     private Integer agrupableCount;
     private TipusDimensioEnum tipus;
+    /** Només rellevant si tipus=ENTITAT: com s'ha d'interpretar el valor per relacionar-lo amb una Entitat. */
+    private EntitatValorTipus entitatValorTipus;
+
+    @AssertTrue(message = "Aquest camp només és vàlid quan el tipus de la dimensió és ENTITAT")
+    public boolean isEntitatValorTipusCoherent() {
+        return entitatValorTipus == null || TipusDimensioEnum.ENTITAT.equals(tipus);
+    }
 
     @Getter
     @Setter

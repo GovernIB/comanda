@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {
+    Autocomplete,
     Box,
     Button,
     Chip,
@@ -14,6 +15,7 @@ import {
     Stack,
     Tab,
     Tabs,
+    TextField,
     Typography,
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
@@ -25,6 +27,7 @@ import {
     useResourceApiService,
 } from 'reactlib';
 import MuiForm from '../../../lib/components/mui/form/MuiForm.tsx';
+import { FormFieldDataActionType } from '../../../lib/components/form/FormContext.tsx';
 import type { FormApi } from '../../../lib/components/form/FormContext.tsx';
 import EstadisticaSimpleWidgetForm, { hasVisualOverrides as simpleHasVisualOverrides } from './EstadisticaSimpleWidgetForm.tsx';
 import EstadisticaGraficWidgetForm, { hasVisualOverrides as graficHasVisualOverrides } from './EstadisticaGraficWidgetForm.tsx';
@@ -33,6 +36,7 @@ import { DimensionsFields, PeriodFields, PersonalitzatFields, hasVisualOverrides
 import { useDashboardPlantilla, useEntornCodi } from './dashboardPlantillaHook.ts';
 import { WidgetPreview } from './WidgetPreview.tsx';
 import { useTranslation } from 'react-i18next';
+import type { DashboardFiltre } from '../../types/dashboardFiltre.model.ts';
 
 export type DashboardWidgetType = 'SIMPLE' | 'GRAFIC' | 'TAULA';
 
@@ -60,6 +64,17 @@ export type DashboardEditorSelection =
           kind: 'title';
           mode: 'edit';
           dashboardTitolId: any;
+      }
+    | {
+          kind: 'filtre';
+          mode: 'create';
+          /** Precalculat pel pare a partir dels filtres existents, perquè el nou en quedi al final. */
+          nextOrdre?: number;
+      }
+    | {
+          kind: 'filtre';
+          mode: 'edit';
+          dashboardFiltreId: any;
       };
 
 type DashboardEditorSidePanelProps = {
@@ -70,6 +85,8 @@ type DashboardEditorSidePanelProps = {
     /** Si es passa un dashboardItemId, el pare pot refrescar només aquest widget en lloc de tot el dashboard */
     onSaved: (dashboardItemId?: any) => void;
     onDeleted: () => void;
+    /** Filtres ja configurats al dashboard, usats per l'editor de filtres per evitar-ne duplicats (vegeu FiltreEditor) */
+    dashboardFiltres?: DashboardFiltre[];
 };
 
 const widgetTypeConfig: Record<
@@ -377,16 +394,19 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
     onSelectionChange,
     onSaved,
     onDeleted,
+    dashboardFiltres,
 }) => {
     const widgetFormApiRef = React.useRef<FormApi | any>({});
     const dashboardItemFormApiRef = React.useRef<FormApi | any>({});
     const titleFormApiRef = React.useRef<FormApi | any>({});
+    const filtreFormApiRef = React.useRef<FormApi | any>({});
     const { temporalMessageShow, messageDialogShow } = useBaseAppContext();
     const { t } = useTranslation();
     const confirmDialogButtons = useConfirmDialogButtons();
     const { create: createDashboardItem, patch: patchDashboardItem, delete: deleteDashboardItem } =
         useResourceApiService('dashboardItem');
     const { patch: patchDashboardTitol, delete: deleteDashboardTitol } = useResourceApiService('dashboardTitol');
+    const { delete: deleteDashboardFiltre } = useResourceApiService('dashboardFiltre');
     const [saving, setSaving] = React.useState(false);
     const [activeTab, setActiveTab] = React.useState(0);
 
@@ -396,6 +416,9 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
         }
         if (selection.kind === 'title') {
             return `title-${selection.mode}-${selection.mode === 'edit' ? selection.dashboardTitolId : 'new'}`;
+        }
+        if (selection.kind === 'filtre') {
+            return `filtre-${selection.mode}-${selection.mode === 'edit' ? selection.dashboardFiltreId : 'new'}`;
         }
         return 'none';
     }, [selection]);
@@ -452,6 +475,8 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
                         data: { personalitzat: hasVisualOverridesTitol(titleData) },
                     });
                 }
+            } else if (selection.kind === 'filtre') {
+                await filtreFormApiRef.current?.save();
             }
             onSaved(
                 selection.kind === 'widget' && selection.mode === 'edit'
@@ -499,6 +524,8 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
             confirmDelete(() => deleteDashboardItem(selection.dashboardItemId));
         } else if (selection.kind === 'title' && selection.mode === 'edit') {
             confirmDelete(() => deleteDashboardTitol(selection.dashboardTitolId));
+        } else if (selection.kind === 'filtre' && selection.mode === 'edit') {
+            confirmDelete(() => deleteDashboardFiltre(selection.dashboardFiltreId));
         } else {
             onDeleted();
         }
@@ -536,13 +563,22 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
                         activeTab={activeTab}
                         onActiveTabChange={setActiveTab}
                     />
-                ) : (
+                ) : selection.kind === 'title' ? (
                     <TitleEditor
                         key={selectionKey}
                         dashboard={dashboard}
                         dashboardId={dashboardId}
                         selection={selection}
                         titleFormApiRef={titleFormApiRef}
+                    />
+                ) : (
+                    <FiltreEditor
+                        key={selectionKey}
+                        dashboard={dashboard}
+                        dashboardId={dashboardId}
+                        selection={selection}
+                        filtreFormApiRef={filtreFormApiRef}
+                        dashboardFiltres={dashboardFiltres}
                     />
                 )}
             </Box>
@@ -739,6 +775,157 @@ const TitleEditor: React.FC<TitleEditorProps> = ({
                 expanded={visualExpanded}
                 onExpandedChange={setVisualExpanded}
             />
+        </MuiForm>
+    );
+};
+
+const filtreDefaultData = {
+    tipus: 'DIMENSIO',
+    multiple: true,
+};
+
+/**
+ * Selector del codi de dimensió d'un filtre (camp `dimensioCodi`, un simple String al backend). Es implementat a
+ * mà (en lloc d'un `<FormField name="dimensioCodi" />`) per oferir un Autocomplete amb les dimensions disponibles
+ * per l'aplicació del dashboard, en comptes de deixar l'usuari escriure el codi de memòria.
+ */
+const FiltreDimensioCodiField: React.FC<{ aplicacioId: any; label: string; excludeCodis?: string[] }> = ({
+    aplicacioId,
+    label,
+    excludeCodis,
+}) => {
+    const { dataGetFieldValue, dataDispatchAction, fields, fieldErrors } = useFormContext();
+    const { isReady, find } = useResourceApiService('dimensio');
+    const [options, setOptions] = React.useState<{ codi: string; nom: string }[]>([]);
+    const value = dataGetFieldValue('dimensioCodi');
+    const field = fields?.find((f: any) => f.name === 'dimensioCodi');
+    const fieldError = fieldErrors?.find((e: any) => e.field === 'dimensioCodi');
+
+    React.useEffect(() => {
+        let cancelled = false;
+        if (isReady && aplicacioId != null) {
+            find({ namedQueries: [`filterByApp:${aplicacioId}`], unpaged: true }).then((response) => {
+                if (cancelled) return;
+                const rows = (response.rows ?? []) as Array<{ codi?: string; nom?: string }>;
+                setOptions(
+                    rows
+                        .filter((row) => typeof row.codi === 'string' && row.codi.length > 0)
+                        .map((row) => ({ codi: row.codi as string, nom: row.nom || (row.codi as string) }))
+                );
+            });
+        }
+        return () => {
+            cancelled = true;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isReady, aplicacioId]);
+
+    const selected = options.find((option) => option.codi === value) ?? null;
+    // Una dimensió ja usada en un altre filtre del mateix dashboard no es pot tornar a triar (vegeu FiltreEditor),
+    // però si ja estava seleccionada (p. ex. en obrir l'edició d'aquest mateix filtre) es manté visible.
+    const visibleOptions = options.filter(
+        (option) => option.codi === value || !excludeCodis?.includes(option.codi)
+    );
+
+    return (
+        <Autocomplete
+            size="small"
+            options={visibleOptions}
+            value={selected}
+            getOptionLabel={(option) => option.nom}
+            isOptionEqualToValue={(option, val) => option.codi === val.codi}
+            onChange={(_event, newValue) => {
+                dataDispatchAction({
+                    type: FormFieldDataActionType.FIELD_CHANGE,
+                    payload: { fieldName: 'dimensioCodi', field, value: newValue?.codi },
+                });
+            }}
+            renderInput={(params) => (
+                <TextField
+                    {...params}
+                    label={label}
+                    required
+                    error={fieldError != null}
+                    helperText={fieldError?.message}
+                />
+            )}
+        />
+    );
+};
+
+type FiltreEditorProps = {
+    dashboard: any;
+    dashboardId: string;
+    selection: Extract<DashboardEditorSelection, { kind: 'filtre' }>;
+    filtreFormApiRef: React.RefObject<FormApi | any>;
+    /** Filtres ja configurats al dashboard, per impedir-ne duplicats (vegeu comentari a sota) */
+    dashboardFiltres?: DashboardFiltre[];
+};
+
+const FiltreEditor: React.FC<FiltreEditorProps> = ({
+    dashboard,
+    dashboardId,
+    selection,
+    filtreFormApiRef,
+    dashboardFiltres,
+}) => {
+    const { t } = useTranslation();
+    const [filtreData, setFiltreData] = React.useState<any>({});
+    // Un dashboard només admet un filtre de tipus PERIODE, i cap dimensió es pot repetir en dos filtres DIMENSIO
+    // (validat també al backend, vegeu DashboardFiltreServiceImpl); aquí només s'evita que l'usuari pugui triar-ho.
+    const otherFiltres = React.useMemo(
+        () =>
+            (dashboardFiltres ?? []).filter(
+                (f) => !(selection.mode === 'edit' && String(f.id) === String(selection.dashboardFiltreId))
+            ),
+        [dashboardFiltres, selection]
+    );
+    const periodeJaUsat = otherFiltres.some((f) => f.tipus === 'PERIODE');
+    const dimensioCodisUsats = otherFiltres
+        .filter((f) => f.tipus === 'DIMENSIO' && f.dimensioCodi)
+        .map((f) => f.dimensioCodi as string);
+    return (
+        <MuiForm
+            resourceName="dashboardFiltre"
+            id={selection.mode === 'edit' ? selection.dashboardFiltreId : undefined}
+            additionalData={
+                selection.mode === 'create'
+                    ? {
+                          dashboard: { id: dashboardId },
+                          ordre: selection.nextOrdre ?? 0,
+                          ...filtreDefaultData,
+                      }
+                    : undefined
+            }
+            apiRef={filtreFormApiRef}
+            hiddenToolbar
+            formBlockerDisabled
+            componentProps={{ sx: { m: 0, mt: 0 } }}
+        >
+            <WidgetDataBridge onChange={setFiltreData} />
+            <Stack spacing={1.5}>
+                <FormField
+                    name="tipus"
+                    label={t($ => $.page.widget.editor.filtre.tipus)}
+                    hiddenEnumValues={periodeJaUsat ? ['PERIODE'] : undefined}
+                />
+                {filtreData?.tipus === 'DIMENSIO' && (
+                    <FiltreDimensioCodiField
+                        aplicacioId={dashboard?.aplicacio?.id}
+                        label={t($ => $.page.widget.editor.filtre.dimensio)}
+                        excludeCodis={dimensioCodisUsats}
+                    />
+                )}
+                <FormField name="titol" label={t($ => $.page.widget.editor.filtre.titol)} required={false} />
+                {filtreData?.tipus === 'DIMENSIO' && (
+                    <FormField
+                        name="multiple"
+                        type="checkbox"
+                        label={t($ => $.page.widget.editor.filtre.multiple)}
+                    />
+                )}
+                <FormField name="ordre" label={t($ => $.page.widget.editor.filtre.ordre)} type="number" />
+            </Stack>
         </MuiForm>
     );
 };

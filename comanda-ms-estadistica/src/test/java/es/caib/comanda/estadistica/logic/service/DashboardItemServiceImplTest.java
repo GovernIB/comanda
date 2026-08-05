@@ -216,7 +216,7 @@ class DashboardItemServiceImplTest {
                 .build();
 
         when(dashboardItemRepository.findById(itemId)).thenReturn(Optional.of(entity));
-        when(consultaEstadisticaHelper.getDadesWidget(entity, false)).thenReturn(informeItem);
+        when(consultaEstadisticaHelper.getDadesWidget(entity, false, null)).thenReturn(informeItem);
 
         Class<?> reportClass = Class.forName("es.caib.comanda.estadistica.logic.service.DashboardItemServiceImpl$InformeWidget");
         java.lang.reflect.Constructor<?> constructor = reportClass.getDeclaredConstructor(DashboardItemServiceImpl.class);
@@ -231,7 +231,7 @@ class DashboardItemServiceImplTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0)).isEqualTo(informeItem);
         verify(dashboardItemRepository).findById(itemId);
-        verify(consultaEstadisticaHelper).getDadesWidget(entity, false);
+        verify(consultaEstadisticaHelper).getDadesWidget(entity, false, null);
     }
 
     @Test
@@ -252,7 +252,7 @@ class DashboardItemServiceImplTest {
         entity.setWidget(widget);
 
         when(dashboardItemRepository.findById(itemId)).thenReturn(Optional.of(entity));
-        when(consultaEstadisticaHelper.getDadesWidget(entity, false))
+        when(consultaEstadisticaHelper.getDadesWidget(entity, false, null))
                 .thenThrow(new RuntimeException("Error de processament"));
         when(consultaEstadisticaHelper.determineWidgetType(entity)).thenReturn(WidgetTipus.SIMPLE);
 

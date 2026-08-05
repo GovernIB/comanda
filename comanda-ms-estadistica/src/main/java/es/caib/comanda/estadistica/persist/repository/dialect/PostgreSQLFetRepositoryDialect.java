@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.persist.repository.dialect;
 
 import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
+import es.caib.comanda.estadistica.logic.intf.model.consulta.SeguretatFiltreSql;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import org.springframework.stereotype.Component;
@@ -23,8 +24,8 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
     private static final String FILTER_BETWEEN = " AND t.data BETWEEN :dataInici AND :dataFi ";
     private static final String FILTER_DATE = " AND t.data = :data ";
     private static final String BASE_WHERE = BASE_WHERE_ENTORN + FILTER_BETWEEN;
-    private static final String SUM_INDICADOR_TEMPLATE = " SUM(TO_NUMBER(f.indicadors_json->>%s)::numeric) AS sum_fets";
-    private static final String DIMENSION_VALUE_TEMPLATE = " f.indicadors_json->>%s ";
+    private static final String SUM_INDICADOR_TEMPLATE = " SUM(TO_NUMBER(f.indicadors_json->>'%s')::numeric) AS sum_fets";
+    private static final String DIMENSION_VALUE_TEMPLATE = " f.dimensions_json->>'%s' ";
 
 
     /**
@@ -65,6 +66,9 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
      * dimensions indicades (amb els seus valors associats).
      * La consulta inclou condicions bàsiques per entornAppId i la data proporcionada, i opcionalment, afegeix condicions
      * addicionals basades en dimensions específiques passades com a paràmetre.
+     * <p>
+     * Nota: aquesta consulta només s'utilitza des del recurs Fet (només-admin, vegeu Fet.java), així que no rep
+     * ni aplica cap filtre de seguretat d'entitat/òrgan (els administradors ja veuen totes les dades).
      *
      * @param dimensionsFiltre Un mapa que representa les dimensions i els seus valors per aplicar com a filtre. Cada clau
      *                         és el codi d'una dimensió, i el valor associat és una llista que conté els valors possibles
@@ -80,7 +84,7 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
                 BASE_WHERE_ENTORN +
                 FILTER_DATE;
 
-        String conditions = generateDimensionConditions(dimensionsFiltre);
+        String conditions = generateDimensionConditions(dimensionsFiltre, null);
         return query + conditions;
     }
 
@@ -89,6 +93,9 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
      * dates i els valors de diverses dimensions especificades.
      * La consulta inclou condicions específiques per filtrar les dades segons els criteris proporcionats mitjançant el mapa
      * de dimensions.
+     * <p>
+     * Nota: aquesta consulta només s'utilitza des del recurs Fet (només-admin), sense filtre de seguretat - vegeu el
+     * mètode anterior.
      *
      * @param dimensionsFiltre Un mapa que conté les dimensions i els seus valors de filtre. Cada clau correspon a un codi
      *                         de dimensió, mentre que el valor associat és una llista que inclou els possibles valors per
@@ -103,7 +110,7 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
                 BASE_JOIN +
                 BASE_WHERE;
 
-        String conditions = generateDimensionConditions(dimensionsFiltre);
+        String conditions = generateDimensionConditions(dimensionsFiltre, null);
         return query + conditions;
     }
 
@@ -117,13 +124,14 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
      *                         de dates.
      * @param indicadorCodi El codi de l'indicador sobre el qual s'aplicarà l'agregació.
      * @param agregacio El tipus d'agregació a aplicar (COUNT, SUM, AVERAGE, etc.).
+     * @param seguretat Restricció de seguretat d'entitat/òrgan a aplicar (null si l'usuari n'és exempt).
      * @return Una cadena de text que representa la consulta SQL generada per obtenir el valor agregat.
      */
     @Override
-    public String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio) {
+    public String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio, SeguretatFiltreSql seguretat) {
 
         String querySelect = getSimpleQuerySelect(agregacio);
-        String queryConditions = generateDimensionConditions(dimensionsFiltre);
+        String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
         String queryGrouping = generateGroupConditions(TableColumnsEnum.AVERAGE.equals(agregacio), unitatAgregacio);
 
         return "SELECT " + querySelect +
@@ -143,15 +151,16 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
      * @param dimensionsFiltre un mapa que conté les dimensions i els seus respectius valors per aplicar els filtres corresponents.
      * @param indicadorAgregacio l'objecte IndicadorAgregacio que conté informació sobre l'indicador a processar.
      * @param tempsAgregacio la unitat de període utilitzada per agrupar les dades temporalment.
+     * @param seguretat Restricció de seguretat d'entitat/òrgan a aplicar (null si l'usuari n'és exempt).
      * @return la consulta SQL generada com a cadena de text, preparada per obtenir dades aplicant els filtres i agrupacions específiques.
      */
     @Override
-    public String getGraficUnIndicadorQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, PeriodeUnitat tempsAgregacio) {
+    public String getGraficUnIndicadorQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat) {
 
         String indicadorCodi = indicadorAgregacio.getIndicadorCodi();
         String querySelect = getGraficQuerySelect(indicadorAgregacio);
         String queryAgrupacio = generateGraficAgrupacioConditions(tempsAgregacio);
-        String queryConditions = generateDimensionConditions(dimensionsFiltre);
+        String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
         String queryGrouping = generateGroupConditions(tempsAgregacio).replace("t.", "");
         String querySubGrouping = generateGroupConditions(indicadorAgregacio.getUnitatAgregacio() != null
                 ? indicadorAgregacio.getUnitatAgregacio()
@@ -179,15 +188,16 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
      * @param indicadorAgregacio indicadors d'agregació que conté el codi de l'indicador a consultar.
      * @param dimensioDescomposicioCodi codi de la dimensió utilitzada per fer la descomposició en el resultat de la consulta.
      * @param tempsAgregacio unitat de temps que defineix com s'agreguen els períodes (diari, mensual, anual, etc.) en la consulta.
+     * @param seguretat Restricció de seguretat d'entitat/òrgan a aplicar (null si l'usuari n'és exempt).
      * @return cadena de text que conté la consulta SQL generada.
      */
     @Override
-    public String getGraficUnIndicadorAmbDescomposicioAndAgrupacioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio) {
+    public String getGraficUnIndicadorAmbDescomposicioAndAgrupacioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat) {
 
         String indicadorCodi = indicadorAgregacio.getIndicadorCodi();
         String querySelect = getGraficQuerySelect(indicadorAgregacio);
         String queryAgrupacio = generateGraficAgrupacioConditions(tempsAgregacio);
-        String queryConditions = generateDimensionConditions(dimensionsFiltre);
+        String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
         String queryGrouping = generateGroupConditions(tempsAgregacio).replace("t.", "");
         String queryDescomposicio = getDimensionValueQuery(dimensioDescomposicioCodi);
         String querySubGrouping = generateGroupConditions(indicadorAgregacio.getUnitatAgregacio() != null
@@ -217,14 +227,15 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
      * @param dimensionsFiltre Mapa amb les dimensions i els seus valors a filtrar en la consulta.
      * @param indicadorAgregacio Objecte que conté la informació de l'indicador agregat, inclòs el seu codi identificador.
      * @param dimensioDescomposicioCodi Codi de la dimensió sobre la qual s'aplicarà la descomposició.
+     * @param seguretat Restricció de seguretat d'entitat/òrgan a aplicar (null si l'usuari n'és exempt).
      * @return Consulta SQL generada com a cadena de text per obtenir dades amb descomposició per l'indicador especificat.
      */
     @Override
-    public String getGraficUnIndicadorAmbDescomposicioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi) {
+    public String getGraficUnIndicadorAmbDescomposicioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, SeguretatFiltreSql seguretat) {
 
         String indicadorCodi = indicadorAgregacio.getIndicadorCodi();
         String querySelect = getGraficQuerySelect(indicadorAgregacio);
-        String queryConditions = generateDimensionConditions(dimensionsFiltre);
+        String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
         String queryDescomposicio = getDimensionValueQuery(dimensioDescomposicioCodi);
 
         return "SELECT " + queryDescomposicio + " AS agrupacio, " +
@@ -242,10 +253,11 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
      * @param dimensionsFiltre mapa que conté les dimensions i els seus valors per aplicar com a criteris de filtre a la consulta
      * @param indicadorsAgregacio llista d'indicadors amb informació sobre l'agregació i la unitat temporal associada
      * @param tempsAgregacio unitat temporal per a l'agregació principal de les dades
+     * @param seguretat Restricció de seguretat d'entitat/òrgan a aplicar (null si l'usuari n'és exempt).
      * @return consulta SQL com a cadena de text per obtenir les dades del gràfic
      */
     @Override
-    public String getGraficVarisIndicadorsQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, PeriodeUnitat tempsAgregacio) {
+    public String getGraficVarisIndicadorsQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat) {
 
         boolean hasAverage = indicadorsAgregacio.stream().anyMatch(ind -> TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()));
         boolean hasDataCols = indicadorsAgregacio.stream().anyMatch(ind -> TableColumnsEnum.FIRST_SEEN.equals(ind.getAgregacio()) || TableColumnsEnum.LAST_SEEN.equals(ind.getAgregacio()));
@@ -267,7 +279,7 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
                         .collect(Collectors.toList());
 
                 return indicadorsAgregacioByPeriode.stream()
-                        .map(listaIndicadors -> getGraficVarisIndicadorsQuery(dimensionsFiltre, listaIndicadors, tempsAgregacio))
+                        .map(listaIndicadors -> getGraficVarisIndicadorsQuery(dimensionsFiltre, listaIndicadors, tempsAgregacio, seguretat))
                         .collect(Collectors.joining(" UNION "));
             }
         }
@@ -275,7 +287,7 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
         String querySelect = getTaulaQuerySelect(indicadorsAgregacio);
         String queryAgrupacio = generateGraficAgrupacioConditions(tempsAgregacio);
         String subQuerySelects = getTaulaSubQuerySelects(indicadorsAgregacio);
-        String queryConditions = generateDimensionConditions(dimensionsFiltre);
+        String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
         String subQueryGrouping = generateGroupConditions(avgUnitat);
         String queryGrouping = generateGroupConditions(tempsAgregacio);
 
@@ -295,7 +307,7 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
     }
 
     @Override
-    public String getTaulaQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, String dimensioAgrupacioCodi) {
+    public String getTaulaQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, String dimensioAgrupacioCodi, SeguretatFiltreSql seguretat) {
 
         boolean hasAverage = indicadorsAgregacio.stream().anyMatch(ind -> TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()));
         boolean hasDataCols = indicadorsAgregacio.stream().anyMatch(ind -> TableColumnsEnum.FIRST_SEEN.equals(ind.getAgregacio()) || TableColumnsEnum.LAST_SEEN.equals(ind.getAgregacio()));
@@ -306,7 +318,7 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
             List<IndicadorAgregacio> indicadorsNotAverage = indicadorsAgregacio.stream().filter(ind -> !TableColumnsEnum.AVERAGE.equals(ind.getAgregacio())).collect(Collectors.toList());
 
             // Generem una consulta amb el format especial per a UNION
-            return generaMixedUnionQuery(dimensionsFiltre, indicadorsAverage, indicadorsNotAverage, dimensioAgrupacioCodi);
+            return generaMixedUnionQuery(dimensionsFiltre, indicadorsAverage, indicadorsNotAverage, dimensioAgrupacioCodi, seguretat);
         }
 
         PeriodeUnitat unitat = indicadorsAgregacio.get(0).getUnitatAgregacio();
@@ -324,14 +336,14 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
                         .collect(Collectors.toList());
 
                 // Generem una consulta amb el format especial per a UNION
-                return generaAvgUnionQuery(dimensionsFiltre, indicadorsAgrupatsByPeriode, dimensioAgrupacioCodi);
+                return generaAvgUnionQuery(dimensionsFiltre, indicadorsAgrupatsByPeriode, dimensioAgrupacioCodi, seguretat);
             }
         }
 
         IndicadorAgregacio primerIndicador = indicadorsAgregacio.get(0);
         String querySelect = getTaulaQuerySelect(indicadorsAgregacio);
         String subQuerySelects = getTaulaSubQuerySelects(indicadorsAgregacio);
-        String queryConditions = generateDimensionConditions(dimensionsFiltre);
+        String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
         String queryGrouping = generateGroupConditions(hasAverage, primerIndicador.getUnitatAgregacio());
         String queryAgrupacio = getDimensionValueQuery(dimensioAgrupacioCodi);
 
@@ -355,9 +367,10 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
      * @param dimensionsFiltre Filtre de dimensions
      * @param indicadorsLists Llista de llistes d'indicadors agrupats per algun criteri
      * @param dimensioAgrupacioCodi Codi de la dimensió d'agrupació
+     * @param seguretat Restricció de seguretat d'entitat/òrgan a aplicar (null si l'usuari n'és exempt).
      * @return Consulta SQL amb format especial per a UNION
      */
-    private String generaAvgUnionQuery(Map<String, List<String>> dimensionsFiltre, List<List<IndicadorAgregacio>> indicadorsLists, String dimensioAgrupacioCodi) {
+    private String generaAvgUnionQuery(Map<String, List<String>> dimensionsFiltre, List<List<IndicadorAgregacio>> indicadorsLists, String dimensioAgrupacioCodi, SeguretatFiltreSql seguretat) {
         // Obtenim tots els indicadors en l'ordre original
         List<IndicadorAgregacio> allIndicadors = indicadorsLists.stream()
                 .flatMap(List::stream)
@@ -365,7 +378,7 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
 
         // Generem les subconsultes per a cada llista d'indicadors
         String unionSubqueries = indicadorsLists.stream()
-                .map(indicadors -> generateUnionSubquery(dimensionsFiltre, indicadors, dimensioAgrupacioCodi, allIndicadors))
+                .map(indicadors -> generateUnionSubquery(dimensionsFiltre, indicadors, dimensioAgrupacioCodi, allIndicadors, seguretat))
                 .collect(Collectors.joining(" UNION ALL "));
 
         return generaUnionQuery(allIndicadors, unionSubqueries);
@@ -378,17 +391,18 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
      * @param indicadorsAverage Llista d'indicadors amb agregació AVERAGE
      * @param indicadorsNotAverage Llista d'indicadors sense agregació AVERAGE
      * @param dimensioAgrupacioCodi Codi de la dimensió d'agrupació
+     * @param seguretat Restricció de seguretat d'entitat/òrgan a aplicar (null si l'usuari n'és exempt).
      * @return Consulta SQL amb format especial per a UNION
      */
-    private String generaMixedUnionQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAverage, List<IndicadorAgregacio> indicadorsNotAverage, String dimensioAgrupacioCodi) {
+    private String generaMixedUnionQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAverage, List<IndicadorAgregacio> indicadorsNotAverage, String dimensioAgrupacioCodi, SeguretatFiltreSql seguretat) {
         // Obtenim tots els indicadors en l'ordre original
         List<IndicadorAgregacio> allIndicadors = new java.util.ArrayList<>();
         allIndicadors.addAll(indicadorsAverage);
         allIndicadors.addAll(indicadorsNotAverage);
 
         // Generem les subconsultes per a cada tipus d'indicador
-        String averageSubquery = generateUnionSubquery(dimensionsFiltre, indicadorsAverage, dimensioAgrupacioCodi, allIndicadors);
-        String notAverageSubquery = generateUnionSubquery(dimensionsFiltre, indicadorsNotAverage, dimensioAgrupacioCodi, allIndicadors);
+        String averageSubquery = generateUnionSubquery(dimensionsFiltre, indicadorsAverage, dimensioAgrupacioCodi, allIndicadors, seguretat);
+        String notAverageSubquery = generateUnionSubquery(dimensionsFiltre, indicadorsNotAverage, dimensioAgrupacioCodi, allIndicadors, seguretat);
         String unionSubqueries = averageSubquery + " UNION ALL " + notAverageSubquery;
 
         return generaUnionQuery(allIndicadors, unionSubqueries);
@@ -425,9 +439,10 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
      * @param dimensionsFiltre Filtre de dimensions
      * @param indicadors Llista d'indicadors
      * @param dimensioAgrupacioCodi Codi de la dimensió d'agrupació
+     * @param seguretat Restricció de seguretat d'entitat/òrgan a aplicar (null si l'usuari n'és exempt).
      * @return Subconsulta SQL
      */
-    private String generateUnionSubquery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadors, String dimensioAgrupacioCodi, List<IndicadorAgregacio> allIndicadors) {
+    private String generateUnionSubquery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadors, String dimensioAgrupacioCodi, List<IndicadorAgregacio> allIndicadors, SeguretatFiltreSql seguretat) {
         if (indicadors.isEmpty()) {
             return "";
         }
@@ -455,7 +470,7 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
                 : "";
 
         String subQuerySelects = getTaulaSubQuerySelects(indicadors);
-        String queryConditions = generateDimensionConditions(dimensionsFiltre);
+        String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
         String queryGrouping = generateGroupConditions(avgUnitat) + ", ";
         String queryAgrupacio = getDimensionValueQuery(dimensioAgrupacioCodi);
 
@@ -524,27 +539,67 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
      *
      * @param dimensionsFiltre Un mapa on la clau és el codi de la dimensió i el valor és una llista de valors a filtrar.
      *                         Si el mapa és null o buit, es retorna una cadena buida.
+     * @param seguretat Restricció de seguretat d'entitat/òrgan a aplicar (null si no cal cap restricció).
      * @return Una cadena que representa la condició SQL generada. Si no hi ha condicions vàlides, retorna una cadena buida.
      */
-    static String generateDimensionConditions(Map<String, List<String>> dimensionsFiltre) {
-        if (dimensionsFiltre == null || dimensionsFiltre.isEmpty()) {
+    static String generateDimensionConditions(Map<String, List<String>> dimensionsFiltre, SeguretatFiltreSql seguretat) {
+        String dimensionsPart = "";
+        if (dimensionsFiltre != null && !dimensionsFiltre.isEmpty()) {
+            dimensionsPart = dimensionsFiltre.entrySet().stream()
+                    .filter(entry -> entry.getKey() != null && entry.getValue() != null && !entry.getValue().isEmpty())
+                    .map(entry -> {
+                        String codi = escapeSqlLiteral(entry.getKey());
+                        List<String> valors = entry.getValue();
+
+                        if (valors.size() == 1) {
+                            return "AND" + getDimensionValueQuery(codi) + "= '" + escapeSqlLiteral(valors.get(0)) + "' ";
+                        } else {
+                            String valorsStr = valors.stream().map(valor -> "'" + escapeSqlLiteral(valor) + "'").collect(Collectors.joining(","));
+                            return "AND" + getDimensionValueQuery(codi) + "IN (" + valorsStr + ") ";
+                        }
+                    })
+                    .collect(Collectors.joining(" "));
+        }
+        return dimensionsPart + generateSecurityCondition(seguretat);
+    }
+
+    /**
+     * Genera la condició de seguretat d'entitat/òrgan (vegeu DashboardSeguretatHelper): una unió (OR) entre com a
+     * màxim dues dimensions, ja que l'usuari ha de veure les dades si l'entitat és una de les permeses, O si l'òrgan
+     * (o un ascendent seu) ho és - a diferència de la resta de condicions d'aquest mètode, que sempre són un AND.
+     * <p>
+     * Si la restricció és aplicable (seguretat != null) però cap valor és permès (p. ex. l'usuari té permisos
+     * d'entitat/òrgan, però cap n'aplica a aquesta app en concret), es denega explícitament (fail-closed) en lloc de
+     * no afegir cap condició - el que deixaria veure totes les files.
+     */
+    private static String generateSecurityCondition(SeguretatFiltreSql seguretat) {
+        if (seguretat == null || !seguretat.isActiva()) {
             return "";
         }
+        List<String> clausules = new java.util.ArrayList<>();
+        if (seguretat.getDimensioEntitatCodi() != null && seguretat.getValorsEntitatPermesos() != null && !seguretat.getValorsEntitatPermesos().isEmpty()) {
+            clausules.add(buildSecurityInClause(seguretat.getDimensioEntitatCodi(), seguretat.getValorsEntitatPermesos()));
+        }
+        if (seguretat.getDimensioOrganCodi() != null && seguretat.getValorsOrganPermesos() != null && !seguretat.getValorsOrganPermesos().isEmpty()) {
+            clausules.add(buildSecurityInClause(seguretat.getDimensioOrganCodi(), seguretat.getValorsOrganPermesos()));
+        }
+        if (clausules.isEmpty()) {
+            return " AND 1 = 0 ";
+        }
+        return " AND (" + String.join(" OR ", clausules) + ") ";
+    }
 
-        return dimensionsFiltre.entrySet().stream()
-                .filter(entry -> entry.getKey() != null && entry.getValue() != null && !entry.getValue().isEmpty())
-                .map(entry -> {
-                    String codi = entry.getKey();
-                    List<String> valors = entry.getValue();
+    private static String buildSecurityInClause(String dimensioCodi, List<String> valors) {
+        String valorsStr = valors.stream().map(v -> "'" + escapeSqlLiteral(v) + "'").collect(Collectors.joining(","));
+        return getDimensionValueQuery(escapeSqlLiteral(dimensioCodi)) + "IN (" + valorsStr + ")";
+    }
 
-                    if (valors.size() == 1) {
-                        return "AND" + getDimensionValueQuery(codi) + "= '" + valors.get(0) + "' ";
-                    } else {
-                        String valorsStr = valors.stream().map(valor -> "'" + valor + "'").collect(Collectors.joining(","));
-                        return "AND" + getDimensionValueQuery(codi) + "IN (" + valorsStr + ") ";
-                    }
-                })
-                .collect(Collectors.joining(" "));
+    /**
+     * Escapa cometes simples per evitar SQL injection. Els valors de dimensions provenen de dades enviades per
+     * les apps externes (JSON arbitrari), així que no es poden considerar segures per a concatenació directa a SQL.
+     */
+    private static String escapeSqlLiteral(String value) {
+        return value == null ? null : value.replace("'", "''");
     }
 
     // TODO: Girar i posar any/mes/dia

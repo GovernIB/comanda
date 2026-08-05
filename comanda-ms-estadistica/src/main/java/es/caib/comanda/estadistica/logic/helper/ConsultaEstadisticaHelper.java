@@ -15,6 +15,7 @@ import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Temps;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
+import es.caib.comanda.estadistica.logic.intf.model.periode.Periode;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
@@ -71,6 +72,8 @@ public class ConsultaEstadisticaHelper {
     private final AtributsVisualsHelper atributsVisualsHelper;
     private final DashboardStyleResolverHelper dashboardStyleResolverHelper;
     private final EstadisticaClientHelper estadisticaClientHelper;
+    private final DashboardSeguretatHelper dashboardSeguretatHelper;
+    private final es.caib.comanda.ms.logic.helper.AuthenticationHelper authenticationHelper;
 
     private static DateTimeFormatter DMYYYY_FORMATTER = DateTimeFormatter.ofPattern("d/M/yyyy");
 
@@ -141,22 +144,30 @@ public class ConsultaEstadisticaHelper {
         return toFets(fets);
     }
 
-    @Cacheable(value = DASHBOARD_WIDGET_CACHE, key = "#dashboardItem.id + '_' + #temaFosc + '_' + T(java.time.LocalDate).now()")
-    public InformeWidgetItem getDadesWidget(DashboardItemEntity dashboardItem, boolean temaFosc) {
+    // La clau de cache HA d'incloure l'usuari: el resultat depèn dels seus permisos d'entitat/òrgan (vegeu
+    // DashboardSeguretatHelper), així que usuaris diferents no es poden compartir la mateixa entrada de cache.
+    @Cacheable(value = DASHBOARD_WIDGET_CACHE, key = "#dashboardItem.id + '_' + #temaFosc + '_' + (#filtreSeleccio != null ? #filtreSeleccio.cacheKey() : '') + '_' + @authenticationHelper.getCurrentUserName() + '_' + T(java.time.LocalDate).now()")
+    public InformeWidgetItem getDadesWidget(DashboardItemEntity dashboardItem, boolean temaFosc, DashboardFiltreSeleccio filtreSeleccio) {
 
         try {
             // Recarregam l'item, ja que estem en una nova transacció.
             dashboardItem = dashboardItemRepository.findById(dashboardItem.getId()).orElseThrow();
             WidgetTipus tipus = determineWidgetType(dashboardItem);
-            DadesComunsWidgetConsulta dadesComunsConsulta = getDadesComunsConsulta(dashboardItem, temaFosc);
+            DadesComunsWidgetConsulta dadesComunsConsulta = getDadesComunsConsulta(dashboardItem, temaFosc, filtreSeleccio);
+
+            SeguretatDadesResultat seguretat = dashboardSeguretatHelper.resoldre(dadesComunsConsulta.getEntornAppId());
+            if (seguretat.isSensePermisos()) {
+                return buildSenseAccesItem(dashboardItem, tipus);
+            }
+            SeguretatFiltreSql filtreSql = seguretat.getFiltreSql();
 
             switch (tipus) {
                 case SIMPLE:
-                    return getDadesWidgetSimple(dashboardItem, dadesComunsConsulta);
+                    return getDadesWidgetSimple(dashboardItem, dadesComunsConsulta, filtreSeleccio, filtreSql);
                 case GRAFIC:
-                    return getDadesWidgetGrafic(dashboardItem, dadesComunsConsulta);
+                    return getDadesWidgetGrafic(dashboardItem, dadesComunsConsulta, filtreSeleccio, filtreSql);
                 case TAULA:
-                    return getDadesWidgetTaula(dashboardItem, dadesComunsConsulta);
+                    return getDadesWidgetTaula(dashboardItem, dadesComunsConsulta, filtreSeleccio, filtreSql);
             }
         } catch (Exception e) {
             log.error("Error obtnint dades de dashboard widget: " + e.getMessage(), e);
@@ -166,19 +177,41 @@ public class ConsultaEstadisticaHelper {
         throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, "Tipus de widget incorrecte");
     }
 
+    /**
+     * Item "buit" retornat quan l'usuari no té cap permís d'entitat ni d'òrgan enlloc del sistema (vegeu
+     * DashboardSeguretatHelper) - el frontend ha de mostrar un missatge informatiu en lloc d'intentar renderitzar
+     * dades (que, deliberadament, no s'arriben ni a consultar).
+     */
+    private InformeWidgetItem buildSenseAccesItem(DashboardItemEntity dashboardItem, WidgetTipus tipus) {
+        return InformeWidgetItem.builder()
+            .dashboardItemId(dashboardItem.getId())
+            .widgetId(dashboardItem.getWidget().getId())
+            .tipus(tipus)
+            .titol(dashboardItem.getWidget().getTitol())
+            .posX(dashboardItem.getPosX())
+            .posY(dashboardItem.getPosY())
+            .width(dashboardItem.getWidth())
+            .height(dashboardItem.getHeight())
+            .destacat(Boolean.TRUE.equals(dashboardItem.getDestacat()))
+            .senseAccesDades(true)
+            .build();
+    }
+
     private InformeWidgetItem getDadesWidgetSimple(DashboardItemEntity dashboardItem,
-                                                   DadesComunsWidgetConsulta dadesComunsConsulta) {
+                                                   DadesComunsWidgetConsulta dadesComunsConsulta,
+                                                   DashboardFiltreSeleccio filtreSeleccio,
+                                                   SeguretatFiltreSql seguretat) {
 
         EstadisticaSimpleWidgetEntity widget = (EstadisticaSimpleWidgetEntity) dashboardItem.getWidget();
         TableColumnsEnum agregacio = widget.getIndicadorInfo().getAgregacio();
 //        Format format = widget.getIndicadorInfo().getIndicador().getFormat();
         boolean compararPeriodeAnterior = widget.isCompararPeriodeAnterior() && !TableColumnsEnum.FIRST_SEEN.equals(agregacio) && !TableColumnsEnum.LAST_SEEN.equals(agregacio);
-        String valorConsulta = calculateValorSimple(widget, dadesComunsConsulta.getPeriodeDates(), dadesComunsConsulta.getEntornAppId());
+        String valorConsulta = calculateValorSimple(widget, dadesComunsConsulta.getPeriodeDates(), dadesComunsConsulta.getEntornAppId(), filtreSeleccio, seguretat);
         PeriodeDates periodePrevi = compararPeriodeAnterior
             ? PeriodeResolverHelper.resolvePreviousPeriod(widget.getPeriode(), dadesComunsConsulta.getPeriodeDates())
             : null;
         String valorConsultaPrevia = compararPeriodeAnterior
-            ? calculateCanviPercentual(widget, valorConsulta, periodePrevi, dadesComunsConsulta.getEntornAppId())
+            ? calculateCanviPercentual(widget, valorConsulta, periodePrevi, dadesComunsConsulta.getEntornAppId(), filtreSeleccio, seguretat)
             : null;
 
         return InformeWidgetSimpleItem.builder()
@@ -201,14 +234,14 @@ public class ConsultaEstadisticaHelper {
     }
 
     private InformeWidgetItem getDadesWidgetGrafic(DashboardItemEntity dashboardItem,
-                                                   DadesComunsWidgetConsulta dadesComunsConsulta) {
+                                                   DadesComunsWidgetConsulta dadesComunsConsulta,
+                                                   DashboardFiltreSeleccio filtreSeleccio,
+                                                   SeguretatFiltreSql seguretat) {
 
         EstadisticaGraficWidgetEntity widget = (EstadisticaGraficWidgetEntity) dashboardItem.getWidget();
         PeriodeUnitat tempsAgrupacio = widget.getTempsAgrupacio();
-        // Mapa de dimensions per filtrar la consulta
-        Map<String, List<String>> dimensionsFiltre = widget.getDimensionsValor() != null && !widget.getDimensionsValor().isEmpty()
-            ? createDimensionsFiltre(widget.getDimensionsValor())
-            : new HashMap<>();
+        // Mapa de dimensions per filtrar la consulta (pròpies del widget + selecció de filtres del dashboard)
+        Map<String, List<String>> dimensionsFiltre = resolveDimensionsFiltre(widget, dadesComunsConsulta.getEntornAppId(), filtreSeleccio);
 
         List<Map<String, String>> labels = new ArrayList<>();
         List<Map<String, String>> files = new ArrayList<>();
@@ -233,7 +266,8 @@ public class ConsultaEstadisticaHelper {
                     dadesComunsConsulta.getPeriodeDates().getEnd(),
                     dimensionsFiltre,
                     indicadorAgregacio,
-                    tempsAgrupacio);
+                    tempsAgrupacio,
+                    seguretat);
                 // files: [{'agrupacio': '', 'indicadorAgregacio.getIndicadorCodi()': ''}]
 
             } else if (UN_INDICADOR_AMB_DESCOMPOSICIO.equals(widget.getTipusDades())) {
@@ -249,7 +283,8 @@ public class ConsultaEstadisticaHelper {
                         dadesComunsConsulta.getPeriodeDates().getEnd(),
                         dimensionsFiltre,
                         indicadorAgregacio,
-                        descomposicioDimensio.getCodi());
+                        descomposicioDimensio.getCodi(),
+                        seguretat);
                     // files: [{'agrupacio': '', 'indicadorAgregacio.getIndicadorCodi()': ''}]
 
                 } else {
@@ -263,7 +298,8 @@ public class ConsultaEstadisticaHelper {
                         dimensionsFiltre,
                         indicadorAgregacio,
                         descomposicioDimensio.getCodi(),
-                        tempsAgrupacio);
+                        tempsAgrupacio,
+                        seguretat);
                     // files: [{'agrupacio': '', 'descomposicio': '', 'indicadorAgregacio.getIndicadorCodi()': ''}]
 
                 }
@@ -292,7 +328,8 @@ public class ConsultaEstadisticaHelper {
                 dadesComunsConsulta.getPeriodeDates().getEnd(),
                 dimensionsFiltre,
                 indicadorsAgregacio,
-                tempsAgrupacio);
+                tempsAgrupacio,
+                seguretat);
 
             // files: [{'agrupacio': '', 'col1': '', .. , 'colN': ''}]
 
@@ -499,12 +536,15 @@ public class ConsultaEstadisticaHelper {
 
 
     private InformeWidgetItem getDadesWidgetTaula(DashboardItemEntity dashboardItem,
-                                                  DadesComunsWidgetConsulta dadesComunsConsulta) throws ReportGenerationException {
+                                                  DadesComunsWidgetConsulta dadesComunsConsulta,
+                                                  DashboardFiltreSeleccio filtreSeleccio,
+                                                  SeguretatFiltreSql seguretat) throws ReportGenerationException {
         EstadisticaTaulaWidgetEntity widget = (EstadisticaTaulaWidgetEntity) dashboardItem.getWidget();
-        // Mapa de dimensions per filtrar la consulta
-        Map<String, List<String>> dimensionsFiltre = widget.getDimensionsValor() != null && !widget.getDimensionsValor().isEmpty()
-            ? createDimensionsFiltre(widget.getDimensionsValor())
-            : new HashMap<>();
+        if (widget.getDimensioAgrupacio() == null) {
+            throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, "El widget de taula no té cap dimensió d'agrupació configurada");
+        }
+        // Mapa de dimensions per filtrar la consulta (pròpies del widget + selecció de filtres del dashboard)
+        Map<String, List<String>> dimensionsFiltre = resolveDimensionsFiltre(widget, dadesComunsConsulta.getEntornAppId(), filtreSeleccio);
         // Indicadors a calcular
         List<IndicadorAgregacio> indicadorsAgregacio = widget.getColumnes().stream()
             .map(columna -> IndicadorAgregacio.builder()
@@ -514,10 +554,15 @@ public class ConsultaEstadisticaHelper {
                 .build())
             .collect(Collectors.toList());
         // Dimensió utilitzada per agrupar
-        String dimensioAgrupacioCodi = widget.getDimensioAgrupacio() != null ? widget.getDimensioAgrupacio().getCodi() : null;
+        String dimensioAgrupacioCodi = widget.getDimensioAgrupacio().getCodi();
+        // Títol efectiu de l'agrupament: sobreescriptura del widget si n'hi ha, si no el nom de la dimensió
+        // (abans es retornava widget.getDimensioAgrupacio().getDescripcio(), que no coincidia amb l'etiqueta de columna real)
+        String titolAgrupacioEfectiu = widget.getTitolAgrupament() != null && !widget.getTitolAgrupament().isBlank()
+            ? widget.getTitolAgrupament()
+            : widget.getDimensioAgrupacio().getNom();
 
         List<Map<String, String>> columnes = new ArrayList<>();
-        columnes.add(Map.of("id", "agrupacio", "label", widget.getTitolAgrupament() != null ? widget.getTitolAgrupament() : widget.getDimensioAgrupacio().getNom()));
+        columnes.add(Map.of("id", "agrupacio", "label", titolAgrupacioEfectiu));
         IntStream.range(0, widget.getColumnes().size()).forEach(index -> {
             var columna = widget.getColumnes().get(index);
             columnes.add(Map.of("id", "col" + (index + 1), "label", columna.getTitol()));
@@ -529,7 +574,8 @@ public class ConsultaEstadisticaHelper {
             dadesComunsConsulta.getPeriodeDates().getEnd(),
             dimensionsFiltre,
             indicadorsAgregacio,
-            dimensioAgrupacioCodi);
+            dimensioAgrupacioCodi,
+            seguretat);
 
         DimensioEntity dimensioEntity = dimensioRepository.findByCodiAndEntornAppId(dimensioAgrupacioCodi, dadesComunsConsulta.getEntornAppId()).orElse(null);
         if (dimensioEntity != null && TipusDimensioEnum.TIPUS_AMB_UNITAT_ORG.contains(dimensioEntity.getTipus())) {
@@ -552,7 +598,7 @@ public class ConsultaEstadisticaHelper {
             .tipus(WidgetTipus.TAULA)
             .entornCodi(dadesComunsConsulta.getEntornCodi())
             .titol(widget.getTitol())
-            .titolAgrupament(widget.getDimensioAgrupacio().getDescripcio())
+            .titolAgrupament(titolAgrupacioEfectiu)
             .columnes(columnes)
             .files(files)
             .atributsVisuals((AtributsVisualsTaula) dadesComunsConsulta.getAtributsVisuals())
@@ -599,7 +645,9 @@ public class ConsultaEstadisticaHelper {
 
     private String calculateValorSimple(EstadisticaSimpleWidgetEntity widget,
                                         PeriodeDates periodeConsulta,
-                                        Long entornAppId) {
+                                        Long entornAppId,
+                                        DashboardFiltreSeleccio filtreSeleccio,
+                                        SeguretatFiltreSql seguretat) {
         if (periodeConsulta == null || periodeConsulta.start == null || periodeConsulta.end == null) {
             return null;
         }
@@ -617,11 +665,8 @@ public class ConsultaEstadisticaHelper {
             .unitatAgregacio(unitatAgregacio)
             .build();
 
-        // Mapa de dimensions per filtrar la consulta
-        Map<String, List<String>> dimensionsFiltre = widget.getDimensionsValor() != null && !widget.getDimensionsValor().isEmpty()
-            ? createDimensionsFiltre(widget.getDimensionsValor())
-            : new HashMap<>();
-
+        // Mapa de dimensions per filtrar la consulta (pròpies del widget + selecció de filtres del dashboard)
+        Map<String, List<String>> dimensionsFiltre = resolveDimensionsFiltre(widget, entornAppId, filtreSeleccio);
 
         // Get the aggregated value directly from the database
         return fetRepository.getValorSimpleAgregat(
@@ -629,13 +674,16 @@ public class ConsultaEstadisticaHelper {
             periodeConsulta.start,
             periodeConsulta.end,
             dimensionsFiltre,
-            indicadorAgregacio);
+            indicadorAgregacio,
+            seguretat);
     }
 
     private String calculateCanviPercentual(EstadisticaSimpleWidgetEntity widget,
                                             String valorConsulta,
                                             PeriodeDates periodePrevi,
-                                            Long entornAppId) {
+                                            Long entornAppId,
+                                            DashboardFiltreSeleccio filtreSeleccio,
+                                            SeguretatFiltreSql seguretat) {
         if (!widget.isCompararPeriodeAnterior()
             || periodePrevi == null || periodePrevi.start == null || periodePrevi.end == null) {
             return null;
@@ -646,7 +694,7 @@ public class ConsultaEstadisticaHelper {
         }
 
         // Calcula el valor pel període previ
-        String valorConsultaPrevia = calculateValorSimple(widget, periodePrevi, entornAppId);
+        String valorConsultaPrevia = calculateValorSimple(widget, periodePrevi, entornAppId, filtreSeleccio, seguretat);
         Double resultatPrevi = toDouble(valorConsultaPrevia);
         if (resultatPrevi == null) {
             return null;
@@ -668,11 +716,15 @@ public class ConsultaEstadisticaHelper {
         throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, "Tipus de widget incorrecte");
     }
 
-    private DadesComunsWidgetConsulta getDadesComunsConsulta(DashboardItemEntity dashboardItem, boolean temaFosc) {
+    private DadesComunsWidgetConsulta getDadesComunsConsulta(DashboardItemEntity dashboardItem, boolean temaFosc, DashboardFiltreSeleccio filtreSeleccio) {
         EstadisticaWidgetEntity widget = dashboardItem.getWidget();
         var entornApp = estadisticaClientHelper.entornAppFindByAppAndEntorn(widget.getAppId(), dashboardItem.getEntornId());
         var entorn = estadisticaClientHelper.entornById(entornApp.getEntorn().getId());
-        PeriodeDates periodeDates = PeriodeResolverHelper.resolvePeriod(widget.getPeriode());
+        // El període seleccionat pel filtre de capçalera del dashboard, si n'hi ha, sobreescriu el període propi del widget.
+        Periode periodeEfectiu = filtreSeleccio != null && filtreSeleccio.hasPeriodeOverride()
+            ? filtreSeleccio.getPeriode()
+            : widget.getPeriode();
+        PeriodeDates periodeDates = PeriodeResolverHelper.resolvePeriod(periodeEfectiu);
         AtributsVisuals atributsVisuals = resolveAtributsVisuals(dashboardItem, temaFosc);
 
         return DadesComunsWidgetConsulta.builder()
@@ -681,6 +733,30 @@ public class ConsultaEstadisticaHelper {
             .periodeDates(periodeDates)
             .atributsVisuals(atributsVisuals)
             .build();
+    }
+
+    /**
+     * Combina el filtre de dimensions propi del widget amb la selecció de filtres de capçalera del dashboard.
+     * Un filtre de dashboard només s'aplica si el widget pertany a un entorn d'aplicació que realment té una
+     * dimensió amb aquest codi - si no, el widget pertany a una altra app i el filtre se n'ignora (no es buida
+     * el widget mostrant zero resultats per un filtre que no li és aplicable).
+     */
+    private Map<String, List<String>> resolveDimensionsFiltre(EstadisticaWidgetEntity widget, Long entornAppId, DashboardFiltreSeleccio filtreSeleccio) {
+        Map<String, List<String>> result = widget.getDimensionsValor() != null && !widget.getDimensionsValor().isEmpty()
+            ? createDimensionsFiltre(widget.getDimensionsValor())
+            : new LinkedHashMap<>();
+        if (filtreSeleccio == null || filtreSeleccio.getDimensions() == null) {
+            return result;
+        }
+        filtreSeleccio.getDimensions().forEach((codi, valors) -> {
+            if (codi == null || valors == null || valors.isEmpty()) {
+                return;
+            }
+            if (dimensioRepository.findByCodiAndEntornAppId(codi, entornAppId).isPresent()) {
+                result.put(codi, valors);
+            }
+        });
+        return result;
     }
 
     public AtributsVisuals resolveAtributsVisuals(DashboardItemEntity dashboardItem, boolean temaFosc) {

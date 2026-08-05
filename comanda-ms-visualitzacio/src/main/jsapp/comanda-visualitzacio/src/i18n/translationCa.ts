@@ -383,6 +383,12 @@ const translationCa = {
                 readAllowed: "Consulta de taulers de control",
                 writeAllowed: "Disseny de taulers de control",
             },
+            sideMenu: {
+                filtresTitle: "Filtres del tauler de control",
+                addFiltre: "Afegir filtre",
+                noFiltres: "Cap filtre configurat",
+                periode: "Període",
+            },
             cloneDashboard: {
                 title: "Clonar el tauler de control",
                 success: "Tauler de controls clonat correctament",
@@ -1134,6 +1140,13 @@ const translationCa = {
                 deleted: "Element eliminat",
                 deleteError: "No s’ha pogut eliminar",
                 selectType: "Seleccionau un tipus per veure les propietats configurables.",
+                filtre: {
+                    tipus: "Tipus de filtre",
+                    dimensio: "Dimensió",
+                    titol: "Etiqueta",
+                    multiple: "Selecció múltiple",
+                    ordre: "Ordre",
+                },
             },
         },
         caches: {

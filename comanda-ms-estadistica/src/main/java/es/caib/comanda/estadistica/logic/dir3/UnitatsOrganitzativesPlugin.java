@@ -23,6 +23,19 @@ public interface UnitatsOrganitzativesPlugin {
 
     public List<UnitatOrganitzativaEntity> findAll(String codi) throws SistemaExternException;
 
+    /**
+     * Retorna el codi de conselleria d'una unitat, pujant per l'arbre d'unitats fins a l'arrel per defecte
+     * (paràmetre de configuració del govern, o el fallback intern si no està configurat).
+     */
     public String getConselleria(String codi);
+
+    /**
+     * Retorna el codi de conselleria d'una unitat, pujant per l'arbre d'unitats fins a l'arrel indicada
+     * (normalment el codiDir3 de l'Entitat a la qual pertany el fet, en lloc de l'arrel per defecte del govern).
+     *
+     * @param codi codi Dir3 de la unitat (òrgan gestor) de la qual es vol la conselleria
+     * @param arrelCodi codi Dir3 de l'arrel a partir de la qual s'ha de considerar que ja no hi ha conselleria
+     */
+    public String getConselleria(String codi, String arrelCodi);
 
 }

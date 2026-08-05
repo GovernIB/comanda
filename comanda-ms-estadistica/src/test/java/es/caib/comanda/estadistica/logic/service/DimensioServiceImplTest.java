@@ -1,6 +1,6 @@
 package es.caib.comanda.estadistica.logic.service;
 
-import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesPlugin;
+import es.caib.comanda.estadistica.logic.helper.EntitatResolverHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio;
@@ -47,7 +47,7 @@ class DimensioServiceImplTest {
     private FetRepository fetRepository;
 
     @Mock
-    private UnitatsOrganitzativesPlugin unitatsOrganitzativesPlugin;
+    private EntitatResolverHelper entitatResolverHelper;
 
     @Mock
     private DimensioRepository dimensioRepository;
@@ -227,7 +227,7 @@ class DimensioServiceImplTest {
         fet.setDimensionsJson(dimensionsJson);
 
         when(fetRepository.findByEntornAppIdAddCons(1L, "TEST_ORGAN", null)).thenReturn(Arrays.asList(fet));
-        when(unitatsOrganitzativesPlugin.getConselleria("ORG123")).thenReturn("CONS456");
+        when(entitatResolverHelper.resolveConselleria(eq(1L), eq("ORG123"), any())).thenReturn("CONS456");
 
         // Act
         Dimensio result = dimensioService.new FetConsActionExecutor().exec("FET_CONS", entity, null);
@@ -257,7 +257,7 @@ class DimensioServiceImplTest {
         fet.setDimensionsJson(dimensionsJson);
 
         when(fetRepository.findByEntornAppIdAddCons(1L, "TEST_ORGAN", null)).thenReturn(Arrays.asList(fet));
-        when(unitatsOrganitzativesPlugin.getConselleria("ORG123")).thenReturn(null);
+        when(entitatResolverHelper.resolveConselleria(eq(1L), eq("ORG123"), any())).thenReturn(null);
 
         // Act
         Dimensio result = dimensioService.new FetConsActionExecutor().exec("FET_CONS", entity, null);
@@ -280,7 +280,7 @@ class DimensioServiceImplTest {
         Dimensio result = dimensioService.new FetConsActionExecutor().exec("FET_CONS", entity, null);
 
         // Assert
-        verifyNoInteractions(dimensioRepository, fetRepository, unitatsOrganitzativesPlugin);
+        verifyNoInteractions(dimensioRepository, fetRepository, entitatResolverHelper);
     }
 
     @Test

@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.persist.repository.dialect;
 
 import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
+import es.caib.comanda.estadistica.logic.intf.model.consulta.SeguretatFiltreSql;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 
@@ -51,7 +52,7 @@ public interface FetRepositoryDialect {
     String getFindByEntornAppIdAndTempsDataBetweenAndDimensionQuery(Map<String, List<String>> dimensionsFiltre);
 
     /**
-     * Genera una consulta SQL per obtenir un valor agregat d'un indicador específic basat en l'entornAppId, 
+     * Genera una consulta SQL per obtenir un valor agregat d'un indicador específic basat en l'entornAppId,
      * un rang de dates específic, valors dimensionals i un tipus d'agregació.
      * Aquesta consulta aplica l'agregació directament a la base de dades, optimitzant el rendiment.
      *
@@ -62,9 +63,9 @@ public interface FetRepositoryDialect {
      * @param agregacio El tipus d'agregació a aplicar (COUNT, SUM, AVERAGE, etc.).
      * @return Una cadena de text que representa la consulta SQL generada per obtenir el valor agregat.
      */
-    String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio);
+    String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio, SeguretatFiltreSql seguretat);
 
-    String getGraficUnIndicadorQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, PeriodeUnitat tempsAgregacio);
+    String getGraficUnIndicadorQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat);
 
     // SELECT
     //     t.dia || '/' || t.mes || + '/' || t.anualitat as agrupacio,
@@ -76,7 +77,7 @@ public interface FetRepositoryDialect {
     //   AND JSON_VALUE(f.dimensions_json, '$."ENT"') = '1641'
     // GROUP BY t.anualitat, t.mes, t.dia, JSON_VALUE(f.dimensions_json, '$."ORG"')
     // ORDER BY agrupacio, descomposicio
-    String getGraficUnIndicadorAmbDescomposicioAndAgrupacioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio);
+    String getGraficUnIndicadorAmbDescomposicioAndAgrupacioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat);
 
     // -- Consulta SQL d'exemple per a widget grafic 1 indicador amb descomposició, agrupant per la descomposició
     // SELECT
@@ -95,10 +96,10 @@ public interface FetRepositoryDialect {
     //         GROUP BY JSON_VALUE(f.dimensions_json, '$."ORG"')
     //     )
     // GROUP BY agrupacio;
-    String getGraficUnIndicadorAmbDescomposicioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi);
+    String getGraficUnIndicadorAmbDescomposicioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, SeguretatFiltreSql seguretat);
 
-    String getGraficVarisIndicadorsQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, PeriodeUnitat tempsAgregacio);
+    String getGraficVarisIndicadorsQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat);
 
-    String getTaulaQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, String dimensioAgrupacioCode);
+    String getTaulaQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, String dimensioAgrupacioCode, SeguretatFiltreSql seguretat);
 
 }

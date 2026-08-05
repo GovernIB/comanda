@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.persist.repository;
 
 import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
+import es.caib.comanda.estadistica.logic.intf.model.consulta.SeguretatFiltreSql;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 
@@ -29,8 +30,8 @@ public interface FetRepositoryCustom {
      * @return Llista d'entitats FetEntity
      */
     List<FetEntity> findByEntornAppIdAndTempsDataBetweenAndDimensionValue(
-            Long entornAppId, 
-            LocalDate dataInici, 
+            Long entornAppId,
+            LocalDate dataInici,
             LocalDate dataFi,
             String dimensioCodi,
             String dimensioValor);
@@ -47,8 +48,8 @@ public interface FetRepositoryCustom {
      * @return Llista d'entitats FetEntity que compleixen els criteris especificats.
      */
     List<FetEntity> findByEntornAppIdAndTempsDataBetweenAndDimensionValues(
-            Long entornAppId, 
-            LocalDate dataInici, 
+            Long entornAppId,
+            LocalDate dataInici,
             LocalDate dataFi,
             String dimensioCodi,
             List<String> valors);
@@ -86,7 +87,7 @@ public interface FetRepositoryCustom {
             Map<String, List<String>> dimensionsFiltre);
 
     /**
-     * Obté un valor agregat d'un indicador específic basat en l'entornAppId, un rang de dates específic, 
+     * Obté un valor agregat d'un indicador específic basat en l'entornAppId, un rang de dates específic,
      * valors dimensionals i un tipus d'agregació.
      * Aquesta consulta aplica l'agregació directament a la base de dades, optimitzant el rendiment.
      *
@@ -96,6 +97,7 @@ public interface FetRepositoryCustom {
      * @param dimensionsFiltre Map que conté com a clau el codi de cada dimensió i com a valor la llista de valors associats
      *                         a aquesta dimensió per aplicar com a criteri de filtre.
      * @param indicadorAgregacio Informació de l'indicador sobre el qual s'aplicarà l'agregació.
+     * @param seguretat Restricció de seguretat d'entitat/òrgan a aplicar (null si l'usuari n'és exempt).
      * @return El valor agregat calculat directament a la base de dades.
      */
     String getValorSimpleAgregat(
@@ -103,7 +105,8 @@ public interface FetRepositoryCustom {
             LocalDate dataInici,
             LocalDate dataFi,
             Map<String, List<String>> dimensionsFiltre,
-            IndicadorAgregacio indicadorAgregacio);
+            IndicadorAgregacio indicadorAgregacio,
+            SeguretatFiltreSql seguretat);
 
     List<Map<String, String>> getValorsGraficUnIndicador(
             Long entornAppId,
@@ -111,7 +114,8 @@ public interface FetRepositoryCustom {
             LocalDate dataFi,
             Map<String, List<String>> dimensionsFiltre,
             IndicadorAgregacio indicadorAgregacio,
-            PeriodeUnitat tempsAgregacio);
+            PeriodeUnitat tempsAgregacio,
+            SeguretatFiltreSql seguretat);
 
     List<Map<String, String>> getValorsGraficUnIndicadorAmdDescomposicio(
             Long entornAppId,
@@ -120,7 +124,8 @@ public interface FetRepositoryCustom {
             Map<String, List<String>> dimensionsFiltre,
             IndicadorAgregacio indicadorAgregacio,
             String dimensioDescomposicioCodi,
-            PeriodeUnitat tempsAgregacio);
+            PeriodeUnitat tempsAgregacio,
+            SeguretatFiltreSql seguretat);
 
     List<Map<String, String>> getValorsGraficUnIndicadorAmdDescomposicio(
             Long entornAppId,
@@ -128,7 +133,8 @@ public interface FetRepositoryCustom {
             LocalDate dataFi,
             Map<String, List<String>> dimensionsFiltre,
             IndicadorAgregacio indicadorAgregacio,
-            String dimensioDescomposicioCodi);
+            String dimensioDescomposicioCodi,
+            SeguretatFiltreSql seguretat);
 
     List<Map<String, String>> getValorsGraficVarisIndicadors(
             Long entornAppId,
@@ -136,7 +142,8 @@ public interface FetRepositoryCustom {
             LocalDate dataFi,
             Map<String, List<String>> dimensionsFiltre,
             List<IndicadorAgregacio> indicadorsAgregacio,
-            PeriodeUnitat tempsAgregacio);
+            PeriodeUnitat tempsAgregacio,
+            SeguretatFiltreSql seguretat);
 
     List<Map<String, String>> getValorsTaulaAgregat(
             Long entornAppId,
@@ -144,6 +151,7 @@ public interface FetRepositoryCustom {
             LocalDate dataFi,
             Map<String, List<String>> dimensionsFiltre,
             List<IndicadorAgregacio> indicadorsAgregacio,
-            String dimensioAgrupacioCodi);
+            String dimensioAgrupacioCodi,
+            SeguretatFiltreSql seguretat);
 
 }

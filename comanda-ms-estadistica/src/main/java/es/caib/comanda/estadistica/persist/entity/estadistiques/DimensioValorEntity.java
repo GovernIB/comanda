@@ -63,4 +63,17 @@ public class DimensioValorEntity extends BaseEntity<DimensioValor> {
     @Column(name = "valor_agrupacio", length = 255)
     private String valorAgrupacio;
 
+    /**
+     * Sobreescriptura manual de l'entitat a la qual correspon aquest valor, per als casos en què el valor rebut no
+     * coincideix exactament amb el codi (o codiDir3) de cap EntitatEntity. Només rellevant quan dimensio.tipus=ENTITAT.
+     * Si és null, la relació es resol automàticament comparant `valor` amb Entitat.codi o Entitat.codiDir3 segons
+     * dimensio.entitatValorTipus.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "entitat_mapejada_id",
+            referencedColumnName = "id",
+            foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "dim_valor_entitat_fk"))
+    private EntitatEntity entitatMapejada;
+
 }

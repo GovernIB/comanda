@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
     showFormDialogMock: vi.fn(),
     useDashboardMock: vi.fn(),
     useDashboardWidgetsMock: vi.fn(),
+    useDashboardFiltresMock: vi.fn(),
     useMapDashboardItemsMock: vi.fn(),
     createDashboardItemMock: vi.fn(),
     patchDashboardItemMock: vi.fn(),
@@ -48,6 +49,12 @@ const mocks = vi.hoisted(() => ({
                         tornarLlistat: 'Tornar al llistat',
                         notExists: 'Dashboard inexistent',
                         carregar: 'Error de càrrega',
+                    },
+                    sideMenu: {
+                        filtresTitle: 'Filtres del tauler de control',
+                        addFiltre: 'Afegir filtre',
+                        noFiltres: 'Cap filtre configurat',
+                        periode: 'Període',
                     },
                 },
                 widget: {
@@ -249,6 +256,7 @@ vi.mock('../../lib/components/mui/form/FormDialog.tsx', () => ({
 vi.mock('../hooks/dashboardRequests.ts', () => ({
     useDashboard: (id: string) => mocks.useDashboardMock(id),
     useDashboardWidgets: (id: string) => mocks.useDashboardWidgetsMock(id),
+    useDashboardFiltres: (id: string) => mocks.useDashboardFiltresMock(id),
 }));
 
 vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', () => ({
@@ -338,6 +346,11 @@ describe('EstadisticaDashboardEdit', () => {
             dashboardWidgets: [{ dashboardItemId: 1 }],
             errorDashboardWidgets: [],
             loadingWidgetPositions: false,
+            forceRefresh: vi.fn(),
+        });
+        mocks.useDashboardFiltresMock.mockReturnValue({
+            dashboardFiltres: [],
+            loading: false,
             forceRefresh: vi.fn(),
         });
         mocks.useMapDashboardItemsMock.mockReturnValue([{ id: 1, x: 0, y: 0, w: 3, h: 3 }]);

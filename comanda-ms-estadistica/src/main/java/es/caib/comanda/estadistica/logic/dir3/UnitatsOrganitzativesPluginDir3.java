@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -23,6 +24,13 @@ public class UnitatsOrganitzativesPluginDir3 implements UnitatsOrganitzativesPlu
     private final UnitatsOrganitzativesRestClient unitatsOrganitzativesRestClient;
     private final Map<String, String> map = new HashMap<>();
     private volatile boolean mapInicialitzat = false;
+
+    /**
+     * Caches per a la resolució de conselleria amb una arrel diferent de la per defecte (una entitat concreta).
+     * A diferència del mapa global (`map`), aquestes es construeixen sota demanda per cada arrel consultada.
+     */
+    private final Map<String, Map<String, UnidadRest>> perArrelUnitatsCache = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, String>> perArrelConselleriaCache = new ConcurrentHashMap<>();
 
     @Override
     public UnitatOrganitzativaEntity findUnidad(String codi) {
@@ -107,6 +115,66 @@ public class UnitatsOrganitzativesPluginDir3 implements UnitatsOrganitzativesPlu
     @Override
     public String getConselleria(String codi) {
         return this.getMap().get(codi);
+    }
+
+    @Override
+    public String getConselleria(String codi, String arrelCodi) {
+        if (codi == null) {
+            return null;
+        }
+        // Si l'arrel demanada és la per defecte (sense entitat, o entitat amb el mateix codiDir3 que el govern),
+        // reutilitzam el mapa global (que inclou les correccions històriques hardcoded a inicialitzarMap()).
+        if (arrelCodi == null || arrelCodi.equals(unitatsOrganitzativesRestClient.getCodiArrel())) {
+            return this.getConselleria(codi);
+        }
+        return getConselleriaAmbArrel(codi, arrelCodi);
+    }
+
+    private String getConselleriaAmbArrel(String codi, String arrelCodi) {
+        if (Objects.equals(codi, arrelCodi)) {
+            // L'arrel (l'entitat mateixa) no té conselleria pròpia.
+            return null;
+        }
+        Map<String, String> cache = perArrelConselleriaCache.computeIfAbsent(arrelCodi, k -> new ConcurrentHashMap<>());
+        if (cache.containsKey(codi)) {
+            return cache.get(codi);
+        }
+        Map<String, UnidadRest> unitatsPerCodi = perArrelUnitatsCache.computeIfAbsent(arrelCodi, this::fetchUnitatsPerCodi);
+        UnidadRest unitat = unitatsPerCodi.get(codi);
+        String conselleria = unitat != null ? getConselleriaAmbArrel(unitat, unitatsPerCodi, arrelCodi, cache) : null;
+        cache.put(codi, conselleria);
+        return conselleria;
+    }
+
+    private Map<String, UnidadRest> fetchUnitatsPerCodi(String arrelCodi) {
+        try {
+            List<UnidadRest> unitats = unitatsOrganitzativesRestClient.findUnidad(arrelCodi, null, null, false);
+            return unitats.stream().collect(Collectors.toMap(UnidadRest::getCodigo, u -> u, (a, b) -> a));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String getConselleriaAmbArrel(UnidadRest unitat,
+                                          Map<String, UnidadRest> unitatsPerCodi,
+                                          String arrelCodi,
+                                          Map<String, String> cache) {
+        if (unitat.getCodUnidadSuperior() == null) {
+            return null;
+        }
+        if (Objects.equals(unitat.getCodUnidadSuperior(), arrelCodi)) {
+            return unitat.getCodigo();
+        }
+
+        String codi = unitat.getCodigo();
+        if (cache.containsKey(codi)) {
+            return cache.get(codi);
+        }
+
+        UnidadRest pare = unitatsPerCodi.get(unitat.getCodUnidadSuperior());
+        String conselleria = pare != null ? getConselleriaAmbArrel(pare, unitatsPerCodi, arrelCodi, cache) : null;
+        cache.put(codi, conselleria);
+        return conselleria;
     }
 
     private String getConselleria(UnidadRest unitat,

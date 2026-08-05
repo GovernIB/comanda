@@ -1,0 +1,83 @@
+databaseChangeLog:
+  - changeSet:
+      id: est-dashboard-filtre-0.1.4-001
+      author: limit
+      comment: Crear taula de filtres de capçalera de dashboard (dimensió o període, aplicats a tots els widgets)
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${db_prefix}est_dashboard_filtre
+      changes:
+        - createTable:
+            tableName: ${db_prefix}est_dashboard_filtre
+            columns:
+              - column:
+                  name: id
+                  type: NUMBER(38,0)
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}est_dboard_filtre_pk
+              - column:
+                  name: dashboard_id
+                  type: NUMBER(38,0)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tipus
+                  type: VARCHAR(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: dimensio_codi
+                  type: VARCHAR(32)
+              - column:
+                  name: titol
+                  type: VARCHAR(64)
+              - column:
+                  name: ordre
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: multiple
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_by
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_date
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lastmod_by
+                  type: VARCHAR(64)
+              - column:
+                  name: lastmod_date
+                  type: TIMESTAMP
+              - column:
+                  name: v
+                  type: NUMBER(38,0)
+        - addForeignKeyConstraint:
+            baseTableName: ${db_prefix}est_dashboard_filtre
+            baseColumnNames: dashboard_id
+            constraintName: ${db_prefix}dboard_filtre_dboard_fk
+            referencedTableName: ${db_prefix}est_dashboard
+            referencedColumnNames: id
+        - createIndex:
+            indexName: ${db_prefix}dboard_filtre_dboard_idx
+            tableName: ${db_prefix}est_dashboard_filtre
+            columns:
+              - column:
+                  name: dashboard_id
+      rollback:
+        - dropTable:
+            tableName: ${db_prefix}est_dashboard_filtre

@@ -2,6 +2,7 @@ package es.caib.comanda.estadistica.persist.entity.estadistiques;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.EntitatValorTipus;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum;
 import es.caib.comanda.ms.persist.entity.BaseEntity;
 import lombok.Getter;
@@ -69,4 +70,9 @@ public class DimensioEntity extends BaseEntity<Dimensio> {
     @Enumerated(EnumType.STRING)
     @Column(name = "tipus", length = 16)
     private TipusDimensioEnum tipus;
+
+    /** Només rellevant si tipus=ENTITAT: com s'ha d'interpretar el valor per relacionar-lo amb una EntitatEntity. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "entitat_valor_tipus", length = 16)
+    private EntitatValorTipus entitatValorTipus;
 }

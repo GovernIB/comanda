@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.persist.repository;
 
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -23,6 +24,8 @@ public interface DimensioRepository extends BaseRepository<DimensioEntity, Long>
     Optional<DimensioEntity> findByCodiAndEntornAppId(String codi, Long entornAppId);
 
     List<DimensioEntity> findByEntornAppId(Long entornAppId);
+
+    Optional<DimensioEntity> findByEntornAppIdAndTipus(Long entornAppId, TipusDimensioEnum tipus);
 
     @Modifying
     @Query("DELETE FROM DimensioEntity d WHERE d.entornAppId = :entornAppId")

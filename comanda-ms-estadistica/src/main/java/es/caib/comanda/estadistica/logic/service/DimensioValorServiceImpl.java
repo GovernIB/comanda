@@ -3,6 +3,8 @@ package es.caib.comanda.estadistica.logic.service;
 import com.turkraft.springfilter.FilterBuilder;
 import com.turkraft.springfilter.parser.Filter;
 import es.caib.comanda.estadistica.logic.dir3.SistemaExternException;
+import es.caib.comanda.estadistica.logic.helper.DashboardSeguretatHelper;
+import es.caib.comanda.estadistica.logic.helper.EntitatResolverHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
 import es.caib.comanda.estadistica.logic.helper.UnitatOrganitzativaHelper;
@@ -14,7 +16,6 @@ import es.caib.comanda.estadistica.logic.intf.service.DimensioValorService;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.EntitatEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.UnitatOrganitzativaEntity;
-import es.caib.comanda.estadistica.persist.repository.EntitatRepository;
 import es.caib.comanda.estadistica.persist.repository.UnitatOrganitzativaRepository;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
@@ -62,7 +63,8 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final UnitatOrganitzativaRepository unitatOrganitzativaRepository;
     private final UnitatOrganitzativaHelper unitatOrganitzativaHelper;
-    private final EntitatRepository entitatRepository;
+    private final EntitatResolverHelper entitatResolverHelper;
+    private final DashboardSeguretatHelper dashboardSeguretatHelper;
 
     @PostConstruct
     public void init() {
@@ -163,6 +165,43 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
         return result.isEmpty() ? null : FilterBuilder.and(result).generate();
     }
 
+    /**
+     * Restringeix les opcions de valors de dimensions de tipus ENTITAT a les entitats sobre les que l'usuari
+     * actual té permís (vegeu DashboardSeguretatHelper) - imprescindible perquè el filtre d'entitat d'un dashboard
+     * només mostri, com a opcions seleccionables, les entitats visibles per l'usuari. No afecta la resta de tipus
+     * de dimensió. Contempla tant la coincidència directa per codi/codiDir3 com la sobreescriptura manual
+     * (entitatMapejada), igual que EntitatResolverHelper.
+     */
+    @Override
+    protected Specification<DimensioValorEntity> additionalSpecification(String[] namedQueries) {
+        List<EntitatEntity> entitatsPermeses = dashboardSeguretatHelper.resoldreEntitatsPermeses();
+        if (entitatsPermeses == null) {
+            return null;
+        }
+        List<String> valorsPermesos = new ArrayList<>();
+        List<Long> idsPermesos = new ArrayList<>();
+        for (EntitatEntity entitat : entitatsPermeses) {
+            if (entitat.getCodi() != null) {
+                valorsPermesos.add(entitat.getCodi());
+            }
+            if (entitat.getCodiDir3() != null) {
+                valorsPermesos.add(entitat.getCodiDir3());
+            }
+            idsPermesos.add(entitat.getId());
+        }
+        return (root, query, cb) -> {
+            List<Predicate> orPredicates = new ArrayList<>();
+            orPredicates.add(cb.notEqual(root.get("dimensio").get("tipus"), TipusDimensioEnum.ENTITAT));
+            if (!valorsPermesos.isEmpty()) {
+                orPredicates.add(root.get("valor").in(valorsPermesos));
+            }
+            if (!idsPermesos.isEmpty()) {
+                orPredicates.add(root.get("entitatMapejada").get("id").in(idsPermesos));
+            }
+            return cb.or(orPredicates.toArray(new Predicate[0]));
+        };
+    }
+
     @Override
     protected void afterConversion(List<DimensioValorEntity> entities, List<DimensioValor> resources) {
         Map<String, Set<String>> codisMap = entities.stream()
@@ -182,9 +221,6 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
             .ifPresent(codis::addAll);
         Map<String, UnitatOrganitzativaEntity> uoMap = findUnitatsOrganitzativesByCodiInBatches(codis);
 
-        Set<String> codisE = codisMap.get(TipusDimensioEnum.ENTITAT.name());
-        Map<String, EntitatEntity> entitatMap = findEntitatsByCodiInBatches(codisE);
-
         IntStream.range(0, entities.size()).forEach(i -> {
             var e = entities.get(i);
             var r = resources.get(i);
@@ -197,9 +233,12 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
             }
 
             if (TipusDimensioEnum.ENTITAT.equals(e.getDimensio().getTipus())) {
-                Optional.ofNullable(entitatMap.get(e.getValor()))
-                    .ifPresent(uo -> r.setEntitat(
-                        ResourceReference.toResourceReference(uo.getId(), uo.getNom())
+                // Fa servir el mateix resolutor que la conselleria a la ingesta (sobreescriptura manual, o
+                // coincidència per codi/codiDir3 segons dimensio.entitatValorTipus), per mostrar sempre l'entitat
+                // que realment s'utilitzarà en calcular la conselleria - no només una coincidència directa per codi.
+                entitatResolverHelper.resolveEntitat(e.getDimensio(), e.getValor())
+                    .ifPresent(entitat -> r.setEntitat(
+                        ResourceReference.toResourceReference(entitat.getId(), entitat.getNom())
                     ));
             }
         });
@@ -255,27 +294,6 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
             List<String> batch = codiList.subList(fromIndex, toIndex);
 
             unitatOrganitzativaRepository.findByCodiIn(batch).forEach(uo -> {
-                if (uo.getCodi() != null) {
-                    result.putIfAbsent(uo.getCodi(), uo);
-                }
-            });
-        }
-
-        return result;
-    }
-    private Map<String, EntitatEntity> findEntitatsByCodiInBatches(Set<String> codis) {
-        if (codis == null || codis.isEmpty()) {
-            return Map.of();
-        }
-
-        List<String> codiList = new ArrayList<>(codis);
-        Map<String, EntitatEntity> result = new HashMap<>();
-
-        for (int fromIndex = 0; fromIndex < codiList.size(); fromIndex += CODI_IN_QUERY_BATCH_SIZE) {
-            int toIndex = Math.min(fromIndex + CODI_IN_QUERY_BATCH_SIZE, codiList.size());
-            List<String> batch = codiList.subList(fromIndex, toIndex);
-
-            entitatRepository.findByCodiIn(batch).forEach(uo -> {
                 if (uo.getCodi() != null) {
                     result.putIfAbsent(uo.getCodi(), uo);
                 }

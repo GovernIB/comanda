@@ -13,7 +13,7 @@ import {
 import { useTheme } from '@mui/material/styles';
 import estils from './WidgetEstils';
 import { useWidgetTheme } from './useWidgetTheme';
-import { WidgetContainer, WidgetHeader, WidgetFooter, WidgetErrorDisplay } from './WidgetLayout';
+import { WidgetContainer, WidgetHeader, WidgetFooter, WidgetErrorDisplay, WidgetNoAccessDisplay } from './WidgetLayout';
 
 // Interfaces
 interface ColumnaEstil {
@@ -89,6 +89,7 @@ export interface TaulaWidgetVisualizationProps {
     error?: boolean;
     errorMsg?: string;
     errorTrace?: string;
+    senseAccesDades?: boolean;
     onClick?: () => void;
 
     midaFontTitol?: number;
@@ -123,6 +124,7 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
         error = false,
         errorMsg,
         errorTrace,
+        senseAccesDades = false,
         onClick,
         dashboardEntornCodi,
     } = props;
@@ -247,6 +249,8 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
 
             {error ? (
                 <WidgetErrorDisplay errorMsg={errorMsg} errorTrace={errorTrace} />
+            ) : senseAccesDades ? (
+                <WidgetNoAccessDisplay />
             ) : (
                 <>
                     <Box sx={estils.tableContainerBox}>

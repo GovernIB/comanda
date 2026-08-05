@@ -42,7 +42,7 @@ public class OracleFetRepositoryDialectTaulaTest {
             String expectedQuery) {
 
         // Act
-        String query = removeConsecutiveSpaces(dialect.getTaulaQuery(dimensionsFiltre, indicadorsAgregacio, dimensioAgrupacioCodi));
+        String query = removeConsecutiveSpaces(dialect.getTaulaQuery(dimensionsFiltre, indicadorsAgregacio, dimensioAgrupacioCodi, null));
 
             assertNotNull(query);
             assertTrue(query.equals(expectedQuery), "Query should be: " + expectedQuery + "\nActual query: " + query);
@@ -196,7 +196,7 @@ public class OracleFetRepositoryDialectTaulaTest {
             String[] expectedQueryFragments) {
 
         // Act
-        String query = removeConsecutiveSpaces(dialect.getTaulaQuery(dimensionsFiltre, indicadorsAgregacio, dimensioAgrupacioCodi));
+        String query = removeConsecutiveSpaces(dialect.getTaulaQuery(dimensionsFiltre, indicadorsAgregacio, dimensioAgrupacioCodi, null));
 
         Arrays.stream(expectedQueryFragments)
                 .filter(fragment -> !query.contains(fragment))

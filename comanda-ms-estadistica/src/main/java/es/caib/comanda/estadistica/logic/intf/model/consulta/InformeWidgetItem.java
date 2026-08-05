@@ -36,4 +36,8 @@ public class InformeWidgetItem implements Serializable {
 
     protected boolean loading;
 
+    // Cert quan l'usuari autenticat no té cap permís d'entitat ni d'òrgan: no s'ha arribat a consultar cap dada,
+    // el frontend ha de mostrar un missatge informatiu enlloc de contingut buit.
+    protected boolean senseAccesDades;
+
 }

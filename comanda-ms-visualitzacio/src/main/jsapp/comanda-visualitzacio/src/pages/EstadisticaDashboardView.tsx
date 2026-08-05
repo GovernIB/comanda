@@ -17,6 +17,8 @@ import PageTitle from '../components/PageTitle.tsx';
 import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
 import { FooterHeightPlaceholder } from '../components/ComandaFooter.tsx';
 import { useEntornCodi } from '../components/estadistiques/dashboardPlantillaHook.ts';
+import DashboardFiltreBar from '../components/estadistiques/DashboardFiltreBar.tsx';
+import { DashboardFiltreSeleccio } from '../types/dashboardFiltre.model.ts';
 
 const LAST_VIEWED_STORAGE_KEY = 'lastViewedDashboardId';
 const NO_DASHBOARD_FOUND = 'NO_DASHBOARD_FOUND';
@@ -89,7 +91,12 @@ const EstadisticaDashboardView = () => {
         exception: dashboardException,
     } = useDashboard(dashboardId);
     const { entornCodi: dashboardEntornCodi, loading: loadingEntornCodi } = useEntornCodi(dashboard?.entorn?.id);
-    const { dashboardWidgets, loadingWidgetPositions } = useDashboardWidgets(dashboardId, temaFosc);
+    const [filtreSeleccio, setFiltreSeleccio] = useState<DashboardFiltreSeleccio>({});
+    useEffect(() => {
+        // En canviar de dashboard, la selecció de filtres de l'anterior ja no és vàlida (dimensions diferents).
+        setFiltreSeleccio({});
+    }, [dashboardId]);
+    const { dashboardWidgets, loadingWidgetPositions } = useDashboardWidgets(dashboardId, temaFosc, filtreSeleccio);
     const { isReady: apiDashboardIsReady, find: findDashboard } =
         useResourceApiService('dashboard');
     const mappedDashboardItems = useMapDashboardItems(dashboardWidgets);
@@ -154,41 +161,52 @@ const EstadisticaDashboardView = () => {
             {loading ? <CenteredCircularProgress /> : null}
             <BasePage
                 toolbar={
-                    <MuiToolbar
-                        disableGutters
-                        sx={{
-                            width: '100%',
-                            display: 'flex',
-                            px: 2,
-                            ml: 0,
-                            mr: 0,
-                            mt: 0,
-                            backgroundColor: (theme) =>
-                                theme.palette.mode === 'dark'
-                                    ? theme.palette.grey['900']
-                                    : theme.palette.grey['200'],
-                        }}
-                    >
-                        <Button
-                            color="primary"
-                            variant="outlined"
-                            size="small"
-                            onClick={openDashboardSelect}
-                            startIcon={<MenuIcon />}
+                    <Box sx={{ width: '100%' }}>
+                        <MuiToolbar
+                            disableGutters
                             sx={{
-                                borderRadius: 1,
+                                width: '100%',
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                rowGap: 1,
+                                px: 2,
+                                ml: 0,
+                                mr: 0,
+                                mt: 0,
+                                backgroundColor: (theme) =>
+                                    theme.palette.mode === 'dark'
+                                        ? theme.palette.grey['900']
+                                        : theme.palette.grey['200'],
                             }}
                         >
-                            <Typography
-                                color="textPrimary"
+                            <Button
+                                color="primary"
+                                variant="outlined"
+                                size="small"
+                                onClick={openDashboardSelect}
+                                startIcon={<MenuIcon />}
                                 sx={{
-                                    textTransform: 'none',
+                                    borderRadius: 1,
                                 }}
                             >
-                                {dashboard?.titol}
-                            </Typography>
-                        </Button>
-                    </MuiToolbar>
+                                <Typography
+                                    color="textPrimary"
+                                    sx={{
+                                        textTransform: 'none',
+                                    }}
+                                >
+                                    {dashboard?.titol}
+                                </Typography>
+                            </Button>
+                            <DashboardFiltreBar
+                                filtres={dashboard?.filtres}
+                                value={filtreSeleccio}
+                                onChange={setFiltreSeleccio}
+                            />
+                        </MuiToolbar>
+                    </Box>
                 }
             >
                 {dashboardWidgets && (

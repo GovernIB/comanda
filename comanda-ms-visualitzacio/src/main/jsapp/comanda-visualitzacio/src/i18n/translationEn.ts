@@ -383,6 +383,12 @@ const translationEn: translationResourcesType = {
                 readAllowed: "View dashboards",
                 writeAllowed: "Design dashboards",
             },
+            sideMenu: {
+                filtresTitle: "Dashboard filters",
+                addFiltre: "Add filter",
+                noFiltres: "No filters configured",
+                periode: "Period",
+            },
             cloneDashboard: {
                 title: "Clone the dashboard",
                 success: "Dashboard cloned correctly",
@@ -1134,6 +1140,13 @@ const translationEn: translationResourcesType = {
                 deleted: "Item deleted",
                 deleteError: "Could not delete",
                 selectType: "Select a type to view configurable properties.",
+                filtre: {
+                    tipus: "Filter type",
+                    dimensio: "Dimension",
+                    titol: "Label",
+                    multiple: "Multiple selection",
+                    ordre: "Order",
+                },
             },
         },
         caches: {

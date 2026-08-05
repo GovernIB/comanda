@@ -18,7 +18,7 @@ import {
 import { PieSeries } from '@mui/x-charts';
 import estils from './WidgetEstils';
 import { useWidgetTheme } from './useWidgetTheme';
-import { WidgetContainer, WidgetHeader, WidgetFooter, WidgetErrorDisplay } from './WidgetLayout';
+import { WidgetContainer, WidgetHeader, WidgetFooter, WidgetErrorDisplay, WidgetNoAccessDisplay } from './WidgetLayout';
 
 interface ColumnLabel {
     id: string;
@@ -84,6 +84,7 @@ export interface GraficWidgetVisualizationProps {
     error?: boolean;
     errorMsg?: string;
     errorTrace?: string;
+    senseAccesDades?: boolean;
     onClick?: () => void;
 
     midaFontTitol?: number;
@@ -148,6 +149,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         error = false,
         errorMsg,
         errorTrace,
+        senseAccesDades = false,
         onClick,
         dashboardEntornCodi,
 
@@ -588,6 +590,8 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
 
             {error ? (
                 <WidgetErrorDisplay errorMsg={errorMsg} errorTrace={errorTrace} />
+            ) : senseAccesDades ? (
+                <WidgetNoAccessDisplay />
             ) : (
                 <>
                     <Box sx={estils.tableContainerBox}>

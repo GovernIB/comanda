@@ -27,6 +27,7 @@ public class HazelCastCacheConfig {
     public static final String ACL_COUNT_CACHE = "aclCountCache";
 //    public static final String ACL_CHECK_CACHE = "aclCheckCache";
     public static final String USUARI_CACHE = "usuariCache";
+    public static final String ORG_TREE_CACHE = "orgTreeCache";
 
     @Bean
     public Config hazelcastConfig() {
@@ -50,6 +51,8 @@ public class HazelCastCacheConfig {
         config.addMapConfig(new MapConfig().setName(ACL_COUNT_CACHE).setTimeToLiveSeconds(86400).setEvictionConfig(getEvictionConfig()));
 //        config.addMapConfig(new MapConfig().setName(ACL_CHECK_CACHE).setTimeToLiveSeconds(900).setEvictionConfig(getEvictionConfig()));
         config.addMapConfig(new MapConfig().setName(USUARI_CACHE).setTimeToLiveSeconds(900).setEvictionConfig(getEvictionConfig()));
+        // Arbre d'unitats organitzatives per arrel (codiUnitatArrel -> mapa de fills) - només canvia amb sincronitzacions Dir3 manuals.
+        config.addMapConfig(new MapConfig().setName(ORG_TREE_CACHE).setTimeToLiveSeconds(3600).setEvictionConfig(getEvictionConfig()));
         return config;
     }
 

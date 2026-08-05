@@ -2,7 +2,8 @@ package es.caib.comanda.estadistica.logic.service;
 
 import com.turkraft.springfilter.FilterBuilder;
 import com.turkraft.springfilter.parser.Filter;
-import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesPlugin;
+import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesRestClient;
+import es.caib.comanda.estadistica.logic.helper.EntitatResolverHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio;
@@ -55,10 +56,10 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
     private final SpringFilterHelper springFilterHelper;
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final FetRepository fetRepository;
-    private final UnitatsOrganitzativesPlugin unitatsOrganitzativesPlugin;
     private final DimensioRepository dimensioRepository;
+    private final EntitatResolverHelper entitatResolverHelper;
 
-    @Value("${es.caib.comanda.estadistica.dir3.govern.codi.arrel:}")
+    @Value("${es.caib.comanda.estadistica.dir3.govern.codi.arrel:" + UnitatsOrganitzativesRestClient.CODI_ARREL_PER_DEFECTE + "}")
     private String codiArrel;
 
     @PostConstruct
@@ -182,11 +183,12 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
 //                    if (!fetEntityList.isEmpty())
 //                        fetRepository.saveAll(fetEntityList);
 
-                    // Actualitzar tots els valors "CONS"
+                    // Actualitzar tots els valors "CONS", tenint en compte l'entitat de cada fet (si en té)
                     List<FetEntity> fetEntityList = fetRepository.findByEntornAppIdAddCons(entity.getEntornAppId(), entity.getCodi(), codiArrel);
                     fetEntityList = fetEntityList.stream()
                         .peek(f -> {
-                            String c = unitatsOrganitzativesPlugin.getConselleria(f.getDimensionsJson().get(entity.getCodi()));
+                            String organValor = f.getDimensionsJson().get(entity.getCodi());
+                            String c = entitatResolverHelper.resolveConselleria(entity.getEntornAppId(), organValor, f.getDimensionsJson());
                             if (c != null) {
                                 f.getDimensionsJson().put("CONS", c);
                             } else {

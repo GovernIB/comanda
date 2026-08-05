@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 
 @Getter
@@ -13,8 +14,8 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Periode {
-    
+public class Periode implements Serializable {
+
     private PeriodeMode periodeMode;
 
     // Camps per mode PRESET
@@ -38,5 +39,5 @@ public class Periode {
     private PeriodeUnitat absolutPeriodeUnitat;
     private Integer absolutPeriodeInici;
     private Integer absolutPeriodeFi;
-    
+
 }

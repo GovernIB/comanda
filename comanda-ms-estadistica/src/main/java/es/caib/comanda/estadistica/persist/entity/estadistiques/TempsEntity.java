@@ -83,7 +83,7 @@ public class TempsEntity extends BaseEntity<Temps> {
     public TempsEntity(LocalDate data) {
         this.data = data;
         this.anualitat = data.getYear();
-        this.trimestre = data.getMonthValue() / 3;
+        this.trimestre = (data.getMonthValue() - 1) / 3 + 1;
         this.mes = data.getMonthValue();
         this.setmana = data.get(WeekFields.ISO.weekOfWeekBasedYear());
         this.diaSetmana = DiaSetmanaEnum.valueOfDayOfWeek(data.getDayOfWeek());

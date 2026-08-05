@@ -54,6 +54,8 @@ class EstadisticaHelperTest {
     private Environment environment;
     @Mock
     private UnitatsOrganitzativesPluginDir3 unitatsOrganitzativesPluginDir3;
+    @Mock
+    private EntitatResolverHelper entitatResolverHelper;
 
     private EstadisticaHelper estadisticaHelper;
     private EntornApp entornApp;
@@ -72,7 +74,8 @@ class EstadisticaHelperTest {
             estadisticaClientHelper,
             restTemplate,
             environment,
-            unitatsOrganitzativesPluginDir3
+            unitatsOrganitzativesPluginDir3,
+            entitatResolverHelper
         );
 
         ReflectionTestUtils.setField(estadisticaHelper, "statsAuthUser", "staticUser");

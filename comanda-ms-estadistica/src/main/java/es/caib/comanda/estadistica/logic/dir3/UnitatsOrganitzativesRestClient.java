@@ -20,8 +20,15 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UnitatsOrganitzativesRestClient {
 
-    @Value("${es.caib.comanda.estadistica.dir3.govern.codi.arrel:}")
+    /** Codi Dir3 arrel per defecte quan un fet no té entitat associada, o no s'ha configurat cap paràmetre. */
+    public static final String CODI_ARREL_PER_DEFECTE = "A04003003";
+
+    @Value("${es.caib.comanda.estadistica.dir3.govern.codi.arrel:" + CODI_ARREL_PER_DEFECTE + "}")
     private String codiArrel;
+
+    public String getCodiArrel() {
+        return codiArrel != null && !codiArrel.isBlank() ? codiArrel : CODI_ARREL_PER_DEFECTE;
+    }
 
     @Value("${es.caib.comanda.plugin.unitats.organitzatives.dir3.service.url:}")
     private String baseUrl;

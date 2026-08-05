@@ -5,5 +5,5 @@ public enum ResourceType {
     ENTORN_APP,
     DASHBOARD,
     ENTITAT,
-    UNITAT,
+    UNITAT
 }

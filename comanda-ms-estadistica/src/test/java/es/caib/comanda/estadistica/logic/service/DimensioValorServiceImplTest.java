@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.service;
 
 import es.caib.comanda.estadistica.logic.dir3.SistemaExternException;
+import es.caib.comanda.estadistica.logic.helper.EntitatResolverHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
 import es.caib.comanda.estadistica.logic.helper.UnitatOrganitzativaHelper;
@@ -11,7 +12,6 @@ import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.EntitatEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.UnitatOrganitzativaEntity;
-import es.caib.comanda.estadistica.persist.repository.EntitatRepository;
 import es.caib.comanda.estadistica.persist.repository.UnitatOrganitzativaRepository;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
@@ -29,6 +29,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -56,7 +57,7 @@ class DimensioValorServiceImplTest {
     private UnitatOrganitzativaHelper unitatOrganitzativaHelper;
 
     @Mock
-    private EntitatRepository entitatRepository;
+    private EntitatResolverHelper entitatResolverHelper;
 
     @Mock
     private ResourceEntityMappingHelper resourceEntityMappingHelper;
@@ -227,7 +228,7 @@ class DimensioValorServiceImplTest {
         entitat.setNom("Entitat 1");
 
         when(unitatOrganitzativaRepository.findByCodiIn(anyList())).thenReturn(Collections.singletonList(uo));
-        when(entitatRepository.findByCodiIn(anyList())).thenReturn(Collections.singletonList(entitat));
+        when(entitatResolverHelper.resolveEntitat(dimensio2, "ENT1")).thenReturn(Optional.of(entitat));
 
         // Act
         dimensioValorService.afterConversion(entities, resources);

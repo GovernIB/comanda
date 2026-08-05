@@ -33,12 +33,12 @@ public class OracleFetRepositoryDialectGraficTest {
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("provideGetGraficUnIndicadorQueryTestCases")
-    void testGetGraficUnIndicadorQueryParameterized(String testName, Map<String, List<String>> dimensionsFiltre, 
-                                                   IndicadorAgregacio indicadorAgregacio, 
-                                                   PeriodeUnitat tempsAgregacio, 
+    void testGetGraficUnIndicadorQueryParameterized(String testName, Map<String, List<String>> dimensionsFiltre,
+                                                   IndicadorAgregacio indicadorAgregacio,
+                                                   PeriodeUnitat tempsAgregacio,
                                                    String expectedQuery) {
         // Act
-        String query = removeConsecutiveSpaces(dialect.getGraficUnIndicadorQuery(dimensionsFiltre, indicadorAgregacio, tempsAgregacio));
+        String query = removeConsecutiveSpaces(dialect.getGraficUnIndicadorQuery(dimensionsFiltre, indicadorAgregacio, tempsAgregacio, null));
 
         // Assert
         assertNotNull(query);
@@ -175,11 +175,11 @@ public class OracleFetRepositoryDialectGraficTest {
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("provideGetGraficUnIndicadorAmbDescomposicioQueryWithTempsAgregacioTestCases")
     void testGetGraficUnIndicadorAmbDescomposicioQueryWithTempsAgregacioParameterized(
-            String testName, 
-            Map<String, List<String>> dimensionsFiltre, 
-            IndicadorAgregacio indicadorAgregacio, 
-            String dimensioDescomposicioCodi, 
-            PeriodeUnitat tempsAgregacio, 
+            String testName,
+            Map<String, List<String>> dimensionsFiltre,
+            IndicadorAgregacio indicadorAgregacio,
+            String dimensioDescomposicioCodi,
+            PeriodeUnitat tempsAgregacio,
             String expectedQuery) {
 
         // Act
@@ -187,7 +187,8 @@ public class OracleFetRepositoryDialectGraficTest {
                 dimensionsFiltre,
                 indicadorAgregacio,
                 dimensioDescomposicioCodi,
-                tempsAgregacio));
+                tempsAgregacio,
+                null));
 
         // Assert
         assertNotNull(query);
@@ -359,7 +360,7 @@ public class OracleFetRepositoryDialectGraficTest {
 
         // Act
         String query = removeConsecutiveSpaces(dialect.getGraficUnIndicadorAmbDescomposicioQuery(
-                dimensionsFiltre, indicadorAgregacio, dimensioDescomposicioCodi));
+                dimensionsFiltre, indicadorAgregacio, dimensioDescomposicioCodi, null));
 
         // Assert
         assertNotNull(query);
@@ -479,7 +480,7 @@ public class OracleFetRepositoryDialectGraficTest {
             String expectedQuery) {
 
         // Act
-        String query = removeConsecutiveSpaces(dialect.getGraficVarisIndicadorsQuery(dimensionsFiltre, indicadorsAgregacio, tempsAgregacio));
+        String query = removeConsecutiveSpaces(dialect.getGraficVarisIndicadorsQuery(dimensionsFiltre, indicadorsAgregacio, tempsAgregacio, null));
 
         // Assert
         assertNotNull(query);

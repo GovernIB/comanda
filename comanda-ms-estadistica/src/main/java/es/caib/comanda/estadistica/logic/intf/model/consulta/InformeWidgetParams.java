@@ -15,4 +15,7 @@ public class InformeWidgetParams implements Serializable {
     private Long dashboardItemId;
     private Boolean temaFosc;
 
+    /** Selecció de filtres de capçalera del dashboard (dimensions i/o període), aplicada a aquest widget. **/
+    private DashboardFiltreSeleccio filtreSeleccio;
+
 }

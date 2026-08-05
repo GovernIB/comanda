@@ -1,6 +1,7 @@
-import { useResourceApiService } from 'reactlib';
+import { springFilterBuilder, useResourceApiService } from 'reactlib';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { horizontalSubdivisions } from '../components/estadistiques/DashboardReactGridLayout';
+import { DashboardFiltre, DashboardFiltreSeleccio } from '../types/dashboardFiltre.model.ts';
 
 export const useDashboard = (dashboardId: any) => {
     type RequestStateType = {
@@ -51,7 +52,11 @@ export const useDashboard = (dashboardId: any) => {
     return requestState;
 };
 
-export const useDashboardWidgets = (dashboardId: any, temaFosc = false) => {
+export const useDashboardWidgets = (
+    dashboardId: any,
+    temaFosc = false,
+    filtreSeleccio?: DashboardFiltreSeleccio
+) => {
     type RequestStateType = {
         loadingWidgetPositions: boolean;
         loadingWidgetData: boolean;
@@ -96,7 +101,7 @@ export const useDashboardWidgets = (dashboardId: any, temaFosc = false) => {
                     .map(async (widget) => {
                         const dashboardItemData = (await artifactReportDashboardItem(
                             widget.dashboardItemId,
-                            { code: 'widget_data', data: { temaFosc } }
+                            { code: 'widget_data', data: { temaFosc, filtreSeleccio } }
                         )) as any[];
                         const firstDashboardItemData = dashboardItemData[0];
                         if (!firstDashboardItemData) return;
@@ -125,7 +130,7 @@ export const useDashboardWidgets = (dashboardId: any, temaFosc = false) => {
         return () => {
             cancelRequests = true;
         };
-    }, [dashboardId, temaFosc, apiDashboardIsReady, apiDashboardItemIsReady]);
+    }, [dashboardId, temaFosc, filtreSeleccio, apiDashboardIsReady, apiDashboardItemIsReady]);
 
     useEffect(effectFunction, [effectFunction]);
 
@@ -136,7 +141,7 @@ export const useDashboardWidgets = (dashboardId: any, temaFosc = false) => {
     /** Refresca només un widget (no cal recarregar tot el dashboard quan només s'ha modificat un component existent) */
     const refreshWidget = useCallback((dashboardItemId: any) => {
         if (!apiDashboardItemIsReady || dashboardItemId == null) return;
-        artifactReportDashboardItem(dashboardItemId, { code: 'widget_data', data: { temaFosc } })
+        artifactReportDashboardItem(dashboardItemId, { code: 'widget_data', data: { temaFosc, filtreSeleccio } })
             .then((dashboardItemData: any) => {
                 const firstDashboardItemData = (dashboardItemData as any[])?.[0];
                 if (!firstDashboardItemData) return;
@@ -149,7 +154,7 @@ export const useDashboardWidgets = (dashboardId: any, temaFosc = false) => {
                     ),
                 }));
             });
-    }, [apiDashboardItemIsReady, artifactReportDashboardItem, temaFosc]);
+    }, [apiDashboardItemIsReady, artifactReportDashboardItem, temaFosc, filtreSeleccio]);
 
     const errorDashboardWidgets = useMemo(
         () => requestState.widgets?.filter((widget: any) => widget.error),
@@ -163,4 +168,45 @@ export const useDashboardWidgets = (dashboardId: any, temaFosc = false) => {
         forceRefresh,
         refreshWidget,
     };
+};
+
+/**
+ * Filtres de capçalera configurats per a un dashboard (recurs `dashboardFiltre`), usats pel dissenyador per
+ * llistar-los i editar-los al panell esquerre; la visualització del dashboard (DashboardFiltreBar) en canvi
+ * ja els rep incrustats a `dashboard.filtres` (vegeu Dashboard.java al backend).
+ */
+export const useDashboardFiltres = (dashboardId: any) => {
+    const { isReady, find } = useResourceApiService('dashboardFiltre');
+    const [dashboardFiltres, setDashboardFiltres] = useState<DashboardFiltre[]>();
+    const [loading, setLoading] = useState(false);
+
+    const effectFunction = useCallback(() => {
+        let cancelled = false;
+        if (isReady && dashboardId != null) {
+            setLoading(true);
+            find({
+                filter: springFilterBuilder.eq('dashboard.id', dashboardId),
+                sorts: ['ordre'],
+                unpaged: true,
+            })
+                .then((response) => {
+                    if (cancelled) return;
+                    setDashboardFiltres(response.rows as DashboardFiltre[]);
+                })
+                .finally(() => {
+                    if (!cancelled) setLoading(false);
+                });
+        }
+        return () => {
+            cancelled = true;
+        };
+    }, [isReady, dashboardId]);
+
+    useEffect(effectFunction, [effectFunction]);
+
+    const forceRefresh = useCallback(() => {
+        effectFunction();
+    }, [effectFunction]);
+
+    return { dashboardFiltres, loading, forceRefresh };
 };

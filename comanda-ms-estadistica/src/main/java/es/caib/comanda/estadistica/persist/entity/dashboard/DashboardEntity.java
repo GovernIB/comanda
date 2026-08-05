@@ -55,4 +55,8 @@ public class DashboardEntity extends BaseAuditableEntity<Dashboard> {
     @OneToMany(mappedBy = "dashboard", cascade = {CascadeType.MERGE, CascadeType.REMOVE})
     private List<DashboardTitolEntity> titols;
 
+    @OneToMany(mappedBy = "dashboard", cascade = {CascadeType.MERGE, CascadeType.REMOVE})
+    @OrderBy("ordre")
+    private List<DashboardFiltreEntity> filtres;
+
 }

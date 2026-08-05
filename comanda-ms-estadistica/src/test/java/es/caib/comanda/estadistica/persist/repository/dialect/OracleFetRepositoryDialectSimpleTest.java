@@ -41,7 +41,7 @@ public class OracleFetRepositoryDialectSimpleTest {
             PeriodeUnitat unitatAgregacio,
             String expectedQuery) {
         // Act
-        String query = removeConsecutiveSpaces(dialect.getSimpleQuery(dimensionsFiltre, indicadorCodi, agregacio, unitatAgregacio));
+        String query = removeConsecutiveSpaces(dialect.getSimpleQuery(dimensionsFiltre, indicadorCodi, agregacio, unitatAgregacio, null));
 
         // Assert
         assertNotNull(query);

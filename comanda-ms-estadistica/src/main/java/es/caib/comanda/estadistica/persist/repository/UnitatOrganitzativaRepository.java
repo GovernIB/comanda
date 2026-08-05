@@ -23,4 +23,7 @@ public interface UnitatOrganitzativaRepository extends BaseRepository<UnitatOrga
     Optional<UnitatOrganitzativaEntity> findByCodi(String codi);
 
     List<UnitatOrganitzativaEntity> findByCodiIn(Collection<String> codis);
+
+    /** Totes les unitats d'un mateix arbre (mateixa arrel Dir3) - vegeu OrganitzativaTreeHelper. */
+    List<UnitatOrganitzativaEntity> findByCodiUnitatArrel(String codiUnitatArrel);
 }

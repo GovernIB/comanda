@@ -39,7 +39,7 @@ import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
 import { useContentDialog } from '../../lib/components/mui/Dialog.tsx';
 import TableBody from '@mui/material/TableBody';
-import { useDashboard, useDashboardWidgets } from '../hooks/dashboardRequests.ts';
+import { useDashboard, useDashboardFiltres, useDashboardWidgets } from '../hooks/dashboardRequests.ts';
 import { DASHBOARDS_PATH } from '../AppRoutes.tsx';
 import AddIcon from '@mui/icons-material/Add';
 import Icon from '@mui/material/Icon';
@@ -210,6 +210,10 @@ const EstadisticaDashboardEdit: React.FC = () => {
         forceRefresh: forceRefreshDashboardWidgets,
         refreshWidget,
     } = useDashboardWidgets(dashboardId, temaFosc);
+    const {
+        dashboardFiltres,
+        forceRefresh: forceRefreshDashboardFiltres,
+    } = useDashboardFiltres(dashboardId);
     const handleWidgetSaved = (dashboardItemId?: any) => {
         if (dashboardItemId != null) {
             refreshWidget(dashboardItemId);
@@ -323,6 +327,29 @@ const EstadisticaDashboardEdit: React.FC = () => {
         }
         return null;
     }, [editorSelection]);
+
+    const selectedFiltreId = React.useMemo(() => {
+        if (editorSelection.kind === 'filtre' && editorSelection.mode === 'edit') {
+            return String(editorSelection.dashboardFiltreId);
+        }
+        return null;
+    }, [editorSelection]);
+
+    const selectDashboardFiltre = (filtre: { id?: string | number } | null | undefined) => {
+        if (!filtre) {
+            setEditorSelection({ kind: 'none' });
+            return;
+        }
+        setEditorSelection({ kind: 'filtre', mode: 'edit', dashboardFiltreId: filtre.id });
+    };
+
+    const addDashboardFiltre = () => {
+        const nextOrdre = (dashboardFiltres ?? []).reduce(
+            (max, filtre) => Math.max(max, filtre.ordre ?? 0),
+            -1
+        ) + 1;
+        setEditorSelection({ kind: 'filtre', mode: 'create', nextOrdre });
+    };
 
     const selectDashboardElement = (entity: { tipus?: string; id?: string | number; dashboardTitolId?: string | number; dashboardItemId?: string | number; widgetId?: string | number } | null | undefined) => {
         if (!entity) {
@@ -583,6 +610,10 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                         dashboardWidgets={dashboardWidgets}
                                         onSelectItem={selectDashboardElement}
                                         selectedItemId={selectedGridItemId}
+                                        dashboardFiltres={dashboardFiltres}
+                                        onSelectFiltre={selectDashboardFiltre}
+                                        onAddFiltre={addDashboardFiltre}
+                                        selectedFiltreId={selectedFiltreId}
                                     />
                                 </Box>
                             )}
@@ -689,10 +720,22 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                         dashboardId={dashboardId}
                                         selection={editorSelection}
                                         onSelectionChange={setEditorSelection}
-                                        onSaved={handleWidgetSaved}
+                                        dashboardFiltres={dashboardFiltres}
+                                        onSaved={(dashboardItemId?: any) => {
+                                            if (editorSelection.kind === 'filtre') {
+                                                forceRefreshDashboardFiltres();
+                                            } else {
+                                                handleWidgetSaved(dashboardItemId);
+                                            }
+                                        }}
                                         onDeleted={() => {
+                                            const wasFiltre = editorSelection.kind === 'filtre';
                                             setEditorSelection({ kind: 'none' });
-                                            forceRefreshDashboardWidgets();
+                                            if (wasFiltre) {
+                                                forceRefreshDashboardFiltres();
+                                            } else {
+                                                forceRefreshDashboardWidgets();
+                                            }
                                         }}
                                     />
                                 </Box>
@@ -725,14 +768,29 @@ const TIPUS_ICON: Record<string, string> = {
     TITOL: 'title',
 };
 
-const SideMenu = ({ dashboard, addWidget, dashboardWidgets, onSelectItem, selectedItemId }:{
+const SideMenu = ({
+    dashboard,
+    addWidget,
+    dashboardWidgets,
+    onSelectItem,
+    selectedItemId,
+    dashboardFiltres,
+    onSelectFiltre,
+    onAddFiltre,
+    selectedFiltreId,
+}:{
     dashboard?: any;
     addWidget: (widgetId: string | number, entornId: string | number, widgetType?: DashboardWidgetType) => void;
     dashboardWidgets: Array<Record<string, unknown>>;
     onSelectItem?: (item: Record<string, unknown>) => void;
     selectedItemId?: string | null;
+    /** Filtres de capçalera configurats al dashboard (vegeu useDashboardFiltres a dashboardRequests.ts) */
+    dashboardFiltres?: Array<{ id?: string | number; tipus?: string; titol?: string; dimensioCodi?: string }>;
+    onSelectFiltre?: (filtre: { id?: string | number } | null) => void;
+    onAddFiltre?: () => void;
+    selectedFiltreId?: string | null;
 }) => {
-    // const { t } = useTranslation();
+    const { t } = useTranslation();
     const appEntornFilterApiRef = useFilterApiRef();
     const [springFilter, setSpringFilter] = useState<string>()
     const [entornId, setEntornId] = useState<string>(dashboard?.entorn?.id as string)
@@ -813,6 +871,59 @@ const SideMenu = ({ dashboard, addWidget, dashboardWidgets, onSelectItem, select
                 <Grid size={12}><FormField name="app" disabled={dashboard?.aplicacio} /></Grid>
             </Grid>
         </MuiFilter>
+
+        <Divider sx={{ my: 1 }}/>
+
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 0.5 }}>
+            <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
+                {t($ => $.page.dashboards.sideMenu.filtresTitle)}
+            </Typography>
+            <IconButton
+                size="small"
+                aria-label={t($ => $.page.dashboards.sideMenu.addFiltre)}
+                title={t($ => $.page.dashboards.sideMenu.addFiltre)}
+                onClick={onAddFiltre}
+                disabled={dashboard?.id == null}
+            >
+                <Icon sx={{ fontSize: '1rem' }}>add</Icon>
+            </IconButton>
+        </Box>
+        <Box sx={{ maxHeight: 160, overflow: 'auto', mb: 0.5 }}>
+            {!dashboardFiltres?.length ? (
+                <Typography variant="body2" sx={{ px: 1, py: 0.25, color: 'text.secondary', fontStyle: 'italic' }}>
+                    {t($ => $.page.dashboards.sideMenu.noFiltres)}
+                </Typography>
+            ) : (
+                dashboardFiltres.map((filtre) => {
+                    const filtreId = String(filtre.id);
+                    const isSelected = selectedFiltreId === filtreId;
+                    return (
+                        <Box
+                            key={filtreId}
+                            onClick={() => onSelectFiltre?.(filtre)}
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.5,
+                                px: 1,
+                                py: 0.25,
+                                cursor: 'pointer',
+                                borderRadius: 1,
+                                fontSize: '0.875rem',
+                                backgroundColor: isSelected ? 'primary.main' : 'transparent',
+                                color: isSelected ? 'primary.contrastText' : 'inherit',
+                                '&:hover': { backgroundColor: isSelected ? 'primary.dark' : 'action.hover' },
+                            }}
+                        >
+                            <Icon sx={{ fontSize: '0.875rem' }}>{filtre.tipus === 'PERIODE' ? 'event' : 'filter_alt'}</Icon>
+                            <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {filtre.titol || (filtre.tipus === 'PERIODE' ? t($ => $.page.dashboards.sideMenu.periode) : filtre.dimensioCodi)}
+                            </Box>
+                        </Box>
+                    );
+                })
+            )}
+        </Box>
 
         <Divider sx={{ my: 1 }}/>
 

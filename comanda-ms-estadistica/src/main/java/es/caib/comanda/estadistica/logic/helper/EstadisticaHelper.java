@@ -62,6 +62,7 @@ public class EstadisticaHelper {
     private final RestTemplate restTemplate;
     private final Environment environment;
     private final UnitatsOrganitzativesPluginDir3 unitatsOrganitzativesPluginDir3;
+    private final EntitatResolverHelper entitatResolverHelper;
 
     private static final ConcurrentHashMap<Long, Object> LOCKS = new ConcurrentHashMap<>();
 
@@ -499,19 +500,21 @@ public class EstadisticaHelper {
                 continue;
             }
 
-            // Crear mapa per dimensions
+            // Crear mapa complet de dimensions (sense enriquir encara amb CONS)
             Map<String, String> dimensionsMap = new HashMap<>();
             for (Dimensio d : re.getDimensions()) {
                 dimensionsMap.put(d.getCodi(), d.getValor());
+            }
 
+            // Enriquir amb la conselleria (CONS) de l'òrgan gestor, ara que ja tenim totes les dimensions del fet
+            // (incloent-hi el valor de la dimensió ENTITAT si n'hi ha - independentment de l'ordre en què arribin).
+            for (Dimensio d : re.getDimensions()) {
                 DimensioEntity dimensioEntity = dimensioRepository.findByCodiAndEntornAppId(d.getCodi(), entornAppId).orElse(null);
                 if (dimensioEntity != null && TipusDimensioEnum.ORGAN_GESTOR.equals(dimensioEntity.getTipus())) {
-                    try {
-                        String conselleria = unitatsOrganitzativesPluginDir3.getConselleria(d.getValor());
-                        if (conselleria != null) {
-                            dimensionsMap.put("CONS", conselleria);
-                        }
-                    } catch (Exception ignore) {}
+                    String conselleria = entitatResolverHelper.resolveConselleria(entornAppId, d.getValor(), dimensionsMap);
+                    if (conselleria != null) {
+                        dimensionsMap.put("CONS", conselleria);
+                    }
                 }
             }
 
