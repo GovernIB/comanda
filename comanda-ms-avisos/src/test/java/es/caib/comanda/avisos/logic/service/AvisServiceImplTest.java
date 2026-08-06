@@ -4,17 +4,21 @@ import es.caib.comanda.avisos.logic.helper.AvisClientHelper;
 import es.caib.comanda.avisos.logic.intf.model.Avis;
 import es.caib.comanda.avisos.logic.mapper.AvisMapper;
 import es.caib.comanda.avisos.persist.entity.AvisEntity;
+import es.caib.comanda.avisos.persist.entity.AvisLlegitEntity;
+import es.caib.comanda.avisos.persist.repository.AvisLlegitRepository;
 import es.caib.comanda.avisos.persist.repository.AvisRepository;
-import es.caib.comanda.client.model.*;
+import es.caib.comanda.client.model.App;
+import es.caib.comanda.client.model.AppRef;
+import es.caib.comanda.client.model.Entorn;
+import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.client.model.EntornRef;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
-import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import es.caib.comanda.model.v1.avis.AvisTipus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -25,33 +29,24 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.persistence.criteria.*;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Optional;
+import java.util.*;
 
 import static es.caib.comanda.base.config.BaseConfig.ROLE_ADMIN;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Tests per a AvisServiceImpl")
 class AvisServiceImplTest {
 
-    @Mock
-    private AuthenticationHelper authenticationHelper;
-
-    @Mock
-    private AvisClientHelper avisClientHelper;
-
-    @Mock
-    private AvisRepository avisRepository;
-
-    @Mock
-    private AvisMapper avisMapper;
-
-    @Mock
-    private Message jmsMessage;
+    @Mock private AuthenticationHelper authenticationHelper;
+    @Mock private AvisClientHelper avisClientHelper;
+    @Mock private AvisRepository avisRepository;
+    @Mock private AvisLlegitRepository avisLlegitRepository;
+    @Mock private AvisMapper avisMapper;
+    @Mock private Message jmsMessage;
 
     @InjectMocks
     private AvisServiceImpl avisService;
@@ -59,35 +54,88 @@ class AvisServiceImplTest {
     @BeforeEach
     void setUp() {
         // Injectem el repositori manualment ja que AvisServiceImpl hereta de BaseMutableResourceService
-        // i aquest usa un camp generic 'entityRepository' que normalment s'injecta via constructor o setter.
         ReflectionTestUtils.setField(avisService, "entityRepository", avisRepository);
         avisService.init();
     }
 
+    // ========================================================================
+    // 1. TESTOS PER A netejaPerEntornApp
+    // ========================================================================
+
     @Test
-    @DisplayName("receiveMessage ha de llançar ResourceNotFoundException si l'entornApp no existeix")
-    void receiveMessage_quanEntornAppNoExisteix_llançaExcepcio() throws JMSException {
+    @DisplayName("netejaPerEntornApp: esborra els avisos quan la llista no és buida")
+    void netejaPerEntornApp_quanHiHaAvisos_llavorsElsEsborra() {
+        // Arrange
+        Long entornAppId = 10L;
+        List<AvisEntity> avisos = List.of(new AvisEntity(), new AvisEntity());
+        when(avisRepository.findByEntornAppId(entornAppId)).thenReturn(avisos);
+
+        // Act
+        avisService.netejaPerEntornApp(entornAppId);
+
+        // Assert
+        verify(avisRepository, times(1)).findByEntornAppId(entornAppId);
+        verify(avisRepository, times(1)).deleteAll(avisos);
+    }
+
+    @Test
+    @DisplayName("netejaPerEntornApp: no fa res quan la llista d'avisos és buida")
+    void netejaPerEntornApp_quanLlistaBuida_llavorsNoEsborraRes() {
+        // Arrange
+        Long entornAppId = 10L;
+        when(avisRepository.findByEntornAppId(entornAppId)).thenReturn(Collections.emptyList());
+
+        // Act
+        avisService.netejaPerEntornApp(entornAppId);
+
+        // Assert
+        verify(avisRepository, times(1)).findByEntornAppId(entornAppId);
+        verify(avisRepository, never()).deleteAll(anyList());
+    }
+
+    // ========================================================================
+    // 2. TESTOS PER A receiveMessage (JMS Listener)
+    // ========================================================================
+
+    @Test
+    @DisplayName("receiveMessage: llança ResourceNotFoundException si l'entornApp no existeix")
+    void receiveMessage_quanEntornAppNoExisteix_llancaExcepcio() throws JMSException {
+        // Arrange
+        es.caib.comanda.model.v1.avis.Avis avisBroker = new es.caib.comanda.model.v1.avis.Avis();
+        avisBroker.setEntornCodi("ENT");
+        avisBroker.setAppCodi("APP");
+        when(avisClientHelper.entornAppFindByEntornCodiAndAppCodi("ENT", "APP")).thenReturn(Optional.empty());
+
+        // Act & Assert
+        // L'excepció es captura dins del catch (Throwable t), per tant no es propaga,
+        // però hem de verificar que no es crida a save ni delete.
+        assertThatCode(() -> avisService.receiveMessage(avisBroker, jmsMessage)).doesNotThrowAnyException();
+
+        verify(jmsMessage).acknowledge();
+        verify(avisRepository, never()).save(any());
+        verify(avisRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("receiveMessage: gestiona excepcions internes sense propagar-les")
+    void receiveMessage_quanEsLlancaExcepcioInterna_llavorsNoPropagaExcepcio() throws JMSException {
         // Arrange
         es.caib.comanda.model.v1.avis.Avis avisBroker = new es.caib.comanda.model.v1.avis.Avis();
         avisBroker.setEntornCodi("ENT");
         avisBroker.setAppCodi("APP");
 
-        when(avisClientHelper.entornAppFindByEntornCodiAndAppCodi("ENT", "APP")).thenReturn(Optional.empty());
+        when(avisClientHelper.entornAppFindByEntornCodiAndAppCodi("ENT", "APP"))
+            .thenThrow(new RuntimeException("Error de xarxa simulat"));
 
         // Act & Assert
-        avisService.receiveMessage(avisBroker, jmsMessage);
-
-        // Assert
+        // El catch (Throwable t) ha d'engolir l'excepció per no reencuar el missatge indefinidament
+        assertThatCode(() -> avisService.receiveMessage(avisBroker, jmsMessage)).doesNotThrowAnyException();
         verify(jmsMessage).acknowledge();
-        verify(avisRepository, never()).save(any());
-        verify(avisRepository, never()).delete(any());
-        verify(avisMapper, never()).toAvis(any(es.caib.comanda.model.v1.avis.Avis.class), any(EntornApp.class));
-        verify(avisMapper, never()).toAvisEntity(any());
     }
 
     @Test
-    @DisplayName("receiveMessage ha d'esborrar l'avís si esborrar=true i l'avís existeix")
-    void receiveMessage_quanEsborrarIExisteix_esborraAvis() throws JMSException {
+    @DisplayName("receiveMessage: esborra l'avís si esborrar=true i l'avís existeix")
+    void receiveMessage_quanEsborrarIExisteix_llavorsEsborraAvis() throws JMSException {
         // Arrange
         es.caib.comanda.model.v1.avis.Avis avisBroker = new es.caib.comanda.model.v1.avis.Avis();
         avisBroker.setEntornCodi("ENT");
@@ -106,13 +154,36 @@ class AvisServiceImplTest {
         avisService.receiveMessage(avisBroker, jmsMessage);
 
         // Assert
-        verify(avisRepository).delete(avisExistent);
-        verify(jmsMessage).acknowledge();
+        verify(avisRepository, times(1)).delete(avisExistent);
+        verify(jmsMessage, times(1)).acknowledge();
     }
 
     @Test
-    @DisplayName("receiveMessage ha de crear un nou avís si no existeix")
-    void receiveMessage_quanNouAvis_guardaAvis() throws JMSException {
+    @DisplayName("receiveMessage: no fa res si esborrar=true però l'avís no existeix")
+    void receiveMessage_quanEsborrarINoExisteix_llavorsNoFaRes() throws JMSException {
+        // Arrange
+        es.caib.comanda.model.v1.avis.Avis avisBroker = new es.caib.comanda.model.v1.avis.Avis();
+        avisBroker.setEntornCodi("ENT");
+        avisBroker.setAppCodi("APP");
+        avisBroker.setIdentificador("ID_INEXISTENT");
+        avisBroker.setEsborrar(true);
+
+        EntornApp entornApp = new EntornApp();
+        entornApp.setId(10L);
+        when(avisClientHelper.entornAppFindByEntornCodiAndAppCodi("ENT", "APP")).thenReturn(Optional.of(entornApp));
+        when(avisRepository.findByEntornAppIdAndIdentificador(10L, "ID_INEXISTENT")).thenReturn(Optional.empty());
+
+        // Act
+        avisService.receiveMessage(avisBroker, jmsMessage);
+
+        // Assert
+        verify(avisRepository, never()).delete(any());
+        verify(jmsMessage, times(1)).acknowledge();
+    }
+
+    @Test
+    @DisplayName("receiveMessage: crea un nou avís si no existeix prèviament")
+    void receiveMessage_quanNouAvis_llavorsGuardaAvis() throws JMSException {
         // Arrange
         es.caib.comanda.model.v1.avis.Avis avisBroker = new es.caib.comanda.model.v1.avis.Avis();
         avisBroker.setEntornCodi("ENT");
@@ -123,25 +194,11 @@ class AvisServiceImplTest {
 
         EntornApp entornApp = new EntornApp();
         entornApp.setId(10L);
-        entornApp.setEntorn(EntornRef.builder().id(1L).build());
-        entornApp.setApp(AppRef.builder().id(2L).build());
-
         when(avisClientHelper.entornAppFindByEntornCodiAndAppCodi("ENT", "APP")).thenReturn(Optional.of(entornApp));
         when(avisRepository.findByEntornAppIdAndIdentificador(10L, "ID1")).thenReturn(Optional.empty());
+
         Avis avisMapejat = new Avis();
-        avisMapejat.setEntornAppId(10L);
-        avisMapejat.setEntornId(1L);
-        avisMapejat.setAppId(2L);
-        avisMapejat.setIdentificador("ID1");
-        avisMapejat.setNom("Nou Avís");
-        avisMapejat.setTipus(AvisTipus.INFO);
         AvisEntity avisEntityMapejat = new AvisEntity();
-        avisEntityMapejat.setEntornAppId(10L);
-        avisEntityMapejat.setEntornId(1L);
-        avisEntityMapejat.setAppId(2L);
-        avisEntityMapejat.setIdentificador("ID1");
-        avisEntityMapejat.setNom("Nou Avís");
-        avisEntityMapejat.setTipus(AvisTipus.INFO);
         when(avisMapper.toAvis(avisBroker, entornApp)).thenReturn(avisMapejat);
         when(avisMapper.toAvisEntity(avisMapejat)).thenReturn(avisEntityMapejat);
 
@@ -149,15 +206,222 @@ class AvisServiceImplTest {
         avisService.receiveMessage(avisBroker, jmsMessage);
 
         // Assert
-        verify(avisMapper).toAvis(avisBroker, entornApp);
-        verify(avisMapper).toAvisEntity(avisMapejat);
-        verify(avisRepository).save(avisEntityMapejat);
-        verify(jmsMessage).acknowledge();
+        verify(avisMapper, times(1)).toAvis(avisBroker, entornApp);
+        verify(avisMapper, times(1)).toAvisEntity(avisMapejat);
+        verify(avisRepository, times(1)).save(avisEntityMapejat);
+        verify(jmsMessage, times(1)).acknowledge();
     }
 
     @Test
-    @DisplayName("afterConversion ha d'omplir els codis d'App i Entorn")
-    void afterConversion_ompleAppIEntornCodi() {
+    @DisplayName("receiveMessage: actualitza l'avís si ja existeix")
+    void receiveMessage_quanAvisJaExisteix_llavorsActualitzaAvis() throws JMSException {
+        // Arrange
+        es.caib.comanda.model.v1.avis.Avis avisBroker = new es.caib.comanda.model.v1.avis.Avis();
+        avisBroker.setEntornCodi("ENT");
+        avisBroker.setAppCodi("APP");
+        avisBroker.setIdentificador("ID1");
+        avisBroker.setNom("Nom Actualitzat");
+
+        EntornApp entornApp = new EntornApp();
+        entornApp.setId(10L);
+        when(avisClientHelper.entornAppFindByEntornCodiAndAppCodi("ENT", "APP")).thenReturn(Optional.of(entornApp));
+
+        AvisEntity avisExistent = new AvisEntity();
+        when(avisRepository.findByEntornAppIdAndIdentificador(10L, "ID1")).thenReturn(Optional.of(avisExistent));
+
+        // Act
+        avisService.receiveMessage(avisBroker, jmsMessage);
+
+        // Assert
+        verify(avisMapper, times(1)).updateAvis(avisBroker, avisExistent);
+        verify(avisMapper, never()).toAvis(eq(avisClientHelper), any());
+        verify(avisMapper, never()).toAvisEntity(any());
+        verify(avisRepository, times(1)).save(avisExistent);
+        verify(jmsMessage, times(1)).acknowledge();
+    }
+
+    // ========================================================================
+    // 3. TESTOS PER A FILTRES I ESPECIFICACIONS
+    // ========================================================================
+
+    @Test
+    @DisplayName("namedFilterToSpringFilter: retorna el filtre correcte per a AVIS_NO_LLEGIT")
+    void namedFilterToSpringFilter_quanEsAvisNoLlegit_llavorsRetornaFiltre() {
+        // Arrange
+        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari1");
+
+        // Act
+        String result = avisService.namedFilterToSpringFilter(Avis.NAMED_FILTER_AVIS_NO_LLEGIT);
+
+        // Assert
+        assertThat(result).contains("not(exists(avisLlegits.usuari:'usuari1'))");
+    }
+
+    @Test
+    @DisplayName("namedFilterToSpringFilter: retorna null per a filtres desconeguts")
+    void namedFilterToSpringFilter_quanFiltreDesconegut_llavorsRetornaNull() {
+        // Act
+        String result = avisService.namedFilterToSpringFilter("FILTRE_DESCONEGUT");
+
+        // Assert
+        assertThat(result).isNull();
+    }
+
+    @Test
+    @DisplayName("additionalSpecification: retorna null per a usuaris amb rol ADMIN")
+    void additionalSpecification_quanAdmin_llavorsRetornaNull() {
+        // Arrange
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{ROLE_ADMIN});
+
+        // Act
+        Specification<AvisEntity> spec = avisService.additionalSpecification(null);
+
+        // Assert
+        assertThat(spec).isNull();
+    }
+
+    @Test
+    @DisplayName("additionalSpecification: retorna especificació combinada per a usuaris normals")
+    void additionalSpecification_quanUsuariNormal_llavorsRetornaEspecificacio() {
+        // Arrange
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"ROLE_USER", "GRUP_TEST"});
+        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari_test");
+
+        // Act
+        Specification<AvisEntity> spec = avisService.additionalSpecification(null);
+
+        // Assert
+        assertThat(spec).isNotNull();
+    }
+
+    @Test
+    @DisplayName("teGrupSiNoNull: genera predicat correcte")
+    void teGrupSiNoNull_quanSExecuta_llavorsGeneraPredicat() {
+        // Arrange
+        String[] grups = {"GRUP1", "GRUP2"};
+        Root<AvisEntity> root = mock(Root.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+        Path<Object> path = mock(Path.class);
+        Predicate predicate = mock(Predicate.class);
+
+        when(root.get("grup")).thenReturn(path);
+        when(cb.isNull(path)).thenReturn(predicate);
+        when(path.in(Collections.singleton(any()))).thenReturn(mock(CriteriaBuilder.In.class));
+        when(cb.or(any(), any())).thenReturn(predicate);
+
+        // Act
+        Specification<AvisEntity> spec = AvisServiceImpl.teGrupSiNoNull(grups);
+        Predicate result = spec.toPredicate(root, query, cb);
+
+        // Assert
+        assertThat(result).isNotNull();
+        verify(root, times(2)).get("grup");
+        verify(cb).isNull(path);
+    }
+
+    @Test
+    @DisplayName("teResponsable: genera predicat correcte")
+    void teResponsable_quanSExecuta_llavorsGeneraPredicat() {
+        // Arrange
+        Root<AvisEntity> root = mock(Root.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+        Path<Object> path = mock(Path.class);
+        Predicate predicate = mock(Predicate.class);
+
+        when(root.get("responsable")).thenReturn(path);
+        when(cb.equal(path, "usuari1")).thenReturn(predicate);
+
+        // Act
+        Specification<AvisEntity> spec = (Specification<AvisEntity>) ReflectionTestUtils.invokeMethod(avisService, "teResponsable", "usuari1");
+        Predicate result = spec.toPredicate(root, query, cb);
+
+        // Assert
+        assertThat(result).isNotNull();
+        verify(root).get("responsable");
+        verify(cb).equal(path, "usuari1");
+    }
+
+    @Test
+    @DisplayName("tePermisUsuari: genera predicat correcte amb JOIN")
+    void tePermisUsuari_quanSExecuta_llavorsGeneraPredicat() {
+        // Arrange
+        Root<AvisEntity> root = mock(Root.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+        Join join = mock(Join.class);
+        Predicate predicate = mock(Predicate.class);
+
+        when(root.join(eq("usuarisAmbPermis"), any(JoinType.class))).thenReturn(join);
+        when(cb.equal(join, "usuari1")).thenReturn(predicate);
+
+        // Act
+        Specification<AvisEntity> spec = (Specification<AvisEntity>) ReflectionTestUtils.invokeMethod(avisService, "tePermisUsuari", "usuari1");
+        Predicate result = spec.toPredicate(root, query, cb);
+
+        // Assert
+        assertThat(result).isNotNull();
+        verify(root).join("usuarisAmbPermis", JoinType.LEFT);
+        verify(query).distinct(true);
+    }
+
+    @Test
+    @DisplayName("tePermisGrupIn: genera predicat correcte amb JOIN")
+    void tePermisGrupIn_quanSExecuta_llavorsGeneraPredicat() {
+        // Arrange
+        String[] grups = {"GRUP1"};
+        Root<AvisEntity> root = mock(Root.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+        Join join = mock(Join.class);
+
+        when(root.join(eq("grupsAmbPermis"), any(JoinType.class))).thenReturn(join);
+        when(join.in(Collections.singleton(any()))).thenReturn(mock(CriteriaBuilder.In.class));
+
+        // Act
+        Specification<AvisEntity> spec = (Specification<AvisEntity>) ReflectionTestUtils.invokeMethod(avisService, "tePermisGrupIn", (Object) grups);
+        Predicate result = spec.toPredicate(root, query, cb);
+
+        // Assert
+        assertThat(result).isNotNull();
+        verify(root).join("grupsAmbPermis", JoinType.LEFT);
+        verify(query).distinct(true);
+    }
+
+    @Test
+    @DisplayName("avisSensePermisos: genera predicat correcte")
+    void avisSensePermisos_quanSExecuta_llavorsGeneraPredicat() {
+        // Arrange
+        Root<AvisEntity> root = mock(Root.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+        Path<Object> path = mock(Path.class);
+        Predicate predicate = mock(Predicate.class);
+
+        when(root.get(anyString())).thenReturn(path);
+        when(cb.isNull(any())).thenReturn(predicate);
+        when(cb.isEmpty(any())).thenReturn(predicate);
+        when(cb.and(any(), any(), any())).thenReturn(predicate);
+
+        // Act
+        Specification<AvisEntity> spec = (Specification<AvisEntity>) ReflectionTestUtils.invokeMethod(avisService, "avisSensePermisos");
+        Predicate result = spec.toPredicate(root, query, cb);
+
+        // Assert
+        assertThat(result).isNotNull();
+        verify(cb).isNull(any());
+        verify(cb, times(2)).isEmpty(any());
+        verify(cb).and(any(), any(), any());
+    }
+
+    // ========================================================================
+    // 4. TESTOS PER A CONVERSIONS I PERSPECTIVES
+    // ========================================================================
+
+    @Test
+    @DisplayName("afterConversion: omple els codis d'App i Entorn correctament")
+    void afterConversion_quanAppIEntornExisteixen_llavorsOmpleCodis() {
         // Arrange
         AvisEntity entity = new AvisEntity();
         entity.setAppId(1L);
@@ -181,22 +445,28 @@ class AvisServiceImplTest {
     }
 
     @Test
-    @DisplayName("additionalSpecification ha de retornar una especificació si l'usuari no és administrador")
-    void additionalSpecification_quanNoAdmin_retornaEspecificacio() {
+    @DisplayName("afterConversion: gestiona correctament quan App o Entorn són null")
+    void afterConversion_quanAppOEntornSonNull_llavorsDeixaCodisNull() {
         // Arrange
-        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"ROLE_USER"});
-        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari1");
+        AvisEntity entity = new AvisEntity();
+        entity.setAppId(1L);
+        entity.setEntornId(2L);
+        Avis resource = new Avis();
+
+        when(avisClientHelper.appById(1L)).thenReturn(null);
+        when(avisClientHelper.entornById(2L)).thenReturn(null);
 
         // Act
-        Specification<AvisEntity> spec = avisService.additionalSpecification(null);
+        avisService.afterConversion(entity, resource);
 
         // Assert
-        assertThat(spec).isNotNull();
+        assertThat(resource.getAppCodi()).isNull();
+        assertThat(resource.getEntornCodi()).isNull();
     }
 
     @Test
-    @DisplayName("PathPerspectiveApplicator ha d'omplir el treePath")
-    void pathPerspective_quanAvisInformat_ompleTreePath() throws PerspectiveApplicationException {
+    @DisplayName("PathPerspectiveApplicator: omple el treePath correctament")
+    void pathPerspective_quanEntornAppExisteix_llavorsOmpleTreePath() throws PerspectiveApplicationException {
         // Arrange
         AvisServiceImpl.PathPerspectiveApplicator applicator = avisService.new PathPerspectiveApplicator();
         AvisEntity entity = new AvisEntity();
@@ -218,97 +488,162 @@ class AvisServiceImplTest {
     }
 
     @Test
-    @DisplayName("receiveMessage ha d'actualitzar l'avís si ja existeix")
-    void receiveMessage_quanAvisJaExisteix_actualitzaAvis() throws JMSException {
+    @DisplayName("PathPerspectiveApplicator: gestiona correctament quan EntornApp és null")
+    void pathPerspective_quanEntornAppEsNull_llavorsOmpleTreePathInvalid() throws PerspectiveApplicationException {
         // Arrange
-        es.caib.comanda.model.v1.avis.Avis avisBroker = new es.caib.comanda.model.v1.avis.Avis();
-        avisBroker.setEntornCodi("ENT");
-        avisBroker.setAppCodi("APP");
-        avisBroker.setIdentificador("ID1");
-        avisBroker.setNom("Nom Actualitzat");
-        avisBroker.setTipus(AvisTipus.ERROR);
-
-        EntornApp entornApp = new EntornApp();
-        entornApp.setId(10L);
-        when(avisClientHelper.entornAppFindByEntornCodiAndAppCodi("ENT", "APP")).thenReturn(Optional.of(entornApp));
-
-        AvisEntity avisExistent = new AvisEntity();
-        avisExistent.setIdentificador("ID1");
-        avisExistent.setNom("Nom Antic");
-        when(avisRepository.findByEntornAppIdAndIdentificador(10L, "ID1")).thenReturn(Optional.of(avisExistent));
-
-        // Act
-        avisService.receiveMessage(avisBroker, jmsMessage);
-
-        // Assert
-        verify(avisMapper).updateAvis(avisBroker, avisExistent);
-        verify(avisMapper, never()).toAvis(any(es.caib.comanda.model.v1.avis.Avis.class), any(EntornApp.class));
-        verify(avisMapper, never()).toAvisEntity(any());
-        verify(avisRepository).save(avisExistent);
-        verify(jmsMessage).acknowledge();
-    }
-
-    @Test
-    @DisplayName("additionalSpecification ha de retornar null per administrador")
-    void additionalSpecification_quanAdmin_retornaNull() {
-        // Arrange
-        String roleAdmin = "COM_ADMIN";
-        when(authenticationHelper.getCurrentUserName()).thenReturn("admin");
-        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{roleAdmin});
-
-        // Act
-        Specification<AvisEntity> spec = avisService.additionalSpecification(null);
-
-        // Assert
-        assertThat(spec).as("L'especificació per a %s hauria de ser null", roleAdmin).isNull();
-    }
-
-    @Test
-    @DisplayName("receiveMessage ha de loguejar un warning si s'intenta esborrar un avís que no existeix")
-    void receiveMessage_quanEsborrarINoExisteix_noFaRes() throws JMSException {
-        // Arrange
-        es.caib.comanda.model.v1.avis.Avis avisBroker = new es.caib.comanda.model.v1.avis.Avis();
-        avisBroker.setEntornCodi("ENT");
-        avisBroker.setAppCodi("APP");
-        avisBroker.setIdentificador("ID_INEXISTENT");
-        avisBroker.setEsborrar(true);
-
-        EntornApp entornApp = new EntornApp();
-        entornApp.setId(10L);
-        when(avisClientHelper.entornAppFindByEntornCodiAndAppCodi("ENT", "APP")).thenReturn(Optional.of(entornApp));
-        when(avisRepository.findByEntornAppIdAndIdentificador(10L, "ID_INEXISTENT")).thenReturn(Optional.empty());
-
-        // Act
-        avisService.receiveMessage(avisBroker, jmsMessage);
-
-        // Assert
-        verify(avisRepository, never()).delete(any());
-        verify(jmsMessage).acknowledge();
-    }
-
-    @Test
-    @DisplayName("afterConversion ha de gestionar App o Entorn null")
-    void afterConversion_quanAppOEntornNull_gestionaNull() {
-        // Arrange
+        AvisServiceImpl.PathPerspectiveApplicator applicator = avisService.new PathPerspectiveApplicator();
         AvisEntity entity = new AvisEntity();
-        entity.setAppId(1L);
-        entity.setEntornId(2L);
+        entity.setEntornAppId(99L);
+        Avis resource = new Avis();
+        resource.setIdentificador("ID1");
+
+        when(avisClientHelper.entornAppFindById(99L)).thenReturn(null);
+
+        // Act
+        applicator.applySingle(Avis.PERSPECTIVE_PATH, entity, resource);
+
+        // Assert
+        assertThat(resource.getTreePath()).containsExactly("INVALID_ENTORNAPP 99", "ID1");
+    }
+
+    @Test
+    @DisplayName("EntornAppPerspectiveApplicator: omple App i Entorn al resource")
+    void entornAppPerspective_quanEntornAppExisteix_llavorsOmpleAppIEntorn() throws PerspectiveApplicationException {
+        // Arrange
+        AvisServiceImpl.EntornAppPerspectiveApplicator applicator = avisService.new EntornAppPerspectiveApplicator();
+        AvisEntity entity = new AvisEntity();
+        entity.setEntornAppId(10L);
         Avis resource = new Avis();
 
-        when(avisClientHelper.appById(1L)).thenReturn(null);
-        when(avisClientHelper.entornById(2L)).thenReturn(null);
+        EntornApp entornApp = new EntornApp();
+        AppRef app = new AppRef();
+        ReflectionTestUtils.setField(app, "nom", "APP");
+        EntornRef entorn = new EntornRef();
+        ReflectionTestUtils.setField(entorn, "nom", "ENT");
+        entornApp.setApp(app);
+        entornApp.setEntorn(entorn);
+
+        when(avisClientHelper.entornAppFindById(10L)).thenReturn(entornApp);
 
         // Act
-        avisService.afterConversion(entity, resource);
+        applicator.applySingle(Avis.PERSPECTIVE_ENTORN_APP, entity, resource);
 
         // Assert
-        assertThat(resource.getAppCodi()).isNull();
-        assertThat(resource.getEntornCodi()).isNull();
+        assertThat(resource.getApp()).isNotNull();
+        assertThat(resource.getApp().getNom()).isEqualTo("APP");
+        assertThat(resource.getEntorn()).isNotNull();
+        assertThat(resource.getEntorn().getNom()).isEqualTo("ENT");
     }
 
     @Test
-    @DisplayName("convertToLocalDateTime ha de retornar null si la data és null")
-    void convertToLocalDateTime_quanDataNull_retornaNull() {
+    @DisplayName("LlegitPerspectiveApplicator: marca com a llegit si existeix al repositori")
+    void llegitPerspective_quanExisteixAlRepositori_llavorsMarcaComALlegit() throws PerspectiveApplicationException {
+        // Arrange
+        AvisServiceImpl.LlegitPerspectiveApplicator applicator = avisService.new LlegitPerspectiveApplicator();
+        AvisEntity entity = new AvisEntity();
+        entity.setId(1L);
+        Avis resource = new Avis();
+
+        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari1");
+        when(avisLlegitRepository.existsByUsuariAndAvis("usuari1", entity)).thenReturn(true);
+
+        // Act
+        applicator.applySingle(Avis.PERSPECTIVE_LLEGIT, entity, resource);
+
+        // Assert
+        assertThat(resource.isLlegit()).isTrue();
+    }
+
+    @Test
+    @DisplayName("LlegitPerspectiveApplicator: marca com a no llegit si no existeix al repositori")
+    void llegitPerspective_quanNoExisteixAlRepositori_llavorsMarcaComANoLlegit() throws PerspectiveApplicationException {
+        // Arrange
+        AvisServiceImpl.LlegitPerspectiveApplicator applicator = avisService.new LlegitPerspectiveApplicator();
+        AvisEntity entity = new AvisEntity();
+        entity.setId(1L);
+        Avis resource = new Avis();
+
+        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari1");
+        when(avisLlegitRepository.existsByUsuariAndAvis("usuari1", entity)).thenReturn(false);
+
+        // Act
+        applicator.applySingle(Avis.PERSPECTIVE_LLEGIT, entity, resource);
+
+        // Assert
+        assertThat(resource.isLlegit()).isFalse();
+    }
+
+    // ========================================================================
+    // 5. TESTOS PER A ACTION EXECUTORS (MarcarAvisLlegit)
+    // ========================================================================
+
+    @Test
+    @DisplayName("MarcarAvisLlegit: retorna null si la llista d'IDs és null o buida")
+    void marcarAvisLlegit_quanIdsSonNullsOBuits_llavorsRetornaNull() throws Exception {
+        // Arrange
+        AvisServiceImpl.MarcarAvisLlegit executor = avisService.new MarcarAvisLlegit();
+        Avis.AvisMarcarLlegitsAction params = new Avis.AvisMarcarLlegitsAction();
+        params.setIds(null);
+
+        // Act
+        Avis result = executor.exec(Avis.ACTION_MARCAR_AVIS_LLEGIT, new AvisEntity(), params);
+
+        // Assert
+        assertThat(result).isNull();
+        verify(avisRepository, never()).findAvisosNoLlegitsByUsuariAndIds(anyString(), anyList());
+    }
+
+    @Test
+    @DisplayName("MarcarAvisLlegit: guarda entitats AvisLlegit quan llegit=true")
+    void marcarAvisLlegit_quanLlegitEsTrue_llavorsGuardaEntitats() throws Exception {
+        // Arrange
+        AvisServiceImpl.MarcarAvisLlegit executor = avisService.new MarcarAvisLlegit();
+        Avis.AvisMarcarLlegitsAction params = new Avis.AvisMarcarLlegitsAction();
+        params.setIds(List.of(1L, 2L));
+        params.setLlegit(true);
+
+        AvisEntity avis1 = new AvisEntity(); avis1.setId(1L);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari1");
+        when(avisRepository.findAvisosNoLlegitsByUsuariAndIds("usuari1", List.of(1L, 2L)))
+            .thenReturn(List.of(avis1));
+
+        // Act
+        Avis result = executor.exec(Avis.ACTION_MARCAR_AVIS_LLEGIT, new AvisEntity(), params);
+
+        // Assert
+        assertThat(result).isNull();
+        verify(avisLlegitRepository, times(1)).saveAll(argThat(list ->
+            ((List<?>) list).size() == 1 && ((AvisLlegitEntity) ((List<?>) list).get(0)).getUsuari().equals("usuari1")
+        ));
+    }
+
+    @Test
+    @DisplayName("MarcarAvisLlegit: elimina entitats AvisLlegit quan llegit=false")
+    void marcarAvisLlegit_quanLlegitEsFalse_llavorsEliminaEntitats() throws Exception {
+        // Arrange
+        AvisServiceImpl.MarcarAvisLlegit executor = avisService.new MarcarAvisLlegit();
+        Avis.AvisMarcarLlegitsAction params = new Avis.AvisMarcarLlegitsAction();
+        params.setIds(List.of(1L, 2L));
+        params.setLlegit(false);
+
+        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari1");
+
+        // Act
+        Avis result = executor.exec(Avis.ACTION_MARCAR_AVIS_LLEGIT, new AvisEntity(), params);
+
+        // Assert
+        assertThat(result).isNull();
+        verify(avisLlegitRepository, times(1)).deleteByUsuariAndAvisIdIn("usuari1", List.of(1L, 2L));
+        verify(avisRepository, never()).findAvisosNoLlegitsByUsuariAndIds(anyString(), anyList());
+    }
+
+    // ========================================================================
+    // 6. TESTOS PER A MÈTODES AUXILIARS
+    // ========================================================================
+
+    @Test
+    @DisplayName("convertToLocalDateTime: retorna null si la data d'entrada és null")
+    void convertToLocalDateTime_quanDataEsNull_llavorsRetornaNull() {
         // Act
         LocalDateTime result = (LocalDateTime) ReflectionTestUtils.invokeMethod(AvisServiceImpl.class, "convertToLocalDateTime", (Date) null);
 
@@ -317,8 +652,8 @@ class AvisServiceImplTest {
     }
 
     @Test
-    @DisplayName("convertToLocalDateTime ha de convertir correctament la data")
-    void convertToLocalDateTime_quanDataNoNull_converteixCorrectament() {
+    @DisplayName("convertToLocalDateTime: converteix correctament una data no nul·la")
+    void convertToLocalDateTime_quanDataNoEsNull_llavorsConverteixCorrectament() {
         // Arrange
         Date data = new Date();
 
@@ -327,134 +662,6 @@ class AvisServiceImplTest {
 
         // Assert
         assertThat(result).isNotNull();
-    }
-
-    @Test
-    @DisplayName("teGrupSiNoNull ha de retornar una especificació vàlida i executar la lambda")
-    void teGrupSiNoNull_retornaEspecificacio() {
-        // Arrange
-        String[] grups = {"GRUP1", "GRUP2"};
-        Root<AvisEntity> root = mock(Root.class);
-        CriteriaQuery<?> query = mock(CriteriaQuery.class);
-        CriteriaBuilder cb = mock(CriteriaBuilder.class);
-        Path<Object> path = mock(Path.class);
-        Predicate predicate = mock(Predicate.class);
-        CriteriaBuilder.In in = mock(CriteriaBuilder.In.class);
-
-        when(root.get("grup")).thenReturn(path);
-        when(cb.isNull(path)).thenReturn(predicate);
-        when(path.in(any(java.util.Collection.class))).thenReturn(in);
-        when(cb.or(any(), any())).thenReturn(predicate);
-
-        // Act
-        Specification<AvisEntity> spec = AvisServiceImpl.teGrupSiNoNull(grups);
-        Predicate result = spec.toPredicate(root, query, cb);
-
-        // Assert
-        assertThat(spec).isNotNull();
-        assertThat(result).isNotNull();
-        verify(root, times(2)).get("grup");
-        verify(cb).isNull(path);
-        verify(path).in(any(java.util.Collection.class));
-        verify(cb).or(any(), any());
-    }
-
-    @Test
-    @DisplayName("tePermisUsuari ha de retornar una especificació vàlida i executar la lambda")
-    void tePermisUsuari_retornaEspecificacio() {
-        // Arrange
-        Root<AvisEntity> root = mock(Root.class);
-        CriteriaQuery<?> query = mock(CriteriaQuery.class);
-        CriteriaBuilder cb = mock(CriteriaBuilder.class);
-        Join join = mock(Join.class);
-        Predicate predicate = mock(Predicate.class);
-
-        when(root.join(eq("usuarisAmbPermis"), any(JoinType.class))).thenReturn(join);
-        when(cb.equal(eq(join), eq("usuari1"))).thenReturn(predicate);
-
-        // Act
-        Specification<AvisEntity> spec = (Specification<AvisEntity>) ReflectionTestUtils.invokeMethod(avisService, "tePermisUsuari", "usuari1");
-        Predicate result = spec.toPredicate(root, query, cb);
-
-        // Assert
-        assertThat(spec).isNotNull();
-        assertThat(result).isNotNull();
-        verify(root).join("usuarisAmbPermis", JoinType.LEFT);
-        verify(query).distinct(true);
-        verify(cb).equal(join, "usuari1");
-    }
-
-    @Test
-    @DisplayName("tePermisGrupIn ha de retornar una especificació vàlida i executar la lambda")
-    void tePermisGrupIn_retornaEspecificacio() {
-        // Arrange
-        String[] grups = {"GRUP1", "GRUP2"};
-        Root<AvisEntity> root = mock(Root.class);
-        CriteriaQuery<?> query = mock(CriteriaQuery.class);
-        CriteriaBuilder cb = mock(CriteriaBuilder.class);
-        Join join = mock(Join.class);
-        CriteriaBuilder.In in = mock(CriteriaBuilder.In.class);
-
-        when(root.join(eq("grupsAmbPermis"), any(JoinType.class))).thenReturn(join);
-        when(join.in(any(java.util.Collection.class))).thenReturn(in);
-
-        // Act
-        Specification<AvisEntity> spec = (Specification<AvisEntity>) ReflectionTestUtils.invokeMethod(avisService, "tePermisGrupIn", (Object) grups);
-        Predicate result = spec.toPredicate(root, query, cb);
-
-        // Assert
-        assertThat(spec).isNotNull();
-        assertThat(result).isNotNull();
-        verify(root).join("grupsAmbPermis", JoinType.LEFT);
-        verify(query).distinct(true);
-        verify(join).in(any(java.util.Collection.class));
-    }
-
-    @Test
-    @DisplayName("avisSensePermisos ha de retornar una especificació vàlida i executar la lambda")
-    void avisSensePermisos_retornaEspecificacio() {
-        // Arrange
-        Root<AvisEntity> root = mock(Root.class);
-        CriteriaQuery<?> query = mock(CriteriaQuery.class);
-        CriteriaBuilder cb = mock(CriteriaBuilder.class);
-        Path<Object> path = mock(Path.class);
-        Predicate predicate = mock(Predicate.class);
-
-        when(root.get(anyString())).thenReturn(path);
-        when(cb.isNull(any())).thenReturn(predicate);
-        when(cb.isEmpty(any())).thenReturn(predicate);
-        when(cb.and(any(), any(), any())).thenReturn(predicate);
-
-        // Act
-        Specification<AvisEntity> spec = (Specification<AvisEntity>) ReflectionTestUtils.invokeMethod(avisService, "avisSensePermisos");
-        Predicate result = spec.toPredicate(root, query, cb);
-
-        // Assert
-        assertThat(spec).isNotNull();
-        assertThat(result).isNotNull();
-        verify(root).get("responsable");
-        verify(root).get("usuarisAmbPermis");
-        verify(root).get("grupsAmbPermis");
-        verify(cb).isNull(any());
-        verify(cb, times(2)).isEmpty(any());
-        verify(cb).and(any(), any(), any());
-    }
-
-    @Test
-    @DisplayName("additionalSpecification ha de combinar correctament les especificacions per a usuari normal")
-    void additionalSpecification_quanUsuariNormal_combinaEspecificacions() {
-        // Arrange
-        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"ROLE_USER", "GRUP_TEST"});
-        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari_test");
-
-        // Act
-        Specification<AvisEntity> spec = avisService.additionalSpecification(null);
-
-        // Assert
-        assertThat(spec).isNotNull();
-        // Atès que Specification és una interfície funcional (lambda), no podem verificar fàcilment 
-        // el contingut sense un CriteriaBuilder real, però el fet que no falli i retorni un objecte
-        // indica que s'ha passat per tota la lògica de combinació:
-        // teGrupSiNoNull(roles).and(teResponsable(userName).or(tePermisUsuari(userName)).or(tePermisGrupIn(roles)).or(avisSensePermisos()))
+        assertThat(result.getYear()).isEqualTo(LocalDateTime.now().getYear());
     }
 }

@@ -78,11 +78,13 @@ public class CacheServiceImpl extends BaseMutableResourceService<ComandaCache, S
         }
         var cache = cacheHelper.getCache(id);
         if (cache == null) {
-            return ComandaCache.builder()
+            ComandaCache c = ComandaCache.builder()
                     .descripcio(descripcio)
                     .entrades(0)
                     .mida(0L)
                     .build();
+            c.setId(id);
+            return c;
         }
 
         ComandaCache comandaCache = ComandaCache.builder()

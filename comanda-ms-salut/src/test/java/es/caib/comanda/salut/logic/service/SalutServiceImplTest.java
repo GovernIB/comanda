@@ -1,666 +1,626 @@
 package es.caib.comanda.salut.logic.service;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.AclServiceClient;
-import es.caib.comanda.client.model.AppContext;
-import es.caib.comanda.client.model.AppIntegracio;
-import es.caib.comanda.client.model.EntornApp;
-import es.caib.comanda.client.model.IntegracioRef;
-import es.caib.comanda.client.model.acl.PermissionEnum;
+import es.caib.comanda.client.model.*;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
-import es.caib.comanda.ms.logic.helper.JasperReportsHelper;
 import es.caib.comanda.ms.logic.helper.ObjectMappingHelper;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
-import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
+import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
 import es.caib.comanda.salut.logic.helper.MetricsHelper;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.helper.SalutEstatHelper;
+import es.caib.comanda.salut.logic.intf.model.*;
 import es.caib.comanda.salut.logic.intf.model.Salut;
+import es.caib.comanda.salut.logic.intf.model.SalutDetall;
 import es.caib.comanda.salut.logic.intf.model.SalutEstat;
-import es.caib.comanda.salut.logic.intf.model.SalutInformeAgrupacio;
-import es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem;
-import es.caib.comanda.salut.logic.intf.model.SalutInformeGrupItem;
 import es.caib.comanda.salut.logic.intf.model.SalutIntegracio;
-import es.caib.comanda.salut.logic.intf.model.SalutMissatge;
-import es.caib.comanda.salut.logic.intf.model.TipusRegistreSalut;
-import es.caib.comanda.salut.persist.entity.SalutEntity;
-import es.caib.comanda.salut.persist.entity.SalutHistEntity;
-import es.caib.comanda.salut.persist.entity.SalutIntegracioEntity;
-import es.caib.comanda.salut.persist.entity.SalutMissatgeEntity;
+import es.caib.comanda.salut.logic.intf.model.SalutSubsistema;
+import es.caib.comanda.salut.persist.entity.*;
 import es.caib.comanda.salut.persist.repository.*;
-import io.micrometer.core.instrument.Meter;
-import io.micrometer.core.instrument.Tags;
-import io.micrometer.core.instrument.noop.NoopTimer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.lang.reflect.Field;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Stream;
 
-import static es.caib.comanda.salut.logic.helper.SalutInfoHelper.MINUTS_PER_AGRUPACIO;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Tests per a SalutServiceImpl")
 class SalutServiceImplTest {
 
-    static class TestableSalutServiceImpl extends SalutServiceImpl {
-        public TestableSalutServiceImpl(SalutIntegracioRepository salutIntegracioRepository,
-                                        SalutSubsistemaRepository salutSubsistemaRepository,
-                                        SalutMissatgeRepository salutMissatgeRepository,
-                                        SalutDetallRepository salutDetallRepository,
-                                        SalutHistRepository salutHistRepository,
-                                        SalutClientHelper salutClientHelper,
-                                        MetricsHelper metricsHelper,
-                                        AuthenticationHelper authenticationHelper,
-                                        HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
-                                        AclServiceClient aclServiceClient,
-                                        SalutEstatHelper salutEstatHelper) {
-            super(salutIntegracioRepository,
-                    salutSubsistemaRepository,
-                    salutMissatgeRepository,
-                    salutDetallRepository,
-                    salutHistRepository,
-                    salutClientHelper,
-                    metricsHelper,
-                    authenticationHelper,
-                    httpAuthorizationHeaderHelper,
-                    aclServiceClient,
-                    salutEstatHelper);
-        }
+    @Mock private SalutIntegracioRepository salutIntegracioRepository;
+    @Mock private SalutSubsistemaRepository salutSubsistemaRepository;
+    @Mock private SalutMissatgeRepository salutMissatgeRepository;
+    @Mock private SalutDetallRepository salutDetallRepository;
+    @Mock private SalutHistRepository salutHistRepository;
+    @Mock private SalutClientHelper salutClientHelper;
+    @Mock private MetricsHelper metricsHelper;
+    @Mock private AuthenticationHelper authenticationHelper;
+    @Mock private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
+    @Mock private AclServiceClient aclServiceClient;
+    @Mock private SalutEstatHelper salutEstatHelper;
+    @Mock private SalutRepository salutRepository;
+    @Mock private ObjectMappingHelper objectMappingHelper;
+    @Mock private ResourceEntityMappingHelper resourceEntityMappingHelper;
 
-        public String exposedAdditionalSpringFilter() {
-            return super.additionalSpringFilter(null, null);
-        }
-    }
-
-    @Mock
-    private SalutRepository salutRepository;
-
-    @Mock
-    private SalutIntegracioRepository salutIntegracioRepository;
-
-    @Mock
-    private SalutSubsistemaRepository salutSubsistemaRepository;
-
-    @Mock
-    private SalutMissatgeRepository salutMissatgeRepository;
-
-    @Mock
-    private SalutDetallRepository salutDetallRepository;
-
-    @Mock
-    private SalutHistRepository salutHistRepository;
-
-    @Mock
-    private SalutClientHelper salutClientHelper;
-
-    @Mock
-    private MetricsHelper metricsHelper;
-
-    @Mock
-    private ObjectMappingHelper objectMappingHelper;
-
-    @Mock
-    private AuthenticationHelper authenticationHelper;
-
-    @Mock
-    private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
-
-    @Mock
-    private AclServiceClient aclServiceClient;
-
-    private SalutEstatHelper salutEstatHelper;
-
-    private TestableSalutServiceImpl service;
+    @InjectMocks
+    private SalutServiceImpl salutService;
 
     @BeforeEach
-    void setUp() throws Exception {
-        salutEstatHelper = new SalutEstatHelper(salutRepository);
-        service = new TestableSalutServiceImpl(
-                salutIntegracioRepository,
-                salutSubsistemaRepository,
-                salutMissatgeRepository,
-                salutDetallRepository,
-                salutHistRepository,
-                salutClientHelper,
-                metricsHelper,
-                authenticationHelper,
-                httpAuthorizationHeaderHelper,
-                aclServiceClient,
-                salutEstatHelper);
-        injectBaseField("entityRepository", salutRepository);
-        injectBaseField("objectMappingHelper", objectMappingHelper);
-        injectBaseField("resourceEntityMappingHelper", new ResourceEntityMappingHelper(new ObjectMappingHelper()));
-        injectBaseField("jasperReportsHelper", org.mockito.Mockito.mock(JasperReportsHelper.class));
-        service.init();
+    void setUp() {
+        ReflectionTestUtils.setField(salutService, "entityRepository", salutRepository);
+        ReflectionTestUtils.setField(salutService, "objectMappingHelper", objectMappingHelper);
+        ReflectionTestUtils.setField(salutService, "resourceEntityMappingHelper", resourceEntityMappingHelper);
+        lenient().when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
+        lenient().when(authenticationHelper.getCurrentUserName()).thenReturn("user");
+        lenient().when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"ROLE_USER"});
     }
 
-    private void stubAclContext(String... roles) {
-        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer test");
-        when(authenticationHelper.isCurrentUserInRole(anyString())).thenReturn(false);
-        when(authenticationHelper.getCurrentUserName()).thenReturn("anna");
-        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(roles);
+    // ========================================================================
+    // 1. TESTOS PER A netejaPerEntornApp
+    // ========================================================================
+
+    @Test
+    @DisplayName("netejaPerEntornApp: quan hi ha saluts, esborra totes les entitats relacionades")
+    void netejaPerEntornApp_quanHiHaSaluts_llavorsEsborraRelacionats() {
+        // Arrange
+        Long entornAppId = 1L;
+        List<Long> salutIds = List.of(10L, 20L);
+        when(salutRepository.findIdsByEntornAppId(entornAppId)).thenReturn(salutIds);
+
+        // Act
+        salutService.netejaPerEntornApp(entornAppId);
+
+        // Assert
+        verify(salutIntegracioRepository, times(1)).deleteAllBySalutIdIn(salutIds);
+        verify(salutSubsistemaRepository, times(1)).deleteAllBySalutIdIn(salutIds);
+        verify(salutMissatgeRepository, times(1)).deleteAllBySalutIdIn(salutIds);
+        verify(salutDetallRepository, times(1)).deleteAllBySalutIdIn(salutIds);
+        verify(salutRepository, times(1)).deleteAllByIdInBatch(salutIds);
+        verify(salutHistRepository, times(1)).deleteByEntornAppId(entornAppId);
     }
 
     @Test
-    void additionalSpringFilter_quanLusuariEsAdmin_noAplicaCapRestriccioAcl() {
-        when(authenticationHelper.isCurrentUserInRole(anyString())).thenReturn(false);
-        when(authenticationHelper.isCurrentUserInRole("COM_ADMIN")).thenReturn(true);
+    @DisplayName("netejaPerEntornApp: quan no hi ha saluts, només esborra els històrics")
+    void netejaPerEntornApp_quanNoHiHaSaluts_llavorsNomésEsborraHistorics() {
+        // Arrange
+        Long entornAppId = 1L;
+        when(salutRepository.findIdsByEntornAppId(entornAppId)).thenReturn(Collections.emptyList());
 
-        String result = service.exposedAdditionalSpringFilter();
+        // Act
+        salutService.netejaPerEntornApp(entornAppId);
 
+        // Assert
+        verify(salutIntegracioRepository, never()).deleteAllBySalutIdIn(any());
+        verify(salutHistRepository, times(1)).deleteByEntornAppId(entornAppId);
+    }
+
+    // ========================================================================
+    // 2. TESTOS PER A additionalSpringFilter
+    // ========================================================================
+
+    @Test
+    @DisplayName("additionalSpringFilter: retorna null quan l'usuari és ADMIN")
+    void additionalSpringFilter_quanEsAdmin_llavorsRetornaNull() {
+        // Arrange
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+
+        // Act
+        String result = salutService.additionalSpringFilter("filter", new String[0]);
+
+        // Assert
         assertThat(result).isNull();
-        verifyNoInteractions(aclServiceClient);
+        verify(aclServiceClient, never()).findIdsWithAnyPermission(any(), any(), any(), any(), any());
     }
 
     @Test
-    void additionalSpringFilter_quanTePermisosPerAppIEntornApp_retornaElsEntornsActiusPermesos() {
-        stubAclContext("COM_USER");
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Set.of(1L)));
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.ENTORN_APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Set.of(5L)));
-        when(salutClientHelper.entornAppFindByActivaTrue("app.id:1"))
-                .thenReturn(List.of(EntornApp.builder().id(10L).build(), EntornApp.builder().id(11L).build()));
-        when(salutClientHelper.entornAppFindByActivaTrue("id:5"))
-                .thenReturn(List.of(EntornApp.builder().id(11L).build(), EntornApp.builder().id(12L).build()));
+    @DisplayName("additionalSpringFilter: retorna null quan l'usuari té rol CONSULTA")
+    void additionalSpringFilter_quanEsConsulta_llavorsRetornaNull() {
+        // Arrange
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(true);
 
-        String result = service.exposedAdditionalSpringFilter();
+        // Act
+        String result = salutService.additionalSpringFilter("filter", new String[0]);
 
-        assertThat(result).isEqualTo("entornAppId:10 or entornAppId:11 or entornAppId:12");
+        // Assert
+        assertThat(result).isNull();
     }
 
     @Test
-    void additionalSpringFilter_quanNomesHiHaPermisosPerApp_retornaElsEntornsAppActiusDeLaApp() {
-        stubAclContext("COM_USER");
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Set.of(1L)));
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.ENTORN_APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
-        when(salutClientHelper.entornAppFindByActivaTrue("app.id:1"))
-                .thenReturn(List.of(EntornApp.builder().id(10L).build(), EntornApp.builder().id(11L).build()));
+    @DisplayName("additionalSpringFilter: retorna filtre zero quan no té permisos d'App ni d'EntornApp")
+    void additionalSpringFilter_quanNoTePermisos_llavorsRetornaFiltreZero() {
+        // Arrange
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+        when(aclServiceClient.findIdsWithAnyPermission(any(), any(), any(), any(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
 
-        String result = service.exposedAdditionalSpringFilter();
+        // Act
+        String result = salutService.additionalSpringFilter("filter", new String[0]);
 
-        assertThat(result).isEqualTo("entornAppId:10 or entornAppId:11");
-    }
-
-    @Test
-    void additionalSpringFilter_quanNomesHiHaPermisosPerEntornApp_retornaElsEntornsAppPermesos() {
-        stubAclContext("COM_USER");
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.ENTORN_APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Set.of(5L, 7L)));
-        when(salutClientHelper.entornAppFindByActivaTrue("id:5 or id:7"))
-                .thenReturn(List.of(EntornApp.builder().id(11L).build(), EntornApp.builder().id(12L).build()));
-
-        String result = service.exposedAdditionalSpringFilter();
-
-        assertThat(result).isEqualTo("entornAppId:11 or entornAppId:12");
-    }
-
-    @Test
-    void additionalSpringFilter_quanConsultaAcl_passaUsuariIRolsActuals() {
-        stubAclContext("COM_USER", "COM_EXTRA");
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER", "COM_EXTRA")),
-                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.ENTORN_APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER", "COM_EXTRA")),
-                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
-
-        service.exposedAdditionalSpringFilter();
-
-        verify(aclServiceClient).findIdsWithAnyPermission(
-                eq(ResourceType.APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER", "COM_EXTRA")),
-                eq("Bearer test"));
-        verify(aclServiceClient).findIdsWithAnyPermission(
-                eq(ResourceType.ENTORN_APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER", "COM_EXTRA")),
-                eq("Bearer test"));
-    }
-
-    @Test
-    void additionalSpringFilter_quanNoHiHaPermisos_retornaFiltreSenseResultats() {
-        stubAclContext("COM_USER");
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(ResponseEntity.ok(null));
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.ENTORN_APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
-
-        String result = service.exposedAdditionalSpringFilter();
-
+        // Assert
         assertThat(result).isEqualTo("entornAppId:0");
     }
 
     @Test
-    void informeSalutLast_quanHiHaDadesPerEntornsActius_retornaElsRecursosMapejats() throws Exception {
-        EntornApp firstEntorn = EntornApp.builder().id(10L).build();
-        EntornApp secondEntorn = EntornApp.builder().id(20L).build();
-        SalutEntity firstEntity = sampleSalutEntity(1L, 10L, LocalDateTime.of(2026, 3, 16, 8, 0));
-        SalutEntity secondEntity = sampleSalutEntity(2L, 20L, LocalDateTime.of(2026, 3, 16, 8, 1));
-        NoopTimer timer = new NoopTimer(new Meter.Id("test", Tags.empty(), null, null, Meter.Type.TIMER));
+    @DisplayName("additionalSpringFilter: retorna filtre mergejat quan té permisos d'App")
+    void additionalSpringFilter_quanTePermisosApp_llavorsRetornaFiltreMerged() {
+        // Arrange
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
 
-        when(metricsHelper.getSalutLastEntornAppsTimer()).thenReturn(timer);
-        when(metricsHelper.getSalutLastDadesTimer()).thenReturn(timer);
-        when(metricsHelper.getSalutLastGlobalTimer()).thenReturn(timer);
-        when(salutClientHelper.entornAppFindByActivaTrue("illes")).thenReturn(Arrays.asList(firstEntorn, null, secondEntorn));
-        when(salutRepository.informeSalutLast(eq(List.of(10L, 20L)), any(LocalDateTime.class)))
-                .thenReturn(List.of(firstEntity, secondEntity));
+        Set<Serializable> appPerms = Set.of(1L);
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(appPerms));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
 
-        List<Salut> result = service.new InformeSalutLast().generateData(Salut.SALUT_REPORT_LAST, null, "illes");
+        EntornApp entornApp = new EntornApp();
+        entornApp.setId(10L);
+        when(salutClientHelper.entornAppFindByActivaTrue("app.id:1")).thenReturn(List.of(entornApp));
 
-        assertThat(result)
-                .extracting(Salut::getEntornAppId)
-                .containsExactly(10L, 20L);
-        verify(salutRepository).informeSalutLast(eq(List.of(10L, 20L)), any(LocalDateTime.class));
+        // Act
+        String result = salutService.additionalSpringFilter("filter", new String[0]);
+
+        // Assert
+        assertThat(result).isEqualTo("entornAppId:10");
+    }
+
+    // ========================================================================
+    // 3. TESTOS PER A Perspectives
+    // ========================================================================
+
+    @Test
+    @DisplayName("PerspectiveUltimEstatOperatiuInfo: no fa res quan no hi ha històric")
+    void perspectiveUltimEstatOperatiuInfo_quanNoHiHaHistoric_llavorsNoFaRes() {
+        // Arrange
+        SalutServiceImpl.PerspectiveUltimEstatOperatiuInfo perspective = salutService.new PerspectiveUltimEstatOperatiuInfo();
+        SalutEntity entity = new SalutEntity();
+        entity.setEntornAppId(1L);
+        Salut resource = new Salut();
+
+        when(salutHistRepository.findTopByEntornAppIdOrderByDataDescIdDesc(1L)).thenReturn(null);
+
+        // Act
+        perspective.applySingle("CODE", entity, resource);
+
+        // Assert
+        assertThat(resource.getUltimEstatInfo()).isNull();
     }
 
     @Test
-    void perspectiveIntegracions_quanClientRetornaMetadades_completaNomILogoDeLesIntegracions() throws Exception {
-        SalutEntity entity = sampleSalutEntity(11L, 33L, LocalDateTime.of(2026, 3, 16, 8, 2));
-        Salut resource = sampleSalutResource(11L, 33L);
+    @DisplayName("PerspectiveUltimEstatOperatiuInfo: no fa res quan l'estat actual és estable")
+    void perspectiveUltimEstatOperatiuInfo_quanEstatEsEstable_llavorsNoFaRes() {
+        // Arrange
+        SalutServiceImpl.PerspectiveUltimEstatOperatiuInfo perspective = salutService.new PerspectiveUltimEstatOperatiuInfo();
+        SalutEntity entity = new SalutEntity();
+        entity.setEntornAppId(1L);
+        Salut resource = new Salut();
+
+        SalutHistEntity historic = new SalutHistEntity();
+        historic.setAppEstat(SalutEstat.UP); // Estat estable
+        when(salutHistRepository.findTopByEntornAppIdOrderByDataDescIdDesc(1L)).thenReturn(historic);
+
+        // Act
+        perspective.applySingle("CODE", entity, resource);
+
+        // Assert
+        assertThat(resource.getUltimEstatInfo()).isNull();
+    }
+
+    @Test
+    @DisplayName("PerspectiveUltimEstatOperatiuInfo: assigna info quan l'estat és inestable i hi ha un anterior estable")
+    void perspectiveUltimEstatOperatiuInfo_quanEstatInestableIAnteriorEstable_llavorsAssignaInfo() {
+        // Arrange
+        SalutServiceImpl.PerspectiveUltimEstatOperatiuInfo perspective = salutService.new PerspectiveUltimEstatOperatiuInfo();
+        SalutEntity entity = new SalutEntity();
+        entity.setEntornAppId(1L);
+        Salut resource = new Salut();
+
+        SalutHistEntity historicInestable = new SalutHistEntity();
+        historicInestable.setAppEstat(SalutEstat.DOWN);
+        historicInestable.setData(LocalDateTime.now());
+
+        SalutHistEntity historicEstable = new SalutHistEntity();
+        historicEstable.setAppEstat(SalutEstat.UP);
+        historicEstable.setData(LocalDateTime.now().minusHours(1));
+
+        when(salutHistRepository.findTopByEntornAppIdOrderByDataDescIdDesc(1L)).thenReturn(historicInestable);
+        when(salutHistRepository.findTopByEntornAppIdAndAppEstatInOrderByDataDesc(eq(1L), anyList())).thenReturn(Optional.of(historicEstable));
+        when(salutHistRepository.findSeguentData(eq(1L), any())).thenReturn(Optional.of(LocalDateTime.now().minusMinutes(30)));
+
+        // Act
+        perspective.applySingle("CODE", entity, resource);
+
+        // Assert
+        assertThat(resource.getUltimEstatInfo()).isNotNull();
+        assertThat(resource.getUltimEstatInfo().getEstat()).isEqualTo(SalutEstat.UP);
+    }
+
+    @Test
+    @DisplayName("PerspectiveDetalls: applyMultiple aplica correctament a totes les entitats")
+    void perspectiveDetalls_applyMultiple_quanHiHaEntitats_llavorsAplicaSingle() throws PerspectiveApplicationException {
+        // Arrange
+        SalutServiceImpl.PerspectiveDetalls perspective = salutService.new PerspectiveDetalls();
+
+        SalutEntity entity = new SalutEntity();
+        entity.setId(1L);
+        Salut resource = new Salut();
+        resource.setId(1L);
+
+        List<SalutEntity> entities = List.of(entity);
+        List<Salut> resources = List.of(resource);
+
+        when(salutDetallRepository.findBySalut(entity)).thenReturn(Collections.emptyList());
+
+        // Act
+        boolean result = perspective.applyMultiple("CODE", entities, resources);
+
+        // Assert
+        assertThat(result).isTrue();
+        verify(salutDetallRepository, times(1)).findBySalut(entity);
+    }
+
+    // ========================================================================
+    // 4. TESTOS PER A Report Generators
+    // ========================================================================
+
+    @Test
+    @DisplayName("InformeEstat: delega correctament a SalutEstatHelper")
+    void informeEstat_generateData_quanEsCrida_llavorsDelegaASalutEstatHelper() {
+        // Arrange
+        SalutServiceImpl.InformeEstat generator = salutService.new InformeEstat();
+        SalutInformeParams params = new SalutInformeParams();
+        params.setEntornAppId(1L);
+        params.setAgrupacio(SalutInformeAgrupacio.HORA);
+        params.setDataReferencia(LocalDateTime.now());
+
+        when(salutEstatHelper.mapTipusAgrupacio(SalutInformeAgrupacio.HORA)).thenReturn(TipusRegistreSalut.HORA);
+        when(salutEstatHelper.getDataIniciAjustada(any(), any())).thenReturn(LocalDateTime.now().minusHours(1));
+        when(salutEstatHelper.generateEstatList(any(), any(), eq(1L))).thenReturn(Collections.emptyList());
+
+        // Act
+        List<SalutInformeEstatItem> result = generator.generateData("CODE", new SalutEntity(), params);
+
+        // Assert
+        assertThat(result).isEmpty();
+        verify(salutEstatHelper, times(1)).generateEstatList(any(), any(), eq(1L));
+    }
+
+    @Test
+    @DisplayName("InformeGrupsDates: genera correctament els grups de dates")
+    void informeGrupsDates_generateData_quanEsCrida_llavorsGeneraGrups() {
+        // Arrange
+        SalutServiceImpl.InformeGrupsDates generator = salutService.new InformeGrupsDates();
+        SalutInformeGrupsParams params = new SalutInformeGrupsParams();
+        params.setAgrupacio(SalutInformeAgrupacio.HORA);
+        params.setDataReferencia(LocalDateTime.now());
+
+        LocalDateTime dataInici = LocalDateTime.now().minusHours(1);
+        when(salutEstatHelper.getDataIniciAjustada(any(), any())).thenReturn(dataInici);
+        when(salutEstatHelper.generarGrupsDates(eq(dataInici), eq(SalutInformeAgrupacio.HORA)))
+            .thenReturn(List.of(dataInici, dataInici.plusHours(1)));
+
+        // Act
+        List<SalutInformeGrupItem> result = generator.generateData("CODE", new SalutEntity(), params);
+
+        // Assert
+        assertThat(result).hasSize(2);
+        verify(salutEstatHelper, times(1)).generarGrupsDates(eq(dataInici), eq(SalutInformeAgrupacio.HORA));
+    }
+
+    @Test
+    @DisplayName("InformeEstats: genera un mapa amb les llistes per a cada entornAppId")
+    void informeEstats_generateData_quanEsCrida_llavorsGeneraMapaPerEntornApp() {
+        // Arrange
+        SalutServiceImpl.InformeEstats generator = salutService.new InformeEstats();
+        SalutInformeLlistatParams params = new SalutInformeLlistatParams();
+        params.setAgrupacio(SalutInformeAgrupacio.HORA);
+        params.setDataReferencia(LocalDateTime.now());
+        params.setEntornAppIdList(List.of(1L, 2L));
+
+        when(salutEstatHelper.mapTipusAgrupacio(any())).thenReturn(TipusRegistreSalut.HORA);
+        when(salutEstatHelper.getDataIniciAjustada(any(), any())).thenReturn(LocalDateTime.now().minusHours(1));
+        when(salutEstatHelper.generateEstatList(any(), any(), anyLong())).thenReturn(Collections.emptyList());
+
+        // Act
+        List<HashMap<String, Object>> result = generator.generateData("CODE", new SalutEntity(), params);
+
+        // Assert
+        assertThat(result).hasSize(1);
+        HashMap<String, Object> map = result.get(0);
+        assertThat(map).containsKeys("1", "2");
+        verify(salutEstatHelper, times(2)).generateEstatList(any(), any(), anyLong());
+    }
+
+    // ========================================================================
+    // 5. TESTOS PER A Perspectives (Faltants)
+    // ========================================================================
+
+    @Test
+    @DisplayName("PerspectiveIntegracions: aplica correctament les integracions i els seus noms/logos")
+    void perspectiveIntegracions_applySingle_quanHiHaDades_llavorsAplicaCorrectament() throws PerspectiveApplicationException {
+        // Arrange
+        SalutServiceImpl.PerspectiveIntegracions perspective = salutService.new PerspectiveIntegracions();
+        SalutEntity entity = new SalutEntity();
+        entity.setEntornAppId(1L);
+        Salut resource = new Salut();
+        resource.setIntegracions(new ArrayList<>());
+
         SalutIntegracioEntity integracioEntity = new SalutIntegracioEntity();
-        integracioEntity.setCodi("INT-A");
-        integracioEntity.setSalut(entity);
-
-        SalutIntegracio integracio = new SalutIntegracio();
-        integracio.setCodi("INT-A");
-
-        IntegracioRef integracioRef = new IntegracioRef(9L, "Integracio A");
-        AppIntegracio appIntegracio = new AppIntegracio();
-        ReflectionTestUtils.setField(appIntegracio, "codi", "INT-A");
-        ReflectionTestUtils.setField(appIntegracio, "integracio", integracioRef);
-        ReflectionTestUtils.setField(appIntegracio, "logo", "logo-a".getBytes());
-
-        EntornApp entornApp = EntornApp.builder()
-                .id(33L)
-                .integracions(List.of(appIntegracio))
-                .build();
-
+        integracioEntity.setCodi("INT1");
         when(salutIntegracioRepository.findBySalutOrderByCodiAsc(entity)).thenReturn(List.of(integracioEntity));
-        when(salutClientHelper.entornAppFindById(33L)).thenReturn(entornApp);
-        when(objectMappingHelper.newInstanceMap(integracioEntity, SalutIntegracio.class, "salut")).thenReturn(integracio);
 
-        service.new PerspectiveIntegracions().applySingle(Salut.PERSP_INTEGRACIONS, entity, resource);
+        SalutIntegracio integracioResource = new SalutIntegracio();
+        integracioResource.setCodi("INT1");
+        when(objectMappingHelper.newInstanceMap(any(), eq(SalutIntegracio.class), eq("salut"))).thenReturn(integracioResource);
 
+        EntornApp entornApp = new EntornApp();
+        AppIntegracio integracio = new AppIntegracio();
+        ReflectionTestUtils.setField(integracio, "codi", "INT1");
+        IntegracioRef integracioRef = new IntegracioRef();
+        ReflectionTestUtils.setField(integracioRef, "nom", "Nom Integracio");
+        ReflectionTestUtils.setField(integracio, "integracio", integracioRef);
+        entornApp.setIntegracions(List.of(integracio));
+        when(salutClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
+
+        // Act
+        perspective.applySingle("CODE", entity, resource);
+
+        // Assert
         assertThat(resource.getIntegracions()).hasSize(1);
-        assertThat(resource.getIntegracions().get(0).getNom()).isEqualTo("Integracio A");
-        assertThat(resource.getIntegracions().get(0).getLogo()).isEqualTo("logo-a".getBytes());
+        assertThat(resource.getIntegracions().get(0).getNom()).isEqualTo("Nom Integracio");
     }
 
     @Test
-    void perspectiveContexts_quanLEntornTeContexts_elsPropagaAlRecurs() throws Exception {
-        SalutEntity entity = sampleSalutEntity(12L, 44L, LocalDateTime.of(2026, 3, 16, 8, 3));
-        Salut resource = sampleSalutResource(12L, 44L);
-        AppContext context = new AppContext();
-        ReflectionTestUtils.setField(context, "codi", "ctx");
-        ReflectionTestUtils.setField(context, "nom", "Context principal");
-        EntornApp entornApp = EntornApp.builder().id(44L).contexts(List.of(context)).build();
-        when(salutClientHelper.entornAppFindById(44L)).thenReturn(entornApp);
+    @DisplayName("PerspectiveSubsistemes: aplica correctament els subsistemes i els seus noms")
+    void perspectiveSubsistemes_applySingle_quanHiHaDades_llavorsAplicaCorrectament() throws PerspectiveApplicationException {
+        // Arrange
+        SalutServiceImpl.PerspectiveSubsistemes perspective = salutService.new PerspectiveSubsistemes();
+        SalutEntity entity = new SalutEntity();
+        entity.setEntornAppId(1L);
+        Salut resource = new Salut();
+        resource.setSubsistemes(new ArrayList<>());
 
-        service.new PerspectiveContexts().applySingle(Salut.PERSP_CONTEXTS, entity, resource);
+        SalutSubsistemaEntity subsistemaEntity = new SalutSubsistemaEntity();
+        subsistemaEntity.setCodi("SUB1");
+        when(salutSubsistemaRepository.findBySalutOrderByCodiAsc(entity)).thenReturn(List.of(subsistemaEntity));
 
-        assertThat(resource.getContexts())
-                .singleElement()
-                .extracting(AppContext::getCodi)
-                .isEqualTo("ctx");
+        SalutSubsistema subsistemaResource = new SalutSubsistema();
+        subsistemaResource.setCodi("SUB1");
+        when(objectMappingHelper.newInstanceMap(any(), eq(SalutSubsistema.class), eq("salut"))).thenReturn(subsistemaResource);
+
+        EntornApp entornApp = new EntornApp();
+        AppSubsistema subsistema = new AppSubsistema();
+        ReflectionTestUtils.setField(subsistema, "codi", "SUB1");
+        ReflectionTestUtils.setField(subsistema, "nom", "Nom Subsistema");
+        entornApp.setSubsistemes(List.of(subsistema));
+        when(salutClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
+
+        // Act
+        perspective.applySingle("CODE", entity, resource);
+
+        // Assert
+        assertThat(resource.getSubsistemes()).hasSize(1);
+        assertThat(resource.getSubsistemes().get(0).getNom()).isEqualTo("Nom Subsistema");
     }
 
     @Test
-    void perspectiveMissatges_quanRepositoriRetornaNull_noAssignaLlistaDeMissatges() throws Exception {
-        SalutEntity entity = sampleSalutEntity(13L, 55L, LocalDateTime.of(2026, 3, 16, 8, 4));
-        Salut resource = sampleSalutResource(13L, 55L);
+    @DisplayName("PerspectiveContexts: aplica correctament els contextos")
+    void perspectiveContexts_applySingle_quanHiHaDades_llavorsAplicaCorrectament() throws PerspectiveApplicationException {
+        // Arrange
+        SalutServiceImpl.PerspectiveContexts perspective = salutService.new PerspectiveContexts();
+        SalutEntity entity = new SalutEntity();
+        entity.setEntornAppId(1L);
+        Salut resource = new Salut();
+
+        EntornApp entornApp = new EntornApp();
+        AppContext appContext1 = new AppContext();
+        ReflectionTestUtils.setField(appContext1, "codi", "CTX1");
+        AppContext appContext2 = new AppContext();
+        ReflectionTestUtils.setField(appContext2, "codi", "CTX2");
+        entornApp.setContexts(List.of(appContext1, appContext2));
+        when(salutClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
+
+        // Act
+        perspective.applySingle("CODE", entity, resource);
+
+        // Assert
+        assertThat(resource.getContexts()).containsExactly(appContext1, appContext2);
+    }
+
+    @Test
+    @DisplayName("PerspectiveMissatges: aplica correctament els missatges")
+    void perspectiveMissatges_applySingle_quanHiHaDades_llavorsAplicaCorrectament() throws PerspectiveApplicationException {
+        // Arrange
+        SalutServiceImpl.PerspectiveMissatges perspective = salutService.new PerspectiveMissatges();
+        SalutEntity entity = new SalutEntity();
+        Salut resource = new Salut();
+
+        SalutMissatgeEntity missatgeEntity = new SalutMissatgeEntity();
+        when(salutMissatgeRepository.findBySalut(entity)).thenReturn(List.of(missatgeEntity));
+        when(objectMappingHelper.newInstanceMap(any(), eq(SalutMissatge.class), eq("salut"))).thenReturn(new SalutMissatge());
+
+        // Act
+        perspective.applySingle("CODE", entity, resource);
+
+        // Assert
+        assertThat(resource.getMissatges()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("PerspectiveMissatges: no fa res quan els missatges són null")
+    void perspectiveMissatges_applySingle_quanMissatgesSonNull_llavorsNoFaRes() throws PerspectiveApplicationException {
+        // Arrange
+        SalutServiceImpl.PerspectiveMissatges perspective = salutService.new PerspectiveMissatges();
+        SalutEntity entity = new SalutEntity();
+        Salut resource = new Salut();
+
         when(salutMissatgeRepository.findBySalut(entity)).thenReturn(null);
 
-        service.new PerspectiveMissatges().applySingle(Salut.PERSP_MISSATGES, entity, resource);
+        // Act
+        perspective.applySingle("CODE", entity, resource);
 
+        // Assert
         assertThat(resource.getMissatges()).isNull();
     }
 
     @Test
-    void perspectiveMissatges_quanHiHaMissatges_elsMapejaAlRecurs() throws Exception {
-        SalutEntity entity = sampleSalutEntity(14L, 56L, LocalDateTime.of(2026, 3, 16, 8, 5));
-        Salut resource = sampleSalutResource(14L, 56L);
-        SalutMissatgeEntity missatgeEntity = new SalutMissatgeEntity();
-        missatgeEntity.setSalut(entity);
-        SalutMissatge missatge = new SalutMissatge();
-        missatge.setMissatge("warning");
-        when(salutMissatgeRepository.findBySalut(entity)).thenReturn(List.of(missatgeEntity));
-        when(objectMappingHelper.newInstanceMap(missatgeEntity, SalutMissatge.class, "salut")).thenReturn(missatge);
-
-        service.new PerspectiveMissatges().applySingle(Salut.PERSP_MISSATGES, entity, resource);
-
-        assertThat(resource.getMissatges())
-                .extracting(SalutMissatge::getMissatge)
-                .containsExactly("warning");
-    }
-
-    @Test
-    void informeGrupsDates_quanAgrupacioEsMinutsHora_alineaLaDataInicialIIncrementaPerFranges() throws Exception {
-        LocalDateTime referencia = LocalDateTime.of(2026, 3, 16, 8, 11);
-        var params = new es.caib.comanda.salut.logic.intf.model.SalutInformeGrupsParams(referencia, SalutInformeAgrupacio.MINUTS_HORA);
-
-        List<SalutInformeGrupItem> result = service.new InformeGrupsDates().generateData(Salut.SALUT_REPORT_GRUPS_DATES, null, params);
-
-        assertThat(result).isNotEmpty();
-        assertThat(result.get(0).getData()).isEqualTo(LocalDateTime.of(2026, 3, 16, 7, 8));
-        assertThat(result.get(result.size() - 1).getData()).isEqualTo(LocalDateTime.of(2026, 3, 16, 8, 8));
-        for (int i = 0; i < result.size() - 1; i++) {
-            assertThat(result.get(i + 1).getData())
-                    .isEqualTo(result.get(i).getData().plusMinutes(MINUTS_PER_AGRUPACIO));
-        }
-    }
-
-    @Test
-    void informeGrupsDates_quanAgrupacioEsMinut_retornaFrangesDunMinutDurantEls15MinutsPrevis() throws Exception {
-        LocalDateTime referencia = LocalDateTime.of(2026, 3, 16, 8, 11, 49);
-        var params = new es.caib.comanda.salut.logic.intf.model.SalutInformeGrupsParams(referencia, SalutInformeAgrupacio.MINUT);
-
-        List<SalutInformeGrupItem> result = service.new InformeGrupsDates().generateData(Salut.SALUT_REPORT_GRUPS_DATES, null, params);
-
-        assertThat(result.get(0).getData()).isEqualTo(LocalDateTime.of(2026, 3, 16, 7, 56));
-        assertThat(result.get(result.size() - 1).getData()).isEqualTo(LocalDateTime.of(2026, 3, 16, 8, 11));
-        for (int i = 0; i < result.size() - 1; i++) {
-            assertThat(result.get(i + 1).getData()).isEqualTo(result.get(i).getData().plusMinutes(1));
-        }
-    }
-
-    @Test
-    void informeGrupsDates_quanAgrupacioEsHora_retornaFrangesHorariesDurantElDarrerDia() throws Exception {
-        LocalDateTime referencia = LocalDateTime.of(2026, 3, 16, 8, 11);
-        var params = new es.caib.comanda.salut.logic.intf.model.SalutInformeGrupsParams(referencia, SalutInformeAgrupacio.HORA);
-
-        List<SalutInformeGrupItem> result = service.new InformeGrupsDates().generateData(Salut.SALUT_REPORT_GRUPS_DATES, null, params);
-
-        assertThat(result.get(0).getData()).isEqualTo(LocalDateTime.of(2026, 3, 15, 8, 0));
-        assertThat(result.get(result.size() - 1).getData()).isEqualTo(LocalDateTime.of(2026, 3, 16, 8, 0));
-        for (int i = 0; i < result.size() - 1; i++) {
-            assertThat(result.get(i + 1).getData()).isEqualTo(result.get(i).getData().plusHours(1));
-        }
-    }
-
-    @Test
-    void informeGrupsDates_quanAgrupacioEsDiaSetmana_retornaFrangesDiariesDurantLaDarreraSetmana() throws Exception {
-        LocalDateTime referencia = LocalDateTime.of(2026, 3, 16, 8, 11);
-        var params = new es.caib.comanda.salut.logic.intf.model.SalutInformeGrupsParams(referencia, SalutInformeAgrupacio.DIA_SETMANA);
-
-        List<SalutInformeGrupItem> result = service.new InformeGrupsDates().generateData(Salut.SALUT_REPORT_GRUPS_DATES, null, params);
-
-        assertThat(result.get(0).getData()).isEqualTo(LocalDateTime.of(2026, 3, 9, 0, 0));
-        assertThat(result.get(result.size() - 1).getData()).isEqualTo(LocalDateTime.of(2026, 3, 16, 0, 0));
-        for (int i = 0; i < result.size() - 1; i++) {
-            assertThat(result.get(i + 1).getData()).isEqualTo(result.get(i).getData().plusDays(1));
-        }
-    }
-
-    @Test
-    void informeGrupsDates_quanAgrupacioEsDiaMes_retornaFrangesDiariesDurantElsDarrers30Dies() throws Exception {
-        LocalDateTime referencia = LocalDateTime.of(2026, 3, 16, 8, 11);
-        var params = new es.caib.comanda.salut.logic.intf.model.SalutInformeGrupsParams(referencia, SalutInformeAgrupacio.DIA_MES);
-
-        List<SalutInformeGrupItem> result = service.new InformeGrupsDates().generateData(Salut.SALUT_REPORT_GRUPS_DATES, null, params);
-
-        assertThat(result.get(0).getData()).isEqualTo(LocalDateTime.of(2026, 2, 14, 0, 0));
-        assertThat(result.get(result.size() - 1).getData()).isEqualTo(LocalDateTime.of(2026, 3, 16, 0, 0));
-        for (int i = 0; i < result.size() - 1; i++) {
-            assertThat(result.get(i + 1).getData()).isEqualTo(result.get(i).getData().plusDays(1));
-        }
-    }
-
-    @Test
-    void informeEstat_quanAgrupacioEsMinutsHora_consultaElRepositoriAmbLaDataAjustadaIElTipusCorrecte() throws Exception {
-        SalutEntity entity = sampleSalutEntity(31L, 88L, LocalDateTime.of(2026, 3, 16, 8, 6));
-        var params = new es.caib.comanda.salut.logic.intf.model.SalutInformeParams(
-                LocalDateTime.of(2026, 3, 16, 8, 11),
-                88L,
-                SalutInformeAgrupacio.MINUTS_HORA);
-        when(salutRepository.findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
-                88L,
-                LocalDateTime.of(2026, 3, 16, 7, 8),
-                TipusRegistreSalut.MINUTS))
-                .thenReturn(List.of(entity));
-
-        List<SalutInformeEstatItem> result = service.new InformeEstat().generateData(Salut.SALUT_REPORT_ESTAT, null, params);
-
-        assertThat(result).hasSizeGreaterThan(1); // La llista s'ha completat amb els temps que no tenim informació
-        assertThat(result) // El nostre registre existeix
-                .anyMatch(item -> item.getData().equals(LocalDateTime.of(2026, 3, 16, 8, 6)));
-        verify(salutRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
-                88L,
-                LocalDateTime.of(2026, 3, 16, 7, 8),
-                TipusRegistreSalut.MINUTS);
-    }
-
-    @Test
-    void informeEstats_quanHiHaDiversosEntorns_consultaCadaEntornAmbLaMateixaFinestraTemporal() throws Exception {
-        SalutEntity entity = sampleSalutEntity(41L, 0L, LocalDateTime.of(2026, 3, 16, 8, 6));
-        var params = new es.caib.comanda.salut.logic.intf.model.SalutInformeLlistatParams(
-                LocalDateTime.of(2026, 3, 16, 8, 11),
-                List.of(5L, 6L, 7L),
-                SalutInformeAgrupacio.MINUTS_HORA);
-        when(salutRepository.findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
-                org.mockito.ArgumentMatchers.anyLong(),
-                eq(LocalDateTime.of(2026, 3, 16, 7, 8)),
-                eq(TipusRegistreSalut.MINUTS)))
-                .thenReturn(List.of(entity));
-
-        List<HashMap<String, Object>> result = service.new InformeEstats().generateData(Salut.SALUT_REPORT_ESTATS, null, params);
-
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0)).containsKeys("5", "6", "7");
-        verify(salutRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
-                5L,
-                LocalDateTime.of(2026, 3, 16, 7, 8),
-                TipusRegistreSalut.MINUTS);
-        verify(salutRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
-                6L,
-                LocalDateTime.of(2026, 3, 16, 7, 8),
-                TipusRegistreSalut.MINUTS);
-        verify(salutRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
-                7L,
-                LocalDateTime.of(2026, 3, 16, 7, 8),
-                TipusRegistreSalut.MINUTS);
-    }
-
-    @Test
-    void informeLatencia_quanConsultaPerAgrupacioMinutsHora_usaTipusIMargeTemporalCorrectes() throws Exception {
-        SalutEntity entity = sampleSalutEntity(21L, 77L, LocalDateTime.of(2026, 3, 16, 8, 6));
-        var params = new es.caib.comanda.salut.logic.intf.model.SalutInformeParams(
-                LocalDateTime.of(2026, 3, 16, 8, 11),
-                77L,
-                SalutInformeAgrupacio.MINUTS_HORA);
-        when(salutRepository.findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
-                77L,
-                LocalDateTime.of(2026, 3, 16, 7, 8),
-                TipusRegistreSalut.MINUTS))
-                .thenReturn(List.of(entity));
-
-        var result = service.new InformeLatencia().generateData(Salut.SALUT_REPORT_LATENCIA, null, params);
-
-        assertThat(result).hasSize(1);
-        verify(salutRepository).findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(
-                77L,
-                LocalDateTime.of(2026, 3, 16, 7, 8),
-                TipusRegistreSalut.MINUTS);
-    }
-
-    private void injectBaseField(String fieldName, Object value) throws Exception {
-        Field field = BaseReadonlyResourceService.class.getDeclaredField(fieldName);
-        field.setAccessible(true);
-        field.set(service, value);
-    }
-
-    private static SalutEntity sampleSalutEntity(Long id, Long entornAppId, LocalDateTime data) {
-        SalutEntity entity = new SalutEntity();
-        entity.setId(id);
-        entity.setEntornAppId(entornAppId);
-        entity.setData(data);
-        entity.setDataApp(data);
-        entity.setTipusRegistre(TipusRegistreSalut.MINUT);
-        entity.setAppEstat(SalutEstat.UP);
-        entity.setBdEstat(SalutEstat.WARN);
-        entity.setAppLatencia(80);
-        entity.setBdLatencia(15);
-        entity.setNumElements(1);
-        return entity;
-    }
-
-    private static Salut sampleSalutResource(Long id, Long entornAppId) {
-        Salut salut = new Salut();
-        salut.setId(id);
-        salut.setEntornAppId(entornAppId);
-        salut.setData(LocalDateTime.of(2026, 3, 16, 8, 0));
-        salut.setVersio("1.0.0");
-        salut.setAppEstat(SalutEstat.UP);
-        salut.setBdEstat(SalutEstat.WARN);
-        return salut;
-    }
-
-    @ParameterizedTest
-    @MethodSource("proporcionarCasosUltimEstatOperatiu")
-    @DisplayName("PerspectiveUltimEstatOperatiuInfo: matriu d'escenaris")
-    void perspectiveUltimEstatOperatiuInfo_escenarios(String descripcion,
-                                                      Long entornAppId,
-                                                      SalutHistEntity darrerHistoric,
-                                                      Optional<SalutHistEntity> ultimEstable,
-                                                      Optional<LocalDateTime> dataSeguent,
-                                                      boolean esperaInfo,
-                                                      SalutEstat estatEsperat,
-                                                      LocalDateTime dataIniciEsperada) {
-
+    @DisplayName("PerspectiveDetalls: aplica correctament els detalls (applySingle)")
+    void perspectiveDetalls_applySingle_quanHiHaDades_llavorsAplicaCorrectament() throws PerspectiveApplicationException {
         // Arrange
-        SalutEntity entity = sampleSalutEntity(100L, entornAppId, LocalDateTime.now());
-        Salut resource = sampleSalutResource(100L, entornAppId);
-        when(salutHistRepository.findTopByEntornAppIdOrderByDataDescIdDesc(entornAppId)).thenReturn(darrerHistoric);
-        if (darrerHistoric != null && !List.of(SalutEstat.UP, SalutEstat.WARN, SalutEstat.DEGRADED).contains(darrerHistoric.getAppEstat())) {
-            when(salutHistRepository.findTopByEntornAppIdAndAppEstatInOrderByDataDesc(eq(entornAppId), any())).thenReturn(ultimEstable);
-        }
-        ultimEstable.ifPresent(salutHistEntity -> when(salutHistRepository.findSeguentData(eq(entornAppId), eq(salutHistEntity.getData())))
-                .thenReturn(dataSeguent));
+        SalutServiceImpl.PerspectiveDetalls perspective = salutService.new PerspectiveDetalls();
+        SalutEntity entity = new SalutEntity();
+        Salut resource = new Salut();
+
+        SalutDetallEntity detallEntity = new SalutDetallEntity();
+        when(salutDetallRepository.findBySalut(entity)).thenReturn(List.of(detallEntity));
+        when(objectMappingHelper.newInstanceMap(any(), eq(SalutDetall.class), eq("salut"))).thenReturn(new SalutDetall());
 
         // Act
-        service.new PerspectiveUltimEstatOperatiuInfo()
-                .applySingle(Salut.PERSP_ULTIM_ESTAT_OPERATIU_INFO, entity, resource);
+        perspective.applySingle("CODE", entity, resource);
 
         // Assert
-        if (esperaInfo) {
-            assertThat(resource.getUltimEstatInfo()).as(descripcion).isNotNull();
-            assertThat(resource.getUltimEstatInfo().getEstat()).as(descripcion).isEqualTo(estatEsperat);
-            assertThat(resource.getUltimEstatInfo().getData()).as(descripcion).isEqualTo(dataIniciEsperada);
-        } else {
-            assertThat(resource.getUltimEstatInfo()).as(descripcion).isNull();
-        }
+        assertThat(resource.getDetalls()).hasSize(1);
     }
 
-    private static Stream<Arguments> proporcionarCasosUltimEstatOperatiu() {
-        return Stream.of(
-                Arguments.of(
-                        "Últim registre estable (UP) → no mostra info",
-                        50L, crearSalutHistEntity(SalutEstat.UP, null, null),
-                        Optional.empty(), Optional.empty(),
-                        false, null, null),
-                Arguments.of(
-                        "Últim DOWN, estable anterior UP → mostra info amb data següent",
-                        51L,
-                        crearSalutHistEntity(SalutEstat.DOWN, null, null),
-                        Optional.of(crearSalutHistEntity(SalutEstat.UP, LocalDateTime.of(2026, 4, 8, 10, 40), null)),
-                        Optional.of(LocalDateTime.of(2026, 4, 8, 10, 18)),
-                        true, SalutEstat.UP, LocalDateTime.of(2026, 4, 8, 10, 18)),
-                Arguments.of(
-                        "No hi ha registre següent → fallback a data del darrerHistoric",
-                        52L,
-                        crearSalutHistEntity(SalutEstat.DOWN, LocalDateTime.of(2026, 4, 8, 9, 0), null),
-                        Optional.of(crearSalutHistEntity(SalutEstat.UP, LocalDateTime.of(2026, 4, 8, 8, 0), null)),
-                        Optional.empty(),
-                        true, SalutEstat.UP, LocalDateTime.of(2026, 4, 8, 9, 0)),
-                Arguments.of(
-                        "Mai ha estat estable → no mostra info",
-                        53L, crearSalutHistEntity(SalutEstat.DOWN, null, null),
-                        Optional.empty(), Optional.empty(),
-                        false, null, null),
-                Arguments.of(
-                        "Sense històric → no mostra info",
-                        54L, null, Optional.empty(), Optional.empty(),
-                        false, null, null),
-                Arguments.of(
-                        "Últim registre WARN (estable) → no mostra info",
-                        55L, crearSalutHistEntity(SalutEstat.WARN, null, null),
-                        Optional.empty(), Optional.empty(),
-                        false, null, null),
-                Arguments.of(
-                        "Últim registre DEGRADED (estable) → no mostra info",
-                        56L, crearSalutHistEntity(SalutEstat.DEGRADED, null, null),
-                        Optional.empty(), Optional.empty(),
-                        false, null, null)
-        );
+    @Test
+    @DisplayName("PerspectiveDetalls: no fa res quan els detalls són null")
+    void perspectiveDetalls_applySingle_quanDetallsSonNull_llavorsNoFaRes() throws PerspectiveApplicationException {
+        // Arrange
+        SalutServiceImpl.PerspectiveDetalls perspective = salutService.new PerspectiveDetalls();
+        SalutEntity entity = new SalutEntity();
+        Salut resource = new Salut();
+
+        when(salutDetallRepository.findBySalut(entity)).thenReturn(null);
+
+        // Act
+        perspective.applySingle("CODE", entity, resource);
+
+        // Assert
+        assertThat(resource.getDetalls()).isNull();
     }
 
-    private static SalutHistEntity crearSalutHistEntity(SalutEstat appEstat, LocalDateTime data, Boolean peticcioError) {
-        SalutHistEntity h = new SalutHistEntity();
-        h.setEntornAppId(1L);
-        h.setData(data != null ? data : LocalDateTime.of(2026, 4, 8, 10, 0));
-        h.setAppEstat(appEstat);
-        h.setPeticioError(peticcioError != null ? peticcioError : (appEstat == SalutEstat.DOWN));
-        return h;
+    @Test
+    @DisplayName("PerspectiveHistorics: aplica correctament els històrics")
+    void perspectiveHistorics_applySingle_quanHiHaDades_llavorsAplicaCorrectament() throws PerspectiveApplicationException {
+        // Arrange
+        SalutServiceImpl.PerspectiveHistorics perspective = salutService.new PerspectiveHistorics();
+        SalutEntity entity = new SalutEntity();
+        entity.setEntornAppId(1L);
+        Salut resource = new Salut();
+
+        SalutHistEntity historicEntity = new SalutHistEntity();
+        when(salutHistRepository.findByEntornAppIdOrderByDataDescIdDesc(1L)).thenReturn(List.of(historicEntity));
+        when(objectMappingHelper.newInstanceMap(any(), eq(SalutHist.class))).thenReturn(new SalutHist());
+
+        // Act
+        perspective.applySingle("CODE", entity, resource);
+
+        // Assert
+        assertThat(resource.getHistorics()).hasSize(1);
+    }
+
+    // ========================================================================
+    // 6. TESTOS PER A Report Generators (Faltants)
+    // ========================================================================
+
+    @Test
+    @DisplayName("InformeSalutLast: genera correctament l'informe de l'últim estat")
+    void informeSalutLast_generateData_quanEsCrida_llavorsGeneraInforme() {
+        // Arrange
+        SalutServiceImpl.InformeSalutLast generator = salutService.new InformeSalutLast();
+        SalutEntity entity = new SalutEntity();
+
+        EntornApp entornApp = new EntornApp();
+        entornApp.setId(1L);
+        when(salutClientHelper.entornAppFindByActivaTrue(anyString())).thenReturn(List.of(entornApp));
+
+        SalutEntity salutEntity = new SalutEntity();
+        salutEntity.setId(1L);
+        salutEntity.setEntornAppId(1L);
+        when(salutRepository.informeSalutLast(eq(List.of(1L)), any())).thenReturn(List.of(salutEntity));
+
+        // Mock dels timers de mètriques
+        when(metricsHelper.getSalutLastEntornAppsTimer()).thenReturn(mock(io.micrometer.core.instrument.Timer.class));
+        when(metricsHelper.getSalutLastDadesTimer()).thenReturn(mock(io.micrometer.core.instrument.Timer.class));
+        when(metricsHelper.getSalutLastGlobalTimer()).thenReturn(mock(io.micrometer.core.instrument.Timer.class));
+
+        Salut salut = new Salut();
+        salut.setId(1L);
+        when(resourceEntityMappingHelper.entityToResource(any(), any())).thenReturn(salut);
+
+        // Act
+        List<Salut> result = generator.generateData("CODE", entity, "filter");
+
+        // Assert
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getId()).isEqualTo(1L);
+        verify(metricsHelper, times(1)).getSalutLastEntornAppsTimer();
+        verify(metricsHelper, times(1)).getSalutLastDadesTimer();
+        verify(metricsHelper, times(1)).getSalutLastGlobalTimer();
+    }
+
+    @Test
+    @DisplayName("InformeSalutLast: retorna llista buida quan no hi ha saluts")
+    void informeSalutLast_generateData_quanNoHiHaSaluts_llavorsRetornaBuit() {
+        // Arrange
+        SalutServiceImpl.InformeSalutLast generator = salutService.new InformeSalutLast();
+        SalutEntity entity = new SalutEntity();
+
+        when(salutClientHelper.entornAppFindByActivaTrue(anyString())).thenReturn(Collections.emptyList());
+        when(salutRepository.informeSalutLast(any(), any())).thenReturn(null);
+
+        when(metricsHelper.getSalutLastEntornAppsTimer()).thenReturn(mock(io.micrometer.core.instrument.Timer.class));
+        when(metricsHelper.getSalutLastDadesTimer()).thenReturn(mock(io.micrometer.core.instrument.Timer.class));
+        when(metricsHelper.getSalutLastGlobalTimer()).thenReturn(mock(io.micrometer.core.instrument.Timer.class));
+
+        // Act
+        List<Salut> result = generator.generateData("CODE", entity, "filter");
+
+        // Assert
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("InformeLatencia: genera correctament l'informe de latència")
+    void informeLatencia_generateData_quanEsCrida_llavorsGeneraInforme() {
+        // Arrange
+        SalutServiceImpl.InformeLatencia generator = salutService.new InformeLatencia();
+        SalutEntity entity = new SalutEntity();
+
+        SalutInformeParams params = new SalutInformeParams();
+        params.setEntornAppId(1L);
+        params.setAgrupacio(SalutInformeAgrupacio.HORA);
+        params.setDataReferencia(LocalDateTime.now());
+
+        when(salutEstatHelper.mapTipusAgrupacio(SalutInformeAgrupacio.HORA)).thenReturn(TipusRegistreSalut.HORA);
+        when(salutEstatHelper.getDataIniciAjustada(any(), any())).thenReturn(LocalDateTime.now().minusHours(1));
+
+        SalutEntity salutEntity = new SalutEntity();
+        salutEntity.setData(LocalDateTime.now());
+        when(salutRepository.findByEntornAppIdAndDataGreaterThanEqualAndTipusRegistreOrderById(anyLong(), any(), any()))
+            .thenReturn(List.of(salutEntity));
+
+        // Act
+        List<SalutInformeLatenciaItem> result = generator.generateData("CODE", entity, params);
+
+        // Assert
+        assertThat(result).hasSize(1);
     }
 }

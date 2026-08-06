@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.NoSuchMessageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +23,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,9 +37,13 @@ class CacheServiceImplTest {
     @InjectMocks
     private CacheServiceImpl cacheService;
 
+    // ========================================================================
+    // 1. TESTOS PER A getOne
+    // ========================================================================
+
     @Test
-    @DisplayName("getOne retorna cache especial per id 'TOTES'")
-    void getOne_quanIdTotes_retornaCacheEspecial() {
+    @DisplayName("getOne: retorna cache especial quan l'id és 'TOTES'")
+    void getOne_quanIdEsTotes_llavorsRetornaCacheEspecial() {
         // Act
         ComandaCache result = cacheService.getOne("TOTES", new String[0]);
 
@@ -47,8 +54,8 @@ class CacheServiceImplTest {
     }
 
     @Test
-    @DisplayName("getOne retorna cache amb dades quan existeix")
-    void getOne_quanCacheExisteix_retornaDades() {
+    @DisplayName("getOne: retorna dades de la cache quan existeix")
+    void getOne_quanCacheExisteix_llavorsRetornaDades() {
         // Arrange
         String cacheId = "testCache";
         I18nUtil mockI18nUtil = mock(I18nUtil.class);
@@ -56,11 +63,6 @@ class CacheServiceImplTest {
 
         try (MockedStatic<I18nUtil> mockedStatic = Mockito.mockStatic(I18nUtil.class)) {
             mockedStatic.when(I18nUtil::getInstance).thenReturn(mockI18nUtil);
-
-//            HazelcastInstance instance = Hazelcast.newHazelcastInstance();
-//            IMap<Object, Object> nativeCache = instance.getMap(cacheId);
-//            nativeCache.put("key1", "value1");
-//            nativeCache.put("key2", "value2");
 
             HazelcastCache mockCache = mock(HazelcastCache.class);
             IMap<Object, Object> nativeCache = mock(IMap.class);
@@ -80,15 +82,12 @@ class CacheServiceImplTest {
             assertThat(result.getMida()).isGreaterThan(0);
 
             verify(cacheHelper).getCache(cacheId);
-
-//            // Neteja Hazelcast
-//            instance.shutdown();
         }
     }
 
     @Test
-    @DisplayName("getOne retorna cache buida quan no existeix")
-    void getOne_quanCacheNoExisteix_retornaCacheBuida() {
+    @DisplayName("getOne: retorna cache buida quan no existeix al CacheHelper")
+    void getOne_quanCacheNoExisteix_llavorsRetornaCacheBuida() {
         // Arrange
         String cacheId = "nonexistentCache";
         I18nUtil mockI18nUtil = mock(I18nUtil.class);
@@ -104,20 +103,44 @@ class CacheServiceImplTest {
 
             // Assert
             assertThat(result).isNotNull();
-            assertThat(result.getId()).isNull(); // No s'ha establert l'ID perquè la cache és null
+            assertThat(result.getId()).isEqualTo("nonexistentCache");
             assertThat(result.getEntrades()).isEqualTo(0);
             assertThat(result.getMida()).isEqualTo(0L);
             verify(cacheHelper).getCache(cacheId);
-
         }
     }
 
     @Test
-    @DisplayName("findPage retorna totes les caches disponibles")
-    void findPage_retornaLlistaDeCaches() {
+    @DisplayName("getOne: utilitza la clau i18n com a descripció quan llança NoSuchMessageException")
+    void getOne_quanI18nLlancaExcepcio_llavorsUsaClauComDescripcio() {
         // Arrange
-        Set<String> cacheNames = new HashSet(Arrays.asList("cache1", "cache2"));
+        String cacheId = "testCacheExcepcio";
+        I18nUtil mockI18nUtil = mock(I18nUtil.class);
+        when(mockI18nUtil.getI18nMessage(anyString(), any())).thenThrow(new NoSuchMessageException("No message"));
 
+        try (MockedStatic<I18nUtil> mockedStatic = Mockito.mockStatic(I18nUtil.class)) {
+            mockedStatic.when(I18nUtil::getInstance).thenReturn(mockI18nUtil);
+
+            when(cacheHelper.getCache(cacheId)).thenReturn(null);
+
+            // Act
+            ComandaCache result = cacheService.getOne(cacheId, new String[0]);
+
+            // Assert
+            assertThat(result).isNotNull();
+            assertThat(result.getDescripcio()).isEqualTo("es.caib.comanda.estadistica.cache." + cacheId);
+        }
+    }
+
+    // ========================================================================
+    // 2. TESTOS PER A findPage
+    // ========================================================================
+
+    @Test
+    @DisplayName("findPage: retorna totes les caches disponibles sense filtre")
+    void findPage_quanNoHiHaFiltre_llavorsRetornaTotesLesCaches() {
+        // Arrange
+        Set<String> cacheNames = new HashSet<>(Arrays.asList("cache1", "cache2"));
         I18nUtil mockI18nUtil = mock(I18nUtil.class);
         when(mockI18nUtil.getI18nMessage(anyString(), any())).thenReturn("Descripció mocada");
 
@@ -136,13 +159,136 @@ class CacheServiceImplTest {
             assertThat(result).isNotNull();
             assertThat(result.getContent()).hasSize(2);
             verify(cacheHelper, times(1)).getCacheNames();
-
         }
     }
 
     @Test
-    @DisplayName("delete esborra totes les caches quan id és 'TOTES'")
-    void delete_quanIdTotes_esborraTotsLesCaches() throws Exception {
+    @DisplayName("findPage: filtra correctament quan el quickFilter coincideix amb l'id")
+    void findPage_quanQuickFilterCoincideixAmbId_llavorsFiltraPerId() {
+        // Arrange
+        Set<String> cacheNames = new HashSet<>(Arrays.asList("cache1", "cache2"));
+        I18nUtil mockI18nUtil = mock(I18nUtil.class);
+        when(mockI18nUtil.getI18nMessage(anyString(), any())).thenReturn("Descripció genèrica");
+
+        try (MockedStatic<I18nUtil> mockedStatic = Mockito.mockStatic(I18nUtil.class)) {
+            mockedStatic.when(I18nUtil::getInstance).thenReturn(mockI18nUtil);
+
+            when(cacheHelper.getCacheNames()).thenReturn(cacheNames);
+            when(cacheHelper.getCache("cache1")).thenReturn(null);
+            when(cacheHelper.getCache("cache2")).thenReturn(null);
+
+            Pageable pageable = PageRequest.of(0, 10);
+
+            // Act
+            Page<ComandaCache> result = cacheService.findPage("2", "", new String[0], new String[0], pageable);
+
+            // Assert
+            assertThat(result.getContent()).hasSize(1);
+            assertThat(result.getContent().get(0).getId()).isEqualTo("cache2");
+        }
+    }
+
+    @Test
+    @DisplayName("findPage: filtra correctament quan el quickFilter coincideix amb la descripció")
+    void findPage_quanQuickFilterCoincideixAmbDescripcio_llavorsFiltraPerDescripcio() {
+        // Arrange
+        Set<String> cacheNames = new HashSet<>(Arrays.asList("cache1", "cache2"));
+        I18nUtil mockI18nUtil = mock(I18nUtil.class);
+        // Només "cache1" tindrà aquesta descripció
+        when(mockI18nUtil.getI18nMessage("es.caib.comanda.estadistica.cache.cache1", null)).thenReturn("Descripció única de cache1");
+        when(mockI18nUtil.getI18nMessage("es.caib.comanda.estadistica.cache.cache2", null)).thenReturn("Altra descripció");
+
+        try (MockedStatic<I18nUtil> mockedStatic = Mockito.mockStatic(I18nUtil.class)) {
+            mockedStatic.when(I18nUtil::getInstance).thenReturn(mockI18nUtil);
+
+            when(cacheHelper.getCacheNames()).thenReturn(cacheNames);
+            when(cacheHelper.getCache("cache1")).thenReturn(null);
+            when(cacheHelper.getCache("cache2")).thenReturn(null);
+
+            Pageable pageable = PageRequest.of(0, 10);
+
+            // Act
+            Page<ComandaCache> result = cacheService.findPage("Descripció única de cache1", "", new String[0], new String[0], pageable);
+
+            // Assert
+            assertThat(result.getContent()).hasSize(1);
+            assertThat(result.getContent().get(0).getDescripcio()).isEqualTo("Descripció única de cache1");
+        }
+    }
+
+    @Test
+    @DisplayName("findPage: filtra correctament quan el quickFilter coincideix amb el nombre d'entrades")
+    void findPage_quanQuickFilterCoincideixAmbEntrades_llavorsFiltraPerEntrades() {
+        // Arrange
+        Set<String> cacheNames = new HashSet<>(Arrays.asList("cache1", "cache2"));
+        I18nUtil mockI18nUtil = mock(I18nUtil.class);
+        when(mockI18nUtil.getI18nMessage(anyString(), any())).thenReturn("Descripció genèrica");
+
+        try (MockedStatic<I18nUtil> mockedStatic = Mockito.mockStatic(I18nUtil.class)) {
+            mockedStatic.when(I18nUtil::getInstance).thenReturn(mockI18nUtil);
+
+            HazelcastCache mockCache1 = mock(HazelcastCache.class);
+            IMap<Object, Object> nativeCache1 = mock(IMap.class);
+            when(mockCache1.getNativeCache()).thenReturn(nativeCache1);
+            when(nativeCache1.size()).thenReturn(5); // 5 entrades
+
+            when(cacheHelper.getCacheNames()).thenReturn(cacheNames);
+            when(cacheHelper.getCache("cache1")).thenReturn(mockCache1);
+            when(cacheHelper.getCache("cache2")).thenReturn(null); // 0 entrades
+
+            Pageable pageable = PageRequest.of(0, 10);
+
+            // Act
+            Page<ComandaCache> result = cacheService.findPage("5", "", new String[0], new String[0], pageable);
+
+            // Assert
+            assertThat(result.getContent()).hasSize(1);
+            assertThat(result.getContent().get(0).getId()).isEqualTo("cache1");
+            assertThat(result.getContent().get(0).getEntrades()).isEqualTo(5);
+        }
+    }
+
+    @Test
+    @DisplayName("findPage: filtra correctament quan el quickFilter coincideix amb la mida")
+    void findPage_quanQuickFilterCoincideixAmbMida_llavorsFiltraPerMida() {
+        // Arrange
+        Set<String> cacheNames = new HashSet<>(Arrays.asList("cache1", "cache2"));
+        I18nUtil mockI18nUtil = mock(I18nUtil.class);
+        when(mockI18nUtil.getI18nMessage(anyString(), any())).thenReturn("Descripció genèrica");
+
+        try (MockedStatic<I18nUtil> mockedStatic = Mockito.mockStatic(I18nUtil.class)) {
+            mockedStatic.when(I18nUtil::getInstance).thenReturn(mockI18nUtil);
+
+            // cache1 tindrà una mida > 0
+            HazelcastCache mockCache1 = mock(HazelcastCache.class);
+            IMap<Object, Object> nativeCache1 = mock(IMap.class);
+            when(mockCache1.getNativeCache()).thenReturn(nativeCache1);
+            when(nativeCache1.size()).thenReturn(1);
+            when(nativeCache1.values()).thenReturn(java.util.List.of("valor_llarg"));
+
+            // cache2 serà null (mida 0)
+            when(cacheHelper.getCacheNames()).thenReturn(cacheNames);
+            when(cacheHelper.getCache("cache1")).thenReturn(mockCache1);
+            when(cacheHelper.getCache("cache2")).thenReturn(null);
+
+            Pageable pageable = PageRequest.of(0, 10);
+
+            // Act
+            Page<ComandaCache> result = cacheService.findPage("0", "", new String[0], new String[0], pageable);
+
+            // Assert
+            assertThat(result.getContent()).hasSize(1);
+            assertThat(result.getContent().get(0).getMida()).isEqualTo(0L);
+        }
+    }
+
+    // ========================================================================
+    // 3. TESTOS PER A delete
+    // ========================================================================
+
+    @Test
+    @DisplayName("delete: esborra totes les caches quan l'id és 'TOTES'")
+    void delete_quanIdEsTotes_llavorsEsborraTotesLesCaches() throws Exception {
         // Act
         cacheService.delete("TOTES", null);
 
@@ -152,8 +298,8 @@ class CacheServiceImplTest {
     }
 
     @Test
-    @DisplayName("delete esborra una cache específica")
-    void delete_quanIdEspecific_esborraAquellaCache() throws Exception {
+    @DisplayName("delete: esborra una cache específica quan l'id no és 'TOTES'")
+    void delete_quanIdEsEspecific_llavorsEsborraAquellaCache() throws Exception {
         // Arrange
         String cacheId = "specificCache";
 

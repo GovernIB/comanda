@@ -77,7 +77,7 @@ class MonitorTasquesTest {
         // Assert
         ArgumentCaptor<Monitor> monitorCaptor = ArgumentCaptor.forClass(Monitor.class);
         verify(tasquesClientHelper).monitorCreate(monitorCaptor.capture());
-        
+
         Monitor capturedMonitor = monitorCaptor.getValue();
         assertThat(capturedMonitor.getEstat()).isEqualTo(EstatEnum.OK);
         assertThat(capturedMonitor.getTempsResposta()).isNotNull();
@@ -98,7 +98,7 @@ class MonitorTasquesTest {
         // Assert
         ArgumentCaptor<Monitor> monitorCaptor = ArgumentCaptor.forClass(Monitor.class);
         verify(tasquesClientHelper).monitorCreate(monitorCaptor.capture());
-        
+
         Monitor capturedMonitor = monitorCaptor.getValue();
         assertThat(capturedMonitor.getEstat()).isEqualTo(EstatEnum.ERROR);
         assertThat(capturedMonitor.getErrorDescripcio()).isEqualTo("Descripció error");

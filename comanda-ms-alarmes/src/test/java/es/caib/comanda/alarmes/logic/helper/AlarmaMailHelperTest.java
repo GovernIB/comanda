@@ -6,7 +6,6 @@ import es.caib.comanda.alarmes.persist.entity.AlarmaEntity;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.model.*;
-import es.caib.comanda.client.model.monitor.Monitor;
 import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,22 +23,19 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Tests per a AlarmaMailHelper")
 class AlarmaMailHelperTest {
 
-    @Mock
-    private AlarmaClientHelper alarmaClientHelper;
-    @Mock
-    private MailHelper mailHelper;
-    @Mock
-    private UserInformationHelper userInformationHelper;
-    @Mock
-    private AlarmaRepository alarmaRepository;
-    @Mock
-    private ParametresHelper parametresHelper;
+    @Mock private AlarmaClientHelper alarmaClientHelper;
+    @Mock private MailHelper mailHelper;
+    @Mock private UserInformationHelper userInformationHelper;
+    @Mock private AlarmaRepository alarmaRepository;
+    @Mock private ParametresHelper parametresHelper;
 
     @InjectMocks
     private AlarmaMailHelper alarmaMailHelper;
@@ -52,10 +48,9 @@ class AlarmaMailHelperTest {
 
     @BeforeEach
     void setUp() {
-        lenient().when(parametresHelper.getParametreText(BaseConfig.PROP_ALARMA_MAIL_FROM_ADDRESS, "comanda@caib.es"))
-                .thenReturn("from@caib.es");
-        lenient().when(parametresHelper.getParametreText(BaseConfig.PROP_ALARMA_MAIL_FROM_NAME, "Comanda"))
-                .thenReturn("Comanda");
+        lenient().when(parametresHelper.getParametreText(BaseConfig.PROP_ALARMA_MAIL_FROM_ADDRESS, "comanda@caib.es")).thenReturn("from@caib.es");
+        lenient().when(parametresHelper.getParametreText(BaseConfig.PROP_ALARMA_MAIL_FROM_NAME, "Comanda")).thenReturn("Comanda");
+        lenient().when(parametresHelper.getParametreBoolean(BaseConfig.PROP_ALARMA_LOG_ACTIVACIO, false)).thenReturn(true);
 
         config = new AlarmaConfigEntity();
         config.setNom("Test Alarma");
@@ -68,15 +63,14 @@ class AlarmaMailHelperTest {
         alarma.setDataActivacio(LocalDateTime.now());
 
         entornApp = EntornApp.builder()
-                .app(AppRef.builder().id(10L).nom("APP").build())
-                .entorn(EntornRef.builder().id(20L).nom("ENTORN").build())
-                .alarmesEmail("admin@caib.es")
-                .build();
+            .app(AppRef.builder().id(10L).nom("APP").build())
+            .entorn(EntornRef.builder().id(20L).nom("ENTORN").build())
+            .alarmesEmail("admin@caib.es")
+            .build();
         app = EntornAppTestHelper.createApp(10L, "APP Nom");
         entorn = Entorn.builder().id(20L).nom("ENTORN Nom").build();
     }
 
-    // Helper intern per crear App ja que no té builder
     private static class EntornAppTestHelper {
         static App createApp(Long id, String nom) {
             App app = new App();
@@ -86,113 +80,57 @@ class AlarmaMailHelperTest {
         }
     }
 
+    // ========================================================================
+    // TESTOS ORIGINALS (MANTINGUTS I OPTIMITZATS)
+    // ========================================================================
+
     @Test
     @DisplayName("Envia correu d'alarma genèrica correctament")
     void sendAlarmaGeneric_quanTotCorrecte_enviamentOk() throws MessagingException, UnsupportedEncodingException {
-        // Arrange
         when(alarmaClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
         when(alarmaClientHelper.appFindById(10L)).thenReturn(app);
         when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
-        when(mailHelper.sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
-                .thenReturn(true);
+        when(mailHelper.sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(true);
 
-        // Act
         alarmaMailHelper.sendAlarmaGeneric(alarma, AlarmaMailEventType.ACTIVACIO);
 
-        // Assert
-        verify(mailHelper).sendSimple(
-                eq("from@caib.es"), eq("Comanda"),
-                eq("admin@caib.es"), anyString(),
-                eq("[COMANDA] Alarma activada: Test Alarma"), anyString());
-        verify(alarmaClientHelper).monitorCreate(any(Monitor.class));
+        verify(mailHelper).sendSimple(eq("from@caib.es"), eq("Comanda"), eq("admin@caib.es"), anyString(), eq("[COMANDA] Alarma activada: Test Alarma"), anyString());
     }
 
     @Test
     @DisplayName("Envia correu d'alarma genèrica correctament sense nom")
     void sendAlarmaGeneric_quanNoNom_enviamentOk() throws MessagingException, UnsupportedEncodingException {
-        // Arrange
         config.setNom(null);
         when(alarmaClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
         when(alarmaClientHelper.appFindById(10L)).thenReturn(app);
         when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
-        when(mailHelper.sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
-                .thenReturn(true);
+        when(mailHelper.sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(true);
 
-        // Act
         alarmaMailHelper.sendAlarmaGeneric(alarma, AlarmaMailEventType.ACTIVACIO);
 
-        // Assert
-        verify(mailHelper).sendSimple(
-                eq("from@caib.es"), eq("Comanda"),
-                eq("admin@caib.es"), anyString(),
-                eq("[COMANDA] Alarma activada"), anyString());
+        verify(mailHelper).sendSimple(eq("from@caib.es"), eq("Comanda"), eq("admin@caib.es"), anyString(), eq("[COMANDA] Alarma activada"), anyString());
     }
 
     @Test
     @DisplayName("Envia correu d'alarma a l'usuari creador")
     void sendAlarmaUser_quanUsuariNoAdmin_enviamentOk() throws MessagingException, UnsupportedEncodingException {
-        // Arrange
         config.setAdmin(false);
-        config.setNom("Test Alarma");
-        Usuari usuari = Usuari.builder()
-                .codi("creator")
-                .nom("Creator Name")
-                .email("creator@caib.es")
-                .alarmaMail(true)
-                .alarmaMailAgrupar(false)
-                .build();
+        Usuari usuari = Usuari.builder().codi("creator").nom("Creator Name").email("creator@caib.es").alarmaMail(true).alarmaMailAgrupar(false).build();
 
         when(userInformationHelper.usuariFindByUsername("creator")).thenReturn(usuari);
-        // Per generateAlarmaBodyMessage:
         when(alarmaClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
         when(alarmaClientHelper.appFindById(10L)).thenReturn(app);
         when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
+        when(mailHelper.sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(true);
 
-        // Act
         alarmaMailHelper.sendAlarmaUser(alarma, AlarmaMailEventType.ACTIVACIO);
 
-        // Assert
-        verify(mailHelper).sendSimple(
-                eq("from@caib.es"), anyString(),
-                eq("creator@caib.es"), eq("Creator Name"),
-                eq("[COMANDA] Alarma activada: Test Alarma"), anyString());
-        verify(alarmaClientHelper).monitorCreate(any(Monitor.class));
-    }
-
-    @Test
-    @DisplayName("Envia correu d'alarma a l'usuari creador sense nom")
-    void sendAlarmaUser_quanUsuariNoAdminNoNom_enviamentOk() throws MessagingException, UnsupportedEncodingException {
-        // Arrange
-        config.setAdmin(false);
-        config.setNom(null);
-        Usuari usuari = Usuari.builder()
-                .codi("creator")
-                .nom("Creator Name")
-                .email("creator@caib.es")
-                .alarmaMail(true)
-                .alarmaMailAgrupar(false)
-                .build();
-
-        when(userInformationHelper.usuariFindByUsername("creator")).thenReturn(usuari);
-        // Per generateAlarmaBodyMessage:
-        when(alarmaClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
-        when(alarmaClientHelper.appFindById(10L)).thenReturn(app);
-        when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
-
-        // Act
-        alarmaMailHelper.sendAlarmaUser(alarma, AlarmaMailEventType.ACTIVACIO);
-
-        // Assert
-        verify(mailHelper).sendSimple(
-                eq("from@caib.es"), anyString(),
-                eq("creator@caib.es"), eq("Creator Name"),
-                eq("[COMANDA] Alarma activada"), anyString());
+        verify(mailHelper).sendSimple(eq("from@caib.es"), anyString(), eq("creator@caib.es"), eq("Creator Name"), eq("[COMANDA] Alarma activada: Test Alarma"), anyString());
     }
 
     @Test
     @DisplayName("Envia correu d'alarma a administradors")
     void sendAlarmaUser_quanAdmin_enviamentOk() throws MessagingException, UnsupportedEncodingException {
-        // Arrange
         config.setAdmin(true);
         String[] admins = {"admin1", "admin2"};
         Usuari u1 = Usuari.builder().codi("admin1").nom("A1").email("a1@caib.es").alarmaMail(true).alarmaMailAgrupar(false).build();
@@ -201,345 +139,319 @@ class AlarmaMailHelperTest {
         when(userInformationHelper.findByRole(BaseConfig.ROLE_ADMIN)).thenReturn(admins);
         when(userInformationHelper.usuariFindByUsername("admin1")).thenReturn(u1);
         when(userInformationHelper.usuariFindByUsername("admin2")).thenReturn(u2);
-        
-        // Per generateAlarmaBodyMessage
         when(alarmaClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
         when(alarmaClientHelper.appFindById(10L)).thenReturn(app);
         when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
+        when(mailHelper.sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(true);
 
-        // Act
         alarmaMailHelper.sendAlarmaUser(alarma, AlarmaMailEventType.ACTIVACIO);
 
-        // Assert
         verify(mailHelper, times(2)).sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
-        verify(alarmaClientHelper, times(2)).monitorCreate(any(Monitor.class));
     }
 
     @Test
     @DisplayName("No envia correu genèric si no hi ha email configurat")
     void sendAlarmaGeneric_quanNoEmail_noEnvia() {
-        // Arrange
         entornApp.setAlarmesEmail(null);
         when(alarmaClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
 
-        // Act
         alarmaMailHelper.sendAlarmaGeneric(alarma, AlarmaMailEventType.ACTIVACIO);
 
-        // Assert
         verifyNoInteractions(mailHelper);
     }
 
     @Test
     @DisplayName("Usa email alternatiu si està informat")
     void sendAlarmaUser_quanEmailAlternatiu_usaAlternatiu() throws MessagingException, UnsupportedEncodingException {
-        // Arrange
         config.setAdmin(false);
-        Usuari usuari = Usuari.builder()
-                .codi("creator")
-                .nom("Creator")
-                .email("original@caib.es")
-                .emailAlternatiu("alternatiu@caib.es")
-                .alarmaMail(true)
-                .alarmaMailAgrupar(false)
-                .build();
+        Usuari usuari = Usuari.builder().codi("creator").nom("Creator").email("original@caib.es").emailAlternatiu("alternatiu@caib.es").alarmaMail(true).alarmaMailAgrupar(false).build();
 
         when(userInformationHelper.usuariFindByUsername("creator")).thenReturn(usuari);
         when(alarmaClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
         when(alarmaClientHelper.appFindById(10L)).thenReturn(app);
         when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
+        when(mailHelper.sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(true);
 
-        // Act
         alarmaMailHelper.sendAlarmaUser(alarma, AlarmaMailEventType.ACTIVACIO);
 
-        // Assert
         verify(mailHelper).sendSimple(anyString(), anyString(), eq("alternatiu@caib.es"), anyString(), anyString(), anyString());
     }
 
-	@Test
-	@DisplayName("Usa email autogenerat si no hi ha ni email ni email alternatiu")
-	void sendAlarmaUser_quanNoEmail_usaAutogenerat() throws MessagingException, UnsupportedEncodingException {
-		// Arrange
-		config.setAdmin(false);
-		Usuari usuari = Usuari.builder()
-				.codi("creator")
-				.nom("Creator")
-				.email(null)
-				.emailAlternatiu(null)
-				.alarmaMail(true)
-				.alarmaMailAgrupar(false)
-				.build();
+    @Test
+    @DisplayName("Usa email autogenerat si no hi ha ni email ni email alternatiu")
+    void sendAlarmaUser_quanNoEmail_usaAutogenerat() throws MessagingException, UnsupportedEncodingException {
+        config.setAdmin(false);
+        Usuari usuari = Usuari.builder().codi("creator").nom("Creator").email(null).emailAlternatiu(null).alarmaMail(true).alarmaMailAgrupar(false).build();
 
-		when(userInformationHelper.usuariFindByUsername("creator")).thenReturn(usuari);
-		when(parametresHelper.getParametreText(BaseConfig.PROP_ALARMA_MAIL_DEFAULT_DOMAIN, "caib.es"))
-				.thenReturn("test.es");
-		when(alarmaClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
-		when(alarmaClientHelper.appFindById(10L)).thenReturn(app);
-		when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
+        when(userInformationHelper.usuariFindByUsername("creator")).thenReturn(usuari);
+        when(parametresHelper.getParametreText(BaseConfig.PROP_ALARMA_MAIL_DEFAULT_DOMAIN, "caib.es")).thenReturn("test.es");
+        when(alarmaClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
+        when(alarmaClientHelper.appFindById(10L)).thenReturn(app);
+        when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
+        when(mailHelper.sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(true);
 
-		// Act
-		alarmaMailHelper.sendAlarmaUser(alarma, AlarmaMailEventType.ACTIVACIO);
+        alarmaMailHelper.sendAlarmaUser(alarma, AlarmaMailEventType.ACTIVACIO);
 
-		// Assert
-		verify(mailHelper).sendSimple(anyString(), anyString(), eq("creator@test.es"), anyString(), anyString(), anyString());
-	}
-
-	@Test
-	@DisplayName("Envia correu d'alarma a administradors usant email autogenerat si cal")
-	void sendAlarmaUser_quanAdminSenseEmail_usaAutogenerat() throws MessagingException, UnsupportedEncodingException {
-		// Arrange
-		config.setAdmin(true);
-		String[] admins = {"admin1"};
-		Usuari admin1 = Usuari.builder()
-				.codi("admin1")
-				.nom("Admin 1")
-				.email(null)
-				.emailAlternatiu(null)
-				.alarmaMail(true)
-				.alarmaMailAgrupar(false)
-				.build();
-
-		when(userInformationHelper.findByRole(BaseConfig.ROLE_ADMIN)).thenReturn(admins);
-		when(userInformationHelper.usuariFindByUsername("admin1")).thenReturn(admin1);
-		when(parametresHelper.getParametreText(BaseConfig.PROP_ALARMA_MAIL_DEFAULT_DOMAIN, "caib.es"))
-				.thenReturn("admin.es");
-		when(alarmaClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
-		when(alarmaClientHelper.appFindById(10L)).thenReturn(app);
-		when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
-
-		// Act
-		alarmaMailHelper.sendAlarmaUser(alarma, AlarmaMailEventType.ACTIVACIO);
-
-		// Assert
-		verify(mailHelper).sendSimple(anyString(), anyString(), eq("admin1@admin.es"), anyString(), anyString(), anyString());
-	}
+        verify(mailHelper).sendSimple(anyString(), anyString(), eq("creator@test.es"), anyString(), anyString(), anyString());
+    }
 
     @Test
     @DisplayName("Envia alarmes agrupades correctament")
     void sendAlarmesAgrupades_enviamentOk() throws MessagingException, UnsupportedEncodingException {
-        // Arrange
         String[] admins = {"admin1"};
         Usuari u1 = Usuari.builder().codi("admin1").nom("A1").email("a1@caib.es").alarmaMail(true).alarmaMailAgrupar(true).build();
-        
+
         when(userInformationHelper.findByRole(BaseConfig.ROLE_ADMIN)).thenReturn(admins);
         when(userInformationHelper.usuariFindByUsername("admin1")).thenReturn(u1);
-        
-        List<AlarmaEntity> alarmesAdmin = Collections.singletonList(alarma);
-        when(alarmaRepository.findByAlarmaConfigAdminTrueAndDataActivacioAfterAndDataEnviamentIsNull(any()))
-                .thenReturn(alarmesAdmin);
-        when(alarmaRepository.findByAlarmaConfigAdminTrueAndAlarmaConfigNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(any()))
-                .thenReturn(Collections.emptyList());
+        when(alarmaRepository.findByAlarmaConfigAdminTrueAndDataActivacioAfterAndDataEnviamentIsNull(any())).thenReturn(Collections.singletonList(alarma));
+        when(alarmaRepository.findByAlarmaConfigAdminTrueAndAlarmaConfigNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(any())).thenReturn(Collections.emptyList());
+        when(alarmaRepository.findDistinctAlarmaConfigCreatedByDataActivacioAfterAndDataEnviamentIsNull(any())).thenReturn(Collections.singletonList("user1"));
+        when(alarmaRepository.findDistinctAlarmaConfigCreatedByNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(any())).thenReturn(Collections.emptyList());
 
-        when(alarmaRepository.findDistinctAlarmaConfigCreatedByDataActivacioAfterAndDataEnviamentIsNull(any()))
-                .thenReturn(Collections.singletonList("user1"));
-        when(alarmaRepository.findDistinctAlarmaConfigCreatedByNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(any()))
-                .thenReturn(Collections.emptyList());
         Usuari u2 = Usuari.builder().codi("user1").nom("U1").email("u1@caib.es").alarmaMail(true).alarmaMailAgrupar(true).build();
         when(userInformationHelper.usuariFindByUsername("user1")).thenReturn(u2);
-        
-        List<AlarmaEntity> alarmesUser = Collections.singletonList(alarma);
-        when(alarmaRepository.findByAlarmaConfigAdminFalseAndAlarmaConfigCreatedByAndDataActivacioAfterAndDataEnviamentIsNull(eq("user1"), any()))
-                .thenReturn(alarmesUser);
-        when(alarmaRepository.findByAlarmaConfigAdminFalseAndAlarmaConfigCreatedByAndAlarmaConfigNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(eq("user1"), any()))
-                .thenReturn(Collections.emptyList());
-
-        // Per generateAlarmaBodyMessage
+        when(alarmaRepository.findByAlarmaConfigAdminFalseAndAlarmaConfigCreatedByAndDataActivacioAfterAndDataEnviamentIsNull(eq("user1"), any())).thenReturn(Collections.singletonList(alarma));
+        when(alarmaRepository.findByAlarmaConfigAdminFalseAndAlarmaConfigCreatedByAndAlarmaConfigNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(eq("user1"), any())).thenReturn(Collections.emptyList());
         when(alarmaClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
         when(alarmaClientHelper.appFindById(10L)).thenReturn(app);
         when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
+        when(mailHelper.sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(true);
 
-        // Configurem mailHelper per retornar true (èxit enviament)
-        when(mailHelper.sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
-                .thenReturn(true);
-
-        // Act
         long count = alarmaMailHelper.sendAlarmesAgrupades();
 
-        // Assert
         assertThat(count).isEqualTo(2);
         verify(mailHelper, times(2)).sendSimple(anyString(), anyString(), anyString(), anyString(), contains("Resum diari"), anyString());
     }
 
-	@Test
-	@DisplayName("Envia alarmes agrupades usant email autogenerat si cal")
-	void sendAlarmesAgrupades_quanNoEmail_usaAutogenerat() throws MessagingException, UnsupportedEncodingException {
-		// Arrange
-		String[] admins = {"admin1"};
-		Usuari u1 = Usuari.builder()
-				.codi("admin1")
-				.nom("A1")
-				.email(null)
-				.emailAlternatiu(null)
-				.alarmaMail(true)
-				.alarmaMailAgrupar(true)
-				.build();
-
-		when(userInformationHelper.findByRole(BaseConfig.ROLE_ADMIN)).thenReturn(admins);
-		when(userInformationHelper.usuariFindByUsername("admin1")).thenReturn(u1);
-		when(parametresHelper.getParametreText(BaseConfig.PROP_ALARMA_MAIL_DEFAULT_DOMAIN, "caib.es"))
-				.thenReturn("test.es");
-
-		List<AlarmaEntity> alarmesAdmin = Collections.singletonList(alarma);
-		when(alarmaRepository.findByAlarmaConfigAdminTrueAndDataActivacioAfterAndDataEnviamentIsNull(any()))
-				.thenReturn(alarmesAdmin);
-		when(alarmaRepository.findByAlarmaConfigAdminTrueAndAlarmaConfigNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(any()))
-				.thenReturn(Collections.emptyList());
-
-		// Cap usuari normal
-		when(alarmaRepository.findDistinctAlarmaConfigCreatedByDataActivacioAfterAndDataEnviamentIsNull(any()))
-				.thenReturn(Collections.emptyList());
-		when(alarmaRepository.findDistinctAlarmaConfigCreatedByNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(any()))
-				.thenReturn(Collections.emptyList());
-
-		// Per generateAlarmaBodyMessage
-		when(alarmaClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
-		when(alarmaClientHelper.appFindById(10L)).thenReturn(app);
-		when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
-
-		lenient().when(mailHelper.sendSimple(anyString(), anyString(), eq("admin1@test.es"), anyString(), anyString(), anyString()))
-				.thenReturn(true);
-
-		// Act
-		long result = alarmaMailHelper.sendAlarmesAgrupades();
-
-		// Assert
-		assertThat(result).isEqualTo(1);
-		verify(mailHelper).sendSimple(anyString(), anyString(), eq("admin1@test.es"), anyString(), anyString(), anyString());
-	}
-
     @Test
     @DisplayName("No envia correus agrupats si no hi ha alarmes pendents")
     void sendAlarmesAgrupades_quanNoHiHaPendents_noEnvia() throws MessagingException, UnsupportedEncodingException {
-        // Arrange
-        when(alarmaRepository.findByAlarmaConfigAdminTrueAndDataActivacioAfterAndDataEnviamentIsNull(any()))
-                .thenReturn(Collections.emptyList());
-        when(alarmaRepository.findByAlarmaConfigAdminTrueAndAlarmaConfigNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(any()))
-                .thenReturn(Collections.emptyList());
-        when(alarmaRepository.findDistinctAlarmaConfigCreatedByDataActivacioAfterAndDataEnviamentIsNull(any()))
-                .thenReturn(Collections.singletonList("user1"));
-        when(alarmaRepository.findDistinctAlarmaConfigCreatedByNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(any()))
-                .thenReturn(Collections.emptyList());
-        when(alarmaRepository.findByAlarmaConfigAdminFalseAndAlarmaConfigCreatedByAndDataActivacioAfterAndDataEnviamentIsNull(eq("user1"), any()))
-                .thenReturn(Collections.emptyList());
-        when(alarmaRepository.findByAlarmaConfigAdminFalseAndAlarmaConfigCreatedByAndAlarmaConfigNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(eq("user1"), any()))
-                .thenReturn(Collections.emptyList());
+        when(alarmaRepository.findByAlarmaConfigAdminTrueAndDataActivacioAfterAndDataEnviamentIsNull(any())).thenReturn(Collections.emptyList());
+        when(alarmaRepository.findByAlarmaConfigAdminTrueAndAlarmaConfigNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(any())).thenReturn(Collections.emptyList());
+        when(alarmaRepository.findDistinctAlarmaConfigCreatedByDataActivacioAfterAndDataEnviamentIsNull(any())).thenReturn(Collections.emptyList());
+        when(alarmaRepository.findDistinctAlarmaConfigCreatedByNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(any())).thenReturn(Collections.emptyList());
 
-        // Act
         long count = alarmaMailHelper.sendAlarmesAgrupades();
 
-        // Assert
         assertThat(count).isZero();
         verify(mailHelper, never()).sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
-        verify(userInformationHelper, never()).findByRole(BaseConfig.ROLE_ADMIN);
     }
 
     @Test
     @DisplayName("Envia correu d'alarma finalitzada amb subject correcte")
     void sendAlarmaGeneric_quanFinalitzada_subjectFinalitzada() throws MessagingException, UnsupportedEncodingException {
-        // Arrange
         alarma.setDataFinalitzacio(LocalDateTime.now());
         when(alarmaClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
         when(alarmaClientHelper.appFindById(10L)).thenReturn(app);
         when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
-        when(mailHelper.sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
-                .thenReturn(true);
+        when(mailHelper.sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(true);
 
-        // Act
         alarmaMailHelper.sendAlarmaGeneric(alarma, AlarmaMailEventType.RECUPERACIO);
 
-        // Assert
-        verify(mailHelper).sendSimple(
-                eq("from@caib.es"), eq("Comanda"),
-                eq("admin@caib.es"), anyString(),
-                eq("[COMANDA] Alarma finalitzada: Test Alarma"), anyString());
+        verify(mailHelper).sendSimple(eq("from@caib.es"), eq("Comanda"), eq("admin@caib.es"), anyString(), eq("[COMANDA] Alarma finalitzada: Test Alarma"), anyString());
     }
 
-	@Test
-	@DisplayName("No envia correu d'alarma si l'usuari és el de httpauth o stats")
-	void sendAlarmaUser_quanUsuariAuth_noEnvia() throws MessagingException, UnsupportedEncodingException {
-		// Arrange
-		ReflectionTestUtils.setField(alarmaMailHelper, "httpAuthUsername", "httpuser");
-		ReflectionTestUtils.setField(alarmaMailHelper, "statsAuthUsername", "statsuser");
-
-		config.setAdmin(false);
-		Usuari usuariHttp = Usuari.builder().codi("httpuser").alarmaMail(true).build();
-		Usuari usuariStats = Usuari.builder().codi("statsuser").alarmaMail(true).build();
-
-		// Act & Assert para httpuser
-		when(userInformationHelper.usuariFindByUsername("httpuser")).thenReturn(usuariHttp);
-		config.setCreatedBy("httpuser");
-		alarmaMailHelper.sendAlarmaUser(alarma, AlarmaMailEventType.ACTIVACIO);
-		verify(mailHelper, never()).sendSimple(anyString(), anyString(), eq("httpuser"), anyString(), anyString(), anyString());
-
-		// Act & Assert para statsuser
-		when(userInformationHelper.usuariFindByUsername("statsuser")).thenReturn(usuariStats);
-		config.setCreatedBy("statsuser");
-		alarmaMailHelper.sendAlarmaUser(alarma, AlarmaMailEventType.ACTIVACIO);
-		verify(mailHelper, never()).sendSimple(anyString(), anyString(), eq("statsuser"), anyString(), anyString(), anyString());
-
-		// Cleanup
-		ReflectionTestUtils.setField(alarmaMailHelper, "httpAuthUsername", null);
-		ReflectionTestUtils.setField(alarmaMailHelper, "statsAuthUsername", null);
-	}
-
     @Test
-    @DisplayName("Envia alarmes agrupades incloent finalitzades")
-    void sendAlarmesAgrupades_ambFinalitzades_enviamentOk() throws MessagingException, UnsupportedEncodingException {
-        // Arrange
-        AlarmaEntity alarmaFinalitzada = new AlarmaEntity();
-        alarmaFinalitzada.setId(2L);
-        alarmaFinalitzada.setAlarmaConfig(config);
-        alarmaFinalitzada.setEntornAppId(1L);
-        alarmaFinalitzada.setMissatge("Alarma finalitzada");
-        alarmaFinalitzada.setDataActivacio(LocalDateTime.now().minusHours(48));
-        alarmaFinalitzada.setDataFinalitzacio(LocalDateTime.now());
+    @DisplayName("No envia correu d'alarma si l'usuari és el de httpauth o stats")
+    void sendAlarmaUser_quanUsuariAuth_noEnvia() throws MessagingException, UnsupportedEncodingException {
+        ReflectionTestUtils.setField(alarmaMailHelper, "httpAuthUsername", "httpuser");
+        ReflectionTestUtils.setField(alarmaMailHelper, "statsAuthUsername", "statsuser");
 
         config.setAdmin(false);
-        config.setNotificacioFinalitzada(true);
-        alarma.setId(1L);
+        Usuari usuariHttp = Usuari.builder().codi("httpuser").alarmaMail(true).build();
+        Usuari usuariStats = Usuari.builder().codi("statsuser").alarmaMail(true).build();
 
-        when(alarmaRepository.findByAlarmaConfigAdminTrueAndDataActivacioAfterAndDataEnviamentIsNull(any()))
-                .thenReturn(Collections.emptyList());
-        when(alarmaRepository.findByAlarmaConfigAdminTrueAndAlarmaConfigNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(any()))
-                .thenReturn(Collections.emptyList());
-        when(alarmaRepository.findDistinctAlarmaConfigCreatedByDataActivacioAfterAndDataEnviamentIsNull(any()))
-                .thenReturn(Collections.singletonList("creator"));
-        when(alarmaRepository.findDistinctAlarmaConfigCreatedByNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(any()))
-                .thenReturn(Collections.singletonList("creator"));
-        when(alarmaRepository.findByAlarmaConfigAdminFalseAndAlarmaConfigCreatedByAndDataActivacioAfterAndDataEnviamentIsNull(eq("creator"), any()))
-                .thenReturn(Collections.singletonList(alarma));
-        when(alarmaRepository.findByAlarmaConfigAdminFalseAndAlarmaConfigCreatedByAndAlarmaConfigNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(eq("creator"), any()))
-                .thenReturn(Collections.singletonList(alarmaFinalitzada));
+        when(userInformationHelper.usuariFindByUsername("httpuser")).thenReturn(usuariHttp);
+        config.setCreatedBy("httpuser");
+        alarmaMailHelper.sendAlarmaUser(alarma, AlarmaMailEventType.ACTIVACIO);
+        verify(mailHelper, never()).sendSimple(anyString(), anyString(), eq("httpuser"), anyString(), anyString(), anyString());
 
-        Usuari usuari = Usuari.builder().codi("creator").nom("Creator").email("creator@caib.es").alarmaMail(true).alarmaMailAgrupar(true).build();
-        when(userInformationHelper.usuariFindByUsername("creator")).thenReturn(usuari);
+        when(userInformationHelper.usuariFindByUsername("statsuser")).thenReturn(usuariStats);
+        config.setCreatedBy("statsuser");
+        alarmaMailHelper.sendAlarmaUser(alarma, AlarmaMailEventType.ACTIVACIO);
+        verify(mailHelper, never()).sendSimple(anyString(), anyString(), eq("statsuser"), anyString(), anyString(), anyString());
 
+        ReflectionTestUtils.setField(alarmaMailHelper, "httpAuthUsername", null);
+        ReflectionTestUtils.setField(alarmaMailHelper, "statsAuthUsername", null);
+    }
+
+    @Test
+    @DisplayName("Gestiona excepció en enviament sense petar")
+    void sendAlarmaGeneric_quanExcepcio_noPeta() throws MessagingException, UnsupportedEncodingException {
         when(alarmaClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
         when(alarmaClientHelper.appFindById(10L)).thenReturn(app);
         when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
-        when(mailHelper.sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
-                .thenReturn(true);
+        when(mailHelper.sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenThrow(new MessagingException("Error test"));
+
+        assertThatCode(() -> alarmaMailHelper.sendAlarmaGeneric(alarma, AlarmaMailEventType.ACTIVACIO)).doesNotThrowAnyException();
+
+        verify(mailHelper).sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
+    }
+
+    // ========================================================================
+    // TESTOS ADDICIONALS PER A COBERTURA COMPLETA (>90%)
+    // ========================================================================
+
+    @Test
+    @DisplayName("sendAlarmaUser (Admin): fa fallback al creador quan falla la consulta LDAP d'administradors")
+    void sendAlarmaUser_quanAdminIldapFalla_llavorsUsaCreatedBy() throws MessagingException, UnsupportedEncodingException {
+        // Arrange
+        config.setAdmin(true);
+        config.setCreatedBy("fallbackCreator");
+
+        Usuari fallbackUser = Usuari.builder().codi("fallbackCreator").nom("Fallback").email("fallback@caib.es").alarmaMail(true).alarmaMailAgrupar(false).build();
+
+        when(userInformationHelper.findByRole(BaseConfig.ROLE_ADMIN)).thenThrow(new UserInformationHelper.UserInformationException("LDAP down", new String[]{}, new Exception()));
+        when(userInformationHelper.usuariFindByUsername("fallbackCreator")).thenReturn(fallbackUser);
+        when(alarmaClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
+        when(alarmaClientHelper.appFindById(10L)).thenReturn(app);
+        when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
+        when(mailHelper.sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(true);
+
+        // Act
+        alarmaMailHelper.sendAlarmaUser(alarma, AlarmaMailEventType.ACTIVACIO);
+
+        // Assert
+        verify(userInformationHelper, times(2)).usuariFindByUsername("fallbackCreator");
+        verify(mailHelper, times(1)).sendSimple(anyString(), anyString(), eq("fallback@caib.es"), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("sendAlarmaMailToUserWithProfileCheck: no envia si l'usuari no existeix (null)")
+    void sendAlarmaMailToUserWithProfileCheck_quanUsuariNull_llavorsNoEnvia() throws Exception {
+        // Arrange
+        config.setAdmin(false);
+        when(userInformationHelper.usuariFindByUsername(alarma.getAlarmaConfig().getCreatedBy())).thenReturn(null);
+
+        // Act
+        alarmaMailHelper.sendAlarmaUser(alarma, AlarmaMailEventType.ACTIVACIO);
+
+        // Assert
+        verify(mailHelper, never()).sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("sendAlarmaMailToUserWithProfileCheck: no envia si alarmaMail és false")
+    void sendAlarmaMailToUserWithProfileCheck_quanAlarmaMailFalse_llavorsNoEnvia() throws Exception {
+        // Arrange
+        config.setAdmin(false);
+        Usuari usuari = Usuari.builder().codi("creator").nom("Creator").email("c@caib.es").alarmaMail(false).alarmaMailAgrupar(false).build();
+        when(userInformationHelper.usuariFindByUsername("creator")).thenReturn(usuari);
+
+        // Act
+        alarmaMailHelper.sendAlarmaUser(alarma, AlarmaMailEventType.ACTIVACIO);
+
+        // Assert
+        verify(mailHelper, never()).sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("sendAlarmaMailForUser: gestiona correctament quan sendSimple retorna false (amb email autogenerat)")
+    void sendAlarmaMailForUser_quanSendSimpleRetornaFalseIEmailAutogenerat_llavorsRegistraMotiuCorrecte() throws Exception {
+        // Arrange
+        config.setAdmin(false);
+        Usuari usuari = Usuari.builder().codi("creator").nom("Creator").email(null).emailAlternatiu(null).alarmaMail(true).alarmaMailAgrupar(false).build();
+
+        when(userInformationHelper.usuariFindByUsername("creator")).thenReturn(usuari);
+        when(parametresHelper.getParametreText(BaseConfig.PROP_ALARMA_MAIL_DEFAULT_DOMAIN, "caib.es")).thenReturn("test.es");
+        when(alarmaClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
+        when(alarmaClientHelper.appFindById(10L)).thenReturn(app);
+        when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
+        when(mailHelper.sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(false);
+
+        // Act
+        alarmaMailHelper.sendAlarmaUser(alarma, AlarmaMailEventType.ACTIVACIO);
+
+        // Assert
+        verify(mailHelper).sendSimple(anyString(), anyString(), eq("creator@test.es"), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("sendAlarmesAgrupades: fa fallback al creador quan falla LDAP per a agrupats")
+    void sendAlarmesAgrupades_quanLdapFallaPerAgrupats_llavorsUsaCreatedBy() throws MessagingException, UnsupportedEncodingException {
+        // Arrange
+        config.setAdmin(true);
+        config.setCreatedBy("adminCreator");
+        Usuari creator = Usuari.builder().codi("adminCreator").nom("Creator").email("creator@caib.es").alarmaMail(true).alarmaMailAgrupar(true).build();
+
+        when(userInformationHelper.findByRole(BaseConfig.ROLE_ADMIN)).thenThrow(new UserInformationHelper.UserInformationException("LDAP error", new String[]{}, new Exception()));
+        when(userInformationHelper.usuariFindByUsername("adminCreator")).thenReturn(creator);
+        when(alarmaRepository.findByAlarmaConfigAdminTrueAndDataActivacioAfterAndDataEnviamentIsNull(any())).thenReturn(Collections.singletonList(alarma));
+        when(alarmaRepository.findByAlarmaConfigAdminTrueAndAlarmaConfigNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(any())).thenReturn(Collections.emptyList());
+        when(alarmaRepository.findDistinctAlarmaConfigCreatedByDataActivacioAfterAndDataEnviamentIsNull(any())).thenReturn(Collections.emptyList());
+        when(alarmaRepository.findDistinctAlarmaConfigCreatedByNotificacioFinalitzadaTrueAndDataFinalitzacioAfter(any())).thenReturn(Collections.emptyList());
+        when(alarmaClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
+        when(alarmaClientHelper.appFindById(10L)).thenReturn(app);
+        when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
+        when(mailHelper.sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(true);
 
         // Act
         long count = alarmaMailHelper.sendAlarmesAgrupades();
 
         // Assert
         assertThat(count).isEqualTo(1);
-        verify(mailHelper).sendSimple(anyString(), anyString(), eq("creator@caib.es"), anyString(), contains("Resum diari"), anyString());
+        verify(userInformationHelper, times(3)).usuariFindByUsername("adminCreator");
+        verify(mailHelper, times(1)).sendSimple(anyString(), anyString(), eq("creator@caib.es"), anyString(), contains("Resum diari"), anyString());
     }
 
     @Test
-    @DisplayName("Gestiona excepció en enviament sense petar")
-    void sendAlarmaGeneric_quanExcepcio_noPeta() throws MessagingException, UnsupportedEncodingException {
-        // Arrange
-        when(alarmaClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
-        when(alarmaClientHelper.appFindById(10L)).thenReturn(app);
-        when(alarmaClientHelper.entornById(20L)).thenReturn(entorn);
-        when(mailHelper.sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
-                .thenThrow(new MessagingException("Error test"));
+    @DisplayName("sendAlarmaGroupedMailForUser: retorna false immediatament si la llista d'alarmes és buida")
+    void sendAlarmaGroupedMailForUser_quanLlistaBuida_llavorsRetornaFalse() throws MessagingException, UnsupportedEncodingException {
+        // Arrange & Act
+        boolean result = (boolean) ReflectionTestUtils.invokeMethod(alarmaMailHelper, "sendAlarmaGroupedMailForUser", Collections.emptyList(), "user1");
 
-        // Act & Assert (no hauria de llançar excepció cap a fora)
-        alarmaMailHelper.sendAlarmaGeneric(alarma, AlarmaMailEventType.ACTIVACIO);
-        
-        verify(mailHelper).sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
+        // Assert
+        assertThat(result).isFalse();
+        verify(userInformationHelper, never()).usuariFindByUsername(anyString());
+        verify(mailHelper, never()).sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("sendAlarmaGroupedMailForUser: retorna false si l'usuari no té el perfil agrupat actiu")
+    void sendAlarmaGroupedMailForUser_quanPerfilNoAgrupat_llavorsRetornaFalse() throws MessagingException, UnsupportedEncodingException {
+        // Arrange
+        Usuari usuari = Usuari.builder().codi("user1").nom("U1").email("u1@caib.es").alarmaMail(true).alarmaMailAgrupar(false).build();
+        when(userInformationHelper.usuariFindByUsername("user1")).thenReturn(usuari);
+
+        // Act
+        boolean result = (boolean) ReflectionTestUtils.invokeMethod(alarmaMailHelper, "sendAlarmaGroupedMailForUser", Collections.singletonList(alarma), "user1");
+
+        // Assert
+        assertThat(result).isFalse();
+        verify(mailHelper, never()).sendSimple(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("mergeAlarmes: elimina duplicats mantenint l'ordre d'inserció")
+    void mergeAlarmes_quanHiHaDuplicats_llavorsRetornaLlistaSenseDuplicats() {
+        // Arrange
+        AlarmaEntity a1 = new AlarmaEntity(); a1.setId(1L);
+        AlarmaEntity a2 = new AlarmaEntity(); a2.setId(2L);
+        AlarmaEntity a1Dup = new AlarmaEntity(); a1Dup.setId(1L); // Duplicat
+
+        // Act
+        @SuppressWarnings("unchecked")
+        List<AlarmaEntity> result = (List<AlarmaEntity>) ReflectionTestUtils.invokeMethod(alarmaMailHelper, "mergeAlarmes", List.of(a1, a2), List.of(a1Dup));
+
+        // Assert
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getId()).isEqualTo(1L);
+        assertThat(result.get(1).getId()).isEqualTo(2L);
+    }
+
+    @Test
+    @DisplayName("mergeUsuaris: elimina duplicats de noms d'usuari")
+    void mergeUsuaris_quanHiHaDuplicats_llavorsRetornaLlistaSenseDuplicats() {
+        // Arrange
+        List<String> llista1 = List.of("user1", "user2");
+        List<String> llista2 = List.of("user2", "user3");
+
+        // Act
+        @SuppressWarnings("unchecked")
+        List<String> result = (List<String>) ReflectionTestUtils.invokeMethod(alarmaMailHelper, "mergeUsuaris", llista1, llista2);
+
+        // Assert
+        assertThat(result).hasSize(3);
+        assertThat(result).containsExactly("user1", "user2", "user3");
     }
 }

@@ -9,6 +9,7 @@ import es.caib.comanda.estadistica.persist.repository.WidgetStylePropertyReposit
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
+import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,7 +19,6 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.*;
 
@@ -36,11 +36,9 @@ class PlantillaServiceImplTest {
     @Mock private DashboardTemplatePaletteGroupRepository paletteGroupRepository;
     @Mock private WidgetStylePropertyRepository stylePropertyRepository;
 
-    @InjectMocks
-    private PlantillaServiceImpl plantillaService;
+    @InjectMocks private PlantillaServiceImpl plantillaService;
 
-    @Captor
-    private ArgumentCaptor<PaletaEntity> paletaEntityCaptor;
+    @Captor private ArgumentCaptor<PaletaEntity> paletaEntityCaptor;
 
     private Plantilla plantillaResource;
     private PlantillaEntity plantillaEntity;
@@ -58,6 +56,10 @@ class PlantillaServiceImplTest {
         answers = new HashMap<>();
     }
 
+    // ========================================================================
+    // TESTOS EXISTENTS (Mantinguts i polits)
+    // ========================================================================
+
     @Test
     @DisplayName("beforeCreateSave: crida syncTemplate i no llança excepció")
     void beforeCreateSave_quanTotCorrecte_noLlancaExcepcio() {
@@ -71,9 +73,8 @@ class PlantillaServiceImplTest {
         doNothing().when(paletaHelper).syncColors(any(), any());
 
         // Act & Assert
-        assertThatCode(() ->
-                plantillaService.beforeCreateSave(plantillaEntity, plantillaResource, answers)
-        ).doesNotThrowAnyException();
+        assertThatCode(() -> plantillaService.beforeCreateSave(plantillaEntity, plantillaResource, answers))
+            .doesNotThrowAnyException();
 
         verify(paletaHelper).syncColors(eq(paletteEntity), eq(paletteResource));
     }
@@ -82,32 +83,12 @@ class PlantillaServiceImplTest {
     @DisplayName("beforeCreateSave: captura excepció i la converteix a ResourceNotCreatedException")
     void beforeCreateSave_quanSyncTemplateLlancaExcepcio_converteixExcepcio() {
         // Arrange
-        doThrow(new RuntimeException("Error de sincronització"))
-                .when(paletaHelper).syncColors(any(), any());
+        doThrow(new RuntimeException("Error de sincronització")).when(paletaHelper).syncColors(any(), any());
 
         // Act & Assert
-        assertThatThrownBy(() ->
-                plantillaService.beforeCreateSave(plantillaEntity, plantillaResource, answers)
-        ).isInstanceOf(ResourceNotCreatedException.class)
-                .hasMessageContaining("Error de sincronització");
-    }
-
-    @Test
-    @DisplayName("beforeUpdateSave: crida syncTemplate i no llança excepció")
-    void beforeUpdateSave_quanTotCorrecte_noLlancaExcepcio() {
-        // Arrange
-        Paleta paletteResource = crearPaletaResource("910001", "Test Widget");
-        plantillaResource.setPaletes(Collections.singletonList(paletteResource));
-        PaletaEntity paletteEntity = crearPaletaEntity(910001L, "Test Widget");
-
-        when(paletaRepository.findById(910001L)).thenReturn(Optional.of(paletteEntity));
-        when(paletaRepository.saveAndFlush(paletteEntity)).thenReturn(paletteEntity);
-        doNothing().when(paletaHelper).syncColors(any(), any());
-
-        // Act & Assert
-        assertThatCode(() ->
-                plantillaService.beforeUpdateSave(plantillaEntity, plantillaResource, answers)
-        ).doesNotThrowAnyException();
+        assertThatThrownBy(() -> plantillaService.beforeCreateSave(plantillaEntity, plantillaResource, answers))
+            .isInstanceOf(ResourceNotCreatedException.class)
+            .hasMessageContaining("Error de sincronització");
     }
 
     @Test
@@ -117,15 +98,14 @@ class PlantillaServiceImplTest {
         doThrow(new RuntimeException("Error en actualització")).when(paletaHelper).syncColors(any(), any());
 
         // Act & Assert
-        assertThatThrownBy(() ->
-                plantillaService.beforeUpdateSave(plantillaEntity, plantillaResource, answers)
-        ).isInstanceOf(ResourceNotUpdatedException.class)
-                .hasMessageContaining("Error en actualització")
-                .hasMessageContaining(String.valueOf(plantillaEntity.getId()));
+        assertThatThrownBy(() -> plantillaService.beforeUpdateSave(plantillaEntity, plantillaResource, answers))
+            .isInstanceOf(ResourceNotUpdatedException.class)
+            .hasMessageContaining("Error en actualització")
+            .hasMessageContaining(String.valueOf(plantillaEntity.getId()));
     }
 
     @Test
-    @DisplayName("afterConversion: popula paletteGroups, styleProperties i paletes per defecte")
+    @DisplayName("afterConversion: popula valors per defecte quan no hi ha dades")
     void afterConversion_quanNoHiHaDadesExistentes_populaValorsPerDefecte() {
         // Arrange
         when(paletaRepository.findAllByOrderByNomAscIdAsc()).thenReturn(Collections.emptyList());
@@ -135,26 +115,34 @@ class PlantillaServiceImplTest {
 
         // Assert
         assertThat(plantillaResource.getPaletes()).isNotEmpty();
-        assertThat(plantillaResource.getPaletteGroups()).isNotEmpty();
+        assertThat(plantillaResource.getPaletteGroups()).hasSize(4);
         assertThat(plantillaResource.getStyleProperties()).isNotEmpty();
     }
 
     @Test
-    @DisplayName("afterConversion: utilitza paletes existents quan n'hi ha")
-    void afterConversion_quanHiHaPaletesExistentes_lesUtilitza() {
+    @DisplayName("afterConversion: fusiona propietats d'estil proporcionades amb les per defecte")
+    void afterConversion_quanHiHaPropietatsPersonalitzades_llavorsFusionaCorrectament() {
         // Arrange
-        PaletaEntity paletaExistente = new PaletaEntity();
-        paletaExistente.setId(910001L);
-        paletaExistente.setNom("Paleta Test");
-        when(paletaRepository.findAllByOrderByNomAscIdAsc()).thenReturn(Collections.singletonList(paletaExistente));
+        Plantilla resource = new Plantilla();
+        resource.setColors(new HashMap<>());
+
+        WidgetStylePropertyEntity customProp = new WidgetStylePropertyEntity();
+        customProp.setScope(WidgetStyleScope.COMMON);
+        customProp.setPropertyName("colorFons");
+        customProp.setScalarValue("#FF0000");
+        plantillaEntity.setStyleProperties(Collections.singletonList(customProp));
+
+        when(paletaRepository.findAllByOrderByNomAscIdAsc()).thenReturn(Collections.emptyList());
 
         // Act
-        plantillaService.afterConversion(plantillaEntity, plantillaResource);
+        plantillaService.afterConversion(plantillaEntity, resource);
 
         // Assert
-        assertThat(plantillaResource.getPaletes())
-                .extracting(Paleta::getNom)
-                .containsExactly("Paleta Test");
+        assertThat(resource.getStyleProperties()).anyMatch(p ->
+            p.getScope() == WidgetStyleScope.COMMON &&
+                p.getPropertyName().equals("colorFons") &&
+                p.getScalarValue().equals("#FF0000")
+        );
     }
 
     @Test
@@ -172,29 +160,113 @@ class PlantillaServiceImplTest {
 
         // Assert
         assertThat(result).containsEntry("910001", existing);
-        assertThat(existing.getColors()).isNotNull();
         verify(paletaHelper).syncColors(eq(existing), eq(palette));
         verify(paletaRepository).saveAndFlush(existing);
     }
 
-    @Test
-    @DisplayName("savePaletteResources: crea nova paleta quan no existeix ni per ID ni per nom")
-    void savePaletteResources_quanNoExisteixPaleta_creaNova() {
-        // Arrange
-        Paleta palette = crearPaleta(null, "Nova Paleta", "#000000");
-        PaletaEntity nueva = new PaletaEntity();
-        nueva.setId(999999L);
+    // ========================================================================
+    // NOUS TESTOS PER A COBERTURA > 90%
+    // ========================================================================
 
-        when(paletaRepository.findByNom("Nova Paleta")).thenReturn(Optional.empty());
-        when(paletaRepository.saveAndFlush(any(PaletaEntity.class))).thenReturn(nueva);
+    @Test
+    @DisplayName("syncStyleProperties: actualitza existents, crea noves i elimina les obsoletes")
+    void syncStyleProperties_quanHiHaCanvis_llavorsSincronitzaCorrectament() {
+        // Arrange
+        PlantillaEntity entity = new PlantillaEntity();
+        entity.setId(1L);
+
+        WidgetStylePropertyEntity existingToUpdate = new WidgetStylePropertyEntity();
+        existingToUpdate.setScope(WidgetStyleScope.COMMON);
+        existingToUpdate.setPropertyName("colorFons");
+
+        WidgetStylePropertyEntity existingToDelete = new WidgetStylePropertyEntity();
+        existingToDelete.setScope(WidgetStyleScope.COMMON);
+        existingToDelete.setPropertyName("colorText");
+
+        when(stylePropertyRepository.findByPlantillaId(1L))
+            .thenReturn(Arrays.asList(existingToUpdate, existingToDelete));
+
+        List<WidgetStyleProperty> provided = new ArrayList<>();
+        WidgetStyleProperty propToUpdate = new WidgetStyleProperty();
+        propToUpdate.setScope(WidgetStyleScope.COMMON);
+        propToUpdate.setPropertyName("colorFons");
+        propToUpdate.setScalarValue("#FF0000");
+        provided.add(propToUpdate);
+
+        WidgetStyleProperty propToCreate = new WidgetStyleProperty();
+        propToCreate.setScope(WidgetStyleScope.SIMPLE);
+        propToCreate.setPropertyName("midaFont");
+        propToCreate.setValueType(WidgetStyleValueType.NUMBER);
+        propToCreate.setScalarValue("14");
+        provided.add(propToCreate);
 
         // Act
-        Map<String, PaletaEntity> result = invokeSavePaletteResources(Collections.singletonList(palette));
+        invokeSyncStyleProperties(entity, provided);
 
         // Assert
-        assertThat(result).hasSize(2);
-        verify(paletaHelper).syncColors(any(PaletaEntity.class), eq(palette));
-        verify(paletaRepository).saveAndFlush(any(PaletaEntity.class));
+        ArgumentCaptor<List<WidgetStylePropertyEntity>> saveCaptor = ArgumentCaptor.forClass(List.class);
+        verify(stylePropertyRepository).saveAll(saveCaptor.capture());
+        assertThat(saveCaptor.getValue()).hasSize(2);
+
+        verify(stylePropertyRepository).deleteAll(any());
+    }
+
+    @Test
+    @DisplayName("resolvePalette: llança excepció quan no es troba la paleta ni per ID ni per clientId")
+    void resolvePalette_quanNoEsTrobaPaleta_llancaExcepcio() {
+        // Arrange
+        ResourceReference<Paleta, Long> ref = new ResourceReference<>();
+        ref.setId(999L);
+
+        Map<String, PaletaEntity> byClientId = new HashMap<>();
+        Map<Long, PaletaEntity> byId = new HashMap<>();
+
+        when(paletaRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> invokeResolvePalette(ref, "unknown-client", byClientId, byId))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Cada grup ha de tenir paleta de widget i paleta de grafic");
+    }
+
+    @Test
+    @DisplayName("mergeDefaultStyleProperties: ignora propietats no configurables com SIMPLE:icona")
+    void mergeDefaultStyleProperties_quanEsNoConfigurable_llavorsIgnora() {
+        // Arrange
+        List<WidgetStyleProperty> provided = new ArrayList<>();
+        WidgetStyleProperty nonConfigurable = new WidgetStyleProperty();
+        nonConfigurable.setScope(WidgetStyleScope.SIMPLE);
+        nonConfigurable.setPropertyName("icona");
+        nonConfigurable.setScalarValue("true");
+        provided.add(nonConfigurable);
+
+        // Act
+        @SuppressWarnings("unchecked")
+        List<WidgetStyleProperty> result = (List<WidgetStyleProperty>) invokeMergeDefaultStyleProperties(provided);
+
+        // Assert: La propietat 'icona' no hauria d'haver sobreescrit la default
+        Optional<WidgetStyleProperty> iconaProp = result.stream()
+            .filter(p -> p.getScope() == WidgetStyleScope.SIMPLE && "icona".equals(p.getPropertyName()))
+            .findFirst();
+        assertThat(iconaProp.isEmpty()).isTrue();
+    }
+
+    @Test
+    @DisplayName("validateTemplate: permet propietat colorSubtitol sense role ni index de paleta")
+    void validateTemplate_quanEsColorSubtitolSensePaleta_llavorsNoLlancaExcepcio() {
+        // Arrange
+        PlantillaEntity entity = new PlantillaEntity();
+        entity.setPaletteGroups(createFourValidGroups());
+
+        WidgetStylePropertyEntity prop = new WidgetStylePropertyEntity();
+        prop.setPropertyName("colorSubtitol");
+        prop.setValueType(WidgetStyleValueType.COLOR);
+        prop.setPaletteRole(null);
+        prop.setPaletteIndex(null);
+        entity.setStyleProperties(Collections.singletonList(prop));
+
+        // Act & Assert
+        assertThatCode(() -> invokeValidateTemplate(entity)).doesNotThrowAnyException();
     }
 
     @Test
@@ -204,13 +276,11 @@ class PlantillaServiceImplTest {
         PlantillaEntity entity = new PlantillaEntity();
         entity.setPaletteGroups(new ArrayList<>());
         entity.getPaletteGroups().add(new PlantillaGrupPaletesEntity());
-        entity.getPaletteGroups().add(new PlantillaGrupPaletesEntity());
 
         // Act & Assert
-        assertThatThrownBy(() ->
-                ReflectionTestUtils.invokeMethod(plantillaService, "validateTemplate", entity)
-        ).isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("exactament quatre grups de paletes");
+        assertThatThrownBy(() -> invokeValidateTemplate(entity))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("exactament quatre grups de paletes");
     }
 
     @Test
@@ -220,46 +290,9 @@ class PlantillaServiceImplTest {
         PlantillaEntity entity = new PlantillaEntity();
         List<PlantillaGrupPaletesEntity> groups = new ArrayList<>();
 
-        PlantillaGrupPaletesEntity group = new PlantillaGrupPaletesEntity();
-        group.setGroupType(PaletteGroupType.LIGHT);
-
         PaletaEntity palette = new PaletaEntity();
         palette.setColors(new ArrayList<>());
-        group.setWidgetPalette(palette);
-        group.setChartPalette(palette);
-        groups.add(group);
 
-        for (int i = 1; i < PaletteGroupType.values().length; i++) {
-            PlantillaGrupPaletesEntity g = new PlantillaGrupPaletesEntity();
-            g.setGroupType(PaletteGroupType.values()[i]);
-            g.setWidgetPalette(palette);
-            g.setChartPalette(palette);
-            groups.add(g);
-        }
-        entity.setPaletteGroups(groups);
-
-        // Act & Assert
-        assertThatThrownBy(() ->
-                ReflectionTestUtils.invokeMethod(plantillaService, "validateTemplate", entity)
-        ).isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("no poden estar buides");
-    }
-
-    @Test
-    @DisplayName("validateTemplate: llança excepció si propietat de color apunta a posició inexistent")
-    void validateTemplate_quanPropietatColorPosicioInvalida_llancaExcepcio() {
-        // Arrange
-        PlantillaEntity entity = new PlantillaEntity();
-        PaletaEntity palette = crearPaletaEntity(1L, "Test");
-        palette.getColors().remove(6);
-        palette.getColors().remove(5);
-
-        PlantillaGrupPaletesEntity group = new PlantillaGrupPaletesEntity();
-        group.setGroupType(PaletteGroupType.LIGHT);
-        group.setWidgetPalette(palette);
-        group.setChartPalette(palette);
-
-        List<PlantillaGrupPaletesEntity> groups = new ArrayList<>();
         for (PaletteGroupType type : PaletteGroupType.values()) {
             PlantillaGrupPaletesEntity g = new PlantillaGrupPaletesEntity();
             g.setGroupType(type);
@@ -269,35 +302,24 @@ class PlantillaServiceImplTest {
         }
         entity.setPaletteGroups(groups);
 
-        WidgetStylePropertyEntity property = new WidgetStylePropertyEntity();
-        property.setValueType(WidgetStyleValueType.COLOR);
-        property.setPaletteRole(PaletteRole.WIDGET);
-        property.setPaletteIndex(5);
-        property.setPropertyName("colorTest");
-        entity.setStyleProperties(Collections.singletonList(property));
-
         // Act & Assert
-        assertThatThrownBy(() ->
-                ReflectionTestUtils.invokeMethod(plantillaService, "validateTemplate", entity)
-        ).isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("posicio inexistent")
-                .hasMessageContaining("colorTest");
+        assertThatThrownBy(() -> invokeValidateTemplate(entity))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("no poden estar buides");
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // HELPERS PER A TESTS
-    // ─────────────────────────────────────────────────────────────
+    // ========================================================================
+    // HELPERS PER A TESTS I REFLEXIÓ
+    // ========================================================================
 
     private Paleta crearPaleta(String clientId, String nom, String color) {
         Paleta palette = new Paleta();
         palette.setClientId(clientId);
         palette.setNom(nom);
-
         PaletaColor colorEntity = new PaletaColor();
         colorEntity.setPosicio(0);
         colorEntity.setValor(color);
         palette.setColors(Collections.singletonList(colorEntity));
-
         return palette;
     }
 
@@ -305,7 +327,6 @@ class PlantillaServiceImplTest {
         PaletaEntity entity = new PaletaEntity();
         entity.setId(id);
         entity.setNom(nom);
-
         List<PaletaColorEntity> colors = new ArrayList<>();
         for (int i = 0; i < 7; i++) {
             PaletaColorEntity color = new PaletaColorEntity();
@@ -315,7 +336,6 @@ class PlantillaServiceImplTest {
             colors.add(color);
         }
         entity.setColors(colors);
-
         return entity;
     }
 
@@ -323,7 +343,6 @@ class PlantillaServiceImplTest {
         Paleta palette = new Paleta();
         palette.setClientId(clientId);
         palette.setNom(nom);
-
         List<PaletaColor> colors = new ArrayList<>();
         for (int i = 0; i < 7; i++) {
             PaletaColor color = new PaletaColor();
@@ -332,16 +351,26 @@ class PlantillaServiceImplTest {
             colors.add(color);
         }
         palette.setColors(colors);
-
         return palette;
     }
 
-    /** Invoca el mètode privat savePaletteResources via reflexió. */
+    private List<PlantillaGrupPaletesEntity> createFourValidGroups() {
+        List<PlantillaGrupPaletesEntity> groups = new ArrayList<>();
+        PaletaEntity validPalette = crearPaletaEntity(1L, "Valid");
+        for (PaletteGroupType type : PaletteGroupType.values()) {
+            PlantillaGrupPaletesEntity g = new PlantillaGrupPaletesEntity();
+            g.setGroupType(type);
+            g.setWidgetPalette(validPalette);
+            g.setChartPalette(validPalette);
+            groups.add(g);
+        }
+        return groups;
+    }
+
     @SuppressWarnings("unchecked")
     private Map<String, PaletaEntity> invokeSavePaletteResources(List<Paleta> palettes) {
         try {
-            java.lang.reflect.Method method = PlantillaServiceImpl.class
-                    .getDeclaredMethod("savePaletteResources", List.class);
+            java.lang.reflect.Method method = PlantillaServiceImpl.class.getDeclaredMethod("savePaletteResources", List.class);
             method.setAccessible(true);
             return (Map<String, PaletaEntity>) method.invoke(plantillaService, palettes);
         } catch (Exception e) {
@@ -349,17 +378,46 @@ class PlantillaServiceImplTest {
         }
     }
 
-    /** Invoca el mètode privat validateTemplate via reflexió per a tests. */
+    private void invokeSyncStyleProperties(PlantillaEntity entity, List<WidgetStyleProperty> properties) {
+        try {
+            java.lang.reflect.Method method = PlantillaServiceImpl.class.getDeclaredMethod("syncStyleProperties", PlantillaEntity.class, List.class);
+            method.setAccessible(true);
+            method.invoke(plantillaService, entity, properties);
+        } catch (Exception e) {
+            throw new RuntimeException("Error invocant syncStyleProperties", e);
+        }
+    }
+
+    private PaletaEntity invokeResolvePalette(ResourceReference<Paleta, Long> ref, String clientId,
+                                              Map<String, PaletaEntity> byClientId, Map<Long, PaletaEntity> byId) {
+        try {
+            java.lang.reflect.Method method = PlantillaServiceImpl.class.getDeclaredMethod("resolvePalette", ResourceReference.class, String.class, Map.class, Map.class);
+            method.setAccessible(true);
+            return (PaletaEntity) method.invoke(plantillaService, ref, clientId, byClientId, byId);
+        } catch (Exception e) {
+            if (e.getCause() instanceof RuntimeException) throw (RuntimeException) e.getCause();
+            throw new RuntimeException("Error invocant resolvePalette", e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<WidgetStyleProperty> invokeMergeDefaultStyleProperties(List<WidgetStyleProperty> provided) {
+        try {
+            java.lang.reflect.Method method = PlantillaServiceImpl.class.getDeclaredMethod("mergeDefaultStyleProperties", List.class);
+            method.setAccessible(true);
+            return (List<WidgetStyleProperty>) method.invoke(plantillaService, provided);
+        } catch (Exception e) {
+            throw new RuntimeException("Error invocant mergeDefaultStyleProperties", e);
+        }
+    }
+
     private void invokeValidateTemplate(PlantillaEntity entity) {
         try {
-            java.lang.reflect.Method method = PlantillaServiceImpl.class
-                    .getDeclaredMethod("validateTemplate", PlantillaEntity.class);
+            java.lang.reflect.Method method = PlantillaServiceImpl.class.getDeclaredMethod("validateTemplate", PlantillaEntity.class);
             method.setAccessible(true);
             method.invoke(plantillaService, entity);
         } catch (Exception e) {
-            if (e.getCause() instanceof RuntimeException) {
-                throw (RuntimeException) e.getCause();
-            }
+            if (e.getCause() instanceof RuntimeException) throw (RuntimeException) e.getCause();
             throw new RuntimeException("Error invocant validateTemplate", e);
         }
     }

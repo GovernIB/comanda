@@ -244,7 +244,7 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
 		ThreadLocalUtil.setAttribute(ThreadLocalUtil.REORDER_ADDITIONAL_PROPS_KEY, entity);
 	}
 
-    private class AuditoriaPerspectiveApplicator implements PerspectiveApplicator<AlarmaConfigEntity, AlarmaConfig> {
+    public class AuditoriaPerspectiveApplicator implements PerspectiveApplicator<AlarmaConfigEntity, AlarmaConfig> {
         @Override
         public void applySingle(String code, AlarmaConfigEntity entity, AlarmaConfig resource) throws PerspectiveApplicationException {
             if (entity.getCreatedBy()!=null) {
