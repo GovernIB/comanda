@@ -10,7 +10,6 @@ import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.monitor.Monitor;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import feign.FeignException;
-import feign.Request;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,41 +19,54 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Tests per a AvisClientHelper")
 class AvisClientHelperTest {
 
     @Mock
     private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
+
     @Mock
     private MonitorServiceClient monitorServiceClient;
+
     @Mock
     private EntornAppServiceClient entornAppServiceClient;
+
     @Mock
     private EntornServiceClient entornServiceClient;
+
     @Mock
     private AppServiceClient appServiceClient;
 
     @InjectMocks
     private AvisClientHelper avisClientHelper;
 
-    private final String AUTH_HEADER = "Bearer token";
+    private static final String AUTH_HEADER = "Bearer token";
 
     @BeforeEach
     void setUp() {
         lenient().when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
     }
 
+    // ========================================================================
+    // 1. TESTOS PER A entornAppFindById
+    // ========================================================================
+
     @Test
-    @DisplayName("entornAppFindById ha de retornar el contingut si el client retorna una entitat")
-    void entornAppFindById_quanElClientRetornaEntitat_retornaElContingut() {
+    @DisplayName("entornAppFindById: retorna el contingut quan el client troba l'entitat")
+    void entornAppFindById_quanElClientRetornaEntitat_llavorsRetornaElContingut() {
         // Arrange
         EntornApp entornApp = new EntornApp();
         entornApp.setId(1L);
@@ -66,11 +78,12 @@ class AvisClientHelperTest {
         // Assert
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(1L);
+        verify(entornAppServiceClient, times(1)).getOne(eq(1L), any(), eq(AUTH_HEADER));
     }
 
     @Test
-    @DisplayName("entornAppFindById ha de retornar null si el client retorna null")
-    void entornAppFindById_quanElClientRetornaNull_retornaNull() {
+    @DisplayName("entornAppFindById: retorna null quan el client retorna null")
+    void entornAppFindById_quanElClientRetornaNull_llavorsRetornaNull() {
         // Arrange
         when(entornAppServiceClient.getOne(eq(1L), any(), eq(AUTH_HEADER))).thenReturn(null);
 
@@ -81,27 +94,46 @@ class AvisClientHelperTest {
         assertThat(result).isNull();
     }
 
-	@Test
-	@DisplayName("entornAppFindById ha de retornar null si es llança FeignException.NotFound")
-	void entornAppFindById_quanNotFound_retornaNull() {
-		// Arrange
-		when(entornAppServiceClient.getOne(eq(1L), any(), eq(AUTH_HEADER))).thenThrow(FeignException.NotFound.class);
+    @Test
+    @DisplayName("entornAppFindById: retorna null quan es llança FeignException.NotFound")
+    void entornAppFindById_quanEsLlancaNotFound_llavorsRetornaNull() {
+        // Arrange
+        when(entornAppServiceClient.getOne(eq(1L), any(), eq(AUTH_HEADER)))
+            .thenThrow(FeignException.NotFound.class);
 
-		// Act
-		EntornApp result = avisClientHelper.entornAppFindById(1L);
+        // Act
+        EntornApp result = avisClientHelper.entornAppFindById(1L);
 
-		// Assert
-		assertThat(result).isNull();
-	}
+        // Assert
+        assertThat(result).isNull();
+    }
 
     @Test
-    @DisplayName("entornAppFindByEntornCodiAndAppCodi ha de retornar el primer element si el client troba resultats")
-    void entornAppFindByEntornCodiAndAppCodi_quanTrobaEntitat_laRetorna() {
+    @DisplayName("entornAppFindById: gestiona correctament un ID null")
+    void entornAppFindById_quanIdEsNull_llavorsNoLlancaExcepcio() {
+        // Arrange
+        when(entornAppServiceClient.getOne(eq(null), any(), eq(AUTH_HEADER))).thenReturn(null);
+
+        // Act & Assert
+        assertThatCode(() -> avisClientHelper.entornAppFindById(null)).doesNotThrowAnyException();
+    }
+
+    // ========================================================================
+    // 2. TESTOS PER A entornAppFindByEntornCodiAndAppCodi
+    // ========================================================================
+
+    @Test
+    @DisplayName("entornAppFindByEntornCodiAndAppCodi: retorna el primer element quan hi ha resultats")
+    void entornAppFindByEntornCodiAndAppCodi_quanHiHaResultats_llavorsRetornaElPrimerElement() {
         // Arrange
         EntornApp entornApp = new EntornApp();
         entornApp.setId(1L);
-        PagedModel<EntityModel<EntornApp>> pagedModel = PagedModel.of(Collections.singletonList(EntityModel.of(entornApp)), new PagedModel.PageMetadata(1, 0, 1));
-        when(entornAppServiceClient.find(any(), anyString(), any(), any(), anyString(), any(), eq(AUTH_HEADER))).thenReturn(pagedModel);
+        PagedModel<EntityModel<EntornApp>> pagedModel = PagedModel.of(
+            Collections.singletonList(EntityModel.of(entornApp)),
+            new PagedModel.PageMetadata(1, 0, 1)
+        );
+        when(entornAppServiceClient.find(any(), anyString(), any(), any(), anyString(), any(), eq(AUTH_HEADER)))
+            .thenReturn(pagedModel);
 
         // Act
         Optional<EntornApp> result = avisClientHelper.entornAppFindByEntornCodiAndAppCodi("ENT", "APP");
@@ -112,22 +144,105 @@ class AvisClientHelperTest {
     }
 
     @Test
-    @DisplayName("monitorCreate ha de cridar al client sense propagar excepció si falla")
-    void monitorCreate_quanElClientLlanzaExcepcio_noLaPropaga() {
+    @DisplayName("entornAppFindByEntornCodiAndAppCodi: retorna Optional buit quan no hi ha resultats")
+    void entornAppFindByEntornCodiAndAppCodi_quanNoHiHaResultats_llavorsRetornaOptionalBuit() {
         // Arrange
-        Monitor monitor = new Monitor();
-        doThrow(new RuntimeException("Error")).when(monitorServiceClient).create(eq(monitor), eq(AUTH_HEADER));
+        PagedModel<EntityModel<EntornApp>> pagedModel = PagedModel.of(
+            Collections.emptyList(),
+            new PagedModel.PageMetadata(0, 0, 0)
+        );
+        when(entornAppServiceClient.find(any(), anyString(), any(), any(), anyString(), any(), eq(AUTH_HEADER)))
+            .thenReturn(pagedModel);
 
-        // Act & Assert (no ha de llançar excepció)
-        avisClientHelper.monitorCreate(monitor);
-        verify(monitorServiceClient).create(monitor, AUTH_HEADER);
+        // Act
+        Optional<EntornApp> result = avisClientHelper.entornAppFindByEntornCodiAndAppCodi("ENT", "APP");
+
+        // Assert
+        assertThat(result).isEmpty();
+    }
+
+    // ========================================================================
+    // 3. TESTOS PER A entornAppFindByEntornAndApp
+    // ========================================================================
+
+    @Test
+    @DisplayName("entornAppFindByEntornAndApp: retorna el primer element quan hi ha resultats")
+    void entornAppFindByEntornAndApp_quanHiHaResultats_llavorsRetornaElPrimerElement() {
+        // Arrange
+        EntornApp entornApp = new EntornApp();
+        entornApp.setId(2L);
+        PagedModel<EntityModel<EntornApp>> pagedModel = PagedModel.of(
+            Collections.singletonList(EntityModel.of(entornApp)),
+            new PagedModel.PageMetadata(1, 0, 1)
+        );
+        when(entornAppServiceClient.find(any(), anyString(), any(), any(), anyString(), any(), eq(AUTH_HEADER)))
+            .thenReturn(pagedModel);
+
+        // Act
+        Optional<EntornApp> result = avisClientHelper.entornAppFindByEntornAndApp(10L, 20L);
+
+        // Assert
+        assertThat(result).isPresent();
+        assertThat(result.get().getId()).isEqualTo(2L);
     }
 
     @Test
-    @DisplayName("appById ha de retornar l'app si el client la troba")
-    void appById_quanTroba_laRetorna() {
+    @DisplayName("entornAppFindByEntornAndApp: retorna Optional buit quan no hi ha resultats")
+    void entornAppFindByEntornAndApp_quanNoHiHaResultats_llavorsRetornaOptionalBuit() {
+        // Arrange
+        PagedModel<EntityModel<EntornApp>> pagedModel = PagedModel.of(
+            Collections.emptyList(),
+            new PagedModel.PageMetadata(0, 0, 0)
+        );
+        when(entornAppServiceClient.find(any(), anyString(), any(), any(), anyString(), any(), eq(AUTH_HEADER)))
+            .thenReturn(pagedModel);
+
+        // Act
+        Optional<EntornApp> result = avisClientHelper.entornAppFindByEntornAndApp(10L, 20L);
+
+        // Assert
+        assertThat(result).isEmpty();
+    }
+
+    // ========================================================================
+    // 4. TESTOS PER A monitorCreate
+    // ========================================================================
+
+    @Test
+    @DisplayName("monitorCreate: crida al client correctament quan no hi ha errors")
+    void monitorCreate_quanNoHiHaErrors_llavorsCridaAlClient() {
+        // Arrange
+        Monitor monitor = new Monitor();
+
+        // Act
+        avisClientHelper.monitorCreate(monitor);
+
+        // Assert
+        verify(monitorServiceClient, times(1)).create(monitor, AUTH_HEADER);
+    }
+
+    @Test
+    @DisplayName("monitorCreate: no propaga l'excepció quan el client falla")
+    void monitorCreate_quanElClientLlancaExcepcio_llavorsNoLaPropaga() {
+        // Arrange
+        Monitor monitor = new Monitor();
+        doThrow(new RuntimeException("Error de xarxa")).when(monitorServiceClient).create(eq(monitor), eq(AUTH_HEADER));
+
+        // Act & Assert
+        assertThatCode(() -> avisClientHelper.monitorCreate(monitor)).doesNotThrowAnyException();
+        verify(monitorServiceClient, times(1)).create(monitor, AUTH_HEADER);
+    }
+
+    // ========================================================================
+    // 5. TESTOS PER A appById
+    // ========================================================================
+
+    @Test
+    @DisplayName("appById: retorna l'app quan el client la troba")
+    void appById_quanElClientTrobaApp_llavorsLaRetorna() {
         // Arrange
         App app = new App();
+        ReflectionTestUtils.setField(app, "id", 1L);
         when(appServiceClient.getOne(eq(1L), any(), eq(AUTH_HEADER))).thenReturn(EntityModel.of(app));
 
         // Act
@@ -135,26 +250,45 @@ class AvisClientHelperTest {
 
         // Assert
         assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(1L);
     }
 
-	@Test
-	@DisplayName("appById ha de retornar null si es llança FeignException.NotFound")
-	void appById_quanNotFound_retornaNull() {
-		// Arrange
-		when(appServiceClient.getOne(eq(1L), any(), eq(AUTH_HEADER))).thenThrow(FeignException.NotFound.class);
+    @Test
+    @DisplayName("appById: retorna null quan el client retorna null")
+    void appById_quanElClientRetornaNull_llavorsRetornaNull() {
+        // Arrange
+        when(appServiceClient.getOne(eq(1L), any(), eq(AUTH_HEADER))).thenReturn(null);
 
-		// Act
-		App result = avisClientHelper.appById(1L);
+        // Act
+        App result = avisClientHelper.appById(1L);
 
-		// Assert
-		assertThat(result).isNull();
-	}
+        // Assert
+        assertThat(result).isNull();
+    }
 
     @Test
-    @DisplayName("entornById ha de retornar l'entorn si el client el troba")
-    void entornById_quanTroba_laRetorna() {
+    @DisplayName("appById: retorna null quan es llança FeignException.NotFound")
+    void appById_quanEsLlancaNotFound_llavorsRetornaNull() {
+        // Arrange
+        when(appServiceClient.getOne(eq(1L), any(), eq(AUTH_HEADER))).thenThrow(FeignException.NotFound.class);
+
+        // Act
+        App result = avisClientHelper.appById(1L);
+
+        // Assert
+        assertThat(result).isNull();
+    }
+
+    // ========================================================================
+    // 6. TESTOS PER A entornById
+    // ========================================================================
+
+    @Test
+    @DisplayName("entornById: retorna l'entorn quan el client el troba")
+    void entornById_quanElClientTrobaEntorn_llavorsElRetorna() {
         // Arrange
         Entorn entorn = new Entorn();
+        ReflectionTestUtils.setField(entorn, "id", 1L);
         when(entornServiceClient.getOne(eq(1L), any(), eq(AUTH_HEADER))).thenReturn(EntityModel.of(entorn));
 
         // Act
@@ -162,11 +296,25 @@ class AvisClientHelperTest {
 
         // Assert
         assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(1L);
     }
 
     @Test
-    @DisplayName("entornById ha de retornar null si es llança FeignException.NotFound")
-    void entornById_quanNotFound_retornaNull() {
+    @DisplayName("entornById: retorna null quan el client retorna null")
+    void entornById_quanElClientRetornaNull_llavorsRetornaNull() {
+        // Arrange
+        when(entornServiceClient.getOne(eq(1L), any(), eq(AUTH_HEADER))).thenReturn(null);
+
+        // Act
+        Entorn result = avisClientHelper.entornById(1L);
+
+        // Assert
+        assertThat(result).isNull();
+    }
+
+    @Test
+    @DisplayName("entornById: retorna null quan es llança FeignException.NotFound")
+    void entornById_quanEsLlancaNotFound_llavorsRetornaNull() {
         // Arrange
         when(entornServiceClient.getOne(eq(1L), any(), eq(AUTH_HEADER))).thenThrow(FeignException.NotFound.class);
 

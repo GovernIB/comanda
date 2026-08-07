@@ -226,7 +226,7 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
     }
 
     @RequiredArgsConstructor
-    private class MarcarAvisLlegit implements ActionExecutor<AvisEntity, AvisMarcarLlegitsAction, Avis> {
+    public class MarcarAvisLlegit implements ActionExecutor<AvisEntity, AvisMarcarLlegitsAction, Avis> {
         @Override
         public void onChange(Serializable id, AvisMarcarLlegitsAction previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, AvisMarcarLlegitsAction target) {}
 

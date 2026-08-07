@@ -61,7 +61,7 @@ public class UsuariServiceImpl extends BaseMutableResourceService<Usuari, Long, 
         return entityToResource(usuariEntity);
     }
 
-    private class AlarmaMailOnchangeLogicProcessor implements OnChangeLogicProcessor<Usuari> {
+    public class AlarmaMailOnchangeLogicProcessor implements OnChangeLogicProcessor<Usuari> {
         @Override
         public void onChange(Serializable id, Usuari previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Usuari target) {
             if (Boolean.FALSE.equals(fieldValue)) {

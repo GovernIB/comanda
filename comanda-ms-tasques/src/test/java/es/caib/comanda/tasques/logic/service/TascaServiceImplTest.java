@@ -9,6 +9,7 @@ import es.caib.comanda.tasques.logic.mapper.TascaMapper;
 import es.caib.comanda.tasques.persist.entity.TascaEntity;
 import es.caib.comanda.tasques.persist.repository.TascaRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,7 +22,9 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import static es.caib.comanda.base.config.BaseConfig.ROLE_ADMIN;
@@ -227,7 +230,7 @@ class TascaServiceImplTest {
         EntornRef entorn = EntornRef.builder().nom("ENT-NOM").build();
         entornApp.setApp(app);
         entornApp.setEntorn(entorn);
-        
+
         when(tasquesClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
 
         // Act
@@ -311,5 +314,172 @@ class TascaServiceImplTest {
         // però verifiquem que no és null i que s'han cridat els helpers d'autenticació.
         verify(authenticationHelper).getCurrentUserName();
         verify(authenticationHelper).getCurrentUserRealmRoles();
+    }
+
+    @Test
+    @DisplayName("netejaPerEntornApp: esborra les tasques quan la llista no és buida")
+    void netejaPerEntornApp_quanHiHaTasques_llavorsEsborra() {
+        // Arrange
+        Long entornAppId = 10L;
+        List<TascaEntity> tasques = List.of(new TascaEntity(), new TascaEntity());
+        when(tascaRepository.findByEntornAppId(entornAppId)).thenReturn(tasques);
+
+        // Act
+        tascaService.netejaPerEntornApp(entornAppId);
+
+        // Assert
+        verify(tascaRepository, times(1)).deleteAll(tasques);
+    }
+
+    @Test
+    @DisplayName("netejaPerEntornApp: no fa res quan la llista de tasques és buida")
+    void netejaPerEntornApp_quanLlistaBuida_llavorsNoEsborraRes() {
+        // Arrange
+        Long entornAppId = 10L;
+        when(tascaRepository.findByEntornAppId(entornAppId)).thenReturn(Collections.emptyList());
+
+        // Act
+        tascaService.netejaPerEntornApp(entornAppId);
+
+        // Assert
+        verify(tascaRepository, never()).deleteAll(any());
+    }
+
+    @Test
+    @DisplayName("ExpirationPerspectiveApplicator: no calcula dies per caducar quan dataFi no és null")
+    void expirationPerspective_quanDataFiNoEsNull_llavorsNoCalculaDies() {
+        // Arrange
+        TascaServiceImpl.ExpirationPerspectiveApplicator applicator = new TascaServiceImpl.ExpirationPerspectiveApplicator();
+        Tasca resource = new Tasca();
+        resource.setDataCaducitat(LocalDateTime.now().plusDays(5));
+        resource.setDataFi(LocalDateTime.now()); // Ja finalitzada
+        resource.setDiesPerCaducar(null);
+        TascaEntity entity = new TascaEntity();
+
+        // Act
+        applicator.applySingle("EXPIRATION", entity, resource);
+
+        // Assert
+        assertThat(resource.getDiesPerCaducar()).isNull();
+    }
+
+    @Test
+    @DisplayName("ExpirationPerspectiveApplicator: no fa res quan dataCaducitat és null")
+    void expirationPerspective_quanDataCaducitatEsNull_llavorsNoFaRes() {
+        // Arrange
+        TascaServiceImpl.ExpirationPerspectiveApplicator applicator = new TascaServiceImpl.ExpirationPerspectiveApplicator();
+        Tasca resource = new Tasca();
+        resource.setDataCaducitat(null);
+        resource.setDataFi(null);
+        resource.setDiesPerCaducar(null);
+        TascaEntity entity = new TascaEntity();
+
+        // Act
+        applicator.applySingle("EXPIRATION", entity, resource);
+
+        // Assert
+        assertThat(resource.getDiesPerCaducar()).isNull();
+    }
+
+    @Test
+    @DisplayName("PathPerspectiveApplicator: estableix treePath amb INVALID_ENTORNAPP quan entornApp és null")
+    void pathPerspective_quanEntornAppEsNull_llavorsEstableixTreePathInvalid() {
+        // Arrange
+        TascaServiceImpl.PathPerspectiveApplicator applicator = new TascaServiceImpl.PathPerspectiveApplicator(tasquesClientHelper);
+        Tasca resource = new Tasca();
+        resource.setIdentificador("ID-IDENT");
+        TascaEntity entity = new TascaEntity();
+        entity.setEntornAppId(99L);
+
+        when(tasquesClientHelper.entornAppFindById(99L)).thenReturn(null);
+
+        // Act
+        applicator.applySingle("PATH", entity, resource);
+
+        // Assert
+        assertThat(resource.getTreePath()).containsExactly("INVALID_ENTORNAPP 99", "ID-IDENT");
+    }
+
+    @Test
+    @DisplayName("EntornAppPerspectiveApplicator: estableix app i entorn quan entornApp no és null")
+    void entornAppPerspective_quanEntornAppNoEsNull_llavorsEstableixAppIEntorn() {
+        // Arrange
+        TascaServiceImpl.EntornAppPerspectiveApplicator applicator = new TascaServiceImpl.EntornAppPerspectiveApplicator(tasquesClientHelper);
+        Tasca resource = new Tasca();
+        TascaEntity entity = new TascaEntity();
+        entity.setEntornAppId(1L);
+
+        EntornApp entornApp = new EntornApp();
+        AppRef app = AppRef.builder().id(10L).nom("APP").build();
+        EntornRef entorn = EntornRef.builder().id(20L).nom("ENT").build();
+        entornApp.setApp(app);
+        entornApp.setEntorn(entorn);
+
+        when(tasquesClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
+
+        // Act
+        applicator.applySingle("ENTORN_APP", entity, resource);
+
+        // Assert
+        assertThat(resource.getApp()).isNotNull();
+        assertThat(resource.getApp().getId()).isEqualTo(10L);
+        assertThat(resource.getEntorn()).isNotNull();
+        assertThat(resource.getEntorn().getId()).isEqualTo(20L);
+    }
+
+    @Test
+    @DisplayName("EntornAppPerspectiveApplicator: no fa res quan entornApp és null")
+    void entornAppPerspective_quanEntornAppEsNull_llavorsNoFaRes() {
+        // Arrange
+        TascaServiceImpl.EntornAppPerspectiveApplicator applicator = new TascaServiceImpl.EntornAppPerspectiveApplicator(tasquesClientHelper);
+        Tasca resource = new Tasca();
+        TascaEntity entity = new TascaEntity();
+        entity.setEntornAppId(99L);
+
+        when(tasquesClientHelper.entornAppFindById(99L)).thenReturn(null);
+
+        // Act
+        applicator.applySingle("ENTORN_APP", entity, resource);
+
+        // Assert
+        assertThat(resource.getApp()).isNull();
+        assertThat(resource.getEntorn()).isNull();
+    }
+
+    @Test
+    @DisplayName("receiveMessage: captura excepció i no la propaga quan falla el procés")
+    void receiveMessage_quanEsLlancaExcepcio_llavorsNoPropagaExcepcio() throws JMSException {
+        // Arrange
+        es.caib.comanda.model.v1.tasca.Tasca tascaBroker = new es.caib.comanda.model.v1.tasca.Tasca();
+        tascaBroker.setEntornCodi("ENT");
+        tascaBroker.setAppCodi("APP");
+        tascaBroker.setIdentificador("ID1");
+
+        when(tasquesClientHelper.entornAppFindByEntornCodiAndAppCodi("ENT", "APP"))
+            .thenThrow(new RuntimeException("Error de xarxa"));
+
+        // Act & Assert
+        org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> tascaService.receiveMessage(tascaBroker, jmsMessage));
+        verify(jmsMessage).acknowledge();
+    }
+
+    @Test
+    @DisplayName("afterConversion: estableix codis a null quan app o entorn són null")
+    void afterConversion_quanAppOEntornSonNull_llavorsEstableixCodiNull() {
+        // Arrange
+        TascaEntity entity = new TascaEntity();
+        entity.setAppId(10L);
+        entity.setEntornId(20L);
+        Tasca resource = new Tasca();
+
+        when(tasquesClientHelper.appById(10L)).thenReturn(null);
+        when(tasquesClientHelper.entornById(20L)).thenReturn(null);
+
+        // Act
+        tascaService.afterConversion(entity, resource);
+
+        // Assert
+        assertThat(resource.getAppCodi()).isNull();
+        assertThat(resource.getEntornCodi()).isNull();
     }
 }

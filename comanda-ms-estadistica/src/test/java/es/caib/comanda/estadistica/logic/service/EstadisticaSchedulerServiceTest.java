@@ -12,6 +12,7 @@ import es.caib.comanda.ms.logic.helper.SchedulerTaskRegistryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.task.TaskExecutor;
@@ -43,20 +44,14 @@ public class EstadisticaSchedulerServiceTest {
     @Mock
     private SchedulerTaskRegistryService schedulerTaskRegistry;
 
+    @InjectMocks
     private EstadisticaSchedulerService service;
+
     private EntornApp ea1;
     private EntornApp ea2;
 
     @BeforeEach
     void setUp() {
-        service = new EstadisticaSchedulerService(
-                estadisticaHelper,
-                estadisticaClientHelper,
-                compactacioHelper,
-                parametresHelper,
-                estadisticaWorkerExecutor,
-                schedulerTaskRegistry
-        );
         // Leader by default
         ReflectionTestUtils.setField(service, "schedulerLeader", true);
         ReflectionTestUtils.setField(service, "schedulerBack", true);

@@ -77,7 +77,7 @@ public class DbIndexServiceImpl extends BaseNoDatabaseMutableResourceService<DbI
         return new PageImpl<>(page, pageable, all.size());
     }
 
-    private class RebuildActionExecutor
+    protected class RebuildActionExecutor
             implements ActionExecutor<NoDatabaseResourceEntity<DbIndex, String>, Serializable, String> {
 
         @Override
