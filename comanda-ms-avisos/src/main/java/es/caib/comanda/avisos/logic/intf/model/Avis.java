@@ -46,8 +46,7 @@ import java.util.List;
                 @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Avis.ACTION_MARCAR_AVIS_LLEGIT, formClass = Avis.AvisMarcarLlegitsAction.class,
                         accessConstraints = {
                                 @ResourceAccessConstraint(
-                                        type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
-                                        roles = { BaseConfig.ROLE_ADMIN, BaseConfig.ROLE_CONSULTA }
+                                    type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED
                                 )}),
                 @ResourceArtifact(type = ResourceArtifactType.FILTER, code = Avis.FILTER, formClass = Avis.AvisFilter.class),
                 @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Avis.PERSPECTIVE_PATH),

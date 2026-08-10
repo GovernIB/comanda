@@ -262,6 +262,8 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
                           bgcolor: 'transparent',
                           cursor: 'default',
                       },
+                      pt: 0,
+                      pb: 0,
                   }}
                   key="darreraConnexio"
               >
@@ -269,6 +271,9 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
                       <AccessTime />
                   </ListItemIcon>
                   <ListItemText>
+                      <Typography color="textSecondary" variant={'body2'} sx={{ fontSize: 12, mr: "1ch" }}>
+                          {t($ => $.menu.user.darreraConnexio)}
+                      </Typography>
                       <Typography color="textSecondary" variant={'body2'}>
                           {formatDate(user?.darreraConnexio, 'DD/MM/YY HH:mm')}
                       </Typography>

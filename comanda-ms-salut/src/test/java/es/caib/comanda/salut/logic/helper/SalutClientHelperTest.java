@@ -95,6 +95,37 @@ class SalutClientHelperTest {
 	}
 
     @Test
+    void entornAppFindByIdWithIntegracionsSubsistemesContexts_quanElClientRetornaEntitat_retornaElContingut() {
+        String[] perspectives = new String[]{EntornApp.PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS};
+        when(entornAppServiceClient.getOne(1L, perspectives, AUTH_HEADER)).thenReturn(EntityModel.of(entornApp));
+
+        EntornApp result = helper.entornAppFindByIdWithIntegracionsSubsistemesContexts(1L);
+
+        assertThat(result).isSameAs(entornApp);
+        verify(entornAppServiceClient).getOne(1L, perspectives, AUTH_HEADER);
+    }
+
+    @Test
+    void entornAppFindByIdWithIntegracionsSubsistemesContexts_quanElClientRetornaNull_retornaNull() {
+        String[] perspectives = new String[]{EntornApp.PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS};
+        when(entornAppServiceClient.getOne(1L, perspectives, AUTH_HEADER)).thenReturn(null);
+
+        EntornApp result = helper.entornAppFindByIdWithIntegracionsSubsistemesContexts(1L);
+
+        assertThat(result).isNull();
+    }
+
+    @Test
+    void entornAppFindByIdWithIntegracionsSubsistemesContexts_quanElClientLlanzaNotFound_retornaNull() {
+        String[] perspectives = new String[]{EntornApp.PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS};
+        when(entornAppServiceClient.getOne(1L, perspectives, AUTH_HEADER)).thenThrow(FeignException.NotFound.class);
+
+        EntornApp result = helper.entornAppFindByIdWithIntegracionsSubsistemesContexts(1L);
+
+        assertThat(result).isNull();
+    }
+
+    @Test
     void entornAppFindByActivaTrue_quanNoHiHaFiltreExtra_consultaAmbElFiltreBase() {
         PagedModel<EntityModel<EntornApp>> pagedModel = PagedModel.of(
                 Collections.singletonList(EntityModel.of(entornApp)),

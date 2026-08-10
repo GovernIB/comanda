@@ -98,7 +98,8 @@ describe('EntornAppHist', () => {
         });
 
         const columnsData = JSON.parse(screen.getByTestId('columns-data').textContent || '[]');
-        expect(columnsData).toContainEqual({ field: 'entornApp', headerName: undefined });
+        expect(columnsData).toContainEqual({ field: 'entorn', headerName: undefined });
+        expect(columnsData).toContainEqual({ field: 'app', headerName: undefined });
 
         const entornApps = mockEntornAppsData.rows;
         const mockValueFormatter = (value: any) => {

@@ -238,7 +238,7 @@ export const FormFieldReference: React.FC<FormFieldRefProps> = (props) => {
                 });
             }
         },
-        [optionsRequestProp, filter, sortModel, namedQueries, perspectives]
+        [optionsRequestProp, field, filter, sortModel, namedQueries, perspectives]
     );
     const {
         loading: optionsLoading,
@@ -373,6 +373,7 @@ export const FormFieldReference: React.FC<FormFieldRefProps> = (props) => {
                 options={options}
                 multiple={multiple}
                 readOnly={readOnly}
+                disabled={disabled}
                 open={open}
                 onOpen={() => !disabled && !readOnly && setOpen(true)}
                 onClose={(event: Event, reason) => {
@@ -438,7 +439,6 @@ export const FormFieldReference: React.FC<FormFieldRefProps> = (props) => {
                         {...params}
                         label={!inline ? label : undefined}
                         placeholder={componentProps?.placeholder ?? (inline ? label : undefined)}
-                        disabled={disabled}
                         required={required ?? field.required}
                         error={fieldError != null}
                         title={componentProps?.title ?? title}

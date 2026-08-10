@@ -114,6 +114,7 @@ const translationEn: translationResourcesType = {
         indicador: "Indicators",
         user: {
             lastConnection: "Date and time of the user's last connection",
+            darreraConnexio: "Last connection:",
             options: {
                 profile: {
                     title: "My profile",
@@ -227,6 +228,8 @@ const translationEn: translationResourcesType = {
                 noInfo: 'No data available for this environment',
                 downAlert: "The application is crashed. Unable to display all health information.",
                 darreraDataInfo1: "The application stopped working on ",
+                darreraDataInfoHora: " at ",
+                darreraDataInfoHores: " hours",
                 darreraDataInfo2: "Previous status: ",
             },
             latencia: {

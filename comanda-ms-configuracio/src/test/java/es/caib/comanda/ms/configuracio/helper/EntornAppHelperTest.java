@@ -12,8 +12,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
-
-import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.times;
@@ -33,7 +31,7 @@ public class EntornAppHelperTest {
         Long entornAppId = 1L;
         entornAppHelper.logicAfterDelete(entornAppId);
 
-        verify(cacheHelper).evictCacheItem(ENTORN_APP_CACHE, entornAppId.toString());
+        verify(cacheHelper).evictEntornAppCacheItem(entornAppId);
         ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
         verify(eventPublisher, times(2)).publishEvent(eventCaptor.capture());
         var publishedEvents = eventCaptor.getAllValues();

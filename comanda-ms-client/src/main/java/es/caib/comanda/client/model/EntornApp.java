@@ -13,6 +13,8 @@ import java.util.List;
 @AllArgsConstructor
 public class EntornApp implements Serializable {
 
+    public static final String PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS = "integracions_subsistemes_contexts";
+
     private Long id;
     private EntornRef entorn;
     private AppRef app;

@@ -634,6 +634,7 @@ const Salut: FunctionComponent = () => {
               goBackActive: true,
               groupingActive: false,
               hideFilter: true,
+              hideAppVersioning: true,
           }
         : null;
 

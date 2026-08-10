@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Profile;
 public class HazelCastCacheConfig {
 
     public static final String ENTORN_APP_CACHE = "entornAppCache";
+    public static final String ENTORN_APP_INTEGRACIONS_SUBSISTEMES_CONTEXTS_CACHE = "entornAppIntSubContCache";
     public static final String APP_CACHE = "appCache";
     public static final String ENTORN_CACHE = "entornCache";
     public static final String DASHBOARD_WIDGET_CACHE = "dashboardWidgetCache";
@@ -40,6 +41,7 @@ public class HazelCastCacheConfig {
         config.getNetworkConfig().getJoin().getTcpIpConfig().setEnabled(true).addMember("localhost");
 
         config.addMapConfig(new MapConfig().setName(ENTORN_APP_CACHE).setTimeToLiveSeconds(3600).setEvictionConfig(getEvictionConfig()));
+        config.addMapConfig(new MapConfig().setName(ENTORN_APP_INTEGRACIONS_SUBSISTEMES_CONTEXTS_CACHE).setTimeToLiveSeconds(3600).setEvictionConfig(getEvictionConfig()));
         config.addMapConfig(new MapConfig().setName(APP_CACHE).setTimeToLiveSeconds(3600).setEvictionConfig(getEvictionConfig()));
         config.addMapConfig(new MapConfig().setName(ENTORN_CACHE).setTimeToLiveSeconds(3600).setEvictionConfig(getEvictionConfig()));
         config.addMapConfig(new MapConfig().setName(DASHBOARD_WIDGET_CACHE).setTimeToLiveSeconds(28800).setEvictionConfig(getEvictionConfig())); // 8 hores de TTL
