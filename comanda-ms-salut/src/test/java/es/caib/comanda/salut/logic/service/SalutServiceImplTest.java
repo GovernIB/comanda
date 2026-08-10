@@ -377,7 +377,7 @@ class SalutServiceImplTest {
         ReflectionTestUtils.setField(integracioRef, "nom", "Nom Integracio");
         ReflectionTestUtils.setField(integracio, "integracio", integracioRef);
         entornApp.setIntegracions(List.of(integracio));
-        when(salutClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
+        when(salutClientHelper.entornAppFindByIdWithIntegracionsSubsistemesContexts(1L)).thenReturn(entornApp);
 
         // Act
         perspective.applySingle("CODE", entity, resource);
@@ -410,7 +410,7 @@ class SalutServiceImplTest {
         ReflectionTestUtils.setField(subsistema, "codi", "SUB1");
         ReflectionTestUtils.setField(subsistema, "nom", "Nom Subsistema");
         entornApp.setSubsistemes(List.of(subsistema));
-        when(salutClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
+        when(salutClientHelper.entornAppFindByIdWithIntegracionsSubsistemesContexts(1L)).thenReturn(entornApp);
 
         // Act
         perspective.applySingle("CODE", entity, resource);
@@ -435,7 +435,7 @@ class SalutServiceImplTest {
         AppContext appContext2 = new AppContext();
         ReflectionTestUtils.setField(appContext2, "codi", "CTX2");
         entornApp.setContexts(List.of(appContext1, appContext2));
-        when(salutClientHelper.entornAppFindById(1L)).thenReturn(entornApp);
+        when(salutClientHelper.entornAppFindByIdWithIntegracionsSubsistemesContexts(1L)).thenReturn(entornApp);
 
         // Act
         perspective.applySingle("CODE", entity, resource);

@@ -72,6 +72,11 @@ const mocks = vi.hoisted(() => ({
                 calendari: 'Calendari',
                 parametre: 'Paràmetres',
             },
+            page: {
+                entitats: {
+                    title: 'Entitats',
+                },
+            },
         })
     ),
 }));
