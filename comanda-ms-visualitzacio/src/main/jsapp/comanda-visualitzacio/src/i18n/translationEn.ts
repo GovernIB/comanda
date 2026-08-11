@@ -1114,6 +1114,7 @@ const translationEn: translationResourcesType = {
                 configData: "Data configuration",
                 configVisual: "Visual configuration",
                 titleText: "Title text",
+                subtitleText: "Subtitle text",
                 titleType: "Title type",
                 showDestacat: "Show as featured",
                 template: "Template",

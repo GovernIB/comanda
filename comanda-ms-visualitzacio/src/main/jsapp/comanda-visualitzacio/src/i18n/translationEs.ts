@@ -1114,6 +1114,7 @@ const translationEs: translationResourcesType = {
                 configData: "Configuración de datos",
                 configVisual: "Configuración visual",
                 titleText: "Texto del título",
+                subtitleText: "Texto del subtítulo",
                 titleType: "Tipo de título",
                 showDestacat: "Mostrar como destacado",
                 template: "Plantilla",

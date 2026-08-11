@@ -1114,6 +1114,7 @@ const translationCa = {
                 configData: "Configuració de dades",
                 configVisual: "Configuració visual",
                 titleText: "Text del títol",
+                subtitleText: "Text del subtítol",
                 titleType: "Tipus de títol",
                 showDestacat: "Mostrar com a destacat",
                 template: "Plantilla",
