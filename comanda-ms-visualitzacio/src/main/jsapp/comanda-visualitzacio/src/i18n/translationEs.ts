@@ -989,6 +989,7 @@ const translationEs: translationResourcesType = {
                     periodeIndicador: "Período agr.",
                     accions: "Acciones",
                     arrossega: "Arrastra para reordenar",
+                    percentageError: "No se pueden combinar columnas de tipo porcentaje con otros tipos de agregación",
                 },
             },
             atributsVisuals: {

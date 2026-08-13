@@ -22,6 +22,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ValidGraficWidgetValidator extends ValidWidgetValidator implements ConstraintValidator<ValidGraficWidget, EstadisticaGraficWidget> {
 
+    private static final String MSG_CAMP_OBLIGATORI = "es.caib.comanda.estadistica.back.validation.ValidGraficWidgetValidator.campObligatori";
+    private static final String MSG_DIFERENTS_UNITATS = "es.caib.comanda.estadistica.back.validation.ValidGraficWidgetValidator.indicadorsInfo.unitatAgregacio.diferents";
+    private static final String MSG_PERCENTATGE_MIX = "es.caib.comanda.estadistica.back.validation.ValidGraficWidgetValidator.indicadorsInfo.agregacio.percentatgeMix";
+
     private final MessageSource messageSource;
     private Locale locale;
 
@@ -48,7 +52,7 @@ public class ValidGraficWidgetValidator extends ValidWidgetValidator implements 
 
         boolean isValid = true;
 
-        if (!TipusGraficDataEnum.UN_INDICADOR_AMB_DESCOMPOSICIO.equals(widget.getTipusDades()) 
+        if (!TipusGraficDataEnum.UN_INDICADOR_AMB_DESCOMPOSICIO.equals(widget.getTipusDades())
                 || !Boolean.TRUE.equals(widget.getAgruparPerDimensioDescomposicio())) {
             isValid = validateField(widget.getTempsAgrupacio() != null, context, "tempsAgrupacio", "És obligatori emplenar aquest camp");
         }
@@ -79,12 +83,12 @@ public class ValidGraficWidgetValidator extends ValidWidgetValidator implements 
         AtomicBoolean isValid = new AtomicBoolean(true);
 
         IndicadorTaula primerIndicador = widget.getIndicadorsInfo().get(0);
-        isValid.set(validateField(primerIndicador.getIndicador() != null, context, "indicadorsInfo[0].indicador", "Camp obligatori") && isValid.get());
+        isValid.set(validateField(primerIndicador.getIndicador() != null, context, "indicadorsInfo[0].indicador", MSG_CAMP_OBLIGATORI) && isValid.get());
         widget.getIndicadorsInfo().forEach(ind -> {
             if (ind.getIndicador() != null) {
-                isValid.set(validateField(ind.getTitol() != null && !ind.getTitol().isEmpty(), context, "indicadorsInfo[" + widget.getIndicadorsInfo().indexOf(ind) + "].titol", "Camp obligatori") && isValid.get());
-                isValid.set(validateField(ind.getAgregacio() != null, context, "indicadorsInfo[" + widget.getIndicadorsInfo().indexOf(ind) + "].agregacio", "Camp obligatori") && isValid.get());
-                isValid.set(validateField(!TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()) || ind.getUnitatAgregacio() != null, context, "indicadorsInfo[" + widget.getIndicadorsInfo().indexOf(ind) + "].unitatAgregacio", "Camp obligatori") && isValid.get());
+                isValid.set(validateField(ind.getTitol() != null && !ind.getTitol().isEmpty(), context, "indicadorsInfo[" + widget.getIndicadorsInfo().indexOf(ind) + "].titol", MSG_CAMP_OBLIGATORI) && isValid.get());
+                isValid.set(validateField(ind.getAgregacio() != null, context, "indicadorsInfo[" + widget.getIndicadorsInfo().indexOf(ind) + "].agregacio", MSG_CAMP_OBLIGATORI) && isValid.get());
+                isValid.set(validateField(!TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()) || ind.getUnitatAgregacio() != null, context, "indicadorsInfo[" + widget.getIndicadorsInfo().indexOf(ind) + "].unitatAgregacio", MSG_CAMP_OBLIGATORI) && isValid.get());
             }
         });
 
@@ -94,13 +98,24 @@ public class ValidGraficWidgetValidator extends ValidWidgetValidator implements 
                 .collect(Collectors.groupingBy(IndicadorTaula::getUnitatAgregacio));
 
         if (groupedAvgIndicadors.size() > 1) {
-            String message = "No hi pot haver difertents unitats d'agregació";
             groupedAvgIndicadors.values().stream()
                     .flatMap(List::stream)
-                    .forEach(ind -> addConstraintViolation(context, message,
+                    .forEach(ind -> addConstraintViolation(context, MSG_DIFERENTS_UNITATS,
                         "indicadorsInfo[" + widget.getIndicadorsInfo().indexOf(ind) + "].unitatAgregacio"));
             isValid.set(false);
         }
+
+        boolean hasPercentage = widget.getIndicadorsInfo().stream().anyMatch(ind -> TableColumnsEnum.PERCENTAGE.equals(ind.getAgregacio()));
+        boolean hasNonPercentage = widget.getIndicadorsInfo().stream().anyMatch(ind -> ind.getAgregacio() != null && !TableColumnsEnum.PERCENTAGE.equals(ind.getAgregacio()));
+
+        if (hasPercentage && hasNonPercentage) {
+            widget.getIndicadorsInfo().stream()
+                    .filter(ind -> TableColumnsEnum.PERCENTAGE.equals(ind.getAgregacio()))
+                    .forEach(ind -> addConstraintViolation(context, MSG_PERCENTATGE_MIX,
+                            "indicadorsInfo[" + widget.getIndicadorsInfo().indexOf(ind) + "].agregacio"));
+            isValid.set(false);
+        }
+
         return isValid.get();
     }
 

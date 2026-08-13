@@ -20,6 +20,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ValidTaulaWidgetValidator extends ValidWidgetValidator implements ConstraintValidator<ValidTaulaWidget, EstadisticaTaulaWidget> {
 
+    private static final String MSG_CAMP_OBLIGATORI = "es.caib.comanda.estadistica.back.validation.ValidTaulaWidgetValidator.campObligatori";
+    private static final String MSG_DIFERENTS_UNITATS = "es.caib.comanda.estadistica.back.validation.ValidTaulaWidgetValidator.columnes.unitatAgregacio.diferents";
+    private static final String MSG_PERCENTATGE_MIX = "es.caib.comanda.estadistica.back.validation.ValidTaulaWidgetValidator.columnes.agregacio.percentatgeMix";
+
     private final MessageSource messageSource;
 
     @Override
@@ -41,19 +45,19 @@ public class ValidTaulaWidgetValidator extends ValidWidgetValidator implements C
 
     private boolean validateColumnes(EstadisticaTaulaWidget widget, ConstraintValidatorContext context) {
         if (widget.getColumnes() == null || widget.getColumnes().isEmpty()) {
-            addConstraintViolation(context, "És obligatori emplenar aquest camp", "columnes[0].indicador");
+            addConstraintViolation(context, MSG_CAMP_OBLIGATORI, "columnes[0].indicador");
             return false;
         }
 
         AtomicBoolean isValid = new AtomicBoolean(true);
 
         IndicadorTaula primerIndicador = widget.getColumnes().get(0);
-        isValid.set(validateField(primerIndicador.getIndicador() != null, context, "columnes[0].indicador", "Camp obligatori") && isValid.get());
+        isValid.set(validateField(primerIndicador.getIndicador() != null, context, "columnes[0].indicador", MSG_CAMP_OBLIGATORI) && isValid.get());
         widget.getColumnes().forEach(ind -> {
             if (ind.getIndicador() != null) {
-                isValid.set(validateField(ind.getTitol() != null && !ind.getTitol().isEmpty(), context, "columnes[" + widget.getColumnes().indexOf(ind) + "].titol", "Camp obligatori") && isValid.get());
-                isValid.set(validateField(ind.getAgregacio() != null, context, "columnes[" + widget.getColumnes().indexOf(ind) + "].agregacio", "Camp obligatori") && isValid.get());
-                isValid.set(validateField(!TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()) || ind.getUnitatAgregacio() != null, context, "columnes[" + widget.getColumnes().indexOf(ind) + "].unitatAgregacio", "Camp obligatori") && isValid.get());
+                isValid.set(validateField(ind.getTitol() != null && !ind.getTitol().isEmpty(), context, "columnes[" + widget.getColumnes().indexOf(ind) + "].titol", MSG_CAMP_OBLIGATORI) && isValid.get());
+                isValid.set(validateField(ind.getAgregacio() != null, context, "columnes[" + widget.getColumnes().indexOf(ind) + "].agregacio", MSG_CAMP_OBLIGATORI) && isValid.get());
+                isValid.set(validateField(!TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()) || ind.getUnitatAgregacio() != null, context, "columnes[" + widget.getColumnes().indexOf(ind) + "].unitatAgregacio", MSG_CAMP_OBLIGATORI) && isValid.get());
             }
         });
 
@@ -63,13 +67,24 @@ public class ValidTaulaWidgetValidator extends ValidWidgetValidator implements C
                 .collect(Collectors.groupingBy(IndicadorTaula::getUnitatAgregacio));
 
         if (groupedAvgIndicadors.size() > 1) {
-            String message = "No hi pot haver difertents unitats d'agregació";
             groupedAvgIndicadors.values().stream()
                     .flatMap(List::stream)
-                    .forEach(ind -> addConstraintViolation(context, message,
+                    .forEach(ind -> addConstraintViolation(context, MSG_DIFERENTS_UNITATS,
                             "columnes[" + widget.getColumnes().indexOf(ind) + "].unitatAgregacio"));
             isValid.set(false);
         }
+
+        boolean hasPercentage = widget.getColumnes().stream().anyMatch(ind -> TableColumnsEnum.PERCENTAGE.equals(ind.getAgregacio()));
+        boolean hasNonPercentage = widget.getColumnes().stream().anyMatch(ind -> ind.getAgregacio() != null && !TableColumnsEnum.PERCENTAGE.equals(ind.getAgregacio()));
+
+        if (hasPercentage && hasNonPercentage) {
+            widget.getColumnes().stream()
+                    .filter(ind -> TableColumnsEnum.PERCENTAGE.equals(ind.getAgregacio()))
+                    .forEach(ind -> addConstraintViolation(context, MSG_PERCENTATGE_MIX,
+                            "columnes[" + widget.getColumnes().indexOf(ind) + "].agregacio"));
+            isValid.set(false);
+        }
+
         return isValid.get();
     }
 

@@ -989,6 +989,7 @@ const translationEn: translationResourcesType = {
                     periodeIndicador: "Periode aggr.",
                     accions: "Actions",
                     arrossega: "Drag to reorder",
+                    percentageError: "Percentage columns cannot be combined with other aggregation types",
                 },
             },
             atributsVisuals: {

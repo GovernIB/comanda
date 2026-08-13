@@ -92,6 +92,22 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
             }
         });
 
+        // Check for mixing PERCENTAGE with other aggregations
+        const hasPercentage = columnes.some(c => c.agregacio === 'PERCENTAGE');
+        const hasNonPercentage = columnes.some(c => c.agregacio && c.agregacio !== 'PERCENTAGE');
+
+        if (hasPercentage && hasNonPercentage) {
+            columnes.forEach((columna, index) => {
+                if (columna.agregacio === 'PERCENTAGE') {
+                    errors.push({
+                        code: 'INVALID',
+                        field: `${name}.${index}.agregacio`,
+                        message: t($ => $.page.widget.taula.columna.percentageError),
+                    });
+                }
+            });
+        }
+
         return errors;
     }, [columnes, touchedFields, data.columnes, name, t]);
 

@@ -989,6 +989,7 @@ const translationCa = {
                     periodeIndicador: "Període agr.",
                     accions: "Accions",
                     arrossega: "Arrossega per reordenar",
+                    percentageError: "No es poden combinar columnes de tipus percentatge amb altres tipus d'agregació",
                 },
             },
             atributsVisuals: {
