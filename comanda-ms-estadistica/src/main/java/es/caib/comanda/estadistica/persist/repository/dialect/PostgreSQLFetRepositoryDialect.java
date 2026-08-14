@@ -5,6 +5,7 @@ import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import org.springframework.stereotype.Component;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -405,7 +406,7 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
                         default: return "total_sum" + getIndicadorSuffix(ind.getIndicadorCodi());
                     }
                 })
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(LinkedHashSet::new));
 
         // Generem el SELECT exterior amb MAX per a cada columna
         String outerSelect = allResultColumns.stream()

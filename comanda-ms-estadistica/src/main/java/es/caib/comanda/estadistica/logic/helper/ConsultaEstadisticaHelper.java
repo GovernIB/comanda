@@ -24,7 +24,6 @@ import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
-import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
@@ -158,6 +157,8 @@ public class ConsultaEstadisticaHelper {
                 case TAULA:
                     return getDadesWidgetTaula(dashboardItem, dadesComunsConsulta);
             }
+        } catch (ReportGenerationException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error obtnint dades de dashboard widget: " + e.getMessage(), e);
             throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId().toString(), e.getMessage(), e.getCause());

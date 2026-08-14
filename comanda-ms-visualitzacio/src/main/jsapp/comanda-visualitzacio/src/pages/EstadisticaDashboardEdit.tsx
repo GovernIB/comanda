@@ -524,10 +524,10 @@ const EstadisticaDashboardEdit: React.FC = () => {
                             {dashboard.titol}
                         </Typography>
                     </Box>
+                    {errorDashboardWidgets?.length ? (
+                        <Box><WidgetsErrorAlert errorWidgets={errorDashboardWidgets} /></Box>
+                    ) : undefined}
                     <Box>
-                        {errorDashboardWidgets?.length ? (
-                            <WidgetsErrorAlert errorWidgets={errorDashboardWidgets} />
-                        ) : undefined}
                         <Button
                             variant="contained"
                             startIcon={<AddIcon />}

@@ -51,8 +51,8 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
 
     @Override
     public List<FetEntity> findByEntornAppIdAndTempsDataBetweenAndDimensionValue(
-            Long entornAppId, 
-            LocalDate dataInici, 
+            Long entornAppId,
+            LocalDate dataInici,
             LocalDate dataFi,
             String dimensioCodi,
             String dimensioValor) {
@@ -71,8 +71,8 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
 
     @Override
     public List<FetEntity> findByEntornAppIdAndTempsDataBetweenAndDimensionValues(
-            Long entornAppId, 
-            LocalDate dataInici, 
+            Long entornAppId,
+            LocalDate dataInici,
             LocalDate dataFi,
             String dimensioCodi,
             List<String> valors) {
@@ -84,7 +84,7 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
         query.setParameter("dataInici", dataInici);
         query.setParameter("dataFi", dataFi);
         query.setParameter("dimensioCodi", dimensioCodi);
-        query.setParameter("dimensioValors", valors);
+        query.setParameter("dimensioValor", valors);
 
         return query.getResultList();
     }
@@ -165,7 +165,7 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
                 .collect(Collectors.toList());
 
         if (TableColumnsEnum.PERCENTAGE.equals(indicadorAgregacio.getAgregacio())) {
-            calculatePercentages(result, indicadorAgregacio.getIndicadorCodi());
+            result = calculatePercentages(result, indicadorAgregacio.getIndicadorCodi());
         }
         return result;
     }
@@ -193,7 +193,7 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
                 .collect(Collectors.toList());
 
         if (TableColumnsEnum.PERCENTAGE.equals(indicadorAgregacio.getAgregacio())) {
-            calculatePercentages(result, indicadorAgregacio.getIndicadorCodi());
+            result = calculatePercentages(result, indicadorAgregacio.getIndicadorCodi());
         }
         return result;
     }
@@ -220,7 +220,7 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
                 .collect(Collectors.toList());
 
         if (TableColumnsEnum.PERCENTAGE.equals(indicadorAgregacio.getAgregacio())) {
-            calculatePercentages(result, indicadorAgregacio.getIndicadorCodi());
+            result = calculatePercentages(result, indicadorAgregacio.getIndicadorCodi());
         }
         return result;
     }
@@ -249,12 +249,11 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
                         columnesConsulta.getIndexColumnesFiltrades()))
                 .collect(Collectors.toList());
 
-        processPercentages(result,
+        return processPercentages(result,
                 columnesConsulta.getIndicadorsPercentatge(),
                 columnesConsulta.getIndicadorsFiltrats(),
                 columnesConsulta.getColumnNames(),
                 indicadorsAgregacio);
-        return result;
     }
 
     @Override
@@ -288,18 +287,17 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
                             columnesConsulta.getIndexColumnesFiltrades()))
                     .collect(Collectors.toList());
 
-            processPercentages(result,
+            return processPercentages(result,
                     columnesConsulta.getIndicadorsPercentatge(),
                     columnesConsulta.getIndicadorsFiltrats(),
                     columnesConsulta.getColumnNames(),
                     indicadorsAgregacio);
-            return result;
         } catch (Exception e) {
             throw new ReportGenerationException(DashboardItem.class, e.getMessage(), e.getCause());
         }
     }
 
-    private void processPercentages(List<Map<String, String>> result,
+    private List<Map<String, String>> processPercentages(List<Map<String, String>> result,
                                     List<IndicadorAgregacio> indicadorsPercentatge,
                                     List<IndicadorAgregacio> filteredIndicadors,
                                     String[] columnNames,
@@ -309,45 +307,55 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
             String percColumnName = columnNames[percIndex + 1];
             if (filteredIndicadors.contains(indPerc)) {
                 // Calcular percentatges per indicadors sense altres agregacions
-                calculatePercentages(result, percColumnName);
+                result = calculatePercentages(result, percColumnName);
             } else {
                 // Càlcul percentatges a partir d'altres agregacions
-                calculateDependentPercentages(result, indPerc, allIndicadors, columnNames);
+                result = calculateDependentPercentages(result, indPerc, allIndicadors, columnNames);
             }
         }
+        return result;
     }
 
-    private void calculatePercentages(List<Map<String, String>> result, String columnName) {
+    private List<Map<String, String>> calculatePercentages(List<Map<String, String>> result, String columnName) {
         double total = result.stream()
                 .mapToDouble(row -> parseRowValue(row, columnName))
                 .sum();
         if (total == 0) {
-            return;
+            return result;
         }
-        for (Map<String, String> row : result) {
-            double value = parseRowValue(row, columnName);
-            row.put(columnName, NUMBER_FORMAT.format((value / total) * 100));
-        }
+        return result.stream()
+            .map(row -> {
+                Map<String, String> newRow = new HashMap<>(row);
+                double value = parseRowValue(row, columnName);
+                newRow.put(columnName, NUMBER_FORMAT.format((value / total) * 100));
+                return newRow;
+            })
+            .collect(Collectors.toList());
     }
 
-    private void calculateDependentPercentages(List<Map<String, String>> result,
+    private List<Map<String, String>> calculateDependentPercentages(List<Map<String, String>> result,
                                                IndicadorAgregacio indPerc,
                                                List<IndicadorAgregacio> allIndicadors,
                                                String[] columnNames) {
         int percIndex = allIndicadors.indexOf(indPerc);
         int baseIndex = findBaseIndex(indPerc, allIndicadors);
-        if (baseIndex >= 0) {
-            String baseColumnName = columnNames[baseIndex + 1];
-            String percColumnName = columnNames[percIndex + 1];
-            double total = result.stream()
-                    .mapToDouble(row -> parseRowValue(row, baseColumnName))
-                    .sum();
-            for (Map<String, String> row : result) {
-                double baseValue = parseRowValue(row, baseColumnName);
-                String resultValue = total == 0 ? "0" : NUMBER_FORMAT.format((baseValue / total) * 100);
-                row.put(percColumnName, resultValue);
-            }
+        if (baseIndex < 0) {
+            return result;
         }
+        String baseColumnName = columnNames[baseIndex + 1];
+        String percColumnName = columnNames[percIndex + 1];
+        double total = result.stream()
+                .mapToDouble(row -> parseRowValue(row, baseColumnName))
+                .sum();
+        return result.stream()
+            .map(row -> {
+                Map<String, String> newRow = new HashMap<>(row);
+                double baseValue = parseRowValue(row, baseColumnName);
+                String resultValue = (total == 0) ? "0" : NUMBER_FORMAT.format((baseValue / total) * 100);
+                newRow.put(percColumnName, resultValue);
+                return newRow;
+            })
+            .collect(Collectors.toList());
     }
 
     private int findBaseIndex(IndicadorAgregacio indPerc, List<IndicadorAgregacio> allIndicadors) {

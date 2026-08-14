@@ -124,6 +124,7 @@ const EstadisticaSimpleWidgetForm: React.FC<EstadisticaSimpleWidgetFormProps> = 
                 <Grid size={6}>
                     <FormField
                         name="tipusIndicador"
+                        hiddenEnumValues={["PERCENTAGE"]}
                     />
                     <FieldHelp text={t($ => $.page.widget.form.help.tipusIndicador)} />
                 </Grid>

@@ -5,6 +5,7 @@ import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import org.springframework.stereotype.Component;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -108,7 +109,7 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
     }
 
     /**
-     * Genera una consulta SQL per obtenir un valor agregat d'un indicador específic basat en l'entornAppId, 
+     * Genera una consulta SQL per obtenir un valor agregat d'un indicador específic basat en l'entornAppId,
      * un rang de dates específic, valors dimensionals i un tipus d'agregació.
      * Aquesta consulta aplica l'agregació directament a la base de dades, optimitzant el rendiment.
      *
@@ -351,7 +352,7 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
 
     /**
      * Genera una consulta SQL amb format especial per a UNION entre diferents llistes d'indicadors.
-     * 
+     *
      * @param dimensionsFiltre Filtre de dimensions
      * @param indicadorsLists Llista de llistes d'indicadors agrupats per algun criteri
      * @param dimensioAgrupacioCodi Codi de la dimensió d'agrupació
@@ -405,7 +406,7 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
                         default: return "total_sum" + getIndicadorSuffix(ind.getIndicadorCodi());
                     }
                 })
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(LinkedHashSet::new));
 
         // Generem el SELECT exterior amb MAX per a cada columna
         String outerSelect = allResultColumns.stream()
@@ -421,7 +422,7 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
 
     /**
      * Genera una subconsulta per a una llista d'indicadors, incloent columnes NULL per a indicadors que no estan a la llista.
-     * 
+     *
      * @param dimensionsFiltre Filtre de dimensions
      * @param indicadors Llista d'indicadors
      * @param dimensioAgrupacioCodi Codi de la dimensió d'agrupació
