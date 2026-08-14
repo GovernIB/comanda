@@ -51,15 +51,14 @@ public class ValidTaulaWidgetValidator extends ValidWidgetValidator implements C
 
         AtomicBoolean isValid = new AtomicBoolean(true);
 
-        IndicadorTaula primerIndicador = widget.getColumnes().get(0);
-        isValid.set(validateField(primerIndicador.getIndicador() != null, context, "columnes[0].indicador", MSG_CAMP_OBLIGATORI) && isValid.get());
-        widget.getColumnes().forEach(ind -> {
-            if (ind.getIndicador() != null) {
-                isValid.set(validateField(ind.getTitol() != null && !ind.getTitol().isEmpty(), context, "columnes[" + widget.getColumnes().indexOf(ind) + "].titol", MSG_CAMP_OBLIGATORI) && isValid.get());
-                isValid.set(validateField(ind.getAgregacio() != null, context, "columnes[" + widget.getColumnes().indexOf(ind) + "].agregacio", MSG_CAMP_OBLIGATORI) && isValid.get());
-                isValid.set(validateField(!TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()) || ind.getUnitatAgregacio() != null, context, "columnes[" + widget.getColumnes().indexOf(ind) + "].unitatAgregacio", MSG_CAMP_OBLIGATORI) && isValid.get());
-            }
-        });
+        List<IndicadorTaula> columnes = widget.getColumnes();
+        for (int i = 0; i < columnes.size(); i++) {
+            IndicadorTaula ind = columnes.get(i);
+            isValid.set(validateField(ind.getIndicador() != null && ind.getIndicador().getId() != null, context, "columnes[" + i + "].indicador", MSG_CAMP_OBLIGATORI) && isValid.get());
+            isValid.set(validateField(ind.getTitol() != null && !ind.getTitol().isEmpty(), context, "columnes[" + i + "].titol", MSG_CAMP_OBLIGATORI) && isValid.get());
+            isValid.set(validateField(ind.getAgregacio() != null, context, "columnes[" + i + "].agregacio", MSG_CAMP_OBLIGATORI) && isValid.get());
+            isValid.set(validateField(!TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()) || ind.getUnitatAgregacio() != null, context, "columnes[" + i + "].unitatAgregacio", MSG_CAMP_OBLIGATORI) && isValid.get());
+        }
 
         Map<PeriodeUnitat, List<IndicadorTaula>> groupedAvgIndicadors = widget.getColumnes().stream()
                 .filter(ind -> TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()))
@@ -89,3 +88,4 @@ public class ValidTaulaWidgetValidator extends ValidWidgetValidator implements C
     }
 
 }
+

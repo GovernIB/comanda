@@ -56,39 +56,46 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
 
         // Validate each row
         columnes.forEach((columna, index) => {
-            // Check if indicador has a value
-            if (columna.indicador) {
-                // Validate titol - should not be empty if indicador has a value
-                const titolFieldName = `${name}.${index}.titol`;
-                if (touchedFields[titolFieldName] && (!columna.titol || columna.titol.trim() === '')) {
-                    errors.push({
-                        code: 'REQUIRED',
-                        field: titolFieldName,
-                        message: '',
-                    });
-                }
+            // Validate indicador - always required
+            const indicadorFieldName = `${name}.${index}.indicador`;
+            if (touchedFields[indicadorFieldName] && !columna.indicador) {
+                errors.push({
+                    code: 'REQUIRED',
+                    field: indicadorFieldName,
+                    message: '',
+                });
+            }
 
-                // Validate agregacio - should not be empty if indicador has a value
-                const agregacioFieldName = `${name}.${index}.agregacio`;
-                if (touchedFields[agregacioFieldName] && (!columna.agregacio || columna.agregacio.trim() === '')) {
-                    errors.push({
-                        code: 'REQUIRED',
-                        field: agregacioFieldName,
-                        message: '',
-                    });
-                }
+            // Validate titol - required
+            const titolFieldName = `${name}.${index}.titol`;
+            if (touchedFields[titolFieldName] && (!columna.titol || columna.titol.trim() === '')) {
+                errors.push({
+                    code: 'REQUIRED',
+                    field: titolFieldName,
+                    message: '',
+                });
+            }
 
-                // Validate unitatAgregacio - should not be empty if tipusIndicador is 'AVERAGE'
-                const unitatAgregacioFieldName = `${name}.${index}.unitatAgregacio`;
-                if (data.columnes?.[index]?.agregacio === 'AVERAGE' &&
-                    touchedFields[unitatAgregacioFieldName] &&
-                    (!columna.unitatAgregacio || columna.unitatAgregacio.trim() === '')) {
-                    errors.push({
-                        code: 'REQUIRED',
-                        field: unitatAgregacioFieldName,
-                        message: '',
-                    });
-                }
+            // Validate agregacio - required
+            const agregacioFieldName = `${name}.${index}.agregacio`;
+            if (touchedFields[agregacioFieldName] && (!columna.agregacio || columna.agregacio.trim() === '')) {
+                errors.push({
+                    code: 'REQUIRED',
+                    field: agregacioFieldName,
+                    message: '',
+                });
+            }
+
+            // Validate unitatAgregacio - required when agregacio is 'AVERAGE'
+            const unitatAgregacioFieldName = `${name}.${index}.unitatAgregacio`;
+            if (columna.agregacio === 'AVERAGE' &&
+                touchedFields[unitatAgregacioFieldName] &&
+                (!columna.unitatAgregacio || columna.unitatAgregacio.trim() === '')) {
+                errors.push({
+                    code: 'REQUIRED',
+                    field: unitatAgregacioFieldName,
+                    message: '',
+                });
             }
         });
 
@@ -109,7 +116,7 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
         }
 
         return errors;
-    }, [columnes, touchedFields, data.columnes, name, t]);
+    }, [columnes, touchedFields, name, t]);
 
     // Update local state when value changes from outside, but only if it's different
     useEffect(() => {
@@ -368,6 +375,7 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
                                         namedQueries={indicadorNamedQueries}
                                         advancedSearchColumns={columnesIndicador}
                                         value={columna.indicador}
+                                        required
                                         onChange={(value) => handleFieldChange(index, 'indicador', value)}
                                         field={fields?.find((field) => field.name === "indicador")}
                                         fieldError={getFieldError(`${name}.${index}.indicador`)}
@@ -381,6 +389,7 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
                                         name={`${name}.${index}.titol`}
                                         label={t($ => $.page.widget.taula.columna.titolIndicador)}
                                         value={columna.titol}
+                                        required
                                         onChange={(value) => handleFieldChange(index, 'titol', value)}
                                         field={fields?.find((field) => field.name === "titol")}
                                         fieldError={getFieldError(`${name}.${index}.titol`)}
@@ -394,6 +403,7 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
                                         name={`${name}.${index}.agregacio`}
                                         label={t($ => $.generic.tipus)}
                                         value={columna.agregacio}
+                                        required
                                         hiddenEnumValues={hiddenAgregacioValues}
                                         onChange={(value) => handleFieldChange(index, 'agregacio', value)}
                                         field={fields?.find((field) => field.name === "agregacio")}
@@ -409,13 +419,14 @@ const ColumnesTable: React.FC<ColumnesTableProps> = ({name, label, mostrarUnitat
                                             name={`${name}.${index}.unitatAgregacio`}
                                             label={t($ => $.generic.periode)}
                                             value={columna.unitatAgregacio}
+                                            required={columna.agregacio === 'AVERAGE'}
                                             onChange={(value) => handleFieldChange(index, 'unitatAgregacio', value)}
                                             field={fields?.find((field) => field.name === "unitatAgregacio")}
                                             fieldError={getFieldError(`${name}.${index}.unitatAgregacio`)}
                                             componentProps={{
                                                 onBlur: () => handleFieldBlur(`${name}.${index}.unitatAgregacio`)
                                             }}
-                                            disabled={columnes?.[index]?.agregacio !== 'AVERAGE'}
+                                            disabled={columna.agregacio !== 'AVERAGE'}
                                         />
                                     </TableCell>
                                 )}

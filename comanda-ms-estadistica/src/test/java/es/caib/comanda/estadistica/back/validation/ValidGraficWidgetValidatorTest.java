@@ -116,4 +116,26 @@ public class ValidGraficWidgetValidatorTest {
 
         assertTrue(validator.isValid(widget, context));
     }
+
+    @Test
+    void testInvalidSecondIndicadorMissing() {
+        // El segon indicador sense indicador seleccionat ha de fallar la validació
+        EstadisticaGraficWidget widget = new EstadisticaGraficWidget();
+        widget.setTipusDades(TipusGraficDataEnum.VARIS_INDICADORS);
+        widget.setTempsAgrupacio(PeriodeUnitat.MES);
+
+        IndicadorTaula ind1 = new IndicadorTaula();
+        ind1.setIndicador(es.caib.comanda.ms.logic.intf.model.ResourceReference.toResourceReference(1L));
+        ind1.setTitol("Visites");
+        ind1.setAgregacio(TableColumnsEnum.SUM);
+
+        IndicadorTaula ind2 = new IndicadorTaula();
+        // ind2 sense indicador -> hauria de fallar
+        ind2.setTitol("Sessions");
+        ind2.setAgregacio(TableColumnsEnum.SUM);
+
+        widget.setIndicadorsInfo(Arrays.asList(ind1, ind2));
+
+        assertFalse(validator.isValid(widget, context));
+    }
 }

@@ -181,4 +181,22 @@ describe('ColumnesTable', () => {
             { indicador: { id: 1 }, titol: 'changed:columnes.0.titol', agregacio: 'SUM' },
         ]);
     });
+
+    it('ColumnesTable_quanSurtsDelIndicadorSenseValor_mostraErrorREQUIRED', () => {
+        // Quan el camp indicador es toca i es deixa buit, el component ha de generar un error REQUIRED.
+        mocks.useFormContextMock.mockReturnValue({
+            data: { aplicacio: { id: 7 }, columnes: [] },
+            apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
+            fields: [],
+            fieldErrors: [],
+        });
+
+        render(<ColumnesTable name="columnes" mostrarUnitat={false} onChange={mocks.onChangeMock} />);
+
+        // Simular blur sense seleccionar cap indicador
+        fireEvent.click(screen.getByRole('button', { name: 'blur:columnes.0.indicador' }));
+
+        // L'error REQUIRED ha d'aparèixer al camp indicador
+        expect(screen.getByTestId('error-columnes.0.indicador')).toHaveTextContent('REQUIRED');
+    });
 });

@@ -54,21 +54,21 @@ public class ValidGraficWidgetValidator extends ValidWidgetValidator implements 
 
         if (!TipusGraficDataEnum.UN_INDICADOR_AMB_DESCOMPOSICIO.equals(widget.getTipusDades())
                 || !Boolean.TRUE.equals(widget.getAgruparPerDimensioDescomposicio())) {
-            isValid = validateField(widget.getTempsAgrupacio() != null, context, "tempsAgrupacio", "És obligatori emplenar aquest camp");
+            isValid = validateField(widget.getTempsAgrupacio() != null, context, "tempsAgrupacio", MSG_CAMP_OBLIGATORI);
         }
 
         if (TipusGraficDataEnum.UN_INDICADOR.equals(widget.getTipusDades()) || TipusGraficDataEnum.UN_INDICADOR_AMB_DESCOMPOSICIO.equals(widget.getTipusDades())) {
-            isValid = validateField(widget.getIndicador() != null, context, "indicador", "És obligatori emplenar aquest camp") && isValid;
-            isValid = validateField(widget.getAgregacio() != null, context, "agregacio", "És obligatori emplenar aquest camp") && isValid;
+            isValid = validateField(widget.getIndicador() != null, context, "indicador", MSG_CAMP_OBLIGATORI) && isValid;
+            isValid = validateField(widget.getAgregacio() != null, context, "agregacio", MSG_CAMP_OBLIGATORI) && isValid;
 
             if (TableColumnsEnum.AVERAGE.equals(widget.getAgregacio())) {
-                isValid = validateField(widget.getUnitatAgregacio() != null, context, "unitatAgregacio", "És obligatori emplenar aquest camp") && isValid;
+                isValid = validateField(widget.getUnitatAgregacio() != null, context, "unitatAgregacio", MSG_CAMP_OBLIGATORI) && isValid;
             }
             if (TipusGraficDataEnum.UN_INDICADOR_AMB_DESCOMPOSICIO.equals(widget.getTipusDades())) {
-                isValid = validateField(widget.getDescomposicioDimensio() != null, context, "descomposicioDimensio", "És obligatori emplenar aquest camp") && isValid;
+                isValid = validateField(widget.getDescomposicioDimensio() != null, context, "descomposicioDimensio", MSG_CAMP_OBLIGATORI) && isValid;
             }
         } else if (TipusGraficDataEnum.VARIS_INDICADORS.equals(widget.getTipusDades())) {
-            isValid = validateField(widget.getIndicadorsInfo() != null && !widget.getIndicadorsInfo().isEmpty(), context, "indicadorsInfo[0].indicador", "És obligatori emplenar aquest camp") && isValid;
+            isValid = validateField(widget.getIndicadorsInfo() != null && !widget.getIndicadorsInfo().isEmpty(), context, "indicadorsInfo[0].indicador", MSG_CAMP_OBLIGATORI) && isValid;
         } else if (TipusGraficDataEnum.DOS_INDICADORS.equals(widget.getTipusDades())) {
             // Pendent
         }
@@ -82,15 +82,14 @@ public class ValidGraficWidgetValidator extends ValidWidgetValidator implements 
 
         AtomicBoolean isValid = new AtomicBoolean(true);
 
-        IndicadorTaula primerIndicador = widget.getIndicadorsInfo().get(0);
-        isValid.set(validateField(primerIndicador.getIndicador() != null, context, "indicadorsInfo[0].indicador", MSG_CAMP_OBLIGATORI) && isValid.get());
-        widget.getIndicadorsInfo().forEach(ind -> {
-            if (ind.getIndicador() != null) {
-                isValid.set(validateField(ind.getTitol() != null && !ind.getTitol().isEmpty(), context, "indicadorsInfo[" + widget.getIndicadorsInfo().indexOf(ind) + "].titol", MSG_CAMP_OBLIGATORI) && isValid.get());
-                isValid.set(validateField(ind.getAgregacio() != null, context, "indicadorsInfo[" + widget.getIndicadorsInfo().indexOf(ind) + "].agregacio", MSG_CAMP_OBLIGATORI) && isValid.get());
-                isValid.set(validateField(!TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()) || ind.getUnitatAgregacio() != null, context, "indicadorsInfo[" + widget.getIndicadorsInfo().indexOf(ind) + "].unitatAgregacio", MSG_CAMP_OBLIGATORI) && isValid.get());
-            }
-        });
+        List<IndicadorTaula> indicadorsInfo = widget.getIndicadorsInfo();
+        for (int i = 0; i < indicadorsInfo.size(); i++) {
+            IndicadorTaula ind = indicadorsInfo.get(i);
+            isValid.set(validateField(ind.getIndicador() != null && ind.getIndicador().getId() != null, context, "indicadorsInfo[" + i + "].indicador", MSG_CAMP_OBLIGATORI) && isValid.get());
+            isValid.set(validateField(ind.getTitol() != null && !ind.getTitol().isEmpty(), context, "indicadorsInfo[" + i + "].titol", MSG_CAMP_OBLIGATORI) && isValid.get());
+            isValid.set(validateField(ind.getAgregacio() != null, context, "indicadorsInfo[" + i + "].agregacio", MSG_CAMP_OBLIGATORI) && isValid.get());
+            isValid.set(validateField(!TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()) || ind.getUnitatAgregacio() != null, context, "indicadorsInfo[" + i + "].unitatAgregacio", MSG_CAMP_OBLIGATORI) && isValid.get());
+        }
 
         Map<PeriodeUnitat, List<IndicadorTaula>> groupedAvgIndicadors = widget.getIndicadorsInfo().stream()
                 .filter(ind -> TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()))
