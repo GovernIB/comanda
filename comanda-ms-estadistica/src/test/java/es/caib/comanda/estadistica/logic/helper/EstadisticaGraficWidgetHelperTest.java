@@ -67,6 +67,9 @@ class EstadisticaGraficWidgetHelperTest {
         IndicadorTaula colResource = new IndicadorTaula();
         colResource.setTitol("Nou Titol");
         colResource.setAgregacio(TableColumnsEnum.SUM);
+        ResourceReference ref = new ResourceReference();
+        ref.setId(1L);
+        colResource.setIndicador(ref);
         resource.setIndicadorsInfo(Collections.singletonList(colResource));
 
         // Act
@@ -104,6 +107,9 @@ class EstadisticaGraficWidgetHelperTest {
         colResource.setTitol("Titol");
         colResource.setAgregacio(TableColumnsEnum.AVERAGE);
         colResource.setUnitatAgregacio(PeriodeUnitat.DIA);
+        ResourceReference ref = new ResourceReference();
+        ref.setId(1L);
+        colResource.setIndicador(ref);
         resource.setIndicadorsInfo(Collections.singletonList(colResource));
 
         // Act

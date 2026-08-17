@@ -24,8 +24,8 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
     private static final String FILTER_BETWEEN = " AND t.data BETWEEN :dataInici AND :dataFi ";
     private static final String FILTER_DATE = " AND t.data = :data ";
     private static final String BASE_WHERE = BASE_WHERE_ENTORN + FILTER_BETWEEN;
-    private static final String SUM_INDICADOR_TEMPLATE = " SUM(TO_NUMBER(f.indicadors_json->>%s)::numeric) AS sum_fets";
-    private static final String DIMENSION_VALUE_TEMPLATE = " f.indicadors_json->>%s ";
+    private static final String SUM_INDICADOR_TEMPLATE = " SUM(TO_NUMBER(f.indicadors_json->>'%s')::numeric) AS sum_fets";
+    private static final String DIMENSION_VALUE_TEMPLATE = " f.dimensions_json->>'%s'";
 
 
     /**
@@ -251,17 +251,24 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
         boolean hasAverage = indicadorsAgregacio.stream().anyMatch(ind -> TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()));
         boolean hasDataCols = indicadorsAgregacio.stream().anyMatch(ind -> TableColumnsEnum.FIRST_SEEN.equals(ind.getAgregacio()) || TableColumnsEnum.LAST_SEEN.equals(ind.getAgregacio()));
 
-        PeriodeUnitat avgUnitat = indicadorsAgregacio.get(0).getUnitatAgregacio();
+        PeriodeUnitat avgUnitat = indicadorsAgregacio.stream()
+                .map(IndicadorAgregacio::getUnitatAgregacio)
+                .filter(java.util.Objects::nonNull)
+                .findFirst()
+                .orElse(tempsAgregacio);
+
         if (hasAverage) {
+            PeriodeUnitat finalAvgUnitat = avgUnitat;
             boolean thereAreDifferentUnitatAgregacio = indicadorsAgregacio.stream()
-                    .skip(1) // Ignora el primer element
-                    .anyMatch(indicador -> !indicador.getUnitatAgregacio().equals(avgUnitat));
+                    .filter(ind -> TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()))
+                    .anyMatch(indicador -> !java.util.Objects.equals(finalAvgUnitat, indicador.getUnitatAgregacio()));
 
             // TODO: Afegir validació per a no permetre diferents unitats d'agregació
             // Si hi ha columnes tipus AVERAGE amb diferents períodes, les separam per unitatAgregacio i fem UNION
             if (thereAreDifferentUnitatAgregacio) {
                 // TODO: Modificar per funcionar semblant a taula (si es permeten difirents unitats d'agregació)
                 List<List<IndicadorAgregacio>> indicadorsAgregacioByPeriode = indicadorsAgregacio.stream()
+                        .filter(ind -> ind.getUnitatAgregacio() != null)
                         .collect(Collectors.groupingBy(IndicadorAgregacio::getUnitatAgregacio))
                         .values()
                         .stream()

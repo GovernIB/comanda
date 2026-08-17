@@ -251,17 +251,24 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
         boolean hasAverage = indicadorsAgregacio.stream().anyMatch(ind -> TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()));
         boolean hasDataCols = indicadorsAgregacio.stream().anyMatch(ind -> TableColumnsEnum.FIRST_SEEN.equals(ind.getAgregacio()) || TableColumnsEnum.LAST_SEEN.equals(ind.getAgregacio()));
 
-        PeriodeUnitat avgUnitat = indicadorsAgregacio.get(0).getUnitatAgregacio();
-        if (hasAverage) {
-            boolean thereAreDifferentUnitatAgregacio = indicadorsAgregacio.stream()
-                    .skip(1) // Ignora el primer element
-                    .anyMatch(indicador -> !indicador.getUnitatAgregacio().equals(avgUnitat));
+        PeriodeUnitat avgUnitat = indicadorsAgregacio.stream()
+                .map(IndicadorAgregacio::getUnitatAgregacio)
+                .filter(java.util.Objects::nonNull)
+                .findFirst()
+                .orElse(tempsAgregacio);
 
-            // TODO: Afegir validació per a no permetre diferents unitats d'agregació
+        if (hasAverage) {
+            PeriodeUnitat finalAvgUnitat = avgUnitat;
+            boolean thereAreDifferentUnitatAgregacio = indicadorsAgregacio.stream()
+                    .filter(ind -> TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()))
+                    .anyMatch(indicador -> !java.util.Objects.equals(finalAvgUnitat, indicador.getUnitatAgregacio()));
+
+            // Hi ha una validació per a no permetre diferents unitats d'agregació (períodes)
             // Si hi ha columnes tipus AVERAGE amb diferents períodes, les separam per unitatAgregacio i fem UNION
             if (thereAreDifferentUnitatAgregacio) {
                 // TODO: Modificar per funcionar semblant a taula (si es permeten difirents unitats d'agregació)
                 List<List<IndicadorAgregacio>> indicadorsAgregacioByPeriode = indicadorsAgregacio.stream()
+                        .filter(ind -> ind.getUnitatAgregacio() != null)
                         .collect(Collectors.groupingBy(IndicadorAgregacio::getUnitatAgregacio))
                         .values()
                         .stream()
