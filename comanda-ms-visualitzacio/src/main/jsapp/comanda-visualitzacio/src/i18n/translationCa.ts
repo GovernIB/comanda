@@ -347,7 +347,7 @@ const translationCa = {
                 title: "Històric de versions i revisions",
                 noInfo: "No hi ha informació d'historial de versions disponible",
                 column: {
-                    data: "Data",
+                    data: "Data de desplegament",
                     versio: "Versió",
                     revisio: "Revisió",
                 },

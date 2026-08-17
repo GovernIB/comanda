@@ -347,7 +347,7 @@ const translationEs: translationResourcesType = {
                 title: "Histórico de versiones y revisiones",
                 noInfo: "No hay información de historial de versiones disponible",
                 column: {
-                    data: "Fecha",
+                    data: "Fecha de despliegue",
                     versio: "Versión",
                     revisio: "Revisión",
                 },
