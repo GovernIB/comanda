@@ -72,6 +72,7 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
     }
 
     @JmsListener(destination = CUA_AVISOS)
+    @Transactional
     public void receiveMessage(@Payload es.caib.comanda.model.v1.avis.Avis avisBroker,
                                Message message) throws JMSException {
         MonitorAvisos monitorAvisos = new MonitorAvisos(null, "", avisClientHelper);
