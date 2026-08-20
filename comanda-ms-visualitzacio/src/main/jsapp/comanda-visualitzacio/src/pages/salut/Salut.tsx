@@ -24,6 +24,7 @@ import { SalutField } from '../../components/salut/SalutChipTooltip';
 import { useAppInfoData } from './dataFetching';
 import { Box } from '@mui/material';
 import PageTitle from '../../components/PageTitle';
+import VersionsEntorns from '../VersionsEntorns.tsx';
 
 // es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem
 export type SalutInformeEstatItem = {
@@ -634,7 +635,7 @@ const Salut: FunctionComponent = () => {
               goBackActive: true,
               groupingActive: false,
               hideFilter: true,
-              hideAppVersioning: true,
+            //   hideAppVersioning: true,
           }
         : null;
 
@@ -659,6 +660,7 @@ const Salut: FunctionComponent = () => {
             <Activity mode={!isAppInfoRouteActive ? 'visible' : 'hidden'}>
                 <Box sx={{ p: 2, flex: 1, overflowY: 'auto', scrollbarGutter: 'stable' }}>
                     <PageTitle title={t($ => $.page.salut.title)} />
+                    {toolbarState.grouping == 'VERSIONS_ENTORNS' ? <VersionsEntorns /> :
                     <SalutLlistat
                         apps={salutData.apps}
                         entorns={salutData.entorns}
@@ -668,7 +670,7 @@ const Salut: FunctionComponent = () => {
                         grupsDates={salutData.grupsDates}
                         loading={salutInitialLoading}
                         {...salutLlistatState}
-                    />
+                    />}
                 </Box>
             </Activity>
             {isAppInfoRouteActive && (

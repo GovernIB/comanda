@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import Menu from '@mui/material/Menu';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
+// import Menu from '@mui/material/Menu';
+// import ListItemIcon from '@mui/material/ListItemIcon';
+// import ListItemText from '@mui/material/ListItemText';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
@@ -36,7 +36,7 @@ export type SalutToolbarProps = {
     subtitle?: string;
     state?: React.ReactElement;
     hideFilter?: boolean;
-    hideAppVersioning?: boolean;
+    // hideAppVersioning?: boolean;
     groupingActive?: boolean;
     ready: boolean;
     onRefreshClick: () => void;
@@ -71,6 +71,7 @@ export enum GroupingEnum {
     APPLICATION = "APPLICATION",
     ENVIRONMENT = "ENVIRONMENT",
     NONE = "NONE",
+    VERSIONS_ENTORNS = "VERSIONS_ENTORNS",
 }
 
 const isValidGrouping = (grouping: string): grouping is GroupingEnum => {
@@ -132,6 +133,13 @@ const GroupForViewSelect = (props: {
                     title={t($ => $.page.salut.groupingSelect.NONE)}
                 >
                     <Icon>block</Icon>
+                </Button>
+                <Button
+                    variant={value === GroupingEnum.VERSIONS_ENTORNS ? 'contained' : 'outlined'}
+                    onClick={() => onChange(GroupingEnum.VERSIONS_ENTORNS)}
+                    title={t($ => $.menu.versionsEntorn)}
+                >
+                    <Icon>format_list_numbered_rtl</Icon>
                 </Button>
             </ButtonGroup>
         </Box>
@@ -405,7 +413,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = React.memo((props) => {
         title,
         subtitle,
         hideFilter,
-        hideAppVersioning,
+        // hideAppVersioning,
         groupingActive,
         state,
         ready,
@@ -427,29 +435,29 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = React.memo((props) => {
     const { handleOpen, dialog } = useSalutEntornAppFilter({ filterData, setFilterData });
     const springFilter = salutEntornAppFilterBuilder(filterData);
 
-    const [versionMenuAnchorEl, setVersionMenuAnchorEl] = React.useState<null | HTMLElement>(null);
-    const isVersionMenuOpen = Boolean(versionMenuAnchorEl);
+    // const [versionMenuAnchorEl, setVersionMenuAnchorEl] = React.useState<null | HTMLElement>(null);
+    // const isVersionMenuOpen = Boolean(versionMenuAnchorEl);
 
-    const handleVersionMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-        setVersionMenuAnchorEl(event.currentTarget);
-    };
+    // const handleVersionMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    //     setVersionMenuAnchorEl(event.currentTarget);
+    // };
 
-    const handleVersionMenuClose = () => {
-        setVersionMenuAnchorEl(null);
-    };
+    // const handleVersionMenuClose = () => {
+    //     setVersionMenuAnchorEl(null);
+    // };
 
     const [openVersionsEntornDialog, setOpenVersionsEntornDialog] = React.useState<boolean>(false);
     const [openEntornAppHistDialog, setOpenEntornAppHistDialog] = React.useState<boolean>(false);
 
-    const handleOpenVersionsEntorn = () => {
-        handleVersionMenuClose();
-        setOpenVersionsEntornDialog(true);
-    };
+    // const handleOpenVersionsEntorn = () => {
+    //     handleVersionMenuClose();
+    //     setOpenVersionsEntornDialog(true);
+    // };
 
-    const handleOpenEntornAppHist = () => {
-        handleVersionMenuClose();
-        setOpenEntornAppHistDialog(true);
-    };
+    // const handleOpenEntornAppHist = () => {
+    //     handleVersionMenuClose();
+    //     setOpenEntornAppHistDialog(true);
+    // };
 
     const closeDialogButtons = useCloseDialogButtons();
 
@@ -556,7 +564,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = React.memo((props) => {
                     {computedSubtitle}
                 </Typography>
                 {state}
-                {!hideAppVersioning && (
+                {/* {!hideAppVersioning && (
                     <>
                         <Button
                             startIcon={<Icon>format_list_numbered_rtl</Icon>}
@@ -592,7 +600,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = React.memo((props) => {
                             </MenuItem>
                         </Menu>
                     </>
-                )}
+                )} */}
             </>
         ),
     });
