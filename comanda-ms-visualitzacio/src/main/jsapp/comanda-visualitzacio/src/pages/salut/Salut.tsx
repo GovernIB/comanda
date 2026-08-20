@@ -1,4 +1,12 @@
-import { Activity, FunctionComponent, useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import {
+    Activity,
+    FunctionComponent,
+    useCallback,
+    useEffect,
+    useRef,
+    useState,
+    useTransition
+} from 'react';
 import { SalutEstatEnum, SalutModel } from '../../types/salut.model';
 import { springFilterBuilder, useResourceApiService } from 'reactlib';
 import dayjs from 'dayjs';
@@ -638,6 +646,12 @@ const Salut: FunctionComponent = () => {
             //   hideAppVersioning: true,
           }
         : null;
+    const versionsEntornGroupingToolbarProps = toolbarState.grouping === GroupingEnum.VERSIONS_ENTORNS ?
+        {
+            hideFilter: true,
+            subtitle: "",
+        }
+        : null;
 
     return (
         <Box
@@ -655,6 +669,7 @@ const Salut: FunctionComponent = () => {
                 lastRefresh={salutData.lastRefresh}
                 groupingActive
                 {...toolbarState}
+                {...versionsEntornGroupingToolbarProps}
                 {...appInfoToolbarProps}
             />
             <Activity mode={!isAppInfoRouteActive ? 'visible' : 'hidden'}>
