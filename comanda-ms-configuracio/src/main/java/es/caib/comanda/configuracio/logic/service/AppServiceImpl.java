@@ -72,7 +72,6 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 
     @PostConstruct
     public void init() {
-        register(App.PERSPECTIVE_ENTORN_APPS, new EntornAppsPerspectiveApplicator());
         register(App.PERSP_PERMIS_NUM, new PermisPerspective());
         register(App.APP_EXPORT, new AppExportReportGenerator());
         register(App.APP_IMPORT, new AppImportActionExecutor());
@@ -436,34 +435,6 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
                         .countSidsWithPermission(ResourceType.APP, entity.getId(),
                             httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
                     .orElse(0));
-        }
-    }
-
-    public static class EntornAppsPerspectiveApplicator implements PerspectiveApplicator<AppEntity, App> {
-        @Override
-        public void applySingle(String code, AppEntity entity, App resource) throws PerspectiveApplicationException {
-            List<EntornAppEntity> entornApps = entity.getEntornApps();
-            if (!entornApps.isEmpty()) {
-                resource.setEntornApps(
-                    entornApps.stream().map(e -> {
-                        EntornApp entornApp = EntornApp.builder()
-                            .app(ResourceReference.toResourceReference(entity.getId(), entity.getNom()))
-                            .entorn(ResourceReference.toResourceReference(e.getEntorn().getId(), e.getEntorn().getNom()))
-                            .infoUrl(e.getInfoUrl())
-                            .infoData(e.getInfoData())
-                            .versio(e.getVersio())
-                            .revisio(e.getRevisio())
-                            .activa(e.isActiva())
-                            .salutUrl(e.getSalutUrl())
-                            .estadisticaInfoUrl(e.getEstadisticaInfoUrl())
-                            .estadisticaUrl(e.getEstadisticaUrl())
-                            .estadisticaCron(e.getEstadisticaCron())
-                            .build();
-                        entornApp.setId(e.getId());
-                        return entornApp;
-                    }).collect(Collectors.toList())
-                );
-            }
         }
     }
 }

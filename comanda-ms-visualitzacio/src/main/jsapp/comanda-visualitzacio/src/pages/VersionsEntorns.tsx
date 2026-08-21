@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { MuiDataGrid, MuiDataGridColDef, useResourceApiService } from 'reactlib';
-import { Chip, Stack, Tooltip } from '@mui/material';
+import { Chip, Skeleton, Stack, Tooltip } from '@mui/material';
 import PageTitle from '../components/PageTitle.tsx';
 import { truncateHashRevisio } from './salut/dataFetching.ts';
 
@@ -35,13 +35,29 @@ const toSortedVersions = (versions: string[]) =>
 const Entorns: React.FC = () => {
     const { t } = useTranslation();
     const { isReady: entornApiIsReady, find: entornApiFind } = useResourceApiService('entorn');
-    const [entorns, setEntorns] = React.useState<Array<{ id: number | string; codi: string; nom: string }>>([]);
+    const [entorns, setEntorns] = React.useState<Array<{ id: number | string; codi: string; nom: string }>>();
     React.useEffect(() => {
         if (entornApiIsReady)
             entornApiFind({
                 unpaged: true,
             }).then((response) => setEntorns(response.rows));
     }, [entornApiFind, entornApiIsReady]);
+
+    const { isReady: entornAppApiIsReady, find: entornAppApiFind } = useResourceApiService('entornApp');
+    const [entornApps, setEntornApps] = React.useState<Array<{
+        id?: number | string;
+        app?: { id?: number | string };
+        entorn?: { id?: number | string };
+        versio?: string;
+        revisio?: string;
+    }>>();
+    React.useEffect(() => {
+        if (entornAppApiIsReady)
+            entornAppApiFind({
+                unpaged: true,
+            }).then((response) => setEntornApps(response.rows));
+    }, [entornAppApiFind, entornAppApiIsReady]);
+
     const columns = React.useMemo(() => {
         const columns: MuiDataGridColDef[] = [
             {
@@ -50,7 +66,7 @@ const Entorns: React.FC = () => {
                 minWidth: 150,
             },
         ];
-        entorns.forEach((entorn) => {
+        entorns?.forEach((entorn) => {
             columns.push({
                 field: entorn.codi,
                 headerName: `${entorn.codi} (${entorn.nom})`,
@@ -58,14 +74,18 @@ const Entorns: React.FC = () => {
                 flex: 1,
                 minWidth: 165,
                 valueGetter: (_value, row) =>
-                    row.entornApps?.find((entornApp: { entorn?: { id?: number | string }; versio?: string }) => entornApp.entorn?.id === entorn.id)?.versio,
+                    entornApps?.find((ea) => ea.app?.id === row.id && ea.entorn?.id === entorn.id)?.versio,
                 renderCell: ({ formattedValue: versioValue, row }) => {
-                    const entornApp = row.entornApps?.find((ea: { entorn?: { id?: number | string }; revisio?: string }) => ea.entorn?.id === entorn.id);
+                    if (entornApps == null) {
+                        return <Skeleton variant="rounded" width={80} height={8} />;
+                    }
+                    const entornApp = entornApps.find((ea) => ea.app?.id === row.id && ea.entorn?.id === entorn.id);
                     const revisioValue = entornApp?.revisio;
                     const versioColor = versioValue != null
                         ? (() => {
+                            const appEntornApps = entornApps.filter((ea) => ea.app?.id === row.id);
                             const sortedVersions = toSortedVersions(
-                                row.entornApps.map((ea: { versio?: string }) => ea.versio).filter(Boolean)
+                                appEntornApps.map((ea) => ea.versio).filter(Boolean) as string[]
                             );
                             return versioValue !== sortedVersions[0]?.unformatted ? 'warning' : 'success';
                         })()
@@ -90,7 +110,7 @@ const Entorns: React.FC = () => {
             });
         });
         return columns;
-    }, [entorns]);
+    }, [entorns, entornApps]);
 
     return (
         <>
@@ -98,11 +118,11 @@ const Entorns: React.FC = () => {
             <MuiDataGrid
                 title={t($ => $.page.versionsEntorns.title)}
                 resourceName="app"
-                perspectives={["ENTORN_APPS"]}
                 columns={columns}
                 readOnly
                 toolbarType="upper"
                 paginationActive
+                toolbarHideRefresh
             />
         </>
     );

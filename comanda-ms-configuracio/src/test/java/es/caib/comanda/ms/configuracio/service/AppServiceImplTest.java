@@ -179,23 +179,6 @@ public class AppServiceImplTest {
     }
 
     @Test
-    void testEntornAppsPerspectiveApplicator() {
-        AppServiceImpl.EntornAppsPerspectiveApplicator applicator = new AppServiceImpl.EntornAppsPerspectiveApplicator();
-        applicator.applySingle(App.PERSPECTIVE_ENTORN_APPS, appEntity, appResource);
-
-        assertNotNull(appResource.getEntornApps());
-        assertEquals(1, appResource.getEntornApps().size());
-
-        EntornApp entornApp = appResource.getEntornApps().get(0);
-        assertEquals(1L, entornApp.getId());
-        assertEquals(ResourceReference.toResourceReference(appEntity.getId(), appEntity.getNom()), entornApp.getApp());
-        assertEquals(ResourceReference.toResourceReference(entornEntity.getId(), entornEntity.getNom()), entornApp.getEntorn());
-        assertEquals("http://test.com/info", entornApp.getInfoUrl());
-        assertEquals("1.0.0", entornApp.getVersio());
-        assertTrue(entornApp.isActiva());
-    }
-
-    @Test
     void testAfterCreateSave() {
         Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
 

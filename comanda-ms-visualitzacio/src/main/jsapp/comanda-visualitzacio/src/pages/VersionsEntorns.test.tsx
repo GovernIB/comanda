@@ -1,9 +1,10 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import VersionsEntorns from './VersionsEntorns';
 
 const mocks = vi.hoisted(() => ({
     entornFindMock: vi.fn(),
+    entornAppFindMock: vi.fn(),
     tMock: vi.fn((selector: any) =>
         selector({
             page: {
@@ -30,34 +31,8 @@ vi.mock('reactlib', () => ({
         title: string;
         columns: Array<Record<string, any>>;
     }) => {
-        const sampleRowLatest = {
-            entornApps: [
-                {
-                    entorn: { id: 1 },
-                    versio: '1.2.0',
-                    revisio: 'abc123def456789',
-                },
-                {
-                    entorn: { id: 2 },
-                    versio: '1.10.0',
-                    revisio: 'xyz987uvw654321',
-                },
-            ],
-        };
-        const sampleRowSuccess = {
-            entornApps: [
-                {
-                    entorn: { id: 1 },
-                    versio: '1.10.0',
-                    revisio: 'abc123def456789',
-                },
-                {
-                    entorn: { id: 2 },
-                    versio: '1.2.0',
-                    revisio: 'xyz987uvw654321',
-                },
-            ],
-        };
+        const sampleRowLatest = { id: 100 };
+        const sampleRowSuccess = { id: 200 };
         return (
             <section>
                 <h2>{title}</h2>
@@ -87,10 +62,18 @@ vi.mock('reactlib', () => ({
             </section>
         );
     },
-    useResourceApiService: () => ({
-        isReady: true,
-        find: mocks.entornFindMock,
-    }),
+    useResourceApiService: (resourceName: string) => {
+        if (resourceName === 'entornApp') {
+            return {
+                isReady: true,
+                find: mocks.entornAppFindMock,
+            };
+        }
+        return {
+            isReady: true,
+            find: mocks.entornFindMock,
+        };
+    },
 }));
 
 vi.mock('../components/PageTitle.tsx', () => ({
@@ -98,6 +81,17 @@ vi.mock('../components/PageTitle.tsx', () => ({
 }));
 
 describe('VersionsEntorns', () => {
+    beforeEach(() => {
+        mocks.entornAppFindMock.mockResolvedValue({
+            rows: [
+                { app: { id: 100 }, entorn: { id: 1 }, versio: '1.2.0', revisio: 'abc123def456789' },
+                { app: { id: 100 }, entorn: { id: 2 }, versio: '1.10.0', revisio: 'xyz987uvw654321' },
+                { app: { id: 200 }, entorn: { id: 1 }, versio: '1.10.0', revisio: 'abc123def456789' },
+                { app: { id: 200 }, entorn: { id: 2 }, versio: '1.2.0', revisio: 'xyz987uvw654321' },
+            ],
+        });
+    });
+
     afterEach(() => {
         vi.clearAllMocks();
     });
@@ -122,6 +116,7 @@ describe('VersionsEntorns', () => {
         expect(screen.getByTestId('value-getter')).toHaveTextContent('1.2.0');
         expect(screen.getByTestId('rendered-chip')).toHaveTextContent('1.2.0');
         expect(mocks.entornFindMock).toHaveBeenCalledWith({ unpaged: true });
+        expect(mocks.entornAppFindMock).toHaveBeenCalledWith({ unpaged: true });
     });
 
     it('VersionsEntorns_quanLaVersioNoEsLaUltima_mostraWarning', async () => {
@@ -205,5 +200,48 @@ describe('VersionsEntorns', () => {
 
         const successChip = screen.getByTestId('rendered-chip-success').querySelector('.MuiChip-colorSuccess');
         expect(successChip).toBeInTheDocument();
+    });
+
+    it('VersionsEntorns_quanEntornAppsNoEstaInicialitzat_mostraSkeletonALaCel·la', async () => {
+        let resolveEntorn: (value: { rows: unknown[] }) => void = () => {};
+        let resolveEntornApp: (value: { rows: unknown[] }) => void = () => {};
+
+        mocks.entornFindMock.mockReturnValue(
+            new Promise((resolve) => {
+                resolveEntorn = resolve;
+            })
+        );
+        mocks.entornAppFindMock.mockReturnValue(
+            new Promise((resolve) => {
+                resolveEntornApp = resolve;
+            })
+        );
+
+        render(<VersionsEntorns />);
+
+        // Resolem la primera petició (entorn)
+        resolveEntorn({
+            rows: [{ id: 1, codi: 'PRO', nom: 'Producció' }],
+        });
+
+        // Mentre entornApp encara està pendent (entornApps == null), la cel·la ha de mostrar un Skeleton
+        await waitFor(() => {
+            expect(screen.getByTestId('column-count')).toHaveTextContent('2');
+        });
+        const skeleton = screen.getByTestId('rendered-chip').querySelector('.MuiSkeleton-root');
+        expect(skeleton).toBeInTheDocument();
+
+        // Resolem la segona petició (entornApp)
+        resolveEntornApp({
+            rows: [
+                { app: { id: 100 }, entorn: { id: 1 }, versio: '1.2.0', revisio: 'abc123def456789' },
+            ],
+        });
+
+        // Un cop resolt entornApp, la cel·la ha de mostrar el Chip amb la versió en lloc del Skeleton
+        await waitFor(() => {
+            expect(screen.getByTestId('rendered-chip')).toHaveTextContent('1.2.0');
+        });
+        expect(screen.getByTestId('rendered-chip').querySelector('.MuiSkeleton-root')).not.toBeInTheDocument();
     });
 });
