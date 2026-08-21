@@ -1,4 +1,12 @@
-import { Activity, FunctionComponent, useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import {
+    Activity,
+    FunctionComponent,
+    useCallback,
+    useEffect,
+    useRef,
+    useState,
+    useTransition
+} from 'react';
 import { SalutEstatEnum, SalutModel } from '../../types/salut.model';
 import { springFilterBuilder, useResourceApiService } from 'reactlib';
 import dayjs from 'dayjs';
@@ -24,6 +32,7 @@ import { SalutField } from '../../components/salut/SalutChipTooltip';
 import { useAppInfoData } from './dataFetching';
 import { Box } from '@mui/material';
 import PageTitle from '../../components/PageTitle';
+import VersionsEntorns from '../VersionsEntorns.tsx';
 
 // es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem
 export type SalutInformeEstatItem = {
@@ -634,8 +643,14 @@ const Salut: FunctionComponent = () => {
               goBackActive: true,
               groupingActive: false,
               hideFilter: true,
-              hideAppVersioning: true,
+            //   hideAppVersioning: true,
           }
+        : null;
+    const versionsEntornGroupingToolbarProps = toolbarState.grouping === GroupingEnum.VERSIONS_ENTORNS ?
+        {
+            hideFilter: true,
+            subtitle: "",
+        }
         : null;
 
     return (
@@ -654,11 +669,13 @@ const Salut: FunctionComponent = () => {
                 lastRefresh={salutData.lastRefresh}
                 groupingActive
                 {...toolbarState}
+                {...versionsEntornGroupingToolbarProps}
                 {...appInfoToolbarProps}
             />
             <Activity mode={!isAppInfoRouteActive ? 'visible' : 'hidden'}>
                 <Box sx={{ p: 2, flex: 1, overflowY: 'auto', scrollbarGutter: 'stable' }}>
                     <PageTitle title={t($ => $.page.salut.title)} />
+                    {toolbarState.grouping == 'VERSIONS_ENTORNS' ? <VersionsEntorns /> :
                     <SalutLlistat
                         apps={salutData.apps}
                         entorns={salutData.entorns}
@@ -668,7 +685,7 @@ const Salut: FunctionComponent = () => {
                         grupsDates={salutData.grupsDates}
                         loading={salutInitialLoading}
                         {...salutLlistatState}
-                    />
+                    />}
                 </Box>
             </Activity>
             {isAppInfoRouteActive && (

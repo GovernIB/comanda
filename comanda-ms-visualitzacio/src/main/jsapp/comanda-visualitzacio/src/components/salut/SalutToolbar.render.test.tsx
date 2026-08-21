@@ -240,6 +240,7 @@ describe('SalutToolbar render', () => {
         expect(screen.getByTitle('Per aplicació')).toBeInTheDocument();
         expect(screen.getByTitle('Per entorn')).toBeInTheDocument();
         expect(screen.getByTitle('Cap')).toBeInTheDocument();
+        expect(screen.getByTitle('Versions per entorn')).toBeInTheDocument();
     });
 
     it('SalutToolbar_quanNoEstaReady_deshabilitaLesAccionsTemporals', () => {
@@ -264,6 +265,7 @@ describe('SalutToolbar render', () => {
         expect(screen.getByTitle('Per aplicació')).toBeDisabled();
         expect(screen.getByTitle('Per entorn')).toBeDisabled();
         expect(screen.getByTitle('Cap')).toBeDisabled();
+        expect(screen.getByTitle('Versions per entorn')).toBeDisabled();
     });
 
     it('SalutToolbar_quanHiHaDataDeRefresh_mostraElResumTemporal', () => {
@@ -286,69 +288,25 @@ describe('SalutToolbar render', () => {
         expect(screen.getByTitle(/Refrescar/)).toHaveAttribute('title', expect.stringContaining('Darrer:'));
     });
 
-    it('SalutToolbar_quanEsClicaElBotoDeVersions_mostraElMenuDApccions', () => {
+    it('SalutToolbar_quanEsClicaElBotoDeVersionsPerEntorn_notificaElCanviDAgrupacio', () => {
+        const setGroupingMock = vi.fn();
         render(
             <SalutToolbar
                 title="Salut"
                 ready={true}
+                groupingActive={true}
                 onRefreshClick={() => undefined}
                 dataRangeDuration="PT15M"
                 setDataRangeDuration={() => undefined}
                 filterData={{}}
                 setFilterData={() => undefined}
                 grouping={GroupingEnum.APPLICATION}
-                setGrouping={() => undefined}
+                setGrouping={setGroupingMock}
             />
         );
 
-        const versionsButton = screen.getByRole('button', { name: 'Versions' });
-        expect(versionsButton).toBeInTheDocument();
+        fireEvent.click(screen.getByTitle('Versions per entorn'));
 
-        fireEvent.click(versionsButton);
-
-        expect(screen.getByText('Versions per entorn')).toBeInTheDocument();
-        expect(screen.getByText("Històric d'entorn d'aplicació")).toBeInTheDocument();
-    });
-
-    it('SalutToolbar_quanSeSeleccionaVersionsPerEntorn_obreElDialogCorresponent', () => {
-        render(
-            <SalutToolbar
-                title="Salut"
-                ready={true}
-                onRefreshClick={() => undefined}
-                dataRangeDuration="PT15M"
-                setDataRangeDuration={() => undefined}
-                filterData={{}}
-                setFilterData={() => undefined}
-                grouping={GroupingEnum.APPLICATION}
-                setGrouping={() => undefined}
-            />
-        );
-
-        fireEvent.click(screen.getByRole('button', { name: 'Versions' }));
-        fireEvent.click(screen.getByText('Versions per entorn'));
-
-        expect(screen.getByTestId('versions-entorns-component')).toBeInTheDocument();
-    });
-
-    it('SalutToolbar_quanSeSeleccionaEntornAppHist_obreElDialogCorresponent', () => {
-        render(
-            <SalutToolbar
-                title="Salut"
-                ready={true}
-                onRefreshClick={() => undefined}
-                dataRangeDuration="PT15M"
-                setDataRangeDuration={() => undefined}
-                filterData={{}}
-                setFilterData={() => undefined}
-                grouping={GroupingEnum.APPLICATION}
-                setGrouping={() => undefined}
-            />
-        );
-
-        fireEvent.click(screen.getByRole('button', { name: 'Versions' }));
-        fireEvent.click(screen.getByText("Històric d'entorn d'aplicació"));
-
-        expect(screen.getByTestId('entorns-app-hist-component')).toBeInTheDocument();
+        expect(setGroupingMock).toHaveBeenCalledWith(GroupingEnum.VERSIONS_ENTORNS);
     });
 });
