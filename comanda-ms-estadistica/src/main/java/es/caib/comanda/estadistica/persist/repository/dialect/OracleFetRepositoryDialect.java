@@ -555,14 +555,14 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
                 .collect(Collectors.joining(" "));
     }
 
-    // TODO: Girar i posar any/mes/dia
+    /** Retorna el camp d'agrupació, que mostrarem i emprarem al frontal. **/
     private static String generateGraficAgrupacioConditions(PeriodeUnitat tempsAgregacio) {
         switch (tempsAgregacio) {
-            case SETMANA: return "setmana || '/' || anualitat";
-            case MES: return "mes || '/' || anualitat";
-            case TRIMESTRE: return "trimestre || '/' || anualitat";
+            case SETMANA: return "anualitat || '/' || LPAD(setmana, 2, '0')";
+            case MES: return "anualitat || '/' || LPAD(mes, 2, '0')";
+            case TRIMESTRE: return "anualitat || '/' || trimestre";
             case ANY: return "anualitat";
-            default: return "dia || '/' || mes || '/' || anualitat";
+            default: return "anualitat || '/' || LPAD(mes, 2, '0') || '/' || LPAD(dia, 2, '0')";
         }
     }
 
