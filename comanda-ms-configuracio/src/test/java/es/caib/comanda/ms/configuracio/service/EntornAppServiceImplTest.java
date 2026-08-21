@@ -14,6 +14,7 @@ import es.caib.comanda.ms.logic.helper.*;
 import es.caib.comanda.model.v1.log.FitxerInfo;
 import es.caib.comanda.model.v1.salut.AppInfo;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -75,6 +76,11 @@ public class EntornAppServiceImplTest {
         @Override
         public void afterConversion(EntornAppEntity entity, EntornApp resource) {
             super.afterConversion(entity, resource);
+        }
+
+        @Override
+        public void afterConversion(List<EntornAppEntity> entities, List<EntornApp> resources) {
+            super.afterConversion(entities, resources);
         }
 
         @Override
@@ -281,7 +287,6 @@ public class EntornAppServiceImplTest {
 
     @Test
     void toogleActivaAction_quanSexecuta_inverteixActivaIPublicaEsdevenimentSse() throws Exception {
-        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
         when(entornAppRepository.findOne(any(Specification.class))).thenReturn(Optional.of(entornAppEntity));
         when(resourceEntityMappingHelper.entityToResource(entornAppEntity, EntornApp.class))
                 .thenReturn(entornAppResource);
@@ -302,7 +307,6 @@ public class EntornAppServiceImplTest {
 
     @Test
     void refreshInfoAction_quanSexecuta_refrescaInformacioIEvictaCache() throws Exception {
-        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
         when(entornAppRepository.findOne(any(Specification.class))).thenReturn(Optional.of(entornAppEntity));
         when(resourceEntityMappingHelper.entityToResource(entornAppEntity, EntornApp.class))
                 .thenReturn(entornAppResource);
@@ -318,131 +322,269 @@ public class EntornAppServiceImplTest {
         assertSame(entornAppResource, result);
     }
 
+    private EntornApp createFullyPopulatedResource(Long id, Long appId, Long entornId) {
+        EntornApp resource = new EntornApp();
+        resource.setId(id);
+        resource.setApp(ResourceReference.toResourceReference(appId, "App " + appId));
+        resource.setEntorn(ResourceReference.toResourceReference(entornId, "Entorn " + entornId));
+        ReflectionTestUtils.setField(resource, "versio", "1.0.0");
+        ReflectionTestUtils.setField(resource, "revisio", "rev123");
+        ReflectionTestUtils.setField(resource, "jdkVersion", "11");
+        resource.setActiva(true);
+        resource.setEntornAppDescription("Description " + id);
+        // Censored fields
+        resource.setInfoUrl("http://test.com/info");
+        resource.setLogsUrl("http://test.com/logs");
+        resource.setSalutUrl("http://test.com/salut");
+        resource.setEstadisticaInfoUrl("http://test.com/stats-info");
+        resource.setEstadisticaUrl("http://test.com/stats");
+        resource.setEstadisticaCron("0 0 * * *");
+        resource.setEstadisticaAuth(true);
+        resource.setSalutAuth(true);
+        resource.setCompactable(true);
+        resource.setCompactacioSetmanalMesos(3);
+        resource.setCompactacioMensualMesos(6);
+        resource.setEliminacioMesos(12);
+        resource.setAlarmesEmail("admin@test.com");
+        resource.setParametreAuth(true);
+        resource.setNomUsuariAuth("user1");
+        resource.setContrasenyaAuth("secret");
+        resource.setNumPermisos(4);
+        return resource;
+    }
+
     @Test
-    void additionalSpringFilter_quanLusuariEsConsulta_noAplicaFiltreAcl() {
-        when(authenticationHelper.isCurrentUserInRole("COM_ADMIN")).thenReturn(false);
-        when(authenticationHelper.isCurrentUserInRole("COM_CONSULTA")).thenReturn(true);
+    @DisplayName("afterConversion: quan l'usuari és ADMIN no censura cap camp")
+    void afterConversion_quanUsuariEsAdmin_noCensuraCamps() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        EntornApp resource = createFullyPopulatedResource(1L, 1L, 1L);
 
-        String result = entornAppService.exposedAdditionalSpringFilter();
+        entornAppService.afterConversion(entornAppEntity, resource);
 
-        assertNull(result);
+        assertEquals("http://test.com/info", resource.getInfoUrl());
+        assertEquals("http://test.com/logs", resource.getLogsUrl());
+        assertEquals("http://test.com/salut", resource.getSalutUrl());
+        assertEquals("http://test.com/stats-info", resource.getEstadisticaInfoUrl());
+        assertEquals("http://test.com/stats", resource.getEstadisticaUrl());
+        assertEquals("0 0 * * *", resource.getEstadisticaCron());
+        assertTrue(resource.isEstadisticaAuth());
+        assertTrue(resource.isSalutAuth());
+        assertEquals(Boolean.TRUE, resource.getCompactable());
+        assertEquals(3, resource.getCompactacioSetmanalMesos());
+        assertEquals(6, resource.getCompactacioMensualMesos());
+        assertEquals(12, resource.getEliminacioMesos());
+        assertEquals("admin@test.com", resource.getAlarmesEmail());
+        assertTrue(resource.isParametreAuth());
+        assertEquals("user1", resource.getNomUsuariAuth());
+        assertEquals("secret", resource.getContrasenyaAuth());
+        assertEquals(4, resource.getNumPermisos());
+        assertEquals("1.0.0", resource.getVersio());
+        assertEquals("rev123", resource.getRevisio());
+        assertEquals("11", resource.getJdkVersion());
+        assertTrue(resource.isActiva());
         verifyNoInteractions(aclServiceClient);
     }
 
     @Test
-    void additionalSpringFilter_quanHiHaPermisosPerAppIEntornApp_combinaElsDosFiltres() {
-        stubAclContext("COM_USER");
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Set.of(1L, 2L)));
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.ENTORN_APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Set.of(5L)));
+    @DisplayName("afterConversion: quan l'usuari és CONSULTA no censura cap camp")
+    void afterConversion_quanUsuariEsConsulta_noCensuraCamps() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(true);
+        EntornApp resource = createFullyPopulatedResource(1L, 1L, 1L);
 
-        String result = entornAppService.exposedAdditionalSpringFilter();
+        entornAppService.afterConversion(entornAppEntity, resource);
 
-        assertEquals("app.id:1 or app.id:2 or id:5", result);
+        assertEquals("http://test.com/info", resource.getInfoUrl());
+        assertEquals("http://test.com/salut", resource.getSalutUrl());
+        assertEquals("secret", resource.getContrasenyaAuth());
+        assertTrue(resource.isEstadisticaAuth());
+        assertEquals(4, resource.getNumPermisos());
+        verifyNoInteractions(aclServiceClient);
     }
 
     @Test
-    void additionalSpringFilter_quanNomesHiHaPermisosPerApp_retornaFiltrePerAplicacions() {
+    @DisplayName("afterConversion: quan l'usuari té permís sobre l'EntornApp no censura cap camp")
+    void afterConversion_quanUsuariTePermisPerEntornApp_noCensuraCamps() {
         stubAclContext("COM_USER");
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Set.of(1L, 2L)));
         when(aclServiceClient.findIdsWithAnyPermission(
                 eq(ResourceType.ENTORN_APP),
                 eq(Collections.singletonList(PermissionEnum.READ)),
                 eq("anna"),
                 eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Set.of(1L)));
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
                 eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
 
-        String result = entornAppService.exposedAdditionalSpringFilter();
+        EntornApp resource = createFullyPopulatedResource(1L, 1L, 1L);
 
-        assertEquals("app.id:1 or app.id:2", result);
+        entornAppService.afterConversion(entornAppEntity, resource);
+
+        assertEquals("http://test.com/info", resource.getInfoUrl());
+        assertEquals("http://test.com/logs", resource.getLogsUrl());
+        assertEquals("http://test.com/salut", resource.getSalutUrl());
+        assertEquals("secret", resource.getContrasenyaAuth());
+        assertTrue(resource.isParametreAuth());
+        assertEquals(4, resource.getNumPermisos());
     }
 
     @Test
-    void additionalSpringFilter_quanNomesHiHaPermisosPerEntornApp_retornaFiltrePerEntornsApp() {
+    @DisplayName("afterConversion: quan l'usuari té permís sobre l'App no censura cap camp")
+    void afterConversion_quanUsuariTePermisPerApp_noCensuraCamps() {
         stubAclContext("COM_USER");
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
         when(aclServiceClient.findIdsWithAnyPermission(
                 eq(ResourceType.ENTORN_APP),
                 eq(Collections.singletonList(PermissionEnum.READ)),
                 eq("anna"),
                 eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Set.of(5L, 7L)));
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Set.of(1L)));
 
-        String result = entornAppService.exposedAdditionalSpringFilter();
+        EntornApp resource = createFullyPopulatedResource(1L, 1L, 1L);
 
-        assertEquals("id:5 or id:7", result);
+        entornAppService.afterConversion(entornAppEntity, resource);
+
+        assertEquals("http://test.com/info", resource.getInfoUrl());
+        assertEquals("http://test.com/salut", resource.getSalutUrl());
+        assertEquals("secret", resource.getContrasenyaAuth());
+        assertEquals("1.0.0", resource.getVersio());
     }
 
     @Test
-    void additionalSpringFilter_quanConsultaAcl_passaUsuariIRolsActuals() {
-        stubAclContext("COM_USER", "COM_EXTRA");
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER", "COM_EXTRA")),
-                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
+    @DisplayName("afterConversion: quan l'usuari NO té permisos censura els camps anotats")
+    void afterConversion_quanUsuariNoTePermisos_censuraCampsAnnotats() {
+        stubAclContext("COM_USER");
         when(aclServiceClient.findIdsWithAnyPermission(
                 eq(ResourceType.ENTORN_APP),
                 eq(Collections.singletonList(PermissionEnum.READ)),
                 eq("anna"),
-                eq(List.of("COM_USER", "COM_EXTRA")),
+                eq(List.of("COM_USER")),
                 eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
-
-        entornAppService.exposedAdditionalSpringFilter();
-
-        verify(aclServiceClient).findIdsWithAnyPermission(
+        when(aclServiceClient.findIdsWithAnyPermission(
                 eq(ResourceType.APP),
                 eq(Collections.singletonList(PermissionEnum.READ)),
                 eq("anna"),
-                eq(List.of("COM_USER", "COM_EXTRA")),
-                eq("Bearer test"));
-        verify(aclServiceClient).findIdsWithAnyPermission(
-                eq(ResourceType.ENTORN_APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER", "COM_EXTRA")),
-                eq("Bearer test"));
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        EntornApp resource = createFullyPopulatedResource(1L, 1L, 1L);
+
+        entornAppService.afterConversion(entornAppEntity, resource);
+
+        // Camps censurats (String -> null, boolean -> false, Boolean/Integer -> null, int -> 0)
+        assertNull(resource.getInfoUrl());
+        assertNull(resource.getLogsUrl());
+        assertNull(resource.getSalutUrl());
+        assertNull(resource.getEstadisticaInfoUrl());
+        assertNull(resource.getEstadisticaUrl());
+        assertNull(resource.getEstadisticaCron());
+        assertFalse(resource.isEstadisticaAuth());
+        assertFalse(resource.isSalutAuth());
+        assertNull(resource.getCompactable());
+        assertNull(resource.getCompactacioSetmanalMesos());
+        assertNull(resource.getCompactacioMensualMesos());
+        assertNull(resource.getEliminacioMesos());
+        assertNull(resource.getAlarmesEmail());
+        assertFalse(resource.isParametreAuth());
+        assertNull(resource.getNomUsuariAuth());
+        assertNull(resource.getContrasenyaAuth());
+        assertEquals(0, resource.getNumPermisos());
+
+        // Camps NO censurats es conserven
+        assertEquals(1L, resource.getId());
+        assertEquals("1.0.0", resource.getVersio());
+        assertEquals("rev123", resource.getRevisio());
+        assertEquals("11", resource.getJdkVersion());
+        assertTrue(resource.isActiva());
+        assertEquals("Description 1", resource.getEntornAppDescription());
+        assertNotNull(resource.getApp());
+        assertNotNull(resource.getEntorn());
     }
 
     @Test
-    void additionalSpringFilter_quanNoHiHaPermisos_retornaFiltreBuit() {
+    @DisplayName("afterConversion: quan entity és null censura els camps del resource")
+    void afterConversion_quanEntityEsNull_censuraCamps() {
+        when(authenticationHelper.isCurrentUserInRole(anyString())).thenReturn(false);
+
+        EntornApp resource = createFullyPopulatedResource(1L, 1L, 1L);
+
+        entornAppService.afterConversion((EntornAppEntity) null, resource);
+
+        assertNull(resource.getInfoUrl());
+        assertNull(resource.getSalutUrl());
+        assertNull(resource.getContrasenyaAuth());
+    }
+
+    @Test
+    @DisplayName("afterConversion amb llista: censura només els recursos sense permisos")
+    void afterConversionList_quanHiHaMixDePermisos_censuraNomesElsNoPermesos() {
         stubAclContext("COM_USER");
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(ResponseEntity.ok(null));
         when(aclServiceClient.findIdsWithAnyPermission(
                 eq(ResourceType.ENTORN_APP),
                 eq(Collections.singletonList(PermissionEnum.READ)),
                 eq("anna"),
                 eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Set.of(1L)));
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
                 eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
 
-        String result = entornAppService.exposedAdditionalSpringFilter();
+        AppEntity app2 = new AppEntity();
+        app2.setId(2L);
+        EntornEntity entorn2 = new EntornEntity();
+        entorn2.setId(2L);
+        EntornAppEntity entity2 = new EntornAppEntity();
+        entity2.setId(2L);
+        entity2.setApp(app2);
+        entity2.setEntorn(entorn2);
 
-        assertEquals("id:0", result);
+        EntornApp resource1 = createFullyPopulatedResource(1L, 1L, 1L);
+        EntornApp resource2 = createFullyPopulatedResource(2L, 2L, 2L);
+
+        entornAppService.afterConversion(List.of(entornAppEntity, entity2), List.of(resource1, resource2));
+
+        // resource1 té permís -> NO censurat
+        assertEquals("http://test.com/info", resource1.getInfoUrl());
+        assertEquals("secret", resource1.getContrasenyaAuth());
+        assertEquals(4, resource1.getNumPermisos());
+
+        // resource2 NO té permís -> CENSURAT
+        assertNull(resource2.getInfoUrl());
+        assertNull(resource2.getContrasenyaAuth());
+        assertEquals(0, resource2.getNumPermisos());
+        assertEquals("1.0.0", resource2.getVersio());
+    }
+
+    @Test
+    @DisplayName("afterConversion amb llista: quan l'usuari és ADMIN no censura res")
+    void afterConversionList_quanUsuariEsAdmin_noCensuraCapElement() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+
+        EntornApp resource1 = createFullyPopulatedResource(1L, 1L, 1L);
+        EntornApp resource2 = createFullyPopulatedResource(2L, 2L, 2L);
+
+        entornAppService.afterConversion(List.of(entornAppEntity, entornAppEntity), List.of(resource1, resource2));
+
+        assertEquals("http://test.com/info", resource1.getInfoUrl());
+        assertEquals("http://test.com/info", resource2.getInfoUrl());
+        verifyNoInteractions(aclServiceClient);
+    }
+
+    @Test
+    void additionalSpringFilter_retornaNull() {
+        String result = entornAppService.exposedAdditionalSpringFilter();
+        assertNull(result);
     }
 
     @Test

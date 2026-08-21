@@ -26,6 +26,10 @@ import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -113,6 +117,7 @@ public class EntornApp extends BaseResource<Long> {
 	@URL
 	@NotNull
 	@Size(max = 200)
+    @CensorField
 	private String infoUrl;
 	@Setter(AccessLevel.NONE)
 	private LocalDateTime infoData;
@@ -132,6 +137,7 @@ public class EntornApp extends BaseResource<Long> {
 	// Logs
 	@URL
 	@Size(max = 200)
+    @CensorField
 	private String logsUrl;
 
 	// Camps calculats de logs
@@ -145,6 +151,7 @@ public class EntornApp extends BaseResource<Long> {
 	@URL
 	@NotNull
 	@Size(max = 200)
+    @CensorField
 	private String salutUrl;
 
 	private List<AppIntegracio> integracions;
@@ -157,41 +164,55 @@ public class EntornApp extends BaseResource<Long> {
 	// Informació d'estadístiques
 	@URL
 	@Size(max = 200)
+    @CensorField
 	private String estadisticaInfoUrl;
 	@Size(max = 200)
 	@URL
+    @CensorField
 	private String estadisticaUrl;
+    @CensorField
  	private String estadisticaCron;
 
     /** Si les estadístiques requereixen autenticació bàsica */
     @InputType("checkbox")
     @Builder.Default
+    @CensorField
     private boolean estadisticaAuth = false;
 
 	/** Si les peticions de salut requereixen autenticació bàsica */
     @InputType("checkbox")
     @Builder.Default
+    @CensorField
 	private boolean salutAuth = false;
 
     @Builder.Default
+    @CensorField
     private Boolean compactable = false;
+    @CensorField
     private Integer compactacioSetmanalMesos;
+    @CensorField
     private Integer compactacioMensualMesos;
+    @CensorField
     private Integer eliminacioMesos;
 
+    @CensorField
 	private String alarmesEmail;
 
     /** Si el nom i la contrasenya son parametres **/
     @InputType("checkbox")
     @Builder.Default
+    @CensorField
     private boolean parametreAuth = false;
+    @CensorField
     private String nomUsuariAuth;
+    @CensorField
     private String contrasenyaAuth;
 
 	// Camps calculats
 	private String entornAppDescription;
 
     @Transient
+    @CensorField
     private int numPermisos;
 
 	public String getRevisioSimplificat() {
@@ -292,5 +313,10 @@ public class EntornApp extends BaseResource<Long> {
 	public static class PrevisualitzarLogResponse implements Serializable {
 		private String linia;
 	}
+
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface CensorField {
+    }
 
 }
