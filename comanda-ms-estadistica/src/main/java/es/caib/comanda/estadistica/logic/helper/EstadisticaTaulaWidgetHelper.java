@@ -53,6 +53,7 @@ public class EstadisticaTaulaWidgetHelper {
                     return columna;
                 }).collect(Collectors.toList());
         indicadorTaulaRepository.saveAll(columnes);
+        entity.setColumnes(columnes);
     }
 
     public void afterCoversionGetColumnes(EstadisticaTaulaWidgetEntity entity, EstadisticaTaulaWidget resource) {
