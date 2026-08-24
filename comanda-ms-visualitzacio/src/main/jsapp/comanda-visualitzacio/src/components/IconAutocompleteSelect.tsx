@@ -23,10 +23,10 @@ const MAX_ITEMS_VISIBLE = 8;
 interface IconAutocompleteSelectProps {
     name?: string;
     label?: string;
-    onChange?: (value: any) => void;
+    onChange?: (iconName: string | null) => void;
 }
 
-const getIconOrNull = (iconKey?: string | null) => {
+const getIconOrNull = (iconKey: string | null) => {
     if (iconKey && allIconNames.includes(iconKey)) {
         return <Icon>{camelToSnakeCase(iconKey)}</Icon>;
     }
@@ -35,10 +35,11 @@ const getIconOrNull = (iconKey?: string | null) => {
 
 const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({
         name = "icona",
-        label = "Icona",
+        label,
         onChange
 }) => {
     const { t } = useTranslation();
+    const resolvedLabel = label ?? t($ => $.components.iconSelect.label);
     const { data, apiRef, dataGetFieldValue } = useFormContext();
     const iconValue = dataGetFieldValue(name);
 
@@ -141,7 +142,7 @@ const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({
         <>
             <TextField
                 inputRef={inputRef}
-                label={label}
+                label={resolvedLabel}
                 value={displayValue}
                 onClick={handleOpen}
                 InputProps={{

@@ -33,6 +33,8 @@ const mocks = vi.hoisted(() => ({
             page: {
                 apps: {
                     title: 'Aplicacions',
+                    logoAlt: 'Logotip',
+                    noLogo: 'Sense logotip',
                     general: 'General',
                     entornApp: 'Entorns',
                     update: 'Editar aplicació',
@@ -687,4 +689,13 @@ describe('Apps', () => {
         expect(mocks.appPermissionShowMock).toHaveBeenCalledWith(12, 'Comanda');
         expect(screen.getByText('Gestor permisos APP')).toBeInTheDocument();
     });
+
+    it('Apps_quanEsRenderitzaLaGraella_laColumnaLogoMostraLaTraduccioDinamica', () => {
+        mocks.useParamsMock.mockReturnValue({ id: undefined });
+
+        render(<Apps />);
+
+        expect(screen.getByLabelText('Sense logotip')).toBeInTheDocument();
+    });
 });
+

@@ -1,4 +1,9 @@
-export const columnesIndicador = [
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { TFunction } from 'i18next';
+import { MuiDataGridColDef } from 'reactlib';
+
+export const columnesIndicador: MuiDataGridColDef[] = [
     {
         field: 'codi',
         flex: 1,
@@ -12,7 +17,8 @@ export const columnesIndicador = [
         flex: 3,
     },
 ];
-export const columnesDimensio = [
+
+export const columnesDimensio: MuiDataGridColDef[] = [
     {
         field: 'codi',
         flex: 1,
@@ -30,14 +36,21 @@ export const columnesDimensio = [
         flex: 1,
     },
 ];
-export const columnesDimensioValor = [
+
+export const getColumnesDimensioValor = (t: TFunction): MuiDataGridColDef[] => [
     {
         field: 'codiNom',
         flex: 1,
     },
     {
         field: 'dimensio.description',
-        headerName: 'Dimensio',
+        headerName: t($ => $.generic.dimensio),
         flex: 2,
-    }
+    },
 ];
+
+export const useColumnesDimensioValor = (): MuiDataGridColDef[] => {
+    const { t } = useTranslation();
+    return useMemo(() => getColumnesDimensioValor(t), [t]);
+};
+
