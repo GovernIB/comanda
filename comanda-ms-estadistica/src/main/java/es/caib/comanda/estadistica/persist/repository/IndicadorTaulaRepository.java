@@ -16,6 +16,8 @@ import org.springframework.data.repository.query.Param;
  */
 public interface IndicadorTaulaRepository extends BaseRepository<IndicadorTaulaEntity, Long> {
 
+    IndicadorTaulaEntity findByWidgetId(Long widgetId);
+
     @Modifying
     @Query("DELETE FROM IndicadorTaulaEntity it WHERE it.indicador IN (SELECT i FROM IndicadorEntity i WHERE i.entornAppId = :entornAppId)")
     void deleteByIndicadorEntornAppId(@Param("entornAppId") Long entornAppId);

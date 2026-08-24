@@ -52,8 +52,8 @@ class EstadisticaSimpleWidgetServiceImplTest {
     // ========================================================================
 
     @Test
-    @DisplayName("beforeCreateSave: converteix atributs visuals a JSON correctament")
-    void beforeCreateSave_quanEsValid_llavorsConverteixJson() {
+    @DisplayName("beforeCreateSave: converteix atributs visuals a JSON i actualitza indicador correctament")
+    void beforeCreateSave_quanEsValid_llavorsConverteixJsonIActualitzaIndicador() {
         // Arrange
         EstadisticaSimpleWidgetEntity entity = new EstadisticaSimpleWidgetEntity();
         EstadisticaSimpleWidget resource = new EstadisticaSimpleWidget();
@@ -68,6 +68,7 @@ class EstadisticaSimpleWidgetServiceImplTest {
         // Assert
         assertThat(entity.getAtributsVisualsJson()).isEqualTo("{\"test\":\"value\"}");
         verify(atributsVisualsHelper, times(1)).getAtributsVisualsJson(atributs);
+        verify(estadisticaSimpleWidgetHelper, times(1)).upsertIndicadorTaula(entity, resource);
     }
 
     @Test
@@ -91,8 +92,8 @@ class EstadisticaSimpleWidgetServiceImplTest {
     // ========================================================================
 
     @Test
-    @DisplayName("beforeUpdateSave: converteix atributs visuals a JSON i actualitza dimensions")
-    void beforeUpdateSave_quanEsValid_llavorsConverteixJsonIActualitzaDimensions() {
+    @DisplayName("beforeUpdateSave: converteix atributs visuals a JSON i actualitza indicador")
+    void beforeUpdateSave_quanEsValid_llavorsConverteixJsonIActualitzaIndicador() {
         // Arrange
         EstadisticaSimpleWidgetEntity entity = new EstadisticaSimpleWidgetEntity();
         entity.setId(1L);
@@ -108,7 +109,7 @@ class EstadisticaSimpleWidgetServiceImplTest {
         // Assert
         assertThat(entity.getAtributsVisualsJson()).isEqualTo("{\"test\":\"value\"}");
         verify(atributsVisualsHelper, times(1)).getAtributsVisualsJson(atributs);
-        verify(estadisticaWidgetHelper, times(1)).upsertDimensionsValors(entity, resource);
+        verify(estadisticaSimpleWidgetHelper, times(1)).upsertIndicadorTaula(entity, resource);
     }
 
     @Test
@@ -133,7 +134,7 @@ class EstadisticaSimpleWidgetServiceImplTest {
     // ========================================================================
 
     @Test
-    @DisplayName("afterCreateSave: crida als helpers per actualitzar indicador i dimensions")
+    @DisplayName("afterCreateSave: crida als helpers per actualitzar dimensions")
     void afterCreateSave_quanEsValid_llavorsCridaHelpers() {
         // Arrange
         EstadisticaSimpleWidgetEntity entity = new EstadisticaSimpleWidgetEntity();
@@ -143,13 +144,12 @@ class EstadisticaSimpleWidgetServiceImplTest {
         estadisticaSimpleWidgetService.afterCreateSave(entity, resource, null, false);
 
         // Assert
-        verify(estadisticaSimpleWidgetHelper, times(1)).upsertIndicadorTaula(entity, resource);
         verify(estadisticaWidgetHelper, times(1)).upsertDimensionsValors(entity, resource);
         verify(estadisticaWidgetHelper, never()).clearDashboardWidgetCacheByWidget(anyLong());
     }
 
     @Test
-    @DisplayName("afterUpdateSave: crida als helpers per actualitzar indicador, dimensions i netejar cache")
+    @DisplayName("afterUpdateSave: crida als helpers per actualitzar dimensions i netejar cache")
     void afterUpdateSave_quanEsValid_llavorsCridaHelpersINetejaCache() {
         // Arrange
         EstadisticaSimpleWidgetEntity entity = new EstadisticaSimpleWidgetEntity();
@@ -160,7 +160,6 @@ class EstadisticaSimpleWidgetServiceImplTest {
         estadisticaSimpleWidgetService.afterUpdateSave(entity, resource, null, false);
 
         // Assert
-        verify(estadisticaSimpleWidgetHelper, times(1)).upsertIndicadorTaula(entity, resource);
         verify(estadisticaWidgetHelper, times(1)).upsertDimensionsValors(entity, resource);
         verify(estadisticaWidgetHelper, times(1)).clearDashboardWidgetCacheByWidget(42L);
     }

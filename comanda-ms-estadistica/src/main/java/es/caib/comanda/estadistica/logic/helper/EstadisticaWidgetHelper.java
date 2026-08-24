@@ -45,9 +45,14 @@ public class EstadisticaWidgetHelper {
     public <E extends EstadisticaWidgetEntity, R extends EstadisticaWidget> void upsertDimensionsValors(E entity, R resource) {
         List<DimensioValorEntity> dimensionsValorsEntities = entity.getDimensionsValor();
         List<ResourceReference<DimensioValor, Long>> dimensionsValors = resource.getDimensionsValor();
-        if (dimensionsValors == null) {
-            dimensionsValors = Collections.emptyList();
+
+        if (dimensionsValors == null || dimensionsValors.isEmpty()) {
+            if (dimensionsValorsEntities != null && !dimensionsValorsEntities.isEmpty()) {
+                dimensionsValorsEntities.clear();
+            }
+            return;
         }
+
         if (dimensionsValorsEntities == null) {
             dimensionsValorsEntities = new ArrayList<>();
             entity.setDimensionsValor(dimensionsValorsEntities);
@@ -62,6 +67,7 @@ public class EstadisticaWidgetHelper {
         dimensionsValorsEntities.clear();
         dimensionsValorsEntities.addAll(persistValues);
     }
+
 
     /** Assigna el nom de l'aplicació a partir de l'appId **/
     public <E extends EstadisticaWidgetEntity, R extends EstadisticaWidget> void afterConversionGetAppNom(E entity, R resource) {

@@ -28,6 +28,15 @@ public class EstadisticaSimpleWidgetHelper {
     /** Crea o actualitza l'entitat {@link IndicadorTaulaEntity} amb les dades del widget **/
     public void upsertIndicadorTaula(EstadisticaSimpleWidgetEntity entity, EstadisticaSimpleWidget resource) {
         IndicadorTaulaEntity indicadorTaulaEntity = entity.getIndicadorInfo();
+        // Durant updateEntityWithResource, el camp 'indicadorInfo' de l'entitat es posa a null
+        // perquè el frontend envia els camps de l'indicador individualment (indicador, titolIndicador, etc.)
+        // en lloc d'una referència a IndicadorTaula.
+        // Si el widget ja existeix a la BD (entity.getId() != null), recuperem l'IndicadorTaulaEntity existent
+        // per widget_id per actualitzar-lo en lloc d'inserir un duplicat, evitant errors de bloqueig optimista
+        // i de files duplicades en el refresh()/merge() del BaseMutableResourceService.
+        if (indicadorTaulaEntity == null && entity.getId() != null) {
+            indicadorTaulaEntity = indicadorTaulaRepository.findByWidgetId(entity.getId());
+        }
         if (indicadorTaulaEntity == null) {
             indicadorTaulaEntity = new IndicadorTaulaEntity();
             indicadorTaulaEntity.setWidget(entity);
