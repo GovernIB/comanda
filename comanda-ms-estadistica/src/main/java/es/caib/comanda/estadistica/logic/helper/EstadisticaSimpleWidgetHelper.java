@@ -43,7 +43,7 @@ public class EstadisticaSimpleWidgetHelper {
         }
         indicadorTaulaEntity.setTitol(resource.getTitolIndicador());
         indicadorTaulaEntity.setAgregacio(resource.getTipusIndicador());
-        indicadorTaulaEntity.setUnitatAgregacio(resource.getPeriodeIndicador());
+        indicadorTaulaEntity.setUnitatAgregacio(TableColumnsEnum.AVERAGE.equals(resource.getTipusIndicador()) ? resource.getPeriodeIndicador() : null);
         if (resource.getIndicador() != null && resource.getIndicador().getId() != null) {
             if (Objects.isNull(indicadorTaulaEntity.getIndicadorId()) ||
                 !Objects.equals(indicadorTaulaEntity.getIndicadorId(), resource.getIndicador().getId())) {
