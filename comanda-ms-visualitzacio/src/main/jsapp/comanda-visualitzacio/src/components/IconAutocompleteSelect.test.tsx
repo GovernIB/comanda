@@ -5,6 +5,24 @@ import IconAutocompleteSelect from './IconAutocompleteSelect';
 const mocks = vi.hoisted(() => ({
     setFieldValueMock: vi.fn(),
     dataGetFieldValueMock: vi.fn(),
+    tMock: vi.fn((selector: any) =>
+        selector({
+            components: {
+                iconSelect: {
+                    label: 'Icona',
+                    noIcon: '(Sense icona)',
+                    searchPlaceholder: 'Cerca icona...',
+                    notFound: "No s'han trobat icones.",
+                },
+            },
+        })
+    ),
+}));
+
+vi.mock('react-i18next', () => ({
+    useTranslation: () => ({
+        t: mocks.tMock,
+    }),
 }));
 
 vi.mock('../util/muiIconAliases', () => ({

@@ -36,6 +36,13 @@ const mocks = vi.hoisted(() => ({
                         midaFontCanviPercentual: 'Mida canvi',
                     },
                 },
+                plantilla: {
+                    sample: {
+                        simpleTitle: 'Títol',
+                        unitDefault: 'u',
+                        simpleDescription: 'Descripció',
+                    },
+                },
             },
         })
     ),

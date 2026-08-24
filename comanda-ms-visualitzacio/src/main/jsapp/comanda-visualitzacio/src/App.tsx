@@ -283,6 +283,7 @@ export const useAppEntries = () => {
 }
 
 export const App: React.FC = () => {
+    const { t } = useTranslation();
     const { user } = useUserContext();
     const theme = useTheme();
     const darkThemeActive = theme.palette.mode === "dark";
@@ -318,7 +319,7 @@ export const App: React.FC = () => {
                 >
                     <ComandaLogo
                         style={{ height: APPBAR_HEIGHT, verticalAlign: 'middle' }}
-                        title="Logo de l'aplicació de Comanda"
+                        title={t($ => $.app.logoTitle)}
                     />
                 </Box>
             }

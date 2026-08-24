@@ -5,8 +5,11 @@ import { Footer } from './ComandaFooter';
 
 const mocks = vi.hoisted(() => ({
     toolbarBackgroundStyleMock: vi.fn(() => ({ backgroundImage: 'url(test.png)' })),
-    tMock: vi.fn((selector: (input: { menu: { sitemap: string; accessibilitat: string } }) => string) =>
-        selector({ menu: { sitemap: 'Mapa del lloc', accessibilitat: 'Accessibilitat' } })
+    tMock: vi.fn((selector: any) =>
+        selector({
+            menu: { sitemap: 'Mapa del lloc', accessibilitat: 'Accessibilitat' },
+            components: { footer: { revisio: 'Revisió:' } },
+        })
     ),
 }));
 

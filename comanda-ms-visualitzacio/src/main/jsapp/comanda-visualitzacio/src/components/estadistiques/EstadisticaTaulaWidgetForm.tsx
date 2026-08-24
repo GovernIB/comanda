@@ -44,7 +44,7 @@ const EstadisticaTaulaWidgetForm: React.FC<EstadisticaTaulaWidgetFormProps> = ({
         (): TaulaWidgetVisualizationProps => ({
             entornCodi: 'ENT',
             titol: data.titol,
-            descripcio: data.descripcio || 'Descripcio de la taula',
+            descripcio: data.descripcio || t($ => $.page.plantilla.sample.tableDescription),
             destacat: data.destacat || destacat,
             // columnes: [{}, {}, {}],
             // files: [{}, {}, {}],

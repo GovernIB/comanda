@@ -9,10 +9,11 @@ const mocks = vi.hoisted(() => ({
     artifactActionMock: vi.fn(),
     temporalMessageShowMock: vi.fn(),
     useReadOnlyGestorMock: vi.fn(() => false),
-    tMock: vi.fn((selector: any) =>
-        selector({
+    tMock: vi.fn((selector: any, options?: any) => {
+        const res = selector({
             page: {
                 dimensions: {
+                    valuesTitle: 'Valors dimensió {{nom}}',
                     action: {
                         sincronitzar: {
                             label: 'UO',
@@ -24,8 +25,12 @@ const mocks = vi.hoisted(() => ({
             components: {
                 clear: 'Netejar',
             },
-        })
-    ),
+        });
+        if (typeof res === 'string' && options?.nom) {
+            return res.replace('{{nom}}', options.nom);
+        }
+        return res;
+    }),
 }));
 
 vi.mock('react-i18next', () => ({

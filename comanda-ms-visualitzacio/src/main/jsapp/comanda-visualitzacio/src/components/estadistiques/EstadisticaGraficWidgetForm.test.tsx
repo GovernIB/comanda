@@ -45,6 +45,11 @@ const mocks = vi.hoisted(() => ({
                         indicadors: 'Indicadors',
                     },
                 },
+                plantilla: {
+                    sample: {
+                        chartTitle: 'Títol del gràfic',
+                    },
+                },
             },
         })
     ),

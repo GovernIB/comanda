@@ -395,8 +395,8 @@ const TabBloquejos: React.FC = () => {
         {
             field: 'blocking', headerName: t($ => $.page.monitorDb.locks.blocking), width: 110,
             renderCell: (params: GridRenderCellParams) => params.value
-                ? <Chip label="Sí" color="error" size="small" />
-                : <Chip label="No" color="default" size="small" />,
+                ? <Chip label={t($ => $.common.yes)} color="error" size="small" />
+                : <Chip label={t($ => $.common.no)} color="default" size="small" />,
         },
     ];
 

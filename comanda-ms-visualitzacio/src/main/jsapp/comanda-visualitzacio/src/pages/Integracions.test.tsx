@@ -6,8 +6,12 @@ const mocks = vi.hoisted(() => ({
     tMock: vi.fn((selector: any) =>
         selector({
             page: {
+                apps: {
+                    logoAlt: 'Logotip',
+                },
                 integracions: {
                     title: 'Integracions',
+                    noLogo: 'Sense logotip',
                 },
             },
         })

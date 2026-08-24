@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Typography, Chip, Skeleton, Paper } from '@mui/material';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -44,8 +45,8 @@ export const WidgetHeader: React.FC<WidgetHeaderProps> = React.memo(({
     const entornChipSx = {
         ...estils.entornCodi,
         color: contrastTextColor,
-        backgroundColor: isWhiteBackground 
-            ? theme.palette.grey[200] 
+        backgroundColor: isWhiteBackground
+            ? theme.palette.grey[200]
             : createTransparentColor(backgroundColor, 0.35),
         border: `1px solid ${voraColor}`,
     };
@@ -126,22 +127,23 @@ export const WidgetErrorDisplay: React.FC<WidgetErrorDisplayProps> = React.memo(
     errorMsg,
     errorTrace,
 }) => {
+    const { t } = useTranslation();
     const theme = useTheme();
 
     return (
         <Box sx={{ flex: 1, p: 2, overflow: 'auto' }}>
-            <Accordion 
-                sx={{...estils.errorAccordion, pointerEvents: 'auto'}} 
+            <Accordion
+                sx={{...estils.errorAccordion, pointerEvents: 'auto'}}
                 onMouseDown={(event) => event.stopPropagation()}
             >
                 <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={estils.errorSummary(theme)}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <ErrorOutlineIcon sx={estils.errorIcon(theme)} />
-                        <Typography sx={{fontSize: '0.75rem'}}>{errorMsg || 'Error'}</Typography>
+                        <Typography sx={{fontSize: '0.75rem'}}>{errorMsg || t($ => $.common.error)}</Typography>
                     </Box>
                 </AccordionSummary>
                 <AccordionDetails sx={estils.errorDetails(theme)}>
-                    {errorTrace || 'No error trace available'}
+                    {errorTrace || t($ => $.page.widget.noErrorTrace)}
                 </AccordionDetails>
             </Accordion>
         </Box>
@@ -172,9 +174,9 @@ export const WidgetContainer: React.FC<WidgetContainerProps> = React.memo(({
     const theme = useTheme();
 
     return (
-        <Paper 
-            elevation={2} 
-            onClick={onClick} 
+        <Paper
+            elevation={2}
+            onClick={onClick}
             sx={estils.paperContainer(bgColor, bg, textColor, mostrarVora, voraAmple, voraColor, onClick, theme)}
         >
             {children}

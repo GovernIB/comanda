@@ -114,7 +114,7 @@ export const Footer: React.FC<AppFootProps> = (props) => {
             }}>
             {(title ? title : '') + (comandaVersion ? ' v' + comandaVersion : '')}
             <span id="versioData" style={{ color: backgroundColor, marginLeft: '16px' }}>
-                ({buildTimestamp} | Revisió: {scmRevision})
+                ({buildTimestamp} | {t($ => $.components.footer.revisio)} {scmRevision})
             </span>
         </Typography>
         <Link component={RouterLink} to="/sitemap" color="white" underline="hover">{t($ => $.menu.sitemap)}</Link>

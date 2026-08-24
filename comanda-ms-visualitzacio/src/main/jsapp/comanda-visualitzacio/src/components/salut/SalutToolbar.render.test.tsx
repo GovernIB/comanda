@@ -42,6 +42,7 @@ vi.mock('react-i18next', () => ({
                               },
                               groupingSelect: {
                                   label: 'Agrupació',
+                                  ariaLabel: 'grouping selection',
                                   BY_APPLICATION: 'Per aplicació',
                                   BY_ENVIRONMENT: 'Per entorn',
                                   NONE: 'Cap',

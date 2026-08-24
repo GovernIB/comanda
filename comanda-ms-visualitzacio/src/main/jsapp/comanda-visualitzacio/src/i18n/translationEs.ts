@@ -12,6 +12,13 @@ const translationEs: translationResourcesType = {
         save: "Guardar",
         modify: "Modificar",
         duplicate: "Duplicar",
+        error: "Error",
+        ok: "OK",
+        selectAll: "Seleccionar todo",
+        breadcrumb: "Miga de pan",
+    },
+    app: {
+        logoTitle: "Logo de la aplicación de Comanda",
     },
     enum: {
         appEstat: {
@@ -179,6 +186,7 @@ const translationEs: translationResourcesType = {
             },
             groupingSelect: {
                 label: "Agrupación",
+                ariaLabel: "Selección de agrupación",
                 BY_APPLICATION: "Agrupar por aplicación",
                 BY_ENVIRONMENT: "Agrupar por entorno",
                 NONE: "Sin agrupación",
@@ -253,6 +261,7 @@ const translationEs: translationResourcesType = {
             },
             integracions: {
                 title: "Integraciones",
+                logoAlt: "Logotipo",
                 integracioUpCount: "Activas",
                 integracioWarnCount: "Alerta",
                 integracioDownCount: "Inactivas",
@@ -345,6 +354,9 @@ const translationEs: translationResourcesType = {
             estats: {
                 title: "Estados",
             },
+            peticioLegendOk: "OK",
+            peticioLegendError: "Error",
+            logoAlt: "Logotipo {{nom}}",
             historicVersions: {
                 title: "Histórico de versiones y revisiones",
                 noInfo: "No hay información de historial de versiones disponible",
@@ -380,6 +392,34 @@ const translationEs: translationResourcesType = {
         },
         dashboards: {
             title: "Cuadros de control",
+            editor: {
+                errorAlert: {
+                    errorsHeader: "Errores",
+                    viewButton: "Visualizar",
+                    message: "Se han encontrado errores en alguno de los widgets",
+                },
+                deleteItem: {
+                    title: "Confirmación",
+                    confirm: "¿Está seguro de que desea eliminar este elemento del cuadro de mando?",
+                    success: "Elemento eliminado",
+                    error: "No se ha podido eliminar",
+                },
+                duplicateItem: {
+                    success: "Elemento duplicado correctamente",
+                    error: "No se ha podido duplicar el elemento",
+                },
+                expandPanel: "Desplegar panel",
+                collapsePanel: "Compactar panel",
+                addWidgetAria: "Añadir {{titol}}",
+                selectApp: "Seleccionar aplicación",
+                availableElements: "Elementos disponibles",
+                types: {
+                    simple: "Simple",
+                    grafic: "Gráfico",
+                    taula: "Tabla",
+                },
+                dashboardElements: "Elementos del cuadro de mando",
+            },
             edit: "Editar",
             dashboardView: "Ir al panel de control",
             acl: {
@@ -433,6 +473,7 @@ const translationEs: translationResourcesType = {
             },
             grid: {
                 groupHeader: "Nombre",
+                logoAlt: "Logotipo {{nom}}",
                 action: {
                     obrir: "Abrir tarea",
                 },
@@ -484,6 +525,7 @@ const translationEs: translationResourcesType = {
             },
             grid: {
                 groupHeader: "Nombre",
+                logoAlt: "Logotipo {{nom}}",
                 column: {
                     appEntorn: "Aplicación - Entorno",
                     global: "Global",
@@ -609,6 +651,8 @@ const translationEs: translationResourcesType = {
         },
         apps: {
             title: "Aplicaciones",
+            logoAlt: "Logotipo",
+            noLogo: "Sin logotipo",
             create: "Crear aplicación",
             update: "Modificar aplicación",
             general: "General",
@@ -695,6 +739,7 @@ const translationEs: translationResourcesType = {
         },
         integracions: {
             title: "Integraciones",
+            noLogo: "Sin logotipo",
             column: {
                 codi: "Código",
                 nom: "Nombre",
@@ -725,6 +770,7 @@ const translationEs: translationResourcesType = {
         },
         dimensions: {
             title: "Dimensiones",
+            valuesTitle: "Valores de la dimensión {{nom}}",
             values: "Valores",
             column: {
                 entornApp: "Entorno de aplicación",
@@ -736,6 +782,7 @@ const translationEs: translationResourcesType = {
             action: {
                 changeTipus: {
                     label: "Cambiar tipo",
+                    dialogTitle: "Cambiar tipo dimensión",
                     ok: "La dimensión se ha actualizado correctamente",
                 },
                 desmarcar: {
@@ -895,6 +942,7 @@ const translationEs: translationResourcesType = {
                     reintentarButton: "Reintentar limpieza",
                     reintentarSuccess: "Limpieza reiniciada correctamente",
                     reintentarError: "Error al reintentar la limpieza",
+                    reintentarGenericError: "Error desconocido al reintentar la operación",
                 },
                 operacioEnum: {
                     netejaEntornApp: "Error al intentar borrar datos asociados en torno a la aplicación",
@@ -912,7 +960,7 @@ const translationEs: translationResourcesType = {
                 dir3: "Dir3",
             },
             tab: {
-                alarmes: "ALARMES",
+                alarmes: "ALARMAS",
                 email: "EMAIL",
             },
             filter: {
@@ -921,6 +969,7 @@ const translationEs: translationResourcesType = {
         },
         widget: {
             title: "Widgets estadísticos",
+            noErrorTrace: "No hay traza del error disponible",
             form: {
                 periode: "Período",
                 simple: "Widget simple",
@@ -993,6 +1042,7 @@ const translationEs: translationResourcesType = {
                 },
             },
             atributsVisuals: {
+                title: "Atributos visuales",
                 colorText: "Color del texto",
                 colorFons: "Color de fondo",
                 icona: "Icono",
@@ -1184,6 +1234,7 @@ const translationEs: translationResourcesType = {
                 messageCount: "Número de mensajes",
                 consumerCount: "Número de consumidores",
                 viewMessages: "Ver mensajes",
+                bytesUnit: "bytes",
             },
         },
         tasquesBackground: {
@@ -1308,6 +1359,9 @@ const translationEs: translationResourcesType = {
             nom: "Nombre",
             descripcio: "Descripción",
             colors: "Colores",
+            column: {
+                colors: "Colores",
+            },
             upElement: "Mover arriba",
             downElement: "Mover abajo",
             addColor: "Añadir color",
@@ -1316,6 +1370,18 @@ const translationEs: translationResourcesType = {
             editPalette: "Editar paleta",
         },
         plantilla: {
+            sample: {
+                chartTitle: "Título del gráfico",
+                chartDescription: "Descripción del gráfico",
+                xAxis: "Eje X",
+                yAxis: "Eje Y",
+                simpleTitle: "Título simple",
+                unitDefault: "u",
+                simpleDescription: "Descripción simple",
+                tableTitle: "Título de la tabla",
+                tableDescription: "Descripción de la tabla",
+                defaultPaletteName: "Paleta",
+            },
             groups: {
                 light: "Tema claro",
                 dark: "Tema oscuro",
@@ -1393,7 +1459,7 @@ const translationEs: translationResourcesType = {
                 colorSeparadorHoritzontal: "Separador horizontal",
                 ampleSeparadorHoritzontal: "Grosor separador horizontal",
                 mostrarSeparadorVertical: "Separador vertical",
-                colorSeparadorVertical: "Separador vertical",
+                colorSeparadorVertical: "Color del separador vertical",
                 ampleSeparadorVertical: "Grosor separador vertical",
                 serie1: "Serie 1",
                 serie2: "Serie 2",
@@ -1409,6 +1475,9 @@ const translationEs: translationResourcesType = {
     generic: {
         tipus: "Tipo",
         periode: "Período",
+        dimensio: "Dimensión",
+        pendentDesenvolupament: "(Pendiente de desarrollo)",
+        error: "Error",
     },
     errors: {
         camp: {
@@ -1423,6 +1492,19 @@ const translationEs: translationResourcesType = {
         copiarContingutTitle: "Copiar el contenido",
         copiarContingutSuccess: "Contenido copiado al portapapeles",
         copiarContingutError: "Acción no soportada por el navegador",
+        footer: {
+            revisio: "Revisión:",
+        },
+        iconSelect: {
+            label: "Icono",
+            noIcon: "(Sin icono)",
+            searchPlaceholder: "Buscar icono...",
+            notFound: "No se han encontrado iconos.",
+        },
+        sideMenu: {
+            title: "Menú",
+            closeMenu: "Cerrar el menú",
+        },
         permisos: {
             title: "Permisos",
             resourceTitle: "permiso"

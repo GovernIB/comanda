@@ -58,6 +58,7 @@ type WidgetsErrorAlertProps = {
 };
 
 function WidgetsErrorAlert({ errorWidgets }: WidgetsErrorAlertProps) {
+    const { t } = useTranslation();
     const buttons = useMessageDialogButtons();
     const [showDialog, dialog] = useContentDialog(buttons);
 
@@ -68,7 +69,7 @@ function WidgetsErrorAlert({ errorWidgets }: WidgetsErrorAlertProps) {
                 <Table sx={{ width: 500 }} aria-label="simple table">
                     <TableHead>
                         <TableRow>
-                            <TableCell>Errors</TableCell>
+                            <TableCell>{t($ => $.page.dashboards.editor.errorAlert.errorsHeader)}</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -91,11 +92,11 @@ function WidgetsErrorAlert({ errorWidgets }: WidgetsErrorAlertProps) {
                 variant="filled"
                 action={
                     <Button color="inherit" size="small" onClick={openDialog}>
-                        Visualitzar
+                        {t($ => $.page.dashboards.editor.errorAlert.viewButton)}
                     </Button>
                 }
             >
-                S'han trobat errors a algun dels widgets
+                {t($ => $.page.dashboards.editor.errorAlert.message)}
             </Alert>
         </>
     );
@@ -359,8 +360,8 @@ const EstadisticaDashboardEdit: React.FC = () => {
         const isTitol = entity.tipus === 'TITOL';
         const entityId = isTitol ? (entity.dashboardTitolId ?? entity.id) : (entity.dashboardItemId ?? entity.id);
         messageDialogShow(
-            'Confirmació',
-            'Estau segur que voleu esborrar aquest element del dashboard?',
+            t($ => $.page.dashboards.editor.deleteItem.title),
+            t($ => $.page.dashboards.editor.deleteItem.confirm),
             confirmDialogButtons,
             { maxWidth: 'sm', fullWidth: true }
         ).then((value: any) => {
@@ -368,7 +369,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
             const deletePromise = isTitol ? deleteDashboardTitol(entityId) : deleteDashboardItem(entityId);
             deletePromise
                 .then(() => {
-                    temporalMessageShow(null, 'Element eliminat', 'success');
+                    temporalMessageShow(null, t($ => $.page.dashboards.editor.deleteItem.success), 'success');
                     if (
                         (isTitol && editorSelection.kind === 'title' && editorSelection.mode === 'edit' && editorSelection.dashboardTitolId === entityId) ||
                         (!isTitol && editorSelection.kind === 'widget' && editorSelection.mode === 'edit' && editorSelection.dashboardItemId === entityId)
@@ -378,7 +379,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                     forceRefreshDashboardWidgets();
                 })
                 .catch((reason: any) => {
-                    temporalMessageShow(null, reason?.message ?? 'No s\'ha pogut eliminar', 'error');
+                    temporalMessageShow(null, reason?.message ?? t($ => $.page.dashboards.editor.deleteItem.error), 'error');
                     console.error('Widget delete error', reason);
                 });
         });
@@ -426,10 +427,10 @@ const EstadisticaDashboardEdit: React.FC = () => {
             } else {
                 return;
             }
-            temporalMessageShow(null, 'Element duplicat correctament', 'success');
+            temporalMessageShow(null, t($ => $.page.dashboards.editor.duplicateItem.success), 'success');
             forceRefreshDashboardWidgets();
         } catch (error: any) {
-            temporalMessageShow(null, error?.message ?? 'No s\'ha pogut duplicar l\'element', 'error');
+            temporalMessageShow(null, error?.message ?? t($ => $.page.dashboards.editor.duplicateItem.error), 'error');
             console.error('Widget duplicate error', error);
         }
     };
@@ -609,7 +610,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                 <IconButton
                                     size="small"
                                     onClick={() => setLeftPanelCollapsed(c => !c)}
-                                    title={leftPanelCollapsed ? 'Expandir panell' : 'Compactar panell'}
+                                    title={leftPanelCollapsed ? t($ => $.page.dashboards.editor.expandPanel) : t($ => $.page.dashboards.editor.collapsePanel)}
                                     sx={leftPanelCollapsed ? {
                                         backgroundColor: 'primary.main',
                                         color: 'primary.contrastText',
@@ -664,7 +665,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                 <IconButton
                                     size="small"
                                     onClick={() => setPanelCollapsed(c => !c)}
-                                    title={panelCollapsed ? 'Expandir panell' : 'Compactar panell'}
+                                    title={panelCollapsed ? t($ => $.page.dashboards.editor.expandPanel) : t($ => $.page.dashboards.editor.collapsePanel)}
                                     sx={panelCollapsed ? {
                                         backgroundColor: 'primary.main',
                                         color: 'primary.contrastText',
@@ -732,7 +733,7 @@ const SideMenu = ({ dashboard, addWidget, dashboardWidgets, onSelectItem, select
     onSelectItem?: (item: Record<string, unknown>) => void;
     selectedItemId?: string | null;
 }) => {
-    // const { t } = useTranslation();
+    const { t } = useTranslation();
     const appEntornFilterApiRef = useFilterApiRef();
     const [springFilter, setSpringFilter] = useState<string>()
     const [entornId, setEntornId] = useState<string>(dashboard?.entorn?.id as string)
@@ -775,7 +776,7 @@ const SideMenu = ({ dashboard, addWidget, dashboardWidgets, onSelectItem, select
         {entornId &&
             <IconButton
                 size={'small'}
-                aria-label={`Afegir ${widget?.titol}`}
+                aria-label={t($ => $.page.dashboards.editor.addWidgetAria, { titol: widget?.titol })}
                 onClick={() => widget?.id != null && addWidget(widget.id, entornId, widgetType)}
             >
                 <Icon sx={{ fontSize: '0.875rem' }}>add</Icon>
@@ -808,7 +809,7 @@ const SideMenu = ({ dashboard, addWidget, dashboardWidgets, onSelectItem, select
             )}
             onSpringFilterChange={setSpringFilter}>
             <Grid container spacing={1}>
-                <Grid size={12}><Typography>Seleccionar aplicació</Typography></Grid>
+                <Grid size={12}><Typography>{t($ => $.page.dashboards.editor.selectApp)}</Typography></Grid>
                 <Grid size={12}><FormField name="entorn" disabled={dashboard?.entorn} /></Grid>
                 <Grid size={12}><FormField name="app" disabled={dashboard?.aplicacio} /></Grid>
             </Grid>
@@ -817,7 +818,7 @@ const SideMenu = ({ dashboard, addWidget, dashboardWidgets, onSelectItem, select
         <Divider sx={{ my: 1 }}/>
 
         <Typography variant="caption" sx={{ px: 0.5, fontWeight: 700, color: 'text.secondary', display: 'block' }}>
-            Elements disponibles
+            {t($ => $.page.dashboards.editor.availableElements)}
         </Typography>
 
         <Box sx={{
@@ -833,17 +834,17 @@ const SideMenu = ({ dashboard, addWidget, dashboardWidgets, onSelectItem, select
                     // fontWeight: '500', // opcional
                 }
             }}>
-            <TreeItem key={'simple'} itemId={'simple'} label={'Simple'}>
+            <TreeItem key={'simple'} itemId={'simple'} label={t($ => $.page.dashboards.editor.types.simple)}>
                 {simpleWidgets?.map?.((widget) =>
                     <WidgetTreeItem widget={widget} widgetType="SIMPLE"/>
                 )}
             </TreeItem>
-            <TreeItem key={'grafic'} itemId={'grafic'} label={'Grafic'}>
+            <TreeItem key={'grafic'} itemId={'grafic'} label={t($ => $.page.dashboards.editor.types.grafic)}>
                 {graficWidgets?.map?.((widget) =>
                     <WidgetTreeItem widget={widget} widgetType="GRAFIC"/>
                 )}
             </TreeItem>
-            <TreeItem key={'taula'} itemId={'taula'} label={'Taula'}>
+            <TreeItem key={'taula'} itemId={'taula'} label={t($ => $.page.dashboards.editor.types.taula)}>
                 {taulaWidgets?.map?.((widget) =>
                     <WidgetTreeItem widget={widget} widgetType="TAULA"/>
                 )}
@@ -854,7 +855,7 @@ const SideMenu = ({ dashboard, addWidget, dashboardWidgets, onSelectItem, select
             <>
                 <Divider sx={{ my: 1 }}/>
                 <Typography variant="caption" sx={{ px: 0.5, fontWeight: 700, color: 'text.secondary', display: 'block' }}>
-                    Elements del dashboard
+                    {t($ => $.page.dashboards.editor.dashboardElements)}
                 </Typography>
                 {dashboardWidgets.map((widget: any) => {
                     const itemId = String(widget.dashboardItemId ?? widget.dashboardTitolId);

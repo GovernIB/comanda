@@ -22,11 +22,12 @@ export interface VisualAttributesPanelProps {
  */
 const VisualAttributesPanel: React.FC<VisualAttributesPanelProps> = (props) => {
   const {
-    title = 'Atributs visuals',
+    title,
     widgetType,
     children,
   } = props;
   const { t } = useTranslation();
+  const panelTitle = title ?? t($ => $.page.widget.atributsVisuals.title);
 
   const { data } = useFormContext();
 
@@ -153,7 +154,7 @@ const VisualAttributesPanel: React.FC<VisualAttributesPanelProps> = (props) => {
             // backgroundColor: theme.palette.background.default,
           }}
         >
-          <Typography variant="subtitle1">{title}</Typography>
+          <Typography variant="subtitle1">{panelTitle}</Typography>
         </Box>
 
         <Divider />

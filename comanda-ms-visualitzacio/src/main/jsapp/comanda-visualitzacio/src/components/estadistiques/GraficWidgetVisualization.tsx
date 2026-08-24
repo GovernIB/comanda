@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Typography, Skeleton } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import {
@@ -154,6 +155,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         //midaFontTitol,
         //midaFontDescripcio,
     } = props;
+    const { t } = useTranslation();
     const theme = useTheme();
     const {
         textColor,
@@ -229,11 +231,11 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         }));
 
         const xAxis: Array<XAxis> = [];
-        const yAxisLabel = preview ? 'Eix Y' : undefined;
+        const yAxisLabel = preview ? t($ => $.page.plantilla.sample.yAxis) : undefined;
         if (barHorizontal) { // Si és horitzontal, l'eix X té valors numèrics
-            xAxis.push({ scaleType: 'linear', label: llegendaX || (preview ? 'Eix X' : undefined), ...axisStyleProps });
+            xAxis.push({ scaleType: 'linear', label: llegendaX || (preview ? t($ => $.page.plantilla.sample.xAxis) : undefined), ...axisStyleProps });
         } else { // Si no és horitzontal, l'eix X té categories
-            xAxis.push({ scaleType: 'band', data: dades.map(item => item[discriminador]), label: llegendaX || (preview ? 'Eix X' : undefined), ...axisStyleProps });
+            xAxis.push({ scaleType: 'band', data: dades.map(item => item[discriminador]), label: llegendaX || (preview ? t($ => $.page.plantilla.sample.xAxis) : undefined), ...axisStyleProps });
         }
 
         const yAxis: Array<YAxis> = [];

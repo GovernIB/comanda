@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
     TextField,
     Popover,
@@ -37,6 +38,7 @@ const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({
         label = "Icona",
         onChange
 }) => {
+    const { t } = useTranslation();
     const { data, apiRef, dataGetFieldValue } = useFormContext();
     const iconValue = dataGetFieldValue(name);
 
@@ -126,7 +128,7 @@ const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({
                         <ListItemText primary={name} />
                     </>
                 ) : (
-                    <ListItemText primary="(Sense icona)" />
+                    <ListItemText primary={t($ => $.components.iconSelect.noIcon)} />
                 )}
             </MenuItem>
         );
@@ -164,7 +166,7 @@ const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({
                 <Box p={1}>
                     <TextField
                         inputRef={searchInputRef}
-                        placeholder="Cerca icona..."
+                        placeholder={t($ => $.components.iconSelect.searchPlaceholder)}
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}
                         fullWidth
@@ -181,7 +183,7 @@ const IconAutocompleteSelect: React.FC<IconAutocompleteSelectProps> = ({
                     ) : (
                         <Box p={2}>
                             <Typography variant="body2" color="text.secondary">
-                                No s'han trobat icones.
+                                {t($ => $.components.iconSelect.notFound)}
                             </Typography>
                         </Box>
                     )}

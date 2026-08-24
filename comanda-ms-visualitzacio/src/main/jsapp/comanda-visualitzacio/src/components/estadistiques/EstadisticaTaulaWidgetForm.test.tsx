@@ -40,6 +40,11 @@ const mocks = vi.hoisted(() => ({
                         ampleVoraTaula: 'Ample vora taula',
                     },
                 },
+                plantilla: {
+                    sample: {
+                        tableDescription: 'Descripcio de la taula',
+                    },
+                },
             },
         })
     ),

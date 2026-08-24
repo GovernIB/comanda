@@ -286,7 +286,7 @@ const IntegracioRow: React.FC<{
                         {integracio.logo && (
                             <img
                                 src={`data:image/png;base64,${integracio.logo}`}
-                                alt="logo"
+                                alt={t($ => $.page.salut.integracions.logoAlt)}
                                 style={{ height: '32px' }}
                             />
                         )}
@@ -454,14 +454,14 @@ const Integracions: React.FC<IntegracionsProps> = props => {
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.integracions.column.peticionsTotals)}
-                                    &nbsp;(<PeticionsOkError ok={'OK'} error={'Error'} />)
+                                    &nbsp;(<PeticionsOkError ok={t($ => $.page.salut.peticioLegendOk)} error={t($ => $.page.salut.peticioLegendError)} />)
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.integracions.column.tempsMigTotal)}
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.integracions.column.peticionsPeriode)}
-                                    &nbsp;(<PeticionsOkError ok={'OK'} error={'Error'} />)
+                                    &nbsp;(<PeticionsOkError ok={t($ => $.page.salut.peticioLegendOk)} error={t($ => $.page.salut.peticioLegendError)} />)
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.integracions.column.tempsMigPeriode)}
@@ -551,14 +551,14 @@ const Subsistemes: React.FC<SubsistemesProps> = ({ salutCurrentApp, selectedEsta
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.subsistemes.column.peticionsTotals)}
-                                    &nbsp;(<PeticionsOkError ok={'OK'} error={'Error'} />)
+                                    &nbsp;(<PeticionsOkError ok={t($ => $.page.salut.peticioLegendOk)} error={t($ => $.page.salut.peticioLegendError)} />)
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.subsistemes.column.tempsMigTotal)}
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.subsistemes.column.peticionsPeriode)}
-                                    &nbsp;(<PeticionsOkError ok={'OK'} error={'Error'} />)
+                                    &nbsp;(<PeticionsOkError ok={t($ => $.page.salut.peticioLegendOk)} error={t($ => $.page.salut.peticioLegendError)} />)
                                 </TableCell>
                                 <TableCell>
                                     {t($ => $.page.salut.subsistemes.column.tempsMigPeriode)}

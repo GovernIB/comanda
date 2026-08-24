@@ -117,7 +117,7 @@ const MonitorDetails: React.FC<MonitorDetailsProps> = (props) => {
             await apiAction(id, { code: 'delete_entorn_app_by_modul' });
             return true;
         } catch (error: any) {
-            throw new Error(error?.message || 'Error desconocido al reintentar la operación');
+            throw new Error(error?.message || t($ => $.page.monitors.detail.netejaEntornApp.reintentarGenericError));
         }
     }
 

@@ -109,7 +109,7 @@ const GroupForViewSelect = (props: {
             <ButtonGroup
                 size="small"
                 disabled={disabled}
-                aria-label="grouping selection"
+                aria-label={t($ => $.page.salut.groupingSelect.ariaLabel)}
                 sx={{ flexWrap: 'nowrap' }}
                 variant="outlined"
             >

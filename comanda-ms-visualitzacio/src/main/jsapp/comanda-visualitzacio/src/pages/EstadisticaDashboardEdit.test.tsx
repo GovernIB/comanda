@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import EstadisticaDashboardEdit from './EstadisticaDashboardEdit';
+import translationCa from '../i18n/translationCa';
 
 const mocks = vi.hoisted(() => ({
     useParamsMock: vi.fn(),
@@ -24,47 +25,49 @@ const mocks = vi.hoisted(() => ({
     createSimpleWidgetMock: vi.fn(),
     messageDialogShowMock: vi.fn(),
     findWidgetsMock: vi.fn(),
-    tMock: vi.fn((selector: any) =>
-        selector({
-            page: {
-                dashboards: {
-                    title: 'Dashboards',
-                    action: {
-                        addWidget: {
-                            success: 'Widget afegit',
-                            error: 'Error afegint widget',
+    tMock: vi.fn((selector: any, options?: any) => {
+        try {
+            const mockDict = {
+                ...translationCa,
+                page: {
+                    ...translationCa.page,
+                    dashboards: {
+                        ...translationCa.page.dashboards,
+                        title: 'Dashboards',
+                        alert: {
+                            tornarLlistat: 'Tornar al llistat',
+                            notExists: 'Dashboard inexistent',
+                            carregar: 'Error de càrrega',
                         },
-                        createComponent: {
-                            label: 'Crear component',
+                        editor: {
+                            ...translationCa.page.dashboards.editor,
+                            expandPanel: 'Expandir panell',
+                            collapsePanel: 'Compactar panell',
                         },
-                        patchItem: {
-                            success: 'Guardat',
-                            error: 'Error guardant',
-                            warning: 'Advertiment',
-                            saveError: 'Error persistint',
+                        action: {
+                            ...translationCa.page.dashboards.action,
+                            patchItem: {
+                                success: 'Guardat',
+                                error: 'Error guardant',
+                                warning: 'Advertiment',
+                                saveError: 'Error persistint',
+                            },
                         },
-                    },
-                    alert: {
-                        tornarLlistat: 'Tornar al llistat',
-                        notExists: 'Dashboard inexistent',
-                        carregar: 'Error de càrrega',
                     },
                 },
-                widget: {
-                    simple: { tab: { title: 'Simple' }, title: 'Widgets simples' },
-                    grafic: { tab: { title: 'Gràfic' }, title: 'Widgets gràfics' },
-                    taula: { tab: { title: 'Taula' }, title: 'Widgets taula' },
-                    grid: {
-                        position: 'Posició',
-                        size: 'Mida',
-                    },
-                    action: {
-                        add: { label: 'Afegir' },
-                    },
-                },
-            },
-        })
-    ),
+            };
+            const res = typeof selector === 'function' ? selector(mockDict) : selector;
+            if (typeof res === 'string' && options) {
+                return Object.entries(options).reduce(
+                    (acc, [k, v]) => acc.replace(new RegExp(`{{${k}}}`, 'g'), String(v)),
+                    res
+                );
+            }
+            return res;
+        } catch {
+            return '';
+        }
+    }),
 }));
 
 vi.mock('react-i18next', () => ({

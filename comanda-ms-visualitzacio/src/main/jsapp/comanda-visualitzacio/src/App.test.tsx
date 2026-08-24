@@ -43,6 +43,9 @@ const mocks = vi.hoisted(() => ({
     },
     tMock: vi.fn((selector: any) =>
         selector({
+            app: {
+                logoTitle: 'Comanda',
+            },
             menu: {
                 salut: 'Salut',
                 estadistiques: 'Estadístiques',

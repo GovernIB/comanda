@@ -374,7 +374,7 @@ const Avis = () => {
                                 {app?.logo && (
                                     <img
                                         src={'data:image/png;base64,' + app?.logo}
-                                        alt={`Logo ${app?.nom}`}
+                                        alt={t($ => $.page.avisos.grid.logoAlt, { nom: app?.nom })}
                                         style={{ height: '48px' }}
                                     />
                                 )}
@@ -414,7 +414,7 @@ const Avis = () => {
                                 {app?.logo && (
                                     <img
                                         src={'data:image/png;base64,' + app?.logo}
-                                        alt={`Logo ${app?.nom}`}
+                                        alt={t($ => $.page.avisos.grid.logoAlt, { nom: app?.nom })}
                                         style={{ height: '48px' }}
                                     />
                                 )}

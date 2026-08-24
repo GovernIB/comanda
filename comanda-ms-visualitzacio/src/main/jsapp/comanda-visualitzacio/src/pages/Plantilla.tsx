@@ -599,39 +599,42 @@ const PaletteBar = ({
     selected?: boolean;
     onClick?: () => void;
     borderColor?: string;
-}) => (
-    <ButtonGroup
-        fullWidth
-        size="small"
-        variant="outlined"
-        onClick={onClick}
-        sx={{
-            overflow: "hidden",
-            borderRadius: 1,
-            border: selected ? "2px solid" : "1px solid",
-            borderColor: selected ? borderColor || "primary.main" : borderColor || "divider",
-            "& .MuiButtonGroup-grouped": {
-                minWidth: 22,
-                borderRadius: 0,
-                borderColor: borderColor || "divider",
-            },
-        }}
-    >
-        {normalizeColors(palette?.colors || []).map((color, index) => (
-            <Tooltip key={`${paletteKey(palette)}-${index}-${color.valor}`} title={`${index}: ${color.valor}`}>
-                <Button
-                    aria-label={`${palette?.nom || "Paleta"} ${index}`}
-                    sx={{
-                        flex: 1,
-                        height: 28,
-                        bgcolor: color.valor,
-                        "&:hover": {bgcolor: color.valor},
-                    }}
-                />
-            </Tooltip>
-        ))}
-    </ButtonGroup>
-);
+}) => {
+    const { t } = useTranslation();
+    return (
+        <ButtonGroup
+            fullWidth
+            size="small"
+            variant="outlined"
+            onClick={onClick}
+            sx={{
+                overflow: "hidden",
+                borderRadius: 1,
+                border: selected ? "2px solid" : "1px solid",
+                borderColor: selected ? borderColor || "primary.main" : borderColor || "divider",
+                "& .MuiButtonGroup-grouped": {
+                    minWidth: 22,
+                    borderRadius: 0,
+                    borderColor: borderColor || "divider",
+                },
+            }}
+        >
+            {normalizeColors(palette?.colors || []).map((color, index) => (
+                <Tooltip key={`${paletteKey(palette)}-${index}-${color.valor}`} title={`${index}: ${color.valor}`}>
+                    <Button
+                        aria-label={`${palette?.nom || t($ => $.page.plantilla.sample.defaultPaletteName)} ${index}`}
+                        sx={{
+                            flex: 1,
+                            height: 28,
+                            bgcolor: color.valor,
+                            "&:hover": {bgcolor: color.valor},
+                        }}
+                    />
+                </Tooltip>
+            ))}
+        </ButtonGroup>
+    );
+};
 
 const PaletteMiniature = ({palette, compact}: { palette?: Palette; compact?: boolean }) => {
     const colors = normalizeColors(palette?.colors || []);

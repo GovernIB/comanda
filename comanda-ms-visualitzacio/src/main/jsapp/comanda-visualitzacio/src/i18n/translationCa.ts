@@ -7,11 +7,18 @@ const translationCa = {
         none: "Cap",
         loading: "Carregant...",
         delete: "Eliminar",
-        cancel: "Cancelar",
+        cancel: "Cancel·lar",
         confirm: "Confirmar",
         save: "Desar",
         modify: "Modificar",
         duplicate: "Duplicar",
+        error: "Error",
+        ok: "OK",
+        selectAll: "Seleccionar tot",
+        breadcrumb: "Fil d'Ariadna",
+    },
+    app: {
+        logoTitle: "Logo de l'aplicació de Comanda",
     },
     enum: {
         appEstat: {
@@ -46,16 +53,16 @@ const translationCa = {
         },
         integracioEstat: {
             UP: {
-                tooltip: "Servei <bold>operatiu</bold>.<br> Sense errors o amb una tassa d'errors <underline>inferior al 10%</underline> en les darreres peticions"
+                tooltip: "Servei <bold>operatiu</bold>.<br> Sense errors o amb una taxa d'errors <underline>inferior al 10%</underline> en les darreres peticions"
             },
             WARN: {
-                tooltip: "Servei amb una tassa d'errors <underline>entre el 10% i el 20%</underline> en les darreres peticions"
+                tooltip: "Servei amb una taxa d'errors <underline>entre el 10% i el 20%</underline> en les darreres peticions"
             },
             DEGRADED: {
-                tooltip: "Servei amb una tassa d'errors <underline>entre el 20% i el 50%</underline> en les darreres peticions",
+                tooltip: "Servei amb una taxa d'errors <underline>entre el 20% i el 50%</underline> en les darreres peticions",
             },
             ERROR: {
-                tooltip: "Servei amb una <bold>alta tassa d'errors</bold>, <underline>superior al 50%</underline> en les darreres peticions"
+                tooltip: "Servei amb una <bold>alta taxa d'errors</bold>, <underline>superior al 50%</underline> en les darreres peticions"
             },
             DOWN: {
                 tooltip: "Servei <bold>no operatiu</bold>. Tassa d'errors del <underline>100%</underline> en les darreres peticions",
@@ -179,6 +186,7 @@ const translationCa = {
             },
             groupingSelect: {
                 label: "Agrupació",
+                ariaLabel: "Selecció d'agrupació",
                 BY_APPLICATION: "Agrupar per aplicació",
                 BY_ENVIRONMENT: "Agrupar per entorn",
                 NONE: "Sense agrupació",
@@ -253,6 +261,7 @@ const translationCa = {
             },
             integracions: {
                 title: "Integracions",
+                logoAlt: "Logotip",
                 integracioUpCount: "Actives",
                 integracioWarnCount: "Alerta",
                 integracioDownCount: "Inactives",
@@ -345,6 +354,9 @@ const translationCa = {
             estats: {
                 title: "Estats",
             },
+            peticioLegendOk: "OK",
+            peticioLegendError: "Error",
+            logoAlt: "Logotip {{nom}}",
             historicVersions: {
                 title: "Històric de versions i revisions",
                 noInfo: "No hi ha informació d'historial de versions disponible",
@@ -380,6 +392,34 @@ const translationCa = {
         },
         dashboards: {
             title: "Taulers de control",
+            editor: {
+                errorAlert: {
+                    errorsHeader: "Errors",
+                    viewButton: "Visualitzar",
+                    message: "S'han trobat errors a algun dels widgets",
+                },
+                deleteItem: {
+                    title: "Confirmació",
+                    confirm: "Estau segur que voleu esborrar aquest element del tauler?",
+                    success: "Element eliminat",
+                    error: "No s'ha pogut eliminar",
+                },
+                duplicateItem: {
+                    success: "Element duplicat correctament",
+                    error: "No s'ha pogut duplicar l'element",
+                },
+                expandPanel: "Desplegar panell",
+                collapsePanel: "Compactar panell",
+                addWidgetAria: "Afegir {{titol}}",
+                selectApp: "Seleccionar aplicació",
+                availableElements: "Elements disponibles",
+                types: {
+                    simple: "Simple",
+                    grafic: "Gràfic",
+                    taula: "Taula",
+                },
+                dashboardElements: "Elements del tauler",
+            },
             edit: "Editar",
             dashboardView: "Anar al taulers de control",
             acl: {
@@ -433,6 +473,7 @@ const translationCa = {
             },
             grid: {
                 groupHeader: "Nom",
+                logoAlt: "Logotip {{nom}}",
                 action: {
                     obrir: "Obrir tasca",
                 },
@@ -484,6 +525,7 @@ const translationCa = {
             },
             grid: {
                 groupHeader: "Nom",
+                logoAlt: "Logotip {{nom}}",
                 column: {
                     appEntorn: "Aplicació - Entorn",
                     global: "Global",
@@ -609,6 +651,8 @@ const translationCa = {
         },
         apps: {
             title: "Aplicacions",
+            logoAlt: "Logotip",
+            noLogo: "Sense logotip",
             create: "Crear aplicació",
             update: "Modificar aplicació",
             general: "General",
@@ -695,6 +739,7 @@ const translationCa = {
         },
         integracions: {
             title: "Integracions",
+            noLogo: "Sense logotip",
             column: {
                 codi: "Codi",
                 nom: "Nom",
@@ -725,6 +770,7 @@ const translationCa = {
         },
         dimensions: {
             title: "Dimensions",
+            valuesTitle: "Valors de la dimensió {{nom}}",
             values: "Valors",
             column: {
                 entornApp: "Entorn d'aplicació",
@@ -736,6 +782,7 @@ const translationCa = {
             action: {
                 changeTipus: {
                     label: "Canviar tipus",
+                    dialogTitle: "Canviar tipus dimensió",
                     ok: "La dimensió s'ha actualitzat correctament",
                 },
                 desmarcar: {
@@ -895,6 +942,7 @@ const translationCa = {
                     reintentarButton: "Reintentar neteja",
                     reintentarSuccess: "Neteja reiniciada correctament",
                     reintentarError: "Error en reintentar la neteja",
+                    reintentarGenericError: "Error desconegut en reintentar l'operació",
                 },
                 operacioEnum: {
                     netejaEntornApp: "Error en intentar esborrar dades associades al entorn d'aplicació",
@@ -921,6 +969,7 @@ const translationCa = {
         },
         widget: {
             title: "Widgets estadístics",
+            noErrorTrace: "No hi ha traça de l'error disponible",
             form: {
                 periode: "Període",
                 simple: "Widget simple",
@@ -993,6 +1042,7 @@ const translationCa = {
                 },
             },
             atributsVisuals: {
+                title: "Atributs visuals",
                 colorText: "Color del text",
                 colorFons: "Color de fons",
                 icona: "Icona",
@@ -1184,6 +1234,7 @@ const translationCa = {
                 messageCount: "Nombre de missatges",
                 consumerCount: "Nombre de consumidors",
                 viewMessages: "Veure missatges",
+                bytesUnit: "bytes",
             },
         },
         tasquesBackground: {
@@ -1308,6 +1359,9 @@ const translationCa = {
             nom: "Nom",
             descripcio: "Descripció",
             colors: "Colors",
+            column: {
+                colors: "Colors",
+            },
             upElement: "Moure amunt",
             downElement: "Moure avall",
             addColor: "Afegir color",
@@ -1316,6 +1370,18 @@ const translationCa = {
             editPalette: "Editar paleta",
         },
         plantilla: {
+            sample: {
+                chartTitle: "Títol del gràfic",
+                chartDescription: "Descripció del gràfic",
+                xAxis: "Eix X",
+                yAxis: "Eix Y",
+                simpleTitle: "Títol simple",
+                unitDefault: "u",
+                simpleDescription: "Descripció simple",
+                tableTitle: "Títol de la taula",
+                tableDescription: "Descripció de la taula",
+                defaultPaletteName: "Paleta",
+            },
             groups: {
                 light: "Tema clar",
                 dark: "Tema fosc",
@@ -1393,7 +1459,7 @@ const translationCa = {
                 colorSeparadorHoritzontal: "Separador horitzontal",
                 ampleSeparadorHoritzontal: "Amplada separador horitzontal",
                 mostrarSeparadorVertical: "Separador vertical",
-                colorSeparadorVertical: "Separador vertical",
+                colorSeparadorVertical: "Color del separador vertical",
                 ampleSeparadorVertical: "Amplada separador vertical",
                 serie1: "Sèrie 1",
                 serie2: "Sèrie 2",
@@ -1409,6 +1475,9 @@ const translationCa = {
     generic: {
         tipus: "Tipus",
         periode: "Període",
+        dimensio: "Dimensió",
+        pendentDesenvolupament: "(Pendent de desenvolupament)",
+        error: "Error",
     },
     errors: {
         camp: {
@@ -1423,6 +1492,19 @@ const translationCa = {
         copiarContingutTitle: "Copiar el contingut",
         copiarContingutSuccess: "Contingut copiar al portapapers",
         copiarContingutError: "Acció no suportada pel navegador",
+        footer: {
+            revisio: "Revisió:",
+        },
+        iconSelect: {
+            label: "Icona",
+            noIcon: "(Sense icona)",
+            searchPlaceholder: "Cerca icona...",
+            notFound: "No s'han trobat icones.",
+        },
+        sideMenu: {
+            title: "Menú",
+            closeMenu: "Tancar el menú",
+        },
         permisos: {
             title: "Permisos",
             resourceTitle: "permís"
@@ -1485,7 +1567,7 @@ const translationCa = {
         collapseAll: "Contreure totes les files",
     },
     reordering: {
-        errorMessage: "Error al reordenar",
+        errorMessage: "Error en reordenar",
     },
 };
 

@@ -453,7 +453,7 @@ const Tasca = () => {
                                     {app?.logo && (
                                         <img
                                             src={'data:image/png;base64,' + app?.logo}
-                                            alt={`Logo ${app?.nom}`}
+                                            alt={t($ => $.page.tasques.grid.logoAlt, { nom: app?.nom })}
                                             style={{ height: '48px' }}
                                         />
                                     )}
@@ -491,7 +491,7 @@ const Tasca = () => {
                                 {app?.logo && (
                                     <img
                                         src={'data:image/png;base64,' + app?.logo}
-                                        alt={`Logo ${app?.nom}`}
+                                        alt={t($ => $.page.tasques.grid.logoAlt, { nom: app?.nom })}
                                         style={{ height: '48px' }}
                                     />
                                 )}
