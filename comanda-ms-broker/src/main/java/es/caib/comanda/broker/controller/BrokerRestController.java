@@ -1,5 +1,6 @@
 package es.caib.comanda.broker.controller;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.broker.dto.BrokerInfoDTO;
 import es.caib.comanda.broker.dto.MessageInfoDTO;
 import es.caib.comanda.broker.dto.QueueInfoDTO;
@@ -45,7 +46,7 @@ import static es.caib.comanda.base.config.Cues.*;
 @Slf4j
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/broker")
+@RequestMapping(BaseConfig.API_PATH + "/broker")
 @Tag(name = "23. Broker", description = "Servei de gestió del broker")
 @PreAuthorize("hasRole(T(es.caib.comanda.base.config.BaseConfig).ROLE_ADMIN)")
 public class BrokerRestController {
@@ -275,7 +276,7 @@ public class BrokerRestController {
      */
     @DeleteMapping("/queues/{queueName}/messages/{messageID}")
     public ResponseEntity<Void> deleteMessage(
-            @PathVariable String queueName, 
+            @PathVariable String queueName,
             @PathVariable String messageID) {
         try {
             // Check if queue exists

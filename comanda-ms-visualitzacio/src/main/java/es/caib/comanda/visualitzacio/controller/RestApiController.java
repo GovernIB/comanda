@@ -1,5 +1,6 @@
 package es.caib.comanda.visualitzacio.controller;
 
+import es.caib.comanda.base.config.BaseConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.Link;
@@ -19,7 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping(BaseConfig.API_PATH)
 public class RestApiController {
 
 	@Value("${es.caib.comanda.visualitzacio.app.service.url}")
