@@ -121,7 +121,7 @@ const DimensioValor: React.FC = () => {
         return queries.length > 0 ? queries : undefined;
     }, [quickfilter]);
 
-    const gridTitle = `Valors dimensió ${dimension?.nom ?? dimension?.description ?? ''}`;
+    const gridTitle = t($ => $.page.dimensions.valuesTitle, { nom: dimension?.nom ?? dimension?.description ?? '' });
 
     const gridApiRef = useMuiDataGridApiRef();
     const refresh = () => {

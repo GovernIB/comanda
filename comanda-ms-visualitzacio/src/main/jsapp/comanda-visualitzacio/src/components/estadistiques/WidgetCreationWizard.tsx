@@ -99,16 +99,27 @@ const isIndicatorsStepValid = (kind: WidgetKind | undefined, data: any): boolean
         if (tipusDades === 'UN_INDICADOR_AMB_DESCOMPOSICIO' && isEmpty(data?.descomposicioDimensio)) return false;
         const skipTempsAgrupacio = tipusDades === 'UN_INDICADOR_AMB_DESCOMPOSICIO' && data?.agruparPerDimensioDescomposicio === true;
         if (!skipTempsAgrupacio && isEmpty(data?.tempsAgrupacio)) return false;
-        if (tipusDades === 'VARIS_INDICADORS' && (isEmpty(data?.indicadorsInfo) || isEmpty(data.indicadorsInfo[0]?.indicador))) return false;
+        if (tipusDades === 'VARIS_INDICADORS') {
+            if (isEmpty(data?.indicadorsInfo)) return false;
+            for (const ind of data.indicadorsInfo) {
+                if (isEmpty(ind?.indicador) || isEmpty(ind?.titol) || isEmpty(ind?.agregacio)) return false;
+                if (ind.agregacio === 'AVERAGE' && isEmpty(ind?.unitatAgregacio)) return false;
+            }
+        }
         return true;
     }
     if (kind === 'TAULA') {
-        if (isEmpty(data?.columnes) || isEmpty(data.columnes[0]?.indicador)) return false;
+        if (isEmpty(data?.columnes)) return false;
+        for (const col of data.columnes) {
+            if (isEmpty(col?.indicador) || isEmpty(col?.titol) || isEmpty(col?.agregacio)) return false;
+            if (col.agregacio === 'AVERAGE' && isEmpty(col?.unitatAgregacio)) return false;
+        }
         if (isEmpty(data?.dimensioAgrupacio)) return false;
         return true;
     }
     return true;
 };
+
 
 /** Comprova els camps obligatoris de la passa "Període", replicant ValidWidgetValidator.validatePeriode. */
 const isPeriodStepValid = (data: any): boolean => {

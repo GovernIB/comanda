@@ -92,14 +92,16 @@ class EstadisticaTaulaWidgetHelperTest {
     }
 
     @Test
-    @DisplayName("upsertColumnes: crea i guarda columnes quan resource té columnes sense indicador")
-    void upsertColumnes_quanResourceTeColumnesSenseIndicador_llavorsCreaIGuardaColumnes() {
+    @DisplayName("upsertColumnes: crea i guarda columnes quan resource té columnes amb indicador")
+    void upsertColumnes_quanResourceTeColumnesAmbIndicador_llavorsCreaIGuardaColumnes() {
         // Arrange
         entity.setColumnes(new ArrayList<>());
         IndicadorTaula colResource = new IndicadorTaula();
         colResource.setTitol("Titol 1");
         colResource.setAgregacio(TableColumnsEnum.SUM);
-        colResource.setIndicador(null);
+        ResourceReference ref = new ResourceReference();
+        ref.setId(1L);
+        colResource.setIndicador(ref);
         resource.setColumnes(Collections.singletonList(colResource));
 
         // Act
@@ -112,12 +114,11 @@ class EstadisticaTaulaWidgetHelperTest {
         assertThat(savedColumns).hasSize(1);
         assertThat(savedColumns.get(0).getTitol()).isEqualTo("Titol 1");
         assertThat(savedColumns.get(0).getWidget()).isSameAs(entity);
-        verify(indicadorRepository, never()).findById(anyLong());
     }
 
     @Test
-    @DisplayName("upsertColumnes: no busca l'indicador quan el resource té indicador null")
-    void upsertColumnes_quanResourceTeColumnesAmbIndicadorNull_llavorsNoBuscaIndicador() {
+    @DisplayName("upsertColumnes: filtra columnes quan el resource té indicador null")
+    void upsertColumnes_quanResourceTeColumnesAmbIndicadorNull_llavorsFiltraColumna() {
         // Arrange
         entity.setColumnes(new ArrayList<>());
         IndicadorTaula colResource = new IndicadorTaula();
@@ -130,12 +131,13 @@ class EstadisticaTaulaWidgetHelperTest {
         estadisticaTaulaWidgetHelper.upsertColumnes(entity, resource);
 
         // Assert
+        verify(indicadorTaulaRepository, times(1)).saveAll(Collections.emptyList());
         verify(indicadorRepository, never()).findById(anyLong());
     }
 
     @Test
-    @DisplayName("upsertColumnes: no busca l'indicador quan l'ID de l'indicador del resource és null")
-    void upsertColumnes_quanResourceTeColumnesAmbIndicadorIdNull_llavorsNoBuscaIndicador() {
+    @DisplayName("upsertColumnes: filtra columnes quan l'ID de l'indicador del resource és null")
+    void upsertColumnes_quanResourceTeColumnesAmbIndicadorIdNull_llavorsFiltraColumna() {
         // Arrange
         entity.setColumnes(new ArrayList<>());
         IndicadorTaula colResource = new IndicadorTaula();
@@ -150,6 +152,7 @@ class EstadisticaTaulaWidgetHelperTest {
         estadisticaTaulaWidgetHelper.upsertColumnes(entity, resource);
 
         // Assert
+        verify(indicadorTaulaRepository, times(1)).saveAll(Collections.emptyList());
         verify(indicadorRepository, never()).findById(anyLong());
     }
 
@@ -213,7 +216,9 @@ class EstadisticaTaulaWidgetHelperTest {
         colResource.setTitol("Titol 1");
         colResource.setAgregacio(TableColumnsEnum.AVERAGE);
         colResource.setUnitatAgregacio(PeriodeUnitat.DIA);
-        colResource.setIndicador(null);
+        ResourceReference ref = new ResourceReference();
+        ref.setId(1L);
+        colResource.setIndicador(ref);
         resource.setColumnes(Collections.singletonList(colResource));
 
         // Act
@@ -234,7 +239,9 @@ class EstadisticaTaulaWidgetHelperTest {
         colResource.setTitol("Titol 1");
         colResource.setAgregacio(TableColumnsEnum.SUM);
         colResource.setUnitatAgregacio(PeriodeUnitat.DIA);
-        colResource.setIndicador(null);
+        ResourceReference ref = new ResourceReference();
+        ref.setId(1L);
+        colResource.setIndicador(ref);
         resource.setColumnes(Collections.singletonList(colResource));
 
         // Act

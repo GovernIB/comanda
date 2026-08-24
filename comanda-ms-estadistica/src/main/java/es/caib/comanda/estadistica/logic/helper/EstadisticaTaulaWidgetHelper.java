@@ -41,19 +41,19 @@ public class EstadisticaTaulaWidgetHelper {
 
         // Crear columnes noves
         var columnes = resource.getColumnes().stream()
+                .filter(columnaResource -> columnaResource.getIndicador() != null && columnaResource.getIndicador().getId() != null)
                 .map(columnaResource -> {
                     var columna = new IndicadorTaulaEntity();
                     columna.setWidget(entity);
                     columna.setTitol(columnaResource.getTitol());
                     columna.setAgregacio(columnaResource.getAgregacio());
                     columna.setUnitatAgregacio(TableColumnsEnum.AVERAGE.equals(columnaResource.getAgregacio()) ? columnaResource.getUnitatAgregacio() : null);
-                    if (columnaResource.getIndicador() != null && columnaResource.getIndicador().getId() != null) {
-                        indicadorRepository.findById(columnaResource.getIndicador().getId())
-                                .ifPresent(columna::setIndicador);
-                    }
+                    indicadorRepository.findById(columnaResource.getIndicador().getId())
+                            .ifPresent(columna::setIndicador);
                     return columna;
                 }).collect(Collectors.toList());
         indicadorTaulaRepository.saveAll(columnes);
+        entity.setColumnes(columnes);
     }
 
     public void afterCoversionGetColumnes(EstadisticaTaulaWidgetEntity entity, EstadisticaTaulaWidget resource) {

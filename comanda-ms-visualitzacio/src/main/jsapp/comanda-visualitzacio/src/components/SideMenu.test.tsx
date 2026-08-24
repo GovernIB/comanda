@@ -8,6 +8,22 @@ const mocks = vi.hoisted(() => ({
     useLocationPathMock: vi.fn(),
     useSmallScreenMock: vi.fn(),
     useSmallHeaderMock: vi.fn(),
+    tMock: vi.fn((selector: any) =>
+        selector({
+            components: {
+                sideMenu: {
+                    title: 'Menú',
+                    closeMenu: 'Tancar el menú',
+                },
+            },
+        })
+    ),
+}));
+
+vi.mock('react-i18next', () => ({
+    useTranslation: () => ({
+        t: mocks.tMock,
+    }),
 }));
 
 vi.mock('../../lib/components/BaseAppContext', () => ({

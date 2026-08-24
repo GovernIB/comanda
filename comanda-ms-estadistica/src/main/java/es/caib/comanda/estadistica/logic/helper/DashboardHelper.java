@@ -47,9 +47,15 @@ public class DashboardHelper {
     }
 
     public void afterConversionLogic(DashboardEntity entity, Dashboard resource) {
-        afterConversionGetAppNom(entity, resource);
-        afterConversionGetEntornNom(entity, resource);
-        afterConversionGetFiltres(entity, resource);
+        if (Objects.nonNull(entity.getAppId())) {
+            afterConversionGetAppNom(entity, resource);
+        }
+        if (Objects.nonNull(entity.getEntornId())) {
+            afterConversionGetEntornNom(entity, resource);
+        }
+        if (Objects.nonNull(entity.getFiltres())) {
+            afterConversionGetFiltres(entity, resource);
+        }
     }
 
     /**

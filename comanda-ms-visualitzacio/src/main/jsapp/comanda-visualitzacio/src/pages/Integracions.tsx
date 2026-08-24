@@ -23,7 +23,7 @@ const Integracions: React.FC = () => {
                 return value ? (
                     <img
                         src={`data:image/png;base64,${value}`}
-                        alt="logo"
+                        alt={t($ => $.page.apps.logoAlt)}
                         style={{ maxHeight: '32px' }}
                     />
                 ) : (

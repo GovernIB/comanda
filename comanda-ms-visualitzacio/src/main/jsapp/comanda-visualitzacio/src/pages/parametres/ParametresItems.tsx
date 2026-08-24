@@ -128,7 +128,7 @@ const ParametreRow: React.FC<{
                                     size="small"
                                     onClick={handleSave}
                                     disabled={saving}
-                                    title={t($ => $.page.parametres.save.success)}
+                                    title={t($ => $.common.save)}
                                 >
                                     {saving
                                         ? <CircularProgress size={18} color="inherit" />

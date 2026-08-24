@@ -1,12 +1,39 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import EstadisticaWidgetFormFields, { PersonalitzatFields, hasVisualOverridesTitol } from './EstadisticaWidgetFormFields';
+import EstadisticaWidgetFormFields, { DimensionsFields, PersonalitzatFields, hasVisualOverridesTitol } from './EstadisticaWidgetFormFields';
 
 const mocks = vi.hoisted(() => ({
     useFormContextMock: vi.fn(),
     useResourceApiServiceMock: vi.fn(),
     findOptionsMock: vi.fn(),
+    tMock: vi.fn((selector: any) =>
+        typeof selector === 'function'
+            ? selector({
+                generic: {
+                    dimensio: 'Dimensió',
+                },
+                page: {
+                    widget: {
+                        form: {
+                            periode: 'Període',
+                            help: {
+                                relatiuPuntReferencia: 'Ajuda punt de referència',
+                                relatiuCount: 'Ajuda quantitat',
+                                relatiueUnitat: 'Ajuda unitat',
+                            },
+                        },
+                    },
+                },
+            })
+            : selector
+    ),
+}));
+
+vi.mock('react-i18next', () => ({
+    useTranslation: () => ({
+        t: mocks.tMock,
+    }),
 }));
 
 vi.mock('reactlib', () => ({
@@ -25,15 +52,9 @@ vi.mock('reactlib', () => ({
     useResourceApiService: () => mocks.useResourceApiServiceMock(),
 }));
 
-vi.mock('react-i18next', () => ({
-    useTranslation: () => ({
-        t: (_selector: unknown) => 'translated-divider',
-    }),
-}));
-
 vi.mock('../FormFieldAdvancedSearchFilters.tsx', () => ({
-    default: ({ name }: { name: string }) => (
-        <div data-testid={`advanced-search-${name}`}>{name}</div>
+    default: ({ name, advancedSearchColumns }: { name: string; advancedSearchColumns?: any }) => (
+        <div data-testid={`advanced-search-${name}`} data-columns={JSON.stringify(advancedSearchColumns)}>{name}</div>
     ),
 }));
 
@@ -217,3 +238,24 @@ describe('hasVisualOverridesTitol', () => {
         expect(hasVisualOverridesTitol({ mostrarVora: true })).toBe(true);
     });
 });
+
+describe('DimensionsFields', () => {
+    it('DimensionsFields_quanHiHaAplicacio_passaColumnesAmbDimensioTraduit', () => {
+        mocks.useFormContextMock.mockReturnValue({
+            data: { aplicacio: { id: 1 } },
+        });
+        render(<DimensionsFields />);
+        const el = screen.getByTestId('advanced-search-dimensionsValor');
+        expect(el).toBeInTheDocument();
+        expect(el.getAttribute('data-columns')).toContain('Dimensió');
+    });
+
+    it('DimensionsFields_quanNoHiHaAplicacio_noMostraElCamp', () => {
+        mocks.useFormContextMock.mockReturnValue({
+            data: {},
+        });
+        const { container } = render(<DimensionsFields />);
+        expect(container).toBeEmptyDOMElement();
+    });
+});
+

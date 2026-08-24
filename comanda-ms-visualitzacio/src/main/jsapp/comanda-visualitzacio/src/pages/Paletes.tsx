@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Box, } from "@mui/material";
 import {GridPage, MuiDataGrid, useFormContext} from "reactlib";
 import PageTitle from "../components/PageTitle.tsx";
@@ -44,26 +45,26 @@ const PaletaForm = () => {
   );
 };
 
-const columns = [
-    {
-        field: "nom",
-        flex: 1,
-    },
-    {
-        field: "descripcio",
-        flex: 2,
-    },
-    {
-        field: "colors",
-        headerName: "Colors",
-        flex: 1,
-        renderCell: (params: { row?: { colors?: PaletteColor[] } }) => <PaletteMiniature colors={params.row?.colors} />,
-        sortable: false,
-    },
-];
-
 const Paletes = () => {
     const {t} = useTranslation();
+
+    const columns = React.useMemo(() => [
+        {
+            field: "nom",
+            flex: 1,
+        },
+        {
+            field: "descripcio",
+            flex: 2,
+        },
+        {
+            field: "colors",
+            headerName: t($ => $.page.palette.column.colors),
+            flex: 1,
+            renderCell: (params: { row?: { colors?: PaletteColor[] } }) => <PaletteMiniature colors={params.row?.colors} />,
+            sortable: false,
+        },
+    ], [t]);
 
     return (
         <GridPage>

@@ -5,7 +5,7 @@ import Divider from "@mui/material/Divider";
 import Icon from "@mui/material/Icon";
 import Tooltip from "@mui/material/Tooltip";
 import ToggleButton from "@mui/material/ToggleButton";
-import { columnesDimensioValor } from '../sharedAdvancedSearch/advancedSearchColumns';
+import { useColumnesDimensioValor } from '../sharedAdvancedSearch/advancedSearchColumns';
 import { useTranslation } from "react-i18next";
 import FormFieldAdvancedSearchFilters from '../FormFieldAdvancedSearchFilters.tsx';
 import { Box } from '@mui/material';
@@ -156,6 +156,7 @@ export const TitleDescriptionFields: React.FC = () => (
 /** Camp de dimensions (filtratge de la informació), pas "Dimensions" de l'assistent */
 export const DimensionsFields: React.FC = () => {
     const { data } = useFormContext();
+    const columnesDimensioValor = useColumnesDimensioValor();
     if (data?.aplicacio == null)
         return null;
     return (

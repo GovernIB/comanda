@@ -103,7 +103,7 @@ const LogList = ({
                 });
                 setLogs(list as FitxerInfo[]);
             } catch (e) {
-                showMessage("Error", getErrorMessage(e), 'error');
+                showMessage(t($ => $.common.error), getErrorMessage(e), 'error');
             } finally {
                 setLogsLoading(false);
             }
@@ -473,11 +473,11 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
                 return mergeSequentialStringArrays(prevState ?? [], newLines);
             });
         } catch (e) {
-            showMessage("Error", getErrorMessage(e), 'error');
+            showMessage(t($ => $.common.error), getErrorMessage(e), 'error');
         } finally {
             setIsRefreshLoading(false);
         }
-    }, [artifactReport, entornAppId, selected, showMessage]);
+    }, [artifactReport, entornAppId, selected, showMessage, t]);
 
     useEffect(() => {
         if (!isReady) {
@@ -515,12 +515,12 @@ const LogsViewer = ({ entornAppId, preselectedLog }: { entornAppId: number, pres
                 a.remove();
                 window.URL.revokeObjectURL(url);
             } catch (e) {
-                showMessage("Error", getErrorMessage(e), 'error');
+                showMessage(t($ => $.common.error), getErrorMessage(e), 'error');
             } finally {
                 setIsDownloadLoading(false);
             }
         },
-        [artifactReport, entornAppId, isReady, showMessage]
+        [artifactReport, entornAppId, isReady, showMessage, t]
     );
 
     /**

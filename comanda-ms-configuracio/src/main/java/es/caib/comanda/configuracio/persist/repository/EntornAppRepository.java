@@ -1,7 +1,6 @@
 package es.caib.comanda.configuracio.persist.repository;
 
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
-import es.caib.comanda.configuracio.persist.projection.EntornPermissionQueryProjection;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
@@ -35,12 +34,5 @@ public interface EntornAppRepository extends BaseRepository<EntornAppEntity, Lon
     " from EntornAppEntity ea" +
     " where ea.id in :entornAppIds ")
 	Set<Long> findAppIdsByEntornAppIds(@Param("entornAppIds") Set<Long> entornAppIds);
-
-	@Query("select " +
-		"ea.id as entornAppId," +
-		"ea.entorn.id as entornId," +
-		"ea.app.id as appId" +
-		" from EntornAppEntity ea")
-	Set<EntornPermissionQueryProjection> findAllEntornPermissionQueryProjection();
 
 }

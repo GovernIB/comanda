@@ -6,6 +6,7 @@ import es.caib.comanda.configuracio.logic.intf.model.EntornAppHist;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JoinFormula;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -20,12 +21,22 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class EntornAppHistEntity extends BaseEntity<EntornAppHist> {
 
+    public static final String ENTORN_APP_COLUMN_NAME = "entorn_app_id";
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
-            name = "entorn_app_id",
+            name = ENTORN_APP_COLUMN_NAME,
             referencedColumnName = "id",
             foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "entorn_app_hist_fk"))
     private EntornAppEntity entornApp;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinFormula("(select ea." + EntornAppEntity.ENTORN_COLUMN_NAME + " from " + EntornAppEntity.TABLE_NAME + " ea where ea.id = " + EntornAppHistEntity.ENTORN_APP_COLUMN_NAME + ")")
+    private EntornEntity entorn;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinFormula("(select ea." + EntornAppEntity.APP_COLUMN_NAME + " from " + EntornAppEntity.TABLE_NAME + " ea where ea.id = " + EntornAppHistEntity.ENTORN_APP_COLUMN_NAME + ")")
+    private AppEntity app;
 
     @Column(name = "versio", nullable = false)
     private String versio;

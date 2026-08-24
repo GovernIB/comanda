@@ -45,6 +45,9 @@ public class EstadisticaSimpleWidgetServiceImpl extends BaseMutableResourceServi
             log.error("Error convertint atributs visuals a JSON", e);
             throw new ResourceNotCreatedException(resource.getClass(), "Error convertint atributs visuals a JSON");
         }
+        // S'actualitza l'indicador abans del save/flush per evitar problemes de bloqueig optimista (OptimisticLockException)
+        // en entitats associades @OneToOne amb cascade=ALL en fer detach/merge.
+        estadisticaSimpleWidgetHelper.upsertIndicadorTaula(entity, resource);
     }
 
     @Override
@@ -56,18 +59,18 @@ public class EstadisticaSimpleWidgetServiceImpl extends BaseMutableResourceServi
             log.error("Error convertint atributs visuals a JSON", e);
             throw new ResourceNotUpdatedException(resource.getClass(), String.valueOf(entity.getId()), "Error convertint atributs visuals a JSON");
         }
-        estadisticaWidgetHelper.upsertDimensionsValors(entity, resource);
+        // S'actualitza l'indicador abans del save/flush per evitar problemes de bloqueig optimista (OptimisticLockException)
+        // en entitats associades @OneToOne amb cascade=ALL en fer detach/merge.
+        estadisticaSimpleWidgetHelper.upsertIndicadorTaula(entity, resource);
     }
 
     @Override
     protected void afterCreateSave(EstadisticaSimpleWidgetEntity entity, EstadisticaSimpleWidget resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
-        estadisticaSimpleWidgetHelper.upsertIndicadorTaula(entity, resource);
         estadisticaWidgetHelper.upsertDimensionsValors(entity, resource);
     }
 
     @Override
     protected void afterUpdateSave(EstadisticaSimpleWidgetEntity entity, EstadisticaSimpleWidget resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
-        estadisticaSimpleWidgetHelper.upsertIndicadorTaula(entity, resource);
         estadisticaWidgetHelper.upsertDimensionsValors(entity, resource);
         estadisticaWidgetHelper.clearDashboardWidgetCacheByWidget(entity.getId());
     }

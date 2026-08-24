@@ -56,12 +56,11 @@ public class AppServiceImplTest {
                                       EntornRepository entornRepository,
                                       EntornAppRepository entornAppRepository,
                                       EntornAppHelper entornAppHelper,
-                                      AuthenticationHelper authenticationHelper,
                                       HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
                                       AclServiceClient aclServiceClient,
                                       ApplicationEventPublisher eventPublisher) {
             super(cacheHelper, objectMapper, appExportMapper, appRepository, entornRepository, entornAppRepository,
-                entornAppHelper, authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient, eventPublisher);
+                entornAppHelper, httpAuthorizationHeaderHelper, aclServiceClient, eventPublisher);
         }
 
         @Override
@@ -82,10 +81,6 @@ public class AppServiceImplTest {
         @Override
         public void afterDelete(AppEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
             super.afterDelete(entity, answers);
-        }
-
-        public String exposedAdditionalSpringFilter() {
-            return super.additionalSpringFilter(null, null);
         }
     }
 
@@ -109,9 +104,6 @@ public class AppServiceImplTest {
 
     @Mock
     private EntornAppHelper entornAppHelper;
-
-    @Mock
-    private AuthenticationHelper authenticationHelper;
 
     @Mock
     private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
@@ -140,7 +132,6 @@ public class AppServiceImplTest {
                 entornRepository,
                 entornAppRepository,
                 entornAppHelper,
-                authenticationHelper,
                 httpAuthorizationHeaderHelper,
                 aclServiceClient,
                 eventPublisher);
@@ -168,31 +159,6 @@ public class AppServiceImplTest {
 
         appResource = new App();
         appResource.setId(1L);
-        appResource.setNom("Test App");
-    }
-
-    private void stubAclContext(String... roles) {
-        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer test");
-        when(authenticationHelper.isCurrentUserInRole(anyString())).thenReturn(false);
-        when(authenticationHelper.getCurrentUserName()).thenReturn("anna");
-        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(roles);
-    }
-
-    @Test
-    void testEntornAppsPerspectiveApplicator() {
-        AppServiceImpl.EntornAppsPerspectiveApplicator applicator = new AppServiceImpl.EntornAppsPerspectiveApplicator();
-        applicator.applySingle(App.PERSPECTIVE_ENTORN_APPS, appEntity, appResource);
-
-        assertNotNull(appResource.getEntornApps());
-        assertEquals(1, appResource.getEntornApps().size());
-
-        EntornApp entornApp = appResource.getEntornApps().get(0);
-        assertEquals(1L, entornApp.getId());
-        assertEquals(ResourceReference.toResourceReference(appEntity.getId(), appEntity.getNom()), entornApp.getApp());
-        assertEquals(ResourceReference.toResourceReference(entornEntity.getId(), entornEntity.getNom()), entornApp.getEntorn());
-        assertEquals("http://test.com/info", entornApp.getInfoUrl());
-        assertEquals("1.0.0", entornApp.getVersio());
-        assertTrue(entornApp.isActiva());
     }
 
     @Test
@@ -213,7 +179,6 @@ public class AppServiceImplTest {
 
         appService.afterUpdateSave(appEntity, appResource, answers, false);
 
-        // Verify that cacheHelper.evictCacheItem was called for the App
         verify(cacheHelper, times(1)).evictCacheItem(APP_CACHE, appEntity.getId().toString());
 
         ArgumentCaptor<ComandaSsePublishRequest> captor = ArgumentCaptor.forClass(ComandaSsePublishRequest.class);
@@ -235,143 +200,5 @@ public class AppServiceImplTest {
         verify(eventPublisher).publishEvent(captor.capture());
         assertEquals(ComandaSseEventTypes.APP_CHANGED, captor.getValue().getEvent().getType());
         assertEquals(appEntity.getId(), captor.getValue().getEvent().getPayload());
-    }
-
-    @Test
-    void additionalSpringFilter_quanLusuariEsAdmin_noAplicaFiltreAcl() {
-        when(authenticationHelper.isCurrentUserInRole("COM_ADMIN")).thenReturn(true);
-
-        String result = appService.exposedAdditionalSpringFilter();
-
-        assertNull(result);
-        verifyNoInteractions(aclServiceClient);
-    }
-
-    @Test
-    void additionalSpringFilter_quanLusuariSenseRols_tePermisPerAppIEntornApp_filtraAppsVisibles() {
-        stubAclContext("COM_USER");
-        AppEntity secondAppEntity = new AppEntity();
-        secondAppEntity.setId(2L);
-        EntornAppEntity permittedEntornApp = new EntornAppEntity();
-        permittedEntornApp.setId(11L);
-        permittedEntornApp.setApp(secondAppEntity);
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(org.springframework.http.ResponseEntity.ok(Set.of(1L)));
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.ENTORN_APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(org.springframework.http.ResponseEntity.ok(Set.of(11L)));
-        when(entornAppRepository.findAppIdsByEntornAppIds(Set.of(11L))).thenReturn(Set.of(2L));
-
-        String result = appService.exposedAdditionalSpringFilter();
-
-        assertEquals("id:1 or id:2", result);
-    }
-
-    @Test
-    void additionalSpringFilter_quanNomesHiHaPermisPerApp_retornaLesAppsPermeses() {
-        stubAclContext("COM_USER");
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(org.springframework.http.ResponseEntity.ok(Set.of(1L, 2L)));
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.ENTORN_APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(org.springframework.http.ResponseEntity.ok(Collections.emptySet()));
-
-        String result = appService.exposedAdditionalSpringFilter();
-
-        assertEquals("id:1 or id:2", result);
-    }
-
-    @Test
-    void additionalSpringFilter_quanNomesHiHaPermisPerEntornApp_retornaLesAppsDelsEntornsPermesos() {
-        stubAclContext("COM_USER");
-        AppEntity secondAppEntity = new AppEntity();
-        secondAppEntity.setId(2L);
-        EntornAppEntity permittedEntornApp = new EntornAppEntity();
-        permittedEntornApp.setId(11L);
-        permittedEntornApp.setApp(secondAppEntity);
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(org.springframework.http.ResponseEntity.ok(Collections.emptySet()));
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.ENTORN_APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(org.springframework.http.ResponseEntity.ok(Set.of(11L)));
-        when(entornAppRepository.findAppIdsByEntornAppIds(Set.of(11L))).thenReturn(Set.of(2L));
-
-        String result = appService.exposedAdditionalSpringFilter();
-
-        assertEquals("id:2", result);
-    }
-
-    @Test
-    void additionalSpringFilter_quanConsultaAcl_passaUsuariIRolsActuals() {
-        stubAclContext("COM_USER", "COM_EXTRA");
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER", "COM_EXTRA")),
-                eq("Bearer test"))).thenReturn(org.springframework.http.ResponseEntity.ok(Collections.emptySet()));
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.ENTORN_APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER", "COM_EXTRA")),
-                eq("Bearer test"))).thenReturn(org.springframework.http.ResponseEntity.ok(Collections.emptySet()));
-
-        appService.exposedAdditionalSpringFilter();
-
-        verify(aclServiceClient).findIdsWithAnyPermission(
-                eq(ResourceType.APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER", "COM_EXTRA")),
-                eq("Bearer test"));
-        verify(aclServiceClient).findIdsWithAnyPermission(
-                eq(ResourceType.ENTORN_APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER", "COM_EXTRA")),
-                eq("Bearer test"));
-    }
-
-    @Test
-    void additionalSpringFilter_quanAclNoRetornaCapId_retornaFiltreQueNoTornaResultats() {
-        stubAclContext("COM_USER");
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(org.springframework.http.ResponseEntity.ok(null));
-        when(aclServiceClient.findIdsWithAnyPermission(
-                eq(ResourceType.ENTORN_APP),
-                eq(Collections.singletonList(PermissionEnum.READ)),
-                eq("anna"),
-                eq(List.of("COM_USER")),
-                eq("Bearer test"))).thenReturn(org.springframework.http.ResponseEntity.ok(Collections.emptySet()));
-
-        String result = appService.exposedAdditionalSpringFilter();
-
-        assertEquals("id:0", result);
     }
 }

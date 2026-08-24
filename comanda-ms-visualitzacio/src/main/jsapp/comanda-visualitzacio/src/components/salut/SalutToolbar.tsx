@@ -1,5 +1,8 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
+// import Menu from '@mui/material/Menu';
+// import ListItemIcon from '@mui/material/ListItemIcon';
+// import ListItemText from '@mui/material/ListItemText';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
@@ -16,6 +19,7 @@ import {
     springFilterBuilder,
     Toolbar,
     useBaseAppContext,
+    useCloseDialogButtons,
     useFilterApiRef,
     useFormContext,
 } from 'reactlib';
@@ -24,12 +28,15 @@ import Grid from '@mui/material/Grid';
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import { SalutEstatEnum, useSalutEstatTranslation } from '../../types/salut.model';
+import VersionsEntorns from '../../pages/VersionsEntorns';
+import EntornAppHist from '../../pages/EntornsAppHistorics';
 
 export type SalutToolbarProps = {
     title: string;
     subtitle?: string;
     state?: React.ReactElement;
     hideFilter?: boolean;
+    // hideAppVersioning?: boolean;
     groupingActive?: boolean;
     ready: boolean;
     onRefreshClick: () => void;
@@ -64,6 +71,7 @@ export enum GroupingEnum {
     APPLICATION = "APPLICATION",
     ENVIRONMENT = "ENVIRONMENT",
     NONE = "NONE",
+    VERSIONS_ENTORNS = "VERSIONS_ENTORNS",
 }
 
 const isValidGrouping = (grouping: string): grouping is GroupingEnum => {
@@ -101,7 +109,7 @@ const GroupForViewSelect = (props: {
             <ButtonGroup
                 size="small"
                 disabled={disabled}
-                aria-label="grouping selection"
+                aria-label={t($ => $.page.salut.groupingSelect.ariaLabel)}
                 sx={{ flexWrap: 'nowrap' }}
                 variant="outlined"
             >
@@ -125,6 +133,13 @@ const GroupForViewSelect = (props: {
                     title={t($ => $.page.salut.groupingSelect.NONE)}
                 >
                     <Icon>block</Icon>
+                </Button>
+                <Button
+                    variant={value === GroupingEnum.VERSIONS_ENTORNS ? 'contained' : 'outlined'}
+                    onClick={() => onChange(GroupingEnum.VERSIONS_ENTORNS)}
+                    title={t($ => $.menu.versionsEntorn)}
+                >
+                    <Icon>format_list_numbered_rtl</Icon>
                 </Button>
             </ButtonGroup>
         </Box>
@@ -398,6 +413,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = React.memo((props) => {
         title,
         subtitle,
         hideFilter,
+        // hideAppVersioning,
         groupingActive,
         state,
         ready,
@@ -419,6 +435,32 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = React.memo((props) => {
     const { handleOpen, dialog } = useSalutEntornAppFilter({ filterData, setFilterData });
     const springFilter = salutEntornAppFilterBuilder(filterData);
 
+    // const [versionMenuAnchorEl, setVersionMenuAnchorEl] = React.useState<null | HTMLElement>(null);
+    // const isVersionMenuOpen = Boolean(versionMenuAnchorEl);
+
+    // const handleVersionMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    //     setVersionMenuAnchorEl(event.currentTarget);
+    // };
+
+    // const handleVersionMenuClose = () => {
+    //     setVersionMenuAnchorEl(null);
+    // };
+
+    const [openVersionsEntornDialog, setOpenVersionsEntornDialog] = React.useState<boolean>(false);
+    const [openEntornAppHistDialog, setOpenEntornAppHistDialog] = React.useState<boolean>(false);
+
+    // const handleOpenVersionsEntorn = () => {
+    //     handleVersionMenuClose();
+    //     setOpenVersionsEntornDialog(true);
+    // };
+
+    // const handleOpenEntornAppHist = () => {
+    //     handleVersionMenuClose();
+    //     setOpenEntornAppHistDialog(true);
+    // };
+
+    const closeDialogButtons = useCloseDialogButtons();
+
     const { tTitle } = useSalutEstatTranslation();
     const computedSubtitle = React.useMemo(() => {
         if (subtitle != null) return subtitle;
@@ -431,21 +473,14 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = React.memo((props) => {
         }
         return parts.join(" - ");
     }, [filterData, subtitle, t]);
+    const getRefreshButtonTitle = () => {
+        let title = t($ => $.page.salut.refrescar);
+        if (lastRefresh != null)
+            title += ` (${t($ => $.page.salut.refresh.last)}: ${lastRefresh.toLocaleTimeString()})`;
+        return title;
+    };
 
     const toolbarElementsWithPositions = [
-        {
-            position: 2,
-            element: (
-                <Box sx={{ mr: 2, minWidth: { xs: '50px', sm: '100px' } }}>
-                    {lastRefresh != null && (
-                        <Typography sx={{ display: 'block' }} variant="caption">
-                            {t($ => $.page.salut.refresh.last)}:{' '}
-                            <b>{lastRefresh.toLocaleTimeString()}</b>
-                        </Typography>
-                    )}
-                </Box>
-            ),
-        },
         {
             position: 2,
             element: (
@@ -461,7 +496,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = React.memo((props) => {
             element: (
                 <IconButton
                     onClick={onRefreshClick}
-                    title={t($ => $.page.salut.refrescar)}
+                    title={getRefreshButtonTitle()}
                     disabled={!ready}
                     loading={appDataLoading}
                 >
@@ -529,6 +564,43 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = React.memo((props) => {
                     {computedSubtitle}
                 </Typography>
                 {state}
+                {/* {!hideAppVersioning && (
+                    <>
+                        <Button
+                            startIcon={<Icon>format_list_numbered_rtl</Icon>}
+                            variant="outlined"
+                            onClick={handleVersionMenuClick}
+                            id="version-menu-button"
+                            aria-controls={isVersionMenuOpen ? 'version-menu' : undefined}
+                            aria-haspopup="true"
+                            aria-expanded={isVersionMenuOpen ? 'true' : undefined}
+                        >
+                            {t($ => $.menu.versions)}
+                        </Button>
+                        <Menu
+                            id="version-menu"
+                            anchorEl={versionMenuAnchorEl}
+                            open={isVersionMenuOpen}
+                            onClose={handleVersionMenuClose}
+                            MenuListProps={{
+                                'aria-labelledby': 'version-menu-button',
+                            }}
+                        >
+                            <MenuItem onClick={handleOpenVersionsEntorn}>
+                                <ListItemIcon>
+                                    <Icon>format_list_numbered_rtl</Icon>
+                                </ListItemIcon>
+                                <ListItemText>{t($ => $.menu.versionsEntorn)}</ListItemText>
+                            </MenuItem>
+                            <MenuItem onClick={handleOpenEntornAppHist}>
+                                <ListItemIcon>
+                                    <Icon>update</Icon>
+                                </ListItemIcon>
+                                <ListItemText>{t($ => $.menu.entornAppHist)}</ListItemText>
+                            </MenuItem>
+                        </Menu>
+                    </>
+                )} */}
             </>
         ),
     });
@@ -562,6 +634,28 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = React.memo((props) => {
                 }}
             />
             {dialog}
+            <MuiDialog
+                open={openVersionsEntornDialog}
+                closeCallback={() => setOpenVersionsEntornDialog(false)}
+                buttonCallback={() => setOpenVersionsEntornDialog(false)}
+                buttons={closeDialogButtons}
+                componentProps={{ fullWidth: true, maxWidth: 'lg' }}
+            >
+                <Box sx={{ mt: 3, minHeight: '400px', height: '600px', display: 'flex', flexDirection: 'column' }}>
+                    <VersionsEntorns />
+                </Box>
+            </MuiDialog>
+            <MuiDialog
+                open={openEntornAppHistDialog}
+                closeCallback={() => setOpenEntornAppHistDialog(false)}
+                buttonCallback={() => setOpenEntornAppHistDialog(false)}
+                buttons={closeDialogButtons}
+                componentProps={{ fullWidth: true, maxWidth: 'lg' }}
+            >
+                <Box sx={{ mt: 3, minHeight: '400px', height: '600px', display: 'flex', flexDirection: 'column' }}>
+                    <EntornAppHist />
+                </Box>
+            </MuiDialog>
         </>
     );
 })

@@ -6,6 +6,7 @@ import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import org.springframework.stereotype.Component;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -262,17 +263,24 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
         boolean hasAverage = indicadorsAgregacio.stream().anyMatch(ind -> TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()));
         boolean hasDataCols = indicadorsAgregacio.stream().anyMatch(ind -> TableColumnsEnum.FIRST_SEEN.equals(ind.getAgregacio()) || TableColumnsEnum.LAST_SEEN.equals(ind.getAgregacio()));
 
-        PeriodeUnitat avgUnitat = indicadorsAgregacio.get(0).getUnitatAgregacio();
-        if (hasAverage) {
-            boolean thereAreDifferentUnitatAgregacio = indicadorsAgregacio.stream()
-                    .skip(1) // Ignora el primer element
-                    .anyMatch(indicador -> !indicador.getUnitatAgregacio().equals(avgUnitat));
+        PeriodeUnitat avgUnitat = indicadorsAgregacio.stream()
+                .map(IndicadorAgregacio::getUnitatAgregacio)
+                .filter(java.util.Objects::nonNull)
+                .findFirst()
+                .orElse(tempsAgregacio);
 
-            // TODO: Afegir validació per a no permetre diferents unitats d'agregació
+        if (hasAverage) {
+            PeriodeUnitat finalAvgUnitat = avgUnitat;
+            boolean thereAreDifferentUnitatAgregacio = indicadorsAgregacio.stream()
+                    .filter(ind -> TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()))
+                    .anyMatch(indicador -> !java.util.Objects.equals(finalAvgUnitat, indicador.getUnitatAgregacio()));
+
+            // Hi ha una validació per a no permetre diferents unitats d'agregació (períodes)
             // Si hi ha columnes tipus AVERAGE amb diferents períodes, les separam per unitatAgregacio i fem UNION
             if (thereAreDifferentUnitatAgregacio) {
                 // TODO: Modificar per funcionar semblant a taula (si es permeten difirents unitats d'agregació)
                 List<List<IndicadorAgregacio>> indicadorsAgregacioByPeriode = indicadorsAgregacio.stream()
+                        .filter(ind -> ind.getUnitatAgregacio() != null)
                         .collect(Collectors.groupingBy(IndicadorAgregacio::getUnitatAgregacio))
                         .values()
                         .stream()
@@ -419,7 +427,7 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
                         default: return "total_sum" + getIndicadorSuffix(ind.getIndicadorCodi());
                     }
                 })
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(LinkedHashSet::new));
 
         // Generem el SELECT exterior amb MAX per a cada columna
         String outerSelect = allResultColumns.stream()
@@ -602,14 +610,14 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
         return value == null ? null : value.replace("'", "''");
     }
 
-    // TODO: Girar i posar any/mes/dia
+    /** Retorna el camp d'agrupació, que mostrarem i emprarem al frontal. **/
     private static String generateGraficAgrupacioConditions(PeriodeUnitat tempsAgregacio) {
         switch (tempsAgregacio) {
-            case SETMANA: return "setmana || '/' || anualitat";
-            case MES: return "mes || '/' || anualitat";
-            case TRIMESTRE: return "trimestre || '/' || anualitat";
+            case SETMANA: return "anualitat || '/' || LPAD(setmana, 2, '0')";
+            case MES: return "anualitat || '/' || LPAD(mes, 2, '0')";
+            case TRIMESTRE: return "anualitat || '/' || trimestre";
             case ANY: return "anualitat";
-            default: return "dia || '/' || mes || '/' || anualitat";
+            default: return "anualitat || '/' || LPAD(mes, 2, '0') || '/' || LPAD(dia, 2, '0')";
         }
     }
 

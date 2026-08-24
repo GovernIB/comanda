@@ -31,6 +31,10 @@ const translations = {
                 downAlert: 'La petició de salut ha fallat',
                 bdEstat: 'Estat BD',
                 appLatencia: 'Latència app',
+                darreraDataInfo1: "L'aplicació va deixar d'estar operativa el ",
+                darreraDataInfoHora: " a les ",
+                darreraDataInfoHores: " hores",
+                darreraDataInfo2: "Estat anterior: ",
                 jdk: {
                     versio: 'Versió JDK',
                 },
@@ -130,16 +134,16 @@ const translations = {
                 },
             },
         },
-        enum: {
-            appEstat: {
-                UP: { title: 'UP', tooltip: 'UP' },
-                WARN: { title: 'WARN', tooltip: 'WARN' },
-                DEGRADED: { title: 'DEGRADED', tooltip: 'DEGRADED' },
-                DOWN: { title: 'DOWN', tooltip: 'DOWN' },
-                MAINTENANCE: { title: 'MAINTENANCE', tooltip: 'MAINTENANCE' },
-                UNKNOWN: { title: 'UNKNOWN', tooltip: 'UNKNOWN' },
-                ERROR: { title: 'ERROR', tooltip: 'ERROR' },
-            },
+    },
+    enum: {
+        appEstat: {
+            UP: { title: 'UP', tooltip: 'UP' },
+            WARN: { title: 'WARN', tooltip: 'WARN' },
+            DEGRADED: { title: 'DEGRADED', tooltip: 'DEGRADED' },
+            DOWN: { title: 'DOWN', tooltip: 'DOWN' },
+            MAINTENANCE: { title: 'MAINTENANCE', tooltip: 'MAINTENANCE' },
+            UNKNOWN: { title: 'UNKNOWN', tooltip: 'UNKNOWN' },
+            ERROR: { title: 'ERROR', tooltip: 'ERROR' },
         },
     },
 };
@@ -161,6 +165,7 @@ vi.mock('react-i18next', () => ({
 
 vi.mock('reactlib', () => ({
     dateFormatLocale: (value: string) => `format:${value}`,
+    timeFormatLocale: (value: string) => `time:${value}`,
 }));
 
 vi.mock('react-error-boundary', () => ({
@@ -263,10 +268,9 @@ vi.mock('../../types/salut.model.tsx', () => ({
     useGetColorByNivellEnum: () => () => '#0088ff',
     useGetColorBySubsistema: () => () => '#00aa00',
     useSalutEstatTranslation: () => {
-        const { t } = (vi.mocked(require('react-i18next')) as any).useTranslation();
         return {
-            tTitle: (estat: string) => t(($: any) => $.enum.appEstat[estat]?.title ?? estat),
-            tTooltip: (estat: string) => t(($: any) => $.enum.appEstat[estat]?.tooltip ?? estat),
+            tTitle: (estat: string) => estat,
+            tTooltip: (estat: string) => estat,
         };
     },
     useSalutDetallCodeTranslation: () => {
@@ -726,6 +730,8 @@ describe('SalutAppInfo', () => {
 
         expect(screen.getByRole('alert')).toBeInTheDocument();
         expect(screen.getByText('format:2026-03-15T10:30:00')).toBeInTheDocument();
+        expect(screen.getByText('time:2026-03-15T10:30:00')).toBeInTheDocument();
+        expect(screen.getByRole('alert')).toHaveTextContent('Estat anterior: UP');
     });
 
     it('Integracions_ALL_ESTATS_derivatCorrectamentDeSalutEstatEnum', async () => {

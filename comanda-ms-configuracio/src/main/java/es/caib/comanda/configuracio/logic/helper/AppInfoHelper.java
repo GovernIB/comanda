@@ -27,7 +27,6 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.Set;
 
-import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
 
 /**
  * Lògica comuna per a consultar la informació de les apps.
@@ -116,7 +115,7 @@ public class AppInfoHelper {
                     ex.getLocalizedMessage());
             monitorApp.endAction(ex, "Error intern de Comanda");
         } finally {
-            cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entornAppId.toString());
+            cacheHelper.evictEntornAppCacheItem(entornAppId);
         }
 	}
 

@@ -167,6 +167,7 @@ const UpdownPieChart: React.FC<{ salutLastItems: SalutModel[] }> = React.memo((p
 });
 
 const useTreeDataEntornAppRenderCell = (apps?: AppModel[]) => {
+    const { t } = useTranslation();
     return React.useCallback((params: any) => {
         const app = apps?.find((app) => app.id === parseInt(params.formattedValue));
         if (typeof params.id === 'number' || app == null) {
@@ -183,13 +184,13 @@ const useTreeDataEntornAppRenderCell = (apps?: AppModel[]) => {
                     }}>
                     {app.logo && <img
                         src={'data:image/png;base64,' + app.logo}
-                        alt="Logo"
+                        alt={t($ => $.page.salut.logoAlt, { nom: app.nom })}
                         style={{ height: '48px' }}/>}
                     {app.nom}
                 </Box>
             }
         />;
-    }, [apps]);
+    }, [apps, t]);
 }
 
 const dataGridSlots = {
@@ -293,7 +294,7 @@ const AppDataTable: React.FC<{
                                       {app.logo && (
                                           <img
                                               src={'data:image/png;base64,' + app.logo}
-                                              alt="Logo"
+                                              alt={t($ => $.page.salut.logoAlt, { nom: app.nom })}
                                               style={{ height: '48px' }}
                                           />
                                       )}
@@ -511,7 +512,7 @@ export const SalutWidgetTitle: React.FC<{
                             {app?.logo && (
                                 <img
                                     src={'data:image/png;base64,' + app.logo}
-                                    alt={'Logo ' + app.nom}
+                                    alt={t($ => $.page.salut.logoAlt, { nom: app.nom })}
                                     style={{ height: '100%' }}
                                 />
                             )}

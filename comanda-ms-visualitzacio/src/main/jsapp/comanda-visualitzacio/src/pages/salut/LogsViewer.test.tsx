@@ -9,6 +9,9 @@ const mocks = vi.hoisted(() => ({
     revokeObjectUrlMock: vi.fn(),
     tMock: vi.fn((selector: any, options?: any) => {
         const translation = selector({
+            common: {
+                error: 'Error',
+            },
             page: {
                 salut: {
                     logs: {

@@ -12,6 +12,11 @@ vi.mock('react-i18next', () => ({
         t: (selector: any) =>
             typeof selector === 'function'
                 ? selector({
+                      menu: {
+                          versions: 'Versions',
+                          versionsEntorn: 'Versions per entorn',
+                          entornAppHist: "Històric d'entorn d'aplicació",
+                      },
                       page: {
                           salut: {
                               filtrar: 'Filtrar',
@@ -37,6 +42,7 @@ vi.mock('react-i18next', () => ({
                               },
                               groupingSelect: {
                                   label: 'Agrupació',
+                                  ariaLabel: 'grouping selection',
                                   BY_APPLICATION: 'Per aplicació',
                                   BY_ENVIRONMENT: 'Per entorn',
                                   NONE: 'Cap',
@@ -50,6 +56,14 @@ vi.mock('react-i18next', () => ({
     Trans: ({ i18nKey }: { i18nKey: any }) => (
         <>{typeof i18nKey === 'function' ? i18nKey({}) : i18nKey}</>
     ),
+}));
+
+vi.mock('../../pages/VersionsEntorns', () => ({
+    default: () => <div data-testid="versions-entorns-component">Versions Entorns Component</div>,
+}));
+
+vi.mock('../../pages/EntornsAppHistorics', () => ({
+    default: () => <div data-testid="entorns-app-hist-component">Entorns App Hist Component</div>,
 }));
 
 vi.mock('reactlib', () => ({
@@ -83,6 +97,7 @@ vi.mock('reactlib', () => ({
         inn: (field: string, values: any[]) => `${field} in (${values.join(',')})`,
     },
     useBaseAppContext: () => ({ goBack: mocks.goBackMock }),
+    useCloseDialogButtons: () => [{ value: 'close', text: 'Tancar' }],
     useFilterApiRef: () => ({ current: { filter: vi.fn(), clear: vi.fn() } }),
     useFormContext: () => ({ data: {} }),
     useResourceApiContext: () => ({ indexState: { links: { has: vi.fn(() => true) } } }),
@@ -226,6 +241,7 @@ describe('SalutToolbar render', () => {
         expect(screen.getByTitle('Per aplicació')).toBeInTheDocument();
         expect(screen.getByTitle('Per entorn')).toBeInTheDocument();
         expect(screen.getByTitle('Cap')).toBeInTheDocument();
+        expect(screen.getByTitle('Versions per entorn')).toBeInTheDocument();
     });
 
     it('SalutToolbar_quanNoEstaReady_deshabilitaLesAccionsTemporals', () => {
@@ -250,6 +266,7 @@ describe('SalutToolbar render', () => {
         expect(screen.getByTitle('Per aplicació')).toBeDisabled();
         expect(screen.getByTitle('Per entorn')).toBeDisabled();
         expect(screen.getByTitle('Cap')).toBeDisabled();
+        expect(screen.getByTitle('Versions per entorn')).toBeDisabled();
     });
 
     it('SalutToolbar_quanHiHaDataDeRefresh_mostraElResumTemporal', () => {
@@ -269,6 +286,28 @@ describe('SalutToolbar render', () => {
             />
         );
 
-        expect(screen.getByText(/Darrer:/)).toBeInTheDocument();
+        expect(screen.getByTitle(/Refrescar/)).toHaveAttribute('title', expect.stringContaining('Darrer:'));
+    });
+
+    it('SalutToolbar_quanEsClicaElBotoDeVersionsPerEntorn_notificaElCanviDAgrupacio', () => {
+        const setGroupingMock = vi.fn();
+        render(
+            <SalutToolbar
+                title="Salut"
+                ready={true}
+                groupingActive={true}
+                onRefreshClick={() => undefined}
+                dataRangeDuration="PT15M"
+                setDataRangeDuration={() => undefined}
+                filterData={{}}
+                setFilterData={() => undefined}
+                grouping={GroupingEnum.APPLICATION}
+                setGrouping={setGroupingMock}
+            />
+        );
+
+        fireEvent.click(screen.getByTitle('Versions per entorn'));
+
+        expect(setGroupingMock).toHaveBeenCalledWith(GroupingEnum.VERSIONS_ENTORNS);
     });
 });

@@ -4,6 +4,27 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { describe, expect, it, vi } from 'vitest';
 import { WidgetHeader, WidgetFooter, WidgetErrorDisplay, WidgetContainer } from './WidgetLayout';
 
+const mocks = vi.hoisted(() => ({
+    tMock: vi.fn((selector: any) =>
+        selector({
+            common: {
+                error: 'Error',
+            },
+            page: {
+                widget: {
+                    noErrorTrace: "No hi ha traça de l'error disponible",
+                },
+            },
+        })
+    ),
+}));
+
+vi.mock('react-i18next', () => ({
+    useTranslation: () => ({
+        t: mocks.tMock,
+    }),
+}));
+
 vi.mock('./WidgetEstils', () => ({
     default: {
         titleContainer: {},

@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.Set;
 
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_INTEGRACIONS_SUBSISTEMES_CONTEXTS_CACHE;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -109,6 +112,14 @@ public class CacheHelper {
     public Set<String> getCacheNames() {
         return hazleCastConfig != null && hazleCastConfig.getMapConfigs() != null ?
                 hazleCastConfig.getMapConfigs().keySet() : Set.of();
+    }
+
+    // Evicts de cache de recursos concrets
+
+    public void evictEntornAppCacheItem(Long id) {
+        String key = id.toString();
+        evictCacheItem(ENTORN_APP_CACHE, key);
+        evictCacheItem(ENTORN_APP_INTEGRACIONS_SUBSISTEMES_CONTEXTS_CACHE, key);
     }
 
 }

@@ -25,7 +25,6 @@ import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
-import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
@@ -37,6 +36,7 @@ import es.caib.comanda.estadistica.persist.repository.UnitatOrganitzativaReposit
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
@@ -169,6 +169,8 @@ public class ConsultaEstadisticaHelper {
                 case TAULA:
                     return getDadesWidgetTaula(dashboardItem, dadesComunsConsulta, filtreSeleccio, filtreSql);
             }
+        } catch (ReportGenerationException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error obtnint dades de dashboard widget: " + e.getMessage(), e);
             throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId().toString(), e.getMessage(), e.getCause());
@@ -259,7 +261,7 @@ public class ConsultaEstadisticaHelper {
 
             if (UN_INDICADOR.equals(widget.getTipusDades())) {
                 labels.add(Map.of("id", "agrupacio", "label", getLabelAgrupacioTemporal(tempsAgrupacio)));
-                labels.add(Map.of("id", indicadorAgregacio.getIndicadorCodi(), "label", indicadorInfo.getTitol()));
+                labels.add(Map.of("id", indicadorAgregacio.getIndicadorCodi(), "label", StringUtils.defaultString(indicadorInfo.getTitol())));
                 files = fetRepository.getValorsGraficUnIndicador(
                     dadesComunsConsulta.getEntornAppId(),
                     dadesComunsConsulta.getPeriodeDates().getStart(),
@@ -276,7 +278,7 @@ public class ConsultaEstadisticaHelper {
                 boolean agruparPerDimensioDescomposicio = Boolean.TRUE.equals(widget.getAgruparPerDimensioDescomposicio());
                 if (agruparPerDimensioDescomposicio) {
                     labels.add(Map.of("id", "agrupacio", "label", descomposicioDimensio.getNom()));
-                    labels.add(Map.of("id", indicadorAgregacio.getIndicadorCodi(), "label", indicadorInfo.getTitol()));
+                    labels.add(Map.of("id", indicadorAgregacio.getIndicadorCodi(), "label", StringUtils.defaultString(indicadorInfo.getTitol())));
                     files = fetRepository.getValorsGraficUnIndicadorAmdDescomposicio(
                         dadesComunsConsulta.getEntornAppId(),
                         dadesComunsConsulta.getPeriodeDates().getStart(),
@@ -290,7 +292,7 @@ public class ConsultaEstadisticaHelper {
                 } else {
                     labels.add(Map.of("id", "agrupacio", "label", getLabelAgrupacioTemporal(tempsAgrupacio)));
                     labels.add(Map.of("id", "descomposicio", "label", descomposicioDimensio.getNom()));
-                    labels.add(Map.of("id", indicadorAgregacio.getIndicadorCodi(), "label", indicadorInfo.getTitol()));
+                    labels.add(Map.of("id", indicadorAgregacio.getIndicadorCodi(), "label", StringUtils.defaultString(indicadorInfo.getTitol())));
                     files = fetRepository.getValorsGraficUnIndicadorAmdDescomposicio(
                         dadesComunsConsulta.getEntornAppId(),
                         dadesComunsConsulta.getPeriodeDates().getStart(),

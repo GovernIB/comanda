@@ -39,7 +39,7 @@ const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = 
     const { t } = useTranslation();
     const previewData = useMemo(() =>({
         entornCodi: 'ENT',
-        titol: data.titol || 'Títol del gràfic',
+        titol: data.titol || t($ => $.page.plantilla.sample.chartTitle),
         descripcio: data.descripcio,
         destacat: data.destacat || destacat,
         colorText: data.colorText,

@@ -12,8 +12,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
-import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
-
 @Slf4j
 @RequiredArgsConstructor
 @Component
@@ -30,7 +28,7 @@ public class EntornAppHelper {
      * @param entornAppId l'identificador de l'EntornApp eliminat.
      */
     public void logicAfterDelete(Long entornAppId) {
-        cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entornAppId.toString());
+        cacheHelper.evictEntornAppCacheItem(entornAppId);
         eventPublisher.publishEvent(new EntornAppEsborratEvent(entornAppId));
         publishEntornAppChanged(entornAppId);
     }

@@ -37,10 +37,10 @@ const EstadisticaSimpleWidgetForm: React.FC<EstadisticaSimpleWidgetFormProps> = 
     const previewData: SimpleWidgetVisualizationProps = useMemo(
         (): SimpleWidgetVisualizationProps => ({
             entornCodi: 'ENT',
-            titol: data.titol || 'Títol del widget',
+            titol: data.titol || t($ => $.page.plantilla.sample.simpleTitle),
             valor: 1234,
-            unitat: data.unitat || 'unitat',
-            descripcio: data.descripcio || 'descripcio del widget',
+            unitat: data.unitat || t($ => $.page.plantilla.sample.unitDefault),
+            descripcio: data.descripcio || t($ => $.page.plantilla.sample.simpleDescription),
             canviPercentual: data.canviPercentual || '12.34',
             destacat: data.destacat || destacat,
             icona: data.icona,
@@ -124,6 +124,7 @@ const EstadisticaSimpleWidgetForm: React.FC<EstadisticaSimpleWidgetFormProps> = 
                 <Grid size={6}>
                     <FormField
                         name="tipusIndicador"
+                        hiddenEnumValues={["PERCENTAGE"]}
                     />
                     <FieldHelp text={t($ => $.page.widget.form.help.tipusIndicador)} />
                 </Grid>

@@ -21,10 +21,11 @@ const baseSalutWidgetContentProps = {
 
 vi.mock('react-i18next', () => ({
     useTranslation: () => ({
-        t: (selector: any) =>
-            selector({
+        t: (selector: any, options?: any) => {
+            const res = selector({
                 page: {
                     salut: {
+                        logoAlt: 'Logo {{nom}}',
                         groupingSelect: { titleNoGrouping: 'Sense agrupació' },
                         apps: {
                             column: {
@@ -45,7 +46,15 @@ vi.mock('react-i18next', () => ({
                         nd: 'N/D',
                     },
                 },
-            }),
+            });
+            if (typeof res === 'string' && options) {
+                return Object.entries(options).reduce(
+                    (acc, [k, v]) => acc.replace(new RegExp(`{{${k}}}`, 'g'), String(v)),
+                    res
+                );
+            }
+            return res;
+        },
     }),
 }));
 

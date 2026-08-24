@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Drawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -225,7 +226,6 @@ const MenuTitle: React.FC<MenuTitleProps> = (props) => {
     </Box>;
 }
 const sideMenuClass = 'side-menu';
-const titol = "Menú";
 const closeIcon = 'close';
 
 export const Menu: React.FC<MenuProps & { onClose?: () => void }> = (props) => {
@@ -237,8 +237,10 @@ export const Menu: React.FC<MenuProps & { onClose?: () => void }> = (props) => {
         drawerWidth = 240,
         onClose,
     } = props;
+    const { t } = useTranslation();
     const smallScreen = useSmallScreen();
     const smallHeader = useSmallHeader();
+    const menuTitle = t($ => $.components.sideMenu.title);
 
     // Add ESC key handling to close the menu
     React.useEffect(() => {
@@ -264,13 +266,13 @@ export const Menu: React.FC<MenuProps & { onClose?: () => void }> = (props) => {
                 <Typography
                     variant="h6"
                     component="span"
-                    title={titol}
+                    title={menuTitle}
                     sx={{ flexGrow: 1, pl: 2 }}>
-                    {titol}
+                    {menuTitle}
                 </Typography>
                 <IconButton
                     color="inherit"
-                    aria-label="close menu"
+                    aria-label={t($ => $.components.sideMenu.closeMenu)}
                     onClick={handleMenuItemClick}
                     edge="start"
                     sx={{flexGrow: 0, mr: 0 }}

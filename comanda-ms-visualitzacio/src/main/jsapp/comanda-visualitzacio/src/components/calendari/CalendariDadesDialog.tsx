@@ -171,7 +171,7 @@ const CalendariDadesDialog: React.FC<CalendariDadesDialogProps> = ({
                             indicadorsShow.length < indicadorsCodis.length
                           }
                         />
-                        <ListItemText primary="Seleccionar todo" />
+                        <ListItemText primary={t($ => $.common.selectAll)} />
                       </MenuItem>
 
                       {indicadors.map((indicador: any) => (

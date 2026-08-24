@@ -171,7 +171,7 @@ const MessageDetails: React.FC<{ data: MessageInfo }> = ({ data }) => {
         },
         {
             label: t($ => $.page.message.detail.size),
-            value: data?.size + ' bytes'
+            value: data?.size != null ? `${data.size} ${t($ => $.page.broker.queue.bytesUnit)}` : undefined
         },
         {
             label: t($ => $.page.message.detail.redelivered),
@@ -353,7 +353,7 @@ const QueueMessages: React.FC = () => {
             headerName: t($ => $.page.message.grid.size),
             flex: 0.5,
             valueFormatter: (value: unknown) => {
-                return value != null ? `${value} bytes` : '';
+                return value != null ? `${value} ${t($ => $.page.broker.queue.bytesUnit)}` : '';
             },
         },
         {
@@ -380,7 +380,7 @@ const QueueMessages: React.FC = () => {
             <PageTitle title={pageTitle} />
             <Box sx={{ p: 2 }}>
                 {/* Breadcrumbs navigation */}
-                <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
+                <Breadcrumbs aria-label={t($ => $.common.breadcrumb)} sx={{ mb: 2 }}>
                     <Link color="inherit" onClick={handleBackToBroker} sx={{ cursor: 'pointer' }}>
                         {t($ => $.page.broker.title)}
                     </Link>

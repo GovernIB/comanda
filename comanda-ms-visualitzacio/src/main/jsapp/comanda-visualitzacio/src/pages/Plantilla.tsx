@@ -36,6 +36,7 @@ import TitolWidgetVisualization from "../components/estadistiques/TitolWidgetVis
 import {useMemo, useState} from "react";
 import * as React from "react";
 import {useTranslation} from "react-i18next";
+import {TFunction} from "i18next";
 import {Theme, useTheme} from "@mui/material/styles";
 import {darkTheme, lightTheme} from "../theme.ts";
 import { useGetPaletteDialogTitle, normalizeColors, PaletteColor, PaletteData, PaletteFormContent, PaletteTheme } from "../components/PaletteFormContent.tsx";
@@ -544,7 +545,7 @@ const scalarValue = (property: StyleProperty) => {
     return property.scalarValue;
 };
 
-const propertiesForPreview = (data: TemplateData, groupType: PaletteGroupType, scope: WidgetStyleScope) => {
+const propertiesForPreview = (data: TemplateData, groupType: PaletteGroupType, scope: WidgetStyleScope, t: TFunction) => {
     const normalized = normalizedTemplate(data);
     const props: Record<string, unknown> = {};
     const activeScopes = scope === "COMMON" ? ["COMMON", "SIMPLE"] : ["COMMON", scope];
@@ -566,21 +567,21 @@ const propertiesForPreview = (data: TemplateData, groupType: PaletteGroupType, s
             .map((color) => color.valor)
             .join(",");
         props.tipusGrafic = data.tipusGrafic || "BAR_CHART";
-        props.titol = props.titol || "Títol del gràfic";
-        props.descripcio = props.descripcio || "Descripció del gràfic";
-        props.llegendaX = props.llegendaX || "Eix X";
+        props.titol = props.titol || t($ => $.page.plantilla.sample.chartTitle);
+        props.descripcio = props.descripcio || t($ => $.page.plantilla.sample.chartDescription);
+        props.llegendaX = props.llegendaX || t($ => $.page.plantilla.sample.xAxis);
     }
     if (scope === "SIMPLE" || scope === "COMMON") {
-        props.titol = props.titol || "Titol simple";
+        props.titol = props.titol || t($ => $.page.plantilla.sample.simpleTitle);
         props.valor = 1234;
         props.icona = "AcUnit";
         props.unitat = props.unitat || "u";
         props.canviPercentual = props.canviPercentual || "12.5";
-        props.descripcio = props.descripcio || "Descripció simple";
+        props.descripcio = props.descripcio || t($ => $.page.plantilla.sample.simpleDescription);
     }
     if (scope === "TAULA") {
-        props.titol = props.titol || "Titol de la taula";
-        props.descripcio = props.descripcio || "Descripció de la taula";
+        props.titol = props.titol || t($ => $.page.plantilla.sample.tableTitle);
+        props.descripcio = props.descripcio || t($ => $.page.plantilla.sample.tableDescription);
     }
     return props;
 };
@@ -599,39 +600,42 @@ const PaletteBar = ({
     selected?: boolean;
     onClick?: () => void;
     borderColor?: string;
-}) => (
-    <ButtonGroup
-        fullWidth
-        size="small"
-        variant="outlined"
-        onClick={onClick}
-        sx={{
-            overflow: "hidden",
-            borderRadius: 1,
-            border: selected ? "2px solid" : "1px solid",
-            borderColor: selected ? borderColor || "primary.main" : borderColor || "divider",
-            "& .MuiButtonGroup-grouped": {
-                minWidth: 22,
-                borderRadius: 0,
-                borderColor: borderColor || "divider",
-            },
-        }}
-    >
-        {normalizeColors(palette?.colors || []).map((color, index) => (
-            <Tooltip key={`${paletteKey(palette)}-${index}-${color.valor}`} title={`${index}: ${color.valor}`}>
-                <Button
-                    aria-label={`${palette?.nom || "Paleta"} ${index}`}
-                    sx={{
-                        flex: 1,
-                        height: 28,
-                        bgcolor: color.valor,
-                        "&:hover": {bgcolor: color.valor},
-                    }}
-                />
-            </Tooltip>
-        ))}
-    </ButtonGroup>
-);
+}) => {
+    const { t } = useTranslation();
+    return (
+        <ButtonGroup
+            fullWidth
+            size="small"
+            variant="outlined"
+            onClick={onClick}
+            sx={{
+                overflow: "hidden",
+                borderRadius: 1,
+                border: selected ? "2px solid" : "1px solid",
+                borderColor: selected ? borderColor || "primary.main" : borderColor || "divider",
+                "& .MuiButtonGroup-grouped": {
+                    minWidth: 22,
+                    borderRadius: 0,
+                    borderColor: borderColor || "divider",
+                },
+            }}
+        >
+            {normalizeColors(palette?.colors || []).map((color, index) => (
+                <Tooltip key={`${paletteKey(palette)}-${index}-${color.valor}`} title={`${index}: ${color.valor}`}>
+                    <Button
+                        aria-label={`${palette?.nom || t($ => $.page.plantilla.sample.defaultPaletteName)} ${index}`}
+                        sx={{
+                            flex: 1,
+                            height: 28,
+                            bgcolor: color.valor,
+                            "&:hover": {bgcolor: color.valor},
+                        }}
+                    />
+                </Tooltip>
+            ))}
+        </ButtonGroup>
+    );
+};
 
 const PaletteMiniature = ({palette, compact}: { palette?: Palette; compact?: boolean }) => {
     const colors = normalizeColors(palette?.colors || []);
@@ -1325,8 +1329,8 @@ const TitleStylePropertiesTab = ({selectedGroup, paletteTheme}: { selectedGroup:
     );
 };
 
-const titlePreviewProps = (data: TemplateData, selectedGroup: PaletteGroupType, scope: WidgetStyleScope) => {
-    const props = propertiesForPreview(data, selectedGroup, scope);
+const titlePreviewProps = (data: TemplateData, selectedGroup: PaletteGroupType, scope: WidgetStyleScope, t: TFunction) => {
+    const props = propertiesForPreview(data, selectedGroup, scope, t);
     return {
         ...props,
         midaFontSubtitol: Number(props.midaFontSubtitol ?? props.midaFontDescripcio) || undefined,
@@ -1348,7 +1352,7 @@ const Preview = ({tab, selectedGroup, paletteTheme}: { tab: number; selectedGrou
     const isTitleTab = tab === 4;
     const scope: WidgetStyleScope = tab === 2 ? "GRAFIC" : tab === 3 ? "TAULA" : tab === 1 ? "SIMPLE" : "COMMON";
     const previewScope = scope === "COMMON" ? "SIMPLE" : scope;
-    const props = useMemo(() => propertiesForPreview(data, selectedGroup, scope), [data, selectedGroup, scope]);
+    const props = useMemo(() => propertiesForPreview(data, selectedGroup, scope, t), [data, selectedGroup, scope, t]);
     const graphProps = {
         ...props,
         mostrarVora: Boolean(props.mostrarVora),
@@ -1377,7 +1381,7 @@ const Preview = ({tab, selectedGroup, paletteTheme}: { tab: number; selectedGrou
                         {titleScopes.map((titleScope) => (
                             <Box key={titleScope} sx={{height: 76}}>
                                 <TitolWidgetVisualization
-                                    {...titlePreviewProps(data, selectedGroup, titleScope)}
+                                    {...titlePreviewProps(data, selectedGroup, titleScope, t)}
                                     titol={tTitleScope(titleScope)}
                                     subtitol={t($ => $.page.plantilla.detail.previewSubtitle)}
                                 />

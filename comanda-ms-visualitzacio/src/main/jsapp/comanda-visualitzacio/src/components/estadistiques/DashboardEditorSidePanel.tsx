@@ -268,6 +268,9 @@ const DashboardTitleFields = ({ dashboardPlantilla, hasOverrides, expanded, onEx
                     <Grid size={12}>
                         <FormField name="titol" label={t($ => $.page.widget.editor.titleText)} />
                     </Grid>
+                    <Grid size={12}>
+                        <FormField name="subtitol" label={t($ => $.page.widget.editor.subtitleText)} />
+                    </Grid>
                 </Grid>
             </PanelSection>
             <PanelSection title={t($ => $.page.widget.editor.configVisual)}>

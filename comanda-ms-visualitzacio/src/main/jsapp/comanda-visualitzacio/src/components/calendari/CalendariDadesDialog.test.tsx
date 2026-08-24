@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
                 sense_dades: 'Sense dades',
                 tancar: 'Tancar',
             },
+            common: { selectAll: 'Seleccionar tot' },
             components: { clear: 'Netejar' },
             page: { avisos: { filter: { more: 'Més filtres' } } },
         })

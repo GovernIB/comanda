@@ -1,14 +1,11 @@
 package es.caib.comanda.configuracio.logic.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.AclServiceClient;
-import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.configuracio.logic.helper.EntornAppHelper;
 import es.caib.comanda.configuracio.logic.intf.model.App;
 import es.caib.comanda.configuracio.logic.intf.model.App.AppImportForm;
-import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
 import es.caib.comanda.configuracio.logic.intf.model.export.AppExport;
 import es.caib.comanda.configuracio.logic.intf.model.export.EntornAppExport;
 import es.caib.comanda.configuracio.logic.intf.service.AppService;
@@ -19,7 +16,6 @@ import es.caib.comanda.configuracio.persist.entity.EntornEntity;
 import es.caib.comanda.configuracio.persist.repository.AppRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornRepository;
-import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
@@ -28,7 +24,6 @@ import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
 import es.caib.comanda.ms.logic.intf.model.FieldOption;
 import es.caib.comanda.ms.logic.intf.model.ReportFileType;
-import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import es.caib.comanda.ms.sse.ComandaSseEvent;
 import es.caib.comanda.ms.sse.ComandaSseEventTypes;
@@ -65,53 +60,15 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
     private final EntornRepository entornRepository;
     private final EntornAppRepository entornAppRepository;
     private final EntornAppHelper entornAppHelper;
-    private final AuthenticationHelper authenticationHelper;
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     private final AclServiceClient aclServiceClient;
     private final ApplicationEventPublisher eventPublisher;
 
     @PostConstruct
     public void init() {
-        register(App.PERSPECTIVE_ENTORN_APPS, new EntornAppsPerspectiveApplicator());
         register(App.PERSP_PERMIS_NUM, new PermisPerspective());
         register(App.APP_EXPORT, new AppExportReportGenerator());
         register(App.APP_IMPORT, new AppImportActionExecutor());
-    }
-
-    @Override
-    protected String additionalSpringFilter(
-        String currentSpringFilter,
-        String[] namedQueries) {
-        if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
-            || authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
-            return null;
-        }
-        Set<Long> allowedAppIds = getAllowedIds(ResourceType.APP).stream()
-            .map(id -> Long.valueOf(String.valueOf(id)))
-            .collect(Collectors.toSet());
-        Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP);
-        if (!entornAppPermissionIds.isEmpty()) {
-            Set<Long> entornAppPermissionIdsSet = entornAppPermissionIds.stream()
-                .map(id -> Long.valueOf(String.valueOf(id)))
-                .collect(Collectors.toSet());
-            allowedAppIds.addAll(entornAppRepository.findAppIdsByEntornAppIds(entornAppPermissionIdsSet));
-        }
-        if (allowedAppIds.isEmpty()) {
-            return "id:0";
-        }
-        return allowedAppIds.stream()
-            .map(id -> "id:" + id)
-            .collect(Collectors.joining(" or "));
-    }
-
-    private Set<Serializable> getAllowedIds(ResourceType resourceType) {
-        return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
-                resourceType,
-                Collections.singletonList(PermissionEnum.READ),
-                authenticationHelper.getCurrentUserName(),
-                Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
-                httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
-            .orElse(Collections.emptySet());
     }
 
     @Override
@@ -436,34 +393,6 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
                         .countSidsWithPermission(ResourceType.APP, entity.getId(),
                             httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
                     .orElse(0));
-        }
-    }
-
-    public static class EntornAppsPerspectiveApplicator implements PerspectiveApplicator<AppEntity, App> {
-        @Override
-        public void applySingle(String code, AppEntity entity, App resource) throws PerspectiveApplicationException {
-            List<EntornAppEntity> entornApps = entity.getEntornApps();
-            if (!entornApps.isEmpty()) {
-                resource.setEntornApps(
-                    entornApps.stream().map(e -> {
-                        EntornApp entornApp = EntornApp.builder()
-                            .app(ResourceReference.toResourceReference(entity.getId(), entity.getNom()))
-                            .entorn(ResourceReference.toResourceReference(e.getEntorn().getId(), e.getEntorn().getNom()))
-                            .infoUrl(e.getInfoUrl())
-                            .infoData(e.getInfoData())
-                            .versio(e.getVersio())
-                            .revisio(e.getRevisio())
-                            .activa(e.isActiva())
-                            .salutUrl(e.getSalutUrl())
-                            .estadisticaInfoUrl(e.getEstadisticaInfoUrl())
-                            .estadisticaUrl(e.getEstadisticaUrl())
-                            .estadisticaCron(e.getEstadisticaCron())
-                            .build();
-                        entornApp.setId(e.getId());
-                        return entornApp;
-                    }).collect(Collectors.toList())
-                );
-            }
         }
     }
 }

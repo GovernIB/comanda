@@ -10,7 +10,6 @@ const mocks = vi.hoisted(() => ({
         fieldErrors: [],
     } as any,
     temporalMessageShowMock: vi.fn(),
-    
 }));
 
 vi.mock('reactlib', () => ({
@@ -24,13 +23,13 @@ vi.mock('reactlib', () => ({
         update: vi.fn().mockResolvedValue({ id: 1, clientId: '1' }),
     }),
     GridPage: ({ children }: any) => <div data-testid="grid-page">{children}</div>,
-    MuiDataGrid: ({ 
-        resourceName, 
-        columns, 
-        toolbarType, 
-        popupEditFormContent, 
+    MuiDataGrid: ({
+        resourceName,
+        columns,
+        toolbarType,
+        popupEditFormContent,
         paginationActive,
-        title 
+        title
     }: any) => (
         <div data-testid="mui-data-grid" data-resource={resourceName} data-title={title}>
             {toolbarType === 'upper' && <div data-testid="grid-toolbar">Toolbar</div>}
@@ -45,10 +44,20 @@ vi.mock('reactlib', () => ({
     ),
 }));
 
+import translationCa from '../i18n/translationCa';
+
 vi.mock('react-i18next', () => ({
     useTranslation: vi.fn(() => ({
         t: (key: any) => {
-            if (typeof key === 'function') return 'Paleta';
+            if (typeof key === 'function') {
+                return key({
+                    ...translationCa,
+                    menu: {
+                        ...translationCa.menu,
+                        paleta: 'Paleta',
+                    },
+                });
+            }
             const translations: Record<string, string> = {
                 'menu.paleta': 'Paleta',
                 'common.cancel': 'Cancel·lar',
@@ -66,16 +75,16 @@ vi.mock('../components/PageTitle.tsx', () => ({
 vi.mock('../components/PaletteFormContent.tsx', () => ({
     PaletteFormContent: ({ palette, onChange, mode, showDuplicateButton }: any) => (
         <div data-testid="palette-form-content" data-mode={mode}>
-            <input 
-                data-testid="palette-nom" 
-                value={palette?.nom || ''} 
-                onChange={(e) => onChange?.({ ...palette, nom: e.target.value })} 
+            <input
+                data-testid="palette-nom"
+                value={palette?.nom || ''}
+                onChange={(e) => onChange?.({ ...palette, nom: e.target.value })}
                 aria-label="Nom"
             />
-            <input 
-                data-testid="palette-descripcio" 
-                value={palette?.descripcio || ''} 
-                onChange={(e) => onChange?.({ ...palette, descripcio: e.target.value })} 
+            <input
+                data-testid="palette-descripcio"
+                value={palette?.descripcio || ''}
+                onChange={(e) => onChange?.({ ...palette, descripcio: e.target.value })}
                 aria-label="Descripció"
             />
             <button data-testid="palette-add-color">Afegir color</button>

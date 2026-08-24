@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Typography, Chip, Skeleton, Paper } from '@mui/material';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
@@ -127,6 +128,7 @@ export const WidgetErrorDisplay: React.FC<WidgetErrorDisplayProps> = React.memo(
     errorMsg,
     errorTrace,
 }) => {
+    const { t } = useTranslation();
     const theme = useTheme();
 
     return (
@@ -138,11 +140,11 @@ export const WidgetErrorDisplay: React.FC<WidgetErrorDisplayProps> = React.memo(
                 <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={estils.errorSummary(theme)}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <ErrorOutlineIcon sx={estils.errorIcon(theme)} />
-                        <Typography sx={{fontSize: '0.75rem'}}>{errorMsg || 'Error'}</Typography>
+                        <Typography sx={{fontSize: '0.75rem'}}>{errorMsg || t($ => $.common.error)}</Typography>
                     </Box>
                 </AccordionSummary>
                 <AccordionDetails sx={estils.errorDetails(theme)}>
-                    {errorTrace || 'No error trace available'}
+                    {errorTrace || t($ => $.page.widget.noErrorTrace)}
                 </AccordionDetails>
             </Accordion>
         </Box>

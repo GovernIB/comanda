@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
+import { TFunction } from 'i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import Grid from '@mui/material/Grid';
 import {
@@ -526,7 +527,7 @@ export const AppForm: React.FC = () => {
     );
 };
 
-const appColumns: MuiDataGridColDef[] = [
+const getAppColumns = (t: TFunction): MuiDataGridColDef[] => [
     {
         field: 'logo',
         flex: 1,
@@ -535,11 +536,11 @@ const appColumns: MuiDataGridColDef[] = [
             return value ? (
                 <img
                     src={`data:image/png;base64,${value}`}
-                    alt="logo"
+                    alt={t($ => $.page.apps.logoAlt)}
                     style={{ maxHeight: '32px' }}
                 />
             ) : (
-                <span role="img" aria-label="block" style={{ fontSize: '24px' }}>
+                <span role="img" aria-label={t($ => $.page.apps.noLogo)} style={{ fontSize: '24px' }}>
                     <BlockIcon style={{ fontSize: '20px', color: 'gray' }} />
                 </span>
             );
@@ -646,6 +647,8 @@ const Apps: React.FC = () => {
     const navigate = useNavigate();
     const gridApiRef = useMuiDataGridApiRef();
     const { appExport } = useActions();
+
+    const appColumns = useMemo(() => getAppColumns(t), [t]);
 
     const additionalColumns:any = useMemo(() => [
         ...appColumns,

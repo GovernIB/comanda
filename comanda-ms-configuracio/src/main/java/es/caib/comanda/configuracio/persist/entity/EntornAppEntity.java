@@ -19,24 +19,28 @@ import java.util.Set;
  * @author Límit Tecnologies
  */
 @Entity
-@Table(name = BaseConfig.DB_PREFIX + "entorn_app",
+@Table(name = EntornAppEntity.TABLE_NAME,
 		uniqueConstraints = {
-				@UniqueConstraint(name = BaseConfig.DB_PREFIX + "entorn_app_entapp_uk", columnNames = { "entorn_id", "app_id" })
+				@UniqueConstraint(name = BaseConfig.DB_PREFIX + "entorn_app_entapp_uk", columnNames = { EntornAppEntity.ENTORN_COLUMN_NAME, EntornAppEntity.APP_COLUMN_NAME })
 		})
 @Getter
 @Setter
 @NoArgsConstructor
 public class EntornAppEntity extends BaseAuditableEntity<EntornApp> {
 
+	public static final String TABLE_NAME = BaseConfig.DB_PREFIX + "entorn_app";
+	public static final String ENTORN_COLUMN_NAME = "entorn_id";
+	public static final String APP_COLUMN_NAME = "app_id";
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(
-			name = "entorn_id",
+			name = ENTORN_COLUMN_NAME,
 			referencedColumnName = "id",
 			foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "entorn_app_entorn_fk"))
 	private EntornEntity entorn;
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(
-			name = "app_id",
+			name = APP_COLUMN_NAME,
 			referencedColumnName = "id",
 			foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "entorn_app_app_fk"))
 	private AppEntity app;
@@ -123,13 +127,13 @@ public class EntornAppEntity extends BaseAuditableEntity<EntornApp> {
 			"coalesce((" +
 			"select a.nom " +
 			"from " + APP_TABLE + " a " +
-			"where a.id = app_id" +
+			"where a.id = " + EntornAppEntity.APP_COLUMN_NAME +
 			"), '')" +
 			" || ' - ' || " +
 			"coalesce((" +
 			"select e.nom " +
 			"from " + ENTORN_TABLE + " e " +
-			"where e.id = entorn_id" +
+			"where e.id = " + EntornAppEntity.ENTORN_COLUMN_NAME +
 			"), '')" +
 			")"
 	)

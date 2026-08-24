@@ -48,7 +48,7 @@ const useChangeTipus = (refresh?: () => void, addConstToFet?: (id:any) => void) 
         handleShow,
         content: <FormActionDialog
             resourceName={"dimensio"}
-            title={'Cambiar tipus dimensió'}
+            title={t($ => $.page.dimensions.action.changeTipus.dialogTitle)}
             action={"CHANGE_TIPUS"}
             apiRef={apiRef}
             onSuccess={onSuccess}

@@ -796,12 +796,12 @@ const AlarmaConfigFilter = (props: AlarmaConfigFilterProps) => {
                     <IconButton onClick={netejar} title={t($ => $.components.clear)}>
                         <Icon>filter_alt_off</Icon>
                     </IconButton>
-                    <IconButton
+                    {isCurrentUserAdmin && <IconButton
                         onClick={() => setMoreFields(mf => !mf)}
                         title={t($ => $.page.alarmaConfig.filter.more)}
                         color={moreFields ? 'primary' : 'default'}>
                         <Icon>filter_list</Icon>
-                    </IconButton>
+                    </IconButton>}
                 </Box>
             </Box>
         </MuiFilter>
@@ -873,7 +873,7 @@ export const AlarmaConfigDialog: React.FC<{
 const getTreeDataPath = (row: any) => ([row.entornAppId, row.id]);
 
 const AlarmaConfigUsuariGrid: React.FC<{
-    username: string;
+    username?: string;
     entornApps: any[];
     filterBy?: { entornAppId?: number | string };
     userFilter?: string;
@@ -960,6 +960,10 @@ const AlarmaConfigUsuariGrid: React.FC<{
         </>
     );
 };
+export type UserDataReduced  = {
+    codi?: string;
+    nom?: string;
+};
 
 const AlarmaConfig: React.FC<{
     filterBy?: { entornAppId?: number | string };
@@ -1025,7 +1029,8 @@ const AlarmaConfig: React.FC<{
     const { isReady: apiIsReadyEntornApp, find: apiFindEntornApp } = useResourceApiService('entornApp');
     const { isReady: configApiReady, find: findConfigs } = useResourceApiService('alarmaConfig');
     const [entornApps, setEntornApps] = React.useState<any[]>();
-    const [otherUsers, setOtherUsers] = React.useState<string[]>([]);
+    const [otherUsers, setOtherUsers] = React.useState<UserDataReduced[]>([]);
+
     const refresh = () => {
         apiRef.current?.refresh?.();
     }
@@ -1048,13 +1053,16 @@ const AlarmaConfig: React.FC<{
 
     React.useEffect(() => {
         if (!configApiReady || !isCurrentUserAdmin || !user?.codi) return;
-        findConfigs({ page: 0, size: 1000, filter: 'admin:false' }).then((response: any) => {
-            const uniqueUsers = [...new Set(
-                (response.rows as any[])
-                    .map((row: any) => row.createdBy as string)
-                    .filter((u: string) => u && u !== user.codi)
-            )] as string[];
-            setOtherUsers(uniqueUsers);
+        findConfigs({ page: 0, size: 1000, filter: 'admin:false', perspectives: ['auditoria'] }).then((response: any) => {
+            const userMap = new Map<string, UserDataReduced>();
+            (response.rows as any[]).forEach((row: any) => {
+                const codi = row.createdBy as string;
+                const nom = (row?.createdByFullName as string) || codi;
+                if (codi && codi !== user.codi && !userMap.has(codi)) {
+                    userMap.set(codi, { codi, nom } as UserDataReduced);
+                }
+            });
+            setOtherUsers(Array.from(userMap.values()));
         });
     }, [configApiReady, findConfigs, isCurrentUserAdmin, user?.codi]);
 
@@ -1242,14 +1250,14 @@ const AlarmaConfig: React.FC<{
                 <Typography variant="h6" sx={{ mb: 1 }}>
                     {t($ => $.page.alarma.userSection.header)}
                 </Typography>
-                {otherUsers.map(username => (
-                    <Accordion key={username} disableGutters>
+                {otherUsers.map((userDataReduced) => (
+                    <Accordion key={userDataReduced.codi} disableGutters>
                         <AccordionSummary expandIcon={<Icon>expand_more</Icon>}>
-                            <Typography>{t($ => $.page.alarma.userSection.userTitle, { username })}</Typography>
+                            <Typography>{t($ => $.page.alarma.userSection.userTitle, { username: userDataReduced?.nom })}</Typography>
                         </AccordionSummary>
                         <AccordionDetails>
                             <AlarmaConfigUsuariGrid
-                                username={username}
+                                username={userDataReduced.codi}
                                 entornApps={entornApps ?? []}
                                 filterBy={filterBy}
                                 userFilter={userFilter}

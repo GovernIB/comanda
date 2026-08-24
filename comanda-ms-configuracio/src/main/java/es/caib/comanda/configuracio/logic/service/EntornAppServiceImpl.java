@@ -40,6 +40,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.*;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
@@ -52,8 +53,6 @@ import java.io.Serializable;
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
 
 /**
  * Implementació del servei de gestió d'aplicacions per entorn.
@@ -102,27 +101,102 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     }
 
     @Override
+    protected void afterConversion(EntornAppEntity entity, EntornApp resource) {
+        if (!hasPermission(Collections.singletonList(entity)).get(0)) {
+            censorFields(resource);
+        }
+    }
+
+    @Override
+    protected void afterConversion(List<EntornAppEntity> entities, List<EntornApp> resources) {
+        if (entities == null || resources == null) {
+            return;
+        }
+        List<Boolean> permissions = hasPermission(entities);
+
+        for (int i = 0; i < entities.size(); i++) {
+            EntornApp resource = resources.get(i);
+            if (!permissions.get(i)) {
+                censorFields(resource);
+            }
+        }
+    }
+
+    private List<Boolean> hasPermission(List<EntornAppEntity> entities) {
+        if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
+                || authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
+            return entities.stream().map(entity -> true).collect(Collectors.toList());
+        }
+        if (entities.stream().noneMatch(Objects::nonNull)) {
+            return entities.stream().map(entity -> false).collect(Collectors.toList());
+        }
+        Set<Serializable> allowedEntornAppIds = getAllowedIds(ResourceType.ENTORN_APP);
+        Set<Serializable> allowedAppIds = getAllowedIds(ResourceType.APP);
+        return entities.stream()
+                .map(entity -> hasPermission(entity, allowedEntornAppIds, allowedAppIds))
+                .collect(Collectors.toList());
+    }
+
+    private boolean hasPermission(
+            EntornAppEntity entity,
+            Set<Serializable> allowedEntornAppIds,
+            Set<Serializable> allowedAppIds) {
+        if (entity == null) {
+            return false;
+        }
+        if (entity.getId() != null && isAllowed(allowedEntornAppIds, entity.getId())) {
+            return true;
+        }
+        if (entity.getApp() != null && entity.getApp().getId() != null && isAllowed(allowedAppIds, entity.getApp().getId())) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isAllowed(Set<Serializable> allowedIds, Serializable id) {
+        if (allowedIds == null || allowedIds.isEmpty() || id == null) {
+            return false;
+        }
+        String idStr = String.valueOf(id);
+        return allowedIds.stream().anyMatch(allowedId -> String.valueOf(allowedId).equals(idStr));
+    }
+
+    private void censorFields(EntornApp resource) {
+        if (resource == null) {
+            return;
+        }
+        ReflectionUtils.doWithFields(resource.getClass(), field -> {
+            if (field.isAnnotationPresent(EntornApp.CensorField.class)) {
+                ReflectionUtils.makeAccessible(field);
+                Class<?> type = field.getType();
+                if (type == boolean.class) {
+                    field.setBoolean(resource, false);
+                } else if (type == int.class) {
+                    field.setInt(resource, 0);
+                } else if (type == long.class) {
+                    field.setLong(resource, 0L);
+                } else if (type == double.class) {
+                    field.setDouble(resource, 0.0);
+                } else if (type == float.class) {
+                    field.setFloat(resource, 0.0f);
+                } else if (type == byte.class) {
+                    field.setByte(resource, (byte) 0);
+                } else if (type == short.class) {
+                    field.setShort(resource, (short) 0);
+                } else if (type == char.class) {
+                    field.setChar(resource, '\0');
+                } else {
+                    field.set(resource, null);
+                }
+            }
+        });
+    }
+
+    @Override
     protected String additionalSpringFilter(
         String currentSpringFilter,
         String[] namedQueries) {
-        if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
-            || authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
-            return null;
-        }
-        Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP);
-        Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP);
-        String appFilter = buildOrFilter("app.id", appPermissionIds);
-        String entornAppFilter = buildOrFilter("id", entornAppPermissionIds);
-        if (appFilter == null && entornAppFilter == null) {
-            return "id:0";
-        }
-        if (appFilter == null) {
-            return entornAppFilter;
-        }
-        if (entornAppFilter == null) {
-            return appFilter;
-        }
-        return appFilter + " or " + entornAppFilter;
+        return null;
     }
 
     private Set<Serializable> getAllowedIds(ResourceType resourceType) {
@@ -157,7 +231,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     protected void afterUpdateSave(EntornAppEntity entity, EntornApp resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
         super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
 
-        cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entity.getId().toString());
+        cacheHelper.evictEntornAppCacheItem(entity.getId());
         entornAppHelper.publishEntornAppChanged(entity.getId());
     }
 
@@ -322,7 +396,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         @Override
         public EntornApp exec(String code, EntornAppEntity entity, String params) throws ActionExecutionException {
             entity.setActiva(!entity.isActiva());
-            cacheHelper.evictCacheItem(ENTORN_APP_CACHE, entity.getId().toString());
+            cacheHelper.evictEntornAppCacheItem(entity.getId());
             // No passa per afterUpdateSave (l'acció no fa servir el flux normal d'actualització),
             // cal notificar-ho explícitament perquè el dashboard de Salut es refresqui via SSE.
             entornAppHelper.publishEntornAppChanged(entity.getId());

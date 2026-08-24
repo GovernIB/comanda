@@ -12,6 +12,13 @@ const translationEn: translationResourcesType = {
         save: "Save",
         modify: "Modify",
         duplicate: "Duplicate",
+        error: "Error",
+        ok: "OK",
+        selectAll: "Select all",
+        breadcrumb: "Breadcrumb",
+    },
+    app: {
+        logoTitle: "Comanda application logo",
     },
     enum: {
         appEstat: {
@@ -114,6 +121,7 @@ const translationEn: translationResourcesType = {
         indicador: "Indicators",
         user: {
             lastConnection: "Date and time of the user's last connection",
+            darreraConnexio: "Last connection:",
             options: {
                 profile: {
                     title: "My profile",
@@ -178,6 +186,7 @@ const translationEn: translationResourcesType = {
             },
             groupingSelect: {
                 label: "Group",
+                ariaLabel: "Grouping selection",
                 BY_APPLICATION: "Group by application",
                 BY_ENVIRONMENT: "Group by environment",
                 NONE: "Do not group",
@@ -227,6 +236,8 @@ const translationEn: translationResourcesType = {
                 noInfo: 'No data available for this environment',
                 downAlert: "The application is crashed. Unable to display all health information.",
                 darreraDataInfo1: "The application stopped working on ",
+                darreraDataInfoHora: " at ",
+                darreraDataInfoHores: " hours",
                 darreraDataInfo2: "Previous status: ",
             },
             latencia: {
@@ -250,6 +261,7 @@ const translationEn: translationResourcesType = {
             },
             integracions: {
                 title: "Integrations",
+                logoAlt: "Logo",
                 integracioUpCount: "Active",
                 integracioWarnCount: "Warning",
                 integracioDownCount: "Inactive",
@@ -330,7 +342,7 @@ const translationEn: translationResourcesType = {
                     EDT: "Total disk space",
                     EDL: "Free disk space",
                     SO: "Operating system",
-                    ST: "Date torn",
+                    ST: "Startup date",
                     UT: "Working time",
                 },
             },
@@ -342,13 +354,16 @@ const translationEn: translationResourcesType = {
             estats: {
                 title: "States",
             },
+            peticioLegendOk: "OK",
+            peticioLegendError: "Error",
+            logoAlt: "Logo {{nom}}",
             historicVersions: {
                 title: "History of versions and revisions",
                 noInfo: "No version history information available.",
                 column: {
-                    data: "Date",
+                    data: "Deployment date",
                     versio: "Version",
-                    revisio: "Revisión",
+                    revisio: "Revision",
                 },
             },
             logs: {
@@ -377,6 +392,34 @@ const translationEn: translationResourcesType = {
         },
         dashboards: {
             title: "Dashboards",
+            editor: {
+                errorAlert: {
+                    errorsHeader: "Errors",
+                    viewButton: "View",
+                    message: "Errors were found in some of the widgets",
+                },
+                deleteItem: {
+                    title: "Confirmation",
+                    confirm: "Are you sure you want to delete this item from the dashboard?",
+                    success: "Item deleted",
+                    error: "Could not be deleted",
+                },
+                duplicateItem: {
+                    success: "Item duplicated successfully",
+                    error: "Could not duplicate item",
+                },
+                expandPanel: "Expand panel",
+                collapsePanel: "Collapse panel",
+                addWidgetAria: "Add {{titol}}",
+                selectApp: "Select application",
+                availableElements: "Available elements",
+                types: {
+                    simple: "Simple",
+                    grafic: "Chart",
+                    taula: "Table",
+                },
+                dashboardElements: "Dashboard items",
+            },
             edit: "Edit",
             dashboardView: "Go to dashboard",
             acl: {
@@ -436,6 +479,7 @@ const translationEn: translationResourcesType = {
             },
             grid: {
                 groupHeader: "Name",
+                logoAlt: "Logo {{nom}}",
                 action: {
                     obrir: "Open task",
                 },
@@ -487,6 +531,7 @@ const translationEn: translationResourcesType = {
             },
             grid: {
                 groupHeader: "Name",
+                logoAlt: "Logo {{nom}}",
                 column: {
                     appEntorn: "Application - Environment",
                     global: "Global",
@@ -612,6 +657,8 @@ const translationEn: translationResourcesType = {
         },
         apps: {
             title: "Applications",
+            logoAlt: "Logo",
+            noLogo: "No logo",
             create: "Create application",
             update: "Update application",
             general: "General",
@@ -681,7 +728,7 @@ const translationEn: translationResourcesType = {
                 toolbarActiva: {
                     activar: "Activate",
                     desactivar: "Deactivate",
-                    permisos: "Permission",
+                    permisos: "Permissions",
                     ok: "The action has been executed successfully",
                 }
             }
@@ -698,6 +745,7 @@ const translationEn: translationResourcesType = {
         },
         integracions: {
             title: "Integrations",
+            noLogo: "No logo",
             column: {
                 codi: "Code",
                 nom: "Name",
@@ -728,6 +776,7 @@ const translationEn: translationResourcesType = {
         },
         dimensions: {
             title: "Dimensions",
+            valuesTitle: "Dimension {{nom}} values",
             values: "Values",
             column: {
                 entornApp: "Application environment",
@@ -739,6 +788,7 @@ const translationEn: translationResourcesType = {
             action: {
                 changeTipus: {
                     label: "Change type",
+                    dialogTitle: "Change dimension type",
                     ok: "The dimension has been updated successfully",
                 },
                 desmarcar: {
@@ -898,6 +948,7 @@ const translationEn: translationResourcesType = {
                     reintentarButton: "Retry cleanup",
                     reintentarSuccess: "Cleanup successfully re-queued",
                     reintentarError: "Error retrying cleanup",
+                    reintentarGenericError: "Unknown error retrying operation",
                 },
                 operacioEnum: {
                     netejaEntornApp: "Error while trying to delete data associated with application environment",
@@ -915,7 +966,7 @@ const translationEn: translationResourcesType = {
                 dir3: "Dir3",
             },
             tab: {
-                alarmes: "ALARMES",
+                alarmes: "ALARMS",
                 email: "EMAIL",
             },
             filter: {
@@ -924,6 +975,7 @@ const translationEn: translationResourcesType = {
         },
         widget: {
             title: "Statistic widgets",
+            noErrorTrace: "No error trace available",
             form: {
                 periode: "Period",
                 simple: "Simple widget",
@@ -992,9 +1044,11 @@ const translationEn: translationResourcesType = {
                     periodeIndicador: "Periode aggr.",
                     accions: "Actions",
                     arrossega: "Drag to reorder",
+                    percentageError: "Percentage columns cannot be combined with other aggregation types",
                 },
             },
             atributsVisuals: {
+                title: "Visual attributes",
                 colorText: "Text color",
                 colorFons: "Background color",
                 icona: "Icon",
@@ -1117,6 +1171,7 @@ const translationEn: translationResourcesType = {
                 configData: "Data configuration",
                 configVisual: "Visual configuration",
                 titleText: "Title text",
+                subtitleText: "Subtitle text",
                 titleType: "Title type",
                 showDestacat: "Show as featured",
                 template: "Template",
@@ -1192,6 +1247,7 @@ const translationEn: translationResourcesType = {
                 messageCount: "Message Count",
                 consumerCount: "Consumer Count",
                 viewMessages: "View Messages",
+                bytesUnit: "bytes",
             },
         },
         tasquesBackground: {
@@ -1316,6 +1372,9 @@ const translationEn: translationResourcesType = {
             nom: "Name",
             descripcio: "Description",
             colors: "Colors",
+            column: {
+                colors: "Colors",
+            },
             upElement: "Move up",
             downElement: "Move down",
             addColor: "Add color",
@@ -1324,6 +1383,18 @@ const translationEn: translationResourcesType = {
             editPalette: "Edit palette",
         },
         plantilla: {
+            sample: {
+                chartTitle: "Chart title",
+                chartDescription: "Chart description",
+                xAxis: "X Axis",
+                yAxis: "Y Axis",
+                simpleTitle: "Simple title",
+                unitDefault: "u",
+                simpleDescription: "Simple description",
+                tableTitle: "Table title",
+                tableDescription: "Table description",
+                defaultPaletteName: "Palette",
+            },
             groups: {
                 light: "Light theme",
                 dark: "Dark theme",
@@ -1401,7 +1472,7 @@ const translationEn: translationResourcesType = {
                 colorSeparadorHoritzontal: "Horizontal separator",
                 ampleSeparadorHoritzontal: "Horizontal separator width",
                 mostrarSeparadorVertical: "Vertical separator",
-                colorSeparadorVertical: "Vertical separator",
+                colorSeparadorVertical: "Vertical separator color",
                 ampleSeparadorVertical: "Vertical separator width",
                 serie1: "Series 1",
                 serie2: "Series 2",
@@ -1417,6 +1488,9 @@ const translationEn: translationResourcesType = {
     generic: {
         tipus: "Type",
         periode: "Period",
+        dimensio: "Dimension",
+        pendentDesenvolupament: "(Pending development)",
+        error: "Error",
     },
     errors: {
         camp: {
@@ -1431,6 +1505,19 @@ const translationEn: translationResourcesType = {
         copiarContingutTitle: "Copy the content",
         copiarContingutSuccess: "Content copied to clipboard",
         copiarContingutError: "Action not supported by the browser",
+        footer: {
+            revisio: "Revision:",
+        },
+        iconSelect: {
+            label: "Icon",
+            noIcon: "(No icon)",
+            searchPlaceholder: "Search icon...",
+            notFound: "No icons found.",
+        },
+        sideMenu: {
+            title: "Menu",
+            closeMenu: "Close menu",
+        },
         permisos: {
             title: "Permissions",
             resourceTitle: "permission"

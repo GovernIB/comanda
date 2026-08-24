@@ -66,6 +66,12 @@ public class EntornAppHist extends BaseResource<Long> {
     @NotNull
     @Transient
     protected ResourceReference<EntornApp, Long> entornApp;
+    @NotNull
+    @Transient
+    protected ResourceReference<Entorn, Long> entorn;
+    @NotNull
+    @Transient
+    protected ResourceReference<App, Long> app;
 
     @Getter
     @Setter
