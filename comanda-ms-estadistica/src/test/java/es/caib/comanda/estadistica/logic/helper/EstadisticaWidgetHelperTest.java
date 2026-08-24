@@ -101,15 +101,22 @@ class EstadisticaWidgetHelperTest {
     @DisplayName("upsertDimensionsValors: inicialitza la llista de l'entitat quan és null")
     void upsertDimensionsValors_quanEntityDimensionsEsNull_llavorsInicialitzaLlista() {
         // Arrange
+        DimensioValorEntity dimVal1 = new DimensioValorEntity();
+        dimVal1.setId(1L);
+
         entity.setDimensionsValor(null);
-        resource.setDimensionsValor(Collections.emptyList());
+        resource.setDimensionsValor(List.of(
+            ResourceReference.toResourceReference(1L, "Desc1")
+        ));
+
+        when(dimensioValorRepository.findById(1L)).thenReturn(Optional.of(dimVal1));
 
         // Act
         estadisticaWidgetHelper.upsertDimensionsValors(entity, resource);
 
         // Assert
         assertThat(entity.getDimensionsValor()).isNotNull();
-        assertThat(entity.getDimensionsValor()).isEmpty();
+        assertThat(entity.getDimensionsValor()).containsExactly(dimVal1);
     }
 
     @Test
