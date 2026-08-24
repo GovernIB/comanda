@@ -78,7 +78,7 @@ class EstadisticaSimpleWidgetHelperTest {
         assertThat(captured.getWidget()).isSameAs(entity);
         assertThat(captured.getTitol()).isEqualTo("Titol Test");
         assertThat(captured.getAgregacio()).isEqualTo(TableColumnsEnum.SUM);
-        assertThat(captured.getUnitatAgregacio()).isEqualTo(PeriodeUnitat.MES);
+        assertThat(captured.getUnitatAgregacio()).isEqualTo(null);
         assertThat(entity.getIndicadorInfo()).isSameAs(savedEntity);
     }
 
