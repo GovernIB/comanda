@@ -60,13 +60,12 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
             String dimensioCodi,
             String dimensioValor) {
 
-        String sql = dialectFactory.getDialect().getFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery();
+        String sql = dialectFactory.getDialect().getFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery(dimensioCodi);
 
         Query query = entityManager.createNativeQuery(sql, FetEntity.class);
         query.setParameter("entornAppId", entornAppId);
         query.setParameter("dataInici", dataInici);
         query.setParameter("dataFi", dataFi);
-        query.setParameter("dimensioCodi", dimensioCodi);
         query.setParameter("dimensioValor", dimensioValor);
 
         return query.getResultList();
@@ -80,13 +79,12 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
             String dimensioCodi,
             List<String> valors) {
 
-        String sql = dialectFactory.getDialect().getFindByEntornAppIdAndTempsDataBetweenAndDimensionValuesQuery();
+        String sql = dialectFactory.getDialect().getFindByEntornAppIdAndTempsDataBetweenAndDimensionValuesQuery(dimensioCodi);
 
         Query query = entityManager.createNativeQuery(sql, FetEntity.class);
         query.setParameter("entornAppId", entornAppId);
         query.setParameter("dataInici", dataInici);
         query.setParameter("dataFi", dataFi);
-        query.setParameter("dimensioCodi", dimensioCodi);
         query.setParameter("dimensioValor", valors);
 
         return query.getResultList();

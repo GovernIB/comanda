@@ -33,7 +33,7 @@ public class PostgreSQLFetRepositoryDialectGraficTest {
             PeriodeUnitat tempsAgregacio,
             String expectedQuery) {
 
-        String actualQuery = dialect.getGraficVarisIndicadorsQuery(dimensionsFiltre, indicadorsAgregacio, tempsAgregacio);
+        String actualQuery = dialect.getGraficVarisIndicadorsQuery(dimensionsFiltre, indicadorsAgregacio, tempsAgregacio, null);
         assertEquals(expectedQuery, removeConsecutiveSpaces(actualQuery), "Failed test case: " + testName);
     }
 
@@ -49,8 +49,8 @@ public class PostgreSQLFetRepositoryDialectGraficTest {
                                 "SUM(sum_fets_visites) AS total_sum_visites " +
                                 "FROM ( " +
                                 "SELECT t.anualitat, t.trimestre, t.mes, " +
-                                "mes || '/' || anualitat AS agrupacio, " +
-                                "SUM(TO_NUMBER(f.indicadors_json->>'visites')::numeric) AS sum_fets_visites " +
+                                "anualitat || '/' || LPAD(mes::text, 2, '0') AS agrupacio, " +
+                                "SUM((f.indicadors_json::jsonb->>'visites')::numeric) AS sum_fets_visites " +
                                 "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data BETWEEN :dataInici AND :dataFi " +
@@ -73,13 +73,13 @@ public class PostgreSQLFetRepositoryDialectGraficTest {
                                 "CASE WHEN SUM(sum_fets_sessions) > 0 THEN MIN(data) ELSE NULL END AS first_seen_sessions " +
                                 "FROM ( " +
                                 "SELECT t.data, t.anualitat, t.trimestre, t.mes, " +
-                                "trimestre || '/' || anualitat AS agrupacio, " +
-                                "SUM(TO_NUMBER(f.indicadors_json->>'visites')::numeric) AS sum_fets_visites, " +
-                                "SUM(TO_NUMBER(f.indicadors_json->>'sessions')::numeric) AS sum_fets_sessions " +
+                                "anualitat || '/' || trimestre AS agrupacio, " +
+                                "SUM((f.indicadors_json::jsonb->>'visites')::numeric) AS sum_fets_visites, " +
+                                "SUM((f.indicadors_json::jsonb->>'sessions')::numeric) AS sum_fets_sessions " +
                                 "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data BETWEEN :dataInici AND :dataFi " +
-                                "AND f.dimensions_json->>'departament'= 'RRHH' " +
+                                "AND f.dimensions_json::jsonb->>'departament' = 'RRHH' " +
                                 "GROUP BY t.data, t.anualitat, t.trimestre, t.mes) " +
                                 "GROUP BY agrupacio " +
                                 "ORDER BY agrupacio")
@@ -98,13 +98,13 @@ public class PostgreSQLFetRepositoryDialectGraficTest {
                                 "SUM(sum_fets_visites) AS total_sum_visites, " +
                                 "AVG(sum_fets_sessions) AS average_result_sessions " +
                                 "FROM ( " +
-                                "SELECT t.anualitat, anualitat AS agrupacio, " +
-                                "SUM(TO_NUMBER(f.indicadors_json->>'visites')::numeric) AS sum_fets_visites, " +
-                                "SUM(TO_NUMBER(f.indicadors_json->>'sessions')::numeric) AS sum_fets_sessions " +
+                                "SELECT anualitat AS agrupacio, " +
+                                "SUM((f.indicadors_json::jsonb->>'visites')::numeric) AS sum_fets_visites, " +
+                                "SUM((f.indicadors_json::jsonb->>'sessions')::numeric) AS sum_fets_sessions " +
                                 "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data BETWEEN :dataInici AND :dataFi " +
-                                "AND f.dimensions_json->>'departament'IN ('RRHH','IT') " +
+                                "AND f.dimensions_json::jsonb->>'departament' IN ('RRHH','IT') " +
                                 "GROUP BY t.anualitat) " +
                                 "GROUP BY agrupacio " +
                                 "ORDER BY agrupacio")

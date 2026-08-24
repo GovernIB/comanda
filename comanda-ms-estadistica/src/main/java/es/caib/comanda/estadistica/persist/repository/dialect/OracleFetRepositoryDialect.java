@@ -36,11 +36,11 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
      * @return Una cadena que conté la consulta SQL per obtenir els resultats filtrats segons entornAppId, rang de dates i valor de dimensió.
      */
     @Override
-    public String getFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery() {
+    public String getFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery(String dimensioCodi) {
         return "SELECT f.*" +
                 BASE_JOIN +
                 BASE_WHERE +
-                "AND" + getDimensionValueQuery("' || :dimensioCodi || '") + "= :dimensioValor";
+                "AND" + getDimensionValueQuery(escapeSqlLiteral(dimensioCodi)) + "= :dimensioValor";
     }
 
     /**
@@ -55,11 +55,11 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
      * @return Una cadena amb la consulta SQL per obtenir els resultats filtrats segons entornAppId, rang de dates i múltiples valors de dimensió.
      */
     @Override
-    public String getFindByEntornAppIdAndTempsDataBetweenAndDimensionValuesQuery() {
+    public String getFindByEntornAppIdAndTempsDataBetweenAndDimensionValuesQuery(String dimensioCodi) {
         return "SELECT f.* " +
                 BASE_JOIN +
                 BASE_WHERE +
-                "AND" + getDimensionValueQuery("' || :dimensioCodi || '") + "IN (:dimensioValor)";
+                "AND" + getDimensionValueQuery(escapeSqlLiteral(dimensioCodi)) + "IN (:dimensioValor)";
     }
 
     /**
@@ -238,13 +238,21 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
         String querySelect = getGraficQuerySelect(indicadorAgregacio);
         String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
         String queryDescomposicio = getDimensionValueQuery(dimensioDescomposicioCodi);
+        boolean isAverage = TableColumnsEnum.AVERAGE.equals(indicadorAgregacio.getAgregacio());
+        String innerGrouping = isAverage ? getGrupping(indicadorAgregacio.getUnitatAgregacio()) : "t.data";
 
-        return "SELECT " + queryDescomposicio + " AS agrupacio, " +
+        return "SELECT agrupacio, " +
+                querySelect +
+                " FROM ( SELECT " +
+                (isAverage ? "" : "t.data as data, ") +
+                queryDescomposicio + " AS agrupacio," +
                 getSumIndicadorQuery(indicadorCodi) +
                 BASE_JOIN +
                 BASE_WHERE +
                 queryConditions +
-                "GROUP BY " + queryDescomposicio +
+                "GROUP BY " + innerGrouping + ", " + queryDescomposicio +
+                ") " +
+                "GROUP BY agrupacio " +
                 "ORDER BY agrupacio";
     }
 

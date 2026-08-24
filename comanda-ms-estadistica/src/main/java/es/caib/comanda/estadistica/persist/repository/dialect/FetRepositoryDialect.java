@@ -16,17 +16,26 @@ public interface FetRepositoryDialect {
 
     /**
      * Obté la consulta SQL per trobar fets per entornAppId, període de temps i valor de dimensió.
+     * <p>
+     * El codi de dimensió s'incrusta a la SQL generada (com a literal escapat), en lloc de passar-se com a
+     * paràmetre de la consulta: Oracle JSON_VALUE exigeix que la seva expressió de ruta JSON sigui un literal
+     * (ORA-40454 si es prova de vincular-la dinàmicament amb un bind parameter).
      *
+     * @param dimensioCodi Codi de la dimensió a cercar.
      * @return La cadena de consulta SQL
      */
-    String getFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery();
+    String getFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery(String dimensioCodi);
 
     /**
      * Obté la consulta SQL per trobar fets per entornAppId, període de temps i múltiples valors de dimensió.
+     * <p>
+     * Vegeu {@link #getFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery} sobre per què el codi de
+     * dimensió s'incrusta com a literal en lloc de vincular-se com a paràmetre.
      *
+     * @param dimensioCodi Codi de la dimensió a cercar.
      * @return La cadena de consulta SQL
      */
-    String getFindByEntornAppIdAndTempsDataBetweenAndDimensionValuesQuery();
+    String getFindByEntornAppIdAndTempsDataBetweenAndDimensionValuesQuery(String dimensioCodi);
 
     /**
      * Genera la consulta SQL per trobar fets basant-se en l'entornAppId, la data concreta i una sèrie de dimensions

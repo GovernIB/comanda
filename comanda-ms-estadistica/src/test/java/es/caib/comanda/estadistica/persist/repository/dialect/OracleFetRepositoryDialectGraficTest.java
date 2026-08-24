@@ -54,7 +54,7 @@ public class OracleFetRepositoryDialectGraficTest {
                         null,
                         createIndicadorAgregacio("visites", TableColumnsEnum.SUM, PeriodeUnitat.MES),
                         PeriodeUnitat.MES,
-                        removeConsecutiveSpaces("SELECT mes || '/' || anualitat as agrupacio, " +
+                        removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes, 2, '0') as agrupacio, " +
                                 "SUM(sum_fets) AS total_sum " +
                                 "FROM ( " +
                                 "SELECT t.anualitat, t.trimestre, t.mes, " +
@@ -73,7 +73,7 @@ public class OracleFetRepositoryDialectGraficTest {
                         new HashMap<>(),
                         createIndicadorAgregacio("visites", TableColumnsEnum.AVERAGE, PeriodeUnitat.SETMANA),
                         PeriodeUnitat.MES,
-                        removeConsecutiveSpaces("SELECT mes || '/' || anualitat as agrupacio, " +
+                        removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes, 2, '0') as agrupacio, " +
                                 "AVG(sum_fets) AS average_result " +
                                 "FROM ( " +
                                 "SELECT t.anualitat, t.trimestre, t.mes, t.setmana, " +
@@ -92,7 +92,7 @@ public class OracleFetRepositoryDialectGraficTest {
                         Map.of("departament", List.of("RRHH")),
                         createIndicadorAgregacio("visites", TableColumnsEnum.PERCENTAGE, PeriodeUnitat.MES),
                         PeriodeUnitat.TRIMESTRE,
-                        removeConsecutiveSpaces("SELECT trimestre || '/' || anualitat as agrupacio, " +
+                        removeConsecutiveSpaces("SELECT anualitat || '/' || trimestre as agrupacio, " +
                                 "SUM(sum_fets) AS total_sum " +
                                 "FROM ( " +
                                 "SELECT t.anualitat, t.trimestre, t.mes, " +
@@ -135,7 +135,7 @@ public class OracleFetRepositoryDialectGraficTest {
                         }},
                         createIndicadorAgregacio("visites", TableColumnsEnum.LAST_SEEN, PeriodeUnitat.DIA),
                         PeriodeUnitat.MES,
-                        removeConsecutiveSpaces("SELECT mes || '/' || anualitat as agrupacio, " +
+                        removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes, 2, '0') as agrupacio, " +
                                 "CASE WHEN SUM(sum_fets) > 0 THEN MAX(data) ELSE NULL END AS last_seen " +
                                 "FROM ( " +
                                 "SELECT t.anualitat, t.trimestre, t.mes, t.setmana, t.dia, " +
@@ -156,7 +156,7 @@ public class OracleFetRepositoryDialectGraficTest {
                         Map.of("departament", List.of("RRHH")),
                         createIndicadorAgregacio("sessions", TableColumnsEnum.SUM, PeriodeUnitat.MES),
                         PeriodeUnitat.MES,
-                        removeConsecutiveSpaces("SELECT mes || '/' || anualitat as agrupacio, " +
+                        removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes, 2, '0') as agrupacio, " +
                                 "SUM(sum_fets) AS total_sum " +
                                 "FROM ( " +
                                 "SELECT t.anualitat, t.trimestre, t.mes, " +
@@ -205,7 +205,7 @@ public class OracleFetRepositoryDialectGraficTest {
                         createIndicadorAgregacio("visites", TableColumnsEnum.SUM, PeriodeUnitat.MES),
                         "aplicacio",
                         PeriodeUnitat.MES,
-                        removeConsecutiveSpaces("SELECT mes || '/' || anualitat as agrupacio, " +
+                        removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes, 2, '0') as agrupacio, " +
                                 "descomposicio, " +
                                 "SUM(sum_fets) AS total_sum " +
                                 "FROM ( " +
@@ -228,7 +228,7 @@ public class OracleFetRepositoryDialectGraficTest {
                         createIndicadorAgregacio("visites", TableColumnsEnum.AVERAGE, PeriodeUnitat.SETMANA),
                         "departament",
                         PeriodeUnitat.MES,
-                        removeConsecutiveSpaces("SELECT mes || '/' || anualitat as agrupacio, " +
+                        removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes, 2, '0') as agrupacio, " +
                                 "descomposicio, " +
                                 "AVG(sum_fets) AS average_result " +
                                 "FROM ( " +
@@ -251,7 +251,7 @@ public class OracleFetRepositoryDialectGraficTest {
                         createIndicadorAgregacio("visites", TableColumnsEnum.PERCENTAGE, PeriodeUnitat.MES),
                         "area",
                         PeriodeUnitat.TRIMESTRE,
-                        removeConsecutiveSpaces("SELECT trimestre || '/' || anualitat as agrupacio, " +
+                        removeConsecutiveSpaces("SELECT anualitat || '/' || trimestre as agrupacio, " +
                                 "descomposicio, " +
                                 "SUM(sum_fets) AS total_sum" +
                                 " FROM ( " +
@@ -302,7 +302,7 @@ public class OracleFetRepositoryDialectGraficTest {
                         createIndicadorAgregacio("visites", TableColumnsEnum.LAST_SEEN, PeriodeUnitat.DIA),
                         "aplicacio",
                         PeriodeUnitat.MES,
-                        removeConsecutiveSpaces("SELECT mes || '/' || anualitat as agrupacio, " +
+                        removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes, 2, '0') as agrupacio, " +
                                 "descomposicio, " +
                                 "CASE WHEN SUM(sum_fets) > 0 THEN MAX(data) ELSE NULL END AS last_seen " +
                                 " FROM ( " +
@@ -327,7 +327,7 @@ public class OracleFetRepositoryDialectGraficTest {
                         createIndicadorAgregacio("sessions", TableColumnsEnum.SUM, PeriodeUnitat.MES),
                         "departament",
                         PeriodeUnitat.MES,
-                        removeConsecutiveSpaces("SELECT mes || '/' || anualitat as agrupacio, " +
+                        removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes, 2, '0') as agrupacio, " +
                                 "descomposicio, " +
                                 "SUM(sum_fets) AS total_sum" +
                                 " FROM ( " +
@@ -376,13 +376,14 @@ public class OracleFetRepositoryDialectGraficTest {
                         null,
                         createIndicadorAgregacio("visites", TableColumnsEnum.SUM, PeriodeUnitat.MES),
                         "aplicacio",
-                        removeConsecutiveSpaces("SELECT  JSON_VALUE(f.dimensions_json, '$.\"aplicacio\"') AS agrupacio, " +
+                        removeConsecutiveSpaces("SELECT agrupacio, SUM(sum_fets) AS total_sum " +
+                                "FROM ( SELECT t.data as data, JSON_VALUE(f.dimensions_json, '$.\"aplicacio\"') AS agrupacio, " +
                                 "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets " +
                                 "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data BETWEEN :dataInici AND :dataFi " +
-                                "GROUP BY  JSON_VALUE(f.dimensions_json, '$.\"aplicacio\"') " +
-                                "ORDER BY agrupacio")
+                                "GROUP BY t.data, JSON_VALUE(f.dimensions_json, '$.\"aplicacio\"') ) " +
+                                "GROUP BY agrupacio ORDER BY agrupacio")
                 ),
 
                 // Test 2: Empty dimensions, AVERAGE aggregation, "departament" descomposicio
@@ -391,13 +392,14 @@ public class OracleFetRepositoryDialectGraficTest {
                         new HashMap<>(),
                         createIndicadorAgregacio("visites", TableColumnsEnum.AVERAGE, PeriodeUnitat.MES),
                         "departament",
-                        removeConsecutiveSpaces("SELECT  JSON_VALUE(f.dimensions_json, '$.\"departament\"') AS agrupacio, " +
+                        removeConsecutiveSpaces("SELECT agrupacio, AVG(sum_fets) AS average_result " +
+                                "FROM ( SELECT JSON_VALUE(f.dimensions_json, '$.\"departament\"') AS agrupacio, " +
                                 "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets " +
                                 "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data BETWEEN :dataInici AND :dataFi " +
-                                "GROUP BY  JSON_VALUE(f.dimensions_json, '$.\"departament\"') " +
-                                "ORDER BY agrupacio")
+                                "GROUP BY t.anualitat, t.trimestre, t.mes, JSON_VALUE(f.dimensions_json, '$.\"departament\"') ) " +
+                                "GROUP BY agrupacio ORDER BY agrupacio")
                 ),
 
                 // Test 3: Single dimension with single value, PERCENTAGE aggregation, "area" descomposicio
@@ -406,14 +408,15 @@ public class OracleFetRepositoryDialectGraficTest {
                         Map.of("departament", List.of("RRHH")),
                         createIndicadorAgregacio("visites", TableColumnsEnum.PERCENTAGE, PeriodeUnitat.MES),
                         "area",
-                        removeConsecutiveSpaces("SELECT  JSON_VALUE(f.dimensions_json, '$.\"area\"') AS agrupacio, " +
+                        removeConsecutiveSpaces("SELECT agrupacio, SUM(sum_fets) AS total_sum " +
+                                "FROM ( SELECT t.data as data, JSON_VALUE(f.dimensions_json, '$.\"area\"') AS agrupacio, " +
                                 "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets " +
                                 "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data BETWEEN :dataInici AND :dataFi " +
                                 "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') = 'RRHH' " +
-                                "GROUP BY  JSON_VALUE(f.dimensions_json, '$.\"area\"') " +
-                                "ORDER BY agrupacio")
+                                "GROUP BY t.data, JSON_VALUE(f.dimensions_json, '$.\"area\"') ) " +
+                                "GROUP BY agrupacio ORDER BY agrupacio")
                 ),
 
                 // Test 4: Single dimension with multiple values, FIRST_SEEN aggregation, "usuari" descomposicio
@@ -422,14 +425,15 @@ public class OracleFetRepositoryDialectGraficTest {
                         Map.of("departament", List.of("RRHH", "IT")),
                         createIndicadorAgregacio("visites", TableColumnsEnum.FIRST_SEEN, PeriodeUnitat.MES),
                         "usuari",
-                        removeConsecutiveSpaces("SELECT  JSON_VALUE(f.dimensions_json, '$.\"usuari\"') AS agrupacio, " +
+                        removeConsecutiveSpaces("SELECT agrupacio, CASE WHEN SUM(sum_fets) > 0 THEN MIN(data) ELSE NULL END AS first_seen " +
+                                "FROM ( SELECT t.data as data, JSON_VALUE(f.dimensions_json, '$.\"usuari\"') AS agrupacio, " +
                                 "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets " +
                                 "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data BETWEEN :dataInici AND :dataFi " +
                                 "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') IN ('RRHH','IT') " +
-                                "GROUP BY  JSON_VALUE(f.dimensions_json, '$.\"usuari\"') " +
-                                "ORDER BY agrupacio")
+                                "GROUP BY t.data, JSON_VALUE(f.dimensions_json, '$.\"usuari\"') ) " +
+                                "GROUP BY agrupacio ORDER BY agrupacio")
                 ),
 
                 // Test 5: Multiple dimensions with mixed values, LAST_SEEN aggregation, "aplicacio" descomposicio
@@ -441,15 +445,16 @@ public class OracleFetRepositoryDialectGraficTest {
                         }},
                         createIndicadorAgregacio("visites", TableColumnsEnum.LAST_SEEN, PeriodeUnitat.MES),
                         "aplicacio",
-                        removeConsecutiveSpaces("SELECT  JSON_VALUE(f.dimensions_json, '$.\"aplicacio\"') AS agrupacio, " +
+                        removeConsecutiveSpaces("SELECT agrupacio, CASE WHEN SUM(sum_fets) > 0 THEN MAX(data) ELSE NULL END AS last_seen " +
+                                "FROM ( SELECT t.data as data, JSON_VALUE(f.dimensions_json, '$.\"aplicacio\"') AS agrupacio, " +
                                 "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets " +
                                 "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data BETWEEN :dataInici AND :dataFi " +
                                 "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') IN ('RRHH','IT') " +
                                 "AND JSON_VALUE(f.dimensions_json, '$.\"area\"') = 'Finance' " +
-                                "GROUP BY  JSON_VALUE(f.dimensions_json, '$.\"aplicacio\"') " +
-                                "ORDER BY agrupacio")
+                                "GROUP BY t.data, JSON_VALUE(f.dimensions_json, '$.\"aplicacio\"') ) " +
+                                "GROUP BY agrupacio ORDER BY agrupacio")
                 ),
 
                 // Test 6: Different indicator code, SUM aggregation, "departament" descomposicio
@@ -458,14 +463,15 @@ public class OracleFetRepositoryDialectGraficTest {
                         Map.of("area", List.of("Finance")),
                         createIndicadorAgregacio("sessions", TableColumnsEnum.SUM, PeriodeUnitat.MES),
                         "departament",
-                        removeConsecutiveSpaces("SELECT  JSON_VALUE(f.dimensions_json, '$.\"departament\"') AS agrupacio, " +
+                        removeConsecutiveSpaces("SELECT agrupacio, SUM(sum_fets) AS total_sum " +
+                                "FROM ( SELECT t.data as data, JSON_VALUE(f.dimensions_json, '$.\"departament\"') AS agrupacio, " +
                                 "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets " +
                                 "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data BETWEEN :dataInici AND :dataFi " +
                                 "AND JSON_VALUE(f.dimensions_json, '$.\"area\"') = 'Finance' " +
-                                "GROUP BY  JSON_VALUE(f.dimensions_json, '$.\"departament\"') " +
-                                "ORDER BY agrupacio")
+                                "GROUP BY t.data, JSON_VALUE(f.dimensions_json, '$.\"departament\"') ) " +
+                                "GROUP BY agrupacio ORDER BY agrupacio")
                 )
         );
     }
@@ -500,7 +506,7 @@ public class OracleFetRepositoryDialectGraficTest {
                                 "SUM(sum_fets_visites) AS total_sum_visites " +
                                 "FROM ( " +
                                 "SELECT t.anualitat, t.trimestre, t.mes, " +
-                                "mes || '/' || anualitat AS agrupacio, " +
+                                "anualitat || '/' || LPAD(mes, 2, '0') AS agrupacio, " +
                                 "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites " +
                                 "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
@@ -523,7 +529,7 @@ public class OracleFetRepositoryDialectGraficTest {
                                 "SUM(sum_fets_visites) AS total_sum_visites, " +
                                 "AVG(sum_fets_sessions) AS average_result_sessions " +
                                 "FROM ( " +
-                                "SELECT mes || '/' || anualitat AS agrupacio, " +
+                                "SELECT anualitat || '/' || LPAD(mes, 2, '0') AS agrupacio, " +
                                 "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites, " +
                                 "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions " +
                                 "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
@@ -548,7 +554,7 @@ public class OracleFetRepositoryDialectGraficTest {
                                 "CASE WHEN SUM(sum_fets_sessions) > 0 THEN MIN(data) ELSE NULL END AS first_seen_sessions " +
                                 "FROM ( " +
                                 "SELECT t.data, t.anualitat, t.trimestre, t.mes, " +
-                                "trimestre || '/' || anualitat AS agrupacio, " +
+                                "anualitat || '/' || trimestre AS agrupacio, " +
                                 "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites, " +
                                 "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions " +
                                 "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
@@ -603,7 +609,7 @@ public class OracleFetRepositoryDialectGraficTest {
                                 "SUM(sum_fets_sessions) AS total_sum_sessions " +
                                 "FROM ( " +
                                 "SELECT t.anualitat, t.trimestre, t.mes, t.setmana, t.dia, " +
-                                "mes || '/' || anualitat AS agrupacio, " +
+                                "anualitat || '/' || LPAD(mes, 2, '0') AS agrupacio, " +
                                 "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites, " +
                                 "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions " +
                                 "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +

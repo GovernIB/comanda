@@ -20,7 +20,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UnitatsOrganitzativesRestClient {
 
-    /** Codi Dir3 arrel per defecte quan un fet no té entitat associada, o no s'ha configurat cap paràmetre. */
+    /**
+     * Codi Dir3 arrel per defecte quan un fet no té entitat associada, o no s'ha configurat cap paràmetre.
+     */
     public static final String CODI_ARREL_PER_DEFECTE = "A04003003";
 
     @Value("${es.caib.comanda.estadistica.dir3.govern.codi.arrel:" + CODI_ARREL_PER_DEFECTE + "}")
@@ -45,8 +47,8 @@ public class UnitatsOrganitzativesRestClient {
 
     @PostConstruct
     public void init() {
-        this.URL_GET_ONE = baseUrl + "/obtenerUnidad";
-        this.URL_FIND = baseUrl + "/obtenerArbolUnidadesDestinatarias";
+        this.URL_GET_ONE = baseUrl + "/rest/unidades/obtenerUnidad";
+        this.URL_FIND = baseUrl + "/rest/unidades/obtenerArbolUnidadesDestinatarias";
     }
 
 
@@ -57,7 +59,7 @@ public class UnitatsOrganitzativesRestClient {
 
     private URI uriBuild(String url, Map<String, Object> params) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromUri(URI.create(url));
-        for (Map.Entry<String, Object> p :params.entrySet()) {
+        for (Map.Entry<String, Object> p : params.entrySet()) {
             builder.queryParam(p.getKey(), p.getValue());
         }
         return builder.build(true).toUri();
@@ -67,7 +69,10 @@ public class UnitatsOrganitzativesRestClient {
         return new MonitorDir3(url, estadisticaClientHelper);
     }
 
-    public UnidadRest obtenerUnidad(String codigo, String fechaActualizacion, String fechaSincronizacion, Boolean denominacioCooficial) throws SistemaExternException {
+    public UnidadRest obtenerUnidad(String codigo,
+                                    String fechaActualizacion,
+                                    String fechaSincronizacion,
+                                    Boolean denominacioCooficial) throws SistemaExternException {
         MonitorDir3 monitor = initializeMonitor(URL_GET_ONE);
 
         try {
@@ -101,11 +106,16 @@ public class UnitatsOrganitzativesRestClient {
         }
     }
 
-    public List<UnidadRest> findUnidadArrel(String fechaActualizacion, String fechaSincronizacion, Boolean denominacioCooficial) throws SistemaExternException {
+    public List<UnidadRest> findUnidadArrel(String fechaActualizacion,
+                                            String fechaSincronizacion,
+                                            Boolean denominacioCooficial) throws SistemaExternException {
         return this.findUnidad(codiArrel, fechaActualizacion, fechaSincronizacion, denominacioCooficial);
     }
 
-    public List<UnidadRest> findUnidad(String codigo, String fechaActualizacion, String fechaSincronizacion, Boolean denominacioCooficial) throws SistemaExternException {
+    public List<UnidadRest> findUnidad(String codigo,
+                                       String fechaActualizacion,
+                                       String fechaSincronizacion,
+                                       Boolean denominacioCooficial) throws SistemaExternException {
         MonitorDir3 monitor = initializeMonitor(URL_FIND);
 
         try {
@@ -125,7 +135,8 @@ public class UnitatsOrganitzativesRestClient {
                 uriBuild(URL_FIND, params),
                 HttpMethod.GET,
                 httpEntity,
-                new ParameterizedTypeReference<List<UnidadRest>>() {});
+                new ParameterizedTypeReference<List<UnidadRest>>() {
+                });
 
             if (response.getStatusCode() == HttpStatus.NO_CONTENT) {
                 throw new RuntimeException("La unitat organitzativa no està vigent (" + "codi=" + codigo + ")");

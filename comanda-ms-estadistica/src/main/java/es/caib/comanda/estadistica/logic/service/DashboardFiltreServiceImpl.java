@@ -41,10 +41,16 @@ public class DashboardFiltreServiceImpl extends BaseMutableResourceService<Dashb
 
     @Override
     protected void beforeCreateEntity(
-            DashboardFiltreEntity entity,
-            DashboardFiltre resource,
-            Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotCreatedException {
-        String errorMessage = findDuplicateErrorMessage(entity.getDashboard().getId(), resource.getTipus(), resource.getDimensioCodi(), null);
+        DashboardFiltreEntity entity,
+        DashboardFiltre resource,
+        Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotCreatedException {
+
+        Long dashboardId = resource.getDashboard() != null ? resource.getDashboard().getId() : entity.getDashboard().getId();
+        String errorMessage = findDuplicateErrorMessage(
+            dashboardId,
+            resource.getTipus(),
+            resource.getDimensioCodi(),
+            null);
         if (errorMessage != null) {
             throw new ResourceNotCreatedException(getResourceClass(), errorMessage);
         }
@@ -52,9 +58,10 @@ public class DashboardFiltreServiceImpl extends BaseMutableResourceService<Dashb
 
     @Override
     protected void beforeUpdateEntity(
-            DashboardFiltreEntity entity,
-            DashboardFiltre resource,
-            Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
+        DashboardFiltreEntity entity,
+        DashboardFiltre resource,
+        Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
+
         Long dashboardId = resource.getDashboard() != null ? resource.getDashboard().getId() : entity.getDashboard().getId();
         String errorMessage = findDuplicateErrorMessage(dashboardId, resource.getTipus(), resource.getDimensioCodi(), entity.getId());
         if (errorMessage != null) {
@@ -68,21 +75,24 @@ public class DashboardFiltreServiceImpl extends BaseMutableResourceService<Dashb
      *
      * @return el missatge d'error localitzat si es vulnera alguna de les regles, o {@code null} si tot és correcte.
      */
-    private String findDuplicateErrorMessage(Long dashboardId, DashboardFiltreTipus tipus, String dimensioCodi, Long excludeId) {
+    private String findDuplicateErrorMessage(Long dashboardId,
+                                             DashboardFiltreTipus tipus,
+                                             String dimensioCodi,
+                                             Long excludeId) {
         if (dashboardId == null || tipus == null) {
             return null;
         }
         boolean duplicate = dashboardFiltreRepository.findByDashboardIdOrderByOrdre(dashboardId).stream()
-                .filter(existing -> !Objects.equals(existing.getId(), excludeId))
-                .anyMatch(existing -> existing.getTipus() == tipus
-                        && (tipus != DashboardFiltreTipus.DIMENSIO || Objects.equals(existing.getDimensioCodi(), dimensioCodi)));
+            .filter(existing -> !Objects.equals(existing.getId(), excludeId))
+            .anyMatch(existing -> existing.getTipus() == tipus
+                && (tipus != DashboardFiltreTipus.DIMENSIO || Objects.equals(existing.getDimensioCodi(), dimensioCodi)));
         if (!duplicate) {
             return null;
         }
         return I18nUtil.getInstance().getI18nMessage(
-                tipus == DashboardFiltreTipus.PERIODE
-                        ? "es.caib.comanda.estadistica.logic.service.DashboardFiltreServiceImpl.periodeDuplicat"
-                        : "es.caib.comanda.estadistica.logic.service.DashboardFiltreServiceImpl.dimensioDuplicada");
+            tipus == DashboardFiltreTipus.PERIODE
+                ? "es.caib.comanda.estadistica.logic.service.DashboardFiltreServiceImpl.periodeDuplicat"
+                : "es.caib.comanda.estadistica.logic.service.DashboardFiltreServiceImpl.dimensioDuplicada");
     }
 
     @Override

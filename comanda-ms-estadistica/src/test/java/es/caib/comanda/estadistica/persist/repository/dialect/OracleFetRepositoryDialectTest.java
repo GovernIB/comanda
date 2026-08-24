@@ -31,7 +31,7 @@ public class OracleFetRepositoryDialectTest {
     @Test
     void testGetFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery() {
         // Act
-        String query = removeConsecutiveSpaces(dialect.getFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery());
+        String query = removeConsecutiveSpaces(dialect.getFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery("departament"));
 
         // Assert
         String expectedQuery = removeConsecutiveSpaces("SELECT f.* " +
@@ -39,7 +39,7 @@ public class OracleFetRepositoryDialectTest {
                 "JOIN com_est_temps t ON f.temps_id = t.id " +
                 "WHERE f.entorn_app_id = :entornAppId " +
                 "AND t.data BETWEEN :dataInici AND :dataFi " +
-                "AND JSON_VALUE(f.dimensions_json, '$.\"' || :dimensioCodi || '\"') = :dimensioValor");
+                "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') = :dimensioValor");
         assertNotNull(query);
         assertTrue(query.equals(expectedQuery), "Query should be: " + expectedQuery + "\nActual query: " + query);
     }
@@ -47,7 +47,7 @@ public class OracleFetRepositoryDialectTest {
     @Test
     void testGetFindByEntornAppIdAndTempsDataBetweenAndDimensionValuesQuery() {
         // Act
-        String query = removeConsecutiveSpaces(dialect.getFindByEntornAppIdAndTempsDataBetweenAndDimensionValuesQuery());
+        String query = removeConsecutiveSpaces(dialect.getFindByEntornAppIdAndTempsDataBetweenAndDimensionValuesQuery("departament"));
 
         // Assert
         String expectedQuery = removeConsecutiveSpaces("SELECT f.* " +
@@ -55,7 +55,7 @@ public class OracleFetRepositoryDialectTest {
                 "JOIN com_est_temps t ON f.temps_id = t.id " +
                 "WHERE f.entorn_app_id = :entornAppId " +
                 "AND t.data BETWEEN :dataInici AND :dataFi " +
-                "AND JSON_VALUE(f.dimensions_json, '$.\"' || :dimensioCodi || '\"') IN (:dimensioValor)");
+                "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') IN (:dimensioValor)");
         assertNotNull(query);
         assertTrue(query.equals(expectedQuery));
     }

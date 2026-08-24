@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
  * Implementació PostgreSQL de FetRepositoryDialect.
  * Proporciona les consultes SQL específiques per a la base de dades PostgreSQL.
  */
-// "        SUM((f.indicadors_json->>'" + indicadorCodi + "')::numeric) AS sum_fets "
 @Component
 public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
 
@@ -25,8 +24,11 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
     private static final String FILTER_BETWEEN = " AND t.data BETWEEN :dataInici AND :dataFi ";
     private static final String FILTER_DATE = " AND t.data = :data ";
     private static final String BASE_WHERE = BASE_WHERE_ENTORN + FILTER_BETWEEN;
-    private static final String SUM_INDICADOR_TEMPLATE = " SUM(TO_NUMBER(f.indicadors_json->>'%s')::numeric) AS sum_fets";
-    private static final String DIMENSION_VALUE_TEMPLATE = " f.dimensions_json->>'%s' ";
+    // dimensions_json/indicadors_json es guarden com a varchar (veure liquibase), no com a jsonb; l'operador ->>
+    // de PostgreSQL només existeix per a json/jsonb, cal el cast explícit. TO_NUMBER(text) tampoc existeix a
+    // PostgreSQL sense una màscara de format (a diferència d'Oracle), per això feim servir un cast directe a numeric.
+    private static final String SUM_INDICADOR_TEMPLATE = " SUM((f.indicadors_json::jsonb->>'%s')::numeric) AS sum_fets";
+    private static final String DIMENSION_VALUE_TEMPLATE = " f.dimensions_json::jsonb->>'%s' ";
 
 
     /**
@@ -36,11 +38,11 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
      * @return Una cadena que conté la consulta SQL per obtenir els resultats filtrats segons entornAppId, rang de dates i valor de dimensió.
      */
     @Override
-    public String getFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery() {
+    public String getFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery(String dimensioCodi) {
         return "SELECT f.*" +
                 BASE_JOIN +
                 BASE_WHERE +
-                "AND" + getDimensionValueQuery("' || :dimensioCodi || '") + "= :dimensioValor";
+                "AND" + getDimensionValueQuery(escapeSqlLiteral(dimensioCodi)) + "= :dimensioValor";
     }
 
     /**
@@ -55,11 +57,11 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
      * @return Una cadena amb la consulta SQL per obtenir els resultats filtrats segons entornAppId, rang de dates i múltiples valors de dimensió.
      */
     @Override
-    public String getFindByEntornAppIdAndTempsDataBetweenAndDimensionValuesQuery() {
+    public String getFindByEntornAppIdAndTempsDataBetweenAndDimensionValuesQuery(String dimensioCodi) {
         return "SELECT f.* " +
                 BASE_JOIN +
                 BASE_WHERE +
-                "AND" + getDimensionValueQuery("' || :dimensioCodi || '") + "IN (:dimensioValor)";
+                "AND" + getDimensionValueQuery(escapeSqlLiteral(dimensioCodi)) + "IN (:dimensioValor)";
     }
 
     /**
@@ -238,13 +240,21 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
         String querySelect = getGraficQuerySelect(indicadorAgregacio);
         String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
         String queryDescomposicio = getDimensionValueQuery(dimensioDescomposicioCodi);
+        boolean isAverage = TableColumnsEnum.AVERAGE.equals(indicadorAgregacio.getAgregacio());
+        String innerGrouping = isAverage ? getGrupping(indicadorAgregacio.getUnitatAgregacio()) : "t.data";
 
-        return "SELECT " + queryDescomposicio + " AS agrupacio, " +
+        return "SELECT agrupacio, " +
+                querySelect +
+                " FROM ( SELECT " +
+                (isAverage ? "" : "t.data as data, ") +
+                queryDescomposicio + " AS agrupacio," +
                 getSumIndicadorQuery(indicadorCodi) +
                 BASE_JOIN +
                 BASE_WHERE +
                 queryConditions +
-                "GROUP BY " + queryDescomposicio +
+                "GROUP BY " + innerGrouping + ", " + queryDescomposicio +
+                ") " +
+                "GROUP BY agrupacio " +
                 "ORDER BY agrupacio";
     }
 
@@ -609,14 +619,18 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
         return value == null ? null : value.replace("'", "''");
     }
 
-    /** Retorna el camp d'agrupació, que mostrarem i emprarem al frontal. **/
+    /**
+     * Retorna el camp d'agrupació, que mostrarem i emprarem al frontal.
+     * A diferència d'Oracle, LPAD de PostgreSQL exigeix un argument de tipus text (no accepta un enter
+     * implícitament), per això cal el cast explícit a text abans de fer el padding.
+     **/
     private static String generateGraficAgrupacioConditions(PeriodeUnitat tempsAgregacio) {
         switch (tempsAgregacio) {
-            case SETMANA: return "anualitat || '/' || LPAD(setmana, 2, '0')";
-            case MES: return "anualitat || '/' || LPAD(mes, 2, '0')";
+            case SETMANA: return "anualitat || '/' || LPAD(setmana::text, 2, '0')";
+            case MES: return "anualitat || '/' || LPAD(mes::text, 2, '0')";
             case TRIMESTRE: return "anualitat || '/' || trimestre";
             case ANY: return "anualitat";
-            default: return "anualitat || '/' || LPAD(mes, 2, '0') || '/' || LPAD(dia, 2, '0')";
+            default: return "anualitat || '/' || LPAD(mes::text, 2, '0') || '/' || LPAD(dia::text, 2, '0')";
         }
     }
 

@@ -52,19 +52,28 @@ public class ValidTaulaWidgetValidatorTest {
         lenient().when(messageSource.getMessage(anyString(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any())).thenThrow(new org.springframework.context.NoSuchMessageException("mock"));
     }
 
+    private static EstadisticaTaulaWidget newWidget() {
+        EstadisticaTaulaWidget widget = new EstadisticaTaulaWidget();
+        // dimensioAgrupacio és obligatori (validateDimensioAgrupacio); es fixa aquí perquè cada test
+        // només exerciti la particularitat que li pertoca comprovar.
+        widget.setDimensioAgrupacio(es.caib.comanda.ms.logic.intf.model.ResourceReference.toResourceReference(1L));
+        return widget;
+    }
+
+    private static IndicadorTaula newColumna(long indicadorId, String titol, TableColumnsEnum agregacio) {
+        IndicadorTaula ind = new IndicadorTaula();
+        ind.setIndicador(es.caib.comanda.ms.logic.intf.model.ResourceReference.toResourceReference(indicadorId));
+        ind.setTitol(titol);
+        ind.setAgregacio(agregacio);
+        return ind;
+    }
+
     @Test
     void testValidPercentageNotMixed() {
-        EstadisticaTaulaWidget widget = new EstadisticaTaulaWidget();
+        EstadisticaTaulaWidget widget = newWidget();
 
-        IndicadorTaula ind1 = new IndicadorTaula();
-        ind1.setIndicador(es.caib.comanda.ms.logic.intf.model.ResourceReference.toResourceReference(1L));
-        ind1.setTitol("Visites");
-        ind1.setAgregacio(TableColumnsEnum.PERCENTAGE);
-
-        IndicadorTaula ind2 = new IndicadorTaula();
-        ind2.setIndicador(es.caib.comanda.ms.logic.intf.model.ResourceReference.toResourceReference(2L));
-        ind2.setTitol("Sessions");
-        ind2.setAgregacio(TableColumnsEnum.PERCENTAGE);
+        IndicadorTaula ind1 = newColumna(1L, "Visites", TableColumnsEnum.PERCENTAGE);
+        IndicadorTaula ind2 = newColumna(2L, "Sessions", TableColumnsEnum.PERCENTAGE);
 
         widget.setColumnes(Arrays.asList(ind1, ind2));
 
@@ -72,18 +81,53 @@ public class ValidTaulaWidgetValidatorTest {
     }
 
     @Test
-    void testInvalidPercentageMixedWithSum() {
-        EstadisticaTaulaWidget widget = new EstadisticaTaulaWidget();
+    void testValidPercentageMixedWithSumOfDifferentIndicador() {
+        // Percentatge i suma d'indicadors diferents no interfereixen entre si: cada columna es calcula
+        // de manera independent (veure FetRepositoryCustomImpl.processPercentages/calculatePercentages).
+        EstadisticaTaulaWidget widget = newWidget();
 
-        IndicadorTaula ind1 = new IndicadorTaula();
-        ind1.setIndicador(es.caib.comanda.ms.logic.intf.model.ResourceReference.toResourceReference(1L));
-        ind1.setTitol("Visites");
-        ind1.setAgregacio(TableColumnsEnum.PERCENTAGE);
+        IndicadorTaula ind1 = newColumna(1L, "Visites", TableColumnsEnum.PERCENTAGE);
+        IndicadorTaula ind2 = newColumna(2L, "Sessions", TableColumnsEnum.SUM);
 
-        IndicadorTaula ind2 = new IndicadorTaula();
-        ind2.setIndicador(es.caib.comanda.ms.logic.intf.model.ResourceReference.toResourceReference(2L));
-        ind2.setTitol("Sessions");
-        ind2.setAgregacio(TableColumnsEnum.SUM);
+        widget.setColumnes(Arrays.asList(ind1, ind2));
+
+        assertTrue(validator.isValid(widget, context));
+    }
+
+    @Test
+    void testValidPercentageCombinedWithSumOfSameIndicador() {
+        // Percentatge que deriva d'una columna base numèrica (SUM) del mateix indicador: vàlid, ja que
+        // FetRepositoryCustomImpl.calculateDependentPercentages pot parsejar el valor base com a número.
+        EstadisticaTaulaWidget widget = newWidget();
+
+        IndicadorTaula ind1 = newColumna(1L, "Visites", TableColumnsEnum.PERCENTAGE);
+        IndicadorTaula ind2 = newColumna(1L, "Visites (total)", TableColumnsEnum.SUM);
+
+        widget.setColumnes(Arrays.asList(ind1, ind2));
+
+        assertTrue(validator.isValid(widget, context));
+    }
+
+    @Test
+    void testInvalidPercentageCombinedWithFirstSeenOfSameIndicador() {
+        // Percentatge que derivaria d'una columna base FIRST_SEEN/LAST_SEEN del mateix indicador (una data,
+        // no un número): ha de fallar la validació (veure comentari a ValidTaulaWidgetValidator.validateColumnes).
+        EstadisticaTaulaWidget widget = newWidget();
+
+        IndicadorTaula ind1 = newColumna(1L, "Visites", TableColumnsEnum.PERCENTAGE);
+        IndicadorTaula ind2 = newColumna(1L, "Primera visita", TableColumnsEnum.FIRST_SEEN);
+
+        widget.setColumnes(Arrays.asList(ind1, ind2));
+
+        assertFalse(validator.isValid(widget, context));
+    }
+
+    @Test
+    void testInvalidPercentageCombinedWithLastSeenOfSameIndicador() {
+        EstadisticaTaulaWidget widget = newWidget();
+
+        IndicadorTaula ind1 = newColumna(1L, "Visites", TableColumnsEnum.PERCENTAGE);
+        IndicadorTaula ind2 = newColumna(1L, "Darrera visita", TableColumnsEnum.LAST_SEEN);
 
         widget.setColumnes(Arrays.asList(ind1, ind2));
 
@@ -92,17 +136,10 @@ public class ValidTaulaWidgetValidatorTest {
 
     @Test
     void testValidSumNotMixed() {
-        EstadisticaTaulaWidget widget = new EstadisticaTaulaWidget();
+        EstadisticaTaulaWidget widget = newWidget();
 
-        IndicadorTaula ind1 = new IndicadorTaula();
-        ind1.setIndicador(es.caib.comanda.ms.logic.intf.model.ResourceReference.toResourceReference(1L));
-        ind1.setTitol("Visites");
-        ind1.setAgregacio(TableColumnsEnum.SUM);
-
-        IndicadorTaula ind2 = new IndicadorTaula();
-        ind2.setIndicador(es.caib.comanda.ms.logic.intf.model.ResourceReference.toResourceReference(2L));
-        ind2.setTitol("Sessions");
-        ind2.setAgregacio(TableColumnsEnum.SUM);
+        IndicadorTaula ind1 = newColumna(1L, "Visites", TableColumnsEnum.SUM);
+        IndicadorTaula ind2 = newColumna(2L, "Sessions", TableColumnsEnum.SUM);
 
         widget.setColumnes(Arrays.asList(ind1, ind2));
 
@@ -111,18 +148,12 @@ public class ValidTaulaWidgetValidatorTest {
 
     @Test
     void testInvalidDifferentUnits() {
-        EstadisticaTaulaWidget widget = new EstadisticaTaulaWidget();
+        EstadisticaTaulaWidget widget = newWidget();
 
-        IndicadorTaula ind1 = new IndicadorTaula();
-        ind1.setIndicador(es.caib.comanda.ms.logic.intf.model.ResourceReference.toResourceReference(1L));
-        ind1.setTitol("Visites");
-        ind1.setAgregacio(TableColumnsEnum.AVERAGE);
+        IndicadorTaula ind1 = newColumna(1L, "Visites", TableColumnsEnum.AVERAGE);
         ind1.setUnitatAgregacio(PeriodeUnitat.DIA);
 
-        IndicadorTaula ind2 = new IndicadorTaula();
-        ind2.setIndicador(es.caib.comanda.ms.logic.intf.model.ResourceReference.toResourceReference(2L));
-        ind2.setTitol("Sessions");
-        ind2.setAgregacio(TableColumnsEnum.AVERAGE);
+        IndicadorTaula ind2 = newColumna(2L, "Sessions", TableColumnsEnum.AVERAGE);
         ind2.setUnitatAgregacio(PeriodeUnitat.MES);
 
         widget.setColumnes(Arrays.asList(ind1, ind2));
@@ -133,12 +164,9 @@ public class ValidTaulaWidgetValidatorTest {
     @Test
     void testInvalidSecondIndicadorMissing() {
         // La segona columna sense indicador seleccionat ha de fallar la validació
-        EstadisticaTaulaWidget widget = new EstadisticaTaulaWidget();
+        EstadisticaTaulaWidget widget = newWidget();
 
-        IndicadorTaula ind1 = new IndicadorTaula();
-        ind1.setIndicador(es.caib.comanda.ms.logic.intf.model.ResourceReference.toResourceReference(1L));
-        ind1.setTitol("Visites");
-        ind1.setAgregacio(TableColumnsEnum.SUM);
+        IndicadorTaula ind1 = newColumna(1L, "Visites", TableColumnsEnum.SUM);
 
         IndicadorTaula ind2 = new IndicadorTaula();
         // ind2 sense indicador -> hauria de fallar
@@ -146,6 +174,17 @@ public class ValidTaulaWidgetValidatorTest {
         ind2.setAgregacio(TableColumnsEnum.SUM);
 
         widget.setColumnes(Arrays.asList(ind1, ind2));
+
+        assertFalse(validator.isValid(widget, context));
+    }
+
+    @Test
+    void testInvalidMissingDimensioAgrupacio() {
+        EstadisticaTaulaWidget widget = new EstadisticaTaulaWidget();
+        widget.setDimensioAgrupacio(null);
+
+        IndicadorTaula ind1 = newColumna(1L, "Visites", TableColumnsEnum.SUM);
+        widget.setColumnes(Arrays.asList(ind1));
 
         assertFalse(validator.isValid(widget, context));
     }

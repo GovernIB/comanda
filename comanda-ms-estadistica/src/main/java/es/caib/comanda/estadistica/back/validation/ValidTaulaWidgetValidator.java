@@ -22,7 +22,6 @@ public class ValidTaulaWidgetValidator extends ValidWidgetValidator implements C
 
     private static final String MSG_CAMP_OBLIGATORI = "es.caib.comanda.estadistica.back.validation.ValidTaulaWidgetValidator.campObligatori";
     private static final String MSG_DIFERENTS_UNITATS = "es.caib.comanda.estadistica.back.validation.ValidTaulaWidgetValidator.columnes.unitatAgregacio.diferents";
-    private static final String MSG_PERCENTATGE_MIX = "es.caib.comanda.estadistica.back.validation.ValidTaulaWidgetValidator.columnes.agregacio.percentatgeMix";
     private static final String MSG_PERCENTATGE_COMB = "es.caib.comanda.estadistica.back.validation.ValidTaulaWidgetValidator.columnes.agregacio.percentatge.combinat";
 
     private final MessageSource messageSource;
@@ -97,23 +96,10 @@ public class ValidTaulaWidgetValidator extends ValidWidgetValidator implements C
                     if (baseNoNumerica) {
                         addConstraintViolation(context,
                                 MSG_PERCENTATGE_COMB,
-//                                "Una columna de tipus percentatge no es pot combinar amb una columna de primera/darrera aparició del mateix indicador",
                                 "columnes[" + widget.getColumnes().indexOf(ind) + "].agregacio");
                         isValid.set(false);
                     }
                 });
-
-
-//        boolean hasPercentage = widget.getColumnes().stream().anyMatch(ind -> TableColumnsEnum.PERCENTAGE.equals(ind.getAgregacio()));
-//        boolean hasNonPercentage = widget.getColumnes().stream().anyMatch(ind -> ind.getAgregacio() != null && !TableColumnsEnum.PERCENTAGE.equals(ind.getAgregacio()));
-//
-//        if (hasPercentage && hasNonPercentage) {
-//            widget.getColumnes().stream()
-//                    .filter(ind -> TableColumnsEnum.PERCENTAGE.equals(ind.getAgregacio()))
-//                    .forEach(ind -> addConstraintViolation(context, MSG_PERCENTATGE_MIX,
-//                            "columnes[" + widget.getColumnes().indexOf(ind) + "].agregacio"));
-//            isValid.set(false);
-//        }
 
         return isValid.get();
     }
