@@ -20,6 +20,7 @@ import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetE
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.*;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -422,7 +423,9 @@ public class DashboardImportHelper {
             throw new AnswerRequiredException(
                     DashboardServiceImpl.DashboardImportParams.class,
                     "ENTORN",
-                    "Entorn amb codi " + entornCodi + " no trobada");
+                    I18nUtil.getInstance().getI18nMessage(
+                            "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.entorn",
+                            entornCodi));
         }
         return entorn;
     }
@@ -433,7 +436,9 @@ public class DashboardImportHelper {
             throw new AnswerRequiredException(
                     DashboardServiceImpl.DashboardImportParams.class,
                     "APP",
-                    "Aplicació amb codi " + appCodi + " no trobada");
+                    I18nUtil.getInstance().getI18nMessage(
+                            "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.app",
+                            appCodi));
         }
         return app;
     }
@@ -449,21 +454,27 @@ public class DashboardImportHelper {
             throw new AnswerRequiredException(
                     DashboardServiceImpl.DashboardImportParams.class,
                     "ENTORN_APP",
-                    "EntornApp amb codi " + entornCodi + " - " + appCodi + " no trobada");
+                    I18nUtil.getInstance().getI18nMessage(
+                            "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.entornApp",
+                            entornCodi,
+                            appCodi));
         }
         return entornApp;
     }
 
     private IndicadorEntity checkIndicador(String indicadorCodi, String entornCodi, String appCodi) {
         EntornApp entornApp = this.checkEntornApp(entornCodi, appCodi);
-        IndicadorEntity dimensio = indicadorRepository.findByCodiAndEntornAppId(indicadorCodi, entornApp.getId()).orElse(null);
-        if (dimensio == null) {
+        IndicadorEntity indicador = indicadorRepository.findByCodiAndEntornAppId(indicadorCodi, entornApp.getId()).orElse(null);
+        if (indicador == null) {
             throw new AnswerRequiredException(
                     DashboardServiceImpl.DashboardImportParams.class,
-                    "DIMENSIO",
-                    "Indicador amb codi " + indicadorCodi + " no trobat al entorApp " + entornApp.getId());
+                    "INDICADOR",
+                    I18nUtil.getInstance().getI18nMessage(
+                            "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.indicador",
+                            indicadorCodi,
+                            entornApp.getId()));
         }
-        return dimensio;
+        return indicador;
     }
 
     private DimensioEntity checkDimensio(String dimensioCodi, String entornCodi, String appCodi) {
@@ -473,7 +484,10 @@ public class DashboardImportHelper {
             throw new AnswerRequiredException(
                     DashboardServiceImpl.DashboardImportParams.class,
                     "DIMENSIO",
-                    "Dimensio amb codi " + dimensioCodi + " no trobada al entorApp " + entornApp.getId());
+                    I18nUtil.getInstance().getI18nMessage(
+                            "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.dimensio",
+                            dimensioCodi,
+                            entornApp.getId()));
         }
         return dimensio;
     }

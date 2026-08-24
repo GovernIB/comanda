@@ -22,6 +22,7 @@ import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidget
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.*;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationContext;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.ArrayList;
@@ -57,12 +59,19 @@ class DashboardImportHelperTest {
     @Mock private DimensioRepository dimensioRepository;
     @Mock private DimensioValorRepository dimensioValorRepository;
     @Mock private PaletaRepository paletaRepository;
+    @Mock private I18nUtil i18nUtil;
+    @Mock private ApplicationContext applicationContext;
 
     @InjectMocks
     private DashboardImportHelper dashboardImportHelper;
 
     @BeforeEach
     void setUp() {
+        // Configuració per evitar NPE en crides estàtiques a I18nUtil
+        ReflectionTestUtils.setField(I18nUtil.class, "applicationContext", applicationContext);
+        lenient().when(applicationContext.getBean(I18nUtil.class)).thenReturn(i18nUtil);
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(i -> i.getArgument(0));
+
         // Configuració per defecte per evitar NPE en crides a repositoris dins de lògica de conflictes
         lenient().when(dashboardRepository.findByTitol(anyString())).thenReturn(null);
         lenient().when(estadisticaWidgetRepository.findByAppIdAndTitol(anyLong(), anyString())).thenReturn(null);
@@ -289,10 +298,14 @@ class DashboardImportHelperTest {
         widget.setDimensionsValor(new ArrayList<>());
         item.setWidget(widget);
 
+        Entorn entorn = new Entorn();
+        ReflectionTestUtils.setField(entorn, "id", 1L);
+        App app = new App();
+        ReflectionTestUtils.setField(app, "id", 2L);
         EntornApp entornApp = new EntornApp();
         entornApp.setId(10L);
-        when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(new Entorn());
-        when(estadisticaClientHelper.appFindByCodi("APP")).thenReturn(new App());
+        when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(entorn);
+        when(estadisticaClientHelper.appFindByCodi("APP")).thenReturn(app);
         when(estadisticaClientHelper.entornAppFindByAppAndEntorn(anyLong(), anyLong())).thenReturn(entornApp);
         when(indicadorRepository.findByCodiAndEntornAppId("IND1", 10L)).thenReturn(Optional.empty());
 
@@ -301,7 +314,7 @@ class DashboardImportHelperTest {
             List<Conflict> conflicts = Collections.emptyList();
             ReflectionTestUtils.invokeMethod(dashboardImportHelper, "checkDashboardItemConflicts", item, conflicts);
         }).isInstanceOf(AnswerRequiredException.class)
-            .hasMessageContaining("Answer 'ENTORN_APP' required to process changes");
+            .hasMessageContaining("Answer 'INDICADOR' required to process changes");
     }
 
     @Test
@@ -318,10 +331,14 @@ class DashboardImportHelperTest {
         widget.setDimensionsValor(new ArrayList<>());
         item.setWidget(widget);
 
+        Entorn entorn = new Entorn();
+        ReflectionTestUtils.setField(entorn, "id", 1L);
+        App app = new App();
+        ReflectionTestUtils.setField(app, "id", 2L);
         EntornApp entornApp = new EntornApp();
         entornApp.setId(20L);
-        when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(new Entorn());
-        when(estadisticaClientHelper.appFindByCodi("APP")).thenReturn(new App());
+        when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(entorn);
+        when(estadisticaClientHelper.appFindByCodi("APP")).thenReturn(app);
         when(estadisticaClientHelper.entornAppFindByAppAndEntorn(anyLong(), anyLong())).thenReturn(entornApp);
         when(dimensioRepository.findByCodiAndEntornAppId("DIM1", 20L)).thenReturn(Optional.empty());
 
@@ -330,7 +347,7 @@ class DashboardImportHelperTest {
             List<Conflict> conflicts = Collections.emptyList();
             ReflectionTestUtils.invokeMethod(dashboardImportHelper, "checkDashboardItemConflicts", item, conflicts);
         }).isInstanceOf(AnswerRequiredException.class)
-            .hasMessageContaining("Answer 'ENTORN_APP' required to process changes");
+            .hasMessageContaining("Answer 'DIMENSIO' required to process changes");
     }
 
     // ========================================================================

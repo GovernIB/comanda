@@ -421,14 +421,14 @@ const translationCa = {
                 dashboardElements: "Elements del tauler",
             },
             edit: "Editar",
-            dashboardView: "Anar al taulers de control",
+            dashboardView: "Anar al tauler de control",
             acl: {
                 readAllowed: "Consulta de taulers de control",
                 writeAllowed: "Disseny de taulers de control",
             },
             cloneDashboard: {
                 title: "Clonar el tauler de control",
-                success: "Tauler de controls clonat correctament",
+                success: "Tauler de control clonat correctament",
             },
             action: {
                 select: {
