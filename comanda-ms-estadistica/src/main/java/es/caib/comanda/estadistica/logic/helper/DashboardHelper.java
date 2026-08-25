@@ -217,7 +217,7 @@ public class DashboardHelper {
                     clone.setWidth(original.getWidth());
                     clone.setHeight(original.getHeight());
                     clone.setAtributsVisualsJson(original.getAtributsVisualsJson());
-                    if (!Objects.equals(original.getWidget().getAppId(), newAppId)){
+                    if (newAppId != null && !Objects.equals(original.getWidget().getAppId(), newAppId)){
                         throw new ActionExecutionException(
                             Dashboard.class,
                             originalDashboard.getId(),
