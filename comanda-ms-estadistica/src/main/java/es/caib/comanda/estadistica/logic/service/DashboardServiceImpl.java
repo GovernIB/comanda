@@ -392,7 +392,8 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                         objectMapper.getTypeFactory().constructCollectionType(List.class, DashboardExport.class));
 
                 List<Dashboard> importedDashboards = new ArrayList<>();
-                dashboardImportHelper.importDashboardFromExport(dashboards, params.getConflicts());
+                List<Conflict> conflicts = params.getConflicts() != null ? params.getConflicts() : Collections.emptyList();
+                dashboardImportHelper.importDashboardFromExport(dashboards, conflicts);
                 return new DashboardImportResult(importedDashboards);
             } catch (Exception e) {
                 log.error("Error importing dashboards from JSON", e);

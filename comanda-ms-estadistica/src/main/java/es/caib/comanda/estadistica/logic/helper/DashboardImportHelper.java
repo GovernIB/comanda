@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -58,17 +59,17 @@ public class DashboardImportHelper {
                 dimensioValorRepository);
     }
 
-    public List<DashboardEntity> importDashboardFromExport(List<DashboardExport> dashboardExportList, List<Conflict> conflicts) {
+    public List<DashboardEntity> importDashboardFromExport(List<DashboardExport> dashboardExportList, @NotNull List<Conflict> conflicts) {
         List<DashboardEntity> dashboardsToImport = this.toDashboardEntity(dashboardExportList);
         return this.importDashboardFromEntity(dashboardsToImport, conflicts);
     }
-    public List<DashboardEntity> importDashboardFromEntity(List<DashboardEntity> dashboardEntityList, List<Conflict> conflicts) {
+    public List<DashboardEntity> importDashboardFromEntity(List<DashboardEntity> dashboardEntityList, @NotNull List<Conflict> conflicts) {
         return dashboardEntityList.stream()
                 .map(d -> this.importDashboardFromEntity(d, conflicts))
                 .collect(Collectors.toList());
     }
 
-    public DashboardEntity importDashboardFromEntity(DashboardEntity dashboardEntity, List<Conflict> conflicts) {
+    public DashboardEntity importDashboardFromEntity(DashboardEntity dashboardEntity, @NotNull List<Conflict> conflicts) {
         Conflict conflicte = this.findConflictByNom(
                 dashboardEntity.getTitol(),
                 null,
@@ -311,12 +312,12 @@ public class DashboardImportHelper {
     /*///////////////////////////////////////////////////////////////////////*/
 
     public void checkDashboardConflicts(List<DashboardExport> dashboards,
-                                        List<Conflict> conflicts) {
+                                        @NotNull List<Conflict> conflicts) {
         dashboards.forEach(d -> this.checkDashboardConflicts(d, conflicts));
     }
 
     public void checkDashboardConflicts(DashboardExport dashboard,
-                                        List<Conflict> conflicts) {
+                                        @NotNull List<Conflict> conflicts) {
         this.addConflict(dashboard.getTitol(), null, DashboardExport.class.getSimpleName(), conflicts);
 
         if (dashboard.getEntornCodi() != null) {
@@ -356,10 +357,12 @@ public class DashboardImportHelper {
             EstadisticaGraficWidgetExport w = (EstadisticaGraficWidgetExport) widget;
             if (w.getIndicadorInfo() != null)
                 this.checkIndicador(w.getIndicadorInfo().getIndicadorCodi(), item.getEntornCodi(), item.getAppCodi());
-            this.checkDimensio(w.getDescomposicioDimensioCodi(), item.getEntornCodi(), item.getAppCodi());
+            if (w.getDescomposicioDimensioCodi() != null)
+                this.checkDimensio(w.getDescomposicioDimensioCodi(), item.getEntornCodi(), item.getAppCodi());
         } else if (widget instanceof EstadisticaTaulaWidgetExport) {
             EstadisticaTaulaWidgetExport w = (EstadisticaTaulaWidgetExport) widget;
-            this.checkDimensio(w.getDimensioAgrupacioCodi(), item.getEntornCodi(), item.getAppCodi());
+            if (w.getDimensioAgrupacioCodi() != null)
+                this.checkDimensio(w.getDimensioAgrupacioCodi(), item.getEntornCodi(), item.getAppCodi());
         }
     }
 
