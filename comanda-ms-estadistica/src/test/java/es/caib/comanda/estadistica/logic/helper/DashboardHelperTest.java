@@ -8,9 +8,11 @@ import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
+import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardTitolRepository;
+import es.caib.comanda.estadistica.persist.repository.PlantillaRepository;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
@@ -30,6 +32,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -56,6 +59,9 @@ class DashboardHelperTest {
 
     @Mock
     private DashboardItemRepository dashboardItemRepository;
+
+    @Mock
+    private PlantillaRepository plantillaRepository;
 
     @Mock
     private I18nUtil i18nUtil;
@@ -376,7 +382,7 @@ class DashboardHelperTest {
     void cloneDashboardAction_exec_quanParamsNoNuls_llavorsClonaAmbParams() throws ActionExecutionException {
         // Arrange
         DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
-            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository);
+            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository);
 
         DashboardEntity entity = new DashboardEntity();
         entity.setId(1L);
@@ -384,17 +390,26 @@ class DashboardHelperTest {
         entity.setAppId(10L);
         entity.setEntornId(20L);
 
+        PlantillaEntity plantilla = new PlantillaEntity();
+        plantilla.setId(5L);
+        when(plantillaRepository.findById(5L)).thenReturn(Optional.of(plantilla));
+
         Dashboard params = new Dashboard();
         params.setTitol("Nou Titol");
         params.setDescripcio("Nova Descripcio");
         params.setAplicacio(ResourceReference.toResourceReference(15L, "Nova App"));
         params.setEntorn(ResourceReference.toResourceReference(25L, "Nou Entorn"));
+        params.setPlantilla(ResourceReference.toResourceReference(5L, "Plantilla"));
 
         // Act
         action.exec(Dashboard.CLONE_ACTION, entity, params);
 
         // Assert
-        verify(dashboardRepository, times(1)).save(any(DashboardEntity.class));
+        verify(dashboardRepository, times(1)).save(argThat(d ->
+            d.getTitol().equals("Nou Titol") &&
+            d.getPlantilla() != null &&
+            Long.valueOf(5L).equals(d.getPlantilla().getId())
+        ));
         verify(dashboardTitolRepository, times(1)).saveAll(anyList());
         verify(dashboardItemRepository, times(1)).saveAll(anyList());
     }
@@ -404,7 +419,10 @@ class DashboardHelperTest {
     void cloneDashboardAction_exec_quanParamsNuls_llavorsClonaAmbValorsEntitat() throws ActionExecutionException {
         // Arrange
         DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
-            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository);
+            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository);
+
+        PlantillaEntity plantilla = new PlantillaEntity();
+        plantilla.setId(5L);
 
         DashboardEntity entity = new DashboardEntity();
         entity.setId(1L);
@@ -412,29 +430,41 @@ class DashboardHelperTest {
         entity.setDescripcio("Desc Original");
         entity.setAppId(10L);
         entity.setEntornId(20L);
+        entity.setPlantilla(plantilla);
 
         // Act
         action.exec(Dashboard.CLONE_ACTION, entity, null);
 
         // Assert
-        verify(dashboardRepository, times(1)).save(argThat(d -> d.getTitol().equals("Original (Copia)")));
+        verify(dashboardRepository, times(1)).save(argThat(d ->
+            d.getTitol().equals("Original (Copia)") &&
+            d.getPlantilla() == plantilla
+        ));
         verify(dashboardTitolRepository, times(1)).saveAll(anyList());
         verify(dashboardItemRepository, times(1)).saveAll(anyList());
     }
 
     @Test
-    @DisplayName("CloneDashboardAction.getClonedTitulos: clona correctament tots els títols")
+    @DisplayName("CloneDashboardAction.getClonedTitulos: clona correctament tots els títols incloent personalitzat, destacat i plantilla")
     void cloneDashboardAction_getClonedTitulos_quanTitolsNoNuls_llavorsClonaTitols() throws Exception {
         // Arrange
         DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
-            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository);
+            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository);
 
         DashboardEntity original = new DashboardEntity();
         DashboardEntity newDashboard = new DashboardEntity();
 
+        PlantillaEntity plantilla = new PlantillaEntity();
+        plantilla.setId(12L);
+
         DashboardTitolEntity titol = new DashboardTitolEntity();
         titol.setTitol("Titol 1");
+        titol.setSubtitol("Subtitol 1");
         titol.setPosX(10);
+        titol.setPersonalitzat(true);
+        titol.setDestacat(true);
+        titol.setPlantilla(plantilla);
+        titol.setColorTitol("#FF0000");
         original.setTitols(Collections.singletonList(titol));
 
         // Act
@@ -444,6 +474,11 @@ class DashboardHelperTest {
         // Assert
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getTitol()).isEqualTo("Titol 1");
+        assertThat(result.get(0).getSubtitol()).isEqualTo("Subtitol 1");
+        assertThat(result.get(0).getPersonalitzat()).isTrue();
+        assertThat(result.get(0).getDestacat()).isTrue();
+        assertThat(result.get(0).getPlantilla()).isEqualTo(plantilla);
+        assertThat(result.get(0).getColorTitol()).isEqualTo("#FF0000");
         assertThat(result.get(0).getDashboard()).isSameAs(newDashboard);
     }
 
@@ -452,7 +487,7 @@ class DashboardHelperTest {
     void cloneDashboardAction_getClonedItem_quanWidgetAppIdNoCompatible_llavorsLlancaActionExecutionException() {
         // Arrange
         DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
-            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository);
+            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository);
 
         DashboardEntity original = new DashboardEntity();
         original.setId(1L);
@@ -478,7 +513,7 @@ class DashboardHelperTest {
     void cloneDashboardAction_getClonedItem_quanEntornAppNoExisteix_llavorsLlancaActionExecutionException() {
         // Arrange
         DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
-            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository);
+            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository);
 
         DashboardEntity original = new DashboardEntity();
         original.setId(1L);
@@ -507,11 +542,11 @@ class DashboardHelperTest {
     }
 
     @Test
-    @DisplayName("CloneDashboardAction.getClonedItem: clona correctament els items quan tot és compatible")
+    @DisplayName("CloneDashboardAction.getClonedItem: clona correctament els items quan tot és compatible incloent personalitzat, destacat i plantilla")
     void cloneDashboardAction_getClonedItem_quanTotCompatible_llavorsClonaItems() throws Exception {
         // Arrange
         DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
-            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository);
+            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository);
 
         DashboardEntity original = new DashboardEntity();
         original.setId(1L);
@@ -522,9 +557,16 @@ class DashboardHelperTest {
         newDashboard.setAppId(10L);
         newDashboard.setEntornId(20L);
 
+        PlantillaEntity plantilla = new PlantillaEntity();
+        plantilla.setId(12L);
+
         DashboardItemEntity item = new DashboardItemEntity();
         item.setEntornId(20L);
         item.setPosX(5);
+        item.setPersonalitzat(true);
+        item.setDestacat(false);
+        item.setPlantilla(plantilla);
+        item.setAtributsVisualsJson("{\"colorFons\":\"#123456\"}");
         EstadisticaWidgetEntity<?> widget = mock(EstadisticaWidgetEntity.class);
         when(widget.getAppId()).thenReturn(10L);
         item.setWidget(widget);
@@ -537,6 +579,10 @@ class DashboardHelperTest {
         // Assert
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getPosX()).isEqualTo(5);
+        assertThat(result.get(0).getPersonalitzat()).isTrue();
+        assertThat(result.get(0).getDestacat()).isFalse();
+        assertThat(result.get(0).getPlantilla()).isEqualTo(plantilla);
+        assertThat(result.get(0).getAtributsVisualsJson()).isEqualTo("{\"colorFons\":\"#123456\"}");
         assertThat(result.get(0).getDashboard()).isSameAs(newDashboard);
     }
 }

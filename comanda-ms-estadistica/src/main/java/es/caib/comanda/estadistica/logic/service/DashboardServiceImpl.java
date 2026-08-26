@@ -77,6 +77,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     private final DashboardRepository dashboardRepository;
     private final DashboardTitolRepository dashboardTitolRepository;
     private final DashboardItemRepository dashboardItemRepository;
+    private final PlantillaRepository plantillaRepository;
     private final DashboardStyleResolverHelper dashboardStyleResolverHelper;
     private final DashboardImportHelper dashboardImportHelper;
     private final AuthenticationHelper authenticationHelper;
@@ -89,7 +90,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
         register(Dashboard.WIDGETS_REPORT, new InformeWidgets());
         register(Dashboard.DASHBOARD_EXPORT, new DashboardExportReportGenerator());
         register(Dashboard.DASHBOARD_IMPORT, new DashboardImportActionExecutor());
-        register(Dashboard.CLONE_ACTION, (ActionExecutor<DashboardEntity, ?, ?>) new DashboardHelper.CloneDashboardAction(estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository));
+        register(Dashboard.CLONE_ACTION, (ActionExecutor<DashboardEntity, ?, ?>) new DashboardHelper.CloneDashboardAction(estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository));
     }
 
     @Override
