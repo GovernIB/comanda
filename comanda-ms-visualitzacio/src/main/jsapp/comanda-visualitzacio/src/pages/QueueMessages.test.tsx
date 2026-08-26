@@ -103,7 +103,6 @@ vi.mock('../hooks/useDataGridLocale', () => ({
 }));
 
 vi.mock('reactlib', () => ({
-    GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     useCloseDialogButtons: () => <button>Tancar</button>,
     useMuiContentDialog: () => [mocks.showDialogMock, <div key="dialog" data-testid="dialog-placeholder" />],
     useAuthContext: () => ({

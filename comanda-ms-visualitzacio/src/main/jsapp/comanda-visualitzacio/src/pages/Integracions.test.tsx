@@ -25,7 +25,6 @@ vi.mock('react-i18next', () => ({
 }));
 
 vi.mock('reactlib', () => ({
-    GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     FormField: ({ name }: { name: string }) => <div data-testid={`field-${name}`}>{name}</div>,
     MuiDataGrid: ({
         title,

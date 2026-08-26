@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import useDataGridLocale from '../hooks/useDataGridLocale';
 import {
-    GridPage,
     useMuiContentDialog,
     useCloseDialogButtons,
     useAuthContext,
@@ -376,7 +375,7 @@ const QueueMessages: React.FC = () => {
     const pageTitle = t($ => $.page.queue.title, { name: queueName });
 
     return (
-        <GridPage>
+        <>
             <PageTitle title={pageTitle} />
             <Box sx={{ p: 2 }}>
                 {/* Breadcrumbs navigation */}
@@ -457,7 +456,7 @@ const QueueMessages: React.FC = () => {
                 {/* Message details dialog */}
                 {messageDialogComponent}
             </Box>
-        </GridPage>
+        </>
     );
 };
 

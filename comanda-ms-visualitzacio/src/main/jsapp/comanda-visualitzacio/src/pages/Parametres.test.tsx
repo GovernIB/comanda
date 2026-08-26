@@ -31,7 +31,6 @@ vi.mock('react-i18next', () => ({
 }));
 
 vi.mock('reactlib', () => ({
-    GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     useDebounce: (v: string) => v,
 }));
 

@@ -22,7 +22,6 @@ vi.mock('reactlib', () => ({
         create: vi.fn().mockResolvedValue({ id: 1, clientId: '1' }),
         update: vi.fn().mockResolvedValue({ id: 1, clientId: '1' }),
     }),
-    GridPage: ({ children }: any) => <div data-testid="grid-page">{children}</div>,
     MuiDataGrid: ({
         resourceName,
         columns,
@@ -102,7 +101,6 @@ describe('Paletes', () => {
 
     it('renderitza la pàgina amb el títol i la taula de paletes', () => {
         render(<Paletes />);
-        expect(screen.getByTestId('grid-page')).toBeInTheDocument();
         expect(screen.getByTestId('page-title')).toHaveTextContent('Paleta');
         expect(screen.getByTestId('mui-data-grid')).toBeInTheDocument();
         expect(screen.getByTestId('mui-data-grid')).toHaveAttribute('data-resource', 'paleta');

@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    GridPage,
     MuiDataGrid,
 } from 'reactlib';
 import { Box, Tab, Tabs } from '@mui/material';
@@ -85,7 +84,7 @@ const EstadisticaWidget: React.FC = () => {
         setTab(newValue);
     };
     return (
-        <GridPage>
+        <>
             <PageTitle title={t($ => $.page.widget.title)} />
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
                 <Tabs value={tab} onChange={handleChange}>
@@ -97,7 +96,7 @@ const EstadisticaWidget: React.FC = () => {
             {tab === 0 && (<EstadisticaSimpleWidgetGrid />)}
             {tab === 1 && (<EstadisticaGraficWidgetGrid />)}
             {tab === 2 && (<EstadisticaTaulaWidgetGrid />)}
-        </GridPage>
+        </>
     );
 };
 

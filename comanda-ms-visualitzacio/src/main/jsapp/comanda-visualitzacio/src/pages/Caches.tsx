@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    GridPage,
     MuiDataGrid,
     useResourceApiService,
     useBaseAppContext,
@@ -100,7 +99,7 @@ const Caches: React.FC = () => {
         },
     ];
     return (
-        <GridPage>
+        <>
             <PageTitle title={t($ => $.page.caches.title)} />
             <MuiDataGrid
                 apiRef={gridApiRef}
@@ -122,7 +121,7 @@ const Caches: React.FC = () => {
                 rowActionsColumnProps={{ width: 10 }}
                 toolbarElementsWithPositions={toolbarElementsWithPositions}
             />
-        </GridPage>
+        </>
     );
 }
 

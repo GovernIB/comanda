@@ -23,7 +23,6 @@ vi.mock('react-i18next', () => ({
 }));
 
 vi.mock('reactlib', () => ({
-    GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     MuiDataGrid: ({
         title,
         columns,

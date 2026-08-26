@@ -64,7 +64,6 @@ vi.mock('react-i18next', () => ({
 }));
 
 vi.mock('reactlib', () => ({
-    GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     FormField: ({ name, value, onChange, componentProps }: { name: string; value?: any; onChange?: (value: any) => void; componentProps?: any }) => (
         <input
             data-testid={`field-${name}`}

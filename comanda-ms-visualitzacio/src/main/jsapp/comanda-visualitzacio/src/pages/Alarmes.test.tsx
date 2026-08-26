@@ -48,7 +48,6 @@ vi.mock('../../lib/components/mui/datagrid/DataGridContext', () => ({
 }));
 
 vi.mock('reactlib', () => ({
-    GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     useMuiDataGridContext: vi.fn(() => ({
         selection: { ids: new Set<string>() },
         apiRef: { current: { refresh: vi.fn() } },

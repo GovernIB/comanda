@@ -6,7 +6,6 @@ import Typography from '@mui/material/Typography';
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 import {
-    GridPage,
     MuiDataGrid,
     FormField,
     useFormContext,
@@ -336,7 +335,7 @@ const EstadisticaDashboards: React.FC = () => {
     const {handleShow: showCloneDashboard, content: contentCloneDashboard} = useCloneDashboardAction(refresh);
     const {handleShow: showImport, content: contentImport} = useImportDashboardAction(refresh);
     return (
-        <GridPage>
+        <>
             <PageTitle title={t($ => $.page.dashboards.title)} />
             {exporting && (
                 <Backdrop
@@ -407,7 +406,7 @@ const EstadisticaDashboards: React.FC = () => {
             {contentCloneDashboard}
             {contentImport}
             {permissionComponent}
-        </GridPage>
+        </>
     );
 };
 

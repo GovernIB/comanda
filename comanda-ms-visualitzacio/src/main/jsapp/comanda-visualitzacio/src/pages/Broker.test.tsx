@@ -57,9 +57,6 @@ vi.mock('react-router-dom', () => ({
     useNavigate: () => mocks.navigateMock,
 }));
 
-vi.mock('reactlib', () => ({
-    GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
 
 vi.mock('../components/ContentDetail', () => ({
     ContentDetail: ({ title, elements }: { title: string; elements: Array<{ label: string; value?: unknown; contentValue?: React.ReactNode }> }) => (
