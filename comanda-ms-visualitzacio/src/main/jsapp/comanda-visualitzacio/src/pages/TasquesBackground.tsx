@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    GridPage,
     MuiDataGrid,
     MuiDataGridColDef,
     useResourceApiService,
@@ -84,7 +83,7 @@ const TasquesBackground: React.FC = () => {
     ];
 
     return (
-        <GridPage>
+        <>
             <PageTitle title={t($ => $.page.tasquesBackground.title)} />
             <MuiDataGrid
                 apiRef={gridApiRef}
@@ -104,7 +103,7 @@ const TasquesBackground: React.FC = () => {
                     },
                 ]}
             />
-        </GridPage>
+        </>
     );
 };
 

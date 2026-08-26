@@ -94,7 +94,6 @@ vi.mock('react-i18next', () => ({
 vi.mock('reactlib', async () => {
     const React = await import('react');
     return {
-        GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
         MuiDataGrid: ({
             title,
             toolbarAdditionalRow,

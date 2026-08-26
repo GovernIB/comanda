@@ -18,13 +18,13 @@ public class WidgetStyleProperty extends BaseResource<Long> {
     @NotNull
     private WidgetStyleScope scope;
     @NotNull
-    @Size(max = 64)
+    @Size(max = es.caib.comanda.estadistica.persist.entity.paleta.WidgetStylePropertyEntity.PROPERTY_NAME_MAX_LENGTH)
     private String propertyName;
     @NotNull
     private WidgetStyleValueType valueType;
     private PaletteRole paletteRole;
     private Integer paletteIndex;
-    @Size(max = 1000)
+    @Size(max = es.caib.comanda.estadistica.persist.entity.paleta.WidgetStylePropertyEntity.SCALAR_VALUE_MAX_LENGTH)
     private String scalarValue;
     private Boolean defaultProperty;
     private Integer ordre;

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Box, } from "@mui/material";
-import {GridPage, MuiDataGrid, useFormContext} from "reactlib";
+import {MuiDataGrid, useFormContext} from "reactlib";
 import PageTitle from "../components/PageTitle.tsx";
 import {useTranslation} from "react-i18next";
 import { normalizeColors, PaletteColor, PaletteData, PaletteFormContent } from "../components/PaletteFormContent.tsx";
@@ -67,7 +67,7 @@ const Paletes = () => {
     ], [t]);
 
     return (
-        <GridPage>
+        <>
             <PageTitle title={t($ => $.menu.paleta)} />
             <MuiDataGrid
                 title={t($ => $.menu.paleta)}
@@ -82,7 +82,7 @@ const Paletes = () => {
                 popupEditFormDialogComponentProps={{fullWidth: true, maxWidth: "md"}}
                 formAdditionalData={(row: { id?: unknown }) => !row?.id ? {colors: defaultColors} : {}}
             />
-        </GridPage>
+        </>
     );
 };
 

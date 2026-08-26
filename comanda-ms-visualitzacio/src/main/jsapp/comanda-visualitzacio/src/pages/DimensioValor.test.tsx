@@ -46,7 +46,6 @@ vi.mock('react-router-dom', () => ({
 }));
 
 vi.mock('reactlib', () => ({
-    GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     MuiDataGrid: ({
                       title,
                       fixedFilter,

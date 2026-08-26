@@ -16,7 +16,9 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class DimensioValorExport implements Serializable {
 
+    @javax.validation.constraints.NotBlank
     private String dimensioCodi;
+    @javax.validation.constraints.NotBlank
     private String valor;
 
 }

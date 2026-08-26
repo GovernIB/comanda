@@ -25,6 +25,10 @@ import javax.persistence.Table;
 @NoArgsConstructor
 public class DashboardTitolEntity extends BaseAuditableEntity<DashboardTitol> {
 
+    public static final int TITOL_MAX_LENGTH = 255;
+    public static final int SUBTITOL_MAX_LENGTH = 255;
+    public static final int COLOR_MAX_LENGTH = 8;
+
     @ManyToOne
     @JoinColumn(
             name = "dashboard_id",
@@ -33,9 +37,9 @@ public class DashboardTitolEntity extends BaseAuditableEntity<DashboardTitol> {
             nullable = false)
     private DashboardEntity dashboard;
 
-    @Column(name = "titol", length = 255, nullable = false)
+    @Column(name = "titol", length = TITOL_MAX_LENGTH, nullable = false)
     private String titol;
-    @Column(name = "subtitol", length = 255)
+    @Column(name = "subtitol", length = SUBTITOL_MAX_LENGTH)
     private String subtitol;
 
     @Column(name = "pos_x", nullable = false)
@@ -50,11 +54,11 @@ public class DashboardTitolEntity extends BaseAuditableEntity<DashboardTitol> {
     @Enumerated(EnumType.STRING)
     @Column(name = "tipus_titol", length = 32)
     private DashboardTitolTipus tipusTitol;
-    @Column(name = "color_titol", length = 8)
+    @Column(name = "color_titol", length = COLOR_MAX_LENGTH)
     private String colorTitol;
     @Column(name = "mida_font_titol")
     private Integer midaFontTitol;
-    @Column(name = "color_subtitol", length = 8)
+    @Column(name = "color_subtitol", length = COLOR_MAX_LENGTH)
     private String colorSubtitol;
     @Column(name = "mida_font_subtitol")
     private Integer midaFontSubtitol;

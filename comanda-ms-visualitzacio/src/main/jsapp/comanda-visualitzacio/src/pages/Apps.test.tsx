@@ -111,7 +111,6 @@ vi.mock('reactlib', () => ({
         <div data-testid={`field-${name}`}>{label ?? name}{componentProps?.slotProps?.input?.endAdornment}</div>
     ),
     FormPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     MuiActionReportButton: ({
         title,
         onSuccess,

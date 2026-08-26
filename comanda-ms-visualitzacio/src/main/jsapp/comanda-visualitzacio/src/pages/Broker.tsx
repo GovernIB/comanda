@@ -2,9 +2,6 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import Grid from '@mui/material/Grid';
-import {
-    GridPage,
-} from 'reactlib';
 import { ContentDetail } from '../components/ContentDetail';
 import { Chip, Box, Button, Typography, Paper, Card, CardContent, CardActions } from '@mui/material';
 import { useResourceApiContext } from '../../lib/components/ResourceApiContext';
@@ -211,7 +208,7 @@ const Broker: React.FC = () => {
     }
 
     return (
-        <GridPage>
+        <>
             <PageTitle title={t($ => $.page.broker.title)} />
             <Box sx={{ p: 2, pb: 6 }}>
                 <Typography variant="h4" component="h1" gutterBottom>
@@ -230,7 +227,7 @@ const Broker: React.FC = () => {
 
                 <QueueList queues={queues} />
             </Box>
-        </GridPage>
+        </>
     );
 };
 

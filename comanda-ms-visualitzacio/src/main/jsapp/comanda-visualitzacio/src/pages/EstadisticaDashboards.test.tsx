@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
         entorn: { id: 7 },
         aplicacio: { id: 3 },
         conflicts: [] as Array<{ tipo: string; titol: string; overwrite?: string; nouNom?: string }>,
+        file: undefined as any,
     },
     tMock: vi.fn((selector: any) =>
         selector({
@@ -45,6 +46,9 @@ const mocks = vi.hoisted(() => ({
                             nouNom: 'Nom nou',
                             dashboardConflicts: 'Conflictes de tauler',
                             widgetConflicts: 'Conflictes de widget',
+                            analyzing: 'Analitzant fitxer...',
+                            noConflicts: 'Sense conflictes',
+                            importing: 'Important dashboard...',
                         },
                     },
                     cloneDashboard: {
@@ -64,18 +68,21 @@ vi.mock('react-i18next', () => ({
 }));
 
 vi.mock('reactlib', () => ({
-    GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     FormField: ({ name, value, onChange, componentProps }: { name: string; value?: any; onChange?: (value: any) => void; componentProps?: any }) => (
         <input
             data-testid={`field-${name}`}
             name={name}
-            value={value ?? ''}
+            defaultValue={value}
             onChange={(e) => onChange?.(e.target.value)}
             {...componentProps}
         />
     ),
     useFormContext: () => ({
         data: mocks.formContextData,
+        fields: [
+            { name: 'overwrite' },
+            { name: 'nouNom' },
+        ],
         apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
     }),
     springFilterBuilder: {
@@ -228,6 +235,7 @@ describe('EstadisticaDashboards', () => {
     afterEach(() => {
         vi.clearAllMocks();
         mocks.formContextData.conflicts = [];
+        mocks.formContextData.file = undefined;
     });
 
     it('EstadisticaDashboards_quanEsRenderitza_mostraLesAccionsIElDialegDeClonat', () => {
@@ -246,17 +254,29 @@ describe('EstadisticaDashboards', () => {
     });
 
     it('EstadisticaDashboards_quanSexportaUnDashboard_descarregaElJsonINotificaExit', async () => {
-        mocks.artifactReportMock.mockResolvedValue({ ok: true });
+        let resolveExport: (value: any) => void;
+        mocks.artifactReportMock.mockReturnValue(new Promise((resolve) => {
+            resolveExport = resolve;
+        }));
 
         render(<EstadisticaDashboards />);
 
         fireEvent.click(screen.getByRole('button', { name: 'Exportar' }));
+
+        // Comprova que es mostra el progress spinner mentre s'està exportant
+        expect(screen.getByRole('progressbar', { hidden: true })).toBeInTheDocument();
+
+        resolveExport!({ ok: true });
 
         await waitFor(() => {
             expect(mocks.artifactReportMock).toHaveBeenCalledWith(9, {
                 code: 'dashboard_export',
                 fileType: 'JSON',
             });
+        });
+
+        await waitFor(() => {
+            expect(screen.queryByRole('progressbar', { hidden: true })).not.toBeInTheDocument();
         });
 
         expect(mocks.downloadJsonMock).toHaveBeenCalledWith({ ok: true });
@@ -315,5 +335,35 @@ describe('EstadisticaDashboards', () => {
 
         expect(mocks.permissionShowMock).toHaveBeenCalledWith(9, 'Dashboard Test');
         expect(screen.getByText('Gestor de permisos DASHBOARD')).toBeInTheDocument();
+    });
+
+    it('EstadisticaDashboards_quanSAnalitzaElFitxer_mostraElSpinnerDAnàlisi', () => {
+        render(<EstadisticaDashboards />);
+
+        const fileInput = screen.getByTestId('field-file');
+        fireEvent.change(fileInput, { target: { value: 'test.json' } });
+
+        expect(screen.getByText('Analitzant fitxer...')).toBeInTheDocument();
+    });
+
+    it('EstadisticaDashboards_quanElFitxerNoTeConflictes_mostraAlertaSenseConflictes', () => {
+        mocks.formContextData.file = { name: 'dashboards.json', content: 'abc' } as any;
+        mocks.formContextData.conflicts = [];
+
+        render(<EstadisticaDashboards />);
+
+        expect(screen.getByText('Sense conflictes')).toBeInTheDocument();
+    });
+
+    it('EstadisticaDashboards_quanEsNetejaElFitxer_eliminaElsConflictes', () => {
+        render(<EstadisticaDashboards />);
+
+        const fileInput = screen.getByTestId('field-file');
+        fireEvent.change(fileInput, { target: { value: 'test.json' } });
+        mocks.setFieldValueMock.mockClear();
+
+        fireEvent.change(fileInput, { target: { value: '' } });
+
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('conflicts', undefined);
     });
 });

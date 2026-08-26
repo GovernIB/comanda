@@ -2,7 +2,6 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
 import {
-    GridPage,
     MuiDataGrid,
     FormField,
 } from 'reactlib';
@@ -44,7 +43,7 @@ const Integracions: React.FC = () => {
         },
     ];
     return (
-        <GridPage>
+        <>
             <PageTitle title={t($ => $.page.integracions.title)} />
             <MuiDataGrid
                 title={t($ => $.page.integracions.title)}
@@ -64,7 +63,7 @@ const Integracions: React.FC = () => {
                     </Grid>
                 }
             />
-        </GridPage>
+        </>
     );
 };
 

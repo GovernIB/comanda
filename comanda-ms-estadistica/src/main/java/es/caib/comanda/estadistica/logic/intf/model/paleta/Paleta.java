@@ -25,9 +25,9 @@ import java.util.List;
 public class Paleta extends BaseResource<Long> {
 
     @NotNull
-    @Size(max = 128)
+    @Size(max = es.caib.comanda.estadistica.persist.entity.paleta.PaletaEntity.NOM_MAX_LENGTH)
     private String nom;
-    @Size(max = 1024)
+    @Size(max = es.caib.comanda.estadistica.persist.entity.paleta.PaletaEntity.DESCRIPCIO_MAX_LENGTH)
     private String descripcio;
     private Integer ordre;
     private List<PaletaColor> colors;

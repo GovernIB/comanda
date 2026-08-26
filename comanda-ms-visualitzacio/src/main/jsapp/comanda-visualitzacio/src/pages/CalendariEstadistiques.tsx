@@ -1,7 +1,7 @@
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import {useBaseAppContext, GridPage, useResourceApiService, Toolbar, springFilterBuilder as builder} from 'reactlib';
+import {useBaseAppContext, useResourceApiService, Toolbar, springFilterBuilder as builder} from 'reactlib';
 import {useState, useEffect, useCallback} from "react";
 import dayjs, { Dayjs } from 'dayjs';
 import '../fullcalendar-custom.css';
@@ -459,7 +459,7 @@ const CalendariEstadistiques: React.FC = () => {
     },[indicadorIsReady, entornAppId])
 
     return (
-        <GridPage disableMargins>
+        <>
             <PageTitle title={t($ => $.menu.calendari)} />
             {/* Global loading overlay */}
             {globalLoading && (
@@ -482,7 +482,7 @@ const CalendariEstadistiques: React.FC = () => {
                                 value={entornAppId}
                                 size={"small"}
                                 label={t($ => $.calendari.seleccionar_entorn_app)}
-                                onChange={(e) => { handleEntornAppChange(e.target.value as number | '');}}                                
+                                onChange={(e) => { handleEntornAppChange(e.target.value as number | '');}}
                             >
                                 <MenuItem value="">{t($ => $.calendari.seleccionar)}</MenuItem>
                                 {entornApps.map((entornApp) => (
@@ -700,7 +700,7 @@ const CalendariEstadistiques: React.FC = () => {
                 setDadesDiaModalOpen={setDadesDiaModalOpen}
             />
             {component}
-        </GridPage>
+        </>
     );
 };
 

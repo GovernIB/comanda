@@ -124,7 +124,6 @@ vi.mock('reactlib', async (importOriginal) => {
     return {
     ...original,
     FormPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     MuiDataGrid: ({
         title,
         filter,

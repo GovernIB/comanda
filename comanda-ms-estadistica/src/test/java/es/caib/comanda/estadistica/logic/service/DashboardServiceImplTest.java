@@ -20,6 +20,7 @@ import es.caib.comanda.estadistica.logic.intf.model.export.DashboardExport;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
+import es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper;
 import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
@@ -72,6 +73,7 @@ class DashboardServiceImplTest {
     @Mock private EstadisticaClientHelper estadisticaClientHelper;
     @Mock private AtributsVisualsHelper atributsVisualsHelper;
     @Mock private DashboardExportMapper dashboardExportMapper;
+    @Mock private DashboardClonerMapper dashboardClonerMapper;
     @Mock private ConsultaEstadisticaHelper consultaEstadisticaHelper;
     @Mock private DashboardHelper dashboardHelper;
     @Mock private ObjectMapper objectMapper;
@@ -756,6 +758,44 @@ class DashboardServiceImplTest {
     }
 
     @Test
+    @DisplayName("DashboardExport: generateFile genera el nom del fitxer a partir del títol del dashboard sanejat")
+    void dashboardExport_generateFile_usaNomDashboardSanejat() throws Exception {
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        ReportGenerator<DashboardEntity, Serializable, DashboardExport> reportGenerator = createDashboardExportReportGenerator();
+
+        // 1. Dashboard amb caràcters especials i accents
+        DashboardExport export1 = new DashboardExport();
+        export1.setTitol("Estadístiques d'ús: Vendes / Facturació (2024)");
+        ByteArrayOutputStream out1 = new ByteArrayOutputStream();
+        DownloadableFile file1 = reportGenerator.generateFile(Dashboard.DASHBOARD_EXPORT, List.of(export1), ReportFileType.JSON, out1);
+
+        assertThat(file1).isNotNull();
+        assertThat(file1.getName()).isEqualTo("Estadistiques d_us_ Vendes _ Facturacio (2024).json");
+
+        // 2. Dashboard amb nom estàndard
+        DashboardExport export2 = new DashboardExport();
+        export2.setTitol("Tauler General");
+        ByteArrayOutputStream out2 = new ByteArrayOutputStream();
+        DownloadableFile file2 = reportGenerator.generateFile(Dashboard.DASHBOARD_EXPORT, List.of(export2), ReportFileType.JSON, out2);
+
+        assertThat(file2).isNotNull();
+        assertThat(file2.getName()).isEqualTo("Tauler General.json");
+
+        // 3. Múltiples dashboards -> dashboards.json
+        DashboardExport export3 = new DashboardExport();
+        export3.setTitol("Tauler 2");
+        ByteArrayOutputStream out3 = new ByteArrayOutputStream();
+        DownloadableFile file3 = reportGenerator.generateFile(Dashboard.DASHBOARD_EXPORT, List.of(export2, export3), ReportFileType.JSON, out3);
+
+        assertThat(file3).isNotNull();
+        assertThat(file3.getName()).isEqualTo("dashboards.json");
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
     @DisplayName("DashboardImport: exec importa dashboards correctament")
     void dashboardImport_exec_importaCorrectament() throws Exception {
         DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
@@ -810,5 +850,102 @@ class DashboardServiceImplTest {
         executor.onChange(null, null, DashboardServiceImpl.DashboardImportParams.Fields.file, null, new HashMap<>(), new String[]{}, target);
 
         assertThat(target.getConflicts()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("DashboardImport: onChange amb fitxer JSON buit o d'objecte buit retorna conflictes buits")
+    void dashboardImport_onChange_ambFitxerSenseItems_retornaConflictesBuits() throws Exception {
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", "[]".getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.DashboardImportParams target = new DashboardServiceImpl.DashboardImportParams();
+        executor.onChange(null, null, DashboardServiceImpl.DashboardImportParams.Fields.file, fileRef, new HashMap<>(), new String[]{}, target);
+
+        assertThat(target.getConflicts()).isNotNull().isEmpty();
+
+        ReflectionTestUtils.setField(fileRef, "content", "{}".getBytes(StandardCharsets.UTF_8));
+        DashboardServiceImpl.DashboardImportParams targetObj = new DashboardServiceImpl.DashboardImportParams();
+        executor.onChange(null, null, DashboardServiceImpl.DashboardImportParams.Fields.file, fileRef, new HashMap<>(), new String[]{}, targetObj);
+
+        assertThat(targetObj.getConflicts()).isNotNull().isEmpty();
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
+    @DisplayName("DashboardImport: exec amb objecte JSON únic importa correctament")
+    void dashboardImport_exec_ambObjecteUnic_importaCorrectament() throws Exception {
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        String json = "{\"titol\":\"Titol Unic\"}";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.DashboardImportParams params = new DashboardServiceImpl.DashboardImportParams();
+        params.setFile(fileRef);
+
+        DashboardServiceImpl.DashboardImportResult result = executor.exec(Dashboard.DASHBOARD_IMPORT, new DashboardEntity(), params);
+
+        assertThat(result).isNotNull();
+        verify(dashboardImportHelper, atLeastOnce()).importDashboardFromExport(anyList(), any());
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
+    @DisplayName("DashboardImport: onChange amb dashboard sense items ni titols popula conflictes sense fallar")
+    void dashboardImport_onChange_ambDashboardSenseItemsNiTitols_populaConflictes() throws Exception {
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        String json = "[\n" +
+                "  {\n" +
+                "    \"titol\": \"Dashboard de prova2\",\n" +
+                "    \"descripcio\": \"Dashboard de prova\",\n" +
+                "    \"entornCodi\": \"DEV\"\n" +
+                "  }\n" +
+                "]";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.DashboardImportParams target = new DashboardServiceImpl.DashboardImportParams();
+        executor.onChange(null, null, DashboardServiceImpl.DashboardImportParams.Fields.file, fileRef, new HashMap<>(), new String[]{}, target);
+
+        assertThat(target.getConflicts()).isNotNull();
+        verify(dashboardImportHelper, atLeastOnce()).checkDashboardConflicts(anyList(), any());
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
+    @DisplayName("DashboardImport: exec llança ActionExecutionException quan la validació falla")
+    void dashboardImport_exec_llancaExcepcioQuanValidacioFalla() throws Exception {
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+
+        String json = "[{\"titol\":\"Titol\"}]";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.DashboardImportParams params = new DashboardServiceImpl.DashboardImportParams();
+        params.setFile(fileRef);
+
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        doThrow(new IllegalArgumentException("Dades del tauler invàlides (titol: no pot ser buit)"))
+                .when(dashboardImportHelper).validateDashboardExport(anyList());
+
+        assertThatThrownBy(() -> executor.exec(Dashboard.DASHBOARD_IMPORT, new DashboardEntity(), params))
+                .isInstanceOf(ActionExecutionException.class)
+                .hasMessageContaining("Dades del tauler invàlides (titol: no pot ser buit)");
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
     }
 }

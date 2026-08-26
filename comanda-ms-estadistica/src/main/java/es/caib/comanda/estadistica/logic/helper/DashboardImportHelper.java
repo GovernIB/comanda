@@ -25,10 +25,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -48,6 +52,29 @@ public class DashboardImportHelper {
     private final DimensioRepository dimensioRepository;
     private final DimensioValorRepository dimensioValorRepository;
     private final PaletaRepository paletaRepository;
+    private final Validator validator;
+
+    public void validateDashboardExport(List<DashboardExport> dashboards) {
+        if (dashboards == null || dashboards.isEmpty()) {
+            throw new IllegalArgumentException("El fitxer no conté cap tauler de control per importar.");
+        }
+        for (int i = 0; i < dashboards.size(); i++) {
+            DashboardExport dashboard = dashboards.get(i);
+            if (validator != null) {
+                Set<ConstraintViolation<DashboardExport>> violations = validator.validate(dashboard);
+                if (!violations.isEmpty()) {
+                    String errorDetails = violations.stream()
+                            .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                            .sorted()
+                            .collect(Collectors.joining(", "));
+                    String prefix = dashboards.size() > 1
+                            ? "Tauler " + (i + 1) + (dashboard.getTitol() != null ? " (" + dashboard.getTitol() + ")" : "") + ": "
+                            : "";
+                    throw new IllegalArgumentException(prefix + "Dades del tauler invàlides (" + errorDetails + ")");
+                }
+            }
+        }
+    }
 
     public List<DashboardEntity> toDashboardEntity(List<DashboardExport> dashboardExportList) {
         return dashboardExportMapper.toDashboardEntity(
@@ -101,18 +128,24 @@ public class DashboardImportHelper {
             dashboardEntity.setPlantilla(this.importPlantilla(dashboardEntity.getPlantilla(), conflicts));
         dashboardRepository.save(dashboardEntity);
 
-        this.importDashboardTitol(dashboardEntity.getTitols(), dashboardEntity, conflicts);
-        this.importDashboardItem(dashboardEntity.getItems(), dashboardEntity, conflicts);
+        if (dashboardEntity.getTitols() != null) {
+            this.importDashboardTitol(dashboardEntity.getTitols(), dashboardEntity, conflicts);
+        }
+        if (dashboardEntity.getItems() != null) {
+            this.importDashboardItem(dashboardEntity.getItems(), dashboardEntity, conflicts);
+        }
         return dashboardEntity;
     }
 
     private List<DashboardTitolEntity> importDashboardTitol(List<DashboardTitolEntity> dashboardItemEntityList, DashboardEntity dashboardEntity, List<Conflict> conflicts) {
+        if (dashboardItemEntityList == null) return Collections.emptyList();
         return dashboardItemEntityList.stream()
                 .map(d -> this.importDashboardTitol(d, dashboardEntity, conflicts))
                 .collect(Collectors.toList());
     }
 
     private DashboardTitolEntity importDashboardTitol(DashboardTitolEntity dashboardTitolEntity, DashboardEntity dashboardEntity, List<Conflict> conflicts) {
+        if (dashboardTitolEntity == null) return null;
         dashboardTitolEntity.setDashboard(dashboardEntity);
         if (dashboardTitolEntity.getPlantilla() != null)
             dashboardTitolEntity.setPlantilla(this.importPlantilla(dashboardTitolEntity.getPlantilla(), conflicts));
@@ -121,14 +154,18 @@ public class DashboardImportHelper {
     }
 
     private List<DashboardItemEntity> importDashboardItem(List<DashboardItemEntity> dashboardItemEntityList, DashboardEntity dashboardEntity, List<Conflict> conflicts) {
+        if (dashboardItemEntityList == null) return Collections.emptyList();
         return dashboardItemEntityList.stream()
                 .map(d -> this.importDashboardItem(d, dashboardEntity, conflicts))
                 .collect(Collectors.toList());
     }
 
     private DashboardItemEntity importDashboardItem(DashboardItemEntity dashboardItemEntity, DashboardEntity dashboardEntity, List<Conflict> conflicts) {
+        if (dashboardItemEntity == null) return null;
         dashboardItemEntity.setDashboard(dashboardEntity);
-        dashboardItemEntity.setWidget(this.importWidget(dashboardItemEntity.getWidget(), conflicts));
+        if (dashboardItemEntity.getWidget() != null) {
+            dashboardItemEntity.setWidget(this.importWidget(dashboardItemEntity.getWidget(), conflicts));
+        }
         if (dashboardItemEntity.getPlantilla() != null)
             dashboardItemEntity.setPlantilla(this.importPlantilla(dashboardItemEntity.getPlantilla(), conflicts));
         dashboardItemRepository.save(dashboardItemEntity);
@@ -318,6 +355,7 @@ public class DashboardImportHelper {
 
     public void checkDashboardConflicts(DashboardExport dashboard,
                                         @NotNull List<Conflict> conflicts) {
+        if (dashboard == null) return;
         this.addConflict(dashboard.getTitol(), null, DashboardExport.class.getSimpleName(), conflicts);
 
         if (dashboard.getEntornCodi() != null) {
@@ -327,12 +365,18 @@ public class DashboardImportHelper {
             this.checkApp(dashboard.getAppCodi());
         }
 
-        for (DashboardItemExport item : dashboard.getItems()) {
-            this.checkDashboardItemConflicts(item, conflicts);
+        if (dashboard.getItems() != null) {
+            for (DashboardItemExport item : dashboard.getItems()) {
+                this.checkDashboardItemConflicts(item, conflicts);
+            }
         }
 
-        for (DashboardTitolExport titolExport : dashboard.getTitols()) {
-            this.checkPlantillaConflicts(titolExport.getPlantilla(), conflicts);
+        if (dashboard.getTitols() != null) {
+            for (DashboardTitolExport titolExport : dashboard.getTitols()) {
+                if (titolExport != null) {
+                    this.checkPlantillaConflicts(titolExport.getPlantilla(), conflicts);
+                }
+            }
         }
         this.checkPlantillaConflicts(dashboard.getPlantilla(), conflicts);
     }
@@ -340,13 +384,20 @@ public class DashboardImportHelper {
     private void checkDashboardItemConflicts(DashboardItemExport item,
                                              List<Conflict> conflicts) {
         if (item == null) return;
-        App app = this.checkApp(item.getAppCodi());
-        this.addConflict(item.getWidget().getTitol(), app.getId(), EstadisticaWidgetExport.class.getSimpleName(), conflicts);
+        App app = item.getAppCodi() != null ? this.checkApp(item.getAppCodi()) : null;
+        Long appId = app != null ? app.getId() : null;
+        if (item.getWidget() != null) {
+            this.addConflict(item.getWidget().getTitol(), appId, EstadisticaWidgetExport.class.getSimpleName(), conflicts);
+        }
         this.checkPlantillaConflicts(item.getPlantilla(), conflicts);
 
         EstadisticaWidgetExport widget = item.getWidget();
-        for (DimensioValorExport dmv : widget.getDimensionsValor()) {
-            this.checkDimensio(dmv.getDimensioCodi(), item.getEntornCodi(), item.getAppCodi());
+        if (widget != null && widget.getDimensionsValor() != null) {
+            for (DimensioValorExport dmv : widget.getDimensionsValor()) {
+                if (dmv != null && dmv.getDimensioCodi() != null) {
+                    this.checkDimensio(dmv.getDimensioCodi(), item.getEntornCodi(), item.getAppCodi());
+                }
+            }
         }
 
         if (widget instanceof EstadisticaSimpleWidgetExport) {
@@ -371,9 +422,13 @@ public class DashboardImportHelper {
         if (plantillaExport == null) return;
 
         this.addConflict(plantillaExport.getNom(), null, PlantillaExport.class.getSimpleName(), conflicts);
-        for (PlantillaGrupPaletesExport group : plantillaExport.getPaletteGroups()) {
-            this.checkPaletaConflicts(group.getWidgetPalette(), conflicts);
-            this.checkPaletaConflicts(group.getChartPalette(), conflicts);
+        if (plantillaExport.getPaletteGroups() != null) {
+            for (PlantillaGrupPaletesExport group : plantillaExport.getPaletteGroups()) {
+                if (group != null) {
+                    this.checkPaletaConflicts(group.getWidgetPalette(), conflicts);
+                    this.checkPaletaConflicts(group.getChartPalette(), conflicts);
+                }
+            }
         }
     }
 

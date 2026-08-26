@@ -19,6 +19,7 @@ import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.logic.intf.service.DashboardService;
 import es.caib.comanda.estadistica.logic.intf.validation.ValidConflict;
+import es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper;
 import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
@@ -72,12 +73,14 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final AtributsVisualsHelper atributsVisualsHelper;
     private final DashboardExportMapper dashboardExportMapper;
+    private final DashboardClonerMapper dashboardClonerMapper;
     private final ObjectMapper objectMapper;
     private final DashboardHelper dashboardHelper;
     private final DashboardRepository dashboardRepository;
     private final DashboardTitolRepository dashboardTitolRepository;
     private final DashboardItemRepository dashboardItemRepository;
     private final PlantillaRepository plantillaRepository;
+    private final EstadisticaWidgetRepository estadisticaWidgetRepository;
     private final DashboardStyleResolverHelper dashboardStyleResolverHelper;
     private final DashboardImportHelper dashboardImportHelper;
     private final AuthenticationHelper authenticationHelper;
@@ -90,7 +93,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
         register(Dashboard.WIDGETS_REPORT, new InformeWidgets());
         register(Dashboard.DASHBOARD_EXPORT, new DashboardExportReportGenerator());
         register(Dashboard.DASHBOARD_IMPORT, new DashboardImportActionExecutor());
-        register(Dashboard.CLONE_ACTION, (ActionExecutor<DashboardEntity, ?, ?>) new DashboardHelper.CloneDashboardAction(estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository));
+        register(Dashboard.CLONE_ACTION, (ActionExecutor<DashboardEntity, ?, ?>) new DashboardHelper.CloneDashboardAction(estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper));
     }
 
     @Override
@@ -310,11 +313,45 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                 byte[] content = baos.toByteArray();
                 out.write(content);
 
-                return new DownloadableFile("dashboards.json", "application/json", content);
+                // Genera nom del fitxer
+                String exportFileName = "dashboards.json";
+                try {
+                    if (data != null && data.size() == 1 && data.get(0) instanceof DashboardExport) {
+                        String titol = ((DashboardExport) data.get(0)).getTitol();
+                        if (titol != null && !titol.trim().isEmpty()) {
+                            exportFileName = sanitizeFilename(titol.trim()) + ".json";
+                        }
+                    }
+                } catch (Exception ex) {
+                    log.error("Error generant el nom del fitxer d'exportació de Dashboards", ex);
+                }
+
+                return new DownloadableFile(exportFileName, "application/json", content);
             } catch (IOException e) {
                 log.error("Error generating JSON file", e);
                 return null;
             }
+        }
+
+        private String sanitizeFilename(String filename) {
+            if (filename == null) {
+                return "dashboard";
+            }
+            // 1. Normalitzem caràcters amb accents / diacrítics (ex: 'é' -> 'e', 'ç' -> 'c')
+            String normalized = java.text.Normalizer.normalize(filename, java.text.Normalizer.Form.NFD);
+            String withoutDiacritics = normalized.replaceAll("\\p{M}", "");
+
+            // 2. Reemplacem caràcters especials / no permesos en noms de fitxers o capçaleres HTTP per '_'
+            //    Permetem lletres, dígits, espais, guions, subratllats, punts i parèntesis
+            String sanitized = withoutDiacritics.replaceAll("[^a-zA-Z0-9 _().-]", "_");
+
+            // 3. Col·lapsem múltiples subratllats i espais consecutius
+            sanitized = sanitized.replaceAll("_{2,}", "_").replaceAll(" {2,}", " ");
+
+            // 4. Eliminem espais o caràcters especials dels extrems
+            sanitized = sanitized.replaceAll("^[._\\-\\s]+|[._\\-\\s]+$", "").trim();
+
+            return sanitized.isEmpty() ? "dashboard" : sanitized;
         }
 
         @Override
@@ -384,18 +421,40 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
      */
     public class DashboardImportActionExecutor implements ActionExecutor<DashboardEntity, DashboardImportParams, DashboardImportResult> {
 
+        private List<DashboardExport> parseDashboardsJson(String jsonString) throws IOException {
+            if (jsonString == null || jsonString.trim().isEmpty()) {
+                return Collections.emptyList();
+            }
+            String trimmed = jsonString.trim();
+            if (trimmed.startsWith("[")) {
+                return objectMapper.readValue(trimmed,
+                        objectMapper.getTypeFactory().constructCollectionType(List.class, DashboardExport.class));
+            } else if (trimmed.startsWith("{")) {
+                DashboardExport single = objectMapper.readValue(trimmed, DashboardExport.class);
+                return single != null ? Collections.singletonList(single) : Collections.emptyList();
+            }
+            throw new IllegalArgumentException("Format JSON no reconegut");
+        }
+
         @Override
         public DashboardImportResult exec(String code, DashboardEntity entity, DashboardImportParams params) {
             try {
                 String jsonString = new String(params.getFile().getContent(), StandardCharsets.UTF_8);
+                List<DashboardExport> dashboards = parseDashboardsJson(jsonString);
 
-                List<DashboardExport> dashboards = objectMapper.readValue(jsonString,
-                        objectMapper.getTypeFactory().constructCollectionType(List.class, DashboardExport.class));
+                dashboardImportHelper.validateDashboardExport(dashboards);
 
                 List<Dashboard> importedDashboards = new ArrayList<>();
                 List<Conflict> conflicts = params.getConflicts() != null ? params.getConflicts() : Collections.emptyList();
                 dashboardImportHelper.importDashboardFromExport(dashboards, conflicts);
                 return new DashboardImportResult(importedDashboards);
+            } catch (IllegalArgumentException e) {
+                log.warn("Validation error importing dashboards from JSON: {}", e.getMessage());
+                throw new ActionExecutionException(
+                        Dashboard.class,
+                        null,
+                        code,
+                        e.getMessage());
             } catch (Exception e) {
                 log.error("Error importing dashboards from JSON", e);
                 throw new ActionExecutionException(
@@ -416,19 +475,22 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                 }
                 try {
                     String jsonString = new String(file.getContent(), StandardCharsets.UTF_8);
-                    List<DashboardExport> dashboards = objectMapper.readValue(jsonString,
-                            objectMapper.getTypeFactory().constructCollectionType(List.class, DashboardExport.class));
+                    List<DashboardExport> dashboards = parseDashboardsJson(jsonString);
 
                     List<Conflict> dashboardConflicts = new ArrayList<>();
-                    dashboardImportHelper.checkDashboardConflicts(dashboards, dashboardConflicts);
+                    if (dashboards != null && !dashboards.isEmpty()) {
+                        dashboardImportHelper.checkDashboardConflicts(dashboards, dashboardConflicts);
+                    }
                     target.setConflicts(dashboardConflicts);
                 } catch (AnswerRequiredException a) {
+                    log.warn("Answer required during onChange: {}", a.getMessage());
                     if (!answers.containsKey(a.getAnswerCode())) {
                         throw a;
                     }
-//                    throw new RuntimeException(a.getQuestion());
+                    target.setConflicts(new ArrayList<>());
                 } catch (Exception e) {
                     log.warn("Error parsing JSON content in onChange", e);
+                    target.setConflicts(new ArrayList<>());
                 }
             }
         }

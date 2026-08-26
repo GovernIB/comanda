@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -59,6 +60,7 @@ class DashboardImportHelperTest {
     @Mock private DimensioRepository dimensioRepository;
     @Mock private DimensioValorRepository dimensioValorRepository;
     @Mock private PaletaRepository paletaRepository;
+    @Mock private javax.validation.Validator validator;
     @Mock private I18nUtil i18nUtil;
     @Mock private ApplicationContext applicationContext;
 
@@ -639,5 +641,46 @@ class DashboardImportHelperTest {
         // Assert
         verify(dashboardExportMapper).toDashboardEntity(eq(exports), any(), any(), any(), any(), any());
         verify(dashboardRepository).save(entity);
+    }
+
+    @Test
+    @DisplayName("validateDashboardExport: quan la llista és buida o null, llança IllegalArgumentException")
+    void validateDashboardExport_quanLlistaBuida_llançaExcepcio() {
+        assertThatThrownBy(() -> dashboardImportHelper.validateDashboardExport(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no conté cap tauler");
+
+        assertThatThrownBy(() -> dashboardImportHelper.validateDashboardExport(Collections.emptyList()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no conté cap tauler");
+    }
+
+    @Test
+    @DisplayName("validateDashboardExport: quan hi ha violacions de validació, llança IllegalArgumentException amb detall")
+    void validateDashboardExport_quanHiHaViolacions_llançaExcepcio() {
+        DashboardExport export = new DashboardExport();
+        javax.validation.ConstraintViolation<DashboardExport> violation = mock(javax.validation.ConstraintViolation.class);
+        javax.validation.Path path = mock(javax.validation.Path.class);
+        when(path.toString()).thenReturn("titol");
+        when(violation.getPropertyPath()).thenReturn(path);
+        when(violation.getMessage()).thenReturn("no pot ser buit");
+
+        Set<javax.validation.ConstraintViolation<DashboardExport>> violations = Collections.singleton(violation);
+        when(validator.validate(export)).thenReturn(violations);
+
+        assertThatThrownBy(() -> dashboardImportHelper.validateDashboardExport(Collections.singletonList(export)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("titol: no pot ser buit");
+    }
+
+    @Test
+    @DisplayName("validateDashboardExport: quan no hi ha violacions, no llança cap excepció")
+    void validateDashboardExport_quanTotCorrecte_noLlançaExcepcio() {
+        DashboardExport export = new DashboardExport();
+        when(validator.validate(export)).thenReturn(Collections.emptySet());
+
+        dashboardImportHelper.validateDashboardExport(Collections.singletonList(export));
+
+        verify(validator).validate(export);
     }
 }

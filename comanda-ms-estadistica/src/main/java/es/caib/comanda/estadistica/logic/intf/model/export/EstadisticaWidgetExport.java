@@ -14,6 +14,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.List;
@@ -39,11 +41,17 @@ import java.util.List;
 })
 public class EstadisticaWidgetExport implements Serializable {
 
+    @NotBlank
+    @Size(max = es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity.TITOL_MAX_LENGTH)
     protected String titol;
+
+    @Size(max = es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity.DESCRIPCIO_MAX_LENGTH)
     protected String descripcio;
+
     protected WidgetTipus tipus;
 
     // Dimensions per les que filtrar
+    @javax.validation.Valid
     protected List<DimensioValorExport> dimensionsValor;
     protected PeriodeMode periodeMode;
     protected PresetPeriode presetPeriode;

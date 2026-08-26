@@ -34,7 +34,6 @@ vi.mock('./salut/dataFetching.ts', () => ({
 }));
 
 vi.mock('reactlib', () => ({
-    GridPage: ({ children }: { children: React.ReactNode }) => <div data-testid="grid-page">{children}</div>,
     MuiDataGrid: ({ columns, toolbarAdditionalRow }: any) => (
         <div data-testid="data-grid">
             <div data-testid="columns-data">

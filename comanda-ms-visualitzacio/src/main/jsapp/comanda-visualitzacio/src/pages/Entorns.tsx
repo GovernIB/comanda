@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
-import { GridPage, FormField, MuiDataGrid } from 'reactlib';
+import { FormField, MuiDataGrid } from 'reactlib';
 import useReordering from '../hooks/reordering.tsx';
 import PageTitle from '../components/PageTitle.tsx';
 import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
@@ -23,7 +23,7 @@ const Entorns: React.FC = () => {
     const gestorReadOnly = useReadOnlyGestor();
 
     return (
-        <GridPage>
+        <>
             <PageTitle title={t(($) => $.page.entorns.title)} />
             <MuiDataGrid
                 title={t(($) => $.page.entorns.title)}
@@ -52,7 +52,7 @@ const Entorns: React.FC = () => {
                 rowHideDeleteButton={gestorReadOnly}
                 {...(!gestorReadOnly ? dataGridProps : {})}
             />
-        </GridPage>
+        </>
     );
 };
 

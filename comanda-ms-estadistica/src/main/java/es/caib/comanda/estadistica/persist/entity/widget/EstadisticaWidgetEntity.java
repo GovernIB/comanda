@@ -69,9 +69,12 @@ import java.util.List;
         })
 public abstract class EstadisticaWidgetEntity<R> extends BaseAuditableEntity<R> {
 
-    @Column(name = "titol", length = 64, nullable = false)
+    public static final int TITOL_MAX_LENGTH = 64;
+    public static final int DESCRIPCIO_MAX_LENGTH = 1024;
+
+    @Column(name = "titol", length = TITOL_MAX_LENGTH, nullable = false)
     protected String titol;
-    @Column(name = "descripcio", length = 1024)
+    @Column(name = "descripcio", length = DESCRIPCIO_MAX_LENGTH)
     protected String descripcio;
 
     @Column(name = "app_id", nullable = false)

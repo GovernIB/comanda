@@ -224,7 +224,6 @@ vi.mock('@fullcalendar/interaction', () => ({
 }));
 
 vi.mock('reactlib', () => ({
-    GridPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     Toolbar: ({
         title,
         elementsWithPositions,
