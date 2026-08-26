@@ -349,7 +349,7 @@ const EstadisticaDashboards: React.FC = () => {
                             title={t($ => $.page.dashboards.action.import.label)}
                             onClick={showImport}
                         >
-                            <Icon>download</Icon>
+                            <Icon>upload</Icon>
                         </IconButton>
                     }
                 ] :[]}

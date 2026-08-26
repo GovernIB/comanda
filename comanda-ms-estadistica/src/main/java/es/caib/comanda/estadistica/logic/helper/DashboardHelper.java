@@ -12,6 +12,7 @@ import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardTitolRepository;
+import es.caib.comanda.estadistica.persist.repository.PlantillaRepository;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
@@ -163,12 +164,19 @@ public class DashboardHelper {
         private final DashboardRepository dashboardRepository;
         private final DashboardTitolRepository dashboardTitolRepository;
         private final DashboardItemRepository dashboardItemRepository;
+        private final PlantillaRepository plantillaRepository;
 
-        public CloneDashboardAction(EstadisticaClientHelper estadisticaClientHelper, DashboardRepository dashboardRepository, DashboardTitolRepository dashboardTitolRepository, DashboardItemRepository dashboardItemRepository) {
+        public CloneDashboardAction(
+                EstadisticaClientHelper estadisticaClientHelper,
+                DashboardRepository dashboardRepository,
+                DashboardTitolRepository dashboardTitolRepository,
+                DashboardItemRepository dashboardItemRepository,
+                PlantillaRepository plantillaRepository) {
             this.estadisticaClientHelper = estadisticaClientHelper;
             this.dashboardRepository = dashboardRepository;
             this.dashboardTitolRepository = dashboardTitolRepository;
             this.dashboardItemRepository = dashboardItemRepository;
+            this.plantillaRepository = plantillaRepository;
         }
 
         @Override
@@ -179,11 +187,15 @@ public class DashboardHelper {
                 newDashboard.setDescripcio(params.getDescripcio());
                 newDashboard.setAppId(Objects.nonNull(params.getAplicacio()) ? params.getAplicacio().getId() : params.getAppId());
                 newDashboard.setEntornId(Objects.nonNull(params.getEntorn()) ? params.getEntorn().getId() : params.getEntornId());
+                if (Objects.nonNull(params.getPlantilla()) && Objects.nonNull(params.getPlantilla().getId())) {
+                    newDashboard.setPlantilla(plantillaRepository.findById(params.getPlantilla().getId()).orElse(null));
+                }
             } else {//Si no nos envian body usaremos los valores de la propia entidad.
                 newDashboard.setTitol(entity.getTitol() + " (Copia)");//El nombre debe ser diferente para respetar la UK
                 newDashboard.setDescripcio(entity.getDescripcio());
                 newDashboard.setAppId(entity.getAppId());
                 newDashboard.setEntornId(entity.getEntornId());
+                newDashboard.setPlantilla(entity.getPlantilla());
             }
             List<DashboardTitolEntity> clonedTitols = getClonedTitulos(entity, newDashboard);
             List<DashboardItemEntity> clonedItems = getClonedItem(entity, newDashboard);
@@ -214,6 +226,9 @@ public class DashboardHelper {
                     clone.setMostrarVora(original.getMostrarVora());
                     clone.setColorVora(original.getColorVora());
                     clone.setAmpleVora(original.getAmpleVora());
+                    clone.setDestacat(original.getDestacat());
+                    clone.setPersonalitzat(original.getPersonalitzat());
+                    clone.setPlantilla(original.getPlantilla());
                     clonedTitols.add(clone);
                 }
             }
@@ -239,7 +254,10 @@ public class DashboardHelper {
                     clone.setWidth(original.getWidth());
                     clone.setHeight(original.getHeight());
                     clone.setAtributsVisualsJson(original.getAtributsVisualsJson());
-                    if (!Objects.equals(original.getWidget().getAppId(), newAppId)){
+                    clone.setDestacat(original.getDestacat());
+                    clone.setPersonalitzat(original.getPersonalitzat());
+                    clone.setPlantilla(original.getPlantilla());
+                    if (newAppId != null && !Objects.equals(original.getWidget().getAppId(), newAppId)){
                         throw new ActionExecutionException(
                             Dashboard.class,
                             originalDashboard.getId(),

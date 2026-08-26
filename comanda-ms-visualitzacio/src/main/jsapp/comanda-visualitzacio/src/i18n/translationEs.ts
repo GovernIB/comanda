@@ -433,8 +433,8 @@ const translationEs: translationResourcesType = {
                 periode: "Periodo",
             },
             cloneDashboard: {
-                title: "Clonar el panel de control",
-                success: "Panel de control clonado correctamente",
+                title: "Clonar el tablero",
+                success: "Tablero clonado correctamente",
             },
             action: {
                 select: {
@@ -455,9 +455,9 @@ const translationEs: translationResourcesType = {
                 },
                 export: "Exportar tablero",
                 import: {
-                    label: "Importar panel",
-                    title: "Importar panel",
-                    success: "Panel importado correctamente",
+                    label: "Importar tablero",
+                    title: "Importar tablero",
+                    success: "Tablero importado correctamente",
                     dashboardConflicts: "Ya existen elementos con estos nombres. Indica qué hacer con cada uno:",
                 },
             },

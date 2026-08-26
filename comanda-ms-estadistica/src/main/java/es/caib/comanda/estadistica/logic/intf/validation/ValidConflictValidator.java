@@ -4,15 +4,15 @@ import es.caib.comanda.estadistica.logic.helper.DashboardImportHelper;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.OverwriteEnum;
 import es.caib.comanda.estadistica.logic.intf.model.export.DashboardExport;
 import es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.Conflict;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
 /**
- * Validador per a comprovar que no existeix un camp boolear {@link Boolean}
- * no pot ser verdader sí l'usuari no és administrador.</br>
- * 
+ * Validador per a comprovar la validesa de la resolució de conflictes en la importació de dashboards.
+ *
  * @author Limit Tecnologies <limit@limit.es>
  */
 public class ValidConflictValidator implements ConstraintValidator<ValidConflict, Conflict> {
@@ -32,7 +32,7 @@ public class ValidConflictValidator implements ConstraintValidator<ValidConflict
             if (OverwriteEnum.EMPRAR_EXISTENT.equals(conflict.getOverwrite())) {
                 valid = false;
                 context.buildConstraintViolationWithTemplate(
-                                "Aquest no es un valor valid per a aquest element")
+                                I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.intf.validation.ValidConflict.overwrite.invalid"))
                         .addNode(Conflict.Fields.overwrite)
                         .addConstraintViolation();
             }
@@ -42,7 +42,7 @@ public class ValidConflictValidator implements ConstraintValidator<ValidConflict
             if (dashboardImportHelper.existsElementByNom(conflict.getNouNom(), conflict.getAppId(), conflict.getTipo())) {
                 valid = false;
                 context.buildConstraintViolationWithTemplate(
-                                "Ja existeix un element amb aquest nom")
+                                I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.intf.validation.ValidConflict.nouNom.exists"))
                         .addNode(Conflict.Fields.nouNom)
                         .addConstraintViolation();
             }
