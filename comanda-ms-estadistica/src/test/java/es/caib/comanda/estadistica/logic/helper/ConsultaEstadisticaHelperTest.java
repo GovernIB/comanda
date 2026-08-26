@@ -13,6 +13,8 @@ import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.OperadorFormulaEnum;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeMode;
@@ -30,6 +32,8 @@ import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DimensioRepository;
 import es.caib.comanda.estadistica.persist.repository.FetRepository;
+import es.caib.comanda.estadistica.persist.repository.IndicadorFormulaTermeRepository;
+import es.caib.comanda.estadistica.persist.repository.IndicadorRepository;
 import es.caib.comanda.estadistica.persist.repository.UnitatOrganitzativaRepository;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import org.apache.commons.lang3.NotImplementedException;
@@ -66,6 +70,8 @@ class ConsultaEstadisticaHelperTest {
     @Mock private DashboardItemRepository dashboardItemRepository;
     @Mock private UnitatOrganitzativaRepository unitatOrganitzativaRepository;
     @Mock private DimensioRepository dimensioRepository;
+    @Mock private IndicadorRepository indicadorRepository;
+    @Mock private IndicadorFormulaTermeRepository indicadorFormulaTermeRepository;
     @Mock private AtributsVisualsHelper atributsVisualsHelper;
     @Mock private EstadisticaClientHelper estadisticaClientHelper;
     @Mock private DashboardStyleResolverHelper dashboardStyleResolverHelper;
@@ -1073,6 +1079,72 @@ class ConsultaEstadisticaHelperTest {
 
         // Act
         String result = (String) ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "extractKeyExcluding", map, "agrupacio");
+
+        // Assert
+        assertThat(result).isNull();
+    }
+
+    @Test
+    @DisplayName("resoldreTermesFormula: retorna els termes (codi component + operador) quan l'indicador és FORMULA")
+    void resoldreTermesFormula_quanIndicadorEsFormula_llavorsRetornaElsTermesOrdenats() {
+        // Arrange
+        IndicadorEntity formula = new IndicadorEntity();
+        formula.setId(1L);
+        formula.setTipus(IndicadorTipus.FORMULA);
+        when(indicadorRepository.findByCodiAndEntornAppId("TOTAL", 10L)).thenReturn(Optional.of(formula));
+
+        IndicadorEntity ind1 = new IndicadorEntity();
+        ind1.setCodi("IND1");
+        IndicadorEntity ind2 = new IndicadorEntity();
+        ind2.setCodi("IND2");
+
+        IndicadorFormulaTermeEntity terme1 = new IndicadorFormulaTermeEntity();
+        terme1.setIndicadorComponent(ind1);
+        terme1.setOperador(OperadorFormulaEnum.SUMA);
+        IndicadorFormulaTermeEntity terme2 = new IndicadorFormulaTermeEntity();
+        terme2.setIndicadorComponent(ind2);
+        terme2.setOperador(OperadorFormulaEnum.RESTA);
+        when(indicadorFormulaTermeRepository.findByIndicadorFormulaIdOrderByOrdreAsc(1L))
+            .thenReturn(List.of(terme1, terme2));
+
+        // Act
+        @SuppressWarnings("unchecked")
+        List<IndicadorFormulaTermeResolt> result = (List<IndicadorFormulaTermeResolt>) ReflectionTestUtils.invokeMethod(
+            consultaEstadisticaHelper, "resoldreTermesFormula", "TOTAL", 10L);
+
+        // Assert
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getIndicadorCodi()).isEqualTo("IND1");
+        assertThat(result.get(0).getOperador()).isEqualTo(OperadorFormulaEnum.SUMA);
+        assertThat(result.get(1).getIndicadorCodi()).isEqualTo("IND2");
+        assertThat(result.get(1).getOperador()).isEqualTo(OperadorFormulaEnum.RESTA);
+    }
+
+    @Test
+    @DisplayName("resoldreTermesFormula: retorna null quan l'indicador és SIMPLE (comportament habitual, sense fórmula)")
+    void resoldreTermesFormula_quanIndicadorEsSimple_llavorsRetornaNull() {
+        // Arrange
+        IndicadorEntity simple = new IndicadorEntity();
+        simple.setId(2L);
+        simple.setTipus(IndicadorTipus.SIMPLE);
+        when(indicadorRepository.findByCodiAndEntornAppId("visites", 10L)).thenReturn(Optional.of(simple));
+
+        // Act
+        Object result = ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "resoldreTermesFormula", "visites", 10L);
+
+        // Assert
+        assertThat(result).isNull();
+        verifyNoInteractions(indicadorFormulaTermeRepository);
+    }
+
+    @Test
+    @DisplayName("resoldreTermesFormula: retorna null quan l'indicador no existeix")
+    void resoldreTermesFormula_quanIndicadorNoExisteix_llavorsRetornaNull() {
+        // Arrange
+        when(indicadorRepository.findByCodiAndEntornAppId("INEXISTENT", 10L)).thenReturn(Optional.empty());
+
+        // Act
+        Object result = ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "resoldreTermesFormula", "INEXISTENT", 10L);
 
         // Assert
         assertThat(result).isNull();

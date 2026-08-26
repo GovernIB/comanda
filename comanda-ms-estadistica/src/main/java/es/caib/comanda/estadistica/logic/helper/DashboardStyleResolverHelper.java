@@ -162,6 +162,9 @@ public class DashboardStyleResolverHelper {
         if (Double.class.equals(targetType) || double.class.equals(targetType)) {
             return Double.valueOf(value);
         }
+        if (targetType.isEnum()) {
+            return Enum.valueOf(targetType.asSubclass(Enum.class), value);
+        }
         return null;
     }
 }

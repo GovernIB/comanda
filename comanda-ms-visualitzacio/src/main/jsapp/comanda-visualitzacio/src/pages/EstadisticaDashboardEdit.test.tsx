@@ -181,36 +181,6 @@ vi.mock('reactlib', async (importOriginal) => {
             getOne: vi.fn(),
         };
     },
-    useFilterApiRef: () => ({
-        current: {},
-    }),
-    MuiFilter: ({
-        children,
-        onDataChange,
-        onSpringFilterChange,
-        additionalData,
-    }: {
-        children: React.ReactNode;
-        onDataChange?: (data: unknown) => void;
-        onSpringFilterChange?: (value?: string) => void;
-        additionalData?: unknown;
-    }) => (
-        <div>
-            <button
-                type="button"
-                onClick={() => {
-                    onDataChange?.({
-                        ...(additionalData as object),
-                        entorn: { id: 2 },
-                    });
-                    onSpringFilterChange?.('appId=1');
-                }}
-            >
-                Aplicar filtre entorn
-            </button>
-            {children}
-        </div>
-    ),
     springFilterBuilder: {
         and: (...values: unknown[]) => values.filter(Boolean).join(' AND '),
         eq: (field: string, value: unknown) => `${field}=${String(value)}`,
@@ -266,18 +236,24 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', () => ({
     DashboardReactGridLayout: ({
         dashboardId,
         editable,
+        dashboardWidgets,
         onGridLayoutItemsChange,
         onDeleteItem,
         onDuplicateItem,
+        backgroundColor,
     }: {
         dashboardId: number;
         editable: boolean;
+        dashboardWidgets?: Array<Record<string, unknown>>;
         onGridLayoutItemsChange?: (items: Array<{ id: number; x: number; y: number; w: number; h: number; type?: string }>) => void;
         onDeleteItem?: (entity: any) => void;
         onDuplicateItem?: (entity: any) => void;
+        backgroundColor?: string;
     }) => (
         <div>
             <div>{`DashboardGrid ${dashboardId} ${String(editable)}`}</div>
+            <div data-testid="dashboard-canvas-background-color">{backgroundColor}</div>
+            <div data-testid="dashboard-widgets-json">{JSON.stringify(dashboardWidgets)}</div>
             <button
                 type="button"
                 onClick={() =>
@@ -312,7 +288,26 @@ vi.mock('../components/CenteredCircularProgress.tsx', () => ({
 }));
 
 vi.mock('../components/estadistiques/DashboardEditorSidePanel.tsx', () => ({
-    default: () => <div>Editor side panel</div>,
+    default: ({
+        onLiveTitleDataChange,
+        onSaved,
+    }: {
+        onLiveTitleDataChange?: (dashboardTitolId: any, data: any) => void;
+        onSaved?: (dashboardItemId?: any) => void;
+    }) => (
+        <div>
+            Editor side panel
+            <button type="button" onClick={() => onLiveTitleDataChange?.(2, { colorTitol: '#ff0000' })}>
+                Simular edició en viu
+            </button>
+            <button type="button" onClick={() => onLiveTitleDataChange?.(2, null)}>
+                Simular neteja de la previsualització
+            </button>
+            <button type="button" onClick={() => onSaved?.()}>
+                Simular desat de la configuració del dashboard
+            </button>
+        </div>
+    ),
 }));
 
 vi.mock('../components/estadistiques/WidgetCreationWizard.tsx', () => ({
@@ -344,6 +339,7 @@ describe('EstadisticaDashboardEdit', () => {
             dashboard: { id: 12, titol: 'Dashboard 12', aplicacio: { id: 1 }, entorn: { id: 2 } },
             loading: false,
             exception: null,
+            forceRefresh: vi.fn(),
         });
         mocks.useDashboardWidgetsMock.mockReturnValue({
             dashboardWidgets: [{ dashboardItemId: 1 }],
@@ -394,6 +390,35 @@ describe('EstadisticaDashboardEdit', () => {
         expect(mocks.navigateMock).toHaveBeenCalledWith('/dashboards');
     });
 
+    it('EstadisticaDashboardEdit_quanEsEditaUnTitolEnViu_reflecteixElCanviAlCanvasIElRevertEixEnNetejar', async () => {
+        // Simula el flux del panell lateral notificant canvis en viu (encara no desats) d'un títol:
+        // el canvas els ha de reflectir, i tornar a l'últim estat desat si es descarten (data=null).
+        mocks.useDashboardWidgetsMock.mockReturnValue({
+            dashboardWidgets: [{ dashboardTitolId: 2, tipus: 'TITOL', titol: 'Títol', colorTitol: '#000000' }],
+            errorDashboardWidgets: [],
+            loadingWidgetPositions: false,
+            forceRefresh: vi.fn(),
+        });
+
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('dashboard-widgets-json')).toHaveTextContent('"colorTitol":"#000000"');
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Simular edició en viu' }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId('dashboard-widgets-json')).toHaveTextContent('"colorTitol":"#ff0000"');
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Simular neteja de la previsualització' }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId('dashboard-widgets-json')).toHaveTextContent('"colorTitol":"#000000"');
+        });
+    });
+
     it('EstadisticaDashboardEdit_quanHiHaDashboard_mostraToolbarIGraellaEditable', async () => {
         // Comprova que la vista d'edició mostra la toolbar principal i el layout editable del dashboard.
         render(<EstadisticaDashboardEdit />);
@@ -405,6 +430,101 @@ describe('EstadisticaDashboardEdit', () => {
         expect(screen.getByRole('heading', { name: 'Dashboards' })).toBeInTheDocument();
         expect(screen.getByText('Dashboard 12')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Crear component' })).toBeInTheDocument();
+    });
+
+    it('EstadisticaDashboardEdit_quanEsDesaLaConfiguracioDelDashboardSenseCapSeleccio_refrescaElDashboard', async () => {
+        // Si es canvia p.ex. el color de fons del dashboard i es desa, els canvis s'han d'aplicar sense
+        // haver de recarregar la pàgina: cal refrescar el propi dashboard (no només els widgets).
+        const forceRefreshDashboard = vi.fn();
+        mocks.useDashboardMock.mockReturnValue({
+            dashboard: { id: 12, titol: 'Dashboard 12', aplicacio: { id: 1 }, entorn: { id: 2 } },
+            loading: false,
+            exception: null,
+            forceRefresh: forceRefreshDashboard,
+        });
+
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Simular desat de la configuració del dashboard' }));
+
+        expect(forceRefreshDashboard).toHaveBeenCalled();
+    });
+
+    it('EstadisticaDashboardEdit_elPanellEsquerre_noMostraElSelectorDAplicacioIEntorn', async () => {
+        // La selecció d'aplicació/entorn s'ha traslladat al panell de propietats (vegeu
+        // DashboardEditorSidePanel); el menú lateral esquerre ja no n'ha de mostrar cap selector propi.
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
+        });
+
+        expect(screen.queryByTestId('field-app')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('field-entorn')).not.toBeInTheDocument();
+    });
+
+    it('EstadisticaDashboardEdit_quanElDashboardTeColorFonsClar_lAplicaAlCanvasPerDefecte', async () => {
+        // Per defecte (tema clar, segons el perfil), s'ha d'aplicar el color de fons clar.
+        mocks.useDashboardMock.mockReturnValue({
+            dashboard: { id: 12, titol: 'Dashboard 12', aplicacio: { id: 1 }, entorn: { id: 2 }, colorFonsClar: '#123456', colorFonsFosc: '#654321' },
+            loading: false,
+            exception: null,
+        });
+
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
+        });
+
+        expect(screen.getByTestId('dashboard-canvas-background-color')).toHaveTextContent('#123456');
+    });
+
+    it('EstadisticaDashboardEdit_enCanviarElSwitchDeTema_aplicaElColorDeFonsFosc', async () => {
+        // El switch de la capçalera commuta la previsualització del disseny entre tema clar i fosc.
+        mocks.useDashboardMock.mockReturnValue({
+            dashboard: { id: 12, titol: 'Dashboard 12', aplicacio: { id: 1 }, entorn: { id: 2 }, colorFonsClar: '#123456', colorFonsFosc: '#654321' },
+            loading: false,
+            exception: null,
+        });
+
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('switch', { name: 'Mode fosc' }));
+
+        expect(screen.getByTestId('dashboard-canvas-background-color')).toHaveTextContent('#654321');
+    });
+
+    it('EstadisticaDashboardEdit_enCanviarElSwitchDeTema_afectaTotaLaPantallaNoNomesElsComponents', async () => {
+        // El tema de tota la pantalla de disseny (no només els colors dels widgets) ha de commutar amb el switch.
+        mocks.useDashboardMock.mockReturnValue({
+            dashboard: { id: 12, titol: 'Dashboard 12', aplicacio: { id: 1 }, entorn: { id: 2 } },
+            loading: false,
+            exception: null,
+        });
+
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
+        });
+
+        const toolbar = screen.getByTestId('dashboard-editor-toolbar');
+        // Tema clar per defecte: la capçalera usa grey[200] (#eeeeee).
+        expect(getComputedStyle(toolbar).backgroundColor).toBe('rgb(238, 238, 238)');
+
+        fireEvent.click(screen.getByRole('switch', { name: 'Mode fosc' }));
+
+        // Tema fosc: la capçalera ha de passar a usar grey[900] (#212121), no només els widgets.
+        expect(getComputedStyle(toolbar).backgroundColor).toBe('rgb(33, 33, 33)');
     });
 
     it('EstadisticaDashboardEdit_quanHiHaErrorGeneric_mostraLalertaDeCarrega', () => {

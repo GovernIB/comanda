@@ -1,7 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import EstadisticaWidgetFormFields, { DimensionsFields, PersonalitzatFields, hasVisualOverridesTitol } from './EstadisticaWidgetFormFields';
+import EstadisticaWidgetFormFields, { DimensionsFields, PersonalitzatFields, VoraGraphicalFormEditor, hasVisualOverridesTitol } from './EstadisticaWidgetFormFields';
 
 const mocks = vi.hoisted(() => ({
     useFormContextMock: vi.fn(),
@@ -10,6 +10,9 @@ const mocks = vi.hoisted(() => ({
     tMock: vi.fn((selector: any) =>
         typeof selector === 'function'
             ? selector({
+                common: {
+                    cancel: 'Cancel·lar',
+                },
                 generic: {
                     dimensio: 'Dimensió',
                 },
@@ -22,6 +25,24 @@ const mocks = vi.hoisted(() => ({
                                 relatiuCount: 'Ajuda quantitat',
                                 relatiueUnitat: 'Ajuda unitat',
                             },
+                        },
+                        editor: {
+                            showBorderTop: 'Mostrar vora superior',
+                            borderColorTop: 'Color vora superior',
+                            borderWidthTop: 'Amplada vora superior',
+                            voraTop: 'Vora superior',
+                            showBorderRight: 'Mostrar vora dreta',
+                            borderColorRight: 'Color vora dreta',
+                            borderWidthRight: 'Amplada vora dreta',
+                            voraRight: 'Vora dreta',
+                            showBorderBottom: 'Mostrar vora inferior',
+                            borderColorBottom: 'Color vora inferior',
+                            borderWidthBottom: 'Amplada vora inferior',
+                            voraBottom: 'Vora inferior',
+                            showBorderLeft: 'Mostrar vora esquerra',
+                            borderColorLeft: 'Color vora esquerra',
+                            borderWidthLeft: 'Amplada vora esquerra',
+                            voraLeft: 'Vora esquerra',
                         },
                     },
                 },
@@ -218,6 +239,60 @@ describe('PersonalitzatFields', () => {
 
         expect(screen.getByTestId('personalitzat-badge')).toBeInTheDocument();
     });
+
+    it('PersonalitzatFields_senseOverrides_noMostraElBotoDEliminarDisseny', () => {
+        renderPersonalitzatFields(false);
+
+        expect(screen.queryByRole('button', { name: 'Eliminar disseny' })).not.toBeInTheDocument();
+    });
+
+    it('PersonalitzatFields_ambOverrides_mostraElBotoDEliminarDissenyIEnClicarNetejaCadaCampPropi', () => {
+        const setFieldValueMock = vi.fn();
+        mocks.useFormContextMock.mockReturnValue({ data: {}, apiRef: { current: { setFieldValue: setFieldValueMock } } });
+        render(
+            <PersonalitzatFields
+                personalitzatLabel="Personalitzat"
+                personalitzatHelp="Ajuda"
+                personalitzatBadge="Hi ha elements personalitzats"
+                resetLabel="Eliminar disseny"
+                hasOverrides
+                overrideFields={['colorTitol', 'midaFontTitol']}
+                onExpandedChange={vi.fn()}
+            />
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: 'Eliminar disseny' }));
+
+        expect(setFieldValueMock).toHaveBeenCalledWith('colorTitol', undefined);
+        expect(setFieldValueMock).toHaveBeenCalledWith('midaFontTitol', undefined);
+    });
+
+    it('PersonalitzatFields_ambResetApiRef_netejaElsCampsAlFormulariIndicatEnLlocDelPropi', () => {
+        // Als widgets Simple/Gràfic/Taula, PersonalitzatFields viu al formulari de dashboardItem però els
+        // camps visuals viuen al formulari específic del widget: cal poder indicar quin apiRef netejar.
+        const localSetFieldValueMock = vi.fn();
+        const widgetSetFieldValueMock = vi.fn();
+        mocks.useFormContextMock.mockReturnValue({ data: {}, apiRef: { current: { setFieldValue: localSetFieldValueMock } } });
+        const widgetFormApiRef = { current: { setFieldValue: widgetSetFieldValueMock } };
+
+        render(
+            <PersonalitzatFields
+                personalitzatLabel="Personalitzat"
+                personalitzatHelp="Ajuda"
+                personalitzatBadge="Hi ha elements personalitzats"
+                resetLabel="Eliminar disseny"
+                hasOverrides
+                overrideFields={['colorText']}
+                resetApiRef={widgetFormApiRef}
+                onExpandedChange={vi.fn()}
+            />
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: 'Eliminar disseny' }));
+
+        expect(widgetSetFieldValueMock).toHaveBeenCalledWith('colorText', undefined);
+        expect(localSetFieldValueMock).not.toHaveBeenCalled();
+    });
 });
 
 describe('hasVisualOverridesTitol', () => {
@@ -234,8 +309,79 @@ describe('hasVisualOverridesTitol', () => {
         expect(hasVisualOverridesTitol({ midaFontSubtitol: 16 })).toBe(true);
     });
 
-    it('hasVisualOverridesTitol_ambMostrarVoraEmplenat_retornaCert', () => {
-        expect(hasVisualOverridesTitol({ mostrarVora: true })).toBe(true);
+    it('hasVisualOverridesTitol_ambMostrarVoraBottomAlSeuValorPerDefecte_retornaFals', () => {
+        // mostrarVoraBottom=true és el valor per defecte de la columna (vora inferior visible per
+        // defecte a totes les entitats persistides): per si sol no és una personalització real.
+        expect(hasVisualOverridesTitol({ mostrarVoraBottom: true })).toBe(false);
+    });
+
+    it('hasVisualOverridesTitol_ambMostrarVoraBottomDiferentDelPerDefecte_retornaCert', () => {
+        expect(hasVisualOverridesTitol({ mostrarVoraBottom: false })).toBe(true);
+    });
+
+    it('hasVisualOverridesTitol_ambNomesValorsPerDefecteDeTotsElsCampsDeVoraISubtitol_retornaFals', () => {
+        expect(hasVisualOverridesTitol({
+            posicioSubtitol: 'SOTA',
+            separacioSubtitol: 0,
+            mostrarVoraTop: false,
+            ampleVoraTop: 1,
+            mostrarVoraRight: false,
+            ampleVoraRight: 1,
+            mostrarVoraBottom: true,
+            ampleVoraBottom: 1,
+            mostrarVoraLeft: false,
+            ampleVoraLeft: 1,
+        })).toBe(false);
+    });
+
+    it('hasVisualOverridesTitol_ambQualsevolCostatDeVoraEmplenat_retornaCert', () => {
+        expect(hasVisualOverridesTitol({ mostrarVoraTop: true })).toBe(true);
+        expect(hasVisualOverridesTitol({ colorVoraRight: '#123456' })).toBe(true);
+        expect(hasVisualOverridesTitol({ ampleVoraLeft: 2 })).toBe(true);
+    });
+
+    it('hasVisualOverridesTitol_ambPosicioONSeparacioDeSubtitolEmplenada_retornaCert', () => {
+        expect(hasVisualOverridesTitol({ posicioSubtitol: 'COSTAT' })).toBe(true);
+        expect(hasVisualOverridesTitol({ separacioSubtitol: 12 })).toBe(true);
+    });
+
+    describe('amb initialData (edició d\'un títol existent)', () => {
+        // Bug: revertir posicioSubtitol a 'SOTA' (el valor per defecte de la columna) des d'un valor
+        // personalitzat anterior (p.ex. 'COSTAT') no es detectava com a canvi perquè 'SOTA' coincideix
+        // amb el valor de referència fix, i sense cap altre camp modificat el flag "personalitzat" no
+        // s'actualitzava mai: el backend continuava aplicant sempre la plantilla i el canvi es perdia.
+        it('hasVisualOverridesTitol_quanEsRevertLaPosicioAlValorPerDefecteDesDunAltreValorInicial_retornaCert', () => {
+            expect(hasVisualOverridesTitol(
+                { posicioSubtitol: 'SOTA' },
+                { posicioSubtitol: 'COSTAT' }
+            )).toBe(true);
+        });
+
+        it('hasVisualOverridesTitol_quanElValorNoHaCanviatRespecteLInicial_retornaFals', () => {
+            expect(hasVisualOverridesTitol(
+                { posicioSubtitol: 'SOTA' },
+                { posicioSubtitol: 'SOTA' }
+            )).toBe(false);
+        });
+
+        it('hasVisualOverridesTitol_quanElValorPerDefecteEsFixaExplicitamentDesDUnValorBuitInicial_retornaCert', () => {
+            expect(hasVisualOverridesTitol(
+                { posicioSubtitol: 'SOTA' },
+                { posicioSubtitol: undefined }
+            )).toBe(true);
+        });
+
+        it('hasVisualOverridesTitol_quanUnAltreCampSiCanviaRespecteLInicial_retornaCertIgualment', () => {
+            expect(hasVisualOverridesTitol(
+                { mostrarVoraBottom: false },
+                { mostrarVoraBottom: true }
+            )).toBe(true);
+        });
+
+        it('hasVisualOverridesTitol_senseInitialDataPeroAmbValorDiferentDelPerDefecte_retornaCertIgualment', () => {
+            // El comportament previ (sense initialData, p.ex. en mode creació) es manté intacte.
+            expect(hasVisualOverridesTitol({ posicioSubtitol: 'COSTAT' }, undefined)).toBe(true);
+        });
     });
 });
 
@@ -256,6 +402,59 @@ describe('DimensionsFields', () => {
         });
         const { container } = render(<DimensionsFields />);
         expect(container).toBeEmptyDOMElement();
+    });
+});
+
+describe('VoraGraphicalFormEditor', () => {
+    afterEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it('VoraGraphicalFormEditor_quanEsRenderitza_mostraLes4ZonesClicablesSenseModalOberta', () => {
+        mocks.useFormContextMock.mockReturnValue({ data: {} });
+        render(<VoraGraphicalFormEditor />);
+
+        expect(screen.getByTestId('vora-zone-Top')).toBeInTheDocument();
+        expect(screen.getByTestId('vora-zone-Right')).toBeInTheDocument();
+        expect(screen.getByTestId('vora-zone-Bottom')).toBeInTheDocument();
+        expect(screen.getByTestId('vora-zone-Left')).toBeInTheDocument();
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('VoraGraphicalFormEditor_quanEsClicaUnaZona_obreLaModalNomesAmbElMostrarDAquellCostat', () => {
+        mocks.useFormContextMock.mockReturnValue({ data: {} });
+        render(<VoraGraphicalFormEditor />);
+
+        fireEvent.click(screen.getByTestId('vora-zone-Top'));
+
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+        expect(screen.getByTestId('form-field-mostrarVoraTop')).toBeInTheDocument();
+        // Sense mostrarVoraTop actiu, no s'han de mostrar els camps de color/gruix.
+        expect(screen.queryByTestId('form-field-colorVoraTop')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('form-field-ampleVoraTop')).not.toBeInTheDocument();
+        // I no s'han de mostrar els camps d'altres costats.
+        expect(screen.queryByTestId('form-field-mostrarVoraLeft')).not.toBeInTheDocument();
+    });
+
+    it('VoraGraphicalFormEditor_quanElCostatClicatTeMostrarActiu_tambeMostraColorIGruix', () => {
+        mocks.useFormContextMock.mockReturnValue({ data: { mostrarVoraTop: true } });
+        render(<VoraGraphicalFormEditor />);
+
+        fireEvent.click(screen.getByTestId('vora-zone-Top'));
+
+        expect(screen.getByTestId('form-field-colorVoraTop')).toBeInTheDocument();
+        expect(screen.getByTestId('form-field-ampleVoraTop')).toBeInTheDocument();
+    });
+
+    it('VoraGraphicalFormEditor_quanEsClicaUnAltreCostat_mostraElSeuPropiMostrar', () => {
+        mocks.useFormContextMock.mockReturnValue({ data: { mostrarVoraTop: true } });
+        render(<VoraGraphicalFormEditor />);
+
+        fireEvent.click(screen.getByTestId('vora-zone-Left'));
+
+        expect(screen.getByTestId('form-field-mostrarVoraLeft')).toBeInTheDocument();
+        // No s'ha de veure el costat Top encara que estigui actiu: la modal només mostra un costat.
+        expect(screen.queryByTestId('form-field-mostrarVoraTop')).not.toBeInTheDocument();
     });
 });
 

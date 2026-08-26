@@ -13,7 +13,7 @@ import { WidgetPreview } from './WidgetPreview';
 import { SimpleWidgetVisualizationProps } from './SimpleWidgetVisualization';
 
 /** Camps que sobreescriuen l'estil de la plantilla */
-const SIMPLE_OVERRIDE_FIELDS = [
+export const SIMPLE_OVERRIDE_FIELDS = [
     'icona', 'colorText', 'colorFons', 'colorIcona', 'colorFonsIcona', 'colorTextDestacat',
     'mostrarVora', 'colorVora', 'ampleVora',
     'midaFontTitol', 'midaFontDescripcio', 'midaFontValor', 'midaFontUnitats', 'midaFontCanviPercentual',

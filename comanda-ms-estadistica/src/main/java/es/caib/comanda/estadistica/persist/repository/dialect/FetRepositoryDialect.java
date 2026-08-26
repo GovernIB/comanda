@@ -68,11 +68,11 @@ public interface FetRepositoryDialect {
      * @param dimensionsFiltre Un mapa on cada clau representa el codi d'una dimensió i el valor és una llista de valors
      *                         a filtrar. Si el mapa és null o buit, es generen només les condicions per entornAppId i rang
      *                         de dates.
-     * @param indicadorCodi El codi de l'indicador sobre el qual s'aplicarà l'agregació.
-     * @param agregacio El tipus d'agregació a aplicar (COUNT, SUM, AVERAGE, etc.).
+     * @param indicadorAgregacio L'indicador (i, si és una fórmula, els seus termes ja resolts) sobre el qual
+     *                           s'aplicarà l'agregació, juntament amb el tipus d'agregació i la unitat.
      * @return Una cadena de text que representa la consulta SQL generada per obtenir el valor agregat.
      */
-    String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio, SeguretatFiltreSql seguretat);
+    String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, SeguretatFiltreSql seguretat);
 
     String getGraficUnIndicadorQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat);
 

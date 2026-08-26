@@ -1,5 +1,6 @@
 package es.caib.comanda.model.server.monitoring;
 
+import es.caib.comanda.model.server.monitoring.DimensioTipusEnum;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.ArrayList;
@@ -26,6 +27,7 @@ public class DimensioDesc   {
   private String nom;
   private String descripcio;
   private @Valid List<String> valors = new ArrayList<>();
+  private DimensioTipusEnum tipus;
 
   public DimensioDesc() {
   }
@@ -135,6 +137,25 @@ public class DimensioDesc   {
 
     return this;
   }
+  /**
+   **/
+  public DimensioDesc tipus(DimensioTipusEnum tipus) {
+    this.tipus = tipus;
+    return this;
+  }
+
+  
+  @ApiModelProperty(value = "")
+  @JsonProperty("tipus")
+  public DimensioTipusEnum getTipus() {
+    return tipus;
+  }
+
+  @JsonProperty("tipus")
+  public void setTipus(DimensioTipusEnum tipus) {
+    this.tipus = tipus;
+  }
+
 
   @Override
   public boolean equals(Object o) {
@@ -148,12 +169,13 @@ public class DimensioDesc   {
     return Objects.equals(this.codi, dimensioDesc.codi) &&
         Objects.equals(this.nom, dimensioDesc.nom) &&
         Objects.equals(this.descripcio, dimensioDesc.descripcio) &&
-        Objects.equals(this.valors, dimensioDesc.valors);
+        Objects.equals(this.valors, dimensioDesc.valors) &&
+        Objects.equals(this.tipus, dimensioDesc.tipus);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(codi, nom, descripcio, valors);
+    return Objects.hash(codi, nom, descripcio, valors, tipus);
   }
 
   @Override
@@ -165,6 +187,7 @@ public class DimensioDesc   {
     sb.append("    nom: ").append(toIndentedString(nom)).append("\n");
     sb.append("    descripcio: ").append(toIndentedString(descripcio)).append("\n");
     sb.append("    valors: ").append(toIndentedString(valors)).append("\n");
+    sb.append("    tipus: ").append(toIndentedString(tipus)).append("\n");
     sb.append("}");
     return sb.toString();
   }

@@ -1,0 +1,163 @@
+databaseChangeLog:
+  - changeSet:
+      id: est-dashboard-titol-vores-costat-0.1.4-001
+      author: limit
+      comment: >
+        Afegir configuració independent dels 4 costats de la vora (mostrar/color/gruix) i de la posició i
+        separació del subtítol respecte del títol, pels components de tipus títol dels dashboards.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: ${db_prefix}est_dashboard_titol
+              columnName: posicio_subtitol
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}est_dashboard_titol
+            columns:
+              - column:
+                  name: posicio_subtitol
+                  type: VARCHAR(32 ${varcharUnit})
+                  defaultValue: SOTA
+              - column:
+                  name: separacio_subtitol
+                  type: int
+                  defaultValueNumeric: 0
+              - column:
+                  name: mostrar_vora_top
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: color_vora_top
+                  type: VARCHAR(8 ${varcharUnit})
+              - column:
+                  name: ample_vora_top
+                  type: int
+                  defaultValueNumeric: 1
+              - column:
+                  name: mostrar_vora_right
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: color_vora_right
+                  type: VARCHAR(8 ${varcharUnit})
+              - column:
+                  name: ample_vora_right
+                  type: int
+                  defaultValueNumeric: 1
+              - column:
+                  name: mostrar_vora_bottom
+                  type: boolean
+                  defaultValueBoolean: true
+              - column:
+                  name: color_vora_bottom
+                  type: VARCHAR(8 ${varcharUnit})
+              - column:
+                  name: ample_vora_bottom
+                  type: int
+                  defaultValueNumeric: 1
+              - column:
+                  name: mostrar_vora_left
+                  type: boolean
+                  defaultValueBoolean: false
+              - column:
+                  name: color_vora_left
+                  type: VARCHAR(8 ${varcharUnit})
+              - column:
+                  name: ample_vora_left
+                  type: int
+                  defaultValueNumeric: 1
+      rollback:
+        - dropColumn:
+            tableName: ${db_prefix}est_dashboard_titol
+            columns:
+              - column:
+                  name: posicio_subtitol
+              - column:
+                  name: separacio_subtitol
+              - column:
+                  name: mostrar_vora_top
+              - column:
+                  name: color_vora_top
+              - column:
+                  name: ample_vora_top
+              - column:
+                  name: mostrar_vora_right
+              - column:
+                  name: color_vora_right
+              - column:
+                  name: ample_vora_right
+              - column:
+                  name: mostrar_vora_bottom
+              - column:
+                  name: color_vora_bottom
+              - column:
+                  name: ample_vora_bottom
+              - column:
+                  name: mostrar_vora_left
+              - column:
+                  name: color_vora_left
+              - column:
+                  name: ample_vora_left
+
+  - changeSet:
+      id: est-dashboard-titol-vores-costat-0.1.4-002
+      author: limit
+      comment: >
+        Migrar les dades de la vora única anterior (mostrar_vora/color_vora/ample_vora) cap als 4 costats nous:
+        l'antiga vora "completa" (mostrar_vora=true) es reparteix a top/right/left, i la vora inferior (que
+        abans es mostrava sempre per defecte al frontend) es formalitza a mostrar_vora_bottom.
+      preConditions:
+        - onFail: MARK_RAN
+        - columnExists:
+            tableName: ${db_prefix}est_dashboard_titol
+            columnName: mostrar_vora
+      changes:
+        - sql:
+            sql: >
+              UPDATE ${db_prefix}est_dashboard_titol
+              SET mostrar_vora_top = COALESCE(mostrar_vora, false),
+                  color_vora_top = COALESCE(color_vora, color_vora_top),
+                  ample_vora_top = COALESCE(ample_vora, ample_vora_top),
+                  mostrar_vora_right = COALESCE(mostrar_vora, false),
+                  color_vora_right = COALESCE(color_vora, color_vora_right),
+                  ample_vora_right = COALESCE(ample_vora, ample_vora_right),
+                  color_vora_bottom = COALESCE(color_vora, color_vora_bottom),
+                  ample_vora_bottom = COALESCE(ample_vora, ample_vora_bottom),
+                  mostrar_vora_left = COALESCE(mostrar_vora, false),
+                  color_vora_left = COALESCE(color_vora, color_vora_left),
+                  ample_vora_left = COALESCE(ample_vora, ample_vora_left)
+      rollback: []
+
+  - changeSet:
+      id: est-dashboard-titol-vores-costat-0.1.4-003
+      author: limit
+      comment: Eliminar les columnes de vora única, substituïdes pels 4 costats independents.
+      preConditions:
+        - onFail: MARK_RAN
+        - columnExists:
+            tableName: ${db_prefix}est_dashboard_titol
+            columnName: mostrar_vora
+      changes:
+        - dropColumn:
+            tableName: ${db_prefix}est_dashboard_titol
+            columns:
+              - column:
+                  name: mostrar_vora
+              - column:
+                  name: color_vora
+              - column:
+                  name: ample_vora
+      rollback:
+        - addColumn:
+            tableName: ${db_prefix}est_dashboard_titol
+            columns:
+              - column:
+                  name: mostrar_vora
+                  type: boolean
+              - column:
+                  name: color_vora
+                  type: VARCHAR(8 ${varcharUnit})
+              - column:
+                  name: ample_vora
+                  type: int

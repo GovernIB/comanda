@@ -52,7 +52,15 @@ public class EstadisticaSimpleWidgetHelper {
                     .ifPresent(indicadorTaulaEntity::setIndicador);
             }
         }
-        indicadorTaulaEntity = indicadorTaulaRepository.save(indicadorTaulaEntity);
+        if (entity.getId() != null) {
+            // El widget ja existeix a BD: cal desar explícitament aquí l'IndicadorTaulaEntity (abans del
+            // save/flush del widget fet per BaseMutableResourceService) per evitar el bloqueig optimista
+            // i les files duplicades comentats més amunt. En creació el widget encara és transitori (id
+            // null): un save() explícit fallaria amb TransientPropertyValueException perquè la FK
+            // 'widget' apuntaria a una entitat encara no persistida — es deixa que el cascade=ALL
+            // d''indicadorInfo' el persisteixi juntament amb el widget quan aquest es desi.
+            indicadorTaulaEntity = indicadorTaulaRepository.save(indicadorTaulaEntity);
+        }
         entity.setIndicadorInfo(indicadorTaulaEntity);
     }
 

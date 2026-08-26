@@ -51,6 +51,21 @@ public class UnitatsOrganitzativesRestClient {
         this.URL_FIND = baseUrl + "/rest/unidades/obtenerArbolUnidadesDestinatarias";
     }
 
+    /**
+     * Indica si el plugin està correctament configurat (URL absoluta no buida). Es fa servir per evitar continuar
+     * fent peticions a Dir3 quan no ho està - vegeu {@link #obtenerUnidad} i {@link #findUnidad}.
+     */
+    public boolean isConfigured() {
+        if (baseUrl == null || baseUrl.isBlank()) {
+            return false;
+        }
+        try {
+            return URI.create(baseUrl).isAbsolute();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 
     private String basicAuthHeader(String user, String password) {
         String token = java.util.Base64.getEncoder().encodeToString((user + ":" + password).getBytes(java.nio.charset.StandardCharsets.UTF_8));
@@ -73,6 +88,9 @@ public class UnitatsOrganitzativesRestClient {
                                     String fechaActualizacion,
                                     String fechaSincronizacion,
                                     Boolean denominacioCooficial) throws SistemaExternException {
+        if (!isConfigured()) {
+            throw new SistemaExternException("El plugin d'unitats organitzatives Dir3 no està configurat (URL buida o no vàlida)");
+        }
         MonitorDir3 monitor = initializeMonitor(URL_GET_ONE);
 
         try {
@@ -116,6 +134,9 @@ public class UnitatsOrganitzativesRestClient {
                                        String fechaActualizacion,
                                        String fechaSincronizacion,
                                        Boolean denominacioCooficial) throws SistemaExternException {
+        if (!isConfigured()) {
+            throw new SistemaExternException("El plugin d'unitats organitzatives Dir3 no està configurat (URL buida o no vàlida)");
+        }
         MonitorDir3 monitor = initializeMonitor(URL_FIND);
 
         try {

@@ -18,7 +18,7 @@ import org.springframework.data.annotation.Transient;
 @NoArgsConstructor
 @FieldNameConstants
 @ResourceConfig(
-        quickFilterFields = { "codi", "nom" },
+        quickFilterFields = { "codi", "nom", "cif" },
         descriptionField = "codi",
         accessConstraints = {
             @ResourceAccessConstraint(
@@ -37,16 +37,27 @@ import org.springframework.data.annotation.Transient;
                     grantedPermissions = { PermissionEnum.WRITE }
                 )
             }),
+        @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Entitat.ACTION_ORGANIGRAMA, requiresId = true,
+            accessConstraints = {
+                @ResourceAccessConstraint(
+                    type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                    roles = { BaseConfig.ROLE_ADMIN },
+                    grantedPermissions = { PermissionEnum.READ }
+                )
+            }),
     }
 )
 public class Entitat extends BaseResource<Long> {
 
     public final static String ACTION_REFRESH_UO = "REFRESH_UO";
+    /** Retorna l'organigrama (llista de UnitatOrganitzativa) de l'entitat, evitant el cost de la graella genèrica. */
+    public final static String ACTION_ORGANIGRAMA = "ORGANIGRAMA";
     public static final String PERSP_PERMIS_NUM = "PERMIS_NUM";
 
     private String codi;
     private String nom;
     private String codiDir3;
+    private String cif;
 
     @Transient
     private int numPermisos;

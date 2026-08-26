@@ -4,10 +4,13 @@ import es.caib.comanda.estadistica.logic.helper.EntitatResolverHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.EntitatValorTipus;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 import es.caib.comanda.estadistica.persist.repository.DimensioRepository;
+import es.caib.comanda.estadistica.persist.repository.DimensioValorRepository;
 import es.caib.comanda.estadistica.persist.repository.FetRepository;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
@@ -49,6 +52,7 @@ class DimensioServiceImplTest {
     @Mock private FetRepository fetRepository;
     @Mock private EntitatResolverHelper entitatResolverHelper;
     @Mock private DimensioRepository dimensioRepository;
+    @Mock private DimensioValorRepository dimensioValorRepository;
     @Mock private ResourceEntityMappingHelper resourceEntityMappingHelper;
 
     @InjectMocks
@@ -243,6 +247,99 @@ class DimensioServiceImplTest {
     }
 
     @Test
+    @DisplayName("ChangeTipusActionExecutor: persisteix entitatValorTipus quan el tipus és ENTITAT")
+    void changeTipusActionExecutor_quanTipusEntitat_llavorsPersisteixEntitatValorTipus() throws ActionExecutionException {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+
+        Dimensio.ChangeTipusActionForm params = new Dimensio.ChangeTipusActionForm();
+        params.setTipus(TipusDimensioEnum.ENTITAT);
+        params.setEntitatValorTipus(EntitatValorTipus.CODI_DIR3);
+
+        when(dimensioValorRepository.findByDimensio(entity)).thenReturn(Collections.emptyList());
+        when(resourceEntityMappingHelper.entityToResource(entity, Dimensio.class)).thenReturn(new Dimensio());
+
+        DimensioServiceImpl.ChangeTipusActionExecutor executor = dimensioService.new ChangeTipusActionExecutor();
+
+        // Act
+        executor.exec(Dimensio.ACTION_CHANGE_TIPUS, entity, params);
+
+        // Assert
+        assertThat(entity.getEntitatValorTipus()).isEqualTo(EntitatValorTipus.CODI_DIR3);
+    }
+
+    @Test
+    @DisplayName("ChangeTipusActionExecutor: en configurar/editar el tipus ENTITAT, enllaça els valors existents amb les Entitat")
+    void changeTipusActionExecutor_quanTipusEntitat_llavorsEnllacaValorsExistents() throws ActionExecutionException {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+        entity.setCodi("ENT");
+
+        Dimensio.ChangeTipusActionForm params = new Dimensio.ChangeTipusActionForm();
+        params.setTipus(TipusDimensioEnum.ENTITAT);
+        params.setEntitatValorTipus(EntitatValorTipus.CODI_DIR3);
+
+        DimensioValorEntity v1 = new DimensioValorEntity();
+        v1.setValor("A01");
+        DimensioValorEntity v2 = new DimensioValorEntity();
+        v2.setValor("A02");
+
+        when(dimensioValorRepository.findByDimensio(entity)).thenReturn(Arrays.asList(v1, v2));
+        when(resourceEntityMappingHelper.entityToResource(entity, Dimensio.class)).thenReturn(new Dimensio());
+
+        DimensioServiceImpl.ChangeTipusActionExecutor executor = dimensioService.new ChangeTipusActionExecutor();
+
+        // Act
+        executor.exec(Dimensio.ACTION_CHANGE_TIPUS, entity, params);
+
+        // Assert
+        verify(entitatResolverHelper).resolveOrCreateEntitat(entity, "A01");
+        verify(entitatResolverHelper).resolveOrCreateEntitat(entity, "A02");
+    }
+
+    @Test
+    @DisplayName("ChangeTipusActionExecutor: no intenta enllaçar valors quan el tipus no és ENTITAT")
+    void changeTipusActionExecutor_quanTipusNoEsEntitat_llavorsNoEnllacaValors() throws ActionExecutionException {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+
+        Dimensio.ChangeTipusActionForm params = new Dimensio.ChangeTipusActionForm();
+        params.setTipus(TipusDimensioEnum.ORGAN_GESTOR);
+
+        when(resourceEntityMappingHelper.entityToResource(entity, Dimensio.class)).thenReturn(new Dimensio());
+
+        DimensioServiceImpl.ChangeTipusActionExecutor executor = dimensioService.new ChangeTipusActionExecutor();
+
+        // Act
+        executor.exec(Dimensio.ACTION_CHANGE_TIPUS, entity, params);
+
+        // Assert
+        verifyNoInteractions(dimensioValorRepository, entitatResolverHelper);
+    }
+
+    @Test
+    @DisplayName("ChangeTipusActionExecutor: ignora entitatValorTipus quan el tipus no és ENTITAT")
+    void changeTipusActionExecutor_quanTipusNoEsEntitat_llavorsIgnoraEntitatValorTipus() throws ActionExecutionException {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+        entity.setEntitatValorTipus(EntitatValorTipus.NOM);
+
+        Dimensio.ChangeTipusActionForm params = new Dimensio.ChangeTipusActionForm();
+        params.setTipus(TipusDimensioEnum.ORGAN_GESTOR);
+        params.setEntitatValorTipus(EntitatValorTipus.CODI_DIR3);
+
+        when(resourceEntityMappingHelper.entityToResource(entity, Dimensio.class)).thenReturn(new Dimensio());
+
+        DimensioServiceImpl.ChangeTipusActionExecutor executor = dimensioService.new ChangeTipusActionExecutor();
+
+        // Act
+        executor.exec(Dimensio.ACTION_CHANGE_TIPUS, entity, params);
+
+        // Assert
+        assertThat(entity.getEntitatValorTipus()).isNull();
+    }
+
+    @Test
     @DisplayName("ChangeTipusActionExecutor.onChange: s'executa sense errors")
     void changeTipusActionExecutor_onChange_quanEsCrida_llavorsNoFaRes() {
         // Arrange
@@ -425,6 +522,96 @@ class DimensioServiceImplTest {
     void fetConsActionExecutor_onChange_quanEsCrida_llavorsNoFaRes() {
         // Arrange
         DimensioServiceImpl.FetConsActionExecutor executor = dimensioService.new FetConsActionExecutor();
+
+        // Act & Assert
+        org.junit.jupiter.api.Assertions.assertDoesNotThrow(() ->
+            executor.onChange(1L, null, "field", "value", new HashMap<>(), new String[0], null)
+        );
+    }
+
+    // ========================================================================
+    // 5. TESTOS PER A UpdateEntitatsActionExecutor
+    // ========================================================================
+
+    @Test
+    @DisplayName("UpdateEntitatsActionExecutor: llança ActionExecutionException quan la dimensió no és ENTITAT")
+    void updateEntitatsActionExecutor_quanNoEsEntitat_llancaActionExecutionException() {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+        entity.setTipus(TipusDimensioEnum.ORGAN_GESTOR);
+
+        DimensioServiceImpl.UpdateEntitatsActionExecutor executor = dimensioService.new UpdateEntitatsActionExecutor();
+
+        // Act & Assert
+        assertThatThrownBy(() -> executor.exec(Dimensio.ACTION_UPDATE_ENTITATS, entity, null))
+            .isInstanceOf(ActionExecutionException.class);
+        verifyNoInteractions(dimensioValorRepository, entitatResolverHelper);
+    }
+
+    @Test
+    @DisplayName("UpdateEntitatsActionExecutor: crida resolveOrCreateEntitat per cada valor no blanc")
+    void updateEntitatsActionExecutor_quanEsEntitat_llavorsResolCadaValorNoBlanc() throws ActionExecutionException {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+        entity.setTipus(TipusDimensioEnum.ENTITAT);
+        entity.setCodi("ENT");
+
+        DimensioValorEntity v1 = new DimensioValorEntity();
+        v1.setValor("A01");
+        DimensioValorEntity v2 = new DimensioValorEntity();
+        v2.setValor(""); // blanc, s'ha d'ignorar
+        DimensioValorEntity v3 = new DimensioValorEntity();
+        v3.setValor(null); // null, s'ha d'ignorar
+        DimensioValorEntity v4 = new DimensioValorEntity();
+        v4.setValor("A02");
+
+        when(dimensioValorRepository.findByDimensio(entity)).thenReturn(Arrays.asList(v1, v2, v3, v4));
+        when(resourceEntityMappingHelper.entityToResource(entity, Dimensio.class)).thenReturn(new Dimensio());
+
+        DimensioServiceImpl.UpdateEntitatsActionExecutor executor = dimensioService.new UpdateEntitatsActionExecutor();
+
+        // Act
+        Dimensio result = executor.exec(Dimensio.ACTION_UPDATE_ENTITATS, entity, null);
+
+        // Assert
+        assertThat(result).isNotNull();
+        verify(entitatResolverHelper).resolveOrCreateEntitat(entity, "A01");
+        verify(entitatResolverHelper).resolveOrCreateEntitat(entity, "A02");
+        verify(entitatResolverHelper, org.mockito.Mockito.times(2)).resolveOrCreateEntitat(any(), anyString());
+    }
+
+    @Test
+    @DisplayName("UpdateEntitatsActionExecutor: continua amb els altres valors quan un falla")
+    void updateEntitatsActionExecutor_quanUnValorFalla_llavorsContinuaAmbLaResta() throws ActionExecutionException {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+        entity.setTipus(TipusDimensioEnum.ENTITAT);
+        entity.setCodi("ENT");
+
+        DimensioValorEntity v1 = new DimensioValorEntity();
+        v1.setValor("A01");
+        DimensioValorEntity v2 = new DimensioValorEntity();
+        v2.setValor("A02");
+
+        when(dimensioValorRepository.findByDimensio(entity)).thenReturn(Arrays.asList(v1, v2));
+        when(entitatResolverHelper.resolveOrCreateEntitat(entity, "A01")).thenThrow(new RuntimeException("Error BD"));
+        when(resourceEntityMappingHelper.entityToResource(entity, Dimensio.class)).thenReturn(new Dimensio());
+
+        DimensioServiceImpl.UpdateEntitatsActionExecutor executor = dimensioService.new UpdateEntitatsActionExecutor();
+
+        // Act
+        Dimensio result = executor.exec(Dimensio.ACTION_UPDATE_ENTITATS, entity, null);
+
+        // Assert
+        assertThat(result).isNotNull();
+        verify(entitatResolverHelper).resolveOrCreateEntitat(entity, "A02");
+    }
+
+    @Test
+    @DisplayName("UpdateEntitatsActionExecutor.onChange: s'executa sense errors")
+    void updateEntitatsActionExecutor_onChange_quanEsCrida_llavorsNoFaRes() {
+        // Arrange
+        DimensioServiceImpl.UpdateEntitatsActionExecutor executor = dimensioService.new UpdateEntitatsActionExecutor();
 
         // Act & Assert
         org.junit.jupiter.api.Assertions.assertDoesNotThrow(() ->

@@ -12,7 +12,7 @@ import java.util.Optional;
 
 /**
  * Repositori per gestionar operacions de persistència relacionades amb l'entitat DimensioEntity.
- *
+ * <p>
  * Aquesta interfície extén BaseRepository, proporcionant funcionalitats bàsiques de CRUD i mètodes específics per
  * gestionar les dimensions dins el sistema d'estadístiques. Principalment, permet cercar dimensions basades en el
  * seu codi i en l'entorn d'aplicació associat, així com obtenir totes les dimensions per a un entorn concret.
@@ -21,13 +21,14 @@ import java.util.Optional;
  */
 public interface DimensioRepository extends BaseRepository<DimensioEntity, Long> {
 
-    Optional<DimensioEntity> findByCodiAndEntornAppId(String codi, Long entornAppId);
-
     List<DimensioEntity> findByEntornAppId(Long entornAppId);
+
+    Optional<DimensioEntity> findByCodiAndEntornAppId(String codi, Long entornAppId);
 
     Optional<DimensioEntity> findByEntornAppIdAndTipus(Long entornAppId, TipusDimensioEnum tipus);
 
     @Modifying
     @Query("DELETE FROM DimensioEntity d WHERE d.entornAppId = :entornAppId")
     void deleteByEntornAppId(@Param("entornAppId") Long entornAppId);
+
 }

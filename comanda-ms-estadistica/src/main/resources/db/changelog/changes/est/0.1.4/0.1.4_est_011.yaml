@@ -1,0 +1,90 @@
+databaseChangeLog:
+  - changeSet:
+      id: est-indicador-formula-0.1.4-001
+      author: limit
+      comment: >
+        Afegir el tipus d'indicador (SIMPLE/FORMULA) i la taula de termes de fórmula, per permetre crear
+        indicadors calculats com a suma/resta d'altres indicadors del mateix entornApp.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: ${db_prefix}est_indicador
+              columnName: tipus
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}est_indicador
+            columns:
+              - column:
+                  name: tipus
+                  type: VARCHAR(16 ${varcharUnit})
+                  defaultValue: SIMPLE
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: ${db_prefix}est_indicador
+            columnName: tipus
+
+  - changeSet:
+      id: est-indicador-formula-0.1.4-002
+      author: limit
+      comment: Crear la taula de termes de fórmula d'indicadors (suma/resta d'altres indicadors).
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${db_prefix}est_indicador_formula_terme
+      changes:
+        - createTable:
+            tableName: ${db_prefix}est_indicador_formula_terme
+            columns:
+              - column:
+                  name: id
+                  type: NUMBER(38,0)
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}ind_formula_terme_pk
+              - column:
+                  name: indicador_formula_id
+                  type: NUMBER(38,0)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: indicador_component_id
+                  type: NUMBER(38,0)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: operador
+                  type: VARCHAR(16 ${varcharUnit})
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ordre
+                  type: INT
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: ${db_prefix}est_indicador_formula_terme
+            baseColumnNames: indicador_formula_id
+            constraintName: ${db_prefix}ind_formula_terme_formula_fk
+            referencedTableName: ${db_prefix}est_indicador
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            baseTableName: ${db_prefix}est_indicador_formula_terme
+            baseColumnNames: indicador_component_id
+            constraintName: ${db_prefix}ind_formula_terme_component_fk
+            referencedTableName: ${db_prefix}est_indicador
+            referencedColumnNames: id
+        - createIndex:
+            indexName: ${db_prefix}ind_formula_terme_formula_idx
+            tableName: ${db_prefix}est_indicador_formula_terme
+            columns:
+              - column:
+                  name: indicador_formula_id
+      rollback:
+        - dropTable:
+            tableName: ${db_prefix}est_indicador_formula_terme

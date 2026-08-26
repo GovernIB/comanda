@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import EstadisticaDashboardView from './EstadisticaDashboardView';
 
 const mocks = vi.hoisted(() => ({
@@ -92,14 +93,17 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', () => ({
         dashboardId,
         gridLayoutItems,
         dashboardEntornCodi,
+        backgroundColor,
     }: {
         dashboardId: number;
         gridLayoutItems: unknown[];
         dashboardEntornCodi?: string;
+        backgroundColor?: string;
     }) => (
         <div>
             {`Grid ${dashboardId} (${gridLayoutItems.length})`}
             {dashboardEntornCodi && <span data-testid="entorn-codi">{dashboardEntornCodi}</span>}
+            <span data-testid="background-color">{backgroundColor}</span>
         </div>
     ),
     useMapDashboardItems: (widgets: unknown[]) => mocks.useMapDashboardItemsMock(widgets),
@@ -182,6 +186,44 @@ describe('EstadisticaDashboardView', () => {
         expect(screen.getByText('Grid 12 (1)')).toBeInTheDocument();
         expect(screen.getByTestId('entorn-codi')).toHaveTextContent('ENT-5');
         expect(mocks.setItemMock).toHaveBeenCalledWith('lastViewedDashboardId', '12');
+    });
+
+    it('EstadisticaDashboardView_quanElDashboardTeColorFonsClar_lAplicaAlGridEnTemaClar', async () => {
+        // En tema clar (per defecte en aquests tests) s'ha d'aplicar el color de fons clar.
+        mocks.useDashboardMock.mockReturnValue({
+            dashboard: { id: 12, titol: 'Dashboard 12', entorn: { id: 5 }, colorFonsClar: '#abcdef', colorFonsFosc: '#111111' },
+            loading: false,
+            exception: null,
+        });
+
+        render(<EstadisticaDashboardView />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('heading', { name: 'Dashboards' })).toBeInTheDocument();
+        });
+
+        expect(screen.getByTestId('background-color')).toHaveTextContent('#abcdef');
+    });
+
+    it('EstadisticaDashboardView_quanElTemaEsFosc_aplicaElColorDeFonsFosc', async () => {
+        // En tema fosc (segons el perfil de l'usuari) s'ha d'aplicar el color de fons fosc.
+        mocks.useDashboardMock.mockReturnValue({
+            dashboard: { id: 12, titol: 'Dashboard 12', entorn: { id: 5 }, colorFonsClar: '#abcdef', colorFonsFosc: '#111111' },
+            loading: false,
+            exception: null,
+        });
+
+        render(
+            <ThemeProvider theme={createTheme({ palette: { mode: 'dark' } })}>
+                <EstadisticaDashboardView />
+            </ThemeProvider>
+        );
+
+        await waitFor(() => {
+            expect(screen.getByRole('heading', { name: 'Dashboards' })).toBeInTheDocument();
+        });
+
+        expect(screen.getByTestId('background-color')).toHaveTextContent('#111111');
     });
 
     it('EstadisticaDashboardView_quanNoHiHaEntorn_noPassaEntornCodi', async () => {

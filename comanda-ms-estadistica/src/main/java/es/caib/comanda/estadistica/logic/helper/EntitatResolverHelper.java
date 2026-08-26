@@ -36,6 +36,7 @@ public class EntitatResolverHelper {
     private final EntitatRepository entitatRepository;
     private final UnitatsOrganitzativesRestClient unitatsOrganitzativesRestClient;
     private final UnitatsOrganitzativesPlugin unitatsOrganitzativesPlugin;
+    private final UnitatOrganitzativaHelper unitatOrganitzativaHelper;
 
     /** Troba la dimensió de tipus ENTITAT de l'entorn d'aplicació indicat, si n'hi ha. */
     public Optional<DimensioEntity> findDimensioEntitat(Long entornAppId) {
@@ -45,8 +46,10 @@ public class EntitatResolverHelper {
     /**
      * Resol l'EntitatEntity corresponent a un valor concret d'una dimensió de tipus ENTITAT.
      * Primer comprova si hi ha una sobreescriptura manual (DimensioValorEntity.entitatMapejada, per als casos en
-     * què el valor rebut no es correspon exactament amb cap Entitat definida a Comanda); si no n'hi ha, compara
-     * `valor` amb Entitat.codi o Entitat.codiDir3 segons {@code dimensioEntitat.getEntitatValorTipus()}.
+     * què el valor rebut no es correspon exactament amb cap Entitat definida a Comanda); si no n'hi ha, i el tipus
+     * no és {@link EntitatValorTipus#MANUAL}, compara `valor` amb Entitat.codi, Entitat.codiDir3 o Entitat.nom
+     * segons {@code dimensioEntitat.getEntitatValorTipus()} (CODI per defecte si no s'ha configurat).
+     * Si el tipus és MANUAL, no s'intenta cap coincidència automàtica: només es fa servir `entitatMapejada`.
      */
     public Optional<EntitatEntity> resolveEntitat(DimensioEntity dimensioEntitat, String valor) {
         if (dimensioEntitat == null || valor == null || valor.isBlank()) {
@@ -56,9 +59,65 @@ public class EntitatResolverHelper {
         if (dimensioValor.isPresent() && dimensioValor.get().getEntitatMapejada() != null) {
             return Optional.of(dimensioValor.get().getEntitatMapejada());
         }
-        return EntitatValorTipus.CODI_DIR3.equals(dimensioEntitat.getEntitatValorTipus())
-            ? entitatRepository.findByCodiDir3(valor)
-            : entitatRepository.findByCodi(valor);
+        EntitatValorTipus tipus = dimensioEntitat.getEntitatValorTipus();
+        if (tipus == null) {
+            tipus = EntitatValorTipus.CODI;
+        }
+        switch (tipus) {
+            case CODI_DIR3:
+                return entitatRepository.findByCodiDir3(valor);
+            case NOM:
+                return entitatRepository.findFirstByNom(valor);
+            case CIF:
+                return entitatRepository.findByCif(valor);
+            case MANUAL:
+                return Optional.empty();
+            case CODI:
+            default:
+                return entitatRepository.findByCodi(valor);
+        }
+    }
+
+    /**
+     * Com {@link #resolveEntitat}, però si no es troba cap Entitat corresponent (i el tipus de relació no és
+     * {@link EntitatValorTipus#MANUAL}), en crea una de nova amb el camp conegut segons
+     * {@code dimensioEntitat.getEntitatValorTipus()} (CODI per defecte) i la resta buits - un administrador haurà
+     * de completar-los manualment. Si l'entitat creada té codiDir3, es dispara (sense bloquejar) la sincronització
+     * d'unitats organitzatives des de Dir3. Es fa servir a la ingesta de fets i al backfill manual.
+     */
+    public Optional<EntitatEntity> resolveOrCreateEntitat(DimensioEntity dimensioEntitat, String valor) {
+        Optional<EntitatEntity> existent = resolveEntitat(dimensioEntitat, valor);
+        if (existent.isPresent() || dimensioEntitat == null || valor == null || valor.isBlank()) {
+            return existent;
+        }
+        EntitatValorTipus tipus = dimensioEntitat.getEntitatValorTipus();
+        if (tipus == null) {
+            tipus = EntitatValorTipus.CODI;
+        }
+        if (EntitatValorTipus.MANUAL.equals(tipus)) {
+            return Optional.empty();
+        }
+        EntitatEntity nova = new EntitatEntity();
+        switch (tipus) {
+            case CODI_DIR3:
+                nova.setCodiDir3(valor);
+                break;
+            case NOM:
+                nova.setNom(valor);
+                break;
+            case CIF:
+                nova.setCif(valor);
+                break;
+            case CODI:
+            default:
+                nova.setCodi(valor);
+                break;
+        }
+        EntitatEntity saved = entitatRepository.save(nova);
+        log.info("Creada automàticament l'Entitat {} a partir del valor '{}' de la dimensió {}",
+            saved.getId(), valor, dimensioEntitat.getCodi());
+        unitatOrganitzativaHelper.refreshFromEntitatCodiDir3(saved.getCodiDir3());
+        return Optional.of(saved);
     }
 
     /**

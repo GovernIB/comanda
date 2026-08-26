@@ -3,6 +3,8 @@ package es.caib.comanda.estadistica.logic.helper;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisuals;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple;
+import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTitol;
+import es.caib.comanda.estadistica.logic.intf.model.dashboard.PosicioSubtitol;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteRole;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
@@ -206,6 +208,23 @@ class DashboardStyleResolverHelperTest {
         helper.applyTemplateDefaults(target, plantilla, PaletteGroupType.LIGHT, WidgetStyleScope.COMMON);
 
         assertEquals("#EXISTENT", target.getColorFons());
+    }
+
+    @Test
+    @DisplayName("applyTemplateDefaults: resol un camp de tipus enum (posicioSubtitol) a partir del valor de text de la propietat")
+    void applyTemplateDefaults_ambCampEnum_llavorsResolElValorDeTextComAEnum() {
+        PlantillaEntity plantilla = new PlantillaEntity();
+        WidgetStylePropertyEntity prop = new WidgetStylePropertyEntity();
+        prop.setScope(WidgetStyleScope.TITOL_1);
+        prop.setPropertyName("posicioSubtitol");
+        prop.setValueType(WidgetStyleValueType.TEXT);
+        prop.setScalarValue("COSTAT");
+        plantilla.setStyleProperties(List.of(prop));
+
+        AtributsVisualsTitol target = new AtributsVisualsTitol();
+        helper.applyTemplateDefaults(target, plantilla, PaletteGroupType.LIGHT, WidgetStyleScope.TITOL_1);
+
+        assertEquals(PosicioSubtitol.COSTAT, target.getPosicioSubtitol());
     }
 
     @Test

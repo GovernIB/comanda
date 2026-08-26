@@ -1,10 +1,15 @@
 package es.caib.comanda.estadistica.logic.helper;
 
+import es.caib.comanda.client.AclServiceClient;
+import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.logic.dir3.SistemaExternException;
 import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesPlugin;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.UOEstatEnum;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.UnitatOrganitzativa;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.UnitatOrganitzativaEntity;
 import es.caib.comanda.estadistica.persist.repository.UnitatOrganitzativaRepository;
+import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,6 +32,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,6 +44,15 @@ class UnitatOrganitzativaHelperTest {
 
     @Mock
     private UnitatOrganitzativaRepository unitatOrganitzativaRepository;
+
+    @Mock
+    private ResourceEntityMappingHelper resourceEntityMappingHelper;
+
+    @Mock
+    private AclServiceClient aclServiceClient;
+
+    @Mock
+    private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
 
     @InjectMocks
     private UnitatOrganitzativaHelper unitatOrganitzativaHelper;
@@ -303,5 +319,134 @@ class UnitatOrganitzativaHelperTest {
         // La llista de codis ha de tenir només 1 element gràcies a .distinct()
         assertThat(codisCaptor.getValue()).hasSize(1);
         assertThat(codisCaptor.getValue().get(0)).isEqualTo("UO001");
+    }
+
+    // ========================================================================
+    // 4. TESTOS PER A refreshFromEntitatCodiDir3
+    // ========================================================================
+
+    @Test
+    @DisplayName("refreshFromEntitatCodiDir3: no fa res quan codiDir3 és null")
+    void refreshFromEntitatCodiDir3_quanCodiDir3EsNull_llavorsNoFaRes() {
+        // Act
+        unitatOrganitzativaHelper.refreshFromEntitatCodiDir3(null);
+
+        // Assert
+        verifyNoInteractions(unitatsOrganitzativesPlugin, unitatOrganitzativaRepository);
+    }
+
+    @Test
+    @DisplayName("refreshFromEntitatCodiDir3: no fa cap petició a Dir3 quan el plugin no està configurat")
+    void refreshFromEntitatCodiDir3_quanPluginNoConfigurat_llavorsNoFaPeticions() throws SistemaExternException {
+        // Arrange
+        when(unitatsOrganitzativesPlugin.isConfigured()).thenReturn(false);
+
+        // Act
+        unitatOrganitzativaHelper.refreshFromEntitatCodiDir3("DIR3_1");
+
+        // Assert
+        verify(unitatsOrganitzativesPlugin, never()).findAll(anyString());
+        verifyNoInteractions(unitatOrganitzativaRepository);
+    }
+
+    @Test
+    @DisplayName("refreshFromEntitatCodiDir3: sincronitza les unitats quan el plugin està configurat")
+    void refreshFromEntitatCodiDir3_quanPluginConfigurat_llavorsSincronitza() throws SistemaExternException {
+        // Arrange
+        when(unitatsOrganitzativesPlugin.isConfigured()).thenReturn(true);
+        when(unitatsOrganitzativesPlugin.findAll("DIR3_1")).thenReturn(Collections.singletonList(pluginResponse));
+        when(unitatOrganitzativaRepository.findByCodiIn(anyList())).thenReturn(Collections.emptyList());
+        when(unitatOrganitzativaRepository.saveAll(anyList())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        unitatOrganitzativaHelper.refreshFromEntitatCodiDir3("DIR3_1");
+
+        // Assert
+        verify(unitatsOrganitzativesPlugin).findAll("DIR3_1");
+        verify(unitatOrganitzativaRepository).saveAll(anyList());
+    }
+
+    @Test
+    @DisplayName("refreshFromEntitatCodiDir3: no propaga l'error si Dir3 falla")
+    void refreshFromEntitatCodiDir3_quanDir3Falla_llavorsNoPropagaError() throws SistemaExternException {
+        // Arrange
+        when(unitatsOrganitzativesPlugin.isConfigured()).thenReturn(true);
+        when(unitatsOrganitzativesPlugin.findAll("DIR3_1")).thenThrow(new RuntimeException("Error Dir3"));
+
+        // Act & Assert
+        org.junit.jupiter.api.Assertions.assertDoesNotThrow(() ->
+            unitatOrganitzativaHelper.refreshFromEntitatCodiDir3("DIR3_1"));
+    }
+
+    // ========================================================================
+    // 5. TESTOS PER A findAllByCodiUnitatArrelCached / evictOrganigramaCache
+    // ========================================================================
+
+    @Test
+    @DisplayName("findAllByCodiUnitatArrelCached: delega en el repositori")
+    void findAllByCodiUnitatArrelCached_delegaEnElRepositori() {
+        // Arrange
+        when(unitatOrganitzativaRepository.findByCodiUnitatArrel("D3")).thenReturn(Collections.singletonList(pluginResponse));
+
+        // Act
+        List<UnitatOrganitzativaEntity> result = unitatOrganitzativaHelper.findAllByCodiUnitatArrelCached("D3");
+
+        // Assert
+        assertThat(result).containsExactly(pluginResponse);
+    }
+
+    @Test
+    @DisplayName("evictOrganigramaCache: no llança cap error")
+    void evictOrganigramaCache_noLlancaError() {
+        org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> unitatOrganitzativaHelper.evictOrganigramaCache("D3"));
+    }
+
+    // ========================================================================
+    // 6. TESTOS PER A buildOrganigrama
+    // ========================================================================
+
+    @Test
+    @DisplayName("buildOrganigrama: converteix les unitats i assigna el nombre de permisos en viu")
+    void buildOrganigrama_assignaNumPermisosEnViu() {
+        // Arrange
+        UnitatOrganitzativaEntity u1 = new UnitatOrganitzativaEntity();
+        u1.setId(1L);
+        u1.setCodi("D3");
+        UnitatOrganitzativaEntity u2 = new UnitatOrganitzativaEntity();
+        u2.setId(2L);
+        u2.setCodi("U2");
+
+        when(unitatOrganitzativaRepository.findByCodiUnitatArrel("D3")).thenReturn(Arrays.asList(u1, u2));
+
+        UnitatOrganitzativa r1 = new UnitatOrganitzativa();
+        UnitatOrganitzativa r2 = new UnitatOrganitzativa();
+        when(resourceEntityMappingHelper.entityToResource(u1, UnitatOrganitzativa.class)).thenReturn(r1);
+        when(resourceEntityMappingHelper.entityToResource(u2, UnitatOrganitzativa.class)).thenReturn(r2);
+
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer test");
+        when(aclServiceClient.countAllSidsWithPermission(ResourceType.UNITAT, "1,2", "Bearer test"))
+            .thenReturn(org.springframework.http.ResponseEntity.ok(Map.of("1", 3)));
+
+        // Act
+        List<UnitatOrganitzativa> result = unitatOrganitzativaHelper.buildOrganigrama("D3");
+
+        // Assert
+        assertThat(result).containsExactly(r1, r2);
+        assertThat(r1.getNumPermisos()).isEqualTo(3);
+        assertThat(r2.getNumPermisos()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("buildOrganigrama: retorna llista buida sense cridar l'ACL quan no hi ha unitats")
+    void buildOrganigrama_quanNoHiHaUnitats_llavorsNoCridaAcl() {
+        // Arrange
+        when(unitatOrganitzativaRepository.findByCodiUnitatArrel("D3")).thenReturn(Collections.emptyList());
+
+        // Act
+        List<UnitatOrganitzativa> result = unitatOrganitzativaHelper.buildOrganigrama("D3");
+
+        // Assert
+        assertThat(result).isEmpty();
+        verifyNoInteractions(aclServiceClient);
     }
 }

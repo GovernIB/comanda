@@ -5,6 +5,13 @@ import Divider from "@mui/material/Divider";
 import Icon from "@mui/material/Icon";
 import Tooltip from "@mui/material/Tooltip";
 import ToggleButton from "@mui/material/ToggleButton";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import { useTheme } from "@mui/material/styles";
 import { useColumnesDimensioValor } from '../sharedAdvancedSearch/advancedSearchColumns';
 import { useTranslation } from "react-i18next";
 import FormFieldAdvancedSearchFilters from '../FormFieldAdvancedSearchFilters.tsx';
@@ -12,14 +19,184 @@ import { Box } from '@mui/material';
 import { findOptions } from '../../util/requestUtils.ts';
 
 /** Camps que sobreescriuen l'estil de la plantilla per a un títol */
-const TITOL_OVERRIDE_FIELDS = [
+export const TITOL_OVERRIDE_FIELDS = [
     'midaFontTitol', 'colorTitol', 'midaFontSubtitol', 'colorSubtitol',
-    'colorFons', 'mostrarVora', 'colorVora', 'ampleVora',
+    'colorFons', 'posicioSubtitol', 'separacioSubtitol',
+    'mostrarVoraTop', 'colorVoraTop', 'ampleVoraTop',
+    'mostrarVoraRight', 'colorVoraRight', 'ampleVoraRight',
+    'mostrarVoraBottom', 'colorVoraBottom', 'ampleVoraBottom',
+    'mostrarVoraLeft', 'colorVoraLeft', 'ampleVoraLeft',
 ];
 
-/** Indica si el títol té algun valor propi que sobreescrigui la plantilla (per mostrar l'indicador de "personalitzat") */
-export const hasVisualOverridesTitol = (data: any): boolean =>
-    TITOL_OVERRIDE_FIELDS.some(field => data?.[field] !== undefined && data?.[field] !== null && data?.[field] !== '');
+/**
+ * Valor de referència d'alguns camps de vora/subtítol quan NO s'han personalitzat: aquestes columnes tenen
+ * un valor per defecte a la base de dades (vegeu el canvi de Liquibase que les va introduir), de manera que
+ * TOTS els títols persistits ja en porten un valor concret. Sense aquesta referència, hasVisualOverridesTitol
+ * els confondria amb una personalització real encara que l'usuari no hagi tocat res.
+ */
+const TITOL_OVERRIDE_FIELD_DEFAULTS: Record<string, unknown> = {
+    posicioSubtitol: 'SOTA',
+    separacioSubtitol: 0,
+    mostrarVoraTop: false,
+    ampleVoraTop: 1,
+    mostrarVoraRight: false,
+    ampleVoraRight: 1,
+    mostrarVoraBottom: true,
+    ampleVoraBottom: 1,
+    mostrarVoraLeft: false,
+    ampleVoraLeft: 1,
+};
+
+/**
+ * Indica si el títol té algun valor propi que sobreescrigui la plantilla (per mostrar l'indicador de
+ * "personalitzat"). `initialData` (opcional, el valor tal com es va carregar en obrir l'edició) permet
+ * detectar un canvi real encara que el valor final coincideixi amb el de referència: per exemple, revertir
+ * posicioSubtitol a 'SOTA' des d'un valor personalitzat anterior ('COSTAT') és un canvi genuí, encara que
+ * 'SOTA' sigui el valor per defecte de la columna i, sense aquesta comparació, passaria desapercebut.
+ */
+export const hasVisualOverridesTitol = (data: any, initialData?: any): boolean =>
+    TITOL_OVERRIDE_FIELDS.some(field => {
+        const value = data?.[field];
+        if (value === undefined || value === null || value === '') return false;
+        if (value !== TITOL_OVERRIDE_FIELD_DEFAULTS[field]) return true;
+        return initialData != null && value !== initialData?.[field];
+    });
+
+export type VoraCostat = 'Top' | 'Right' | 'Bottom' | 'Left';
+const voraCostats: VoraCostat[] = ['Top', 'Right', 'Bottom', 'Left'];
+
+/** Costat de vora independent (Top/Right/Bottom/Left): checkbox "mostrar" i, si és cert, color i gruix. */
+export const VoraCostatFields: React.FC<{ costat: VoraCostat; showLabel: string; colorLabel: string; widthLabel: string }> = ({
+    costat,
+    showLabel,
+    colorLabel,
+    widthLabel,
+}) => {
+    const { data } = useFormContext();
+    const mostrarField = `mostrarVora${costat}`;
+    return (
+        <Grid container spacing={1.5}>
+            <Grid size={12}>
+                <FormField name={mostrarField} label={showLabel} type="checkbox" />
+            </Grid>
+            {data?.[mostrarField] && (
+                <>
+                    <Grid size={6}>
+                        <FormField name={`colorVora${costat}`} label={colorLabel} type="color" required={false} />
+                    </Grid>
+                    <Grid size={6}>
+                        <FormField name={`ampleVora${costat}`} label={widthLabel} type="number" required={false} />
+                    </Grid>
+                </>
+            )}
+        </Grid>
+    );
+};
+
+const useVoraCostatLabels = () => {
+    const { t } = useTranslation();
+    const labels: Record<VoraCostat, { show: string; color: string; width: string; zone: string }> = {
+        Top: {
+            show: t($ => $.page.widget.editor.showBorderTop),
+            color: t($ => $.page.widget.editor.borderColorTop),
+            width: t($ => $.page.widget.editor.borderWidthTop),
+            zone: t($ => $.page.widget.editor.voraTop),
+        },
+        Right: {
+            show: t($ => $.page.widget.editor.showBorderRight),
+            color: t($ => $.page.widget.editor.borderColorRight),
+            width: t($ => $.page.widget.editor.borderWidthRight),
+            zone: t($ => $.page.widget.editor.voraRight),
+        },
+        Bottom: {
+            show: t($ => $.page.widget.editor.showBorderBottom),
+            color: t($ => $.page.widget.editor.borderColorBottom),
+            width: t($ => $.page.widget.editor.borderWidthBottom),
+            zone: t($ => $.page.widget.editor.voraBottom),
+        },
+        Left: {
+            show: t($ => $.page.widget.editor.showBorderLeft),
+            color: t($ => $.page.widget.editor.borderColorLeft),
+            width: t($ => $.page.widget.editor.borderWidthLeft),
+            zone: t($ => $.page.widget.editor.voraLeft),
+        },
+    };
+    return labels;
+};
+
+/**
+ * Editor gràfic de les 4 vores independents d'un títol: un rectangle amb una zona clicable a cada costat
+ * que obre una modal amb els camps (mostrar/color/gruix) d'aquell costat concret. Lligat directament als
+ * camps del formulari (mostrarVoraTop, colorVoraTop, ampleVoraTop, ...), reutilitzable tant a l'assistent
+ * de creació com al panell lateral d'edició del dashboard.
+ */
+export const VoraGraphicalFormEditor: React.FC = () => {
+    const { data } = useFormContext();
+    const { t } = useTranslation();
+    const theme = useTheme();
+    const labels = useVoraCostatLabels();
+    const [openCostat, setOpenCostat] = React.useState<VoraCostat | null>(null);
+
+    const borderFor = (costat: VoraCostat) => {
+        const mostrar = Boolean(data?.[`mostrarVora${costat}`]);
+        const color = data?.[`colorVora${costat}`] || theme.palette.divider;
+        const ample = Number(data?.[`ampleVora${costat}`]) || 1;
+        return mostrar ? `${ample}px solid ${color}` : `1px dashed ${theme.palette.divider}`;
+    };
+
+    const zoneSx = { position: 'absolute' as const, cursor: 'pointer' };
+
+    return (
+        <>
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 1.5 }}>
+                <Box
+                    sx={{
+                        width: 180,
+                        height: 96,
+                        position: 'relative',
+                        borderTop: borderFor('Top'),
+                        borderRight: borderFor('Right'),
+                        borderBottom: borderFor('Bottom'),
+                        borderLeft: borderFor('Left'),
+                        bgcolor: 'background.paper',
+                    }}
+                >
+                    {voraCostats.map((costat) => (
+                        <Tooltip key={costat} title={labels[costat].zone}>
+                            <Box
+                                data-testid={`vora-zone-${costat}`}
+                                onClick={() => setOpenCostat(costat)}
+                                sx={{
+                                    ...zoneSx,
+                                    ...(costat === 'Top' ? { top: 0, left: 14, right: 14, height: 16 } : {}),
+                                    ...(costat === 'Right' ? { top: 14, right: 0, bottom: 14, width: 16 } : {}),
+                                    ...(costat === 'Bottom' ? { bottom: 0, left: 14, right: 14, height: 16 } : {}),
+                                    ...(costat === 'Left' ? { top: 14, left: 0, bottom: 14, width: 16 } : {}),
+                                }}
+                            />
+                        </Tooltip>
+                    ))}
+                </Box>
+            </Box>
+            <Dialog open={openCostat != null} onClose={() => setOpenCostat(null)} maxWidth="xs" fullWidth>
+                <DialogTitle>{openCostat && labels[openCostat].zone}</DialogTitle>
+                <DialogContent>
+                    {openCostat && (
+                        <VoraCostatFields
+                            costat={openCostat}
+                            showLabel={labels[openCostat].show}
+                            colorLabel={labels[openCostat].color}
+                            widthLabel={labels[openCostat].width}
+                        />
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenCostat(null)}>{t($ => $.common.cancel)}</Button>
+                </DialogActions>
+            </Dialog>
+        </>
+    );
+};
 
 /** Icona d'ajuda amb un tooltip explicatiu, per a conceptes que poden no ser obvis per a un usuari sense coneixements tècnics */
 export const FieldHelp: React.FC<{ text: string }> = ({ text }) => (
@@ -43,6 +220,17 @@ export type PersonalitzatFieldsProps = {
     plantillaLabel?: string;
     /** Notifica el pare si la secció de personalització està desplegada, perquè pugui mostrar (o no) els camps que sobreescriuen la plantilla al component de visualització. */
     onExpandedChange?: (expanded: boolean) => void;
+    /** Etiqueta/tooltip del botó per eliminar el disseny personalitzat. Si no es passa junt amb overrideFields, el botó no es mostra. */
+    resetLabel?: string;
+    /** Noms dels camps propis del component (Simple/Gràfic/Taula/Títol) que s'han de buidar en eliminar el disseny personalitzat. */
+    overrideFields?: string[];
+    /**
+     * apiRef del formulari on viuen realment els camps d'overrideFields, si és diferent del formulari on
+     * es renderitza aquest component (p.ex. als widgets Simple/Gràfic/Taula, on PersonalitzatFields viu al
+     * formulari de dashboardItem però els camps visuals viuen al formulari específic del widget). Si no es
+     * passa, s'utilitza l'apiRef del propi context de formulari.
+     */
+    resetApiRef?: React.RefObject<any>;
 };
 
 /**
@@ -60,9 +248,19 @@ export const PersonalitzatFields: React.FC<PersonalitzatFieldsProps> = ({
     destacatLabel,
     plantillaLabel,
     onExpandedChange,
+    resetLabel,
+    overrideFields,
+    resetApiRef,
 }) => {
+    const { apiRef: localApiRef } = useFormContext();
     const [expanded, setExpanded] = React.useState(false);
     const initializedRef = React.useRef(false);
+
+    const handleReset = (event: React.MouseEvent) => {
+        event.stopPropagation();
+        const targetApiRef = resetApiRef ?? localApiRef;
+        overrideFields?.forEach(field => targetApiRef?.current?.setFieldValue?.(field, undefined));
+    };
 
     React.useEffect(() => {
         if (!initializedRef.current && hasOverrides) {
@@ -108,6 +306,13 @@ export const PersonalitzatFields: React.FC<PersonalitzatFieldsProps> = ({
                         </Tooltip>
                     )}
                 </ToggleButton>
+                {hasOverrides && overrideFields && overrideFields.length > 0 && (
+                    <Tooltip title={resetLabel} arrow>
+                        <IconButton size="small" aria-label={resetLabel} onClick={handleReset}>
+                            <Icon sx={{ fontSize: '1.1rem' }}>restore</Icon>
+                        </IconButton>
+                    </Tooltip>
+                )}
                 <FieldHelp text={personalitzatHelp} />
             </Grid>
         </Grid>

@@ -5,6 +5,12 @@ import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
+import Button from '@mui/material/Button';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import Autocomplete from '@mui/material/Autocomplete';
 import {
     MuiDataGrid,
     MuiDataGridColDef,
@@ -13,8 +19,14 @@ import {
     FormField,
     useFilterApiRef,
     useResourceApiService,
-    useFormContext
+    useFormContext,
+    useMuiDataGridApiRef,
+    useMuiFormDialogApiRef,
+    useFormDialogButtons,
+    useBaseAppContext,
+    MuiFormDialog,
 } from 'reactlib';
+import { FormFieldDataActionType } from '../../lib/components/form/FormContext.tsx';
 import { columnesIndicador } from '../components/sharedAdvancedSearch/advancedSearchColumns';
 import FormFieldCustomAdvancedSearch from '../components/FormFieldCustomAdvancedSearch';
 import PageTitle from '../components/PageTitle.tsx';
@@ -100,20 +112,290 @@ const IndicadorsFilter = (props: { onSpringFilterChange: (springFilter?: string)
     );
 };
 
+type FormulaTerme = { key: string; indicadorId: any; operador: 'SUMA' | 'RESTA' };
+
+let formulaTermeKeyCounter = 0;
+const nextFormulaTermeKey = () => `terme-${formulaTermeKeyCounter++}`;
+export const buildDefaultFormulaTermes = (): FormulaTerme[] => [
+    { key: nextFormulaTermeKey(), indicadorId: null, operador: 'SUMA' },
+];
+
+/** Converteix les files carregades del recurs `indicadorFormulaTerme` a l'estat intern de l'editor, ordenades per `ordre`. */
+export const mapTermeRowsToFormulaTermes = (rows: any[]): FormulaTerme[] =>
+    (rows ?? [])
+        .slice()
+        .sort((a, b) => (a?.ordre ?? 0) - (b?.ordre ?? 0))
+        .map(row => ({
+            key: nextFormulaTermeKey(),
+            indicadorId: row?.indicadorComponent?.id ?? row?.indicadorComponent,
+            operador: row?.operador,
+        }));
+
+/** Payloads per crear els termes d'una fórmula: descarta files sense indicador triat i reassigna `ordre`. */
+export const computeFormulaTermePayloads = (termes: FormulaTerme[], indicadorId: any) =>
+    termes
+        .filter(terme => terme.indicadorId != null)
+        .map((terme, index) => ({
+            indicadorFormula: { id: indicadorId },
+            indicadorComponent: { id: terme.indicadorId },
+            operador: terme.operador,
+            ordre: index,
+        }));
+
+/**
+ * Selector de l'entornApp de l'indicador de fórmula (camp `entornAppId`, un `Long` senzill al backend, no
+ * una `ResourceReference`). Es implementat a mà (en lloc d'un `<FormField type="reference">`, que espera un
+ * camp de tipus referència) seguint el mateix patró que `FiltreDimensioCodiField` a DashboardEditorSidePanel.
+ */
+const IndicadorFormulaEntornAppField: React.FC<{
+    label: string;
+    disabled?: boolean;
+    entornAppOptions: Array<{ id?: number | string; entornAppDescription?: string }>;
+}> = ({ label, disabled, entornAppOptions }) => {
+    const { dataGetFieldValue, dataDispatchAction, fields, fieldErrors } = useFormContext();
+    const value = dataGetFieldValue('entornAppId');
+    const field = fields?.find((f: any) => f.name === 'entornAppId');
+    const fieldError = fieldErrors?.find((e: any) => e.field === 'entornAppId');
+    const options = (entornAppOptions ?? []).map(ea => ({ id: ea.id, description: ea.entornAppDescription ?? '' }));
+    const selected = options.find(option => option.id === value) ?? null;
+
+    return (
+        <Autocomplete
+            size="small"
+            disabled={disabled}
+            options={options}
+            value={selected}
+            getOptionLabel={(option) => option.description}
+            isOptionEqualToValue={(option, val) => option.id === val.id}
+            onChange={(_event, newValue) => {
+                dataDispatchAction({
+                    type: FormFieldDataActionType.FIELD_CHANGE,
+                    payload: { fieldName: 'entornAppId', field, value: newValue?.id ?? null },
+                });
+            }}
+            renderInput={(params) => (
+                <TextField {...params} label={label} required error={fieldError != null} helperText={fieldError?.message} />
+            )}
+        />
+    );
+};
+
+/**
+ * Editor dels termes (indicador component + operador +/-) d'un indicador de fórmula. `IndicadorFormulaTerme`
+ * no és un camp del recurs `indicador`, sinó una col·lecció d'un recurs fill independent que es desa per
+ * separat (vegeu saveFormulaTermes), per això l'estat es gestiona amb un `useState` propi (no via `FormField`).
+ *
+ * L'estat NO es guarda al component `Indicadors` (el pare): el contingut del diàleg de `MuiFormDialog` es
+ * "congela" quan es crida `show()` i no es torna a renderitzar encara que el pare canviï d'estat i li passi
+ * uns `children` nous — només es refresca quan es torna a cridar `show()`. Per això `termesRef` és una
+ * referència mutable i estable (mateix objecte a cada render) que fa de canal entre aquest component (que
+ * gestiona el seu propi `useState` per refrescar-se ell mateix en afegir/eliminar termes) i `Indicadors`
+ * (que llegeix `termesRef.current` a `saveFormulaTermes` i l'escriu abans de cridar `show()`).
+ */
+const FormulaTermesEditor: React.FC<{
+    termesRef: React.MutableRefObject<FormulaTerme[]>;
+}> = ({ termesRef }) => {
+    const { t } = useTranslation();
+    const { data } = useFormContext();
+    const { isReady, find } = useResourceApiService('indicador');
+    const [termes, setTermesState] = React.useState<FormulaTerme[]>(() => termesRef.current);
+    const [options, setOptions] = React.useState<{ id: any; codi: string; nom: string }[]>([]);
+    const entornAppId = data?.entornAppId;
+
+    useEffect(() => {
+        let cancelled = false;
+        if (isReady && entornAppId != null) {
+            find({
+                filter: springFilterBuilder.and(
+                    springFilterBuilder.eq('entornAppId', entornAppId),
+                    springFilterBuilder.eq('tipus', "'SIMPLE'"),
+                ),
+                unpaged: true,
+            }).then((response: any) => {
+                if (cancelled) return;
+                const rows = (response.rows ?? []) as Array<{ id?: any; codi?: string; nom?: string }>;
+                setOptions(rows.map(row => ({ id: row.id, codi: row.codi ?? '', nom: row.nom ?? row.codi ?? '' })));
+            });
+        } else {
+            setOptions([]);
+        }
+        return () => {
+            cancelled = true;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isReady, entornAppId]);
+
+    const updateTermes = (next: FormulaTerme[]) => {
+        termesRef.current = next;
+        setTermesState(next);
+    };
+    const addTerme = () => updateTermes([...termes, { key: nextFormulaTermeKey(), indicadorId: null, operador: 'SUMA' }]);
+    const removeTerme = (key: string) => updateTermes(termes.filter(terme => terme.key !== key));
+    const updateTerme = (key: string, changes: Partial<FormulaTerme>) =>
+        updateTermes(termes.map(terme => (terme.key === key ? { ...terme, ...changes } : terme)));
+
+    return (
+        <Box>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                {t($ => $.page.indicadors.formulaForm.termesTitle)}
+            </Typography>
+            {termes.map((terme, index) => {
+                const selected = options.find(option => option.id === terme.indicadorId) ?? null;
+                const usedElsewhere = termes.filter(t => t.key !== terme.key).map(t => t.indicadorId);
+                const visibleOptions = options.filter(option => !usedElsewhere.includes(option.id));
+                return (
+                    <Box key={terme.key} sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 1 }}>
+                        {index === 0 ? (
+                            <Typography sx={{ width: 40, textAlign: 'center' }}>+</Typography>
+                        ) : (
+                            <Select
+                                size="small"
+                                value={terme.operador}
+                                onChange={(event) => updateTerme(terme.key, { operador: event.target.value as 'SUMA' | 'RESTA' })}
+                                sx={{ width: 70 }}
+                                inputProps={{ 'aria-label': t($ => $.page.indicadors.formulaForm.termeIndicador) }}
+                            >
+                                <MenuItem value="SUMA">+</MenuItem>
+                                <MenuItem value="RESTA">-</MenuItem>
+                            </Select>
+                        )}
+                        <Autocomplete
+                            size="small"
+                            sx={{ flexGrow: 1 }}
+                            options={visibleOptions}
+                            value={selected}
+                            getOptionLabel={(option) => `${option.codi} - ${option.nom}`}
+                            isOptionEqualToValue={(option, val) => option.id === val.id}
+                            onChange={(_event, newValue) => updateTerme(terme.key, { indicadorId: newValue?.id ?? null })}
+                            renderInput={(params) => (
+                                <TextField {...params} label={t($ => $.page.indicadors.formulaForm.termeIndicador)} required />
+                            )}
+                        />
+                        <IconButton
+                            onClick={() => removeTerme(terme.key)}
+                            disabled={termes.length <= 1}
+                            title={t($ => $.page.indicadors.formulaForm.removeTerme)}>
+                            <Icon>delete</Icon>
+                        </IconButton>
+                    </Box>
+                );
+            })}
+            <Button startIcon={<Icon>add</Icon>} onClick={addTerme} disabled={entornAppId == null}>
+                {t($ => $.page.indicadors.formulaForm.addTerme)}
+            </Button>
+        </Box>
+    );
+};
+
 const Indicadors: React.FC = () => {
     const { t } = useTranslation();
     const gestorReadOnly = useReadOnlyGestor();
+    const { temporalMessageShow } = useBaseAppContext();
     const [filter, setFilter] = React.useState<string | undefined>(springFilterBuilder.eq('entornAppId', 0));
+
+    const gridApiRef = useMuiDataGridApiRef();
+    const formulaDialogApiRef = useMuiFormDialogApiRef();
+    const formulaDialogButtons = useFormDialogButtons();
+    const { isReady: entornAppApiIsReady, find: entornAppGetAll } = useResourceApiService('entornApp');
+    const [entornAppOptions, setEntornAppOptions] = useState<Array<{ id?: number | string; entornAppDescription?: string }>>([]);
+    const termesRef = React.useRef<FormulaTerme[]>(buildDefaultFormulaTermes());
+    const {
+        isReady: termeApiIsReady,
+        find: findTerme,
+        create: createTerme,
+        delete: deleteTerme,
+    } = useResourceApiService('indicadorFormulaTerme');
+    const { delete: deleteIndicador } = useResourceApiService('indicador');
+
+    useEffect(() => {
+        if (entornAppApiIsReady) {
+            entornAppGetAll({
+                unpaged: true,
+                filter: 'activa : true AND app.activa : true',
+            }).then(response => {
+                setEntornAppOptions(response.rows);
+            });
+        }
+    }, [entornAppApiIsReady, entornAppGetAll]);
 
     const columns: MuiDataGridColDef[] = [
         { field: 'codi', flex: 1 },
         { field: 'nom', flex: 2 },
         { field: 'descripcio', flex: 3 },
         { field: 'format', flex: 1 },
+        { field: 'tipus', headerName: t($ => $.page.indicadors.column.tipus), flex: 0.8 },
         { field: 'compactable', flex: 0.6 },
         { field: 'tipusCompactacio', flex: 1.2 },
         { field: 'indicadorComptadorPerMitjana.description', headerName: t($ => $.page.indicadors.column.indicadorMitjana), flex: 2 },
     ];
+
+    const openCreateFormula = () => {
+        termesRef.current = buildDefaultFormulaTermes();
+        // compactable és NOT NULL a BD (per defecte true als indicadors SIMPLE); els de fórmula no es
+        // compacten (el seu valor es calcula a partir dels termes, no de fets JSON), per això es força a false.
+        formulaDialogApiRef.current?.show(
+            undefined,
+            { tipus: 'FORMULA', compactable: false },
+            t($ => $.page.indicadors.formulaForm.createTitle)
+        );
+    };
+
+    const openEditFormula = async (id: any) => {
+        if (!termeApiIsReady) return;
+        const response = await findTerme({
+            filter: springFilterBuilder.eq('indicadorFormula.id', id),
+            unpaged: true,
+        });
+        const loadedTermes = mapTermeRowsToFormulaTermes(response.rows ?? []);
+        termesRef.current = loadedTermes.length > 0 ? loadedTermes : buildDefaultFormulaTermes();
+        formulaDialogApiRef.current?.show(id, undefined, t($ => $.page.indicadors.formulaForm.editTitle));
+    };
+
+    const saveFormulaTermes = async (indicadorId: any) => {
+        const existing = await findTerme({
+            filter: springFilterBuilder.eq('indicadorFormula.id', indicadorId),
+            unpaged: true,
+        });
+        for (const existingTerme of existing.rows ?? []) {
+            await deleteTerme(existingTerme.id);
+        }
+        for (const payload of computeFormulaTermePayloads(termesRef.current, indicadorId)) {
+            await createTerme({ data: payload });
+        }
+    };
+
+    // L'indicador i els seus termes es desen amb dues crides HTTP independents (l'indicador és un recurs
+    // "pare" normal i els termes són un recurs fill propi, vegeu el comentari de FormulaTermesEditor), per
+    // tant no hi ha una transacció única que ho cobreixi tot. En creació, si el desat dels termes falla just
+    // després de crear l'indicador, s'esborra l'indicador acabat de crear per no deixar-lo "orfe" sense
+    // termes (en edició no es desfà res, ja que hi havia dades prèvies vàlides que no s'han de perdre).
+    const handleFormulaCreated = async (savedIndicador: any) => {
+        const indicadorId = savedIndicador?.id;
+        try {
+            await saveFormulaTermes(indicadorId);
+            temporalMessageShow(null, t($ => $.page.indicadors.formulaForm.success), 'success');
+            gridApiRef.current?.refresh?.();
+        } catch (error: any) {
+            try {
+                await deleteIndicador(indicadorId);
+            } catch {
+                // Si tampoc es pot desfer la creació, es prioritza mostrar l'error original dels termes.
+            }
+            temporalMessageShow(null, error?.message ?? t($ => $.common.error), 'error');
+        }
+    };
+
+    const handleFormulaUpdated = async (savedIndicador: any) => {
+        const indicadorId = savedIndicador?.id;
+        try {
+            await saveFormulaTermes(indicadorId);
+            temporalMessageShow(null, t($ => $.page.indicadors.formulaForm.success), 'success');
+            gridApiRef.current?.refresh?.();
+        } catch (error: any) {
+            temporalMessageShow(null, error?.message ?? t($ => $.common.error), 'error');
+        }
+    };
+
     const filterElement = <IndicadorsFilter onSpringFilterChange={setFilter}/>;
 
     const IndicadorForm: React.FC = () => {
@@ -145,10 +427,34 @@ const Indicadors: React.FC = () => {
         );
     };
 
+    const IndicadorFormulaForm: React.FC = () => {
+        const { data } = useFormContext();
+        const isEdit = data?.id != null;
+        return (
+            <Grid container spacing={2}>
+                <Grid size={6}><FormField name="codi" readOnly={isEdit} disabled={isEdit} required /></Grid>
+                <Grid size={6}><FormField name="nom" required /></Grid>
+                <Grid size={12}><FormField name="descripcio" required={false} /></Grid>
+                <Grid size={6}><FormField name="format" required={false} /></Grid>
+                <Grid size={6}>
+                    <IndicadorFormulaEntornAppField
+                        label={t($ => $.page.indicadors.column.entornApp)}
+                        disabled={isEdit}
+                        entornAppOptions={entornAppOptions}
+                    />
+                </Grid>
+                <Grid size={12}>
+                    <FormulaTermesEditor termesRef={termesRef} />
+                </Grid>
+            </Grid>
+        );
+    };
+
     return (
         <>
             <PageTitle title={t($ => $.page.indicadors.title)} />
             <MuiDataGrid
+                apiRef={gridApiRef}
                 title={t($ => $.page.indicadors.title)}
                 resourceName="indicador"
                 columns={columns}
@@ -161,7 +467,40 @@ const Indicadors: React.FC = () => {
                 toolbarHideCreate
                 rowHideDeleteButton={gestorReadOnly}
                 popupEditFormContent={<IndicadorForm />}
+                toolbarElementsWithPositions={[
+                    {
+                        position: 2,
+                        element: (
+                            <IconButton
+                                title={t($ => $.page.indicadors.action.createFormula)}
+                                onClick={openCreateFormula}>
+                                <Icon>add</Icon>
+                            </IconButton>
+                        ),
+                    },
+                ]}
+                rowAdditionalActions={[
+                    {
+                        label: t($ => $.page.indicadors.action.editFormula),
+                        icon: 'functions',
+                        showInMenu: true,
+                        onClick: (id: any) => openEditFormula(id),
+                        hidden: (row: any) => row?.tipus !== 'FORMULA',
+                    },
+                ]}
             />
+            <MuiFormDialog
+                resourceName="indicador"
+                apiRef={formulaDialogApiRef}
+                dialogButtons={formulaDialogButtons}
+                dialogComponentProps={{ fullWidth: true, maxWidth: 'md' }}
+                formComponentProps={{
+                    onCreateSuccess: handleFormulaCreated,
+                    onUpdateSuccess: handleFormulaUpdated,
+                }}
+            >
+                <IndicadorFormulaForm />
+            </MuiFormDialog>
         </>
     );
 };

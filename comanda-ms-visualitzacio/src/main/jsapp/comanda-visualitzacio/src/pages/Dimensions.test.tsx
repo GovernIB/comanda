@@ -9,6 +9,8 @@ const mocks = vi.hoisted(() => ({
     artifactActionMock: vi.fn(),
     temporalMessageShowMock: vi.fn(),
     messageDialogShowMock: vi.fn(),
+    formContextData: { tipus: undefined as string | undefined },
+    mockRowTipus: 'ORGAN_GESTOR' as string,
     tMock: vi.fn((selector: any) =>
         selector({
             page: {
@@ -24,11 +26,19 @@ const mocks = vi.hoisted(() => ({
                         changeTipus: {
                             label: 'Canviar tipus',
                             ok: 'Tipus cambiat',
+                            field: {
+                                tipus: 'Tipus de dimensió',
+                                entitatValorTipus: 'Camp de mapeig',
+                            },
                         },
                         desmarcar: {
                             label: 'NO_ORGAN_GESTOR',
                             ok: 'Tipus cambiat a null',
-                        }
+                        },
+                        updateEntitats: {
+                            label: 'UPDATE_ENTITATS',
+                            ok: 'Entitats actualitzades',
+                        },
                     },
                     column: {
                         entornApp: 'Entorn app',
@@ -59,11 +69,11 @@ vi.mock('reactlib', () => ({
         title: string;
         filter?: string;
         toolbarAdditionalRow?: React.ReactNode;
-        rowAdditionalActions?: Array<{ label: string; linkTo?: string; onClick?: (id: string, row: any) => void }>;
+        rowAdditionalActions?: Array<{ label: string; linkTo?: string; onClick?: (id: string, row: any) => void; showInMenu?: boolean; hidden?: boolean | ((row: any) => boolean) }>;
         columns: Array<{ field: string }>;
     }) => {
         // Simulem una fila per passar-la als onClick i poder provar lògica que depèn de 'row'
-        const mockRow = { id: '15', entornAppId: 99, tipus: 'ORGAN_GESTOR' };
+        const mockRow = { id: '15', entornAppId: 99, tipus: mocks.mockRowTipus };
         return (
             <section>
                 <h2>{title}</h2>
@@ -74,6 +84,8 @@ vi.mock('reactlib', () => ({
                 {rowAdditionalActions?.filter(a => a.onClick).map((action) => (
                     <button
                         key={action.label}
+                        data-in-menu={String(!!action.showInMenu)}
+                        data-hidden={String(typeof action.hidden === 'function' ? action.hidden(mockRow) : !!action.hidden)}
                         onClick={() => action.onClick?.(mockRow.id, mockRow)}
                         type="button"
                     >
@@ -123,6 +135,11 @@ vi.mock('reactlib', () => ({
         messageDialogShow: mocks.messageDialogShowMock,
     }),
     useConfirmDialogButtons: () => <button>Confirmar</button>,
+    useFormDialogButtons: () => [
+        { value: false, text: 'Cancel·lar' },
+        { value: true, text: 'Desar' },
+    ],
+    useFormContext: () => ({ data: mocks.formContextData }),
     useResourceApiService: (resourceName: string) => {
         if (resourceName === 'dimensio') {
             return {
@@ -137,7 +154,14 @@ vi.mock('reactlib', () => ({
 }));
 
 vi.mock('../components/FormActionDialog.tsx', () => ({
-    default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    default: ({ children, formDialogButtons }: { children: React.ReactNode; formDialogButtons?: Array<{ text: string }> }) => (
+        <div>
+            {children}
+            {formDialogButtons && (
+                <div data-testid="dialog-buttons">{formDialogButtons.map((b) => b.text).join(',')}</div>
+            )}
+        </div>
+    ),
 }));
 
 vi.mock('../components/PageTitle.tsx', () => ({
@@ -155,6 +179,8 @@ describe('Dimensions', () => {
     afterEach(() => {
         vi.clearAllMocks();
         document.body.removeAttribute('data-dimension-options');
+        mocks.formContextData.tipus = undefined;
+        mocks.mockRowTipus = 'ORGAN_GESTOR';
     });
 
     it('Dimensions_quanEsRenderitza_mostraElGridElFiltreIElLinkAlsValors', async () => {
@@ -217,7 +243,7 @@ describe('Dimensions', () => {
         });
     });
 
-    it('Dimensions_quanEsPremAccioCanviarTipus_obreElDialog', async () => {
+    it('Dimensions_quanEsPremAccioCanviarTipus_obreElDialogAmbLesDadesActualsPrecarregades', async () => {
         render(<Dimensions />);
 
         await waitFor(() => {
@@ -227,9 +253,76 @@ describe('Dimensions', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Canviar tipus' }));
 
         await waitFor(() => {
-            // Verifiquem que s'obre el diàleg passant l'id i l'entornAppId de la fila
-            expect(mocks.showMock).toHaveBeenCalledWith('15', { entornAppId: 99 });
+            // Verifiquem que s'obre el diàleg amb l'id, l'entornAppId i el tipus/mapeig actuals de la fila,
+            // per poder editar el mapeig sense haver de tornar a triar el tipus.
+            expect(mocks.showMock).toHaveBeenCalledWith('15', {
+                entornAppId: 99,
+                tipus: 'ORGAN_GESTOR',
+                entitatValorTipus: undefined,
+                dimensioId: '15',
+            });
         });
+    });
+
+    it('Dimensions_laAccioCanviarTipus_esMostraAlMenuINoEstaOcultaEncaraQueLaDimensioJaTinguiTipus', async () => {
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(mocks.findMock).toHaveBeenCalled();
+        });
+
+        const button = screen.getByRole('button', { name: 'Canviar tipus' });
+
+        // mockRow ja té tipus='ORGAN_GESTOR': l'acció ha d'estar disponible igualment (per editar el mapeig)
+        expect(button).toHaveAttribute('data-in-menu', 'true');
+        expect(button).toHaveAttribute('data-hidden', 'false');
+    });
+
+    it('Dimensions_laAccioDesmarcar_esMostraAlMenu', async () => {
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(mocks.findMock).toHaveBeenCalled();
+        });
+
+        expect(screen.getByRole('button', { name: 'NO_ORGAN_GESTOR' })).toHaveAttribute('data-in-menu', 'true');
+    });
+
+    it('Dimensions_laAccioFET_CONS_esMostraAlMenu', async () => {
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(mocks.findMock).toHaveBeenCalled();
+        });
+
+        expect(screen.getByRole('button', { name: 'FET_CONS' })).toHaveAttribute('data-in-menu', 'true');
+    });
+
+    it('Dimensions_quanLaDimensioEsConselleria_ocultaCanviarTipusIDesmarcar', async () => {
+        mocks.mockRowTipus = 'CONSELLERIA';
+
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(mocks.findMock).toHaveBeenCalled();
+        });
+
+        expect(screen.getByRole('button', { name: 'Canviar tipus' })).toHaveAttribute('data-hidden', 'true');
+        expect(screen.getByRole('button', { name: 'NO_ORGAN_GESTOR' })).toHaveAttribute('data-hidden', 'true');
+    });
+
+    it('Dimensions_elDialegDeCanviarTipus_mostraLesEtiquetesDelsCampsIElBotoDesar', async () => {
+        mocks.formContextData.tipus = 'ENTITAT';
+
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(mocks.findMock).toHaveBeenCalled();
+        });
+
+        expect(screen.getByTestId('field-tipus')).toHaveTextContent('Tipus de dimensió');
+        expect(screen.getByTestId('field-entitatValorTipus')).toHaveTextContent('Camp de mapeig');
+        expect(screen.getByTestId('dialog-buttons')).toHaveTextContent('Desar');
     });
 
     it('Dimensions_quanEsPremAccioNO_ORGAN_GESTOR_cridaApiActionIMostraMissatgeExit', async () => {
@@ -250,5 +343,46 @@ describe('Dimensions', () => {
             });
             expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Tipus cambiat a null', 'success');
         });
+    });
+
+    it('Dimensions_quanEsPremAccioActualitzaEntitats_cridaApiActionAmbUPDATE_ENTITATSIMostraMissatgeExit', async () => {
+        mocks.artifactActionMock.mockResolvedValue({});
+
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'UPDATE_ENTITATS' })).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'UPDATE_ENTITATS' }));
+
+        await waitFor(() => {
+            expect(mocks.artifactActionMock).toHaveBeenCalledWith('15', {
+                code: 'UPDATE_ENTITATS',
+            });
+            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Entitats actualitzades', 'success');
+        });
+    });
+
+    it('Dimensions_quanElTipusDelFormulariEsEntitat_mostraElCampEntitatValorTipus', async () => {
+        mocks.formContextData.tipus = 'ENTITAT';
+
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('field-entitatValorTipus')).toBeInTheDocument();
+        });
+    });
+
+    it('Dimensions_quanElTipusDelFormulariNoEsEntitat_noMostraElCampEntitatValorTipus', async () => {
+        mocks.formContextData.tipus = 'ORGAN_GESTOR';
+
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('heading', { name: 'Dimensions' })).toBeInTheDocument();
+        });
+
+        expect(screen.queryByTestId('field-entitatValorTipus')).not.toBeInTheDocument();
     });
 });

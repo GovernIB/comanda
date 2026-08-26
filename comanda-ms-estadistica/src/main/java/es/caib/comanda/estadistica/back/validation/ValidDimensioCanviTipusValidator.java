@@ -34,7 +34,10 @@ public class ValidDimensioCanviTipusValidator implements ConstraintValidator<Val
 
         if (resource.getTipus() != null) {
             List<DimensioEntity> dimensioEntityList = dimensioRepository.findByEntornAppId(resource.getEntornAppId());
-            if (dimensioEntityList.stream().anyMatch(c -> c.getTipus() == resource.getTipus())) {
+            // Excloem la pròpia dimensió (dimensioId) de la comprovació: reenviar el mateix tipus que ja tenia
+            // -per exemple, per editar només el camp de mapeig d'entitat- no s'ha de considerar un conflicte.
+            if (dimensioEntityList.stream().anyMatch(c ->
+                    c.getTipus() == resource.getTipus() && !c.getId().equals(resource.getDimensioId()))) {
                 context.buildConstraintViolationWithTemplate("Tipus ja assignat")
                     .addPropertyNode(ChangeTipusActionForm.Fields.tipus)
                     .addConstraintViolation();

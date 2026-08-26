@@ -6,6 +6,7 @@ import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltre;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltreTipus;
+import es.caib.comanda.estadistica.logic.intf.model.dashboard.PosicioSubtitol;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardFiltreEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
@@ -50,13 +51,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests per a DashboardHelper")
@@ -269,7 +264,7 @@ class DashboardHelperTest {
 
         DashboardFiltre periodeResource = filtreResource(10L, DashboardFiltreTipus.PERIODE);
         when(resourceEntityMappingHelper.entityToResource(periodeEntity, DashboardFiltre.class))
-                .thenReturn(periodeResource);
+            .thenReturn(periodeResource);
 
         Dashboard resource = new Dashboard();
 
@@ -293,9 +288,9 @@ class DashboardHelperTest {
         DashboardFiltre periodeResource = filtreResource(10L, DashboardFiltreTipus.PERIODE);
         DashboardFiltre dimensioResource = filtreResource(20L, DashboardFiltreTipus.DIMENSIO);
         when(resourceEntityMappingHelper.entityToResource(periodeEntity, DashboardFiltre.class))
-                .thenReturn(periodeResource);
+            .thenReturn(periodeResource);
         when(resourceEntityMappingHelper.entityToResource(dimensioEntity, DashboardFiltre.class))
-                .thenReturn(dimensioResource);
+            .thenReturn(dimensioResource);
 
         Dashboard resource = new Dashboard();
 
@@ -485,7 +480,7 @@ class DashboardHelperTest {
         Map<String, Object> answers = new HashMap<>();
 
         when(estadisticaClientHelper.entornAppFindByAppAndEntornOrDefaultNull(10L, 99L)).thenReturn(null);
-        when(estadisticaClientHelper.entornAppFindById(20L)).thenReturn(new EntornApp()); // Mock per evitar NPE intern
+//        when(estadisticaClientHelper.entornAppFindById(20L)).thenReturn(new EntornApp()); // Mock per evitar NPE intern
 
         // Act & Assert
         assertThatThrownBy(() -> dashboardHelper.beforeUpdateEntityLogic(entity, resource, (Map) answers))
@@ -509,6 +504,8 @@ class DashboardHelperTest {
         entity.setTitol("Original");
         entity.setAppId(10L);
         entity.setEntornId(20L);
+        entity.setColorFonsClar("#111111");
+        entity.setColorFonsFosc("#222222");
 
         PlantillaEntity plantilla = new PlantillaEntity();
         plantilla.setId(5L);
@@ -525,10 +522,14 @@ class DashboardHelperTest {
         action.exec(Dashboard.CLONE_ACTION, entity, params);
 
         // Assert
+        // El color de fons (clar/fosc) no és un paràmetre editable en clonar: sempre s'ha d'heretar de
+        // l'entitat original, independentment que s'hagin proporcionat altres paràmetres.
         verify(dashboardRepository, times(1)).save(argThat(d ->
             d.getTitol().equals("Nou Titol") &&
             d.getPlantilla() != null &&
-            Long.valueOf(5L).equals(d.getPlantilla().getId())
+            Long.valueOf(5L).equals(d.getPlantilla().getId()) &&
+            "#111111".equals(d.getColorFonsClar()) &&
+            "#222222".equals(d.getColorFonsFosc())
         ));
         verify(dashboardTitolRepository, times(1)).saveAll(anyList());
         verify(dashboardItemRepository, times(1)).saveAll(anyList());
@@ -551,6 +552,8 @@ class DashboardHelperTest {
         entity.setAppId(10L);
         entity.setEntornId(20L);
         entity.setPlantilla(plantilla);
+        entity.setColorFonsClar("#111111");
+        entity.setColorFonsFosc("#222222");
 
         // Act
         action.exec(Dashboard.CLONE_ACTION, entity, null);
@@ -558,7 +561,9 @@ class DashboardHelperTest {
         // Assert
         verify(dashboardRepository, times(1)).save(argThat(d ->
             d.getTitol().equals("Original (Copia)") &&
-            d.getPlantilla() == plantilla
+            d.getPlantilla() == plantilla &&
+            "#111111".equals(d.getColorFonsClar()) &&
+            "#222222".equals(d.getColorFonsFosc())
         ));
         verify(dashboardTitolRepository, times(1)).saveAll(anyList());
         verify(dashboardItemRepository, times(1)).saveAll(anyList());
@@ -581,6 +586,14 @@ class DashboardHelperTest {
         titol.setTitol("Titol 1");
         titol.setSubtitol("Subtitol 1");
         titol.setPosX(10);
+        titol.setPosicioSubtitol(PosicioSubtitol.COSTAT);
+        titol.setSeparacioSubtitol(8);
+        titol.setMostrarVoraTop(true);
+        titol.setColorVoraTop("#111111");
+        titol.setAmpleVoraTop(2);
+        titol.setMostrarVoraBottom(false);
+        titol.setColorVoraBottom("#222222");
+        titol.setAmpleVoraBottom(3);
         titol.setPersonalitzat(true);
         titol.setDestacat(true);
         titol.setPlantilla(plantilla);
@@ -600,6 +613,14 @@ class DashboardHelperTest {
         assertThat(result.get(0).getPlantilla()).isEqualTo(plantilla);
         assertThat(result.get(0).getColorTitol()).isEqualTo("#FF0000");
         assertThat(result.get(0).getDashboard()).isSameAs(newDashboard);
+        assertThat(result.get(0).getPosicioSubtitol()).isEqualTo(PosicioSubtitol.COSTAT);
+        assertThat(result.get(0).getSeparacioSubtitol()).isEqualTo(8);
+        assertThat(result.get(0).getMostrarVoraTop()).isTrue();
+        assertThat(result.get(0).getColorVoraTop()).isEqualTo("#111111");
+        assertThat(result.get(0).getAmpleVoraTop()).isEqualTo(2);
+        assertThat(result.get(0).getMostrarVoraBottom()).isFalse();
+        assertThat(result.get(0).getColorVoraBottom()).isEqualTo("#222222");
+        assertThat(result.get(0).getAmpleVoraBottom()).isEqualTo(3);
     }
 
     @Test

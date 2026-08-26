@@ -16,35 +16,35 @@ databaseChangeLog:
                     primaryKeyName: ${db_prefix}unitat_org_pk
               - column:
                   name: codi
-                  type: VARCHAR(64)
+                  type: VARCHAR(64 ${varcharUnit})
                   constraints: { nullable: false }
               - column:
                   name: denominacio_es
-                  type: VARCHAR(255)
+                  type: VARCHAR(255 ${varcharUnit})
                   constraints: { nullable: false }
               - column:
                   name: denominacio_ca
-                  type: VARCHAR(255)
+                  type: VARCHAR(255 ${varcharUnit})
                   constraints: { nullable: false }
               - column:
                   name: nif_cif
-                  type: VARCHAR(16)
+                  type: VARCHAR(16 ${varcharUnit})
                   constraints: { nullable: false }
               - column:
                   name: codi_unitat_superior
-                  type: VARCHAR(64)
+                  type: VARCHAR(64 ${varcharUnit})
                   constraints: { nullable: false }
               - column:
                   name: codi_unitat_arrel
-                  type: VARCHAR(64)
+                  type: VARCHAR(64 ${varcharUnit})
                   constraints: { nullable: false }
               - column:
                   name: estat
-                  type: VARCHAR(1)
+                  type: VARCHAR(1 ${varcharUnit})
                   constraints: { nullable: false }
               - column:
                   name: created_by
-                  type: VARCHAR(64)
+                  type: VARCHAR(64 ${varcharUnit})
                   constraints: { nullable: false }
               - column:
                   name: created_date
@@ -52,7 +52,7 @@ databaseChangeLog:
                   constraints: { nullable: false }
               - column:
                   name: lastmod_by
-                  type: VARCHAR(64)
+                  type: VARCHAR(64 ${varcharUnit})
               - column:
                   name: lastmod_date
                   type: TIMESTAMP
@@ -145,7 +145,7 @@ databaseChangeLog:
             columns:
               - column:
                   name: tipus
-                  type: varchar(16)
+                  type: varchar(16 ${varcharUnit})
   - changeSet:
       id: plugin-uo-dir3-4
       author: Limit
@@ -155,7 +155,7 @@ databaseChangeLog:
             columns:
               - column:
                   name: codi_conselleria
-                  type: varchar(64)
+                  type: varchar(64 ${varcharUnit})
   - changeSet:
       id: plugin-uo-dir3-5
       author: Limit

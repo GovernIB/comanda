@@ -13,7 +13,7 @@ import FormFieldCustomAdvancedSearch from '../FormFieldCustomAdvancedSearch';
 import { WidgetPreview } from "./WidgetPreview.tsx";
 
 /** Camps que sobreescriuen l'estil de la plantilla (excloent-ne `lineWidth`, que s'inicialitza sempre a 2 en muntar-se) */
-const GRAFIC_OVERRIDE_FIELDS = [
+export const GRAFIC_OVERRIDE_FIELDS = [
     'colorText', 'colorFons', 'mostrarVora', 'colorVora', 'ampleVora',
     'colorsPaleta', 'mostrarReticula', 'llegendaX',
     'barStacked', 'barHorizontal', 'lineShowPoints', 'area', 'lineSmooth',

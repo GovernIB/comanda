@@ -3,7 +3,9 @@ package es.caib.comanda.estadistica.logic.helper;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesPluginDir3;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.EntitatValorTipus;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet.FetObtenirResponse;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Temps;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum;
@@ -45,6 +47,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EstadisticaHelper {
 
+    private final EntitatRepository entitatRepository;
     @Value("${" + BaseConfig.PROP_STATS_AUTH_USER + ":}")
     private String statsAuthUser;
     @Value("${" + BaseConfig.PROP_STATS_AUTH_PASSWORD + ":}")
@@ -63,6 +66,7 @@ public class EstadisticaHelper {
     private final Environment environment;
     private final UnitatsOrganitzativesPluginDir3 unitatsOrganitzativesPluginDir3;
     private final EntitatResolverHelper entitatResolverHelper;
+    private final UnitatOrganitzativaHelper unitatOrganitzativaHelper;
 
     private static final ConcurrentHashMap<Long, Object> LOCKS = new ConcurrentHashMap<>();
 
@@ -292,6 +296,111 @@ public class EstadisticaHelper {
     private void crearIndicadorsIDimensions(EstadistiquesInfo estadistiquesInfo, Long entornAppId) {
         crearIndicadors(estadistiquesInfo.getIndicadors(), entornAppId);
         crearDimensions(estadistiquesInfo.getDimensions(), entornAppId);
+        crearEntitats(estadistiquesInfo.getEntitats(), entornAppId);
+    }
+
+    private void crearEntitats(List<EntitatDesc> entitats, Long entornAppId) {
+        if (entitats == null || entitats.isEmpty())
+            return;
+
+        entitats.forEach(e -> {
+            try {
+                crearEntitat(e, entornAppId);
+            } catch (Exception ex) {
+                log.warn("No s'ha pogut crear/actualitzar l'Entitat rebuda a la informació estadística (codi={}, codiDir3={}): {}",
+                    e.getCodi(), e.getCodiDir3(), ex.getMessage());
+            }
+        });
+    }
+
+    private void crearEntitat(EntitatDesc e, Long entornAppId) {
+        EntitatEntity entitat = trobarEntitatExistent(e).orElseGet(EntitatEntity::new);
+        boolean afegeixCodiDir3 = Strings.isBlank(entitat.getCodiDir3()) && !Strings.isBlank(e.getCodiDir3());
+
+        if (!Strings.isBlank(e.getCodiDir3())) {
+            entitat.setCodiDir3(e.getCodiDir3());
+        }
+        if (!Strings.isBlank(e.getNom())) {
+            entitat.setNom(e.getNom());
+        }
+        if (!Strings.isBlank(e.getCif())) {
+            entitat.setCif(e.getCif());
+        }
+        if (entitat.getCodi() == null && !Strings.isBlank(e.getCodi())) {
+            entitat.setCodi(e.getCodi());
+        }
+        EntitatEntity saved = entitatRepository.save(entitat);
+
+        if (afegeixCodiDir3) {
+            unitatOrganitzativaHelper.refreshFromEntitatCodiDir3(saved.getCodiDir3());
+        }
+
+        lligarDimensioEntitat(e, entornAppId, saved);
+    }
+
+    /**
+     * Cerca una Entitat ja existent que correspongui a la mateixa entitat real descrita per {@code e}, mirant
+     * tots els seus camps identificadors coneguts (no només codiDir3). Cal fer-ho així perquè {@code crearDimensions}
+     * ja pot haver creat abans un "esquelet" d'Entitat amb un únic camp (segons entitatValorTipus, vegeu
+     * {@link EntitatResolverHelper#resolveOrCreateEntitat}) per al mateix valor - si només es cerqués per codiDir3,
+     * es crearia una fila duplicada per a la mateixa entitat.
+     */
+    private Optional<EntitatEntity> trobarEntitatExistent(EntitatDesc e) {
+        if (!Strings.isBlank(e.getCodiDir3())) {
+            Optional<EntitatEntity> trobada = entitatRepository.findByCodiDir3(e.getCodiDir3());
+            if (trobada.isPresent()) return trobada;
+        }
+        if (!Strings.isBlank(e.getCodi())) {
+            Optional<EntitatEntity> trobada = entitatRepository.findByCodi(e.getCodi());
+            if (trobada.isPresent()) return trobada;
+        }
+        if (!Strings.isBlank(e.getCif())) {
+            Optional<EntitatEntity> trobada = entitatRepository.findByCif(e.getCif());
+            if (trobada.isPresent()) return trobada;
+        }
+        if (!Strings.isBlank(e.getNom())) {
+            return entitatRepository.findFirstByNom(e.getNom());
+        }
+        return Optional.empty();
+    }
+
+    private void lligarDimensioEntitat(EntitatDesc e, Long entornAppId, EntitatEntity entitat) {
+        // Enllaçar entitats amb dimensió tipus entitat
+        DimensioEntity dimensioEntitat = dimensioRepository.findByEntornAppIdAndTipus(entornAppId, TipusDimensioEnum.ENTITAT).orElse(null);
+        if (dimensioEntitat == null || dimensioEntitat.getValors() == null)
+            return;
+
+        EntitatValorTipus tipus = dimensioEntitat.getEntitatValorTipus();
+        if (tipus == null) {
+            tipus = EntitatValorTipus.CODI;
+        }
+        String valorEsperat;
+        switch (tipus) {
+            case CODI_DIR3:
+                valorEsperat = e.getCodiDir3();
+                break;
+            case CIF:
+                valorEsperat = e.getCif();
+                break;
+            case NOM:
+                valorEsperat = e.getNom();
+                break;
+            case MANUAL:
+                // Sense automatisme: el mapeig d'aquests valors s'ha de fer manualment.
+                return;
+            case CODI:
+            default:
+                valorEsperat = e.getCodi();
+                break;
+        }
+        if (valorEsperat == null) {
+            return;
+        }
+        for (DimensioValorEntity v : dimensioEntitat.getValors()) {
+            if (valorEsperat.equals(v.getValor())) {
+                v.setEntitatMapejada(entitat);
+            }
+        }
     }
 
 
@@ -310,6 +419,13 @@ public class EstadisticaHelper {
 
                 IndicadorEntity indicador = indicadorRepository.findByCodiAndEntornAppId(i.getCodi(), entornAppId)
                     .orElseGet(() -> new IndicadorEntity());
+
+                // Un indicador de tipus FORMULA es gestiona només des de la pantalla d'Indicadors: si una app
+                // publica per error un codi que hi coincideix, no se n'ha de sobreescriure cap camp.
+                if (indicador.getTipus() == IndicadorTipus.FORMULA) {
+                    log.warn("S'ha ignorat la publicació de l'indicador amb codi={} i entornAppId={} perquè ja existeix com a indicador de fórmula", i.getCodi(), entornAppId);
+                    return;
+                }
 
                 indicador.setEntornAppId(entornAppId);
                 indicador.setCodi(i.getCodi());
@@ -373,7 +489,8 @@ public class EstadisticaHelper {
                         dimensioRepository.save(dEntity);
 
                         this.crearDimensions(List.of(dDesc), entornAppId);
-                    } catch (Exception ignore) {}
+                    } catch (Exception ignore) {
+                    }
                 }
             }
 
@@ -395,8 +512,11 @@ public class EstadisticaHelper {
     }
 
     private void createMissingDimensioValors(DimensioEntity dimensio, Set<String> values, Set<String> existingValues) {
-        List<DimensioValorEntity> newValues = values.stream()
+        List<String> missingValues = values.stream()
             .filter(v -> !existingValues.contains(v))
+            .collect(Collectors.toList());
+
+        List<DimensioValorEntity> newValues = missingValues.stream()
             .map(v -> {
                 DimensioValorEntity valor = new DimensioValorEntity();
                 valor.setDimensio(dimensio);
@@ -407,6 +527,18 @@ public class EstadisticaHelper {
 
         if (!newValues.isEmpty()) {
             dimensioValorRepository.saveAll(newValues);
+        }
+
+        if (TipusDimensioEnum.ENTITAT.equals(dimensio.getTipus())) {
+            for (String valor : missingValues) {
+                if (Strings.isBlank(valor)) continue;
+                try {
+                    entitatResolverHelper.resolveOrCreateEntitat(dimensio, valor);
+                } catch (Exception e) {
+                    log.warn("No s'ha pogut crear/resoldre automàticament l'Entitat pel valor '{}' de la dimensió {}: {}",
+                        valor, dimensio.getCodi(), e.getMessage());
+                }
+            }
         }
     }
 

@@ -38,4 +38,11 @@ public interface UnitatsOrganitzativesPlugin {
      */
     public String getConselleria(String codi, String arrelCodi);
 
+    /**
+     * Indica si el plugin està correctament configurat i, per tant, es poden fer peticions a Dir3. Si no ho està
+     * (p.ex. URL buida o no vàlida), els mètodes d'aquest plugin no han de continuar fent peticions al sistema
+     * extern.
+     */
+    public boolean isConfigured();
+
 }

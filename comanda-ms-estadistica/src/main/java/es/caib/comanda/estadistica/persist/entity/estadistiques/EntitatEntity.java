@@ -18,13 +18,22 @@ import javax.persistence.Table;
 @AllArgsConstructor
 public class EntitatEntity extends BaseEntity<Entitat> {
 
-    @Column(name = "codi", unique = true, nullable = false)
+    /**
+     * Codi, nom i codiDir3 no són {@code nullable = false}: quan una Entitat es crea automàticament a partir d'un
+     * valor de dimensió desconegut (vegeu {@code EntitatResolverHelper.resolveOrCreateEntitat}), només se'n coneix
+     * el camp corresponent al {@code entitatValorTipus} de la dimensió; la resta queden buits fins que un
+     * administrador els completi.
+     */
+    @Column(name = "codi", unique = true)
     private String codi;
 
-    @Column(name = "nom", nullable = false)
+    @Column(name = "nom")
     private String nom;
 
-    @Column(name = "codi_dir3", nullable = false)
+    @Column(name = "codi_dir3")
     private String codiDir3;
+
+    @Column(name = "cif")
+    private String cif;
 
 }

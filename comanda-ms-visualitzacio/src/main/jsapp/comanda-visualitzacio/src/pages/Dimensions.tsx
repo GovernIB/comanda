@@ -12,20 +12,40 @@ import {
     MuiFilter,
     FormField,
     useFilterApiRef,
+    useFormContext,
+    useFormDialogButtons,
     useResourceApiService, useBaseAppContext, useMuiDataGridApiRef, useConfirmDialogButtons, useMuiFormDialogApiRef
 } from 'reactlib';
 import PageTitle from '../components/PageTitle.tsx';
 import FormActionDialog from "../components/FormActionDialog.tsx";
+
+const EntitatValorTipusField: React.FC = () => {
+    const { t } = useTranslation();
+    const { data } = useFormContext();
+    if (data?.tipus !== 'ENTITAT') {
+        return null;
+    }
+    return <FormField name={'entitatValorTipus'} label={t($ => $.page.dimensions.action.changeTipus.field.entitatValorTipus)}/>;
+}
 
 const useChangeTipus = (refresh?: () => void, addConstToFet?: (id:any) => void) => {
     const { t } = useTranslation();
     const apiRef = useMuiFormDialogApiRef();
     const { temporalMessageShow, messageDialogShow } = useBaseAppContext();
     const confirmDialogButtons = useConfirmDialogButtons();
+    const formDialogButtons = useFormDialogButtons();
     const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
 
     const handleShow = (id:any, row:any) :void => {
-        apiRef.current?.show?.(id, {entornAppId: row.entornAppId})
+        // Precarreguem el tipus i el mapeig actuals: si la dimensió ja té tipus=ENTITAT, permet editar el
+        // camp de mapeig sense haver de tornar a triar el tipus (i sense que el validador ho consideri un
+        // conflicte - vegeu dimensioId).
+        apiRef.current?.show?.(id, {
+            entornAppId: row.entornAppId,
+            tipus: row.tipus,
+            entitatValorTipus: row.entitatValorTipus,
+            dimensioId: id,
+        })
     }
     const onSuccess = (response:any) :void => {
         refresh?.()
@@ -52,8 +72,21 @@ const useChangeTipus = (refresh?: () => void, addConstToFet?: (id:any) => void) 
             action={"CHANGE_TIPUS"}
             apiRef={apiRef}
             onSuccess={onSuccess}
+            formDialogButtons={formDialogButtons}
         >
-            <FormField name={'tipus'} hiddenEnumValues={["CONSELLERIA"]} required/>
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+                <Grid size={12}>
+                    <FormField
+                        name={'tipus'}
+                        label={t($ => $.page.dimensions.action.changeTipus.field.tipus)}
+                        hiddenEnumValues={["CONSELLERIA"]}
+                        required
+                    />
+                </Grid>
+                <Grid size={12}>
+                    <EntitatValorTipusField/>
+                </Grid>
+            </Grid>
         </FormActionDialog>
     }
 }
@@ -179,6 +212,14 @@ const Dimensions: React.FC = () => {
             })
             .catch(error => temporalMessageShow(null, error.message, 'error'))
     }
+    const updateEntitats = (id:any) => {
+        apiAction(id, {code: 'UPDATE_ENTITATS'})
+            .then(() => {
+                refresh()
+                temporalMessageShow(null, t($ => $.page.dimensions.action.updateEntitats.ok), 'success')
+            })
+            .catch(error => temporalMessageShow(null, error.message, 'error'))
+    }
 
     const {handleShow, content} = useChangeTipus(refresh, addConstToFet);
 
@@ -199,28 +240,36 @@ const Dimensions: React.FC = () => {
                     {
                         label: t($ => $.page.dimensions.action.refreshCons.label),
                         icon: 'refresh',
-                        showInMenu: false,
+                        showInMenu: true,
                         action: 'FET_CONS',
                         onClick: addConstToFet,
-                        // hidden: (row) => !row?.tipus || row?.tipus == 'CONSELLERIA'
                         hidden: (row) => row?.tipus != 'ORGAN_GESTOR'
                     },
                     {
                         label: t($ => $.page.dimensions.action.changeTipus.label),
                         icon: 'check_box_outline_blank',
-                        showInMenu: false,
+                        showInMenu: true,
                         action: 'CHANGE_TIPUS',
                         onClick: handleShow,
-                        hidden: (row) => row?.tipus
+                        // La dimensió CONSELLERIA es genera automàticament (des de FET_CONS) i no s'ha de poder
+                        // configurar manualment.
+                        hidden: (row) => row?.tipus === 'CONSELLERIA',
                     },
                     {
                         label: t($ => $.page.dimensions.action.desmarcar.label),
                         icon: 'check_box',
-                        showInMenu: false,
+                        showInMenu: true,
                         action: 'CHANGE_TIPUS',
                         onClick: clearTipus,
-                        disabled: (row) => row?.tipus == 'CONSELLERIA',
-                        hidden: (row) => !row?.tipus,
+                        hidden: (row) => !row?.tipus || row?.tipus === 'CONSELLERIA',
+                    },
+                    {
+                        label: t($ => $.page.dimensions.action.updateEntitats.label),
+                        icon: 'sync',
+                        showInMenu: true,
+                        action: 'UPDATE_ENTITATS',
+                        onClick: updateEntitats,
+                        hidden: (row) => row?.tipus != 'ENTITAT'
                     },
                     {
                         label: t($ => $.page.dimensions.values),

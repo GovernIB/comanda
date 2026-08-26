@@ -19,6 +19,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * Classe que representa un Indicador.
@@ -61,7 +62,10 @@ import java.io.Serializable;
                 @ResourceAccessConstraint(
                         type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
                         roles = { BaseConfig.ROLE_ADMIN },
-                        grantedPermissions = { PermissionEnum.READ }
+                        // CREATE/WRITE/DELETE calen perquè els indicadors de tipus FORMULA es creen i
+                        // s'editen des de la pantalla d'Indicadors (els SIMPLE es continuen gestionant
+                        // només via sincronització automàtica des de les apps, vegeu EstadisticaHelper).
+                        grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE, PermissionEnum.CREATE, PermissionEnum.DELETE }
                 ),
                 @ResourceAccessConstraint(
                         type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
@@ -92,11 +96,16 @@ public class Indicador extends BaseResource<Long> {
     @NotNull
     private Long entornAppId;
     private Format format;
+    @NotNull
+    private IndicadorTipus tipus = IndicadorTipus.SIMPLE;
 
     // Compactació
     private Boolean compactable;
     private CompactacioEnum tipusCompactacio;
     private ResourceReference<Indicador, Long> indicadorComptadorPerMitjana;
+
+    // Fórmula (només rellevant quan tipus == FORMULA): suma/resta d'altres indicadors del mateix entornApp.
+    private List<IndicadorFormulaTerme> formula;
 
     public String getCodiNomDescription() {
         return this.codi + " - " + this.nom;

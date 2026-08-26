@@ -40,7 +40,8 @@ class UnitatsOrganitzativesPluginDir3Test {
         c.setCodUnidadSuperior("B");
         c.setCodUnidadRaiz("A");
 
-        when(unitatsOrganitzativesRestClient.findUnidadArrel(eq(null), eq(null), eq(false)))
+        lenient().when(unitatsOrganitzativesRestClient.isConfigured()).thenReturn(true);
+        lenient().when(unitatsOrganitzativesRestClient.findUnidadArrel(eq(null), eq(null), eq(false)))
             .thenReturn(List.of(a, b, c));
     }
 
@@ -78,5 +79,44 @@ class UnitatsOrganitzativesPluginDir3Test {
     void getConselleria(String input, String expected) {
         String result = unitatsOrganitzativesPlugin.getConselleria(input);
         assertEquals(expected, result);
+    }
+
+    @Test
+    void isConfigured_delegaAlRestClient() {
+        // Given
+        when(unitatsOrganitzativesRestClient.isConfigured()).thenReturn(true);
+
+        // When / Then
+        assertThat(unitatsOrganitzativesPlugin.isConfigured()).isTrue();
+        verify(unitatsOrganitzativesRestClient).isConfigured();
+    }
+
+    @Test
+    void getConselleria_quanNoConfigurat_llavorsNoCridaFindUnidadArrelIRetornaValorHardcoded() throws SistemaExternException {
+        // Given: substituïm el mock configurat al setUp() per un que indica que Dir3 no està configurat
+        org.mockito.Mockito.reset(unitatsOrganitzativesRestClient);
+        when(unitatsOrganitzativesRestClient.isConfigured()).thenReturn(false);
+
+        // When
+        String result = unitatsOrganitzativesPlugin.getConselleria("A04026975");
+
+        // Then: el valor ve del mapa de correccions històriques (hardcoded), no de Dir3
+        assertEquals("A04026972", result);
+        verify(unitatsOrganitzativesRestClient, never()).findUnidadArrel(any(), any(), any());
+    }
+
+    @Test
+    void getConselleria_ambArrel_quanNoConfigurat_llavorsRetornaNullSenseCridarDir3() throws SistemaExternException {
+        // Given
+        org.mockito.Mockito.reset(unitatsOrganitzativesRestClient);
+        when(unitatsOrganitzativesRestClient.isConfigured()).thenReturn(false);
+        when(unitatsOrganitzativesRestClient.getCodiArrel()).thenReturn("GOVERN_ARREL");
+
+        // When
+        String result = unitatsOrganitzativesPlugin.getConselleria("C", "ALTRA_ARREL");
+
+        // Then
+        assertEquals(null, result);
+        verify(unitatsOrganitzativesRestClient, never()).findUnidad(any(), any(), any(), any());
     }
 }

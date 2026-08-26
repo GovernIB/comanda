@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Builder
 @Getter
 @Setter
@@ -17,4 +19,6 @@ public class IndicadorAgregacio {
     private String indicadorCodi;
     private TableColumnsEnum agregacio;
     private PeriodeUnitat unitatAgregacio;
+    /** Només present quan indicadorCodi correspon a un indicador de tipus FORMULA (vegeu ConsultaEstadisticaHelper). */
+    private List<IndicadorFormulaTermeResolt> termesFormula;
 }

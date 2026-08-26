@@ -41,6 +41,10 @@ public class DashboardEntity extends BaseAuditableEntity<Dashboard> {
     private String titol;
     @Column(name = "descripcio", length = DESCRIPCIO_MAX_LENGTH)
     private String descripcio;
+    @Column(name = "color_fons_clar", length = 8)
+    private String colorFonsClar;
+    @Column(name = "color_fons_fosc", length = 8)
+    private String colorFonsFosc;
     @Column(name = "app_id")
     protected Long appId;
     @Column(name = "entorn_id")

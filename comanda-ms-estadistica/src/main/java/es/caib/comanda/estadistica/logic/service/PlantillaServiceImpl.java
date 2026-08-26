@@ -490,9 +490,6 @@ public class PlantillaServiceImpl extends BaseMutableResourceService<Plantilla, 
         addScalar(properties, WidgetStyleScope.SIMPLE, "midaFontUnitats", WidgetStyleValueType.NUMBER, "16");
         addScalar(properties, WidgetStyleScope.SIMPLE, "midaFontCanviPercentual", WidgetStyleValueType.NUMBER, "18");
 
-        for (int i = 0; i < 6; i++) {
-            addColor(properties, WidgetStyleScope.GRAFIC, "chartSerieColor" + (i + 1), PaletteRole.CHART, i);
-        }
         addScalar(properties, WidgetStyleScope.GRAFIC, "mostrarReticula", WidgetStyleValueType.BOOLEAN, "false");
         addScalar(properties, WidgetStyleScope.GRAFIC, "barStacked", WidgetStyleValueType.BOOLEAN, "false");
         addScalar(properties, WidgetStyleScope.GRAFIC, "barHorizontal", WidgetStyleValueType.BOOLEAN, "false");
@@ -538,9 +535,23 @@ public class PlantillaServiceImpl extends BaseMutableResourceService<Plantilla, 
         addColor(properties, scope, "colorFons", PaletteRole.WIDGET, 0);
         addColor(properties, scope, "colorTitol", PaletteRole.WIDGET, 1);
         addScalar(properties, scope, "midaFontTitol", WidgetStyleValueType.NUMBER, String.valueOf(fontSize));
-        addScalar(properties, scope, "mostrarVora", WidgetStyleValueType.BOOLEAN, "true");
-        addColor(properties, scope, "colorVora", PaletteRole.WIDGET, 2);
-        addScalar(properties, scope, "ampleVora", WidgetStyleValueType.NUMBER, String.valueOf(underlineWidth));
+        WidgetStyleProperty colorSubtitol = baseProperty(properties, scope, "colorSubtitol", WidgetStyleValueType.COLOR);
+        colorSubtitol.setPaletteRole(PaletteRole.WIDGET);
+        addScalar(properties, scope, "midaFontSubtitol", WidgetStyleValueType.NUMBER, null);
+        addScalar(properties, scope, "posicioSubtitol", WidgetStyleValueType.TEXT, "SOTA");
+        addScalar(properties, scope, "separacioSubtitol", WidgetStyleValueType.NUMBER, "0");
+        addScalar(properties, scope, "mostrarVoraTop", WidgetStyleValueType.BOOLEAN, "false");
+        addColor(properties, scope, "colorVoraTop", PaletteRole.WIDGET, 2);
+        addScalar(properties, scope, "ampleVoraTop", WidgetStyleValueType.NUMBER, "1");
+        addScalar(properties, scope, "mostrarVoraRight", WidgetStyleValueType.BOOLEAN, "false");
+        addColor(properties, scope, "colorVoraRight", PaletteRole.WIDGET, 2);
+        addScalar(properties, scope, "ampleVoraRight", WidgetStyleValueType.NUMBER, "1");
+        addScalar(properties, scope, "mostrarVoraBottom", WidgetStyleValueType.BOOLEAN, "true");
+        addColor(properties, scope, "colorVoraBottom", PaletteRole.WIDGET, 2);
+        addScalar(properties, scope, "ampleVoraBottom", WidgetStyleValueType.NUMBER, String.valueOf(underlineWidth));
+        addScalar(properties, scope, "mostrarVoraLeft", WidgetStyleValueType.BOOLEAN, "false");
+        addColor(properties, scope, "colorVoraLeft", PaletteRole.WIDGET, 2);
+        addScalar(properties, scope, "ampleVoraLeft", WidgetStyleValueType.NUMBER, "1");
     }
 
     private void addColor(List<WidgetStyleProperty> properties, WidgetStyleScope scope, String name, PaletteRole role, int index) {

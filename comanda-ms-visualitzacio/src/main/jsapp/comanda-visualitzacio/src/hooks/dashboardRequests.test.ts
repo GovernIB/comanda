@@ -64,6 +64,29 @@ describe('useDashboard', () => {
             expect(result.current.exception).toBe(exception);
         });
     });
+
+    it('useDashboard_quanEsForcaRefresh_tornaACarregarElDashboard', async () => {
+        // Necessari perquè canvis fets al propi dashboard (p.ex. el color de fons) es reflecteixin
+        // sense haver de refrescar la pàgina.
+        mocks.dashboardService.getOne
+            .mockResolvedValueOnce({ id: 7, colorFonsClar: '#111111' })
+            .mockResolvedValueOnce({ id: 7, colorFonsClar: '#222222' });
+
+        const { result } = renderHook(() => useDashboard(7));
+
+        await waitFor(() => {
+            expect(result.current.dashboard).toEqual({ id: 7, colorFonsClar: '#111111' });
+        });
+
+        act(() => {
+            result.current.forceRefresh();
+        });
+
+        await waitFor(() => {
+            expect(result.current.dashboard).toEqual({ id: 7, colorFonsClar: '#222222' });
+        });
+        expect(mocks.dashboardService.getOne).toHaveBeenCalledTimes(2);
+    });
 });
 
 describe('useDashboardWidgets', () => {

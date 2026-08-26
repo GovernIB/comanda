@@ -3,6 +3,7 @@ package es.caib.comanda.estadistica.persist.entity.dashboard;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardTitol;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardTitolTipus;
+import es.caib.comanda.estadistica.logic.intf.model.dashboard.PosicioSubtitol;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import lombok.Getter;
@@ -64,12 +65,35 @@ public class DashboardTitolEntity extends BaseAuditableEntity<DashboardTitol> {
     private Integer midaFontSubtitol;
     @Column(name = "color_fons", length = 8)
     private String colorFons;
-    @Column(name = "mostrar_vora")
-    private Boolean mostrarVora;
-    @Column(name = "color_vora", length = 8)
-    private String colorVora;
-    @Column(name = "ample_vora")
-    private Integer ampleVora;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "posicio_subtitol", length = 32)
+    private PosicioSubtitol posicioSubtitol;
+    @Column(name = "separacio_subtitol")
+    private Integer separacioSubtitol;
+    @Column(name = "mostrar_vora_top")
+    private Boolean mostrarVoraTop;
+    @Column(name = "color_vora_top", length = 8)
+    private String colorVoraTop;
+    @Column(name = "ample_vora_top")
+    private Integer ampleVoraTop;
+    @Column(name = "mostrar_vora_right")
+    private Boolean mostrarVoraRight;
+    @Column(name = "color_vora_right", length = 8)
+    private String colorVoraRight;
+    @Column(name = "ample_vora_right")
+    private Integer ampleVoraRight;
+    @Column(name = "mostrar_vora_bottom")
+    private Boolean mostrarVoraBottom;
+    @Column(name = "color_vora_bottom", length = 8)
+    private String colorVoraBottom;
+    @Column(name = "ample_vora_bottom")
+    private Integer ampleVoraBottom;
+    @Column(name = "mostrar_vora_left")
+    private Boolean mostrarVoraLeft;
+    @Column(name = "color_vora_left", length = 8)
+    private String colorVoraLeft;
+    @Column(name = "ample_vora_left")
+    private Integer ampleVoraLeft;
     @Column(name = "destacat")
     private Boolean destacat;
     @Column(name = "personalitzat")

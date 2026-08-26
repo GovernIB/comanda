@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WidgetCreationWizard } from './WidgetCreationWizard';
@@ -108,14 +109,17 @@ vi.mock('../../../lib/components/mui/form/MuiForm.tsx', () => ({
 vi.mock('./EstadisticaSimpleWidgetForm.tsx', () => ({
     default: ({ mode }: { mode?: string }) => <div data-testid="simple-widget-form">{mode}</div>,
     hasVisualOverrides: () => false,
+    SIMPLE_OVERRIDE_FIELDS: ['colorText'],
 }));
 vi.mock('./EstadisticaGraficWidgetForm.tsx', () => ({
     default: ({ mode }: { mode?: string }) => <div data-testid="grafic-widget-form">{mode}</div>,
     hasVisualOverrides: () => false,
+    GRAFIC_OVERRIDE_FIELDS: ['colorText'],
 }));
 vi.mock('./EstadisticaTaulaWidgetForm.tsx', () => ({
     default: ({ mode }: { mode?: string }) => <div data-testid="taula-widget-form">{mode}</div>,
     hasVisualOverrides: () => false,
+    TAULA_OVERRIDE_FIELDS: ['colorTextTaula'],
 }));
 
 vi.mock('./EstadisticaWidgetFormFields.tsx', () => ({
@@ -123,8 +127,16 @@ vi.mock('./EstadisticaWidgetFormFields.tsx', () => ({
     DimensionsFields: () => <div data-testid="dimensions-fields" />,
     PeriodFields: () => <div data-testid="period-fields" />,
     FieldHelp: ({ text }: { text: string }) => <div data-testid="field-help">{text}</div>,
-    PersonalitzatFields: () => <div data-testid="personalitzat-fields" />,
+    PersonalitzatFields: ({ hasOverrides, onExpandedChange }: { hasOverrides: boolean; onExpandedChange?: (expanded: boolean) => void }) => {
+        // Reprodueix el comportament real: en muntar-se, si ja hi ha overrides es desplega automàticament.
+        useEffect(() => {
+            if (hasOverrides) onExpandedChange?.(true);
+        }, [hasOverrides]);
+        return <div data-testid="personalitzat-fields" data-has-overrides={hasOverrides ? 'true' : 'false'} />;
+    },
+    VoraGraphicalFormEditor: () => <div data-testid="vora-graphical-form-editor" />,
     hasVisualOverridesTitol: (data: any) => mocks.hasVisualOverridesTitolMock(data),
+    TITOL_OVERRIDE_FIELDS: ['colorTitol'],
 }));
 
 vi.mock('./WidgetPreview.tsx', () => ({
@@ -294,6 +306,12 @@ describe('WidgetCreationWizard', () => {
         expect(screen.getByTestId('widget-preview')).toHaveTextContent('TITOL');
         expect(screen.getByTestId('field-tipusTitol')).toBeInTheDocument();
         expect(screen.getByTestId('personalitzat-fields')).toBeInTheDocument();
+        // Amb overrides ja detectats, la secció es desplega automàticament i mostra la posició/separació
+        // del subtítol i l'editor gràfic de vores (rectangle + modal), no els camps plans antics.
+        expect(screen.getByTestId('field-posicioSubtitol')).toBeInTheDocument();
+        expect(screen.getByTestId('field-separacioSubtitol')).toBeInTheDocument();
+        expect(screen.getByTestId('vora-graphical-form-editor')).toBeInTheDocument();
+        expect(screen.queryByTestId('field-mostrarVora')).not.toBeInTheDocument();
 
         fireEvent.click(screen.getByRole('button', { name: 'Crear' }));
 

@@ -5,7 +5,7 @@
     <artifactId>comanda-api-server-monitoring</artifactId>
     <packaging>jar</packaging>
     <name>comanda-api-server-monitoring</name>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <description>Comanda - API Rest Server stub - monitoring v1</description>
     <build>
         <sourceDirectory>src/main/java</sourceDirectory>
@@ -62,7 +62,8 @@
                         <configuration>
                             <sources>
                                 <source>
-                                src/gen/java</source>
+                                    src/gen/java
+                                </source>
                             </sources>
                         </configuration>
                     </execution>
@@ -73,7 +74,8 @@
                 <artifactId>maven-deploy-plugin</artifactId>
                 <version>3.1.4</version>
                 <configuration>
-                    <altDeploymentRepository>internal.repo::default::file://${project.build.directory}/mvn-repo</altDeploymentRepository>
+                    <altDeploymentRepository>internal.repo::default::file://${project.build.directory}/mvn-repo
+                    </altDeploymentRepository>
                 </configuration>
             </plugin>
             <plugin>
@@ -85,7 +87,9 @@
                     <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory>
                     <noJekyll>true</noJekyll>
                     <branch>refs/heads/gh-pages</branch>
-                    <includes><include>**/*</include></includes>
+                    <includes>
+                        <include>**/*</include>
+                    </includes>
                     <path>maven</path>
                     <!-- github repo name -->
                     <repositoryName>maven</repositoryName>
@@ -129,12 +133,12 @@
                                 <requireJavaVersion>
                                     <version>11</version>
                                 </requireJavaVersion>
-                                <banDuplicatePomDependencyVersions />
-                                <dependencyConvergence />
+                                <banDuplicatePomDependencyVersions/>
+                                <dependencyConvergence/>
                                 <enforcePluginVersionConsistencyRule
-                                        implementation="es.caib.maven.artifacts.enforcer.rules.EnforcePluginVersionConsistencyRule" />
+                                    implementation="es.caib.maven.artifacts.enforcer.rules.EnforcePluginVersionConsistencyRule"/>
                                 <enforceDependencyVersionConsistencyRule
-                                        implementation="es.caib.maven.artifacts.enforcer.rules.EnforceDependencyVersionConsistencyRule" />
+                                    implementation="es.caib.maven.artifacts.enforcer.rules.EnforceDependencyVersionConsistencyRule"/>
                             </rules>
                             <fail>true</fail>
                         </configuration>

@@ -2,6 +2,7 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import {
     DashboardReactGridLayout,
     useMapDashboardItems,
@@ -323,5 +324,44 @@ describe('DashboardReactGridLayout', () => {
         fireEvent.contextMenu(screen.getByTestId('grid-item'), { clientX: 50, clientY: 60 });
 
         expect(screen.queryByText('Modificar')).not.toBeInTheDocument();
+    });
+
+    it('DashboardReactGridLayout_quanEsPassaBackgroundColor_lAplicaAlContenidorDelCanvas', () => {
+        // El color de fons del dashboard s'ha d'aplicar al contenidor del canvas, no només als widgets.
+        mocks.isEqualMock.mockReturnValue(true);
+
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={false}
+                dashboardWidgets={[]}
+                gridLayoutItems={[]}
+                backgroundColor="#ff0000"
+            />
+        );
+
+        expect(screen.getByTestId('dashboard-canvas')).toHaveStyle({ backgroundColor: '#ff0000' });
+    });
+
+    it('DashboardReactGridLayout_quanNoHiHaBackgroundColorConfigurat_usaElFonsPerDefecteDelTemaActual', () => {
+        // Sense color de fons configurat al dashboard, el canvas ha de reflectir igualment el tema
+        // (clar/fosc) actiu, en lloc de quedar transparent i mostrar el fons real de l'aplicació.
+        mocks.isEqualMock.mockReturnValue(true);
+
+        const { rerender } = render(
+            <ThemeProvider theme={createTheme({ palette: { mode: 'light' } })}>
+                <DashboardReactGridLayout dashboardId={1} editable={false} dashboardWidgets={[]} gridLayoutItems={[]} />
+            </ThemeProvider>
+        );
+        const lightBackground = getComputedStyle(screen.getByTestId('dashboard-canvas')).backgroundColor;
+
+        rerender(
+            <ThemeProvider theme={createTheme({ palette: { mode: 'dark' } })}>
+                <DashboardReactGridLayout dashboardId={1} editable={false} dashboardWidgets={[]} gridLayoutItems={[]} />
+            </ThemeProvider>
+        );
+        const darkBackground = getComputedStyle(screen.getByTestId('dashboard-canvas')).backgroundColor;
+
+        expect(lightBackground).not.toBe(darkBackground);
     });
 });

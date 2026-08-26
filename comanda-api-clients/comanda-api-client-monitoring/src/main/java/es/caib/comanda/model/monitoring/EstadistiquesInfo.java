@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import es.caib.comanda.model.monitoring.DimensioDesc;
+import es.caib.comanda.model.monitoring.EntitatDesc;
 import es.caib.comanda.model.monitoring.IndicadorDesc;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -38,7 +39,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   EstadistiquesInfo.JSON_PROPERTY_VERSIO,
   EstadistiquesInfo.JSON_PROPERTY_DATA,
   EstadistiquesInfo.JSON_PROPERTY_DIMENSIONS,
-  EstadistiquesInfo.JSON_PROPERTY_INDICADORS
+  EstadistiquesInfo.JSON_PROPERTY_INDICADORS,
+  EstadistiquesInfo.JSON_PROPERTY_ENTITATS
 })
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.17.0")
 public class EstadistiquesInfo {
@@ -61,6 +63,10 @@ public class EstadistiquesInfo {
   public static final String JSON_PROPERTY_INDICADORS = "indicadors";
   @javax.annotation.Nonnull
   private List<IndicadorDesc> indicadors = new ArrayList<>();
+
+  public static final String JSON_PROPERTY_ENTITATS = "entitats";
+  @javax.annotation.Nullable
+  private List<EntitatDesc> entitats = new ArrayList<>();
 
   public EstadistiquesInfo() {
   }
@@ -206,6 +212,39 @@ public class EstadistiquesInfo {
     this.indicadors = indicadors;
   }
 
+  public EstadistiquesInfo entitats(@javax.annotation.Nullable List<EntitatDesc> entitats) {
+    
+    this.entitats = entitats;
+    return this;
+  }
+
+  public EstadistiquesInfo addEntitatsItem(EntitatDesc entitatsItem) {
+    if (this.entitats == null) {
+      this.entitats = new ArrayList<>();
+    }
+    this.entitats.add(entitatsItem);
+    return this;
+  }
+
+  /**
+   * Entitats disponibles
+   * @return entitats
+   */
+  @javax.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_ENTITATS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public List<EntitatDesc> getEntitats() {
+    return entitats;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_ENTITATS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setEntitats(@javax.annotation.Nullable List<EntitatDesc> entitats) {
+    this.entitats = entitats;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -219,12 +258,13 @@ public class EstadistiquesInfo {
         Objects.equals(this.versio, estadistiquesInfo.versio) &&
         Objects.equals(this.data, estadistiquesInfo.data) &&
         Objects.equals(this.dimensions, estadistiquesInfo.dimensions) &&
-        Objects.equals(this.indicadors, estadistiquesInfo.indicadors);
+        Objects.equals(this.indicadors, estadistiquesInfo.indicadors) &&
+        Objects.equals(this.entitats, estadistiquesInfo.entitats);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(codi, versio, data, dimensions, indicadors);
+    return Objects.hash(codi, versio, data, dimensions, indicadors, entitats);
   }
 
   @Override
@@ -236,6 +276,7 @@ public class EstadistiquesInfo {
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("    dimensions: ").append(toIndentedString(dimensions)).append("\n");
     sb.append("    indicadors: ").append(toIndentedString(indicadors)).append("\n");
+    sb.append("    entitats: ").append(toIndentedString(entitats)).append("\n");
     sb.append("}");
     return sb.toString();
   }

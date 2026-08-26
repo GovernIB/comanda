@@ -3,17 +3,9 @@ package es.caib.comanda.model.v1.estadistica;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import es.caib.comanda.model.v1.deserializer.OffsetDateTimeDeserializer;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import javax.validation.Valid;
-import javax.validation.Validation;
-import javax.validation.Validator;
+import javax.validation.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.OffsetDateTime;
@@ -28,7 +20,8 @@ import java.util.Set;
 @Schema(name = "EstadistiquesInfo", description = "Catàleg de dimensions i indicadors d'estadística disponibles per a una APP")
 public class EstadistiquesInfo {
     @Schema(description = "Codi identificador de l'aplicació", example = "APP")
-    @NotNull @Size(min = 1)
+    @NotNull
+    @Size(min = 1)
     private String codi;
 
     @Schema(description = "Versió de l'aplicació", example = "2.1.0")
@@ -39,17 +32,23 @@ public class EstadistiquesInfo {
     private OffsetDateTime data;
 
     @Schema(description = "Dimensions estadístiques disponibles")
-    @NotNull @Valid
+    @NotNull
+    @Valid
     private List<DimensioDesc> dimensions;
 
     @Schema(description = "Indicadors estadístics disponibles")
-    @NotNull @Valid
+    @NotNull
+    @Valid
     private List<IndicadorDesc> indicadors;
+
+    @Schema(description = "Entitats disponibles")
+    @Valid
+    private List<EntitatDesc> entitats;
 
     // Custom builder to validate bean constraints on build()
     public static class EstadistiquesInfoBuilder {
         public EstadistiquesInfo build() {
-            EstadistiquesInfo instance = new EstadistiquesInfo(codi, versio, data, dimensions, indicadors);
+            EstadistiquesInfo instance = new EstadistiquesInfo(codi, versio, data, dimensions, indicadors, entitats);
             Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
             Set<ConstraintViolation<EstadistiquesInfo>> violations = validator.validate(instance);
             if (!violations.isEmpty()) {

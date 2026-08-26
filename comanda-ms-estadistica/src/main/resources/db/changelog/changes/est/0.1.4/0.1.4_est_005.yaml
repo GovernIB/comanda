@@ -15,7 +15,7 @@ databaseChangeLog:
             columns:
               - column:
                   name: entitat_valor_tipus
-                  type: VARCHAR(16)
+                  type: VARCHAR(16 ${varcharUnit})
       rollback:
         - dropColumn:
             tableName: ${db_prefix}est_dimensio

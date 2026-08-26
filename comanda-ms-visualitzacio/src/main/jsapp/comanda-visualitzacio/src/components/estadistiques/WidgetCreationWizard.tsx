@@ -22,10 +22,10 @@ import { FormField, MuiFilter, useBaseAppContext, useFormContext, useResourceApi
 import { useTranslation } from 'react-i18next';
 import MuiForm from '../../../lib/components/mui/form/MuiForm.tsx';
 import type { FormApi } from '../../../lib/components/form/FormContext.tsx';
-import EstadisticaSimpleWidgetForm, { hasVisualOverrides as simpleHasVisualOverrides } from './EstadisticaSimpleWidgetForm.tsx';
-import EstadisticaGraficWidgetForm, { hasVisualOverrides as graficHasVisualOverrides } from './EstadisticaGraficWidgetForm.tsx';
-import EstadisticaTaulaWidgetForm, { hasVisualOverrides as taulaHasVisualOverrides } from './EstadisticaTaulaWidgetForm.tsx';
-import { DimensionsFields, PeriodFields, PersonalitzatFields, TitleDescriptionFields, hasVisualOverridesTitol } from './EstadisticaWidgetFormFields.tsx';
+import EstadisticaSimpleWidgetForm, { hasVisualOverrides as simpleHasVisualOverrides, SIMPLE_OVERRIDE_FIELDS } from './EstadisticaSimpleWidgetForm.tsx';
+import EstadisticaGraficWidgetForm, { hasVisualOverrides as graficHasVisualOverrides, GRAFIC_OVERRIDE_FIELDS } from './EstadisticaGraficWidgetForm.tsx';
+import EstadisticaTaulaWidgetForm, { hasVisualOverrides as taulaHasVisualOverrides, TAULA_OVERRIDE_FIELDS } from './EstadisticaTaulaWidgetForm.tsx';
+import { DimensionsFields, PeriodFields, PersonalitzatFields, TitleDescriptionFields, VoraGraphicalFormEditor, TITOL_OVERRIDE_FIELDS, hasVisualOverridesTitol } from './EstadisticaWidgetFormFields.tsx';
 import { useDashboardPlantilla } from './dashboardPlantillaHook.ts';
 import { WidgetPreview } from './WidgetPreview.tsx';
 import type { DashboardWidgetType } from './DashboardEditorSidePanel.tsx';
@@ -51,11 +51,12 @@ const widgetTypeConfig: Record<
         resourceName: string;
         FormComponent: React.FC<{ mode?: 'full' | 'stats' | 'indicators' | 'visual'; dashboardPlantilla?: any; destacat?: boolean; showOverrideFields?: boolean }>;
         hasVisualOverrides: (data: any) => boolean;
+        overrideFields: string[];
     }
 > = {
-    SIMPLE: { resourceName: 'estadisticaSimpleWidget', FormComponent: EstadisticaSimpleWidgetForm, hasVisualOverrides: simpleHasVisualOverrides },
-    GRAFIC: { resourceName: 'estadisticaGraficWidget', FormComponent: EstadisticaGraficWidgetForm, hasVisualOverrides: graficHasVisualOverrides },
-    TAULA: { resourceName: 'estadisticaTaulaWidget', FormComponent: EstadisticaTaulaWidgetForm, hasVisualOverrides: taulaHasVisualOverrides },
+    SIMPLE: { resourceName: 'estadisticaSimpleWidget', FormComponent: EstadisticaSimpleWidgetForm, hasVisualOverrides: simpleHasVisualOverrides, overrideFields: SIMPLE_OVERRIDE_FIELDS },
+    GRAFIC: { resourceName: 'estadisticaGraficWidget', FormComponent: EstadisticaGraficWidgetForm, hasVisualOverrides: graficHasVisualOverrides, overrideFields: GRAFIC_OVERRIDE_FIELDS },
+    TAULA: { resourceName: 'estadisticaTaulaWidget', FormComponent: EstadisticaTaulaWidgetForm, hasVisualOverrides: taulaHasVisualOverrides, overrideFields: TAULA_OVERRIDE_FIELDS },
 };
 
 const defaultDashboardItemData = {
@@ -287,6 +288,8 @@ const TitleVisualFields: React.FC<TitleVisualFieldsProps> = ({ hasOverrides, exp
                     personalitzatLabel={t($ => $.page.widget.wizard.visual.personalitzat)}
                     personalitzatHelp={t($ => $.page.widget.wizard.visual.personalitzatHelp)}
                     personalitzatBadge={t($ => $.page.widget.wizard.visual.personalitzatBadge)}
+                    resetLabel={t($ => $.page.widget.wizard.visual.resetLabel)}
+                    overrideFields={TITOL_OVERRIDE_FIELDS}
                     hasOverrides={hasOverrides}
                     onExpandedChange={onExpandedChange}
                 />
@@ -317,18 +320,14 @@ const TitleVisualFields: React.FC<TitleVisualFieldsProps> = ({ hasOverrides, exp
                         <FormField name="colorFons" type="color" required={false} />
                     </Grid>
                     <Grid size={6}>
-                        <FormField name="mostrarVora" type="checkbox" />
+                        <FormField name="posicioSubtitol" />
                     </Grid>
-                    {data?.mostrarVora && (
-                        <>
-                            <Grid size={6}>
-                                <FormField name="colorVora" type="color" required={false} />
-                            </Grid>
-                            <Grid size={6}>
-                                <FormField name="ampleVora" type="number" required={false} />
-                            </Grid>
-                        </>
-                    )}
+                    <Grid size={6}>
+                        <FormField name="separacioSubtitol" type="number" required={false} />
+                    </Grid>
+                    <Grid size={12}>
+                        <VoraGraphicalFormEditor />
+                    </Grid>
                 </>
             )}
         </Grid>
@@ -586,6 +585,9 @@ export const WidgetCreationWizard: React.FC<WidgetCreationWizardProps> = ({
                                         personalitzatLabel={t($ => $.page.widget.wizard.visual.personalitzat)}
                                         personalitzatHelp={t($ => $.page.widget.wizard.visual.personalitzatHelp)}
                                         personalitzatBadge={t($ => $.page.widget.wizard.visual.personalitzatBadge)}
+                                        resetLabel={t($ => $.page.widget.wizard.visual.resetLabel)}
+                                        overrideFields={config?.overrideFields}
+                                        resetApiRef={widgetFormApiRef}
                                         hasOverrides={hasOverrides}
                                         onExpandedChange={setVisualExpanded}
                                     />

@@ -27,15 +27,15 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: tipus
-                  type: VARCHAR(16)
+                  type: VARCHAR(16 ${varcharUnit})
                   constraints:
                     nullable: false
               - column:
                   name: dimensio_codi
-                  type: VARCHAR(32)
+                  type: VARCHAR(32 ${varcharUnit})
               - column:
                   name: titol
-                  type: VARCHAR(64)
+                  type: VARCHAR(64 ${varcharUnit})
               - column:
                   name: ordre
                   type: INT
@@ -49,7 +49,7 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: created_by
-                  type: VARCHAR(64)
+                  type: VARCHAR(64 ${varcharUnit})
                   constraints:
                     nullable: false
               - column:
@@ -59,7 +59,7 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: lastmod_by
-                  type: VARCHAR(64)
+                  type: VARCHAR(64 ${varcharUnit})
               - column:
                   name: lastmod_date
                   type: TIMESTAMP

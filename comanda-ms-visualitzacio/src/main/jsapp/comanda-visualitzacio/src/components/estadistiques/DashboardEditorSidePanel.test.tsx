@@ -1,3 +1,4 @@
+import {useEffect} from 'react';
 import {fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {DashboardEditorSelection, DashboardEditorSidePanel} from './DashboardEditorSidePanel';
@@ -39,6 +40,20 @@ const mocks = vi.hoisted(() => ({
                         showBorder: 'Mostrar vora',
                         borderColor: 'Color de vora',
                         borderWidth: 'Amplada de vora',
+                        subtitlePosition: 'Posició del subtítol',
+                        subtitleSpacing: 'Separació del subtítol',
+                        showBorderTop: 'Mostrar vora superior',
+                        borderColorTop: 'Color vora superior',
+                        borderWidthTop: 'Amplada vora superior',
+                        showBorderRight: 'Mostrar vora dreta',
+                        borderColorRight: 'Color vora dreta',
+                        borderWidthRight: 'Amplada vora dreta',
+                        showBorderBottom: 'Mostrar vora inferior',
+                        borderColorBottom: 'Color vora inferior',
+                        borderWidthBottom: 'Amplada vora inferior',
+                        showBorderLeft: 'Mostrar vora esquerra',
+                        borderColorLeft: 'Color vora esquerra',
+                        borderWidthLeft: 'Amplada vora esquerra',
                         posX: 'Posició X',
                         posY: 'Posició Y',
                         width: 'Amplada',
@@ -51,6 +66,9 @@ const mocks = vi.hoisted(() => ({
                         deleted: 'Element eliminat',
                         deleteError: 'No s’ha pogut eliminar',
                         selectType: 'Seleccionau un tipus per veure les propietats configurables.',
+                        colorFonsClar: 'Color de fons (tema clar)',
+                        colorFonsFosc: 'Color de fons (tema fosc)',
+                        darkModeToggle: 'Mode fosc',
                     },
                     wizard: {
                         steps: {
@@ -84,8 +102,8 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('reactlib', () => ({
-    FormField: ({name, label}: { name: string; label?: string }) => (
-        <div data-testid={`field-${name}`}>{label || name}</div>
+    FormField: ({name, label, disabled}: { name: string; label?: string; disabled?: unknown }) => (
+        <div data-testid={`field-${name}`} data-disabled={disabled ? 'true' : 'false'}>{label || name}</div>
     ),
     useBaseAppContext: () => ({
         temporalMessageShow: mocks.temporalMessageShowMock,
@@ -93,6 +111,11 @@ vi.mock('reactlib', () => ({
     }),
     useConfirmDialogButtons: () => <button>Confirmar</button>,
     useFormContext: () => mocks.formContextValue,
+    springFilterBuilder: {
+        and: (...values: string[]) => values.join(' AND '),
+        eq: (field: string, value: unknown) => `${field}=${String(value)}`,
+        exists: (value: string) => `EXISTS(${value})`,
+    },
     useResourceApiService: (resourceName: string) => {
         if (resourceName === 'dashboardItem') {
             return {
@@ -105,6 +128,12 @@ vi.mock('reactlib', () => ({
             return {
                 patch: mocks.patchDashboardTitolMock,
                 delete: mocks.deleteDashboardTitolMock,
+            };
+        }
+        if (resourceName === 'app' || resourceName === 'entorn') {
+            return {
+                isReady: true,
+                find: vi.fn().mockResolvedValue({rows: []}),
             };
         }
         return {};
@@ -132,6 +161,7 @@ vi.mock('./EstadisticaSimpleWidgetForm.tsx', () => ({
         <div data-testid="simple-widget-form">{mode}</div>
     ),
     hasVisualOverrides: () => false,
+    SIMPLE_OVERRIDE_FIELDS: ['colorText'],
 }));
 
 vi.mock('./EstadisticaGraficWidgetForm.tsx', () => ({
@@ -139,6 +169,7 @@ vi.mock('./EstadisticaGraficWidgetForm.tsx', () => ({
         <div data-testid="grafic-widget-form">{mode}</div>
     ),
     hasVisualOverrides: () => false,
+    GRAFIC_OVERRIDE_FIELDS: ['colorText'],
 }));
 
 vi.mock('./EstadisticaTaulaWidgetForm.tsx', () => ({
@@ -146,6 +177,7 @@ vi.mock('./EstadisticaTaulaWidgetForm.tsx', () => ({
         <div data-testid="taula-widget-form">{mode}</div>
     ),
     hasVisualOverrides: () => false,
+    TAULA_OVERRIDE_FIELDS: ['colorTextTaula'],
 }));
 
 vi.mock('./dashboardPlantillaHook.ts', () => ({
@@ -156,11 +188,19 @@ vi.mock('./dashboardPlantillaHook.ts', () => ({
 vi.mock('./EstadisticaWidgetFormFields.tsx', () => ({
     DimensionsFields: () => <div data-testid="dimensions-fields"/>,
     PeriodFields: () => <div data-testid="period-fields"/>,
-    PersonalitzatFields: ({hasOverrides}: { hasOverrides: boolean }) => (
-        <div data-testid="personalitzat-fields" data-has-overrides={hasOverrides ? 'true' : 'false'}/>
-    ),
+    PersonalitzatFields: ({hasOverrides, onExpandedChange}: { hasOverrides: boolean; onExpandedChange?: (expanded: boolean) => void }) => {
+        // Reprodueix el comportament real: en muntar-se, si ja hi ha overrides es desplega automàticament.
+        useEffect(() => {
+            if (hasOverrides) onExpandedChange?.(true);
+        }, [hasOverrides]);
+        return <div data-testid="personalitzat-fields" data-has-overrides={hasOverrides ? 'true' : 'false'}/>;
+    },
     FieldHelp: ({text}: { text: string }) => <div data-testid="field-help">{text}</div>,
-    hasVisualOverridesTitol: (data: any) => mocks.hasVisualOverridesTitolMock(data),
+    hasVisualOverridesTitol: (data: any, initialData?: any) => mocks.hasVisualOverridesTitolMock(data, initialData),
+    TITOL_OVERRIDE_FIELDS: ['colorTitol'],
+    // L'editor gràfic de vores (rectangle + modal) es testeja a fons a EstadisticaWidgetFormFields.test.tsx;
+    // aquí només cal comprovar que el panell el mostra quan la secció de personalitzat es desplega.
+    VoraGraphicalFormEditor: () => <div data-testid="vora-graphical-form-editor"/>,
 }));
 
 vi.mock('./WidgetPreview.tsx', () => ({
@@ -179,6 +219,7 @@ describe('DashboardEditorSidePanel', () => {
     };
 
     beforeEach(() => {
+        mocks.formContextValue.data = {};
         mocks.createDashboardItemMock.mockResolvedValue({id: 123});
         mocks.patchDashboardItemMock.mockResolvedValue(undefined);
         mocks.patchDashboardTitolMock.mockResolvedValue(undefined);
@@ -196,7 +237,7 @@ describe('DashboardEditorSidePanel', () => {
         vi.clearAllMocks();
     });
 
-    it('DashboardEditorSidePanel_quanSelectionEsNone_mostraMissatgeBuit', () => {
+    it('DashboardEditorSidePanel_quanSelectionEsNone_mostraElsSelectorsDAplicacioEntornIColorDeFons', () => {
         const selection: DashboardEditorSelection = {kind: 'none'};
         const onSelectionChange = vi.fn();
         const onSaved = vi.fn();
@@ -213,7 +254,84 @@ describe('DashboardEditorSidePanel', () => {
             />
         );
 
-        expect(screen.getByText(/Seleccionau un element del canvas/)).toBeInTheDocument();
+        expect(screen.getByTestId('field-aplicacio')).toBeInTheDocument();
+        expect(screen.getByTestId('field-entorn')).toBeInTheDocument();
+        expect(screen.getByTestId('field-colorFonsClar')).toBeInTheDocument();
+        expect(screen.getByTestId('field-colorFonsFosc')).toBeInTheDocument();
+    });
+
+    it('DashboardEditorSidePanel_quanElDashboardJaTeAplicacioIEntorn_elsSelectorsEstanDeshabilitats', () => {
+        // Igual que al panell esquerre: un cop configurats, aplicació i entorn ja no es poden canviar des d'aquí.
+        mocks.formContextValue.data = {aplicacio: {id: 3}, entorn: {id: 5}};
+
+        render(
+            <DashboardEditorSidePanel
+                dashboard={defaultDashboard}
+                dashboardId="1"
+                selection={{kind: 'none'}}
+                onSelectionChange={vi.fn()}
+                onSaved={vi.fn()}
+                onDeleted={vi.fn()}
+            />
+        );
+
+        expect(screen.getByTestId('field-aplicacio')).toHaveAttribute('data-disabled', 'true');
+        expect(screen.getByTestId('field-entorn')).toHaveAttribute('data-disabled', 'true');
+    });
+
+    it('DashboardEditorSidePanel_quanElDashboardNoTeAplicacioNiEntorn_elsSelectorsEstanHabilitats', () => {
+        mocks.formContextValue.data = {};
+
+        render(
+            <DashboardEditorSidePanel
+                dashboard={{...defaultDashboard, aplicacio: undefined, entorn: undefined}}
+                dashboardId="1"
+                selection={{kind: 'none'}}
+                onSelectionChange={vi.fn()}
+                onSaved={vi.fn()}
+                onDeleted={vi.fn()}
+            />
+        );
+
+        expect(screen.getByTestId('field-aplicacio')).toHaveAttribute('data-disabled', 'false');
+        expect(screen.getByTestId('field-entorn')).toHaveAttribute('data-disabled', 'false');
+    });
+
+    it('DashboardEditorSidePanel_quanSelectionEsNone_elBotoDesarEstaHabilitat', () => {
+        render(
+            <DashboardEditorSidePanel
+                dashboard={defaultDashboard}
+                dashboardId="1"
+                selection={{kind: 'none'}}
+                onSelectionChange={vi.fn()}
+                onSaved={vi.fn()}
+                onDeleted={vi.fn()}
+            />
+        );
+
+        expect(screen.getByRole('button', {name: 'Desar'})).not.toBeDisabled();
+        expect(screen.getByRole('button', {name: 'Eliminar'})).toBeDisabled();
+    });
+
+    it('DashboardEditorSidePanel_quanSelectionEsNoneIEsPremDesar_desaLaConfiguracioDelDashboardINotificaOnSaved', async () => {
+        const onSaved = vi.fn();
+
+        render(
+            <DashboardEditorSidePanel
+                dashboard={defaultDashboard}
+                dashboardId="1"
+                selection={{kind: 'none'}}
+                onSelectionChange={vi.fn()}
+                onSaved={onSaved}
+                onDeleted={vi.fn()}
+            />
+        );
+
+        fireEvent.click(screen.getByRole('button', {name: 'Desar'}));
+
+        await waitFor(() => {
+            expect(onSaved).toHaveBeenCalled();
+        });
     });
 
     it('DashboardEditorSidePanel_quanSelectionEsWidgetSimple_mostraFormulariSimple', () => {
@@ -294,6 +412,85 @@ describe('DashboardEditorSidePanel', () => {
         expect(screen.getByTestId('personalitzat-fields')).toBeInTheDocument();
     });
 
+    it('DashboardEditorSidePanel_editantUnTitolExistent_notificaElsCanvisEnViuIElsNetejaEnDesmuntar', () => {
+        mocks.formContextValue.data = { colorTitol: '#ff0000' };
+        const onLiveTitleDataChangeMock = vi.fn();
+        const selection: DashboardEditorSelection = {
+            kind: 'title',
+            mode: 'edit',
+            dashboardTitolId: 15,
+        };
+
+        const { unmount } = render(
+            <DashboardEditorSidePanel
+                dashboard={defaultDashboard}
+                dashboardId="1"
+                selection={selection}
+                onSelectionChange={vi.fn()}
+                onSaved={vi.fn()}
+                onDeleted={vi.fn()}
+                onLiveTitleDataChange={onLiveTitleDataChangeMock}
+            />
+        );
+
+        expect(onLiveTitleDataChangeMock).toHaveBeenCalledWith(15, { colorTitol: '#ff0000' });
+
+        // Si es deselecciona (el panell es desmunta) sense haver desat, s'ha de descartar la previsualització.
+        unmount();
+
+        expect(onLiveTitleDataChangeMock).toHaveBeenLastCalledWith(15, null);
+    });
+
+    it('DashboardEditorSidePanel_creantUnTitolNou_noNotificaCanvisEnViu', () => {
+        // Un títol en mode 'create' encara no existeix al canvas: no té sentit previsualitzar-lo.
+        mocks.formContextValue.data = { colorTitol: '#ff0000' };
+        const onLiveTitleDataChangeMock = vi.fn();
+        const selection: DashboardEditorSelection = {
+            kind: 'title',
+            mode: 'create',
+        };
+
+        render(
+            <DashboardEditorSidePanel
+                dashboard={defaultDashboard}
+                dashboardId="1"
+                selection={selection}
+                onSelectionChange={vi.fn()}
+                onSaved={vi.fn()}
+                onDeleted={vi.fn()}
+                onLiveTitleDataChange={onLiveTitleDataChangeMock}
+            />
+        );
+
+        expect(onLiveTitleDataChangeMock).not.toHaveBeenCalled();
+    });
+
+    it('DashboardEditorSidePanel_quanTitolTePersonalitzatIEsDesplega_mostraCampsDePosicioISeparacioIEditorGraficDeVores', () => {
+        mocks.hasVisualOverridesTitolMock.mockReturnValue(true);
+        const selection: DashboardEditorSelection = {
+            kind: 'title',
+            mode: 'edit',
+            dashboardTitolId: 15,
+        };
+
+        render(
+            <DashboardEditorSidePanel
+                dashboard={defaultDashboard}
+                dashboardId="1"
+                selection={selection}
+                onSelectionChange={vi.fn()}
+                onSaved={vi.fn()}
+                onDeleted={vi.fn()}
+            />
+        );
+
+        expect(screen.getByTestId('field-posicioSubtitol')).toBeInTheDocument();
+        expect(screen.getByTestId('field-separacioSubtitol')).toBeInTheDocument();
+        // La configuració de les 4 vores es fa gràficament (rectangle + modal), no amb camps plans.
+        expect(screen.getByTestId('vora-graphical-form-editor')).toBeInTheDocument();
+        expect(screen.queryByTestId('field-mostrarVoraTop')).not.toBeInTheDocument();
+    });
+
     it('DashboardEditorSidePanel_quanEsPremDesarAmbTitolExistent_actualitzaElFlagPersonalitzat', async () => {
         // El backend només aplica els camps propis del títol per sobre de la plantilla si `personalitzat`
         // és cert: cal que es desi sempre, calculat a partir dels overrides reals del títol.
@@ -321,6 +518,37 @@ describe('DashboardEditorSidePanel', () => {
             expect(mocks.patchDashboardTitolMock).toHaveBeenCalledWith(15, {
                 data: {personalitzat: true},
             });
+        });
+    });
+
+    it('DashboardEditorSidePanel_quanElTitolJaHaCarregat_calculaElsOverridesComparantAmbLInstantaniaInicial', async () => {
+        // Un cop el títol ha carregat (té id), el càlcul de "personalitzat" ha de tenir en compte l'estat
+        // inicial per detectar reversions a un valor que coincideix amb el de referència (vegeu
+        // hasVisualOverridesTitol i el bug de posicioSubtitol='SOTA' que no s'aplicava).
+        mocks.hasVisualOverridesTitolMock.mockReturnValue(false);
+        mocks.formContextValue.data = {id: 15, posicioSubtitol: 'COSTAT'};
+        const selection: DashboardEditorSelection = {
+            kind: 'title',
+            mode: 'edit',
+            dashboardTitolId: 15,
+        };
+
+        render(
+            <DashboardEditorSidePanel
+                dashboard={defaultDashboard}
+                dashboardId="1"
+                selection={selection}
+                onSelectionChange={vi.fn()}
+                onSaved={vi.fn()}
+                onDeleted={vi.fn()}
+            />
+        );
+
+        await waitFor(() => {
+            expect(mocks.hasVisualOverridesTitolMock).toHaveBeenCalledWith(
+                {id: 15, posicioSubtitol: 'COSTAT'},
+                {id: 15, posicioSubtitol: 'COSTAT'}
+            );
         });
     });
 

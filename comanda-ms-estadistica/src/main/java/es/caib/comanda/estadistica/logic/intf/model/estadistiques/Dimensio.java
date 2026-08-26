@@ -86,6 +86,14 @@ import java.util.List;
                             grantedPermissions = { PermissionEnum.WRITE }
                         )
                     }),
+                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Dimensio.ACTION_UPDATE_ENTITATS, requiresId = true,
+                    accessConstraints = {
+                        @ResourceAccessConstraint(
+                            type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                            roles = { BaseConfig.ROLE_ADMIN },
+                            grantedPermissions = { PermissionEnum.WRITE }
+                        )
+                    }),
         }
 )
 public class Dimensio extends BaseResource<Long> {
@@ -97,6 +105,8 @@ public class Dimensio extends BaseResource<Long> {
     public final static String FILTER_BY_APP_NAMEDFILTER = "filterByApp";
     public final static String ACTION_CHANGE_TIPUS = "CHANGE_TIPUS";
     public final static String ACTION_FET_CONS = "FET_CONS";
+    /** Recorre els valors d'una dimensió ENTITAT i crea les Entitat que falten (backfill de valors històrics). */
+    public final static String ACTION_UPDATE_ENTITATS = "UPDATE_ENTITATS";
 
     @NotNull
     @Pattern(regexp = "^[a-zA-Z0-9_]*$", message = "El codi només pot contenir caràcters alfanumèrics")
@@ -150,5 +160,19 @@ public class Dimensio extends BaseResource<Long> {
     public static class ChangeTipusActionForm implements Serializable {
         private TipusDimensioEnum tipus;
         private Long entornAppId;
+        /** Només rellevant si tipus=ENTITAT: com s'ha d'interpretar el valor per relacionar-lo amb una Entitat. */
+        private EntitatValorTipus entitatValorTipus;
+        /**
+         * Id de la dimensió que s'està configurant (la mateixa sobre la que s'executa l'acció). Es fa servir
+         * únicament a {@link es.caib.comanda.estadistica.back.validation.ValidDimensioCanviTipusValidator} per
+         * excloure aquesta dimensió de la comprovació de "tipus ja assignat" quan només es vol editar el camp de
+         * mapeig (entitatValorTipus) sense canviar realment el tipus.
+         */
+        private Long dimensioId;
+
+        @AssertTrue(message = "Aquest camp només és vàlid quan el tipus és ENTITAT")
+        public boolean isEntitatValorTipusCoherent() {
+            return entitatValorTipus == null || TipusDimensioEnum.ENTITAT.equals(tipus);
+        }
     }
 }

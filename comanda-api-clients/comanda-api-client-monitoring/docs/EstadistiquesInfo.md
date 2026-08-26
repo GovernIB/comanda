@@ -13,6 +13,7 @@ Catàleg de dimensions i indicadors d'estadística disponibles per a una APP
 |**data** | [**OffsetDateTime**](OffsetDateTime.md) |  |  [optional] |
 |**dimensions** | [**List&lt;DimensioDesc&gt;**](DimensioDesc.md) | Dimensions estadístiques disponibles |  |
 |**indicadors** | [**List&lt;IndicadorDesc&gt;**](IndicadorDesc.md) | Indicadors estadístics disponibles |  |
+|**entitats** | [**List&lt;EntitatDesc&gt;**](EntitatDesc.md) | Entitats disponibles |  [optional] |
 
 
 

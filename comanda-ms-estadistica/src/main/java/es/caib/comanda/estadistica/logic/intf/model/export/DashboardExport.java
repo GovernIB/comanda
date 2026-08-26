@@ -29,6 +29,11 @@ public class DashboardExport implements Serializable {
     @Size(max = es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity.DESCRIPCIO_MAX_LENGTH)
     private String descripcio;
 
+    @Size(max = es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity.COLOR_MAX_LENGTH)
+    private String colorFonsClar;
+    @Size(max = es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity.COLOR_MAX_LENGTH)
+    private String colorFonsFosc;
+
     private String entornCodi;
     private String appCodi;
 

@@ -15,7 +15,7 @@ export const useDashboard = (dashboardId: any) => {
     const [requestState, setRequestState] = useState<RequestStateType>({
         loading: false,
     });
-    useEffect(() => {
+    const effectFunction = useCallback(() => {
         let cancelRequests = false;
         (async () => {
             if (apiDashboardIsReady && dashboardId != null) {
@@ -48,8 +48,15 @@ export const useDashboard = (dashboardId: any) => {
         return () => {
             cancelRequests = true;
         };
-    }, [dashboardId, apiDashboardIsReady]);
-    return requestState;
+    }, [dashboardId, apiDashboardIsReady, getOneDashboard]);
+
+    useEffect(effectFunction, [effectFunction]);
+
+    const forceRefresh = useCallback(() => {
+        effectFunction();
+    }, [effectFunction]);
+
+    return { ...requestState, forceRefresh };
 };
 
 export const useDashboardWidgets = (

@@ -1,15 +1,15 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import Entitats from './Entitats';
 
 const mocks = vi.hoisted(() => ({
-    findMock: vi.fn(),
     artifactActionMock: vi.fn(),
     temporalMessageShowMock: vi.fn(),
     refreshMock: vi.fn(),
     entitatPermissionShowMock: vi.fn(),
     unitatPermissionShowMock: vi.fn(),
+    unitatOnEntryChanged: { current: undefined as ((resourceId: any) => void) | undefined },
     useFormContextValue: {
         data: {},
         apiRef: { current: { setFieldValue: vi.fn() } },
@@ -107,14 +107,17 @@ vi.mock('reactlib', () => ({
                     open,
                     title,
                     children,
+                    closeCallback,
                 }: {
         open: boolean;
         title: string;
         children: React.ReactNode;
+        closeCallback?: () => void;
     }) => (
         open ? (
             <div role="dialog" data-testid="organigrama-dialog">
                 <h3>{title}</h3>
+                <button type="button" onClick={closeCallback}>Tancar</button>
                 {children}
             </div>
         ) : null
@@ -134,13 +137,8 @@ vi.mock('reactlib', () => ({
     useResourceApiService: (resourceName: string) => {
         if (resourceName === 'entitat') {
             return {
-                artifactAction: mocks.artifactActionMock,
-            };
-        }
-        if (resourceName === 'unitatOrganitzativa') {
-            return {
                 isReady: true,
-                find: mocks.findMock,
+                artifactAction: mocks.artifactActionMock,
             };
         }
         return {
@@ -177,10 +175,15 @@ vi.mock('../components/PageTitle.tsx', () => ({
 }));
 
 vi.mock('../components/AclPermissionManager.tsx', () => ({
-    useAclCustomPermissionManager: (config: { resourceType: string }) => ({
-        show: config.resourceType === 'UNITAT' ? mocks.unitatPermissionShowMock : mocks.entitatPermissionShowMock,
-        component: <div>{`Gestor permisos ${config.resourceType}`}</div>,
-    }),
+    useAclCustomPermissionManager: (config: { resourceType: string, onEntryChanged?: (resourceId: any) => void }) => {
+        if (config.resourceType === 'UNITAT') {
+            mocks.unitatOnEntryChanged.current = config.onEntryChanged;
+        }
+        return {
+            show: config.resourceType === 'UNITAT' ? mocks.unitatPermissionShowMock : mocks.entitatPermissionShowMock,
+            component: <div>{`Gestor permisos ${config.resourceType}`}</div>,
+        };
+    },
 }));
 
 vi.mock('@mui/x-tree-view', () => ({
@@ -198,12 +201,9 @@ vi.mock('@mui/x-tree-view', () => ({
 }));
 
 describe('Entitats', () => {
-    beforeEach(() => {
-        mocks.findMock.mockResolvedValue({ rows: [] });
-    });
-
     afterEach(() => {
         vi.clearAllMocks();
+        mocks.unitatOnEntryChanged.current = undefined;
     });
 
     it('Entitats_quanEsRenderitza_mostraElTitolLesColumnesILesAccions', () => {
@@ -211,7 +211,8 @@ describe('Entitats', () => {
 
         expect(screen.getByTestId('page-title')).toHaveTextContent('Entitats');
         expect(screen.getByRole('heading', { name: 'Entitats' })).toBeInTheDocument();
-        expect(screen.getByTestId('columns')).toHaveTextContent('codi,nom,codiDir3');
+        expect(screen.getByTestId('columns')).toHaveTextContent('codi,nom,codiDir3,cif');
+        expect(screen.getByTestId('field-cif')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Permisos' })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Refrescar UO' })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Organigrama' })).toBeInTheDocument();
@@ -253,11 +254,9 @@ describe('Entitats', () => {
     });
 
     it('Entitats_quanEsPremOrganigrama_obreElDialegAmbElCodiDir3', async () => {
-        mocks.findMock.mockResolvedValue({
-            rows: [
-                { id: 1, codi: 'D3', codiNom: 'Unitat arrel', codiUnitatSuperior: null },
-            ],
-        });
+        mocks.artifactActionMock.mockResolvedValue([
+            { id: 1, codi: 'D3', codiNom: 'Unitat arrel', codiUnitatSuperior: null },
+        ]);
 
         render(<Entitats />);
 
@@ -267,10 +266,11 @@ describe('Entitats', () => {
             expect(screen.getByTestId('organigrama-dialog')).toBeInTheDocument();
             expect(screen.getByTestId('tree-view')).toBeInTheDocument();
         });
+        expect(mocks.artifactActionMock).toHaveBeenCalledWith(15, { code: 'ORGANIGRAMA' });
     });
 
     it('Entitats_quanNoHiHaUnitatsALOrganigrama_mostraMissatgeError', async () => {
-        mocks.findMock.mockResolvedValue({ rows: [] });
+        mocks.artifactActionMock.mockResolvedValue([]);
 
         render(<Entitats />);
 
@@ -281,12 +281,55 @@ describe('Entitats', () => {
         });
     });
 
-    it('Entitats_quanEsPremPermisosDunNodeDeLOrganigrama_obreElGestorDeUnitats', async () => {
-        mocks.findMock.mockResolvedValue({
-            rows: [
-                { id: 1, codi: 'D3', codiNom: 'Unitat arrel', codiUnitatSuperior: null, numPermisos: 1 },
-            ],
+    it('Entitats_quanEsCarregaLOrganigrama_mostraUnSpinnerFinsQueArribenLesDades', async () => {
+        let resolveAction: (value: any) => void;
+        mocks.artifactActionMock.mockReturnValue(new Promise((resolve) => { resolveAction = resolve; }));
+
+        render(<Entitats />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Organigrama' }));
+
+        await waitFor(() => {
+            expect(screen.getByRole('progressbar')).toBeInTheDocument();
         });
+        expect(screen.queryByTestId('tree-view')).not.toBeInTheDocument();
+
+        resolveAction!([{ id: 1, codi: 'D3', codiNom: 'Unitat arrel', codiUnitatSuperior: null }]);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('tree-view')).toBeInTheDocument();
+        });
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    });
+
+    it('Entitats_quanEsReobreLOrganigramaDeLaMateixaEntitat_tornaADemanarLesDadesAlBackend', async () => {
+        // La cache viu al backend (transparent per al frontend): cada obertura torna a demanar l'acció, ja
+        // que el nombre de permisos es calcula en viu i pot haver canviat.
+        mocks.artifactActionMock.mockResolvedValue([
+            { id: 1, codi: 'D3', codiNom: 'Unitat arrel', codiUnitatSuperior: null },
+        ]);
+
+        render(<Entitats />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Organigrama' }));
+        await waitFor(() => {
+            expect(screen.getByTestId('tree-view')).toBeInTheDocument();
+        });
+        expect(mocks.artifactActionMock).toHaveBeenCalledTimes(1);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Tancar' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Organigrama' }));
+
+        await waitFor(() => {
+            expect(mocks.artifactActionMock).toHaveBeenCalledTimes(2);
+        });
+        expect(mocks.artifactActionMock).toHaveBeenNthCalledWith(2, 15, { code: 'ORGANIGRAMA' });
+    });
+
+    it('Entitats_quanEsPremPermisosDunNodeDeLOrganigrama_obreElGestorDeUnitats', async () => {
+        mocks.artifactActionMock.mockResolvedValue([
+            { id: 1, codi: 'D3', codiNom: 'Unitat arrel', codiUnitatSuperior: null, numPermisos: 1 },
+        ]);
 
         render(<Entitats />);
 
@@ -305,11 +348,69 @@ describe('Entitats', () => {
         expect(mocks.unitatPermissionShowMock).toHaveBeenCalledWith(1, 'Unitat arrel');
     });
 
+    it('Entitats_quanEsModifiquenPermisosDunNodeDeLOrganigrama_tornaADemanarLesDadesPerActualitzarElComptador', async () => {
+        mocks.artifactActionMock.mockResolvedValue([
+            { id: 1, codi: 'D3', codiNom: 'Unitat arrel', codiUnitatSuperior: null, numPermisos: 1 },
+        ]);
+
+        render(<Entitats />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Organigrama' }));
+        await waitFor(() => {
+            expect(screen.getByTestId('tree-view')).toBeInTheDocument();
+        });
+        expect(mocks.artifactActionMock).toHaveBeenCalledTimes(1);
+
+        // Simulem que useAclCustomPermissionManager avisa que s'ha creat/editat/eliminat un permís de la unitat 1
+        act(() => {
+            mocks.unitatOnEntryChanged.current?.(1);
+        });
+
+        await waitFor(() => {
+            expect(mocks.artifactActionMock).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    it('Entitats_quanEsModifiquenPermisosDunNodeDeLOrganigrama_noPerdLEstatDelsNodesObertsMentreRecarrega', async () => {
+        mocks.artifactActionMock.mockResolvedValueOnce([
+            { id: 1, codi: 'D3', codiNom: 'Unitat arrel', codiUnitatSuperior: null, numPermisos: 1 },
+        ]);
+
+        render(<Entitats />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Organigrama' }));
+        await waitFor(() => {
+            expect(screen.getByTestId('tree-view')).toBeInTheDocument();
+        });
+
+        let resolveReload: (value: any) => void;
+        mocks.artifactActionMock.mockReturnValueOnce(new Promise((resolve) => { resolveReload = resolve; }));
+
+        act(() => {
+            mocks.unitatOnEntryChanged.current?.(1);
+        });
+
+        // Mentre es recarrega en segon pla (per actualitzar el comptador de permisos), l'arbre ha de seguir
+        // muntat: no es pot perdre l'estat dels nodes oberts per l'usuari.
+        expect(screen.getByTestId('tree-view')).toBeInTheDocument();
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+
+        resolveReload!([
+            { id: 1, codi: 'D3', codiNom: 'Unitat arrel', codiUnitatSuperior: null, numPermisos: 2 },
+        ]);
+
+        await waitFor(() => {
+            expect(mocks.artifactActionMock).toHaveBeenCalledTimes(2);
+        });
+        expect(screen.getByTestId('tree-view')).toBeInTheDocument();
+    });
+
     it('Entitats_quanEsRenderitzaElFormulariDEdicio_mostraElsCampsEsperats', () => {
         render(<Entitats />);
 
         expect(screen.getByTestId('field-codi')).toBeInTheDocument();
         expect(screen.getByTestId('field-nom')).toBeInTheDocument();
         expect(screen.getByTestId('field-codiDir3')).toBeInTheDocument();
+        expect(screen.getByTestId('field-cif')).toBeInTheDocument();
     });
 });

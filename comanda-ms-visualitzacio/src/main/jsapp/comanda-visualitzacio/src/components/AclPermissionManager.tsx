@@ -40,13 +40,16 @@ export const useAclCustomPermissionManager = (
             flex: 1
         }],
         formContent = <AclEntryForm />,
-        additionalData
-    }: {resourceType: string, columns?:MuiDataGridColDef[], formContent?: any, additionalData?: any }
+        additionalData,
+        onEntryChanged
+    }: {resourceType: string, columns?:MuiDataGridColDef[], formContent?: any, additionalData?: any, onEntryChanged?: (resourceId: any) => void }
 ) => {
     const { t } = useTranslation();
     const gestorReadOnly = useReadOnlyGestor();
     const dataGridDialogApiRef = React.useRef<MuiDataGridDialogApi | any>({});
+    const currentResourceIdRef = React.useRef<any>(undefined);
     const show = (id: any, description: string) => {
+        currentResourceIdRef.current = id;
         dataGridDialogApiRef.current.show({
             title: description,
             dataGridComponentProps: {
@@ -68,6 +71,11 @@ export const useAclCustomPermissionManager = (
                 popupEditFormContent: formContent,
                 popupEditFormDialogResourceTitle: t($ => $.components.permisos.resourceTitle),
                 rowHideDeleteButton: gestorReadOnly,
+                // Permet als consumidors del hook saber que s'ha creat/editat/eliminat un permís (p.ex. per
+                // refrescar un comptador de permisos mostrat en una altra pantalla, com l'organigrama d'entitats).
+                onRowCreate: () => onEntryChanged?.(currentResourceIdRef.current),
+                onRowUpdate: () => onEntryChanged?.(currentResourceIdRef.current),
+                onRowDelete: () => onEntryChanged?.(currentResourceIdRef.current),
             }
         });
     }

@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: est-entitat-camps-opcionals-0.1.4-001
+      author: limit
+      comment: >
+        Permetre codi/nom/codiDir3 buits a Entitat, ja que ara es pot crear automàticament a partir d'un valor
+        de dimensió desconegut coneixent només el camp corresponent al tipus de relació configurat a la dimensió
+        (codi, codiDir3 o nom); la resta de camps els completa un administrador més tard.
+      changes:
+        - dropNotNullConstraint:
+            tableName: ${db_prefix}entitat
+            columnName: codi
+            columnDataType: VARCHAR(64 ${varcharUnit})
+        - dropNotNullConstraint:
+            tableName: ${db_prefix}entitat
+            columnName: nom
+            columnDataType: VARCHAR(255 ${varcharUnit})
+        - dropNotNullConstraint:
+            tableName: ${db_prefix}entitat
+            columnName: codi_dir3
+            columnDataType: VARCHAR(64 ${varcharUnit})
+      rollback:
+        - addNotNullConstraint:
+            tableName: ${db_prefix}entitat
+            columnName: codi
+            columnDataType: VARCHAR(64 ${varcharUnit})
+        - addNotNullConstraint:
+            tableName: ${db_prefix}entitat
+            columnName: nom
+            columnDataType: VARCHAR(255 ${varcharUnit})
+        - addNotNullConstraint:
+            tableName: ${db_prefix}entitat
+            columnName: codi_dir3
+            columnDataType: VARCHAR(64 ${varcharUnit})

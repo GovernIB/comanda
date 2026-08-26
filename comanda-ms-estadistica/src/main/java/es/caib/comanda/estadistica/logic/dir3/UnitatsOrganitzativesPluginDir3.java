@@ -6,6 +6,7 @@ package es.caib.comanda.estadistica.logic.dir3;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.UOEstatEnum;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.UnitatOrganitzativaEntity;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
  *
  * @author Limit Tecnologies <limit@limit.es>
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UnitatsOrganitzativesPluginDir3 implements UnitatsOrganitzativesPlugin {
@@ -98,6 +100,11 @@ public class UnitatsOrganitzativesPluginDir3 implements UnitatsOrganitzativesPlu
             }
         }
 
+        if (!unitatsOrganitzativesRestClient.isConfigured()) {
+            log.warn("El plugin d'unitats organitzatives Dir3 no està configurat (URL buida o no vàlida); no es" +
+                " carregarà l'arbre d'unitats des de Dir3, només les correccions històriques.");
+            return;
+        }
         try {
             List<UnidadRest> unitats = unitatsOrganitzativesRestClient.findUnidadArrel(null, null, false);
             Map<String, UnidadRest> unitatsPerCodi = unitats.stream()
@@ -110,6 +117,11 @@ public class UnitatsOrganitzativesPluginDir3 implements UnitatsOrganitzativesPlu
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public boolean isConfigured() {
+        return unitatsOrganitzativesRestClient.isConfigured();
     }
 
     @Override
@@ -133,6 +145,9 @@ public class UnitatsOrganitzativesPluginDir3 implements UnitatsOrganitzativesPlu
     private String getConselleriaAmbArrel(String codi, String arrelCodi) {
         if (Objects.equals(codi, arrelCodi)) {
             // L'arrel (l'entitat mateixa) no té conselleria pròpia.
+            return null;
+        }
+        if (!unitatsOrganitzativesRestClient.isConfigured()) {
             return null;
         }
         Map<String, String> cache = perArrelConselleriaCache.computeIfAbsent(arrelCodi, k -> new ConcurrentHashMap<>());

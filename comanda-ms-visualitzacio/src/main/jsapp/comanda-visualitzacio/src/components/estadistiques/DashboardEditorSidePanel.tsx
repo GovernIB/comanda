@@ -21,18 +21,20 @@ import {
 import Grid from '@mui/material/Grid';
 import {
     FormField,
+    springFilterBuilder,
     useBaseAppContext,
     useConfirmDialogButtons,
     useFormContext,
     useResourceApiService,
 } from 'reactlib';
+import { findOptions } from '../../util/requestUtils.ts';
 import MuiForm from '../../../lib/components/mui/form/MuiForm.tsx';
 import { FormFieldDataActionType } from '../../../lib/components/form/FormContext.tsx';
 import type { FormApi } from '../../../lib/components/form/FormContext.tsx';
-import EstadisticaSimpleWidgetForm, { hasVisualOverrides as simpleHasVisualOverrides } from './EstadisticaSimpleWidgetForm.tsx';
-import EstadisticaGraficWidgetForm, { hasVisualOverrides as graficHasVisualOverrides } from './EstadisticaGraficWidgetForm.tsx';
-import EstadisticaTaulaWidgetForm, { hasVisualOverrides as taulaHasVisualOverrides } from './EstadisticaTaulaWidgetForm.tsx';
-import { DimensionsFields, PeriodFields, PersonalitzatFields, hasVisualOverridesTitol } from './EstadisticaWidgetFormFields.tsx';
+import EstadisticaSimpleWidgetForm, { hasVisualOverrides as simpleHasVisualOverrides, SIMPLE_OVERRIDE_FIELDS } from './EstadisticaSimpleWidgetForm.tsx';
+import EstadisticaGraficWidgetForm, { hasVisualOverrides as graficHasVisualOverrides, GRAFIC_OVERRIDE_FIELDS } from './EstadisticaGraficWidgetForm.tsx';
+import EstadisticaTaulaWidgetForm, { hasVisualOverrides as taulaHasVisualOverrides, TAULA_OVERRIDE_FIELDS } from './EstadisticaTaulaWidgetForm.tsx';
+import { DimensionsFields, PeriodFields, PersonalitzatFields, VoraGraphicalFormEditor, TITOL_OVERRIDE_FIELDS, hasVisualOverridesTitol } from './EstadisticaWidgetFormFields.tsx';
 import { useDashboardPlantilla, useEntornCodi } from './dashboardPlantillaHook.ts';
 import { WidgetPreview } from './WidgetPreview.tsx';
 import { useTranslation } from 'react-i18next';
@@ -87,6 +89,12 @@ type DashboardEditorSidePanelProps = {
     onDeleted: () => void;
     /** Filtres ja configurats al dashboard, usats per l'editor de filtres per evitar-ne duplicats (vegeu FiltreEditor) */
     dashboardFiltres?: DashboardFiltre[];
+    /**
+     * Notifica el pare dels canvis en viu (encara no desats) d'un títol existent que s'està editant, perquè
+     * pugui reflectir-los al canvas. El pare ha de descartar aquesta previsualització (revertint el canvas
+     * a l'últim estat desat) quan la selecció canviï sense haver-se desat.
+     */
+    onLiveTitleDataChange?: (dashboardTitolId: any, data: any) => void;
 };
 
 const widgetTypeConfig: Record<
@@ -95,22 +103,26 @@ const widgetTypeConfig: Record<
         resourceName: string;
         FormComponent: React.FC<{ mode?: 'full' | 'stats' | 'indicators' | 'visual', dashboardPlantilla?: any, destacat?: boolean, showOverrideFields?: boolean}>;
         hasVisualOverrides: (data: any) => boolean;
+        overrideFields: string[];
     }
 > = {
     SIMPLE: {
         resourceName: 'estadisticaSimpleWidget',
         FormComponent: EstadisticaSimpleWidgetForm,
         hasVisualOverrides: simpleHasVisualOverrides,
+        overrideFields: SIMPLE_OVERRIDE_FIELDS,
     },
     GRAFIC: {
         resourceName: 'estadisticaGraficWidget',
         FormComponent: EstadisticaGraficWidgetForm,
         hasVisualOverrides: graficHasVisualOverrides,
+        overrideFields: GRAFIC_OVERRIDE_FIELDS,
     },
     TAULA: {
         resourceName: 'estadisticaTaulaWidget',
         FormComponent: EstadisticaTaulaWidgetForm,
         hasVisualOverrides: taulaHasVisualOverrides,
+        overrideFields: TAULA_OVERRIDE_FIELDS,
     },
 };
 
@@ -223,9 +235,13 @@ const PositionSizeFields = () => {
 const VisualizationTabFields = ({
     hasOverrides,
     onExpandedChange,
+    overrideFields,
+    resetApiRef,
 }: {
     hasOverrides: boolean;
     onExpandedChange: (expanded: boolean) => void;
+    overrideFields?: string[];
+    resetApiRef?: React.RefObject<any>;
 }) => {
     const { t } = useTranslation();
     return (
@@ -233,6 +249,9 @@ const VisualizationTabFields = ({
             personalitzatLabel={t($ => $.page.widget.wizard.visual.personalitzat)}
             personalitzatHelp={t($ => $.page.widget.wizard.visual.personalitzatHelp)}
             personalitzatBadge={t($ => $.page.widget.wizard.visual.personalitzatBadge)}
+            resetLabel={t($ => $.page.widget.wizard.visual.resetLabel)}
+            overrideFields={overrideFields}
+            resetApiRef={resetApiRef}
             hasOverrides={hasOverrides}
             onExpandedChange={onExpandedChange}
         />
@@ -257,6 +276,7 @@ type DashboardTitleFieldsProps = {
     expanded: boolean;
     onExpandedChange: (expanded: boolean) => void;
 };
+
 
 const DashboardTitleFields = ({ dashboardPlantilla, hasOverrides, expanded, onExpandedChange }: DashboardTitleFieldsProps) => {
     const { data } = useFormContext();
@@ -297,6 +317,8 @@ const DashboardTitleFields = ({ dashboardPlantilla, hasOverrides, expanded, onEx
                             personalitzatBadge={t($ => $.page.widget.wizard.visual.personalitzatBadge)}
                             destacatLabel={t($ => $.page.widget.editor.showDestacat)}
                             plantillaLabel={t($ => $.page.widget.editor.template)}
+                            resetLabel={t($ => $.page.widget.wizard.visual.resetLabel)}
+                            overrideFields={TITOL_OVERRIDE_FIELDS}
                             hasOverrides={hasOverrides}
                             onExpandedChange={onExpandedChange}
                         />
@@ -319,18 +341,17 @@ const DashboardTitleFields = ({ dashboardPlantilla, hasOverrides, expanded, onEx
                                 <FormField name="colorFons" label={t($ => $.page.widget.editor.backgroundColor)} type="color" required={false} />
                             </Grid>
                             <Grid size={6}>
-                                <FormField name="mostrarVora" label={t($ => $.page.widget.editor.showBorder)} type="checkbox" />
+                                <FormField name="posicioSubtitol" label={t($ => $.page.widget.editor.subtitlePosition)} />
                             </Grid>
-                            {data?.mostrarVora && (
-                                <>
-                                    <Grid size={6}>
-                                        <FormField name="colorVora" label={t($ => $.page.widget.editor.borderColor)} type="color" required={false} />
-                                    </Grid>
-                                    <Grid size={6}>
-                                        <FormField name="ampleVora" label={t($ => $.page.widget.editor.borderWidth)} type="number" required={false} />
-                                    </Grid>
-                                </>
-                            )}
+                            <Grid size={6}>
+                                <FormField name="separacioSubtitol" label={t($ => $.page.widget.editor.subtitleSpacing)} type="number" required={false} />
+                            </Grid>
+                            <Grid size={12}>
+                                <Divider sx={{ my: 1 }} />
+                            </Grid>
+                            <Grid size={12}>
+                                <VoraGraphicalFormEditor />
+                            </Grid>
                         </>
                     )}
                     <Grid size={12}>
@@ -354,16 +375,71 @@ const DashboardTitleFields = ({ dashboardPlantilla, hasOverrides, expanded, onEx
     );
 };
 
-const EmptyPanel = () => {
+/**
+ * Camps de configuració general del dashboard (aplicació, entorn i colors de fons per tema clar/fosc),
+ * mostrats al panell de propietats quan no hi ha cap element del canvas seleccionat.
+ */
+const DashboardSettingsFields = () => {
     const { t } = useTranslation();
+    const { data } = useFormContext();
+    const { isReady: appIsReady, find: appFind } = useResourceApiService('app');
+    const { isReady: entornIsReady, find: entornFind } = useResourceApiService('entorn');
+    const filterAplicacio = springFilterBuilder.and(
+        springFilterBuilder.eq('activa', true),
+        springFilterBuilder.exists(springFilterBuilder.and(springFilterBuilder.eq('entornApps.entorn.id', data?.entorn?.id)))
+    );
+    const filterEntorn = springFilterBuilder.exists(
+        springFilterBuilder.and(springFilterBuilder.eq('entornAppEntities.app.id', data?.aplicacio?.id))
+    );
+
+    if (!appIsReady || !entornIsReady) {
+        return null;
+    }
+
     return (
-        <Box sx={{ p: 2, color: 'text.secondary' }}>
-            <Typography variant="body2">
-                {t($ => $.page.widget.editor.empty)}
-            </Typography>
-        </Box>
+        <Grid container spacing={2}>
+            <Grid size={12}>
+                <FormField
+                    name="aplicacio"
+                    // Igual que al menú lateral: un cop configurada al dashboard, l'aplicació ja no es pot canviar des d'aquí.
+                    disabled={data?.aplicacio}
+                    optionsRequest={(quickFilter: string) => findOptions(appFind, 'nom', quickFilter, filterAplicacio)}
+                />
+            </Grid>
+            <Grid size={12}>
+                <FormField
+                    name="entorn"
+                    disabled={data?.entorn}
+                    optionsRequest={(quickFilter: string) => findOptions(entornFind, 'nom', quickFilter, filterEntorn)}
+                />
+            </Grid>
+            <Grid size={6}>
+                <FormField name="colorFonsClar" type="color" required={false} label={t($ => $.page.widget.editor.colorFonsClar)} />
+            </Grid>
+            <Grid size={6}>
+                <FormField name="colorFonsFosc" type="color" required={false} label={t($ => $.page.widget.editor.colorFonsFosc)} />
+            </Grid>
+        </Grid>
     );
 };
+
+type DashboardSettingsEditorProps = {
+    dashboardId: string;
+    dashboardSettingsFormApiRef: React.RefObject<FormApi | any>;
+};
+
+const DashboardSettingsEditor: React.FC<DashboardSettingsEditorProps> = ({ dashboardId, dashboardSettingsFormApiRef }) => (
+    <MuiForm
+        resourceName="dashboard"
+        id={dashboardId}
+        apiRef={dashboardSettingsFormApiRef}
+        hiddenToolbar
+        formBlockerDisabled
+        componentProps={{ sx: { m: 0, mt: 0 } }}
+    >
+        <DashboardSettingsFields />
+    </MuiForm>
+);
 
 const WidgetTypeSelector = ({
     value,
@@ -398,11 +474,16 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
     onSaved,
     onDeleted,
     dashboardFiltres,
+    onLiveTitleDataChange,
 }) => {
     const widgetFormApiRef = React.useRef<FormApi | any>({});
     const dashboardItemFormApiRef = React.useRef<FormApi | any>({});
     const titleFormApiRef = React.useRef<FormApi | any>({});
     const filtreFormApiRef = React.useRef<FormApi | any>({});
+    const dashboardSettingsFormApiRef = React.useRef<FormApi | any>({});
+    // Mateix càlcul que mostra l'indicador de "personalitzat" a TitleEditor (vegeu hasVisualOverridesTitol),
+    // reutilitzat en desar per evitar duplicar-hi la lògica de comparació amb l'estat inicial carregat.
+    const titleHasOverridesRef = React.useRef(false);
     const { temporalMessageShow, messageDialogShow } = useBaseAppContext();
     const { t } = useTranslation();
     const confirmDialogButtons = useConfirmDialogButtons();
@@ -431,12 +512,11 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
     }, [selectionKey]);
 
     const handleSave = async () => {
-        if (selection.kind === 'none') {
-            return;
-        }
         setSaving(true);
         try {
-            if (selection.kind === 'widget') {
+            if (selection.kind === 'none') {
+                await dashboardSettingsFormApiRef.current?.save();
+            } else if (selection.kind === 'widget') {
                 if (!selection.widgetType) {
                     temporalMessageShow(null, t($ => $.page.widget.editor.selectWidgetType), 'warning');
                     return;
@@ -471,11 +551,12 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
             } else if (selection.kind === 'title') {
                 await titleFormApiRef.current?.save();
                 if (selection.mode === 'edit') {
-                    const titleData = titleFormApiRef.current?.getData() ?? {};
                     // Fet en una petició separada, pel mateix motiu que a l'edició de widgets (vegeu
                     // comentari més amunt): evita la carrera amb el useEffect que actualitza apiRef.current.
+                    // S'usa el mateix valor calculat que mostra l'indicador de "personalitzat" (vegeu
+                    // TitleEditor), en lloc de recalcular-lo aquí sense l'estat inicial carregat.
                     await patchDashboardTitol(selection.dashboardTitolId, {
-                        data: { personalitzat: hasVisualOverridesTitol(titleData) },
+                        data: { personalitzat: titleHasOverridesRef.current },
                     });
                 }
             } else if (selection.kind === 'filtre') {
@@ -553,7 +634,11 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
             <Divider />
             <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 2 }}>
                 {selection.kind === 'none' ? (
-                    <EmptyPanel />
+                    <DashboardSettingsEditor
+                        key={dashboardId}
+                        dashboardId={dashboardId}
+                        dashboardSettingsFormApiRef={dashboardSettingsFormApiRef}
+                    />
                 ) : selection.kind === 'widget' ? (
                     <WidgetEditor
                         key={selectionKey}
@@ -573,6 +658,8 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
                         dashboardId={dashboardId}
                         selection={selection}
                         titleFormApiRef={titleFormApiRef}
+                        onLiveDataChange={onLiveTitleDataChange}
+                        onHasOverridesChange={(value) => { titleHasOverridesRef.current = value; }}
                     />
                 ) : (
                     <FiltreEditor
@@ -600,7 +687,7 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
                     variant="contained"
                     startIcon={<Icon>save</Icon>}
                     onClick={handleSave}
-                    disabled={selection.kind === 'none' || saving}
+                    disabled={saving}
                 >
                     {t($ => $.common.save)}
                 </Button>
@@ -707,7 +794,12 @@ const WidgetEditor: React.FC<WidgetEditorProps> = ({
                         <PlantillaBridge onChange={setPlantilla} />
                         <EntornIdBridge onChange={setEntornId} />
                         {activeTab === 1 && (
-                            <VisualizationTabFields hasOverrides={hasOverrides} onExpandedChange={setVisualExpanded} />
+                            <VisualizationTabFields
+                                hasOverrides={hasOverrides}
+                                onExpandedChange={setVisualExpanded}
+                                overrideFields={config?.overrideFields}
+                                resetApiRef={widgetFormApiRef}
+                            />
                         )}
                         {activeTab === 2 && <PositionSizeFields />}
                     </MuiForm>
@@ -739,6 +831,10 @@ type TitleEditorProps = {
     dashboardId: string;
     selection: Extract<DashboardEditorSelection, { kind: 'title' }>;
     titleFormApiRef: React.RefObject<FormApi | any>;
+    /** Notifica el pare de l'estat en viu (encara no desat) del títol, perquè el pugui previsualitzar al canvas. */
+    onLiveDataChange?: (dashboardTitolId: any, data: any) => void;
+    /** Notifica el pare del valor actual de "té personalitzacions", perquè el pugui desar amb el mateix càlcul que mostra el indicador. */
+    onHasOverridesChange?: (hasOverrides: boolean) => void;
 };
 
 const TitleEditor: React.FC<TitleEditorProps> = ({
@@ -746,13 +842,52 @@ const TitleEditor: React.FC<TitleEditorProps> = ({
     dashboardId,
     selection,
     titleFormApiRef,
+    onLiveDataChange,
+    onHasOverridesChange,
 }) => {
     const [titleData, setTitleData] = React.useState<any>({});
     const [visualExpanded, setVisualExpanded] = React.useState(false);
+    // Instantània del títol tal com es va carregar en obrir l'edició (abans de cap canvi de l'usuari). Cal
+    // per detectar reversions a un valor que coincideix amb el de referència (vegeu hasVisualOverridesTitol):
+    // p.ex. tornar posicioSubtitol a 'SOTA' des d'un valor personalitzat anterior és un canvi genuí, encara
+    // que 'SOTA' sigui el valor per defecte de la columna.
+    const initialTitleDataRef = React.useRef<any>(null);
     // La plantilla pròpia del títol té prioritat sobre la del dashboard (igual que als widgets).
     const plantillaId = titleData?.plantilla?.id || dashboard?.plantilla?.id;
     const { plantilla: dashboardPlantilla } = useDashboardPlantilla(plantillaId);
-    const hasOverrides = hasVisualOverridesTitol(titleData);
+    const hasOverrides = hasVisualOverridesTitol(
+        titleData,
+        selection.mode === 'edit' ? initialTitleDataRef.current : undefined
+    );
+
+    React.useEffect(() => {
+        onHasOverridesChange?.(hasOverrides);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [hasOverrides]);
+
+    const handleTitleDataChange = (data: any) => {
+        if (selection.mode === 'edit' && initialTitleDataRef.current === null && data?.id != null) {
+            initialTitleDataRef.current = data;
+        }
+        setTitleData(data);
+        // Només té sentit previsualitzar al canvas un títol EXISTENT que ja s'hi renderitza; un de nou
+        // (mode 'create') encara no té cap element al canvas a sobreescriure.
+        if (selection.mode === 'edit') {
+            onLiveDataChange?.(selection.dashboardTitolId, data);
+        }
+    };
+
+    // Si es desmunta l'editor (p.ex. l'usuari deselecciona l'element) sense haver desat, es descarta la
+    // previsualització en viu perquè el canvas torni a mostrar l'últim estat desat.
+    React.useEffect(() => {
+        return () => {
+            if (selection.mode === 'edit') {
+                onLiveDataChange?.(selection.dashboardTitolId, null);
+            }
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     return (
         <MuiForm
             resourceName="dashboardTitol"
@@ -771,7 +906,7 @@ const TitleEditor: React.FC<TitleEditorProps> = ({
             formBlockerDisabled
             componentProps={{ sx: { m: 0, mt: 0 } }}
         >
-            <WidgetDataBridge onChange={setTitleData} />
+            <WidgetDataBridge onChange={handleTitleDataChange} />
             <DashboardTitleFields
                 dashboardPlantilla={dashboardPlantilla}
                 hasOverrides={hasOverrides}

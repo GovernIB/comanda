@@ -74,13 +74,15 @@ public class DashboardHelper {
     private void afterConversionGetFiltres(DashboardEntity entity, Dashboard resource) {
         if (entity.getFiltres() != null) {
             resource.setFiltres(
-                    entity.getFiltres().stream()
-                            .map(filtreEntity -> resourceEntityMappingHelper.entityToResource(filtreEntity, DashboardFiltre.class))
-                            .collect(Collectors.toList()));
+                entity.getFiltres().stream()
+                    .map(filtreEntity -> resourceEntityMappingHelper.entityToResource(filtreEntity, DashboardFiltre.class))
+                    .collect(Collectors.toList()));
         }
     }
 
-    /** Assigna el nom de l'aplicació a partir de l'appId **/
+    /**
+     * Assigna el nom de l'aplicació a partir de l'appId
+     **/
     private void afterConversionGetAppNom(DashboardEntity entity, Dashboard resource) {
         try {
             App app = estadisticaClientHelper.appFindById(entity.getAppId());
@@ -92,7 +94,9 @@ public class DashboardHelper {
         }
     }
 
-    /** Assigna el nom de l'entorn a partir de l'entornId **/
+    /**
+     * Assigna el nom de l'entorn a partir de l'entornId
+     **/
     private void afterConversionGetEntornNom(DashboardEntity entity, Dashboard resource) {
         try {
             Entorn entorn = estadisticaClientHelper.entornById(entity.getEntornId());
@@ -104,11 +108,15 @@ public class DashboardHelper {
         }
     }
 
-    public void beforeUpdateEntityLogic(DashboardEntity entity, Dashboard resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
+    public void beforeUpdateEntityLogic(DashboardEntity entity,
+                                        Dashboard resource,
+                                        Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
         beforeUpdateChangeEntornApp(entity, resource, answers);
     }
 
-    private void beforeUpdateChangeEntornApp(DashboardEntity entity, Dashboard resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
+    private void beforeUpdateChangeEntornApp(DashboardEntity entity,
+                                             Dashboard resource,
+                                             Map<String, AnswerRequiredException.AnswerValue> answers) {
         if (entity.getItems().isEmpty()) {
             return;
         }
@@ -124,10 +132,13 @@ public class DashboardHelper {
         if (!canviAppId && !canviEntornId) {
             return;
         }
-        Long newAppId = resource.getAppId();
-        Long newEntornId = resource.getEntornId();
+
+        Long newAppId = canviAppId ? resource.getAppId() : entity.getAppId();
+        Long newEntornId = canviEntornId ? resource.getEntornId() : entity.getEntornId();
+
         EntornApp newEntornApp = (Objects.nonNull(newAppId) && Objects.nonNull(newEntornId)) ?
             estadisticaClientHelper.entornAppFindByAppAndEntornOrDefaultNull(newAppId, newEntornId) : null;
+
         for (DashboardItemEntity item : entity.getItems()) {
             // Validamos si el widget tiene app compatible
             if (canviAppId && !answers.containsKey(ANSWER_CODE_APP_ID)) {
@@ -140,26 +151,17 @@ public class DashboardHelper {
                     );
                 }
             }
-            //Actualizaremos su referencia a EntornApp.
+
+            // Comprovam que existeixi entornApp de destí
             if (Objects.nonNull(newEntornApp)) {
-                if (!Objects.equals(newEntornApp.getId(), item.getEntornId())) {
-                    item.setEntornId(newEntornApp.getId());
-                }
+                item.setEntornId(newEntornId);
             } else {
-                EntornApp itemEntornApp = estadisticaClientHelper.entornAppFindById(item.getEntornId());
-                Long itemAppId = Objects.nonNull(newAppId) ? newAppId : itemEntornApp.getApp().getId();
-                Long itemEntornId = Objects.nonNull(newEntornId) ? newEntornId : itemEntornApp.getEntorn().getId();
-                EntornApp newItemEntornApp = estadisticaClientHelper.entornAppFindByAppAndEntornOrDefaultNull(itemAppId, itemEntornId);
-                if (Objects.nonNull(newItemEntornApp)) {
-                    item.setEntornId(newItemEntornApp.getId());
-                } else if (!answers.containsKey(ANSWER_CODE_ENTORN_ID)) {
-                    throw new AnswerRequiredException(
-                        Dashboard.class,
-                        ANSWER_CODE_ENTORN_ID,
-                        I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.error.entornId"),
-                        null
-                    );
-                }
+                throw new AnswerRequiredException(
+                    Dashboard.class,
+                    ANSWER_CODE_ENTORN_ID,
+                    I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.error.entornId"),
+                    null
+                );
             }
         }
     }
@@ -174,14 +176,13 @@ public class DashboardHelper {
         private final EstadisticaWidgetRepository estadisticaWidgetRepository;
         private final es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper dashboardClonerMapper;
 
-        public CloneDashboardAction(
-                EstadisticaClientHelper estadisticaClientHelper,
-                DashboardRepository dashboardRepository,
-                DashboardTitolRepository dashboardTitolRepository,
-                DashboardItemRepository dashboardItemRepository,
-                PlantillaRepository plantillaRepository,
-                EstadisticaWidgetRepository estadisticaWidgetRepository,
-                es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper dashboardClonerMapper) {
+        public CloneDashboardAction(EstadisticaClientHelper estadisticaClientHelper,
+                                    DashboardRepository dashboardRepository,
+                                    DashboardTitolRepository dashboardTitolRepository,
+                                    DashboardItemRepository dashboardItemRepository,
+                                    PlantillaRepository plantillaRepository,
+                                    EstadisticaWidgetRepository estadisticaWidgetRepository,
+                                    es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper dashboardClonerMapper) {
             this.estadisticaClientHelper = estadisticaClientHelper;
             this.dashboardRepository = dashboardRepository;
             this.dashboardTitolRepository = dashboardTitolRepository;
@@ -209,6 +210,10 @@ public class DashboardHelper {
                 newDashboard.setEntornId(entity.getEntornId());
                 newDashboard.setPlantilla(entity.getPlantilla());
             }
+            // El color de fons (clar/fosc) no és un paràmetre editable en clonar: sempre s'ha d'heretar de
+            // l'entitat original, independentment que s'hagin proporcionat altres paràmetres.
+            newDashboard.setColorFonsClar(entity.getColorFonsClar());
+            newDashboard.setColorFonsFosc(entity.getColorFonsFosc());
             List<DashboardTitolEntity> clonedTitols = getClonedTitulos(entity, newDashboard);
             List<DashboardItemEntity> clonedItems = getClonedItem(entity, newDashboard);
             dashboardRepository.save(newDashboard);
@@ -217,7 +222,8 @@ public class DashboardHelper {
             return null;
         }
 
-        private List<DashboardTitolEntity> getClonedTitulos(DashboardEntity originalDashboard, DashboardEntity newDashboard) {
+        private List<DashboardTitolEntity> getClonedTitulos(DashboardEntity originalDashboard,
+                                                            DashboardEntity newDashboard) {
             List<DashboardTitolEntity> clonedTitols = new ArrayList<>();
             if (originalDashboard.getTitols() != null) {
                 for (DashboardTitolEntity original : originalDashboard.getTitols()) {
@@ -230,7 +236,8 @@ public class DashboardHelper {
             return clonedTitols;
         }
 
-        private List<DashboardItemEntity> getClonedItem(DashboardEntity originalDashboard, DashboardEntity newDashboard) {
+        private List<DashboardItemEntity> getClonedItem(DashboardEntity originalDashboard,
+                                                        DashboardEntity newDashboard) {
             List<DashboardItemEntity> clonedItems = new ArrayList<>();
             Map<Long, EstadisticaWidgetEntity> clonedWidgetsMap = new HashMap<>();
             if (originalDashboard.getItems() != null) {
@@ -370,7 +377,13 @@ public class DashboardHelper {
         }
 
         @Override
-        public void onChange(Serializable id, Dashboard previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Dashboard target) {
+        public void onChange(Serializable id,
+                             Dashboard previous,
+                             String fieldName,
+                             Object fieldValue,
+                             Map<String, AnswerRequiredException.AnswerValue> answers,
+                             String[] previousFieldNames,
+                             Dashboard target) {
         }
 
     }

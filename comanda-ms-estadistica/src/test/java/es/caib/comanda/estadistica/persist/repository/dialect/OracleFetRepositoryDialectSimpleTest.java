@@ -1,8 +1,13 @@
 package es.caib.comanda.estadistica.persist.repository.dialect;
 
+import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
+import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorFormulaTermeResolt;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.OperadorFormulaEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -41,7 +46,12 @@ public class OracleFetRepositoryDialectSimpleTest {
             PeriodeUnitat unitatAgregacio,
             String expectedQuery) {
         // Act
-        String query = removeConsecutiveSpaces(dialect.getSimpleQuery(dimensionsFiltre, indicadorCodi, agregacio, unitatAgregacio, null));
+        IndicadorAgregacio indicadorAgregacio = IndicadorAgregacio.builder()
+                .indicadorCodi(indicadorCodi)
+                .agregacio(agregacio)
+                .unitatAgregacio(unitatAgregacio)
+                .build();
+        String query = removeConsecutiveSpaces(dialect.getSimpleQuery(dimensionsFiltre, indicadorAgregacio, null));
 
         // Assert
         assertNotNull(query);
@@ -183,6 +193,36 @@ public class OracleFetRepositoryDialectSimpleTest {
                             "GROUP BY t.anualitat, t.trimestre, t.mes)")
                 )
         );
+    }
+
+    @Test
+    @DisplayName("getSimpleQuery: un indicador FORMULA genera la suma/resta dels seus termes dins del mateix SUM(...)")
+    void getSimpleQuery_quanIndicadorEsFormula_llavorsGeneraSumaIRestaDinsDelMateixSum() {
+        IndicadorAgregacio indicadorAgregacio = IndicadorAgregacio.builder()
+                .indicadorCodi("TOTAL")
+                .agregacio(TableColumnsEnum.SUM)
+                .termesFormula(List.of(
+                        IndicadorFormulaTermeResolt.builder().indicadorCodi("IND1").operador(OperadorFormulaEnum.SUMA).build(),
+                        IndicadorFormulaTermeResolt.builder().indicadorCodi("IND2").operador(OperadorFormulaEnum.SUMA).build(),
+                        IndicadorFormulaTermeResolt.builder().indicadorCodi("IND3").operador(OperadorFormulaEnum.RESTA).build()
+                ))
+                .build();
+
+        String query = removeConsecutiveSpaces(dialect.getSimpleQuery(null, indicadorAgregacio, null));
+
+        String expected = removeConsecutiveSpaces("SELECT SUM(sum_fets) AS total_sum " +
+                "FROM ( " +
+                "    SELECT t.data as data, " +
+                "        SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"IND1\"')) " +
+                "            + TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"IND2\"')) " +
+                "            - TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"IND3\"'))) AS sum_fets " +
+                "    FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                "    WHERE f.entorn_app_id = :entornAppId " +
+                "    AND t.data BETWEEN :dataInici AND :dataFi " +
+                "GROUP BY t.data)");
+
+        assertNotNull(query);
+        assertTrue(query.equals(expected), "Query should be: " + expected + "\nActual query: " + query);
     }
 
 }

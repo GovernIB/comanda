@@ -3,6 +3,7 @@ package es.caib.comanda.estadistica.persist.entity.estadistiques;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.CompactacioEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Indicador;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus;
 import es.caib.comanda.model.v1.estadistica.Format;
 import es.caib.comanda.ms.persist.entity.BaseEntity;
 import lombok.Getter;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -17,8 +19,10 @@ import javax.persistence.Enumerated;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import java.util.List;
 
 /**
  * Entitat JPA que representa un Indicador dins de l'entorn de l'aplicació.
@@ -73,6 +77,9 @@ public class IndicadorEntity extends BaseEntity<Indicador> {
     @Column(name = "format", length = 64)
     @Enumerated(EnumType.STRING)
     private Format format;
+    @Column(name = "tipus", length = 16, nullable = false)
+    @Enumerated(EnumType.STRING)
+    private IndicadorTipus tipus = IndicadorTipus.SIMPLE;
 
     @Column(name = "compactable", nullable = false)
     private Boolean compactable = true;
@@ -85,6 +92,10 @@ public class IndicadorEntity extends BaseEntity<Indicador> {
             referencedColumnName = "id",
             foreignKey = @ForeignKey(name = BaseConfig.DB_PREFIX + "ind_compactacio_fk"))
     private IndicadorEntity indicadorComptadorPerMitjana;
+
+    // Fórmula (només rellevant quan tipus == FORMULA): vegeu IndicadorFormulaTermeEntity.
+    @OneToMany(mappedBy = "indicadorFormula", cascade = { CascadeType.MERGE, CascadeType.REMOVE })
+    private List<IndicadorFormulaTermeEntity> formula;
 
     public String getCodiNomDescription() {
         return this.codi + " - " + this.nom;

@@ -1,6 +1,7 @@
 package es.caib.comanda.model.server.monitoring;
 
 import es.caib.comanda.model.server.monitoring.DimensioDesc;
+import es.caib.comanda.model.server.monitoring.EntitatDesc;
 import es.caib.comanda.model.server.monitoring.IndicadorDesc;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -30,6 +31,7 @@ public class EstadistiquesInfo   {
   private OffsetDateTime data;
   private @Valid List<@Valid DimensioDesc> dimensions = new ArrayList<>();
   private @Valid List<@Valid IndicadorDesc> indicadors = new ArrayList<>();
+  private @Valid List<@Valid EntitatDesc> entitats = new ArrayList<>();
 
   public EstadistiquesInfo() {
   }
@@ -176,6 +178,42 @@ public class EstadistiquesInfo   {
 
     return this;
   }
+  /**
+   * Entitats disponibles
+   **/
+  public EstadistiquesInfo entitats(List<@Valid EntitatDesc> entitats) {
+    this.entitats = entitats;
+    return this;
+  }
+
+  
+  @ApiModelProperty(value = "Entitats disponibles")
+  @JsonProperty("entitats")
+  @Valid public List<@Valid EntitatDesc> getEntitats() {
+    return entitats;
+  }
+
+  @JsonProperty("entitats")
+  public void setEntitats(List<@Valid EntitatDesc> entitats) {
+    this.entitats = entitats;
+  }
+
+  public EstadistiquesInfo addEntitatsItem(EntitatDesc entitatsItem) {
+    if (this.entitats == null) {
+      this.entitats = new ArrayList<>();
+    }
+
+    this.entitats.add(entitatsItem);
+    return this;
+  }
+
+  public EstadistiquesInfo removeEntitatsItem(EntitatDesc entitatsItem) {
+    if (entitatsItem != null && this.entitats != null) {
+      this.entitats.remove(entitatsItem);
+    }
+
+    return this;
+  }
 
   @Override
   public boolean equals(Object o) {
@@ -190,12 +228,13 @@ public class EstadistiquesInfo   {
         Objects.equals(this.versio, estadistiquesInfo.versio) &&
         Objects.equals(this.data, estadistiquesInfo.data) &&
         Objects.equals(this.dimensions, estadistiquesInfo.dimensions) &&
-        Objects.equals(this.indicadors, estadistiquesInfo.indicadors);
+        Objects.equals(this.indicadors, estadistiquesInfo.indicadors) &&
+        Objects.equals(this.entitats, estadistiquesInfo.entitats);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(codi, versio, data, dimensions, indicadors);
+    return Objects.hash(codi, versio, data, dimensions, indicadors, entitats);
   }
 
   @Override
@@ -208,6 +247,7 @@ public class EstadistiquesInfo   {
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("    dimensions: ").append(toIndentedString(dimensions)).append("\n");
     sb.append("    indicadors: ").append(toIndentedString(indicadors)).append("\n");
+    sb.append("    entitats: ").append(toIndentedString(entitats)).append("\n");
     sb.append("}");
     return sb.toString();
   }

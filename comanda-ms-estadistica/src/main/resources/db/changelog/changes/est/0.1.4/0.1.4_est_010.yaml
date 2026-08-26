@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: est-dashboard-color-fons-0.1.4-001
+      author: limit
+      comment: Permetre configurar un color de fons pel dashboard, un per tema clar i un per tema fosc
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: ${db_prefix}est_dashboard
+              columnName: color_fons_clar
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}est_dashboard
+            columns:
+              - column:
+                  name: color_fons_clar
+                  type: VARCHAR(8 ${varcharUnit})
+              - column:
+                  name: color_fons_fosc
+                  type: VARCHAR(8 ${varcharUnit})
+      rollback:
+        - dropColumn:
+            tableName: ${db_prefix}est_dashboard
+            columnName: color_fons_clar
+        - dropColumn:
+            tableName: ${db_prefix}est_dashboard
+            columnName: color_fons_fosc

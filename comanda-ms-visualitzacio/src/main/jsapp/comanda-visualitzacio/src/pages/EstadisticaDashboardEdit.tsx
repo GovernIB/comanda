@@ -3,12 +3,9 @@ import MuiToolbar from '@mui/material/Toolbar';
 import {
     useBaseAppContext,
     useResourceApiService,
-    MuiFilter,
     springFilterBuilder,
-    FormField,
     useMessageDialogButtons,
     useConfirmDialogButtons,
-    useFilterApiRef,
 } from 'reactlib';
 import { useNavigate, useParams } from 'react-router-dom';
 import {useCallback, useEffect, useRef, useState} from 'react';
@@ -36,7 +33,6 @@ import {
     Typography,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import Grid from '@mui/material/Grid';
 import { useContentDialog } from '../../lib/components/mui/Dialog.tsx';
 import TableBody from '@mui/material/TableBody';
 import { useDashboard, useDashboardFiltres, useDashboardWidgets } from '../hooks/dashboardRequests.ts';
@@ -48,8 +44,10 @@ import PageTitle from '../components/PageTitle.tsx';
 import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
 import {SimpleTreeView, TreeItem} from "@mui/x-tree-view";
 import Divider from "@mui/material/Divider";
-import { useTheme } from '@mui/material/styles';
+import { ThemeProvider, useTheme } from '@mui/material/styles';
 import { useEntornCodi } from '../components/estadistiques/dashboardPlantillaHook.ts';
+import IOSSwitch from '../components/IOSSwitch.tsx';
+import { darkTheme, lightTheme } from '../theme.ts';
 
 type WidgetsErrorAlertProps = {
     errorWidgets: Array<{
@@ -178,7 +176,10 @@ const EstadisticaDashboardEdit: React.FC = () => {
     const { id: paramsId } = useParams();
     const dashboardId = paramsId as string;
     const theme = useTheme();
-    const temaFosc = theme.palette.mode === 'dark';
+    // Per defecte es mostra el disseny en el mode (clar/fosc) configurat al perfil de l'usuari; l'switch
+    // de la capçalera permet commutar-lo només per a la previsualització del disseny, sense afectar el perfil.
+    const [designDarkMode, setDesignDarkMode] = useState(() => theme.palette.mode === 'dark');
+    const temaFosc = designDarkMode;
     const {
         isReady: apiDashboardItemIsReady,
         patch: patchDashboardItem,
@@ -202,6 +203,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
         dashboard,
         loading: loadingDashboard,
         exception: dashboardException,
+        forceRefresh: forceRefreshDashboard,
     } = useDashboard(dashboardId);
     const { entornCodi: dashboardEntornCodi, loading: loadingEntornCodi } = useEntornCodi(dashboard?.entorn?.id);
     const {
@@ -270,6 +272,22 @@ const EstadisticaDashboardEdit: React.FC = () => {
             setPanelCollapsed(false);
         }
     }, [editorSelection]);
+
+    // Previsualització en viu (encara no desada) d'un títol que s'està editant al panell lateral: es
+    // reflecteix al canvas mentre s'edita, i el panell la neteja (passant data=null) quan es deselecciona
+    // sense desar, fent que el canvas torni a l'últim estat efectivament desat.
+    const [liveTitlePreview, setLiveTitlePreview] = useState<{ id: any; data: any } | null>(null);
+    const handleLiveTitleDataChange = useCallback((dashboardTitolId: any, data: any) => {
+        setLiveTitlePreview(data == null ? null : { id: dashboardTitolId, data });
+    }, []);
+    const displayedDashboardWidgets = React.useMemo(() => {
+        if (!liveTitlePreview || !dashboardWidgets) return dashboardWidgets;
+        return dashboardWidgets.map((widget: any) =>
+            String(widget.dashboardTitolId) === String(liveTitlePreview.id)
+                ? { ...widget, ...liveTitlePreview.data }
+                : widget
+        );
+    }, [dashboardWidgets, liveTitlePreview]);
     const navigate = useNavigate();
     const [wizardState, setWizardState] = useState<{
         open: boolean;
@@ -518,6 +536,9 @@ const EstadisticaDashboardEdit: React.FC = () => {
     }
 
     return (
+        // Tota la pantalla de disseny (no només els colors dels widgets) s'ha de mostrar amb el tema
+        // (clar/fosc) seleccionat a l'switch de la capçalera, independentment del tema real del perfil.
+        <ThemeProvider theme={designDarkMode ? darkTheme : lightTheme}>
         <Box sx={{
             flex: 1,
             height: '100%',
@@ -529,6 +550,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
             {loading ? <CenteredCircularProgress /> : null}
             {dashboard && (<>
                 <MuiToolbar
+                    data-testid="dashboard-editor-toolbar"
                     disableGutters
                     sx={{
                         width: '100%',
@@ -555,7 +577,14 @@ const EstadisticaDashboardEdit: React.FC = () => {
                     {errorDashboardWidgets?.length ? (
                         <Box><WidgetsErrorAlert errorWidgets={errorDashboardWidgets} /></Box>
                     ) : undefined}
-                    <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Icon fontSize="small">light_mode</Icon>
+                        <IOSSwitch
+                            checked={designDarkMode}
+                            onChange={(_event, checked) => setDesignDarkMode(checked)}
+                            slotProps={{ input: { 'aria-label': t($ => $.page.dashboards.editor.darkModeToggle) } }}
+                        />
+                        <Icon fontSize="small">dark_mode</Icon>
                         <Button
                             variant="contained"
                             startIcon={<AddIcon />}
@@ -575,7 +604,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                             {apiDashboardItemIsReady && apiDashboardTitolIsReady && dashboardWidgets && (
                                 <DashboardReactGridLayout
                                     dashboardId={dashboard.id}
-                                    dashboardWidgets={dashboardWidgets}
+                                    dashboardWidgets={displayedDashboardWidgets}
                                     gridLayoutItems={mappedDashboardItems}
                                     onGridLayoutItemsChange={onGridLayoutItemsChange}
                                     onSelectItem={selectDashboardElement}
@@ -584,6 +613,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                     onClearSelection={() => setEditorSelection({ kind: 'none' })}
                                     selectedItemId={selectedGridItemId}
                                     dashboardEntornCodi={dashboardEntornCodi}
+                                    backgroundColor={designDarkMode ? dashboard.colorFonsFosc : dashboard.colorFonsClar}
                                     editable
                                 />
                             )}
@@ -722,9 +752,15 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                         selection={editorSelection}
                                         onSelectionChange={setEditorSelection}
                                         dashboardFiltres={dashboardFiltres}
+                                        onLiveTitleDataChange={handleLiveTitleDataChange}
                                         onSaved={(dashboardItemId?: any) => {
                                             if (editorSelection.kind === 'filtre') {
                                                 forceRefreshDashboardFiltres();
+                                            } else if (editorSelection.kind === 'none') {
+                                                // Configuració del propi dashboard (aplicació/entorn/colors de
+                                                // fons): cal refrescar-lo perquè els canvis (p.ex. el color de
+                                                // fons del canvas) s'apliquin sense haver de recarregar la pàgina.
+                                                forceRefreshDashboard();
                                             } else {
                                                 handleWidgetSaved(dashboardItemId);
                                             }
@@ -759,6 +795,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                 )}
             </>)}
         </Box>
+        </ThemeProvider>
     );
 };
 
@@ -792,9 +829,12 @@ const SideMenu = ({
     selectedFiltreId?: string | null;
 }) => {
     const { t } = useTranslation();
-    const appEntornFilterApiRef = useFilterApiRef();
-    const [springFilter, setSpringFilter] = useState<string>()
-    const [entornId, setEntornId] = useState<string>(dashboard?.entorn?.id as string)
+    // L'aplicació i l'entorn del dashboard es configuren al panell de propietats (quan no hi ha cap
+    // element seleccionat), no aquí: aquest menú només els usa per filtrar els widgets disponibles.
+    const entornId = dashboard?.entorn?.id as string | undefined;
+    const springFilter = dashboard?.aplicacio?.id != null
+        ? springFilterBuilder.eq('appId', dashboard.aplicacio.id)
+        : undefined;
     const [simpleWidgets, setSimpleWidgets] = useState<Array<{ id?: string | number; titol?: string }>>()
     const [graficWidgets, setGraficWidgets] = useState<Array<{ id?: string | number; titol?: string }>>()
     const [taulaWidgets, setTaulaWidgets] = useState<Array<{ id?: string | number; titol?: string }>>()
@@ -843,38 +883,6 @@ const SideMenu = ({
     </Box>} />
 
     return <Paper elevation={1} sx={{ p: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <MuiFilter
-            initialData={dashboard?.aplicacio && {
-                app: {
-                    id: dashboard?.aplicacio?.id,
-                    description: dashboard?.aplicacio?.description,
-                },
-                entorn: {
-                    id: dashboard?.entorn?.id,
-                    description: dashboard?.entorn?.description,
-                },
-            }}
-            detached
-            apiRef={appEntornFilterApiRef}
-            resourceName="entornApp"
-            code="optional_entornApp_filter"
-            commonFieldComponentProps={{ size: 'small' }}
-            onDataChange={(data) => {
-                    setEntornId(data?.entorn?.id);
-                }}
-            springFilterBuilder={(data: any) => springFilterBuilder.and(
-                springFilterBuilder.eq("appId", data?.app?.id)
-            )}
-            onSpringFilterChange={setSpringFilter}>
-            <Grid container spacing={1}>
-                <Grid size={12}><Typography>{t($ => $.page.dashboards.editor.selectApp)}</Typography></Grid>
-                <Grid size={12}><FormField name="entorn" disabled={dashboard?.entorn} /></Grid>
-                <Grid size={12}><FormField name="app" disabled={dashboard?.aplicacio} /></Grid>
-            </Grid>
-        </MuiFilter>
-
-        <Divider sx={{ my: 1 }}/>
-
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 0.5 }}>
             <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
                 {t($ => $.page.dashboards.sideMenu.filtresTitle)}

@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: est-unitat-org-arrel-index-0.1.4-001
+      author: limit
+      comment: >
+        Índex sobre codi_unitat_arrel: la pantalla d'organigrama d'entitats consulta totes les unitats d'un arbre
+        (findByCodiUnitatArrel / filtre codiUnitatArrel) i sense índex feia un full scan de tota la taula.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              tableName: ${db_prefix}unitat_org
+              indexName: ${db_prefix}unitat_org_arrel_idx
+      changes:
+        - createIndex:
+            indexName: ${db_prefix}unitat_org_arrel_idx
+            tableName: ${db_prefix}unitat_org
+            columns:
+              - column:
+                  name: codi_unitat_arrel
+      rollback:
+        - dropIndex:
+            indexName: ${db_prefix}unitat_org_arrel_idx
+            tableName: ${db_prefix}unitat_org

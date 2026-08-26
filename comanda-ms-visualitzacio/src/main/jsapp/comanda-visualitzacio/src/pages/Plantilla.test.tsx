@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Plantilla } from './Plantilla';
 import userEvent from '@testing-library/user-event';
@@ -219,8 +219,181 @@ describe('Plantilla', () => {
         });
     });
 
+    it('la pestanya de gràfics mostra pestanyes de tipus de gràfic (no un desplegable) i BAR_CHART per defecte només té les seves propietats', async () => {
+        const user = userEvent.setup();
+        render(<Plantilla />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
+        });
+
+        const mainTabs = screen.getAllByRole('tab');
+        await user.click(mainTabs[2]);
+
+        // El desplegable de tipus de gràfic ha estat substituït per pestanyes.
+        expect(screen.queryByTestId('form-field-tipusGrafic')).not.toBeInTheDocument();
+
+        // 5 pestanyes principals + 7 pestanyes de tipus de gràfic (BAR_CHART, LINE_CHART, PIE_CHART,
+        // SCATTER_CHART, SPARK_LINE_CHART, GAUGE_CHART, HEATMAP_CHART).
+        const allTabs = screen.getAllByRole('tab');
+        expect(allTabs).toHaveLength(12);
+
+        // BAR_CHART (pestanya per defecte) només té 3 propietats booleanes configurables: mostrarReticula,
+        // barStacked i barHorizontal. Si el filtre no s'aplica, se'n mostren 8.
+        expect(screen.getAllByRole('checkbox')).toHaveLength(3);
+    });
+
+    it('canviar de pestanya de tipus de gràfic mostra només les propietats d’aquell tipus', async () => {
+        const user = userEvent.setup();
+        // El mock de FormField/setFieldValue no simula el re-render reactiu del formulari real: cal fer-ho
+        // explícit aquí, aplicant el canvi sobre les dades i tornant a renderitzar.
+        mocks.useFormContextValue.apiRef.current.setFieldValue = vi.fn((field: string, value: unknown) => {
+            mocks.useFormContextValue.data = { ...mocks.useFormContextValue.data, [field]: value };
+        });
+        const { rerender } = render(<Plantilla />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
+        });
+
+        const mainTabs = screen.getAllByRole('tab');
+        await user.click(mainTabs[2]);
+
+        const chartTypeTabs = screen.getAllByRole('tab').slice(5);
+        // chartTypesList: ["BAR_CHART", "PIE_CHART", ...] -> índex 1 és PIE_CHART.
+        // PIE_CHART: outerRadius, pieDonut, innerRadius, pieShowLabels, labelSize -> 2 booleans, 3 numèrics.
+        await user.click(chartTypeTabs[1]);
+        rerender(<Plantilla />);
+
+        await waitFor(() => {
+            expect(screen.getAllByRole('checkbox')).toHaveLength(2);
+        });
+    });
+
+    it('un títol amb una fila antiga de vora única (mostrarVora) no la mostra a la graella, ja que ara es configura gràficament', async () => {
+        const user = userEvent.setup();
+        mocks.useFormContextValue.data = {
+            ...mocks.useFormContextValue.data,
+            styleProperties: [
+                { scope: 'TITOL_1', propertyName: 'mostrarVora', valueType: 'BOOLEAN', scalarValue: 'true' },
+                { scope: 'TITOL_1', propertyName: 'colorVora', valueType: 'COLOR', paletteRole: 'WIDGET', paletteIndex: 2 },
+                { scope: 'TITOL_1', propertyName: 'ampleVora', valueType: 'NUMBER', scalarValue: '2' },
+            ],
+        };
+        render(<Plantilla />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
+        });
+
+        const tabs = screen.getAllByRole('tab');
+        await user.click(tabs[4]);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('property-select-TITOL_1-posicioSubtitol')).toBeInTheDocument();
+        });
+        expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    });
+
+    it('la pestanya de Títols conté 3 subpestanyes, una per cada títol', async () => {
+        const user = userEvent.setup();
+        render(<Plantilla />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
+        });
+
+        // Només 5 pestanyes principals (Comuns, Simple, Gràfic, Taula, Títols); les subpestanyes de
+        // títol encara no existeixen perquè la pestanya de Títols no està activa.
+        const mainTabs = screen.getAllByRole('tab');
+        expect(mainTabs).toHaveLength(5);
+
+        await user.click(mainTabs[4]);
+        await waitFor(() => {
+            expect(screen.getByTestId('property-select-TITOL_1-posicioSubtitol')).toBeInTheDocument();
+        });
+        expect(screen.queryByTestId('property-select-TITOL_2-posicioSubtitol')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('property-select-TITOL_3-posicioSubtitol')).not.toBeInTheDocument();
+
+        // Ara que la pestanya de Títols és activa, apareixen les 3 subpestanyes (Títol 1/2/3) a més
+        // de les 5 principals.
+        const allTabsWithSubtabs = screen.getAllByRole('tab');
+        expect(allTabsWithSubtabs).toHaveLength(8);
+        const titleSubTabs = allTabsWithSubtabs.slice(5);
+
+        await user.click(titleSubTabs[1]);
+        await waitFor(() => {
+            expect(screen.getByTestId('property-select-TITOL_2-posicioSubtitol')).toBeInTheDocument();
+        });
+        expect(screen.queryByTestId('property-select-TITOL_1-posicioSubtitol')).not.toBeInTheDocument();
+
+        await user.click(screen.getAllByRole('tab').slice(5)[2]);
+        await waitFor(() => {
+            expect(screen.getByTestId('property-select-TITOL_3-posicioSubtitol')).toBeInTheDocument();
+        });
+        expect(screen.queryByTestId('property-select-TITOL_2-posicioSubtitol')).not.toBeInTheDocument();
+    });
+
     it('inicializa los colores por defecto al crear una nueva plantilla', () => {
         render(<Plantilla />);
         expect(mockSetFieldValue).toBeDefined();
+    });
+
+    it('el camp posicioSubtitol de la pestanya de títols es mostra com un desplegable amb SOTA i COSTAT', async () => {
+        const user = userEvent.setup();
+        render(<Plantilla />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
+        });
+
+        const tabs = screen.getAllByRole('tab');
+        await user.click(tabs[4]);
+
+        const select = await screen.findByTestId('property-select-TITOL_1-posicioSubtitol');
+        const combobox = select.querySelector('[role="combobox"]') as HTMLElement;
+        await user.click(combobox);
+
+        const options = await screen.findAllByRole('option');
+        const optionValues = options.map((option) => option.getAttribute('data-value'));
+        expect(optionValues).toEqual(['SOTA', 'COSTAT']);
+
+        await user.click(options[1]);
+
+        expect(mockSetFieldValue).toHaveBeenCalledWith(
+            'styleProperties',
+            expect.arrayContaining([
+                expect.objectContaining({ scope: 'TITOL_1', propertyName: 'posicioSubtitol', scalarValue: 'COSTAT' }),
+            ])
+        );
+    });
+
+    it('permet configurar gràficament les vores del títol clicant cada costat del rectangle', async () => {
+        const user = userEvent.setup();
+        render(<Plantilla />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
+        });
+
+        const tabs = screen.getAllByRole('tab');
+        await user.click(tabs[4]);
+
+        // Els camps plans (checkbox/color/número) de cada costat NO s'han de mostrar directament a la graella.
+        expect(screen.queryByRole('checkbox', { name: /vora/i })).not.toBeInTheDocument();
+
+        const topZone = await screen.findByTestId('vora-zone-TITOL_1-Top');
+        await user.click(topZone);
+
+        const dialog = await screen.findByRole('dialog');
+        const checkbox = within(dialog).getByRole('checkbox');
+        await user.click(checkbox);
+
+        expect(mockSetFieldValue).toHaveBeenCalledWith(
+            'styleProperties',
+            expect.arrayContaining([
+                expect.objectContaining({ scope: 'TITOL_1', propertyName: 'mostrarVoraTop', scalarValue: 'true' }),
+            ])
+        );
     });
 });

@@ -91,6 +91,8 @@ class DashboardExportMapperTest {
         entity.setTitol("Dashboard Test");
         entity.setEntornId(entorn.getId());
         entity.setAppId(app.getId());
+        entity.setColorFonsClar("#111111");
+        entity.setColorFonsFosc("#222222");
 
         PlantillaEntity plantilla = new PlantillaEntity();
         plantilla.setNom("Plantilla Test");
@@ -105,6 +107,8 @@ class DashboardExportMapperTest {
         assertEquals("ENTORN001", result.getEntornCodi());
         assertEquals("APP001", result.getAppCodi());
         assertEquals("Plantilla Test", result.getPlantilla().getNom());
+        assertEquals("#111111", result.getColorFonsClar());
+        assertEquals("#222222", result.getColorFonsFosc());
 
         verify(estadisticaClientHelper).entornById(10L);
         verify(estadisticaClientHelper).appFindById(20L);
@@ -317,6 +321,8 @@ class DashboardExportMapperTest {
         export.setTitol("Dashboard Test");
         export.setEntornCodi(entorn.getCodi());
         export.setAppCodi(app.getCodi());
+        export.setColorFonsClar("#111111");
+        export.setColorFonsFosc("#222222");
 
         PlantillaExport plantillaExport = new PlantillaExport();
         plantillaExport.setNom("Plantilla Test");
@@ -332,6 +338,8 @@ class DashboardExportMapperTest {
         assertEquals(entorn.getId(), result.getEntornId());
         assertEquals(app.getId(), result.getAppId());
         assertEquals("Plantilla Test", result.getPlantilla().getNom());
+        assertEquals("#111111", result.getColorFonsClar());
+        assertEquals("#222222", result.getColorFonsFosc());
     }
 
     @Test

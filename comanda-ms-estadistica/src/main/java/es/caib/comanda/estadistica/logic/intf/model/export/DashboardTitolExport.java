@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.model.export;
 
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardTitolTipus;
+import es.caib.comanda.estadistica.logic.intf.model.dashboard.PosicioSubtitol;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -48,16 +49,32 @@ public class DashboardTitolExport implements Serializable {
     private String colorSubtitol;
 
     private Integer midaFontSubtitol;
+    private PosicioSubtitol posicioSubtitol;
+    private Integer separacioSubtitol;
 
     @Size(max = es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity.COLOR_MAX_LENGTH)
     private String colorFons;
 
-    private Boolean mostrarVora;
-
+    private Boolean mostrarVoraTop;
     @Size(max = es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity.COLOR_MAX_LENGTH)
-    private String colorVora;
+    private String colorVoraTop;
+    private Integer ampleVoraTop;
 
-    private Integer ampleVora;
+    private Boolean mostrarVoraRight;
+    @Size(max = es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity.COLOR_MAX_LENGTH)
+    private String colorVoraRight;
+    private Integer ampleVoraRight;
+
+    private Boolean mostrarVoraBottom;
+    @Size(max = es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity.COLOR_MAX_LENGTH)
+    private String colorVoraBottom;
+    private Integer ampleVoraBottom;
+
+    private Boolean mostrarVoraLeft;
+    @Size(max = es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity.COLOR_MAX_LENGTH)
+    private String colorVoraLeft;
+    private Integer ampleVoraLeft;
+
     private Boolean destacat;
     private Boolean personalitzat;
 

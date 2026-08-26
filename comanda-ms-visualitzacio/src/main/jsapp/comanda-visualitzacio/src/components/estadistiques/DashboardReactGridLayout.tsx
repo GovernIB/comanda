@@ -1,40 +1,51 @@
 import * as React from 'react';
-import { Layout, Layouts } from 'react-grid-layout';
-import { Responsive, WidthProvider } from 'react-grid-layout';
-import { isEqual } from 'lodash';
+import {useEffect, useMemo, useRef} from 'react';
+import {Layout, Layouts, Responsive, WidthProvider} from 'react-grid-layout';
+import {isEqual} from 'lodash';
 import SimpleWidgetVisualization from './SimpleWidgetVisualization.tsx';
 import GraficWidgetVisualization from './GraficWidgetVisualization.tsx';
 import TaulaWidgetVisualization from './TaulaWidgetVisualization.tsx';
-import { useEffect, useMemo, useRef } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
-import { Box, Menu, MenuItem, ListItemIcon, ListItemText, Icon } from '@mui/material';
+import {ErrorBoundary} from 'react-error-boundary';
+import {Box, Icon, ListItemIcon, ListItemText, Menu, MenuItem} from '@mui/material';
 import 'react-grid-layout/css/styles.css';
 import './react-resizable-custom.css';
 import TitolWidgetVisualization from "./TitolWidgetVisualization.tsx";
-import { SalutErrorBoundaryFallback } from '../salut/SalutErrorBoundaryFallback';
-import { useTranslation } from 'react-i18next';
+import {SalutErrorBoundaryFallback} from '../salut/SalutErrorBoundaryFallback';
+import {useTranslation} from 'react-i18next';
 
 const CustomGridLayout = WidthProvider(Responsive);
 
-const SimpleChartWrapper = React.memo<{ dashboardWidget: any, dashboardEntornCodi?: string |undefined }>(({ dashboardWidget, dashboardEntornCodi }) => {
-    return <SimpleWidgetVisualization {...dashboardWidget} {...dashboardWidget.atributsVisuals} dashboardEntornCodi={dashboardEntornCodi} />;
+const SimpleChartWrapper = React.memo<{
+    dashboardWidget: any,
+    dashboardEntornCodi?: string | undefined
+}>(({dashboardWidget, dashboardEntornCodi}) => {
+    return <SimpleWidgetVisualization {...dashboardWidget} {...dashboardWidget.atributsVisuals}
+                                      dashboardEntornCodi={dashboardEntornCodi}/>;
 });
 
-const GraficChartWrapper = React.memo<{ dashboardWidget: any, dashboardEntornCodi?: string |undefined }>(({ dashboardWidget, dashboardEntornCodi }) => {
-    return <GraficWidgetVisualization {...dashboardWidget} {...dashboardWidget.atributsVisuals} dashboardEntornCodi={dashboardEntornCodi} />;
+const GraficChartWrapper = React.memo<{
+    dashboardWidget: any,
+    dashboardEntornCodi?: string | undefined
+}>(({dashboardWidget, dashboardEntornCodi}) => {
+    return <GraficWidgetVisualization {...dashboardWidget} {...dashboardWidget.atributsVisuals}
+                                      dashboardEntornCodi={dashboardEntornCodi}/>;
 });
 
-const TaulaChartWrapper = React.memo<{ dashboardWidget: any, dashboardEntornCodi?: string |undefined }>(({ dashboardWidget, dashboardEntornCodi }) => {
-    return <TaulaWidgetVisualization {...dashboardWidget} {...dashboardWidget.atributsVisuals} dashboardEntornCodi={dashboardEntornCodi} />;
+const TaulaChartWrapper = React.memo<{
+    dashboardWidget: any,
+    dashboardEntornCodi?: string | undefined
+}>(({dashboardWidget, dashboardEntornCodi}) => {
+    return <TaulaWidgetVisualization {...dashboardWidget} {...dashboardWidget.atributsVisuals}
+                                     dashboardEntornCodi={dashboardEntornCodi}/>;
 });
 
-const TitolChartWrapper = React.memo<{ dashboardTitol: any}>(({ dashboardTitol}) => {
+const TitolChartWrapper = React.memo<{ dashboardTitol: any }>(({dashboardTitol}) => {
     return <TitolWidgetVisualization {...dashboardTitol} {...dashboardTitol.atributsVisuals}/>;
 });
 
 const CustomGridItemComponent = React.forwardRef<HTMLDivElement, any>(
     (
-        { style, className, onMouseDown, onMouseUp, onTouchEnd, editable, selected, entity, onItemContextMenu, children },
+        {style, className, onMouseDown, onMouseUp, onTouchEnd, editable, selected, entity, onItemContextMenu, children},
         ref
     ) => {
         // onMouseDown/onMouseUp aquí són els mètodes propis de react-draggable (GridItem els injecta
@@ -76,7 +87,7 @@ const CustomGridItemComponent = React.forwardRef<HTMLDivElement, any>(
                         height: '100%',
                     }}
                 >
-                    <div style={{ pointerEvents: editable ? 'none' : undefined, height: '100%' }}>
+                    <div style={{pointerEvents: editable ? 'none' : undefined, height: '100%'}}>
                         {children}
                     </div>
                 </div>
@@ -86,7 +97,7 @@ const CustomGridItemComponent = React.forwardRef<HTMLDivElement, any>(
 );
 
 const CustomHandle = React.forwardRef<HTMLDivElement, any>((props, ref) => {
-    const { handleAxis, ...restProps } = props;
+    const {handleAxis, ...restProps} = props;
     return (
         <div
             ref={ref}
@@ -105,7 +116,7 @@ const getMinDimensionsByType = (type: WidgetType) => {
         case 'GRAFIC':
         case 'TAULA':
         case 'TITOL':
-            return { minW: 1, minH: 1 };
+            return {minW: 1, minH: 1};
     }
 };
 
@@ -136,6 +147,7 @@ type DashboardReactGridLayoutProps = {
     selectedItemId?: string | null;
     dashboardEntornCodi?: string;
     editable: boolean;
+    backgroundColor?: string;
 };
 
 export const useMapDashboardItems = (dashboardWidgets: unknown[]) => {
@@ -153,24 +165,25 @@ export const useMapDashboardItems = (dashboardWidgets: unknown[]) => {
     );
 };
 
-export const horizontalSubdivisions = 30;
+export const horizontalSubdivisions = 24;
 
 /** Distància màxima (en px) entre l'inici i el final d'un arrossegament perquè es consideri un simple clic */
 const CLICK_MOVEMENT_THRESHOLD = 5;
 
 export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> = ({
-    dashboardWidgets,
-    editable,
-    gridLayoutItems,
-    onGridLayoutItemsChange,
-    onSelectItem,
-    onDeleteItem,
-    onDuplicateItem,
-    onClearSelection,
-    selectedItemId,
-    dashboardEntornCodi,
-}) => {
-    const { t } = useTranslation();
+                                                                                      dashboardWidgets,
+                                                                                      editable,
+                                                                                      gridLayoutItems,
+                                                                                      onGridLayoutItemsChange,
+                                                                                      onSelectItem,
+                                                                                      onDeleteItem,
+                                                                                      onDuplicateItem,
+                                                                                      onClearSelection,
+                                                                                      selectedItemId,
+                                                                                      dashboardEntornCodi,
+                                                                                      backgroundColor,
+                                                                                  }) => {
+    const {t} = useTranslation();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const findEntityById = (id: string) =>
         dashboardWidgets.find((widget) => String(widget.dashboardItemId) === id) ??
@@ -178,7 +191,7 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
 
     const [contextMenu, setContextMenu] = React.useState<{ mouseX: number; mouseY: number; entity: any } | null>(null);
     const handleItemContextMenu = (event: React.MouseEvent, entity: any) => {
-        setContextMenu({ mouseX: event.clientX, mouseY: event.clientY, entity });
+        setContextMenu({mouseX: event.clientX, mouseY: event.clientY, entity});
     };
     const closeContextMenu = () => setContextMenu(null);
     const handleContextMenuModificar = () => {
@@ -212,7 +225,7 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
         event: MouseEvent
     ) => {
         try {
-            dragStartPosRef.current = { x: event.clientX, y: event.clientY };
+            dragStartPosRef.current = {x: event.clientX, y: event.clientY};
         } catch (error) {
             dragStartPosRef.current = null;
             console.error('Error registrant l\'inici de l\'arrossegament', error);
@@ -249,8 +262,7 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
             const typeFromAutogeneratedId: string = item.i.split('-')[1];
             const mergedType = typeInGridLayoutItems ?? typeFromAutogeneratedId;
 
-            if (!isValidWidgetType(mergedType))
-            {
+            if (!isValidWidgetType(mergedType)) {
                 console.error(`Invalid widget type: ${typeFromAutogeneratedId}`);
                 return undefined;
             }
@@ -336,10 +348,14 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
     return (
         <>
             <Box
+                data-testid="dashboard-canvas"
                 sx={{
                     position: 'relative',
                     width: '100%',
                     minHeight: 'calc(100vh - 196px)',
+                    // Sense color configurat al dashboard, s'ha de reflectir igualment el tema actiu
+                    // (clar/fosc) en lloc de quedar transparent i mostrar el fons real de l'aplicació.
+                    backgroundColor: backgroundColor || 'background.default',
                 }}
                 onClick={() => editable && onClearSelection?.()}
             >
@@ -359,10 +375,10 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                 )}
                 <CustomGridLayout
                     className="layout"
-                    breakpoints={{ md: 0 }}
-                    layouts={{ md: layout }}
+                    breakpoints={{md: 0}}
+                    layouts={{md: layout}}
                     onLayoutChange={onLayoutChange}
-                    cols={{ md: horizontalSubdivisions }}
+                    cols={{md: horizontalSubdivisions}}
                     margin={[0, 0]}
                     rowHeight={rowHeight}
                     compactType={null}
@@ -372,7 +388,7 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                     }}
                     isDraggable={!isReadonly}
                     isResizable={!isReadonly}
-                    resizeHandle={<CustomHandle />}
+                    resizeHandle={<CustomHandle/>}
                     resizeHandles={!isReadonly ? ['s', 'w', 'e', 'n', 'sw', 'nw', 'se', 'ne'] : []}
                     onDragStart={onItemDragStart}
                     onDragStop={onItemDragStop}
@@ -385,7 +401,7 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                         const dashboardTitol = dashboardWidgets.find(
                             (dashboardWidget) => String(dashboardWidget.dashboardTitolId) === item.id
                         );
-                        if(dashboardTitol) dashboardTitol.id = dashboardTitol?.dashboardTitolId;
+                        if (dashboardTitol) dashboardTitol.id = dashboardTitol?.dashboardTitolId;
                         return (
                             <CustomGridItemComponent
                                 key={item.id}
@@ -394,17 +410,20 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                                 entity={dashboardWidget ?? dashboardTitol}
                                 onItemContextMenu={handleItemContextMenu}
                             >
-                                <ErrorBoundary fallback={<SalutErrorBoundaryFallback />}>
+                                <ErrorBoundary fallback={<SalutErrorBoundaryFallback/>}>
                                     {(() => {
                                         switch (item.type) {
                                             case 'SIMPLE':
-                                                return (<SimpleChartWrapper dashboardWidget={dashboardWidget} dashboardEntornCodi={dashboardEntornCodi} />);
+                                                return (<SimpleChartWrapper dashboardWidget={dashboardWidget}
+                                                                            dashboardEntornCodi={dashboardEntornCodi}/>);
                                             case 'GRAFIC':
-                                                return (<GraficChartWrapper dashboardWidget={dashboardWidget} dashboardEntornCodi={dashboardEntornCodi} />);
+                                                return (<GraficChartWrapper dashboardWidget={dashboardWidget}
+                                                                            dashboardEntornCodi={dashboardEntornCodi}/>);
                                             case 'TAULA':
-                                                return (<TaulaChartWrapper dashboardWidget={dashboardWidget} dashboardEntornCodi={dashboardEntornCodi} />);
+                                                return (<TaulaChartWrapper dashboardWidget={dashboardWidget}
+                                                                           dashboardEntornCodi={dashboardEntornCodi}/>);
                                             case 'TITOL':
-                                                return (<TitolChartWrapper dashboardTitol={dashboardTitol} />);
+                                                return (<TitolChartWrapper dashboardTitol={dashboardTitol}/>);
                                         }
                                     })()}
                                 </ErrorBoundary>
@@ -417,7 +436,7 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                 open={contextMenu !== null}
                 onClose={closeContextMenu}
                 anchorReference="anchorPosition"
-                anchorPosition={contextMenu ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined}
+                anchorPosition={contextMenu ? {top: contextMenu.mouseY, left: contextMenu.mouseX} : undefined}
             >
                 <MenuItem onClick={handleContextMenuModificar}>
                     <ListItemIcon><Icon fontSize="small">edit</Icon></ListItemIcon>

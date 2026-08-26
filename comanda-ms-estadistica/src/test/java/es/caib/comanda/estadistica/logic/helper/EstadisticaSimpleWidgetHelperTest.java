@@ -47,6 +47,10 @@ class EstadisticaSimpleWidgetHelperTest {
     @BeforeEach
     void setUp() {
         entity = new EstadisticaSimpleWidgetEntity();
+        // La majoria de tests d'upsertIndicadorTaula assumeixen un widget ja existent a BD (per defecte
+        // aquí en tenen prou amb tenir id); el test específic del cas de creació (widget transitori, sense
+        // id) el sobreescriu explícitament — vegeu upsertIndicadorTaula_quanWidgetEsTransitori_....
+        entity.setId(1L);
         resource = new EstadisticaSimpleWidget();
     }
 
@@ -55,9 +59,10 @@ class EstadisticaSimpleWidgetHelperTest {
     // ========================================================================
 
     @Test
-    @DisplayName("upsertIndicadorTaula: crea una nova entitat quan la informació de l'indicador és null")
-    void upsertIndicadorTaula_quanIndicadorInfoEsNull_llavorsCreaNovaEntitat() {
+    @DisplayName("upsertIndicadorTaula: widget existent (té id) i indicadorInfo null - desa explícitament la nova entitat")
+    void upsertIndicadorTaula_quanWidgetJaExisteixIIndicadorInfoEsNull_llavorsDesaExplicitamentNovaEntitat() {
         // Arrange
+        entity.setId(1L);
         entity.setIndicadorInfo(null);
         resource.setTitolIndicador("Titol Test");
         resource.setTipusIndicador(TableColumnsEnum.SUM);
@@ -80,6 +85,28 @@ class EstadisticaSimpleWidgetHelperTest {
         assertThat(captured.getAgregacio()).isEqualTo(TableColumnsEnum.SUM);
         assertThat(captured.getUnitatAgregacio()).isEqualTo(null);
         assertThat(entity.getIndicadorInfo()).isSameAs(savedEntity);
+    }
+
+    @Test
+    @DisplayName("upsertIndicadorTaula: widget nou (id null, encara transitori) - NO desa explícitament l'IndicadorTaulaEntity, es deixa al cascade del widget per evitar TransientPropertyValueException")
+    void upsertIndicadorTaula_quanWidgetEsTransitori_llavorsNoDesaExplicitamentIDeixaElCascade() {
+        // Arrange
+        entity.setId(null);
+        entity.setIndicadorInfo(null);
+        resource.setTitolIndicador("Titol Test");
+        resource.setTipusIndicador(TableColumnsEnum.SUM);
+        resource.setPeriodeIndicador(PeriodeUnitat.MES);
+        resource.setIndicador(null);
+
+        // Act
+        estadisticaSimpleWidgetHelper.upsertIndicadorTaula(entity, resource);
+
+        // Assert
+        verify(indicadorTaulaRepository, never()).save(any());
+        assertThat(entity.getIndicadorInfo()).isNotNull();
+        assertThat(entity.getIndicadorInfo().getWidget()).isSameAs(entity);
+        assertThat(entity.getIndicadorInfo().getTitol()).isEqualTo("Titol Test");
+        assertThat(entity.getIndicadorInfo().getAgregacio()).isEqualTo(TableColumnsEnum.SUM);
     }
 
     @Test

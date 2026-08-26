@@ -15,7 +15,7 @@ import { WidgetPreview } from './WidgetPreview';
 import { TaulaWidgetVisualizationProps } from './TaulaWidgetVisualization';
 
 /** Camps que sobreescriuen l'estil de la plantilla (excloent `mostrarCapcalera`/`mostrarSeparadorHoritzontal`, que s'inicialitzen sempre a `true` en muntar-se) */
-const TAULA_OVERRIDE_FIELDS = [
+export const TAULA_OVERRIDE_FIELDS = [
     'colorText', 'colorFons', 'mostrarVora', 'colorVora', 'ampleVora',
     'colorTextTaula', 'colorFonsTaula', 'colorCapcalera', 'colorFonsCapcalera',
     'mostrarAlternancia', 'colorAlternancia',

@@ -93,6 +93,8 @@ public class Dashboard extends BaseResource<Long> {
     private String titol;
     @Size(max = es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity.DESCRIPCIO_MAX_LENGTH)
     private String descripcio;
+    private String colorFonsClar;
+    private String colorFonsFosc;
     protected ResourceReference<AppResource, Long> aplicacio;
     private Long appId;
     protected ResourceReference<EntornResource, Long> entorn;

@@ -16,13 +16,13 @@ databaseChangeLog:
                     primaryKeyName: ${db_prefix}entitat_pk
               - column:
                   name: codi
-                  type: VARCHAR(64)
+                  type: VARCHAR(64 ${varcharUnit})
                   constraints: { nullable: false }
               - column:
                   name: nom
-                  type: VARCHAR(255)
+                  type: VARCHAR(255 ${varcharUnit})
                   constraints: { nullable: false }
               - column:
                   name: codi_dir3
-                  type: VARCHAR(64)
+                  type: VARCHAR(64 ${varcharUnit})
                   constraints: { nullable: false }

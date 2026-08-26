@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: est-entitat-cif-0.1.4-001
+      author: limit
+      comment: Afegir el CIF de l'entitat, per poder-lo mostrar/editar i com a nou camp de relació de dimensions ENTITAT
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: ${db_prefix}entitat
+              columnName: cif
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}entitat
+            columns:
+              - column:
+                  name: cif
+                  type: VARCHAR(16 ${varcharUnit})
+      rollback:
+        - dropColumn:
+            tableName: ${db_prefix}entitat
+            columnName: cif

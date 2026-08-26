@@ -11,7 +11,9 @@ import es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioE
 import es.caib.comanda.estadistica.logic.intf.service.DimensioService;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.repository.DimensioRepository;
+import es.caib.comanda.estadistica.persist.repository.DimensioValorRepository;
 import es.caib.comanda.estadistica.persist.repository.FetRepository;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
@@ -57,6 +59,7 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final FetRepository fetRepository;
     private final DimensioRepository dimensioRepository;
+    private final DimensioValorRepository dimensioValorRepository;
     private final EntitatResolverHelper entitatResolverHelper;
 
     @Value("${es.caib.comanda.estadistica.dir3.govern.codi.arrel:" + UnitatsOrganitzativesRestClient.CODI_ARREL_PER_DEFECTE + "}")
@@ -66,6 +69,7 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
     public void init() {
         register(Dimensio.ACTION_CHANGE_TIPUS, new ChangeTipusActionExecutor());
         register(Dimensio.ACTION_FET_CONS, new FetConsActionExecutor());
+        register(Dimensio.ACTION_UPDATE_ENTITATS, new UpdateEntitatsActionExecutor());
     }
 
     @Override
@@ -130,6 +134,13 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
                              Dimensio.ChangeTipusActionForm params) throws ActionExecutionException {
             try {
                 entity.setTipus(params.getTipus());
+                entity.setEntitatValorTipus(
+                    TipusDimensioEnum.ENTITAT.equals(params.getTipus()) ? params.getEntitatValorTipus() : null);
+                if (TipusDimensioEnum.ENTITAT.equals(params.getTipus())) {
+                    // Tant si es configura ENTITAT per primer cop com si només se n'edita el camp de mapeig,
+                    // enllaçam/creem les Entitat corresponents als valors ja existents de la dimensió.
+                    actualitzaEntitats(entity);
+                }
                 return resourceEntityMappingHelper.entityToResource(entity, Dimensio.class);
             } catch (ActionExecutionException a) {
                 throw a;
@@ -199,6 +210,63 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
                     if (!fetEntityList.isEmpty())
                         fetRepository.saveAll(fetEntityList);
                 }
+                return resourceEntityMappingHelper.entityToResource(entity, Dimensio.class);
+            } catch (ActionExecutionException a) {
+                throw a;
+            } catch (Exception e) {
+                throw new ActionExecutionException(
+                    Dimensio.class,
+                    null,
+                    code,
+                    e.getMessage());
+            }
+        }
+
+        @Override
+        public void onChange(Serializable id,
+                             Serializable previous,
+                             String fieldName,
+                             Object fieldValue,
+                             Map<String, AnswerRequiredException.AnswerValue> answers,
+                             String[] previousFieldNames,
+                             Serializable target) {
+
+        }
+    }
+
+    /**
+     * Recorre tots els valors d'una dimensió de tipus ENTITAT i crea/enllaça les Entitat corresponents (backfill de
+     * valors històrics que van arribar abans que existís l'auto-creació a la ingesta, o que encara no s'havien
+     * pogut enllaçar perquè la dimensió no tenia tipus ENTITAT). Reutilitza
+     * {@link EntitatResolverHelper#resolveOrCreateEntitat}, que ja no fa res si l'entitat ja existeix. Es crida tant
+     * des de {@link UpdateEntitatsActionExecutor} (backfill manual) com des de {@link ChangeTipusActionExecutor}
+     * (en configurar/editar el tipus ENTITAT d'una dimensió).
+     */
+    private void actualitzaEntitats(DimensioEntity entity) {
+        for (DimensioValorEntity valor : dimensioValorRepository.findByDimensio(entity)) {
+            if (valor.getValor() == null || valor.getValor().isBlank()) continue;
+            try {
+                entitatResolverHelper.resolveOrCreateEntitat(entity, valor.getValor());
+            } catch (Exception e) {
+                log.warn("No s'ha pogut crear/resoldre automàticament l'Entitat pel valor '{}' de la dimensió {}: {}",
+                    valor.getValor(), entity.getCodi(), e.getMessage());
+            }
+        }
+    }
+
+    public class UpdateEntitatsActionExecutor implements ActionExecutor<DimensioEntity, Serializable, Dimensio> {
+
+        @Override
+        public Dimensio exec(String code, DimensioEntity entity, Serializable params) throws ActionExecutionException {
+            if (!TipusDimensioEnum.ENTITAT.equals(entity.getTipus())) {
+                throw new ActionExecutionException(
+                    Dimensio.class,
+                    null,
+                    code,
+                    "Aquesta acció només és vàlida per a dimensions de tipus ENTITAT");
+            }
+            try {
+                actualitzaEntitats(entity);
                 return resourceEntityMappingHelper.entityToResource(entity, Dimensio.class);
             } catch (ActionExecutionException a) {
                 throw a;

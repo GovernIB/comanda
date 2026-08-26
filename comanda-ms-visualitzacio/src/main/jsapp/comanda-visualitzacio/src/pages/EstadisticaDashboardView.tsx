@@ -216,6 +216,7 @@ const EstadisticaDashboardView = () => {
                         dashboardWidgets={dashboardWidgets}
                         gridLayoutItems={mappedDashboardItems}
                         dashboardEntornCodi={dashboardEntornCodi}
+                        backgroundColor={temaFosc ? dashboard.colorFonsFosc : dashboard.colorFonsClar}
                     />
                 )}
                 <FooterHeightPlaceholder />

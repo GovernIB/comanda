@@ -16,6 +16,7 @@ import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetTitolItem;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardTitolTipus;
+import es.caib.comanda.estadistica.logic.intf.model.dashboard.PosicioSubtitol;
 import es.caib.comanda.estadistica.logic.intf.model.export.DashboardExport;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
@@ -291,6 +292,63 @@ class DashboardServiceImplTest {
 
         InformeWidgetTitolItem item = (InformeWidgetTitolItem) result.get(0);
         assertThat(item.getAtributsVisuals().getColorTitol()).isEqualTo("#AAAAAA");
+    }
+
+    @Test
+    @DisplayName("InformeWidgets: amb personalitzat, s'apliquen la posició/separació del subtítol i les 4 vores independents")
+    void informeWidgets_titolAmbPersonalitzat_aplicaPosicioSubtitolISeparacioIVoresPerCostat() throws Exception {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+
+        PlantillaEntity plantilla = new PlantillaEntity();
+        entity.setPlantilla(plantilla);
+
+        DashboardTitolEntity titol = new DashboardTitolEntity();
+        titol.setId(20L);
+        titol.setTitol("Títol personalitzat");
+        titol.setPosX(0);
+        titol.setPosY(0);
+        titol.setWidth(12);
+        titol.setHeight(1);
+        titol.setTipusTitol(DashboardTitolTipus.TIPUS_1);
+        titol.setPersonalitzat(true);
+        titol.setPosicioSubtitol(PosicioSubtitol.COSTAT);
+        titol.setSeparacioSubtitol(12);
+        titol.setMostrarVoraTop(true);
+        titol.setColorVoraTop("#111111");
+        titol.setAmpleVoraTop(2);
+        titol.setMostrarVoraRight(true);
+        titol.setColorVoraRight("#222222");
+        titol.setAmpleVoraRight(3);
+        titol.setMostrarVoraBottom(false);
+        titol.setColorVoraBottom("#333333");
+        titol.setAmpleVoraBottom(4);
+        titol.setMostrarVoraLeft(true);
+        titol.setColorVoraLeft("#444444");
+        titol.setAmpleVoraLeft(5);
+        entity.setTitols(List.of(titol));
+
+        mockDashboardEntity(entity);
+
+        ReportGenerator<DashboardEntity, InformeWidgetParams, InformeWidgetItem> reportGenerator = createInformeWidgets();
+        List<InformeWidgetItem> result = reportGenerator.generateData(Dashboard.WIDGETS_REPORT, entity, null);
+
+        InformeWidgetTitolItem item = (InformeWidgetTitolItem) result.get(0);
+        AtributsVisualsTitol atributsVisuals = item.getAtributsVisuals();
+        assertThat(atributsVisuals.getPosicioSubtitol()).isEqualTo(PosicioSubtitol.COSTAT);
+        assertThat(atributsVisuals.getSeparacioSubtitol()).isEqualTo(12);
+        assertThat(atributsVisuals.getMostrarVoraTop()).isTrue();
+        assertThat(atributsVisuals.getColorVoraTop()).isEqualTo("#111111");
+        assertThat(atributsVisuals.getAmpleVoraTop()).isEqualTo(2);
+        assertThat(atributsVisuals.getMostrarVoraRight()).isTrue();
+        assertThat(atributsVisuals.getColorVoraRight()).isEqualTo("#222222");
+        assertThat(atributsVisuals.getAmpleVoraRight()).isEqualTo(3);
+        assertThat(atributsVisuals.getMostrarVoraBottom()).isFalse();
+        assertThat(atributsVisuals.getColorVoraBottom()).isEqualTo("#333333");
+        assertThat(atributsVisuals.getAmpleVoraBottom()).isEqualTo(4);
+        assertThat(atributsVisuals.getMostrarVoraLeft()).isTrue();
+        assertThat(atributsVisuals.getColorVoraLeft()).isEqualTo("#444444");
+        assertThat(atributsVisuals.getAmpleVoraLeft()).isEqualTo(5);
     }
 
     @Test

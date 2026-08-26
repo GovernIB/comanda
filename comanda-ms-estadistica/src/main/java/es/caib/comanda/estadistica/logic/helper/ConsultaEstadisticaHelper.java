@@ -24,7 +24,10 @@ import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaGrupPaletesEnt
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorFormulaTermeEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
@@ -32,6 +35,8 @@ import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DimensioRepository;
 import es.caib.comanda.estadistica.persist.repository.FetRepository;
+import es.caib.comanda.estadistica.persist.repository.IndicadorFormulaTermeRepository;
+import es.caib.comanda.estadistica.persist.repository.IndicadorRepository;
 import es.caib.comanda.estadistica.persist.repository.UnitatOrganitzativaRepository;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import lombok.RequiredArgsConstructor;
@@ -68,6 +73,8 @@ public class ConsultaEstadisticaHelper {
     private final DashboardItemRepository dashboardItemRepository;
     private final UnitatOrganitzativaRepository unitatOrganitzativaRepository;
     private final DimensioRepository dimensioRepository;
+    private final IndicadorRepository indicadorRepository;
+    private final IndicadorFormulaTermeRepository indicadorFormulaTermeRepository;
 
     private final AtributsVisualsHelper atributsVisualsHelper;
     private final DashboardStyleResolverHelper dashboardStyleResolverHelper;
@@ -76,6 +83,32 @@ public class ConsultaEstadisticaHelper {
     private final es.caib.comanda.ms.logic.helper.AuthenticationHelper authenticationHelper;
 
     private static DateTimeFormatter DMYYYY_FORMATTER = DateTimeFormatter.ofPattern("d/M/yyyy");
+
+    /**
+     * Si l'indicador (codi, entornAppId) és de tipus FORMULA, resol els seus termes (codi de l'indicador
+     * component + operador) perquè la capa de generació de SQL (FetRepositoryDialect) pugui expandir-lo
+     * a una suma/resta de JSON_VALUE en lloc d'un únic valor. Retorna null per a indicadors SIMPLE (o
+     * inexistents), en què la consulta es genera igual que sempre.
+     */
+    private List<IndicadorFormulaTermeResolt> resoldreTermesFormula(String indicadorCodi, Long entornAppId) {
+        if (indicadorCodi == null || entornAppId == null) {
+            return null;
+        }
+        IndicadorEntity indicador = indicadorRepository.findByCodiAndEntornAppId(indicadorCodi, entornAppId).orElse(null);
+        if (indicador == null || indicador.getTipus() != IndicadorTipus.FORMULA) {
+            return null;
+        }
+        List<IndicadorFormulaTermeEntity> termes = indicadorFormulaTermeRepository.findByIndicadorFormulaIdOrderByOrdreAsc(indicador.getId());
+        if (termes == null || termes.isEmpty()) {
+            return null;
+        }
+        return termes.stream()
+            .map(terme -> IndicadorFormulaTermeResolt.builder()
+                .indicadorCodi(terme.getIndicadorComponent().getCodi())
+                .operador(terme.getOperador())
+                .build())
+            .collect(Collectors.toList());
+    }
 
 
     // CONSULTA ESTADISTIQUES
@@ -256,6 +289,7 @@ public class ConsultaEstadisticaHelper {
                     .indicadorCodi(indicadorInfo.getIndicador().getCodi())
                     .agregacio(indicadorInfo.getAgregacio())
                     .unitatAgregacio(indicadorInfo.getUnitatAgregacio())
+                    .termesFormula(resoldreTermesFormula(indicadorInfo.getIndicador().getCodi(), dadesComunsConsulta.getEntornAppId()))
                     .build()
                 : null;
 
@@ -315,6 +349,7 @@ public class ConsultaEstadisticaHelper {
                     .indicadorCodi(columna.getIndicador().getCodi())
                     .agregacio(columna.getAgregacio())
                     .unitatAgregacio(columna.getUnitatAgregacio())
+                    .termesFormula(resoldreTermesFormula(columna.getIndicador().getCodi(), dadesComunsConsulta.getEntornAppId()))
                     .build())
                 .collect(Collectors.toList());
 
@@ -553,6 +588,7 @@ public class ConsultaEstadisticaHelper {
                 .indicadorCodi(columna.getIndicador().getCodi())
                 .agregacio(columna.getAgregacio())
                 .unitatAgregacio(columna.getUnitatAgregacio())
+                .termesFormula(resoldreTermesFormula(columna.getIndicador().getCodi(), dadesComunsConsulta.getEntornAppId()))
                 .build())
             .collect(Collectors.toList());
         // Dimensió utilitzada per agrupar
@@ -665,6 +701,7 @@ public class ConsultaEstadisticaHelper {
             .indicadorCodi(indicadorCodi)
             .agregacio(agregacio)
             .unitatAgregacio(unitatAgregacio)
+            .termesFormula(resoldreTermesFormula(indicadorCodi, entornAppId))
             .build();
 
         // Mapa de dimensions per filtrar la consulta (pròpies del widget + selecció de filtres del dashboard)

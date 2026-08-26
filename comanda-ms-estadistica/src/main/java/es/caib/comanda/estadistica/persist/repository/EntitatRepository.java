@@ -22,5 +22,9 @@ public interface EntitatRepository extends BaseRepository<EntitatEntity, Long> {
 
     Optional<EntitatEntity> findByCodiDir3(String codiDir3);
 
+    Optional<EntitatEntity> findFirstByNom(String nom);
+
+    Optional<EntitatEntity> findByCif(String cif);
+
     List<EntitatEntity> findByCodiIn(Collection<String> codis);
 }

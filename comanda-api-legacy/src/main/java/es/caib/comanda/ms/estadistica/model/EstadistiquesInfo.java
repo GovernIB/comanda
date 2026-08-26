@@ -4,11 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import es.caib.comanda.legacy.json.LenientDateDeserializer;
 import es.caib.comanda.legacy.json.Rfc3339DateSerializer;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
@@ -29,4 +25,5 @@ public class EstadistiquesInfo implements Serializable {
     private Date data;
     private List<DimensioDesc> dimensions;
     private List<IndicadorDesc> indicadors;
+    private List<EntitatDesc> entitats;
 }

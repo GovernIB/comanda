@@ -1,11 +1,14 @@
 package es.caib.comanda.estadistica.persist.repository.dialect;
 
 import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
+import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorFormulaTermeResolt;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.SeguretatFiltreSql;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.OperadorFormulaEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import org.springframework.stereotype.Component;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +29,7 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
     private static final String FILTER_DATE = " AND t.data = :data ";
     private static final String BASE_WHERE = BASE_WHERE_ENTORN + FILTER_BETWEEN;
     private static final String SUM_INDICADOR_TEMPLATE = " SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"%s\"'))) AS sum_fets";
+    private static final String INDICADOR_VALUE_EXPR_TEMPLATE = "TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"%s\"'))";
     private static final String DIMENSION_VALUE_TEMPLATE = " JSON_VALUE(f.dimensions_json, '$.\"%s\"') ";
 
 
@@ -129,8 +133,10 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
      * @return Una cadena de text que representa la consulta SQL generada per obtenir el valor agregat.
      */
     @Override
-    public String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio, SeguretatFiltreSql seguretat) {
+    public String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, SeguretatFiltreSql seguretat) {
 
+        TableColumnsEnum agregacio = indicadorAgregacio.getAgregacio();
+        PeriodeUnitat unitatAgregacio = indicadorAgregacio.getUnitatAgregacio();
         String querySelect = getSimpleQuerySelect(agregacio);
         String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
         String queryGrouping = generateGroupConditions(TableColumnsEnum.AVERAGE.equals(agregacio), unitatAgregacio);
@@ -138,7 +144,7 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
         return "SELECT " + querySelect +
                 " FROM ( SELECT " +
                 (TableColumnsEnum.AVERAGE. equals(agregacio) ? "" : "t.data as data, ") +
-                getSumIndicadorQuery(indicadorCodi) +
+                getSumIndicadorQuery(indicadorAgregacio) +
                 BASE_JOIN +
                 BASE_WHERE +
                 queryConditions +
@@ -158,7 +164,6 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
     @Override
     public String getGraficUnIndicadorQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat) {
 
-        String indicadorCodi = indicadorAgregacio.getIndicadorCodi();
         String querySelect = getGraficQuerySelect(indicadorAgregacio);
         String queryAgrupacio = generateGraficAgrupacioConditions(tempsAgregacio);
         String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
@@ -172,7 +177,7 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
                 querySelect +
                 " FROM ( SELECT " +
                 querySubGrouping + ", " +
-                getSumIndicadorQuery(indicadorCodi) +
+                getSumIndicadorQuery(indicadorAgregacio) +
                 BASE_JOIN +
                 BASE_WHERE +
                 queryConditions +
@@ -195,7 +200,6 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
     @Override
     public String getGraficUnIndicadorAmbDescomposicioAndAgrupacioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat) {
 
-        String indicadorCodi = indicadorAgregacio.getIndicadorCodi();
         String querySelect = getGraficQuerySelect(indicadorAgregacio);
         String queryAgrupacio = generateGraficAgrupacioConditions(tempsAgregacio);
         String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
@@ -212,7 +216,7 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
                 " FROM ( SELECT " +
                 querySubGrouping + ", " +
                 queryDescomposicio + "AS descomposicio," +
-                getSumIndicadorQuery(indicadorCodi) +
+                getSumIndicadorQuery(indicadorAgregacio) +
                 BASE_JOIN +
                 BASE_WHERE +
                 queryConditions +
@@ -234,7 +238,6 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
     @Override
     public String getGraficUnIndicadorAmbDescomposicioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, SeguretatFiltreSql seguretat) {
 
-        String indicadorCodi = indicadorAgregacio.getIndicadorCodi();
         String querySelect = getGraficQuerySelect(indicadorAgregacio);
         String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
         String queryDescomposicio = getDimensionValueQuery(dimensioDescomposicioCodi);
@@ -246,7 +249,7 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
                 " FROM ( SELECT " +
                 (isAverage ? "" : "t.data as data, ") +
                 queryDescomposicio + " AS agrupacio," +
-                getSumIndicadorQuery(indicadorCodi) +
+                getSumIndicadorQuery(indicadorAgregacio) +
                 BASE_JOIN +
                 BASE_WHERE +
                 queryConditions +
@@ -504,10 +507,10 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
 
     private String getTaulaSubQuerySelects(List<IndicadorAgregacio> indicadorsAgregacio) {
         // Només volem un select per indicadorCodi
-        return indicadorsAgregacio.stream()
-                .map(IndicadorAgregacio::getIndicadorCodi)
-                .distinct()
-                .map(indicadorCodi -> getSumIndicadorQuery(indicadorCodi) + getIndicadorSuffix(indicadorCodi))
+        Map<String, IndicadorAgregacio> unics = new LinkedHashMap<>();
+        indicadorsAgregacio.forEach(ind -> unics.putIfAbsent(ind.getIndicadorCodi(), ind));
+        return unics.values().stream()
+                .map(ind -> getSumIndicadorQuery(ind) + getIndicadorSuffix(ind.getIndicadorCodi()))
                 .collect(Collectors.joining(", "));
     }
 
@@ -542,6 +545,27 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
 
     private static String getSumIndicadorQuery(String indicadorCodi) {
         return String.format(SUM_INDICADOR_TEMPLATE, indicadorCodi);
+    }
+
+    /**
+     * Com {@link #getSumIndicadorQuery(String)}, però si l'indicador és una FORMULA (té termesFormula), en
+     * lloc d'un únic JSON_VALUE genera la suma/resta dels JSON_VALUE de tots els seus indicadors component
+     * -dins del mateix SUM(...), perquè el càlcul es faci fila a fila abans d'agregar-.
+     */
+    private static String getSumIndicadorQuery(IndicadorAgregacio indicadorAgregacio) {
+        List<IndicadorFormulaTermeResolt> termes = indicadorAgregacio != null ? indicadorAgregacio.getTermesFormula() : null;
+        if (termes == null || termes.isEmpty()) {
+            return getSumIndicadorQuery(indicadorAgregacio.getIndicadorCodi());
+        }
+        String expressio = termes.stream()
+                .map(terme -> (OperadorFormulaEnum.RESTA.equals(terme.getOperador()) ? "- " : "+ ")
+                        + String.format(INDICADOR_VALUE_EXPR_TEMPLATE, terme.getIndicadorCodi()))
+                .collect(Collectors.joining(" "));
+        if (expressio.startsWith("+ ")) {
+            // El primer terme sempre és positiu: no cal el "+" inicial.
+            expressio = expressio.substring(2);
+        }
+        return " SUM(" + expressio + ") AS sum_fets";
     }
 
     private static String getDimensionValueQuery(String dimensioCodi) {

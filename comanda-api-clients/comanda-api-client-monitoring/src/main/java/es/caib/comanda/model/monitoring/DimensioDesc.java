@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import es.caib.comanda.model.monitoring.DimensioTipusEnum;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -34,7 +35,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   DimensioDesc.JSON_PROPERTY_CODI,
   DimensioDesc.JSON_PROPERTY_NOM,
   DimensioDesc.JSON_PROPERTY_DESCRIPCIO,
-  DimensioDesc.JSON_PROPERTY_VALORS
+  DimensioDesc.JSON_PROPERTY_VALORS,
+  DimensioDesc.JSON_PROPERTY_TIPUS
 })
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.17.0")
 public class DimensioDesc {
@@ -53,6 +55,10 @@ public class DimensioDesc {
   public static final String JSON_PROPERTY_VALORS = "valors";
   @javax.annotation.Nullable
   private List<String> valors = new ArrayList<>();
+
+  public static final String JSON_PROPERTY_TIPUS = "tipus";
+  @javax.annotation.Nullable
+  private DimensioTipusEnum tipus;
 
   public DimensioDesc() {
   }
@@ -165,6 +171,31 @@ public class DimensioDesc {
     this.valors = valors;
   }
 
+  public DimensioDesc tipus(@javax.annotation.Nullable DimensioTipusEnum tipus) {
+    
+    this.tipus = tipus;
+    return this;
+  }
+
+  /**
+   * Get tipus
+   * @return tipus
+   */
+  @javax.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_TIPUS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public DimensioTipusEnum getTipus() {
+    return tipus;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_TIPUS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setTipus(@javax.annotation.Nullable DimensioTipusEnum tipus) {
+    this.tipus = tipus;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -177,12 +208,13 @@ public class DimensioDesc {
     return Objects.equals(this.codi, dimensioDesc.codi) &&
         Objects.equals(this.nom, dimensioDesc.nom) &&
         Objects.equals(this.descripcio, dimensioDesc.descripcio) &&
-        Objects.equals(this.valors, dimensioDesc.valors);
+        Objects.equals(this.valors, dimensioDesc.valors) &&
+        Objects.equals(this.tipus, dimensioDesc.tipus);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(codi, nom, descripcio, valors);
+    return Objects.hash(codi, nom, descripcio, valors, tipus);
   }
 
   @Override
@@ -193,6 +225,7 @@ public class DimensioDesc {
     sb.append("    nom: ").append(toIndentedString(nom)).append("\n");
     sb.append("    descripcio: ").append(toIndentedString(descripcio)).append("\n");
     sb.append("    valors: ").append(toIndentedString(valors)).append("\n");
+    sb.append("    tipus: ").append(toIndentedString(tipus)).append("\n");
     sb.append("}");
     return sb.toString();
   }

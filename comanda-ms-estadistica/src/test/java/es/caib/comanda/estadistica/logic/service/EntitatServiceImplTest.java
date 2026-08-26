@@ -6,6 +6,7 @@ import es.caib.comanda.estadistica.logic.dir3.SistemaExternException;
 import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesPlugin;
 import es.caib.comanda.estadistica.logic.helper.UnitatOrganitzativaHelper;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Entitat;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.UnitatOrganitzativa;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.EntitatEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.UnitatOrganitzativaEntity;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
@@ -30,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -139,6 +141,7 @@ class EntitatServiceImplTest {
         // Assert
         verify(unitatsOrganitzativesPlugin, times(1)).findAll("DIR3_123");
         verify(unitatOrganitzativaHelper, times(1)).updateAll(Collections.singletonList(uo));
+        verify(unitatOrganitzativaHelper, times(1)).evictOrganigramaCache("DIR3_123");
         verify(resourceEntityMappingHelper, times(1)).entityToResource(entity, Entitat.class);
         assertThat(result).isSameAs(expectedResource);
     }
@@ -167,6 +170,138 @@ class EntitatServiceImplTest {
     void refreshUoActionExecutor_onChange_quanEsCrida_llavorsNoFaRes() {
         // Arrange
         EntitatServiceImpl.RefreshUOActionExecutor executor = entitatService.new RefreshUOActionExecutor();
+
+        // Act & Assert
+        assertDoesNotThrow(() ->
+            executor.onChange(1L, null, "fieldName", "fieldValue", new HashMap<>(), new String[0], null)
+        );
+    }
+
+    // ========================================================================
+    // 3. TESTOS PER A afterCreate
+    // ========================================================================
+
+    @Test
+    @DisplayName("afterCreate: sincronitza les unitats organitzatives quan l'entitat té codiDir3")
+    void afterCreate_quanEntitatAmbCodiDir3_llavorsSincronitzaUO() {
+        // Arrange
+        EntitatEntity entity = new EntitatEntity();
+        entity.setCodiDir3("DIR3_999");
+
+        // Act
+        entitatService.afterCreate(entity, new Entitat(), new HashMap<>());
+
+        // Assert
+        verify(unitatOrganitzativaHelper, times(1)).refreshFromEntitatCodiDir3("DIR3_999");
+    }
+
+    @Test
+    @DisplayName("afterCreate: crida el mètode de sincronització encara que l'entitat no tingui codiDir3")
+    void afterCreate_quanEntitatSenseCodiDir3_llavorsCridaAmbNull() {
+        // Arrange
+        EntitatEntity entity = new EntitatEntity();
+
+        // Act
+        entitatService.afterCreate(entity, new Entitat(), new HashMap<>());
+
+        // Assert - la decisió de no fer res quan és null és responsabilitat de UnitatOrganitzativaHelper
+        verify(unitatOrganitzativaHelper, times(1)).refreshFromEntitatCodiDir3(null);
+    }
+
+    // ========================================================================
+    // 3b. TESTOS PER A beforeUpdateEntity
+    // ========================================================================
+
+    @Test
+    @DisplayName("beforeUpdateEntity: sincronitza les UO quan s'afegeix el codiDir3 (abans buit)")
+    void beforeUpdateEntity_quanSAfegeixCodiDir3_llavorsSincronitzaUO() {
+        // Arrange
+        EntitatEntity entity = new EntitatEntity();
+        Entitat resource = new Entitat();
+        resource.setCodiDir3("DIR3_NOU");
+
+        // Act
+        entitatService.beforeUpdateEntity(entity, resource, new HashMap<>());
+
+        // Assert
+        verify(unitatOrganitzativaHelper, times(1)).refreshFromEntitatCodiDir3("DIR3_NOU");
+    }
+
+    @Test
+    @DisplayName("beforeUpdateEntity: no fa res si l'entitat ja tenia codiDir3")
+    void beforeUpdateEntity_quanJaTeniaCodiDir3_llavorsNoFaRes() {
+        // Arrange
+        EntitatEntity entity = new EntitatEntity();
+        entity.setCodiDir3("DIR3_EXISTENT");
+        Entitat resource = new Entitat();
+        resource.setCodiDir3("DIR3_NOU");
+
+        // Act
+        entitatService.beforeUpdateEntity(entity, resource, new HashMap<>());
+
+        // Assert
+        verify(unitatOrganitzativaHelper, never()).refreshFromEntitatCodiDir3(any());
+    }
+
+    @Test
+    @DisplayName("beforeUpdateEntity: no fa res si el nou codiDir3 també és buit")
+    void beforeUpdateEntity_quanNouCodiDir3EsBuit_llavorsNoFaRes() {
+        // Arrange
+        EntitatEntity entity = new EntitatEntity();
+        Entitat resource = new Entitat();
+
+        // Act
+        entitatService.beforeUpdateEntity(entity, resource, new HashMap<>());
+
+        // Assert
+        verify(unitatOrganitzativaHelper, never()).refreshFromEntitatCodiDir3(any());
+    }
+
+    // ========================================================================
+    // 4. TESTOS PER A OrganigramaActionExecutor
+    // ========================================================================
+
+    @Test
+    @DisplayName("OrganigramaActionExecutor: retorna l'organigrama construït per UnitatOrganitzativaHelper")
+    void organigramaActionExecutor_quanEsValid_llavorsRetornaOrganigrama() throws ActionExecutionException {
+        // Arrange
+        EntitatEntity entity = new EntitatEntity();
+        entity.setCodiDir3("DIR3_123");
+
+        UnitatOrganitzativa uo = new UnitatOrganitzativa();
+        when(unitatOrganitzativaHelper.buildOrganigrama("DIR3_123")).thenReturn(Collections.singletonList(uo));
+
+        EntitatServiceImpl.OrganigramaActionExecutor executor = entitatService.new OrganigramaActionExecutor();
+
+        // Act
+        var result = executor.exec(Entitat.ACTION_ORGANIGRAMA, entity, null);
+
+        // Assert
+        assertThat(result).containsExactly(uo);
+    }
+
+    @Test
+    @DisplayName("OrganigramaActionExecutor: llança ActionExecutionException quan falla la construcció de l'organigrama")
+    void organigramaActionExecutor_quanFalla_llancaActionExecutionException() {
+        // Arrange
+        EntitatEntity entity = new EntitatEntity();
+        entity.setCodiDir3("DIR3_123");
+
+        when(unitatOrganitzativaHelper.buildOrganigrama("DIR3_123")).thenThrow(new RuntimeException("Error ACL"));
+
+        EntitatServiceImpl.OrganigramaActionExecutor executor = entitatService.new OrganigramaActionExecutor();
+
+        // Act & Assert
+        assertThatThrownBy(() -> executor.exec(Entitat.ACTION_ORGANIGRAMA, entity, null))
+            .isInstanceOf(ActionExecutionException.class)
+            .hasMessageContaining("Error ACL");
+    }
+
+    @Test
+    @DisplayName("OrganigramaActionExecutor.onChange: s'executa sense errors (mètode buit)")
+    void organigramaActionExecutor_onChange_quanEsCrida_llavorsNoFaRes() {
+        // Arrange
+        EntitatServiceImpl.OrganigramaActionExecutor executor = entitatService.new OrganigramaActionExecutor();
 
         // Act & Assert
         assertDoesNotThrow(() ->

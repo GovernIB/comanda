@@ -5,8 +5,10 @@ import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.EntornRef;
 import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesPluginDir3;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet.FetObtenirResponse;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.EntitatEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.TempsEntity;
 import es.caib.comanda.estadistica.persist.repository.*;
@@ -60,6 +62,10 @@ class EstadisticaHelperTest {
     private UnitatsOrganitzativesPluginDir3 unitatsOrganitzativesPluginDir3;
     @Mock
     private EntitatResolverHelper entitatResolverHelper;
+    @Mock
+    private EntitatRepository entitatRepository;
+    @Mock
+    private UnitatOrganitzativaHelper unitatOrganitzativaHelper;
 
     @InjectMocks
     private EstadisticaHelper estadisticaHelper;
@@ -404,6 +410,31 @@ class EstadisticaHelperTest {
     }
 
     @Test
+    @DisplayName("crearIndicadors: no sobreescriu un indicador existent de tipus FORMULA")
+    void crearIndicadors_quanIndicadorExistentEsFormula_llavorsNoElSobreescriu() {
+        // Arrange: una app publica per error un codi que coincideix amb una fórmula ja creada.
+        IndicadorDesc desc = new IndicadorDesc();
+        desc.setCodi("CODI1");
+        desc.setNom("Nom publicat per l'app");
+        desc.setDescripcio("Desc publicada per l'app");
+        desc.setFormat(Format.LONG);
+
+        IndicadorEntity existing = new IndicadorEntity();
+        existing.setTipus(IndicadorTipus.FORMULA);
+        existing.setNom("Nom original de la fórmula");
+        existing.setDescripcio("Desc original de la fórmula");
+        when(indicadorRepository.findByCodiAndEntornAppId("CODI1", 10L)).thenReturn(Optional.of(existing));
+
+        // Act
+        ReflectionTestUtils.invokeMethod(estadisticaHelper, "crearIndicadors", List.of(desc), 10L);
+
+        // Assert
+        assertThat(existing.getNom()).isEqualTo("Nom original de la fórmula");
+        assertThat(existing.getDescripcio()).isEqualTo("Desc original de la fórmula");
+        verify(indicadorRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("crearDimensions: ignora dimensions amb nom en blanc")
     void crearDimensions_quanNomEnBlanc_llavorsIgnoraDimensio() {
         // Arrange
@@ -492,6 +523,259 @@ class EstadisticaHelperTest {
         List<DimensioValorEntity> savedValues = captor.getValue();
         assertThat(savedValues).hasSize(2);
         assertThat(savedValues.stream().map(DimensioValorEntity::getValor)).containsExactlyInAnyOrder("V2", "V3");
+    }
+
+    @Test
+    @DisplayName("crearDimensions: crida resolveOrCreateEntitat per cada valor nou quan el tipus és ENTITAT")
+    void crearDimensions_quanTipusEntitatIValorsNous_llavorsResolOCreaEntitatsPerCadaValorNou() {
+        // Arrange
+        DimensioDesc desc = new DimensioDesc();
+        desc.setCodi("ENT");
+        desc.setNom("Entitat");
+        desc.setValors(List.of("A01", "A02"));
+
+        DimensioEntity savedDim = new DimensioEntity();
+        savedDim.setCodi("ENT");
+        savedDim.setTipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum.ENTITAT);
+
+        when(dimensioRepository.findByCodiAndEntornAppId("ENT", 10L)).thenReturn(Optional.of(new DimensioEntity()));
+        when(dimensioRepository.save(any(DimensioEntity.class))).thenReturn(savedDim);
+        when(dimensioValorRepository.findByDimensioAndValorIn(any(), anyList())).thenReturn(List.of());
+
+        // Act
+        ReflectionTestUtils.invokeMethod(estadisticaHelper, "crearDimensions", List.of(desc), 10L);
+
+        // Assert
+        verify(entitatResolverHelper).resolveOrCreateEntitat(savedDim, "A01");
+        verify(entitatResolverHelper).resolveOrCreateEntitat(savedDim, "A02");
+    }
+
+    @Test
+    @DisplayName("crearDimensions: no crida resolveOrCreateEntitat quan el tipus no és ENTITAT")
+    void crearDimensions_quanTipusNoEsEntitat_llavorsNoCridaResolveOrCreateEntitat() {
+        // Arrange
+        DimensioDesc desc = new DimensioDesc();
+        desc.setCodi("ALTRE");
+        desc.setNom("Altre");
+        desc.setValors(List.of("V1"));
+
+        DimensioEntity savedDim = new DimensioEntity();
+        savedDim.setCodi("ALTRE");
+
+        when(dimensioRepository.findByCodiAndEntornAppId("ALTRE", 10L)).thenReturn(Optional.of(new DimensioEntity()));
+        when(dimensioRepository.save(any(DimensioEntity.class))).thenReturn(savedDim);
+        when(dimensioValorRepository.findByDimensioAndValorIn(any(), anyList())).thenReturn(List.of());
+
+        // Act
+        ReflectionTestUtils.invokeMethod(estadisticaHelper, "crearDimensions", List.of(desc), 10L);
+
+        // Assert
+        verifyNoInteractions(entitatResolverHelper);
+    }
+
+    @Test
+    @DisplayName("crearDimensions: continua amb els altres valors quan resolveOrCreateEntitat falla per un")
+    void crearDimensions_quanResolveOrCreateEntitatFalla_llavorsContinuaAmbLaResta() {
+        // Arrange
+        DimensioDesc desc = new DimensioDesc();
+        desc.setCodi("ENT");
+        desc.setNom("Entitat");
+        desc.setValors(List.of("A01", "A02"));
+
+        DimensioEntity savedDim = new DimensioEntity();
+        savedDim.setCodi("ENT");
+        savedDim.setTipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum.ENTITAT);
+
+        when(dimensioRepository.findByCodiAndEntornAppId("ENT", 10L)).thenReturn(Optional.of(new DimensioEntity()));
+        when(dimensioRepository.save(any(DimensioEntity.class))).thenReturn(savedDim);
+        when(dimensioValorRepository.findByDimensioAndValorIn(any(), anyList())).thenReturn(List.of());
+        when(entitatResolverHelper.resolveOrCreateEntitat(savedDim, "A01")).thenThrow(new RuntimeException("Error BD"));
+
+        // Act & Assert
+        org.junit.jupiter.api.Assertions.assertDoesNotThrow(() ->
+            ReflectionTestUtils.invokeMethod(estadisticaHelper, "crearDimensions", List.of(desc), 10L));
+        verify(entitatResolverHelper).resolveOrCreateEntitat(savedDim, "A02");
+    }
+
+    // ========================================================================
+    // TESTOS PER A crearEntitats / crearEntitat / lligarDimensioEntitat
+    // ========================================================================
+
+    private es.caib.comanda.model.v1.estadistica.EntitatDesc entitatDesc(String codi, String nom, String codiDir3, String cif) {
+        es.caib.comanda.model.v1.estadistica.EntitatDesc e = new es.caib.comanda.model.v1.estadistica.EntitatDesc();
+        e.setCodi(codi);
+        e.setNom(nom);
+        e.setCodiDir3(codiDir3);
+        e.setCif(cif);
+        return e;
+    }
+
+    @Test
+    @DisplayName("crearEntitats: crea una Entitat nova quan no n'existeix cap coincident i sincronitza Dir3")
+    void crearEntitats_quanNoExisteixCap_llavorsCreaEntitatNovaISincronitzaDir3() {
+        // Arrange
+        var desc = entitatDesc("GOIB", "Govern de les Illes Balears", "A04003003", "Q0700100J");
+        when(entitatRepository.findByCodiDir3("A04003003")).thenReturn(Optional.empty());
+        when(entitatRepository.save(any(EntitatEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // Act
+        ReflectionTestUtils.invokeMethod(estadisticaHelper, "crearEntitats", List.of(desc), 10L);
+
+        // Assert
+        ArgumentCaptor<EntitatEntity> captor = ArgumentCaptor.forClass(EntitatEntity.class);
+        verify(entitatRepository).save(captor.capture());
+        assertThat(captor.getValue().getCodi()).isEqualTo("GOIB");
+        assertThat(captor.getValue().getNom()).isEqualTo("Govern de les Illes Balears");
+        assertThat(captor.getValue().getCodiDir3()).isEqualTo("A04003003");
+        assertThat(captor.getValue().getCif()).isEqualTo("Q0700100J");
+        verify(unitatOrganitzativaHelper).refreshFromEntitatCodiDir3("A04003003");
+    }
+
+    @Test
+    @DisplayName("crearEntitats: reutilitza una Entitat ja existent trobada per codi (no només per codiDir3), evitant duplicar-la")
+    void crearEntitats_quanJaExisteixPerCodi_llavorsReutilitzaSenseDuplicar() {
+        // Arrange: simula l'"esquelet" d'Entitat que crearDimensions ja hauria creat abans amb només el codi
+        EntitatEntity existent = new EntitatEntity();
+        existent.setId(1L);
+        existent.setCodi("GOIB");
+
+        var desc = entitatDesc("GOIB", "Govern de les Illes Balears", "A04003003", "Q0700100J");
+        when(entitatRepository.findByCodiDir3("A04003003")).thenReturn(Optional.empty());
+        when(entitatRepository.findByCodi("GOIB")).thenReturn(Optional.of(existent));
+        when(entitatRepository.save(any(EntitatEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // Act
+        ReflectionTestUtils.invokeMethod(estadisticaHelper, "crearEntitats", List.of(desc), 10L);
+
+        // Assert: només es desa un cop, i és la mateixa entitat (mateix id) ara completada
+        verify(entitatRepository, times(1)).save(any(EntitatEntity.class));
+        ArgumentCaptor<EntitatEntity> captor = ArgumentCaptor.forClass(EntitatEntity.class);
+        verify(entitatRepository).save(captor.capture());
+        assertThat(captor.getValue().getId()).isEqualTo(1L);
+        assertThat(captor.getValue().getCodiDir3()).isEqualTo("A04003003");
+        assertThat(captor.getValue().getCif()).isEqualTo("Q0700100J");
+    }
+
+    @Test
+    @DisplayName("crearEntitats: no torna a sincronitzar Dir3 si l'Entitat ja tenia codiDir3")
+    void crearEntitats_quanJaTeniaCodiDir3_llavorsNoTornaASincronitzar() {
+        // Arrange
+        EntitatEntity existent = new EntitatEntity();
+        existent.setId(1L);
+        existent.setCodi("GOIB");
+        existent.setCodiDir3("A04003003");
+
+        var desc = entitatDesc("GOIB", "Govern de les Illes Balears", "A04003003", "Q0700100J");
+        when(entitatRepository.findByCodiDir3("A04003003")).thenReturn(Optional.of(existent));
+        when(entitatRepository.save(any(EntitatEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // Act
+        ReflectionTestUtils.invokeMethod(estadisticaHelper, "crearEntitats", List.of(desc), 10L);
+
+        // Assert
+        verify(unitatOrganitzativaHelper, never()).refreshFromEntitatCodiDir3(any());
+    }
+
+    @Test
+    @DisplayName("crearEntitats: continua amb la resta d'entitats quan una falla")
+    void crearEntitats_quanUnaFalla_llavorsContinuaAmbLaResta() {
+        // Arrange
+        var descKo = entitatDesc("KO", "Entitat que falla", "DIR3_KO", "CIF_KO");
+        var descOk = entitatDesc("OK", "Entitat correcta", "DIR3_OK", "CIF_OK");
+
+        when(entitatRepository.findByCodiDir3("DIR3_KO")).thenThrow(new RuntimeException("Error BD"));
+        when(entitatRepository.findByCodiDir3("DIR3_OK")).thenReturn(Optional.empty());
+        when(entitatRepository.save(any(EntitatEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // Act & Assert
+        org.junit.jupiter.api.Assertions.assertDoesNotThrow(() ->
+            ReflectionTestUtils.invokeMethod(estadisticaHelper, "crearEntitats", List.of(descKo, descOk), 10L));
+
+        ArgumentCaptor<EntitatEntity> captor = ArgumentCaptor.forClass(EntitatEntity.class);
+        verify(entitatRepository, times(1)).save(captor.capture());
+        assertThat(captor.getValue().getCodi()).isEqualTo("OK");
+    }
+
+    @Test
+    @DisplayName("crearEntitats: enllaça (entitatMapejada) els valors de la dimensió ENTITAT segons entitatValorTipus")
+    void crearEntitats_llavorsEnllacaValorsDeLaDimensioEntitat() {
+        // Arrange
+        DimensioEntity dimensioEntitat = new DimensioEntity();
+        dimensioEntitat.setTipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum.ENTITAT);
+        dimensioEntitat.setEntitatValorTipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.EntitatValorTipus.CODI_DIR3);
+
+        DimensioValorEntity valorCoincident = new DimensioValorEntity();
+        valorCoincident.setValor("A04003003");
+        DimensioValorEntity valorNoCoincident = new DimensioValorEntity();
+        valorNoCoincident.setValor("ALTRE");
+        DimensioValorEntity valorNul = new DimensioValorEntity();
+        valorNul.setValor(null);
+        dimensioEntitat.setValors(List.of(valorCoincident, valorNoCoincident, valorNul));
+
+        var desc = entitatDesc("GOIB", "Govern", "A04003003", "Q0700100J");
+        when(entitatRepository.findByCodiDir3("A04003003")).thenReturn(Optional.empty());
+        when(entitatRepository.save(any(EntitatEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(dimensioRepository.findByEntornAppIdAndTipus(10L, es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum.ENTITAT))
+            .thenReturn(Optional.of(dimensioEntitat));
+
+        // Act & Assert - no ha de llançar NPE encara que hi hagi un valor null a la llista
+        org.junit.jupiter.api.Assertions.assertDoesNotThrow(() ->
+            ReflectionTestUtils.invokeMethod(estadisticaHelper, "crearEntitats", List.of(desc), 10L));
+
+        assertThat(valorCoincident.getEntitatMapejada()).isNotNull();
+        assertThat(valorCoincident.getEntitatMapejada().getCodiDir3()).isEqualTo("A04003003");
+        assertThat(valorNoCoincident.getEntitatMapejada()).isNull();
+        assertThat(valorNul.getEntitatMapejada()).isNull();
+    }
+
+    @Test
+    @DisplayName("crearEntitats: si entitatValorTipus és null, enllaça per defecte pel camp codi (com EntitatResolverHelper)")
+    void crearEntitats_quanEntitatValorTipusEsNull_llavorsEnllacaPerCodiPerDefecte() {
+        // Arrange
+        DimensioEntity dimensioEntitat = new DimensioEntity();
+        dimensioEntitat.setTipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum.ENTITAT);
+        dimensioEntitat.setEntitatValorTipus(null);
+
+        DimensioValorEntity valor = new DimensioValorEntity();
+        valor.setValor("GOIB");
+        dimensioEntitat.setValors(List.of(valor));
+
+        var desc = entitatDesc("GOIB", "Govern", "A04003003", "Q0700100J");
+        when(entitatRepository.findByCodiDir3("A04003003")).thenReturn(Optional.empty());
+        when(entitatRepository.save(any(EntitatEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(dimensioRepository.findByEntornAppIdAndTipus(10L, es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum.ENTITAT))
+            .thenReturn(Optional.of(dimensioEntitat));
+
+        // Act
+        ReflectionTestUtils.invokeMethod(estadisticaHelper, "crearEntitats", List.of(desc), 10L);
+
+        // Assert
+        assertThat(valor.getEntitatMapejada()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("crearEntitats: no enllaça res quan entitatValorTipus és MANUAL")
+    void crearEntitats_quanEntitatValorTipusEsManual_llavorsNoEnllacaRes() {
+        // Arrange
+        DimensioEntity dimensioEntitat = new DimensioEntity();
+        dimensioEntitat.setTipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum.ENTITAT);
+        dimensioEntitat.setEntitatValorTipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.EntitatValorTipus.MANUAL);
+
+        DimensioValorEntity valor = new DimensioValorEntity();
+        valor.setValor("GOIB");
+        dimensioEntitat.setValors(List.of(valor));
+
+        var desc = entitatDesc("GOIB", "Govern", "A04003003", "Q0700100J");
+        when(entitatRepository.findByCodiDir3("A04003003")).thenReturn(Optional.empty());
+        when(entitatRepository.save(any(EntitatEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(dimensioRepository.findByEntornAppIdAndTipus(10L, es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum.ENTITAT))
+            .thenReturn(Optional.of(dimensioEntitat));
+
+        // Act
+        ReflectionTestUtils.invokeMethod(estadisticaHelper, "crearEntitats", List.of(desc), 10L);
+
+        // Assert
+        assertThat(valor.getEntitatMapejada()).isNull();
     }
 
     @Test
