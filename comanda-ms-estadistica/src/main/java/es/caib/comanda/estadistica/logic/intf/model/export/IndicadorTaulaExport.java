@@ -18,6 +18,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class IndicadorTaulaExport implements Serializable {
 
+    @javax.validation.constraints.NotBlank
     private String indicadorCodi;
     private TableColumnsEnum agregacio;
     private PeriodeUnitat unitatAgregacio;

@@ -15,10 +15,13 @@ import java.util.List;
 @Table(name = BaseConfig.DB_PREFIX + "est_color_palette")
 public class PaletaEntity extends BaseAuditableEntity<Paleta> {
 
-    @Column(name = "nom", nullable = false, length = 128)
+    public static final int NOM_MAX_LENGTH = 128;
+    public static final int DESCRIPCIO_MAX_LENGTH = 1024;
+
+    @Column(name = "nom", nullable = false, length = NOM_MAX_LENGTH)
     private String nom;
 
-    @Column(name = "descripcio", length = 1024)
+    @Column(name = "descripcio", length = DESCRIPCIO_MAX_LENGTH)
     private String descripcio;
 
     @OneToMany(mappedBy = "paleta", cascade = CascadeType.ALL)

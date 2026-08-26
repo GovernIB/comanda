@@ -25,11 +25,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -49,6 +52,29 @@ public class DashboardImportHelper {
     private final DimensioRepository dimensioRepository;
     private final DimensioValorRepository dimensioValorRepository;
     private final PaletaRepository paletaRepository;
+    private final Validator validator;
+
+    public void validateDashboardExport(List<DashboardExport> dashboards) {
+        if (dashboards == null || dashboards.isEmpty()) {
+            throw new IllegalArgumentException("El fitxer no conté cap tauler de control per importar.");
+        }
+        for (int i = 0; i < dashboards.size(); i++) {
+            DashboardExport dashboard = dashboards.get(i);
+            if (validator != null) {
+                Set<ConstraintViolation<DashboardExport>> violations = validator.validate(dashboard);
+                if (!violations.isEmpty()) {
+                    String errorDetails = violations.stream()
+                            .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                            .sorted()
+                            .collect(Collectors.joining(", "));
+                    String prefix = dashboards.size() > 1
+                            ? "Tauler " + (i + 1) + (dashboard.getTitol() != null ? " (" + dashboard.getTitol() + ")" : "") + ": "
+                            : "";
+                    throw new IllegalArgumentException(prefix + "Dades del tauler invàlides (" + errorDetails + ")");
+                }
+            }
+        }
+    }
 
     public List<DashboardEntity> toDashboardEntity(List<DashboardExport> dashboardExportList) {
         return dashboardExportMapper.toDashboardEntity(

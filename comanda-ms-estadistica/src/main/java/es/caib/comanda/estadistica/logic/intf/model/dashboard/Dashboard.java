@@ -89,9 +89,9 @@ public class Dashboard extends BaseResource<Long> {
     public final static String DASHBOARD_IMPORT = "dashboard_import";
 
     @NotNull
-    @Size(max = 64)
+    @Size(max = es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity.TITOL_MAX_LENGTH)
     private String titol;
-    @Size(max = 1024)
+    @Size(max = es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity.DESCRIPCIO_MAX_LENGTH)
     private String descripcio;
     protected ResourceReference<AppResource, Long> aplicacio;
     private Long appId;

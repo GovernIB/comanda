@@ -19,6 +19,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class EstadisticaSimpleWidgetExport extends EstadisticaWidgetExport implements Serializable {
 
+    @javax.validation.Valid
     private IndicadorTaulaExport indicadorInfo;
     private String unitat;
     private boolean compararPeriodeAnterior;

@@ -20,6 +20,7 @@ import java.util.List;
 @AllArgsConstructor
 public class EstadisticaTaulaWidgetExport extends EstadisticaWidgetExport implements Serializable {
 
+    @javax.validation.Valid
     private List<IndicadorTaulaExport> columnes;
     private String dimensioAgrupacioCodi;
     private String titolAgrupament;

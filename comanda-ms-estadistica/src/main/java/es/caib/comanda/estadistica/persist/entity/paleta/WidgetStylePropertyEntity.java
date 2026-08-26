@@ -30,6 +30,9 @@ import javax.persistence.UniqueConstraint;
         })
 public class WidgetStylePropertyEntity extends BaseAuditableEntity<WidgetStyleProperty> {
 
+    public static final int PROPERTY_NAME_MAX_LENGTH = 64;
+    public static final int SCALAR_VALUE_MAX_LENGTH = 1000;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "template_id",
@@ -42,7 +45,7 @@ public class WidgetStylePropertyEntity extends BaseAuditableEntity<WidgetStylePr
     @Column(name = "scope", nullable = false, length = 32)
     private WidgetStyleScope scope;
 
-    @Column(name = "property_name", nullable = false, length = 64)
+    @Column(name = "property_name", nullable = false, length = PROPERTY_NAME_MAX_LENGTH)
     private String propertyName;
 
     @Enumerated(EnumType.STRING)
@@ -56,7 +59,7 @@ public class WidgetStylePropertyEntity extends BaseAuditableEntity<WidgetStylePr
     @Column(name = "palette_index")
     private Integer paletteIndex;
 
-    @Column(name = "scalar_value", length = 1000)
+    @Column(name = "scalar_value", length = SCALAR_VALUE_MAX_LENGTH)
     private String scalarValue;
 
     @Column(name = "default_property")

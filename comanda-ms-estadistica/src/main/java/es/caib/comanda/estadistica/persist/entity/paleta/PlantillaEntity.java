@@ -15,7 +15,9 @@ import java.util.List;
 @Table(name = BaseConfig.DB_PREFIX + "est_dashboard_style_template")
 public class PlantillaEntity extends BaseAuditableEntity<Plantilla> {
 
-    @Column(name = "nom", nullable = false, length = 128)
+    public static final int NOM_MAX_LENGTH = 128;
+
+    @Column(name = "nom", nullable = false, length = NOM_MAX_LENGTH)
     private String nom;
     @Column(name = "mostrar_vora")
     private Boolean mostrarVora;

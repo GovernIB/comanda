@@ -26,6 +26,7 @@ import java.util.Map;
 public class Plantilla extends BaseResource<Long> {
 
     @NotNull
+    @javax.validation.constraints.Size(max = es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity.NOM_MAX_LENGTH)
     private String nom;
     private Boolean mostrarVora;
     private Integer ampleVora;

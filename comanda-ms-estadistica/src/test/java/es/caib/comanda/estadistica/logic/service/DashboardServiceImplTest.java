@@ -923,4 +923,29 @@ class DashboardServiceImplTest {
 
         ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
     }
+
+    @Test
+    @DisplayName("DashboardImport: exec llança ActionExecutionException quan la validació falla")
+    void dashboardImport_exec_llancaExcepcioQuanValidacioFalla() throws Exception {
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+
+        String json = "[{\"titol\":\"Titol\"}]";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.DashboardImportParams params = new DashboardServiceImpl.DashboardImportParams();
+        params.setFile(fileRef);
+
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        doThrow(new IllegalArgumentException("Dades del tauler invàlides (titol: no pot ser buit)"))
+                .when(dashboardImportHelper).validateDashboardExport(anyList());
+
+        assertThatThrownBy(() -> executor.exec(Dashboard.DASHBOARD_IMPORT, new DashboardEntity(), params))
+                .isInstanceOf(ActionExecutionException.class)
+                .hasMessageContaining("Dades del tauler invàlides (titol: no pot ser buit)");
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
 }

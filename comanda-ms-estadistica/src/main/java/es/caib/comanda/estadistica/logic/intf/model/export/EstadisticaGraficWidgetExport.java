@@ -25,7 +25,9 @@ public class EstadisticaGraficWidgetExport extends EstadisticaWidgetExport imple
 
     private TipusGraficEnum tipusGrafic;
     private TipusGraficDataEnum tipusDades;
+    @javax.validation.Valid
     private IndicadorTaulaExport indicadorInfo;
+    @javax.validation.Valid
     private List<IndicadorTaulaExport> indicadorsInfo;
     private String descomposicioDimensioCodi;
     private Boolean agruparPerDimensioDescomposicio;

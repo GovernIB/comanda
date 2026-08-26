@@ -1,11 +1,14 @@
 package es.caib.comanda.estadistica.logic.intf.model.export;
 
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardTitolTipus;
-import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 
 /**
@@ -18,23 +21,47 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class DashboardTitolExport implements Serializable {
 
+    @NotBlank
+    @Size(max = es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity.TITOL_MAX_LENGTH)
     private String titol;
+
+    @Size(max = es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity.SUBTITOL_MAX_LENGTH)
     private String subtitol;
+
     private int posX;
     private int posY;
+
+    @Min(1)
     private int width;
+
+    @Min(1)
     private int height;
+
     private DashboardTitolTipus tipusTitol;
+
+    @Size(max = es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity.COLOR_MAX_LENGTH)
     private String colorTitol;
+
     private Integer midaFontTitol;
+
+    @Size(max = es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity.COLOR_MAX_LENGTH)
     private String colorSubtitol;
+
     private Integer midaFontSubtitol;
+
+    @Size(max = es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity.COLOR_MAX_LENGTH)
     private String colorFons;
+
     private Boolean mostrarVora;
+
+    @Size(max = es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity.COLOR_MAX_LENGTH)
     private String colorVora;
+
     private Integer ampleVora;
     private Boolean destacat;
     private Boolean personalitzat;
+
+    @Valid
     private PlantillaExport plantilla;
 
 }

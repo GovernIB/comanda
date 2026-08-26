@@ -442,10 +442,19 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                 String jsonString = new String(params.getFile().getContent(), StandardCharsets.UTF_8);
                 List<DashboardExport> dashboards = parseDashboardsJson(jsonString);
 
+                dashboardImportHelper.validateDashboardExport(dashboards);
+
                 List<Dashboard> importedDashboards = new ArrayList<>();
                 List<Conflict> conflicts = params.getConflicts() != null ? params.getConflicts() : Collections.emptyList();
                 dashboardImportHelper.importDashboardFromExport(dashboards, conflicts);
                 return new DashboardImportResult(importedDashboards);
+            } catch (IllegalArgumentException e) {
+                log.warn("Validation error importing dashboards from JSON: {}", e.getMessage());
+                throw new ActionExecutionException(
+                        Dashboard.class,
+                        null,
+                        code,
+                        e.getMessage());
             } catch (Exception e) {
                 log.error("Error importing dashboards from JSON", e);
                 throw new ActionExecutionException(
