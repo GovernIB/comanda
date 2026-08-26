@@ -310,11 +310,45 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                 byte[] content = baos.toByteArray();
                 out.write(content);
 
-                return new DownloadableFile("dashboards.json", "application/json", content);
+                // Genera nom del fitxer
+                String exportFileName = "dashboards.json";
+                try {
+                    if (data != null && data.size() == 1 && data.get(0) instanceof DashboardExport) {
+                        String titol = ((DashboardExport) data.get(0)).getTitol();
+                        if (titol != null && !titol.trim().isEmpty()) {
+                            exportFileName = sanitizeFilename(titol.trim()) + ".json";
+                        }
+                    }
+                } catch (Exception ex) {
+                    log.error("Error generant el nom del fitxer d'exportació de Dashboards", ex);
+                }
+
+                return new DownloadableFile(exportFileName, "application/json", content);
             } catch (IOException e) {
                 log.error("Error generating JSON file", e);
                 return null;
             }
+        }
+
+        private String sanitizeFilename(String filename) {
+            if (filename == null) {
+                return "dashboard";
+            }
+            // 1. Normalitzem caràcters amb accents / diacrítics (ex: 'é' -> 'e', 'ç' -> 'c')
+            String normalized = java.text.Normalizer.normalize(filename, java.text.Normalizer.Form.NFD);
+            String withoutDiacritics = normalized.replaceAll("\\p{M}", "");
+
+            // 2. Reemplacem caràcters especials / no permesos en noms de fitxers o capçaleres HTTP per '_'
+            //    Permetem lletres, dígits, espais, guions, subratllats, punts i parèntesis
+            String sanitized = withoutDiacritics.replaceAll("[^a-zA-Z0-9 _().-]", "_");
+
+            // 3. Col·lapsem múltiples subratllats i espais consecutius
+            sanitized = sanitized.replaceAll("_{2,}", "_").replaceAll(" {2,}", " ");
+
+            // 4. Eliminem espais o caràcters especials dels extrems
+            sanitized = sanitized.replaceAll("^[._\\-\\s]+|[._\\-\\s]+$", "").trim();
+
+            return sanitized.isEmpty() ? "dashboard" : sanitized;
         }
 
         @Override

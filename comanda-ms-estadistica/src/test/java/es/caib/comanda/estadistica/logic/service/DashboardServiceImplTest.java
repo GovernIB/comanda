@@ -756,6 +756,44 @@ class DashboardServiceImplTest {
     }
 
     @Test
+    @DisplayName("DashboardExport: generateFile genera el nom del fitxer a partir del títol del dashboard sanejat")
+    void dashboardExport_generateFile_usaNomDashboardSanejat() throws Exception {
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        ReportGenerator<DashboardEntity, Serializable, DashboardExport> reportGenerator = createDashboardExportReportGenerator();
+
+        // 1. Dashboard amb caràcters especials i accents
+        DashboardExport export1 = new DashboardExport();
+        export1.setTitol("Estadístiques d'ús: Vendes / Facturació (2024)");
+        ByteArrayOutputStream out1 = new ByteArrayOutputStream();
+        DownloadableFile file1 = reportGenerator.generateFile(Dashboard.DASHBOARD_EXPORT, List.of(export1), ReportFileType.JSON, out1);
+
+        assertThat(file1).isNotNull();
+        assertThat(file1.getName()).isEqualTo("Estadistiques d_us_ Vendes _ Facturacio (2024).json");
+
+        // 2. Dashboard amb nom estàndard
+        DashboardExport export2 = new DashboardExport();
+        export2.setTitol("Tauler General");
+        ByteArrayOutputStream out2 = new ByteArrayOutputStream();
+        DownloadableFile file2 = reportGenerator.generateFile(Dashboard.DASHBOARD_EXPORT, List.of(export2), ReportFileType.JSON, out2);
+
+        assertThat(file2).isNotNull();
+        assertThat(file2.getName()).isEqualTo("Tauler General.json");
+
+        // 3. Múltiples dashboards -> dashboards.json
+        DashboardExport export3 = new DashboardExport();
+        export3.setTitol("Tauler 2");
+        ByteArrayOutputStream out3 = new ByteArrayOutputStream();
+        DownloadableFile file3 = reportGenerator.generateFile(Dashboard.DASHBOARD_EXPORT, List.of(export2, export3), ReportFileType.JSON, out3);
+
+        assertThat(file3).isNotNull();
+        assertThat(file3.getName()).isEqualTo("dashboards.json");
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
     @DisplayName("DashboardImport: exec importa dashboards correctament")
     void dashboardImport_exec_importaCorrectament() throws Exception {
         DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
