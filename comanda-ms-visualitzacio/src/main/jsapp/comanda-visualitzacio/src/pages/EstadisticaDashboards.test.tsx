@@ -246,17 +246,29 @@ describe('EstadisticaDashboards', () => {
     });
 
     it('EstadisticaDashboards_quanSexportaUnDashboard_descarregaElJsonINotificaExit', async () => {
-        mocks.artifactReportMock.mockResolvedValue({ ok: true });
+        let resolveExport: (value: any) => void;
+        mocks.artifactReportMock.mockReturnValue(new Promise((resolve) => {
+            resolveExport = resolve;
+        }));
 
         render(<EstadisticaDashboards />);
 
         fireEvent.click(screen.getByRole('button', { name: 'Exportar' }));
+
+        // Comprova que es mostra el progress spinner mentre s'està exportant
+        expect(screen.getByRole('progressbar', { hidden: true })).toBeInTheDocument();
+
+        resolveExport!({ ok: true });
 
         await waitFor(() => {
             expect(mocks.artifactReportMock).toHaveBeenCalledWith(9, {
                 code: 'dashboard_export',
                 fileType: 'JSON',
             });
+        });
+
+        await waitFor(() => {
+            expect(screen.queryByRole('progressbar', { hidden: true })).not.toBeInTheDocument();
         });
 
         expect(mocks.downloadJsonMock).toHaveBeenCalledWith({ ok: true });

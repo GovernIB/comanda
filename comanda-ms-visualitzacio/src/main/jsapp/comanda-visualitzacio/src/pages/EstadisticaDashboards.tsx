@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 import {
     GridPage,
     MuiDataGrid,
@@ -216,8 +218,10 @@ const useActions = () => {
     const { artifactReport: apiReport } = useResourceApiService('dashboard');
     const { temporalMessageShow } = useBaseAppContext();
     const { t } = useTranslation();
+    const [exporting, setExporting] = React.useState(false);
 
     const report = (id:any, code:any, mssg:any, fileType:any) => {
+        setExporting(true);
         apiReport(id, {code, fileType})
             .then((result) => {
                 iniciaDescargaJSON(result);
@@ -225,12 +229,16 @@ const useActions = () => {
             })
             .catch((error) => {
                 temporalMessageShow(null, error.message, 'error');
+            })
+            .finally(() => {
+                setExporting(false);
             });
     }
     const dashboardExport = (id:any) => report(id, 'dashboard_export', t($ => $.page.dashboards.action.export), 'JSON')
 
     return {
         dashboardExport,
+        exporting,
     };
 };
 
@@ -324,12 +332,27 @@ const EstadisticaDashboards: React.FC = () => {
     const refresh = () => {
         gridApiRef?.current?.refresh?.();
     }
-    const { dashboardExport } = useActions();
+    const { dashboardExport, exporting } = useActions();
     const {handleShow: showCloneDashboard, content: contentCloneDashboard} = useCloneDashboardAction(refresh);
     const {handleShow: showImport, content: contentImport} = useImportDashboardAction(refresh);
     return (
         <GridPage>
             <PageTitle title={t($ => $.page.dashboards.title)} />
+            {exporting && (
+                <Backdrop
+                    open={exporting}
+                    sx={{
+                        color: 'common.white',
+                        zIndex: (theme) => theme.zIndex.drawer + 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2
+                    }}
+                >
+                    <CircularProgress color="inherit" />
+                    <Typography variant="h6">{t($ => $.page.dashboards.action.export)}</Typography>
+                </Backdrop>
+            )}
             <MuiDataGrid
                 title={t($ => $.page.dashboards.title)}
                 resourceName="dashboard"
