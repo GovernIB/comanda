@@ -7,12 +7,20 @@ import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
-import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
+import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
+import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
+import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
+import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardTitolRepository;
+import es.caib.comanda.estadistica.persist.repository.EstadisticaWidgetRepository;
 import es.caib.comanda.estadistica.persist.repository.PlantillaRepository;
+import es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
@@ -22,6 +30,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -62,6 +71,11 @@ class DashboardHelperTest {
 
     @Mock
     private PlantillaRepository plantillaRepository;
+
+    @Mock
+    private EstadisticaWidgetRepository estadisticaWidgetRepository;
+
+    private final DashboardClonerMapper dashboardClonerMapper = Mappers.getMapper(DashboardClonerMapper.class);
 
     @Mock
     private I18nUtil i18nUtil;
@@ -382,7 +396,7 @@ class DashboardHelperTest {
     void cloneDashboardAction_exec_quanParamsNoNuls_llavorsClonaAmbParams() throws ActionExecutionException {
         // Arrange
         DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
-            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository);
+            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper);
 
         DashboardEntity entity = new DashboardEntity();
         entity.setId(1L);
@@ -419,7 +433,7 @@ class DashboardHelperTest {
     void cloneDashboardAction_exec_quanParamsNuls_llavorsClonaAmbValorsEntitat() throws ActionExecutionException {
         // Arrange
         DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
-            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository);
+            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper);
 
         PlantillaEntity plantilla = new PlantillaEntity();
         plantilla.setId(5L);
@@ -449,7 +463,7 @@ class DashboardHelperTest {
     void cloneDashboardAction_getClonedTitulos_quanTitolsNoNuls_llavorsClonaTitols() throws Exception {
         // Arrange
         DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
-            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository);
+            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper);
 
         DashboardEntity original = new DashboardEntity();
         DashboardEntity newDashboard = new DashboardEntity();
@@ -487,7 +501,7 @@ class DashboardHelperTest {
     void cloneDashboardAction_getClonedItem_quanWidgetAppIdNoCompatible_llavorsLlancaActionExecutionException() {
         // Arrange
         DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
-            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository);
+            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper);
 
         DashboardEntity original = new DashboardEntity();
         original.setId(1L);
@@ -497,8 +511,8 @@ class DashboardHelperTest {
         newDashboard.setAppId(20L); // Canvi d'AppId
 
         DashboardItemEntity item = new DashboardItemEntity();
-        EstadisticaWidgetEntity<?> widget = mock(EstadisticaWidgetEntity.class);
-        when(widget.getAppId()).thenReturn(10L); // No compatible amb 20L
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setAppId(10L); // No compatible amb 20L
         item.setWidget(widget);
         original.setItems(Collections.singletonList(item));
 
@@ -513,7 +527,7 @@ class DashboardHelperTest {
     void cloneDashboardAction_getClonedItem_quanEntornAppNoExisteix_llavorsLlancaActionExecutionException() {
         // Arrange
         DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
-            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository);
+            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper);
 
         DashboardEntity original = new DashboardEntity();
         original.setId(1L);
@@ -526,8 +540,8 @@ class DashboardHelperTest {
 
         DashboardItemEntity item = new DashboardItemEntity();
         item.setEntornId(20L);
-        EstadisticaWidgetEntity<?> widget = mock(EstadisticaWidgetEntity.class);
-        when(widget.getAppId()).thenReturn(10L); // Compatible
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setAppId(10L); // Compatible
         item.setWidget(widget);
         original.setItems(Collections.singletonList(item));
 
@@ -542,11 +556,11 @@ class DashboardHelperTest {
     }
 
     @Test
-    @DisplayName("CloneDashboardAction.getClonedItem: clona correctament els items quan tot és compatible incloent personalitzat, destacat i plantilla")
-    void cloneDashboardAction_getClonedItem_quanTotCompatible_llavorsClonaItems() throws Exception {
+    @DisplayName("CloneDashboardAction.getClonedItem: clona correctament els items i els widgets associats")
+    void cloneDashboardAction_getClonedItem_quanTotCompatible_llavorsClonaItemsIWidgets() throws Exception {
         // Arrange
         DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
-            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository);
+            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper);
 
         DashboardEntity original = new DashboardEntity();
         original.setId(1L);
@@ -560,29 +574,138 @@ class DashboardHelperTest {
         PlantillaEntity plantilla = new PlantillaEntity();
         plantilla.setId(12L);
 
-        DashboardItemEntity item = new DashboardItemEntity();
-        item.setEntornId(20L);
-        item.setPosX(5);
-        item.setPersonalitzat(true);
-        item.setDestacat(false);
-        item.setPlantilla(plantilla);
-        item.setAtributsVisualsJson("{\"colorFons\":\"#123456\"}");
-        EstadisticaWidgetEntity<?> widget = mock(EstadisticaWidgetEntity.class);
-        when(widget.getAppId()).thenReturn(10L);
-        item.setWidget(widget);
-        original.setItems(Collections.singletonList(item));
+        // Simple widget
+        EstadisticaSimpleWidgetEntity originalSimpleWidget = new EstadisticaSimpleWidgetEntity();
+        originalSimpleWidget.setId(100L);
+        originalSimpleWidget.setAppId(10L);
+        originalSimpleWidget.setTitol("Widget Simple");
+        originalSimpleWidget.setUnitat("unitats");
+        IndicadorEntity indicador = new IndicadorEntity();
+        indicador.setId(50L);
+        IndicadorTaulaEntity indInfo = new IndicadorTaulaEntity();
+        indInfo.setIndicador(indicador);
+        indInfo.setTitol("Ind Info");
+        originalSimpleWidget.setIndicadorInfo(indInfo);
+
+        // Grafic widget
+        EstadisticaGraficWidgetEntity originalGraficWidget = new EstadisticaGraficWidgetEntity();
+        originalGraficWidget.setId(200L);
+        originalGraficWidget.setAppId(10L);
+        originalGraficWidget.setTitol("Widget Grafic");
+        originalGraficWidget.setLlegendaX("X");
+        originalGraficWidget.setLlegendaY("Y");
+        IndicadorTaulaEntity indGrafic = new IndicadorTaulaEntity();
+        indGrafic.setIndicador(indicador);
+        indGrafic.setTitol("Ind Grafic");
+        originalGraficWidget.setIndicadorsInfo(Collections.singletonList(indGrafic));
+
+        // Taula widget
+        EstadisticaTaulaWidgetEntity originalTaulaWidget = new EstadisticaTaulaWidgetEntity();
+        originalTaulaWidget.setId(300L);
+        originalTaulaWidget.setAppId(10L);
+        originalTaulaWidget.setTitol("Widget Taula");
+        DimensioEntity dimensio = new DimensioEntity();
+        dimensio.setId(70L);
+        originalTaulaWidget.setDimensioAgrupacio(dimensio);
+        IndicadorTaulaEntity indTaula = new IndicadorTaulaEntity();
+        indTaula.setIndicador(indicador);
+        indTaula.setTitol("Columna 1");
+        originalTaulaWidget.setColumnes(Collections.singletonList(indTaula));
+
+        // Item 1 with Simple widget
+        DashboardItemEntity item1 = new DashboardItemEntity();
+        item1.setEntornId(20L);
+        item1.setPosX(0);
+        item1.setPersonalitzat(true);
+        item1.setDestacat(false);
+        item1.setPlantilla(plantilla);
+        item1.setWidget(originalSimpleWidget);
+
+        // Item 2 with Grafic widget
+        DashboardItemEntity item2 = new DashboardItemEntity();
+        item2.setEntornId(20L);
+        item2.setPosX(4);
+        item2.setPlantilla(plantilla);
+        item2.setWidget(originalGraficWidget);
+
+        // Item 3 with Taula widget
+        DashboardItemEntity item3 = new DashboardItemEntity();
+        item3.setEntornId(20L);
+        item3.setPosX(8);
+        item3.setPlantilla(plantilla);
+        item3.setWidget(originalTaulaWidget);
+
+        // Item 4 sharing the SAME Simple widget as Item 1
+        DashboardItemEntity item4 = new DashboardItemEntity();
+        item4.setEntornId(20L);
+        item4.setPosX(12);
+        item4.setPlantilla(plantilla);
+        item4.setWidget(originalSimpleWidget);
+
+        original.setItems(List.of(item1, item2, item3, item4));
+
+        // Simulació que el widget ja existeix amb el títol original per forçar el nom "(Copia)"
+        lenient().when(estadisticaWidgetRepository.findByAppIdAndTitol(10L, "Widget Simple")).thenReturn(originalSimpleWidget);
+        lenient().when(estadisticaWidgetRepository.findByAppIdAndTitol(10L, "Widget Grafic")).thenReturn(originalGraficWidget);
+        lenient().when(estadisticaWidgetRepository.findByAppIdAndTitol(10L, "Widget Taula")).thenReturn(originalTaulaWidget);
 
         // Act
         List<DashboardItemEntity> result = (List<DashboardItemEntity>) ReflectionTestUtils.invokeMethod(
             action, "getClonedItem", original, newDashboard);
 
         // Assert
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getPosX()).isEqualTo(5);
-        assertThat(result.get(0).getPersonalitzat()).isTrue();
-        assertThat(result.get(0).getDestacat()).isFalse();
-        assertThat(result.get(0).getPlantilla()).isEqualTo(plantilla);
-        assertThat(result.get(0).getAtributsVisualsJson()).isEqualTo("{\"colorFons\":\"#123456\"}");
-        assertThat(result.get(0).getDashboard()).isSameAs(newDashboard);
+        assertThat(result).hasSize(4);
+
+        // Verify widgets were cloned (new instances, not same reference)
+        assertThat(result.get(0).getWidget()).isNotSameAs(originalSimpleWidget);
+        assertThat(result.get(0).getWidget()).isInstanceOf(EstadisticaSimpleWidgetEntity.class);
+        assertThat(result.get(0).getWidget().getTitol()).isEqualTo("Widget Simple (Copia)");
+        assertThat(((EstadisticaSimpleWidgetEntity) result.get(0).getWidget()).getUnitat()).isEqualTo("unitats");
+        assertThat(((EstadisticaSimpleWidgetEntity) result.get(0).getWidget()).getIndicadorInfo()).isNotNull();
+        assertThat(((EstadisticaSimpleWidgetEntity) result.get(0).getWidget()).getIndicadorInfo().getTitol()).isEqualTo("Ind Info");
+        assertThat(((EstadisticaSimpleWidgetEntity) result.get(0).getWidget()).getIndicadorInfo().getWidget()).isSameAs(result.get(0).getWidget());
+
+        assertThat(result.get(1).getWidget()).isNotSameAs(originalGraficWidget);
+        assertThat(result.get(1).getWidget()).isInstanceOf(EstadisticaGraficWidgetEntity.class);
+        assertThat(result.get(1).getWidget().getTitol()).isEqualTo("Widget Grafic (Copia)");
+        assertThat(((EstadisticaGraficWidgetEntity) result.get(1).getWidget()).getLlegendaX()).isEqualTo("X");
+        assertThat(((EstadisticaGraficWidgetEntity) result.get(1).getWidget()).getIndicadorsInfo()).hasSize(1);
+        assertThat(((EstadisticaGraficWidgetEntity) result.get(1).getWidget()).getIndicadorsInfo().get(0).getWidget()).isSameAs(result.get(1).getWidget());
+
+        assertThat(result.get(2).getWidget()).isNotSameAs(originalTaulaWidget);
+        assertThat(result.get(2).getWidget()).isInstanceOf(EstadisticaTaulaWidgetEntity.class);
+        assertThat(result.get(2).getWidget().getTitol()).isEqualTo("Widget Taula (Copia)");
+        assertThat(((EstadisticaTaulaWidgetEntity) result.get(2).getWidget()).getDimensioAgrupacio()).isEqualTo(dimensio);
+        assertThat(((EstadisticaTaulaWidgetEntity) result.get(2).getWidget()).getColumnes()).hasSize(1);
+        assertThat(((EstadisticaTaulaWidgetEntity) result.get(2).getWidget()).getColumnes().get(0).getWidget()).isSameAs(result.get(2).getWidget());
+
+        // Item 4 had the same original widget as Item 1, so it should reuse the cloned widget instance
+        assertThat(result.get(3).getWidget()).isSameAs(result.get(0).getWidget());
+
+        // Verify widgets were saved (3 distinct widgets cloned)
+        verify(estadisticaWidgetRepository, times(3)).save(any(EstadisticaWidgetEntity.class));
+
+        // Plantilles are kept by reference
+        assertThat(result.get(0).getPlantilla()).isSameAs(plantilla);
+        assertThat(result.get(1).getPlantilla()).isSameAs(plantilla);
+        assertThat(result.get(2).getPlantilla()).isSameAs(plantilla);
+        assertThat(result.get(3).getPlantilla()).isSameAs(plantilla);
+    }
+
+    @Test
+    @DisplayName("CloneDashboardAction.getWidgetNewTitol: llança IllegalStateException quan es supera el màxim d'intents (1000)")
+    void cloneDashboardAction_getWidgetNewTitol_quanSuperaMaximIntents_llavorsLlancaIllegalStateException() {
+        // Arrange
+        DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
+            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper);
+
+        // Sempre retorna un widget existent per forçar el límit de 1000 intents
+        when(estadisticaWidgetRepository.findByAppIdAndTitol(eq(10L), anyString()))
+            .thenReturn(new EstadisticaSimpleWidgetEntity());
+
+        // Act & Assert
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(action, "getWidgetNewTitol", "Widget Test", 10L))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("S'ha superat el nombre màxim d'intents (1000)");
     }
 }

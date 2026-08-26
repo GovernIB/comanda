@@ -7,10 +7,15 @@ import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
+import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
+import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
+import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardTitolRepository;
+import es.caib.comanda.estadistica.persist.repository.EstadisticaWidgetRepository;
 import es.caib.comanda.estadistica.persist.repository.PlantillaRepository;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
@@ -24,6 +29,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -143,18 +149,24 @@ public class DashboardHelper {
         private final DashboardTitolRepository dashboardTitolRepository;
         private final DashboardItemRepository dashboardItemRepository;
         private final PlantillaRepository plantillaRepository;
+        private final EstadisticaWidgetRepository estadisticaWidgetRepository;
+        private final es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper dashboardClonerMapper;
 
         public CloneDashboardAction(
                 EstadisticaClientHelper estadisticaClientHelper,
                 DashboardRepository dashboardRepository,
                 DashboardTitolRepository dashboardTitolRepository,
                 DashboardItemRepository dashboardItemRepository,
-                PlantillaRepository plantillaRepository) {
+                PlantillaRepository plantillaRepository,
+                EstadisticaWidgetRepository estadisticaWidgetRepository,
+                es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper dashboardClonerMapper) {
             this.estadisticaClientHelper = estadisticaClientHelper;
             this.dashboardRepository = dashboardRepository;
             this.dashboardTitolRepository = dashboardTitolRepository;
             this.dashboardItemRepository = dashboardItemRepository;
             this.plantillaRepository = plantillaRepository;
+            this.estadisticaWidgetRepository = estadisticaWidgetRepository;
+            this.dashboardClonerMapper = dashboardClonerMapper;
         }
 
         @Override
@@ -187,26 +199,8 @@ public class DashboardHelper {
             List<DashboardTitolEntity> clonedTitols = new ArrayList<>();
             if (originalDashboard.getTitols() != null) {
                 for (DashboardTitolEntity original : originalDashboard.getTitols()) {
-                    DashboardTitolEntity clone = new DashboardTitolEntity();
+                    DashboardTitolEntity clone = dashboardClonerMapper.cloneTitol(original);
                     clone.setDashboard(newDashboard);
-                    clone.setTitol(original.getTitol());
-                    clone.setSubtitol(original.getSubtitol());
-                    clone.setPosX(original.getPosX());
-                    clone.setPosY(original.getPosY());
-                    clone.setWidth(original.getWidth());
-                    clone.setHeight(original.getHeight());
-                    clone.setTipusTitol(original.getTipusTitol());
-                    clone.setColorTitol(original.getColorTitol());
-                    clone.setMidaFontTitol(original.getMidaFontTitol());
-                    clone.setColorSubtitol(original.getColorSubtitol());
-                    clone.setMidaFontSubtitol(original.getMidaFontSubtitol());
-                    clone.setColorFons(original.getColorFons());
-                    clone.setMostrarVora(original.getMostrarVora());
-                    clone.setColorVora(original.getColorVora());
-                    clone.setAmpleVora(original.getAmpleVora());
-                    clone.setDestacat(original.getDestacat());
-                    clone.setPersonalitzat(original.getPersonalitzat());
-                    clone.setPlantilla(original.getPlantilla());
                     clonedTitols.add(clone);
                 }
             }
@@ -216,6 +210,7 @@ public class DashboardHelper {
 
         private List<DashboardItemEntity> getClonedItem(DashboardEntity originalDashboard, DashboardEntity newDashboard) {
             List<DashboardItemEntity> clonedItems = new ArrayList<>();
+            Map<Long, EstadisticaWidgetEntity> clonedWidgetsMap = new HashMap<>();
             if (originalDashboard.getItems() != null) {
                 boolean canviAppId = !Objects.equals(originalDashboard.getAppId(), newDashboard.getAppId()) && Objects.nonNull(newDashboard.getAppId());
                 boolean canviEntornId = !Objects.equals(originalDashboard.getEntornId(), newDashboard.getEntornId()) && Objects.nonNull(newDashboard.getEntornId());
@@ -224,24 +219,19 @@ public class DashboardHelper {
                 EntornApp newEntornApp = (Objects.nonNull(newAppId) && Objects.nonNull(newEntornId)) ?
                     estadisticaClientHelper.entornAppFindByAppAndEntornOrDefaultNull(newAppId, newEntornId) : null;
                 for (DashboardItemEntity original : originalDashboard.getItems()) {
-                    DashboardItemEntity clone = new DashboardItemEntity();
+                    DashboardItemEntity clone = dashboardClonerMapper.cloneItem(original);
                     clone.setDashboard(newDashboard);
-                    clone.setWidget(original.getWidget());
-                    clone.setPosX(original.getPosX());
-                    clone.setPosY(original.getPosY());
-                    clone.setWidth(original.getWidth());
-                    clone.setHeight(original.getHeight());
-                    clone.setAtributsVisualsJson(original.getAtributsVisualsJson());
-                    clone.setDestacat(original.getDestacat());
-                    clone.setPersonalitzat(original.getPersonalitzat());
-                    clone.setPlantilla(original.getPlantilla());
-                    if (newAppId != null && !Objects.equals(original.getWidget().getAppId(), newAppId)){
-                        throw new ActionExecutionException(
-                            Dashboard.class,
-                            originalDashboard.getId(),
-                            Dashboard.CLONE_ACTION,
-                            I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.error.appId")
-                        );
+                    if (original.getWidget() != null) {
+                        if (newAppId != null && !Objects.equals(original.getWidget().getAppId(), newAppId)){
+                            throw new ActionExecutionException(
+                                Dashboard.class,
+                                originalDashboard.getId(),
+                                Dashboard.CLONE_ACTION,
+                                I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.error.appId")
+                            );
+                        }
+                        EstadisticaWidgetEntity clonedWidget = cloneWidget(original.getWidget(), newAppId, clonedWidgetsMap);
+                        clone.setWidget(clonedWidget);
                     }
                     Long resolvedEntornId;
                     if (!canviAppId && !canviEntornId) {
@@ -269,6 +259,92 @@ public class DashboardHelper {
             }
             newDashboard.setItems(clonedItems);
             return clonedItems;
+        }
+
+        private EstadisticaWidgetEntity cloneWidget(
+                EstadisticaWidgetEntity original,
+                Long targetAppId,
+                Map<Long, EstadisticaWidgetEntity> clonedWidgetsMap) {
+            if (original == null) {
+                return null;
+            }
+            if (original.getId() != null && clonedWidgetsMap.containsKey(original.getId())) {
+                return clonedWidgetsMap.get(original.getId());
+            }
+            Long appId = targetAppId != null ? targetAppId : original.getAppId();
+            String newTitol = getWidgetNewTitol(original.getTitol(), appId);
+
+            EstadisticaWidgetEntity clone;
+            if (original instanceof EstadisticaSimpleWidgetEntity) {
+                EstadisticaSimpleWidgetEntity originalSimple = (EstadisticaSimpleWidgetEntity) original;
+                EstadisticaSimpleWidgetEntity cloneSimple = dashboardClonerMapper.cloneSimpleWidget(originalSimple);
+                cloneSimple.setTitol(newTitol);
+                cloneSimple.setAppId(appId);
+                if (originalSimple.getIndicadorInfo() != null) {
+                    IndicadorTaulaEntity indClone = dashboardClonerMapper.cloneIndicadorTaula(originalSimple.getIndicadorInfo());
+                    indClone.setWidget(cloneSimple);
+                    cloneSimple.setIndicadorInfo(indClone);
+                }
+                clone = cloneSimple;
+            } else if (original instanceof EstadisticaGraficWidgetEntity) {
+                EstadisticaGraficWidgetEntity originalGrafic = (EstadisticaGraficWidgetEntity) original;
+                EstadisticaGraficWidgetEntity cloneGrafic = dashboardClonerMapper.cloneGraficWidget(originalGrafic);
+                cloneGrafic.setTitol(newTitol);
+                cloneGrafic.setAppId(appId);
+                if (originalGrafic.getIndicadorsInfo() != null) {
+                    List<IndicadorTaulaEntity> clonedIndicadors = new ArrayList<>();
+                    for (IndicadorTaulaEntity ind : originalGrafic.getIndicadorsInfo()) {
+                        IndicadorTaulaEntity indClone = dashboardClonerMapper.cloneIndicadorTaula(ind);
+                        indClone.setWidget(cloneGrafic);
+                        clonedIndicadors.add(indClone);
+                    }
+                    cloneGrafic.setIndicadorsInfo(clonedIndicadors);
+                }
+                clone = cloneGrafic;
+            } else if (original instanceof EstadisticaTaulaWidgetEntity) {
+                EstadisticaTaulaWidgetEntity originalTaula = (EstadisticaTaulaWidgetEntity) original;
+                EstadisticaTaulaWidgetEntity cloneTaula = dashboardClonerMapper.cloneTaulaWidget(originalTaula);
+                cloneTaula.setTitol(newTitol);
+                cloneTaula.setAppId(appId);
+                if (originalTaula.getColumnes() != null) {
+                    List<IndicadorTaulaEntity> clonedColumnes = new ArrayList<>();
+                    for (IndicadorTaulaEntity col : originalTaula.getColumnes()) {
+                        IndicadorTaulaEntity colClone = dashboardClonerMapper.cloneIndicadorTaula(col);
+                        colClone.setWidget(cloneTaula);
+                        clonedColumnes.add(colClone);
+                    }
+                    cloneTaula.setColumnes(clonedColumnes);
+                }
+                clone = cloneTaula;
+            } else {
+                throw new IllegalArgumentException("Tipus de widget desconegut: " + original.getClass().getName());
+            }
+
+            estadisticaWidgetRepository.save(clone);
+            if (original.getId() != null) {
+                clonedWidgetsMap.put(original.getId(), clone);
+            }
+            return clone;
+        }
+
+        private static final int MAX_TITOL_TRIES = 1000;
+
+        private String getWidgetNewTitol(String originalTitol, Long appId) {
+            String candidate = originalTitol;
+            int counter = 1;
+            while (appId != null && estadisticaWidgetRepository.findByAppIdAndTitol(appId, candidate) != null) {
+                if (counter > MAX_TITOL_TRIES) {
+                    throw new IllegalStateException("S'ha superat el nombre màxim d'intents (" + MAX_TITOL_TRIES + ") per generar un títol únic per al widget: " + originalTitol);
+                }
+                int maxLength = EstadisticaWidgetEntity.TITOL_MAX_LENGTH;
+                String suffix = counter == 1 ? " (Copia)" : " (Copia " + counter + ")";
+                String base = originalTitol != null && originalTitol.length() + suffix.length() > maxLength
+                        ? originalTitol.substring(0, maxLength - suffix.length())
+                        : (originalTitol != null ? originalTitol : "Widget");
+                candidate = base + suffix;
+                counter++;
+            }
+            return candidate;
         }
 
         @Override

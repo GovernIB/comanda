@@ -20,6 +20,7 @@ import es.caib.comanda.estadistica.logic.intf.model.export.DashboardExport;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
+import es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper;
 import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
@@ -72,6 +73,7 @@ class DashboardServiceImplTest {
     @Mock private EstadisticaClientHelper estadisticaClientHelper;
     @Mock private AtributsVisualsHelper atributsVisualsHelper;
     @Mock private DashboardExportMapper dashboardExportMapper;
+    @Mock private DashboardClonerMapper dashboardClonerMapper;
     @Mock private ConsultaEstadisticaHelper consultaEstadisticaHelper;
     @Mock private DashboardHelper dashboardHelper;
     @Mock private ObjectMapper objectMapper;

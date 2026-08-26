@@ -19,6 +19,7 @@ import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.logic.intf.service.DashboardService;
 import es.caib.comanda.estadistica.logic.intf.validation.ValidConflict;
+import es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper;
 import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
@@ -72,12 +73,14 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final AtributsVisualsHelper atributsVisualsHelper;
     private final DashboardExportMapper dashboardExportMapper;
+    private final DashboardClonerMapper dashboardClonerMapper;
     private final ObjectMapper objectMapper;
     private final DashboardHelper dashboardHelper;
     private final DashboardRepository dashboardRepository;
     private final DashboardTitolRepository dashboardTitolRepository;
     private final DashboardItemRepository dashboardItemRepository;
     private final PlantillaRepository plantillaRepository;
+    private final EstadisticaWidgetRepository estadisticaWidgetRepository;
     private final DashboardStyleResolverHelper dashboardStyleResolverHelper;
     private final DashboardImportHelper dashboardImportHelper;
     private final AuthenticationHelper authenticationHelper;
@@ -90,7 +93,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
         register(Dashboard.WIDGETS_REPORT, new InformeWidgets());
         register(Dashboard.DASHBOARD_EXPORT, new DashboardExportReportGenerator());
         register(Dashboard.DASHBOARD_IMPORT, new DashboardImportActionExecutor());
-        register(Dashboard.CLONE_ACTION, (ActionExecutor<DashboardEntity, ?, ?>) new DashboardHelper.CloneDashboardAction(estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository));
+        register(Dashboard.CLONE_ACTION, (ActionExecutor<DashboardEntity, ?, ?>) new DashboardHelper.CloneDashboardAction(estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper));
     }
 
     @Override

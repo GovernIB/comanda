@@ -9,6 +9,7 @@ import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeEspecificAny;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeMode;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PresetPeriode;
+import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
@@ -30,9 +31,9 @@ import java.util.List;
 public class WidgetBaseResource<ID extends Serializable> extends BaseResource<ID> {
 
     @NotNull
-    @Size(max = 64)
+    @Size(max = EstadisticaWidgetEntity.TITOL_MAX_LENGTH)
     protected String titol;
-    @Size(max = 1024)
+    @Size(max = EstadisticaWidgetEntity.DESCRIPCIO_MAX_LENGTH)
     protected String descripcio;
 
 
