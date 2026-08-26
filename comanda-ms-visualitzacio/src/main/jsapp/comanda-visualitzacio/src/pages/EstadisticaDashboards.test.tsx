@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
         entorn: { id: 7 },
         aplicacio: { id: 3 },
         conflicts: [] as Array<{ tipo: string; titol: string; overwrite?: string; nouNom?: string }>,
+        file: undefined as any,
     },
     tMock: vi.fn((selector: any) =>
         selector({
@@ -45,6 +46,9 @@ const mocks = vi.hoisted(() => ({
                             nouNom: 'Nom nou',
                             dashboardConflicts: 'Conflictes de tauler',
                             widgetConflicts: 'Conflictes de widget',
+                            analyzing: 'Analitzant fitxer...',
+                            noConflicts: 'Sense conflictes',
+                            importing: 'Important dashboard...',
                         },
                     },
                     cloneDashboard: {
@@ -68,13 +72,17 @@ vi.mock('reactlib', () => ({
         <input
             data-testid={`field-${name}`}
             name={name}
-            value={value ?? ''}
+            defaultValue={value}
             onChange={(e) => onChange?.(e.target.value)}
             {...componentProps}
         />
     ),
     useFormContext: () => ({
         data: mocks.formContextData,
+        fields: [
+            { name: 'overwrite' },
+            { name: 'nouNom' },
+        ],
         apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
     }),
     springFilterBuilder: {
@@ -227,6 +235,7 @@ describe('EstadisticaDashboards', () => {
     afterEach(() => {
         vi.clearAllMocks();
         mocks.formContextData.conflicts = [];
+        mocks.formContextData.file = undefined;
     });
 
     it('EstadisticaDashboards_quanEsRenderitza_mostraLesAccionsIElDialegDeClonat', () => {
@@ -326,5 +335,35 @@ describe('EstadisticaDashboards', () => {
 
         expect(mocks.permissionShowMock).toHaveBeenCalledWith(9, 'Dashboard Test');
         expect(screen.getByText('Gestor de permisos DASHBOARD')).toBeInTheDocument();
+    });
+
+    it('EstadisticaDashboards_quanSAnalitzaElFitxer_mostraElSpinnerDAnàlisi', () => {
+        render(<EstadisticaDashboards />);
+
+        const fileInput = screen.getByTestId('field-file');
+        fireEvent.change(fileInput, { target: { value: 'test.json' } });
+
+        expect(screen.getByText('Analitzant fitxer...')).toBeInTheDocument();
+    });
+
+    it('EstadisticaDashboards_quanElFitxerNoTeConflictes_mostraAlertaSenseConflictes', () => {
+        mocks.formContextData.file = { name: 'dashboards.json', content: 'abc' } as any;
+        mocks.formContextData.conflicts = [];
+
+        render(<EstadisticaDashboards />);
+
+        expect(screen.getByText('Sense conflictes')).toBeInTheDocument();
+    });
+
+    it('EstadisticaDashboards_quanEsNetejaElFitxer_eliminaElsConflictes', () => {
+        render(<EstadisticaDashboards />);
+
+        const fileInput = screen.getByTestId('field-file');
+        fireEvent.change(fileInput, { target: { value: 'test.json' } });
+        mocks.setFieldValueMock.mockClear();
+
+        fireEvent.change(fileInput, { target: { value: '' } });
+
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('conflicts', undefined);
     });
 });

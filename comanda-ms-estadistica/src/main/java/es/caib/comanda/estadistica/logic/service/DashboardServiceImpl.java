@@ -421,13 +421,26 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
      */
     public class DashboardImportActionExecutor implements ActionExecutor<DashboardEntity, DashboardImportParams, DashboardImportResult> {
 
+        private List<DashboardExport> parseDashboardsJson(String jsonString) throws IOException {
+            if (jsonString == null || jsonString.trim().isEmpty()) {
+                return Collections.emptyList();
+            }
+            String trimmed = jsonString.trim();
+            if (trimmed.startsWith("[")) {
+                return objectMapper.readValue(trimmed,
+                        objectMapper.getTypeFactory().constructCollectionType(List.class, DashboardExport.class));
+            } else if (trimmed.startsWith("{")) {
+                DashboardExport single = objectMapper.readValue(trimmed, DashboardExport.class);
+                return single != null ? Collections.singletonList(single) : Collections.emptyList();
+            }
+            throw new IllegalArgumentException("Format JSON no reconegut");
+        }
+
         @Override
         public DashboardImportResult exec(String code, DashboardEntity entity, DashboardImportParams params) {
             try {
                 String jsonString = new String(params.getFile().getContent(), StandardCharsets.UTF_8);
-
-                List<DashboardExport> dashboards = objectMapper.readValue(jsonString,
-                        objectMapper.getTypeFactory().constructCollectionType(List.class, DashboardExport.class));
+                List<DashboardExport> dashboards = parseDashboardsJson(jsonString);
 
                 List<Dashboard> importedDashboards = new ArrayList<>();
                 List<Conflict> conflicts = params.getConflicts() != null ? params.getConflicts() : Collections.emptyList();
@@ -453,19 +466,22 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                 }
                 try {
                     String jsonString = new String(file.getContent(), StandardCharsets.UTF_8);
-                    List<DashboardExport> dashboards = objectMapper.readValue(jsonString,
-                            objectMapper.getTypeFactory().constructCollectionType(List.class, DashboardExport.class));
+                    List<DashboardExport> dashboards = parseDashboardsJson(jsonString);
 
                     List<Conflict> dashboardConflicts = new ArrayList<>();
-                    dashboardImportHelper.checkDashboardConflicts(dashboards, dashboardConflicts);
+                    if (dashboards != null && !dashboards.isEmpty()) {
+                        dashboardImportHelper.checkDashboardConflicts(dashboards, dashboardConflicts);
+                    }
                     target.setConflicts(dashboardConflicts);
                 } catch (AnswerRequiredException a) {
+                    log.warn("Answer required during onChange: {}", a.getMessage());
                     if (!answers.containsKey(a.getAnswerCode())) {
                         throw a;
                     }
-//                    throw new RuntimeException(a.getQuestion());
+                    target.setConflicts(new ArrayList<>());
                 } catch (Exception e) {
                     log.warn("Error parsing JSON content in onChange", e);
+                    target.setConflicts(new ArrayList<>());
                 }
             }
         }

@@ -851,4 +851,76 @@ class DashboardServiceImplTest {
 
         assertThat(target.getConflicts()).isEmpty();
     }
+
+    @Test
+    @DisplayName("DashboardImport: onChange amb fitxer JSON buit o d'objecte buit retorna conflictes buits")
+    void dashboardImport_onChange_ambFitxerSenseItems_retornaConflictesBuits() throws Exception {
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", "[]".getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.DashboardImportParams target = new DashboardServiceImpl.DashboardImportParams();
+        executor.onChange(null, null, DashboardServiceImpl.DashboardImportParams.Fields.file, fileRef, new HashMap<>(), new String[]{}, target);
+
+        assertThat(target.getConflicts()).isNotNull().isEmpty();
+
+        ReflectionTestUtils.setField(fileRef, "content", "{}".getBytes(StandardCharsets.UTF_8));
+        DashboardServiceImpl.DashboardImportParams targetObj = new DashboardServiceImpl.DashboardImportParams();
+        executor.onChange(null, null, DashboardServiceImpl.DashboardImportParams.Fields.file, fileRef, new HashMap<>(), new String[]{}, targetObj);
+
+        assertThat(targetObj.getConflicts()).isNotNull().isEmpty();
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
+    @DisplayName("DashboardImport: exec amb objecte JSON únic importa correctament")
+    void dashboardImport_exec_ambObjecteUnic_importaCorrectament() throws Exception {
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        String json = "{\"titol\":\"Titol Unic\"}";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.DashboardImportParams params = new DashboardServiceImpl.DashboardImportParams();
+        params.setFile(fileRef);
+
+        DashboardServiceImpl.DashboardImportResult result = executor.exec(Dashboard.DASHBOARD_IMPORT, new DashboardEntity(), params);
+
+        assertThat(result).isNotNull();
+        verify(dashboardImportHelper, atLeastOnce()).importDashboardFromExport(anyList(), any());
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
+    @DisplayName("DashboardImport: onChange amb dashboard sense items ni titols popula conflictes sense fallar")
+    void dashboardImport_onChange_ambDashboardSenseItemsNiTitols_populaConflictes() throws Exception {
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        String json = "[\n" +
+                "  {\n" +
+                "    \"titol\": \"Dashboard de prova2\",\n" +
+                "    \"descripcio\": \"Dashboard de prova\",\n" +
+                "    \"entornCodi\": \"DEV\"\n" +
+                "  }\n" +
+                "]";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.DashboardImportParams target = new DashboardServiceImpl.DashboardImportParams();
+        executor.onChange(null, null, DashboardServiceImpl.DashboardImportParams.Fields.file, fileRef, new HashMap<>(), new String[]{}, target);
+
+        assertThat(target.getConflicts()).isNotNull();
+        verify(dashboardImportHelper, atLeastOnce()).checkDashboardConflicts(anyList(), any());
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
 }

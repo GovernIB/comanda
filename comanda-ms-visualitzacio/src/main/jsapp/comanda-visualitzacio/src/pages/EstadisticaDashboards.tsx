@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
 import {
     MuiDataGrid,
     FormField,
@@ -141,55 +142,120 @@ const ImportConflictRow: React.FC<{
     );
 };
 
-const DashboardImportConflictsForm: React.FC = () => {
+const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean }> = ({ isAnalyzing }) => {
     const { t } = useTranslation();
     const { data, apiRef } = useFormContext();
-    const conflicts: Conflicte[] = data?.conflicts ?? [];
+    const conflicts: Conflicte[] | undefined = data?.conflicts;
+    const hasFile = data?.file != null || (conflicts != null && conflicts.length > 0);
 
     const updateConflict = (index: number, changes: Partial<Conflicte>) => {
+        if (!conflicts) return;
         const updated = conflicts.map((c, i) => (i === index ? { ...c, ...changes } : c));
         apiRef.current?.setFieldValue('conflicts', updated);
     };
 
+    if (!hasFile && !isAnalyzing) {
+        return null;
+    }
+
+    if (isAnalyzing || (hasFile && conflicts === undefined)) {
+        return (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, my: 2 }}>
+                <CircularProgress size={24} />
+                <Typography variant="body2" color="text.secondary">
+                    {t($ => $.page.dashboards.action.import.analyzing)}
+                </Typography>
+            </Box>
+        );
+    }
+
+    if (!conflicts || conflicts.length === 0) {
+        return (
+            <Alert severity="info" sx={{ mt: 2 }}>
+                {t($ => $.page.dashboards.action.import.noConflicts)}
+            </Alert>
+        );
+    }
+
     return (
         <>
-            {conflicts.length > 0 && (<>
-                <Grid size={12}>
-                    <FormField name="overwrite" onChange={(value) => {
-                        const updated = conflicts.map((c) => ({ ...c, overwrite: value }));
-                        apiRef.current?.setFieldValue('conflicts', updated)
-                    }} />
-                </Grid>
-                <Box sx={{ mt: 2 }}>
-                    <Typography variant="subtitle2">
-                        {t($ => $.page.dashboards.action.import.dashboardConflicts)}
-                    </Typography>
-                    {conflicts.map((c, i) => (
-                        <ImportConflictRow
-                            key={i + c.titol}
-                            index={i}
-                            conflict={c}
-                            onChange={(changes) => updateConflict(i, changes)}
-                        />
-                    ))}
-                </Box>
-            </>)}
+            <Grid size={12}>
+                <FormField name="overwrite" onChange={(value) => {
+                    const updated = conflicts.map((c) => ({ ...c, overwrite: value }));
+                    apiRef.current?.setFieldValue('conflicts', updated);
+                }} />
+            </Grid>
+            <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle2">
+                    {t($ => $.page.dashboards.action.import.dashboardConflicts)}
+                </Typography>
+                {conflicts.map((c, i) => (
+                    <ImportConflictRow
+                        key={i + c.titol}
+                        index={i}
+                        conflict={c}
+                        onChange={(changes) => updateConflict(i, changes)}
+                    />
+                ))}
+            </Box>
         </>
+    );
+};
+
+const DashboardImportFormContent: React.FC = () => {
+    const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+    const { apiRef, data } = useFormContext();
+
+    const handleFileChange = (fileValue: any) => {
+        if (!fileValue) {
+            setIsAnalyzing(false);
+            apiRef.current?.setFieldValue('conflicts', undefined);
+        } else {
+            setIsAnalyzing(true);
+            apiRef.current?.setFieldValue('conflicts', undefined);
+        }
+    };
+
+    React.useEffect(() => {
+        if (data?.conflicts !== undefined) {
+            setIsAnalyzing(false);
+        }
+    }, [data?.conflicts]);
+
+    return (
+        <Grid container spacing={2}>
+            <Grid size={12}>
+                <FormField name="file" type={"file"} onChange={handleFileChange} />
+            </Grid>
+            <Grid size={12}>
+                <DashboardImportConflictsForm isAnalyzing={isAnalyzing} />
+            </Grid>
+        </Grid>
     );
 };
 
 const useImportDashboardAction = (refresh?: () => void) => {
     const { t } = useTranslation();
     const apiRef = React.useRef<MuiFormDialogApi>(null);
-    const {temporalMessageShow} = useBaseAppContext();
-    const handleShow = () :void => {
-        apiRef.current?.show?.(undefined)
-    }
-    const onSuccess = () :void => {
+    const { temporalMessageShow } = useBaseAppContext();
+    const handleShow = (): void => {
+        apiRef.current?.show?.(undefined);
+    };
+    const onSuccess = (): void => {
         refresh?.();
         temporalMessageShow(null, t($ => $.page.dashboards.action.import.success), 'success');
-    }
-    const formulario =
+    };
+
+    const importLoading = (
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, my: 4 }}>
+            <CircularProgress size={48} />
+            <Typography variant="h6" color="text.primary">
+                {t($ => $.page.dashboards.action.import.importing)}
+            </Typography>
+        </Box>
+    );
+
+    const formulario = (
         <FormActionDialog
             resourceName={"dashboard"}
             action={"dashboard_import"}
@@ -197,21 +263,17 @@ const useImportDashboardAction = (refresh?: () => void) => {
             title={t($ => $.page.dashboards.action.import.title)}
             onSuccess={onSuccess}
             initialOnChange={false}
+            formDialogLoading={importLoading}
         >
-            <Grid container spacing={2}>
-                <Grid size={12}>
-                    <FormField name="file" type={"file"} />
-                </Grid>
-                <Grid size={12}>
-                    <DashboardImportConflictsForm />
-                </Grid>
-            </Grid>
-        </FormActionDialog>;
+            <DashboardImportFormContent />
+        </FormActionDialog>
+    );
+
     return {
         handleShow,
-        content: formulario
-    }
-}
+        content: formulario,
+    };
+};
 
 const useActions = () => {
     const { artifactReport: apiReport } = useResourceApiService('dashboard');

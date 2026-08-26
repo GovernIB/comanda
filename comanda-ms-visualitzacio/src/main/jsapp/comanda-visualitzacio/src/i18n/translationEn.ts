@@ -453,6 +453,9 @@ const translationEn: translationResourcesType = {
                     title: "Import dashboard",
                     success: "Dashboard imported successfully",
                     dashboardConflicts: "Elements with these names already exist. Indicate what to do with each one:",
+                    analyzing: "Analyzing the file and checking for potential conflicts...",
+                    noConflicts: "No conflicts detected.",
+                    importing: "Importing dashboard and associated resources...",
                 },
             },
             alert: {

@@ -6,6 +6,7 @@ type CommonProps = {
     resourceName: string,
     formDialogButtons?: DialogButton[],
     formDialogComponentProps?: any,
+    formDialogLoading?: React.ReactElement,
     initialOnChange?: boolean,
     children: React.ReactElement,
     apiRef?: MutableRefObject<any>,
@@ -30,6 +31,7 @@ const FormActionDialog = (props:FormActionDialogProp) => {
         action,
         formDialogButtons,
         formDialogComponentProps,
+        formDialogLoading,
         initialOnChange = false,
         children,
         apiRef,
@@ -58,12 +60,14 @@ const FormActionDialog = (props:FormActionDialogProp) => {
         initialOnChange,
         children,
         undefined,
-        undefined,
+        formDialogLoading,
         formDialogButtons,
         formDialogComponentProps,
         formDialogResultProcessor,
         onSuccess,
         onError,
+        undefined,
+        undefined,
         (reason?: string) => reason !== 'backdropClick'
     )
 
@@ -88,6 +92,7 @@ export const FormReportDialog = (props:FormReportDialogProp) => {
         report,
         reportFileType = 'PDF',
         formDialogComponentProps,
+        formDialogLoading,
         initialOnChange,
         children,
         apiRef,
@@ -117,12 +122,14 @@ export const FormReportDialog = (props:FormReportDialogProp) => {
         initialOnChange,
         children,
         undefined,
-        undefined,
+        formDialogLoading,
         undefined,
         formDialogComponentProps,
         formDialogResultProcessor,
         onSuccess,
         onError,
+        undefined,
+        undefined,
         (reason?: string) => reason !== 'backdropClick'
     )
 

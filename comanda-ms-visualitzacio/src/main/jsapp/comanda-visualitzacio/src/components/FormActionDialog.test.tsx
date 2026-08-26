@@ -114,6 +114,8 @@ describe('FormActionDialog', () => {
             undefined,
             expect.any(Function),
             expect.any(Function),
+            undefined,
+            undefined,
             expect.any(Function)
         );
         expect(mocks.execMock).toHaveBeenCalledWith(9, 'Informe', { filtre: 'ok' });
