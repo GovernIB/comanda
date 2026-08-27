@@ -144,7 +144,7 @@ const groupConflicts = (conflicts: Conflicte[], t: TFunction): ConflictGroupMeta
     map.forEach((items, tipo) => {
         groups.push({
             tipo,
-            label: tipo,
+            label: tipo === 'Other' ? t($ => $.page.dashboards.action.import.groups.other) : tipo,
             icon: 'category',
             items,
         });

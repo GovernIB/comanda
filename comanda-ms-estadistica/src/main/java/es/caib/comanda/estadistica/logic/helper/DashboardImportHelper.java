@@ -56,7 +56,9 @@ public class DashboardImportHelper {
 
     public void validateDashboardExport(List<DashboardExport> dashboards) {
         if (dashboards == null || dashboards.isEmpty()) {
-            throw new IllegalArgumentException("El fitxer no conté cap tauler de control per importar.");
+            throw new IllegalArgumentException(
+                    I18nUtil.getInstance().getI18nMessage(
+                            "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.buit"));
         }
         for (int i = 0; i < dashboards.size(); i++) {
             DashboardExport dashboard = dashboards.get(i);
@@ -68,9 +70,14 @@ public class DashboardImportHelper {
                             .sorted()
                             .collect(Collectors.joining(", "));
                     String prefix = dashboards.size() > 1
-                            ? "Tauler " + (i + 1) + (dashboard.getTitol() != null ? " (" + dashboard.getTitol() + ")" : "") + ": "
+                            ? I18nUtil.getInstance().getI18nMessage(
+                                    "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.prefix",
+                                    (i + 1),
+                                    dashboard.getTitol() != null ? " (" + dashboard.getTitol() + ")" : "") + ": "
                             : "";
-                    throw new IllegalArgumentException(prefix + "Dades del tauler invàlides (" + errorDetails + ")");
+                    throw new IllegalArgumentException(prefix + I18nUtil.getInstance().getI18nMessage(
+                            "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.dadesInvalides",
+                            errorDetails));
                 }
             }
         }

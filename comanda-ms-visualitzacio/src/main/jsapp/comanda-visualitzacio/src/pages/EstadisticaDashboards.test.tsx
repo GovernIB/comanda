@@ -529,4 +529,15 @@ describe('EstadisticaDashboards', () => {
         expect(screen.getByText('2 seleccionats')).toBeInTheDocument();
         expect(groupTreeItem).toHaveAttribute('aria-checked', 'true');
     });
+
+    it('EstadisticaDashboards_quanHiHaUnTipusDeConflicteDesconegut_mostraEtiquetaAltresElements', () => {
+        mocks.formContextData.conflicts = [
+            { tipo: '', titol: 'Element Desconegut', overwrite: undefined },
+        ];
+
+        render(<EstadisticaDashboards />);
+
+        expect(screen.getByText('Altres elements')).toBeInTheDocument();
+        expect(screen.getByText('Element Desconegut')).toBeInTheDocument();
+    });
 });

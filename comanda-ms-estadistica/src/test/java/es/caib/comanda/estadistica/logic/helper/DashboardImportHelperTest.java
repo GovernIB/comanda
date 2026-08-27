@@ -667,11 +667,11 @@ class DashboardImportHelperTest {
     void validateDashboardExport_quanLlistaBuida_llançaExcepcio() {
         assertThatThrownBy(() -> dashboardImportHelper.validateDashboardExport(null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("no conté cap tauler");
+                .hasMessageContaining("es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.buit");
 
         assertThatThrownBy(() -> dashboardImportHelper.validateDashboardExport(Collections.emptyList()))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("no conté cap tauler");
+                .hasMessageContaining("es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.buit");
     }
 
     @Test
@@ -689,7 +689,7 @@ class DashboardImportHelperTest {
 
         assertThatThrownBy(() -> dashboardImportHelper.validateDashboardExport(Collections.singletonList(export)))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("titol: no pot ser buit");
+                .hasMessageContaining("es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.dadesInvalides");
     }
 
     @Test
