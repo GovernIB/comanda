@@ -549,9 +549,10 @@ class DashboardImportHelperTest {
         EntornApp entornApp = new EntornApp(); entornApp.setId(1L);
 
 
-        when(dashboardRepository.findByTitol(any())).thenReturn(new DashboardEntity());
-        when(estadisticaWidgetRepository.findByAppIdAndTitol(any(), any())).thenReturn(new EstadisticaSimpleWidgetEntity());
-        when(plantillaRepository.findByNom(any())).thenReturn(Optional.of(new PlantillaEntity()));
+        when(dashboardRepository.findByTitol("Dash Test")).thenReturn(new DashboardEntity());
+        when(estadisticaWidgetRepository.findByAppIdAndTitol(2L, "Widget Test")).thenReturn(new EstadisticaSimpleWidgetEntity());
+        when(plantillaRepository.findByNom("Plantilla Titol")).thenReturn(Optional.of(new PlantillaEntity()));
+        when(plantillaRepository.findByNom("Plantilla Dash")).thenReturn(Optional.of(new PlantillaEntity()));
         lenient().when(paletaRepository.findByNom(any())).thenReturn(Optional.of(new PaletaEntity()));
 
         when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(entorn);
@@ -568,6 +569,24 @@ class DashboardImportHelperTest {
         // Assert
         // S'han d'haver afegit conflictes per: Dashboard, Widget, Plantilla Titol, Plantilla Dash
         assertThat(conflicts).hasSize(4);
+        assertThat(conflicts).allSatisfy(c -> {
+            assertThat(c.getSuggerenciaNouNom()).isNotNull();
+            assertThat(c.getSuggerenciaNouNom()).isEqualTo(c.getTitol() + " (1)");
+        });
+    }
+
+    @Test
+    @DisplayName("getElementNewNom: retorna el nom original sense modificar si s'esgoten els intents màxims")
+    void getElementNewNom_quanSExhaureixenIntents_llavorsRetornaNomOriginal() {
+        // Arrange - Qualsevol nom existeix a la base de dades
+        when(dashboardRepository.findByTitol(any())).thenReturn(new DashboardEntity());
+
+        // Act
+        String result = (String) ReflectionTestUtils.invokeMethod(
+            dashboardImportHelper, "getElementNewNom", "Dash Test", null, DashboardExport.class.getSimpleName());
+
+        // Assert - Ha de retornar el nom original sense modificar
+        assertThat(result).isEqualTo("Dash Test");
     }
 
     @Test
@@ -648,11 +667,11 @@ class DashboardImportHelperTest {
     void validateDashboardExport_quanLlistaBuida_llançaExcepcio() {
         assertThatThrownBy(() -> dashboardImportHelper.validateDashboardExport(null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("no conté cap tauler");
+                .hasMessageContaining("es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.buit");
 
         assertThatThrownBy(() -> dashboardImportHelper.validateDashboardExport(Collections.emptyList()))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("no conté cap tauler");
+                .hasMessageContaining("es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.buit");
     }
 
     @Test
@@ -670,7 +689,7 @@ class DashboardImportHelperTest {
 
         assertThatThrownBy(() -> dashboardImportHelper.validateDashboardExport(Collections.singletonList(export)))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("titol: no pot ser buit");
+                .hasMessageContaining("es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.dadesInvalides");
     }
 
     @Test

@@ -474,6 +474,22 @@ const translationCa = {
                     analyzing: "Analitzant el fitxer i verificant possibles conflictes...",
                     noConflicts: "No s'ha detectat cap conflicte.",
                     importing: "Important tauler de control i recursos associats...",
+                    groups: {
+                        dashboard: "Taulers de control",
+                        widget: "Widgets",
+                        plantilla: "Plantilles",
+                        paleta: "Paletes",
+                        other: "Altres elements",
+                    },
+                    bulkActions: {
+                        selectedCount: "{{count}} seleccionats",
+                        useExisting: "Emprar existent",
+                        createWithAnotherName: "Crear amb un altre nom",
+                        selectAll: "Seleccionar-ho tot",
+                        deselectAll: "Deseleccionar",
+                    },
+                    warningExistingTitle: "Elements compartits entre taulers de control",
+                    warningExistingDescription: "Els elements amb l'opció \"Emprar existent\" quedaran vinculats entre els taulers. Les modificacions que s'hi facin posteriorment afectaran automàticament tots els taulers de control que els utilitzin.",
                 },
             },
             alert: {

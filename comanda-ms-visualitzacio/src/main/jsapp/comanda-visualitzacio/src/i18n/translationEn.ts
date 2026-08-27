@@ -474,6 +474,22 @@ const translationEn: translationResourcesType = {
                     analyzing: "Analyzing the file and checking for potential conflicts...",
                     noConflicts: "No conflicts detected.",
                     importing: "Importing dashboard and associated resources...",
+                    groups: {
+                        dashboard: "Dashboards",
+                        widget: "Widgets",
+                        plantilla: "Templates",
+                        paleta: "Palettes",
+                        other: "Other elements",
+                    },
+                    bulkActions: {
+                        selectedCount: "{{count}} selected",
+                        useExisting: "Use existing",
+                        createWithAnotherName: "Create with another name",
+                        selectAll: "Select all",
+                        deselectAll: "Deselect",
+                    },
+                    warningExistingTitle: "Shared items across dashboards",
+                    warningExistingDescription: "Items with the \"Use existing\" option will be linked between dashboards. Subsequent modifications will automatically affect all dashboards that use them.",
                 },
             },
             alert: {

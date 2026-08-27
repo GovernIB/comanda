@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import EstadisticaDashboards from './EstadisticaDashboards';
 
@@ -14,11 +14,11 @@ const mocks = vi.hoisted(() => ({
     formContextData: {
         entorn: { id: 7 },
         aplicacio: { id: 3 },
-        conflicts: [] as Array<{ tipo: string; titol: string; overwrite?: string; nouNom?: string }>,
+        conflicts: [] as Array<{ tipo: string; titol: string; overwrite?: string; nouNom?: string; suggerenciaNouNom?: string }>,
         file: undefined as any,
     },
-    tMock: vi.fn((selector: any) =>
-        selector({
+    tMock: vi.fn((selector: any, options?: any) => {
+        const res = selector({
             components: {
                 permisos: {
                     title: 'Permisos',
@@ -49,6 +49,22 @@ const mocks = vi.hoisted(() => ({
                             analyzing: 'Analitzant fitxer...',
                             noConflicts: 'Sense conflictes',
                             importing: 'Important dashboard...',
+                            groups: {
+                                dashboard: 'Taulers de control',
+                                widget: 'Widgets',
+                                plantilla: 'Plantilles',
+                                paleta: 'Paletes',
+                                other: 'Altres elements',
+                            },
+                            bulkActions: {
+                                selectedCount: '{{count}} seleccionats',
+                                useExisting: 'Emprar existent',
+                                createWithAnotherName: 'Crear amb un altre nom',
+                                selectAll: 'Seleccionar-ho tot',
+                                deselectAll: 'Deseleccionar',
+                            },
+                            warningExistingTitle: 'Elements compartits entre taulers de control',
+                            warningExistingDescription: "Els elements amb l'opció \"Emprar existent\" quedaran vinculats entre els taulers. Les modificacions que s'hi facin posteriorment afectaran automàticament tots els taulers de control que els utilitzin.",
                         },
                     },
                     cloneDashboard: {
@@ -57,8 +73,15 @@ const mocks = vi.hoisted(() => ({
                     },
                 },
             },
-        })
-    ),
+        });
+        if (typeof res === 'string' && options) {
+            return Object.entries(options).reduce(
+                (str, [k, v]) => str.replace(`{{${k}}}`, String(v)),
+                res
+            );
+        }
+        return res;
+    }),
 }));
 
 vi.mock('react-i18next', () => ({
@@ -228,7 +251,7 @@ vi.mock('@mui/material/Badge', () => ({
 }));
 
 vi.mock('@mui/material/Icon', () => ({
-    default: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+    default: ({ children, ...props }: any) => <span {...props}>{children}</span>,
 }));
 
 describe('EstadisticaDashboards', () => {
@@ -313,7 +336,7 @@ describe('EstadisticaDashboards', () => {
 
     it('EstadisticaDashboards_quanElConflicteDeWidgetTeDecisioCrearNou_mostraElCampDeNomNouIPermetEditarLo', () => {
         mocks.formContextData.conflicts = [
-            { tipo: 'EstadisticaWidgetExport', titol: 'Widget X', overwrite: 'CREAR_AMB_ALTRE_NOM', nouNom: '' },
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget X', overwrite: 'CREAR_AMB_ALTRE_NOM', nouNom: '', suggerenciaNouNom: 'Widget X (5)' },
         ];
 
         render(<EstadisticaDashboards />);
@@ -321,10 +344,12 @@ describe('EstadisticaDashboards', () => {
         expect(screen.getByText('Widget X')).toBeInTheDocument();
 
         const nouNomInput = screen.getByTestId('field-conflicts[0].nouNom');
+        expect(nouNomInput).toHaveAttribute('placeholder', 'Widget X (5)');
+
         fireEvent.change(nouNomInput, { target: { value: 'Widget X (2)' } });
 
         expect(mocks.setFieldValueMock).toHaveBeenCalledWith('conflicts', [
-            { tipo: 'EstadisticaWidgetExport', titol: 'Widget X', overwrite: 'CREAR_AMB_ALTRE_NOM', nouNom: 'Widget X (2)' },
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget X', overwrite: 'CREAR_AMB_ALTRE_NOM', nouNom: 'Widget X (2)', suggerenciaNouNom: 'Widget X (5)' },
         ]);
     });
 
@@ -365,5 +390,190 @@ describe('EstadisticaDashboards', () => {
         fireEvent.change(fileInput, { target: { value: '' } });
 
         expect(mocks.setFieldValueMock).toHaveBeenCalledWith('conflicts', undefined);
+    });
+
+    it('EstadisticaDashboards_quanHiHaDiversosTipusDeConflictes_esMostrenAgrupatsEnElTreeView', () => {
+        mocks.formContextData.conflicts = [
+            { tipo: 'DashboardExport', titol: 'Dashboard 1' },
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget 1' },
+            { tipo: 'PlantillaExport', titol: 'Plantilla 1' },
+            { tipo: 'PaletaExport', titol: 'Paleta 1' },
+        ];
+
+        render(<EstadisticaDashboards />);
+
+        expect(screen.getByText('Taulers de control')).toBeInTheDocument();
+        expect(screen.getByText('Widgets')).toBeInTheDocument();
+        expect(screen.getByText('Plantilles')).toBeInTheDocument();
+        expect(screen.getByText('Paletes')).toBeInTheDocument();
+
+        expect(screen.getByText('Dashboard 1')).toBeInTheDocument();
+        expect(screen.getByText('Widget 1')).toBeInTheDocument();
+        expect(screen.getByText('Plantilla 1')).toBeInTheDocument();
+        expect(screen.getByText('Paleta 1')).toBeInTheDocument();
+    });
+
+    it('EstadisticaDashboards_quanSutilitzenAccionsMassives_aplicaEmprarExistentATotsElsSeleccionats', () => {
+        mocks.formContextData.conflicts = [
+            { tipo: 'DashboardExport', titol: 'Dashboard 1', overwrite: undefined },
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget 1', overwrite: undefined },
+            { tipo: 'PlantillaExport', titol: 'Plantilla 1', overwrite: undefined },
+        ];
+
+        render(<EstadisticaDashboards />);
+
+        // Seleccionar-ho tot
+        const selectAllButton = screen.getByRole('button', { name: 'Seleccionar-ho tot' });
+        fireEvent.click(selectAllButton);
+
+        // Clicar a Emprar existent
+        const bulkUseExistingBtn = screen.getByRole('button', { name: /Emprar existent/i });
+        expect(bulkUseExistingBtn).not.toBeDisabled();
+        fireEvent.click(bulkUseExistingBtn);
+
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('conflicts', [
+            { tipo: 'DashboardExport', titol: 'Dashboard 1', overwrite: 'EMPRAR_EXISTENT' },
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget 1', overwrite: 'EMPRAR_EXISTENT' },
+            { tipo: 'PlantillaExport', titol: 'Plantilla 1', overwrite: 'EMPRAR_EXISTENT' },
+        ]);
+    });
+
+    it('EstadisticaDashboards_quanSutilitzenAccionsMassives_aplicaCrearAmbAltreNomATotsElsSeleccionats', () => {
+        mocks.formContextData.conflicts = [
+            { tipo: 'DashboardExport', titol: 'Dashboard 1', overwrite: undefined },
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget 1', overwrite: undefined },
+        ];
+
+        render(<EstadisticaDashboards />);
+
+        // Seleccionar-ho tot
+        const selectAllButton = screen.getByRole('button', { name: 'Seleccionar-ho tot' });
+        fireEvent.click(selectAllButton);
+
+        // Clicar a Crear amb un altre nom
+        const bulkCreateBtn = screen.getByRole('button', { name: /Crear amb un altre nom/i });
+        expect(bulkCreateBtn).not.toBeDisabled();
+        fireEvent.click(bulkCreateBtn);
+
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('conflicts', [
+            { tipo: 'DashboardExport', titol: 'Dashboard 1', overwrite: 'CREAR_AMB_ALTRE_NOM' },
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget 1', overwrite: 'CREAR_AMB_ALTRE_NOM' },
+        ]);
+    });
+
+    it('EstadisticaDashboards_quanEsPremDeseleccionar_deshabilitaElsBotonsDAccioMassiva', () => {
+        mocks.formContextData.conflicts = [
+            { tipo: 'DashboardExport', titol: 'Dashboard 1', overwrite: undefined },
+        ];
+
+        render(<EstadisticaDashboards />);
+
+        const selectAllButton = screen.getByRole('button', { name: 'Seleccionar-ho tot' });
+        const deselectAllButton = screen.getByRole('button', { name: 'Deseleccionar' });
+        const bulkUseExistingBtn = screen.getByRole('button', { name: /Emprar existent/i });
+        const bulkCreateBtn = screen.getByRole('button', { name: /Crear amb un altre nom/i });
+
+        // Inicialment sense selecció
+        expect(bulkUseExistingBtn).toBeDisabled();
+        expect(bulkCreateBtn).toBeDisabled();
+
+        // Seleccionar tot
+        fireEvent.click(selectAllButton);
+        expect(bulkUseExistingBtn).not.toBeDisabled();
+        expect(bulkCreateBtn).not.toBeDisabled();
+
+        // Deseleccionar tot
+        fireEvent.click(deselectAllButton);
+        expect(bulkUseExistingBtn).toBeDisabled();
+        expect(bulkCreateBtn).toBeDisabled();
+    });
+
+    it('EstadisticaDashboards_quanEsSeleccionaUnGrup_seleccionaTotsElsFillsIActualitzaElCompte', () => {
+        mocks.formContextData.conflicts = [
+            { tipo: 'DashboardExport', titol: 'Dashboard A', overwrite: undefined },
+            { tipo: 'DashboardExport', titol: 'Dashboard B', overwrite: undefined },
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget 1', overwrite: undefined },
+        ];
+
+        render(<EstadisticaDashboards />);
+
+        // El grup de Taulers de control té 2 fills
+        const groupTreeItem = screen.getByRole('treeitem', { name: /Taulers de control/i });
+        const groupInput = groupTreeItem.querySelector('input.PrivateSwitchBase-input') as HTMLInputElement;
+        expect(groupInput).not.toBeNull();
+
+        // Clic al checkbox del grup
+        fireEvent.click(groupInput);
+
+        // El compte de seleccionats ha de ser 2
+        expect(screen.getByText('2 seleccionats')).toBeInTheDocument();
+
+        // Ambdós fills han d'estar seleccionats
+        const childA = within(groupTreeItem).getByRole('treeitem', { name: /Dashboard A/i });
+        const childB = within(groupTreeItem).getByRole('treeitem', { name: /Dashboard B/i });
+        expect(childA).toHaveAttribute('aria-checked', 'true');
+        expect(childB).toHaveAttribute('aria-checked', 'true');
+
+        // Deseleccionar un fill
+        const childAInput = childA.querySelector('input.PrivateSwitchBase-input') as HTMLInputElement;
+        fireEvent.click(childAInput);
+
+        // El compte ha de baixar a 1
+        expect(screen.getByText('1 seleccionats')).toBeInTheDocument();
+        expect(childA).toHaveAttribute('aria-checked', 'false');
+        expect(childB).toHaveAttribute('aria-checked', 'true');
+
+        // El grup ha de tenir l'estat indeterminat
+        expect(groupTreeItem).toHaveAttribute('aria-checked', 'mixed');
+
+        // Tornar a seleccionar el fill
+        fireEvent.click(childAInput);
+        expect(screen.getByText('2 seleccionats')).toBeInTheDocument();
+        expect(groupTreeItem).toHaveAttribute('aria-checked', 'true');
+    });
+
+    it('EstadisticaDashboards_quanHiHaUnTipusDeConflicteDesconegut_mostraEtiquetaAltresElements', () => {
+        mocks.formContextData.conflicts = [
+            { tipo: '', titol: 'Element Desconegut', overwrite: undefined },
+        ];
+
+        render(<EstadisticaDashboards />);
+
+        expect(screen.getByText('Altres elements')).toBeInTheDocument();
+        expect(screen.getByText('Element Desconegut')).toBeInTheDocument();
+    });
+
+    it('EstadisticaDashboards_quanHiHaConflictesAmbDecisioEmprarExistent_mostraAlertDAvisPlegable', () => {
+        mocks.formContextData.conflicts = [
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget Existent', overwrite: 'EMPRAR_EXISTENT' },
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget Nou', overwrite: 'CREAR_AMB_ALTRE_NOM', nouNom: 'Widget Nou (1)' },
+        ];
+
+        const { rerender } = render(<EstadisticaDashboards />);
+
+        // Ha de mostrar el títol de l'alerta d'avís
+        const alertTitle = screen.getByText('Elements compartits entre taulers de control');
+        expect(alertTitle).toBeInTheDocument();
+
+        // Inicialment el botó mostra expand_more
+        expect(screen.getByText('expand_more')).toBeInTheDocument();
+
+        // En fer clic sobre el botó d'expandir, canvia a expand_less
+        const expandBtn = screen.getByRole('button', { name: 'expand_more' });
+        fireEvent.click(expandBtn);
+        expect(screen.getByText('expand_less')).toBeInTheDocument();
+
+        // En fer clic sobre el títol, es torna a plegar
+        fireEvent.click(alertTitle);
+        expect(screen.getByText('expand_more')).toBeInTheDocument();
+
+        // Si tots els conflictes passen a CREAR_AMB_ALTRE_NOM, l'alerta d'avís desapareix
+        mocks.formContextData.conflicts = [
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget Existent', overwrite: 'CREAR_AMB_ALTRE_NOM', nouNom: 'Widget Existent (1)' },
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget Nou', overwrite: 'CREAR_AMB_ALTRE_NOM', nouNom: 'Widget Nou (1)' },
+        ];
+        rerender(<EstadisticaDashboards />);
+
+        expect(screen.queryByText('Elements compartits entre taulers de control')).not.toBeInTheDocument();
     });
 });
