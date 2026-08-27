@@ -388,6 +388,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
         @NotNull private String titol;
         @NotNull private OverwriteEnum overwrite = OverwriteEnum.EMPRAR_EXISTENT;
         private String nouNom;
+        private String suggerenciaNouNom;
         @NotNull private String tipo;
 
         private Long appId;

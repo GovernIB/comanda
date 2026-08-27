@@ -442,8 +442,10 @@ public class DashboardImportHelper {
         if (this.existsElementByNom(nom, appId, tipus)) {
             if (conflicts.stream()
                     .noneMatch(c -> Objects.equals(nom, c.getTitol()) && Objects.equals(appId, c.getAppId()) && Objects.equals(tipus, c.getTipo()))) {
-                conflicts.add(
-                        new Conflict(nom, appId, tipus));
+                String suggerenciaNouNom = this.getElementNewNom(nom, appId, tipus);
+                Conflict conflict = new Conflict(nom, appId, tipus);
+                conflict.setSuggerenciaNouNom(suggerenciaNouNom);
+                conflicts.add(conflict);
             }
         }
     }
@@ -463,11 +465,16 @@ public class DashboardImportHelper {
         return this.getElementByNom(nom, appId, tipus) != null;
     }
 
+    private static final int MAX_TRIES_NOU_NOM = 100;
+
     private String getElementNewNom(String nomEntrada, Long appId, String tipus) {
         int contador = 0;
         String temp = nomEntrada;
         while (this.existsElementByNom(temp, appId, tipus)) {
             contador++;
+            if (contador > MAX_TRIES_NOU_NOM) {
+                return nomEntrada;
+            }
             temp = nomEntrada + " (" + contador + ")";
         }
         return temp;

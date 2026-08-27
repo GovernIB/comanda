@@ -101,7 +101,7 @@ const useCloneDashboardAction = (refresh?: () => void) => {
     }
 }
 
-type Conflicte = { titol: string; tipo: string; overwrite?: string; nouNom?: string; appId?: number };
+type Conflicte = { titol: string; tipo: string; overwrite?: string; nouNom?: string; appId?: number; suggerenciaNouNom?: string };
 
 interface ConflictGroupMeta {
     tipo: string;
@@ -238,7 +238,7 @@ const ConflictsTreeViewItemChild = React.memo(
                                         field={fieldNouNom}
                                         value={conflict.nouNom}
                                         onChange={value => updateConflict(index, { nouNom: value })}
-                                        componentProps={{ size: 'small', variant: 'standard', label: "", placeholder: conflict.titol + " (1)" }}
+                                        componentProps={{ size: 'small', variant: 'standard', label: "", placeholder: conflict.suggerenciaNouNom || conflict.titol }}
                                     />
                                 </Box>
                             )}

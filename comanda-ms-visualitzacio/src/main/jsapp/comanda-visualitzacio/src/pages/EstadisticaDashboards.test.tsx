@@ -1,5 +1,4 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import EstadisticaDashboards from './EstadisticaDashboards';
 
@@ -15,7 +14,7 @@ const mocks = vi.hoisted(() => ({
     formContextData: {
         entorn: { id: 7 },
         aplicacio: { id: 3 },
-        conflicts: [] as Array<{ tipo: string; titol: string; overwrite?: string; nouNom?: string }>,
+        conflicts: [] as Array<{ tipo: string; titol: string; overwrite?: string; nouNom?: string; suggerenciaNouNom?: string }>,
         file: undefined as any,
     },
     tMock: vi.fn((selector: any, options?: any) => {
@@ -335,7 +334,7 @@ describe('EstadisticaDashboards', () => {
 
     it('EstadisticaDashboards_quanElConflicteDeWidgetTeDecisioCrearNou_mostraElCampDeNomNouIPermetEditarLo', () => {
         mocks.formContextData.conflicts = [
-            { tipo: 'EstadisticaWidgetExport', titol: 'Widget X', overwrite: 'CREAR_AMB_ALTRE_NOM', nouNom: '' },
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget X', overwrite: 'CREAR_AMB_ALTRE_NOM', nouNom: '', suggerenciaNouNom: 'Widget X (5)' },
         ];
 
         render(<EstadisticaDashboards />);
@@ -343,10 +342,12 @@ describe('EstadisticaDashboards', () => {
         expect(screen.getByText('Widget X')).toBeInTheDocument();
 
         const nouNomInput = screen.getByTestId('field-conflicts[0].nouNom');
+        expect(nouNomInput).toHaveAttribute('placeholder', 'Widget X (5)');
+
         fireEvent.change(nouNomInput, { target: { value: 'Widget X (2)' } });
 
         expect(mocks.setFieldValueMock).toHaveBeenCalledWith('conflicts', [
-            { tipo: 'EstadisticaWidgetExport', titol: 'Widget X', overwrite: 'CREAR_AMB_ALTRE_NOM', nouNom: 'Widget X (2)' },
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget X', overwrite: 'CREAR_AMB_ALTRE_NOM', nouNom: 'Widget X (2)', suggerenciaNouNom: 'Widget X (5)' },
         ]);
     });
 
@@ -485,8 +486,7 @@ describe('EstadisticaDashboards', () => {
         expect(bulkCreateBtn).toBeDisabled();
     });
 
-    it('EstadisticaDashboards_quanEsSeleccionaUnGrup_seleccionaTotsElsFillsIActualitzaElCompte', async () => {
-        const user = userEvent.setup();
+    it('EstadisticaDashboards_quanEsSeleccionaUnGrup_seleccionaTotsElsFillsIActualitzaElCompte', () => {
         mocks.formContextData.conflicts = [
             { tipo: 'DashboardExport', titol: 'Dashboard A', overwrite: undefined },
             { tipo: 'DashboardExport', titol: 'Dashboard B', overwrite: undefined },
@@ -501,7 +501,7 @@ describe('EstadisticaDashboards', () => {
         expect(groupInput).not.toBeNull();
 
         // Clic al checkbox del grup
-        await user.click(groupInput);
+        fireEvent.click(groupInput);
 
         // El compte de seleccionats ha de ser 2
         expect(screen.getByText('2 seleccionats')).toBeInTheDocument();
@@ -514,7 +514,7 @@ describe('EstadisticaDashboards', () => {
 
         // Deseleccionar un fill
         const childAInput = childA.querySelector('input.PrivateSwitchBase-input') as HTMLInputElement;
-        await user.click(childAInput);
+        fireEvent.click(childAInput);
 
         // El compte ha de baixar a 1
         expect(screen.getByText('1 seleccionats')).toBeInTheDocument();
@@ -525,7 +525,7 @@ describe('EstadisticaDashboards', () => {
         expect(groupTreeItem).toHaveAttribute('aria-checked', 'mixed');
 
         // Tornar a seleccionar el fill
-        await user.click(childAInput);
+        fireEvent.click(childAInput);
         expect(screen.getByText('2 seleccionats')).toBeInTheDocument();
         expect(groupTreeItem).toHaveAttribute('aria-checked', 'true');
     });
