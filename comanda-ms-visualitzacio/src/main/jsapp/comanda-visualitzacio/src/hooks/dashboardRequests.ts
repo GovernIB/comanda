@@ -106,12 +106,25 @@ export const useDashboardWidgets = (
                 const widgetsDataPromises = widgetsPositionResponse
                     .filter((widget: any) => widget.tipus !== 'TITOL')
                     .map(async (widget) => {
-                        const dashboardItemData = (await artifactReportDashboardItem(
-                            widget.dashboardItemId,
-                            { code: 'widget_data', data: { temaFosc, filtreSeleccio } }
-                        )) as any[];
-                        const firstDashboardItemData = dashboardItemData[0];
-                        if (!firstDashboardItemData) return;
+                        // Cada widget es carrega individualment: si la petició d'un falla (p. ex. error SQL
+                        // al backend que no s'ha pogut convertir en una resposta 200 amb error:true), no s'ha
+                        // de perdre silenciosament — es marca aquest widget concret com a erroni perquè
+                        // GraficWidgetVisualization/WidgetErrorDisplay el puguin mostrar.
+                        let widgetResult: any;
+                        try {
+                            const dashboardItemData = (await artifactReportDashboardItem(
+                                widget.dashboardItemId,
+                                { code: 'widget_data', data: { temaFosc, filtreSeleccio } }
+                            )) as any[];
+                            widgetResult = dashboardItemData[0];
+                        } catch (exception: any) {
+                            widgetResult = {
+                                error: true,
+                                errorMsg: exception?.message,
+                                errorTrace: exception?.description,
+                            };
+                        }
+                        if (!widgetResult) return;
                         // Actualitzar el llistat de dashboardWidgets a mesura que es reben les dades
                         if (cancelRequests) return;
                         setRequestState((prevState) => ({
@@ -119,7 +132,8 @@ export const useDashboardWidgets = (
                             widgets: prevState.widgets.map((item: any) =>
                                 widget.dashboardItemId === item.dashboardItemId
                                     ? {
-                                          ...firstDashboardItemData,
+                                          ...item,
+                                          ...widgetResult,
                                           loading: false,
                                       }
                                     : item
@@ -156,7 +170,19 @@ export const useDashboardWidgets = (
                     ...prevState,
                     widgets: prevState.widgets?.map((item: any) =>
                         String(item.dashboardItemId) === String(dashboardItemId)
-                            ? { ...firstDashboardItemData, loading: false }
+                            ? { ...item, ...firstDashboardItemData, loading: false }
+                            : item
+                    ),
+                }));
+            })
+            .catch((exception: any) => {
+                // Vegeu el comentari equivalent a useDashboardWidgets: si la petició falla no s'ha de perdre
+                // silenciosament, s'ha de marcar aquest widget com a erroni.
+                setRequestState((prevState) => ({
+                    ...prevState,
+                    widgets: prevState.widgets?.map((item: any) =>
+                        String(item.dashboardItemId) === String(dashboardItemId)
+                            ? { ...item, error: true, errorMsg: exception?.message, errorTrace: exception?.description, loading: false }
                             : item
                     ),
                 }));

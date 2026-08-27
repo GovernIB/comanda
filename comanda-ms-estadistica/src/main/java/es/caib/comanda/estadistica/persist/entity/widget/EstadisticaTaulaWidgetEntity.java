@@ -2,6 +2,7 @@ package es.caib.comanda.estadistica.persist.entity.widget;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTaula;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.OrdreDireccioEnum;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaTaulaWidget;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
@@ -11,7 +12,9 @@ import lombok.Setter;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
+import javax.persistence.EnumType;
 import javax.persistence.Entity;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
@@ -62,6 +65,16 @@ public class EstadisticaTaulaWidgetEntity extends EstadisticaWidgetEntity<Estadi
     private DimensioEntity dimensioAgrupacio;
     @Column(name = "agrupament_dimensio_titol", length = 64)
     private String titolAgrupament;
+
+    @Column(name = "amagar_files_zero", nullable = false)
+    private Boolean amagarFilesZero = false;
+    @Column(name = "columna_ordenacio")
+    private Integer columnaOrdenacio;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "direccio_ordenacio", length = 4)
+    private OrdreDireccioEnum direccioOrdenacio;
+    @Column(name = "limit_resultats")
+    private Integer limitResultats;
 
     @Override
     public Class getAtributsVisualsType() {

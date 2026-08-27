@@ -9,6 +9,7 @@ import es.caib.comanda.client.model.EntornRef;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisuals;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.*;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.OrdreDireccioEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
@@ -1148,5 +1149,132 @@ class ConsultaEstadisticaHelperTest {
 
         // Assert
         assertThat(result).isNull();
+    }
+
+    // ========================================================================
+    // applyFilesFilterSortLimit
+    // ========================================================================
+
+    private static Map<String, String> fila(String agrupacio, String... colValues) {
+        Map<String, String> row = new LinkedHashMap<>();
+        row.put("agrupacio", agrupacio);
+        for (int i = 0; i < colValues.length; i++) {
+            row.put("col" + (i + 1), colValues[i]);
+        }
+        return row;
+    }
+
+    @Test
+    @DisplayName("applyFilesFilterSortLimit: sense cap opció activa, retorna les files sense canvis")
+    void applyFilesFilterSortLimit_senseOpcions_retornaFilesSenseCanvis() {
+        EstadisticaTaulaWidgetEntity widget = new EstadisticaTaulaWidgetEntity();
+        widget.setAmagarFilesZero(false);
+        List<Map<String, String>> files = List.of(fila("A", "5"), fila("B", "0"));
+
+        List<Map<String, String>> result = ConsultaEstadisticaHelper.applyFilesFilterSortLimit(files, widget);
+
+        assertThat(result).isEqualTo(files);
+    }
+
+    @Test
+    @DisplayName("applyFilesFilterSortLimit: amb amagarFilesZero, elimina només les files amb totes les columnes a zero")
+    void applyFilesFilterSortLimit_ambAmagarFilesZero_eliminaFilesTotesAZero() {
+        EstadisticaTaulaWidgetEntity widget = new EstadisticaTaulaWidgetEntity();
+        widget.setAmagarFilesZero(true);
+        List<Map<String, String>> files = List.of(
+            fila("A", "5", "0"),
+            fila("B", "0", "0"),
+            fila("C", "0", "3")
+        );
+
+        List<Map<String, String>> result = ConsultaEstadisticaHelper.applyFilesFilterSortLimit(files, widget);
+
+        assertThat(result).extracting(row -> row.get("agrupacio")).containsExactly("A", "C");
+    }
+
+    @Test
+    @DisplayName("applyFilesFilterSortLimit: amb columnaOrdenacio i DESC, ordena de major a menor per la columna indicada")
+    void applyFilesFilterSortLimit_ambColumnaOrdenacioDesc_ordenaDeMajorAMenor() {
+        EstadisticaTaulaWidgetEntity widget = new EstadisticaTaulaWidgetEntity();
+        widget.setColumnaOrdenacio(0);
+        widget.setDireccioOrdenacio(OrdreDireccioEnum.DESC);
+        List<Map<String, String>> files = List.of(fila("A", "5"), fila("B", "20"), fila("C", "10"));
+
+        List<Map<String, String>> result = ConsultaEstadisticaHelper.applyFilesFilterSortLimit(files, widget);
+
+        assertThat(result).extracting(row -> row.get("agrupacio")).containsExactly("B", "C", "A");
+    }
+
+    @Test
+    @DisplayName("applyFilesFilterSortLimit: amb columnaOrdenacio i ASC, ordena de menor a major per la columna indicada")
+    void applyFilesFilterSortLimit_ambColumnaOrdenacioAsc_ordenaDeMenorAMajor() {
+        EstadisticaTaulaWidgetEntity widget = new EstadisticaTaulaWidgetEntity();
+        widget.setColumnaOrdenacio(0);
+        widget.setDireccioOrdenacio(OrdreDireccioEnum.ASC);
+        List<Map<String, String>> files = List.of(fila("A", "5"), fila("B", "20"), fila("C", "10"));
+
+        List<Map<String, String>> result = ConsultaEstadisticaHelper.applyFilesFilterSortLimit(files, widget);
+
+        assertThat(result).extracting(row -> row.get("agrupacio")).containsExactly("A", "C", "B");
+    }
+
+    @Test
+    @DisplayName("applyFilesFilterSortLimit: amb columnaOrdenacio i limitResultats, retalla la llista al nombre indicat un cop ordenada")
+    void applyFilesFilterSortLimit_ambLimitResultats_retallaLaLlistaOrdenada() {
+        EstadisticaTaulaWidgetEntity widget = new EstadisticaTaulaWidgetEntity();
+        widget.setColumnaOrdenacio(0);
+        widget.setDireccioOrdenacio(OrdreDireccioEnum.DESC);
+        widget.setLimitResultats(2);
+        List<Map<String, String>> files = List.of(fila("A", "5"), fila("B", "20"), fila("C", "10"));
+
+        List<Map<String, String>> result = ConsultaEstadisticaHelper.applyFilesFilterSortLimit(files, widget);
+
+        assertThat(result).extracting(row -> row.get("agrupacio")).containsExactly("B", "C");
+    }
+
+    @Test
+    @DisplayName("applyFilesFilterSortLimit: limitResultats sense columnaOrdenacio no té cap efecte")
+    void applyFilesFilterSortLimit_ambLimitResultatsSenseColumnaOrdenacio_noTeEfecte() {
+        EstadisticaTaulaWidgetEntity widget = new EstadisticaTaulaWidgetEntity();
+        widget.setLimitResultats(1);
+        List<Map<String, String>> files = List.of(fila("A", "5"), fila("B", "20"));
+
+        List<Map<String, String>> result = ConsultaEstadisticaHelper.applyFilesFilterSortLimit(files, widget);
+
+        assertThat(result).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("applyFilesFilterSortLimit: limitResultats superior al nombre de files no en descarta cap")
+    void applyFilesFilterSortLimit_ambLimitResultatsSuperiorAlNombreDeFiles_noDescartaCap() {
+        EstadisticaTaulaWidgetEntity widget = new EstadisticaTaulaWidgetEntity();
+        widget.setColumnaOrdenacio(0);
+        widget.setDireccioOrdenacio(OrdreDireccioEnum.DESC);
+        widget.setLimitResultats(10);
+        List<Map<String, String>> files = List.of(fila("A", "5"), fila("B", "20"));
+
+        List<Map<String, String>> result = ConsultaEstadisticaHelper.applyFilesFilterSortLimit(files, widget);
+
+        assertThat(result).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("applyFilesFilterSortLimit: combina amagarFilesZero, ordenació i límit en aquest ordre")
+    void applyFilesFilterSortLimit_ambTotesLesOpcions_lesCombinaEnLordreCorrecte() {
+        EstadisticaTaulaWidgetEntity widget = new EstadisticaTaulaWidgetEntity();
+        widget.setAmagarFilesZero(true);
+        widget.setColumnaOrdenacio(0);
+        widget.setDireccioOrdenacio(OrdreDireccioEnum.DESC);
+        widget.setLimitResultats(1);
+        List<Map<String, String>> files = List.of(
+            fila("A", "5"),
+            fila("B", "0"),
+            fila("C", "20")
+        );
+
+        List<Map<String, String>> result = ConsultaEstadisticaHelper.applyFilesFilterSortLimit(files, widget);
+
+        // B (zero) queda exclosa pel filtre, i del que queda (A=5, C=20) el límit 1 amb DESC es queda amb C.
+        assertThat(result).extracting(row -> row.get("agrupacio")).containsExactly("C");
     }
 }

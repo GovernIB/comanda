@@ -358,6 +358,18 @@ const paletteOptionValue = (palette?: Palette) => paletteKey(palette);
 
 const propertyKey = (property: StyleProperty) => `${property.scope}:${property.propertyName}`;
 
+// Propietats de color de fons: sempre s'han de poder deixar en blanc, de manera que el widget no pinti cap
+// fons i caigui al color del tema. Els desplegables de posició de paleta hi afegeixen una opció de buidat.
+const backgroundColorPropertyNames = new Set([
+    "colorFons",
+    "colorFonsIcona",
+    "colorFonsTaula",
+    "colorFonsCapcalera",
+    "colorAlternancia",
+]);
+
+const isBackgroundColorProperty = (propertyName: string) => backgroundColorPropertyNames.has(propertyName);
+
 type ChartType =
     "BAR_CHART"
     | "LINE_CHART"
@@ -1351,6 +1363,9 @@ const PalettePositionSelect = ({
     const colors = normalizeColors(palette?.colors || []);
 
     const labelText = getPropertyLabel(property, t);
+    // Els colors de fons sempre es poden buidar, encara que la propietat no estigui marcada com a opcional.
+    const isBackground = isBackgroundColorProperty(property.propertyName);
+    const allowEmpty = optional || isBackground;
 
     const updateProperty = (patch: Partial<StyleProperty>) => {
         const next = template.styleProperties.map((item) => propertyKey(item) === propertyKey(property) ? {...item, ...patch} : item);
@@ -1361,6 +1376,7 @@ const PalettePositionSelect = ({
         <FormControl fullWidth size="small" sx={themedFormControlSx}>
             <InputLabel>{labelText}</InputLabel>
             <Select
+                data-testid={`property-select-${property.scope}-${property.propertyName}`}
                 label={labelText}
                 value={property.paletteIndex != null ? String(property.paletteIndex) : ""}
                 onChange={(event: SelectChangeEvent) => {
@@ -1386,8 +1402,10 @@ const PalettePositionSelect = ({
                     },
                 }}
             >
-                {optional && (<MenuItem value="">
-                    <em>{t($ => $.page.plantilla.detail.defaultValue)}</em>
+                {allowEmpty && (<MenuItem value="">
+                    <em>{isBackground
+                        ? t($ => $.page.plantilla.detail.senseColor)
+                        : t($ => $.page.plantilla.detail.defaultValue)}</em>
                 </MenuItem>)}
                 {colors.map((color, index) => (
                     <MenuItem key={`${property.propertyName}-${index}`} value={String(index)}>

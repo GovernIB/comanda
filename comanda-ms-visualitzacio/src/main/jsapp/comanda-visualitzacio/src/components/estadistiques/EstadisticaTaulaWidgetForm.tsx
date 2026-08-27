@@ -1,5 +1,5 @@
 import Grid from '@mui/material/Grid';
-import { Box, Typography } from '@mui/material';
+import { Box, MenuItem, Select, Typography } from '@mui/material';
 import { FormField, useFormContext } from 'reactlib';
 import * as React from 'react';
 import { useEffect, useMemo, useRef } from 'react';
@@ -172,6 +172,56 @@ const EstadisticaTaulaWidgetForm: React.FC<EstadisticaTaulaWidgetFormProps> = ({
                 <Grid size={6}>
                     <FormField name="titolAgrupament" />
                 </Grid>
+                <Grid size={12}>
+                    <FormField
+                        name="amagarFilesZero"
+                        label={t($ => $.page.widget.taula.amagarFilesZero)}
+                        type="checkbox"
+                    />
+                </Grid>
+                <Grid size={4}>
+                    <Select
+                        fullWidth
+                        size="small"
+                        displayEmpty
+                        value={data?.columnaOrdenacio ?? ''}
+                        onChange={(event) => {
+                            const value = event.target.value === '' ? null : Number(event.target.value);
+                            apiRef.current?.setFieldValue('columnaOrdenacio', value);
+                            if (value == null) {
+                                apiRef.current?.setFieldValue('direccioOrdenacio', null);
+                                apiRef.current?.setFieldValue('limitResultats', null);
+                            } else if (data?.direccioOrdenacio == null) {
+                                apiRef.current?.setFieldValue('direccioOrdenacio', 'DESC');
+                            }
+                        }}
+                    >
+                        <MenuItem value="">{t($ => $.page.widget.taula.senseOrdenacio)}</MenuItem>
+                        {(data?.columnes ?? []).map((columna: any, index: number) => (
+                            <MenuItem key={index} value={index}>
+                                {columna?.titol || `Col ${index + 1}`}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </Grid>
+                {data?.columnaOrdenacio != null && (
+                    <>
+                        <Grid size={4}>
+                            <FormField
+                                name="direccioOrdenacio"
+                                label={t($ => $.page.widget.taula.direccioOrdenacio)}
+                            />
+                        </Grid>
+                        <Grid size={4}>
+                            <FormField
+                                name="limitResultats"
+                                label={t($ => $.page.widget.taula.limitResultats)}
+                                type="number"
+                                required={false}
+                            />
+                        </Grid>
+                    </>
+                )}
             </>
         );
     }

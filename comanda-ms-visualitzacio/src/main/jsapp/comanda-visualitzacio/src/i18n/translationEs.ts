@@ -88,6 +88,10 @@ const translationEs: translationResourcesType = {
             SIMPLE: 'Simple',
             FORMULA: 'Fórmula'
         },
+        direccioOrdenacio: {
+            ASC: 'Ascendente',
+            DESC: 'Descendente'
+        },
         posicioSubtitol: {
             SOTA: 'Debajo del título',
             COSTAT: 'Al lado del título'
@@ -1111,6 +1115,10 @@ const translationEs: translationResourcesType = {
                     arrossega: "Arrastra para reordenar",
                     percentageError: "No se pueden combinar columnas de tipo porcentaje con otros tipos de agregación",
                 },
+                amagarFilesZero: "Ocultar filas con todos los valores a cero",
+                senseOrdenacio: "Sin ordenación",
+                direccioOrdenacio: "Dirección",
+                limitResultats: "Límite de resultados",
             },
             atributsVisuals: {
                 title: "Atributos visuales",
@@ -1520,6 +1528,7 @@ const translationEs: translationResourcesType = {
                 msgSaveError: "No se ha podido guardar la paleta",
                 previewSubtitle: "Subtítulo del dashboard",
                 defaultValue: "Valor por defecto",
+                senseColor: "Sin color",
             },
             action: {
                 createPalette: "Crear paleta",

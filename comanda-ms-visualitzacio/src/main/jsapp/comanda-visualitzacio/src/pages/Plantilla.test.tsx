@@ -368,6 +368,55 @@ describe('Plantilla', () => {
         );
     });
 
+    it('els colors de fons es poden buidar (opció de buidat al desplegable), els altres colors no', async () => {
+        const user = userEvent.setup();
+        render(<Plantilla />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
+        });
+
+        // Pestanya "Comú": conté colorFons (color de fons) i colorText (no és color de fons).
+        const openOptions = async (testId: string) => {
+            const select = await screen.findByTestId(testId);
+            await user.click(select.querySelector('[role="combobox"]') as HTMLElement);
+            const options = await screen.findAllByRole('option');
+            return options.map((option) => option.getAttribute('data-value'));
+        };
+
+        const colorFonsValues = await openOptions('property-select-COMMON-colorFons');
+        expect(colorFonsValues).toContain('');
+        await user.keyboard('{Escape}');
+
+        const colorTextValues = await openOptions('property-select-COMMON-colorText');
+        expect(colorTextValues).not.toContain('');
+        await user.keyboard('{Escape}');
+    });
+
+    it('en seleccionar l\'opció de buidat d\'un color de fons, la propietat queda sense posició de paleta', async () => {
+        const user = userEvent.setup();
+        render(<Plantilla />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
+        });
+
+        const select = await screen.findByTestId('property-select-COMMON-colorFons');
+        await user.click(select.querySelector('[role="combobox"]') as HTMLElement);
+
+        const options = await screen.findAllByRole('option');
+        const emptyOption = options.find((option) => option.getAttribute('data-value') === '') as HTMLElement;
+        expect(emptyOption).toBeDefined();
+        await user.click(emptyOption);
+
+        expect(mockSetFieldValue).toHaveBeenCalledWith(
+            'styleProperties',
+            expect.arrayContaining([
+                expect.objectContaining({ scope: 'COMMON', propertyName: 'colorFons', paletteIndex: undefined }),
+            ])
+        );
+    });
+
     it('permet configurar gràficament les vores del títol clicant cada costat del rectangle', async () => {
         const user = userEvent.setup();
         render(<Plantilla />);

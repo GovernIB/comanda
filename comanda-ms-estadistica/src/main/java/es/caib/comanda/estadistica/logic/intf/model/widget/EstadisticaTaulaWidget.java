@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.Nulls;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.back.intf.validation.ValidTaulaWidget;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTaula;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.OrdreDireccioEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Indicador;
@@ -90,6 +91,13 @@ public class EstadisticaTaulaWidget extends EstadisticaWidget { // WidgetBaseRes
     @NotNull
     private ResourceReference<Dimensio, Long> dimensioAgrupacio;
     private String titolAgrupament;
+
+    // Opcions de tractament dels resultats: amagar files a zero, i ordenar/limitar per una columna concreta
+    // (columnaOrdenacio és l'índex 0-based dins `columnes`; limitResultats només té efecte si hi ha columnaOrdenacio).
+    private Boolean amagarFilesZero = false;
+    private Integer columnaOrdenacio;
+    private OrdreDireccioEnum direccioOrdenacio;
+    private Integer limitResultats;
 
     // Atributs per a la configuració visual de la taula
     @JsonUnwrapped

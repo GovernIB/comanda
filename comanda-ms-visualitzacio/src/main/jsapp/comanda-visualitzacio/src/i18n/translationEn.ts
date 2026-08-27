@@ -88,6 +88,10 @@ const translationEn: translationResourcesType = {
             SIMPLE: 'Simple',
             FORMULA: 'Formula'
         },
+        direccioOrdenacio: {
+            ASC: 'Ascending',
+            DESC: 'Descending'
+        },
         posicioSubtitol: {
             SOTA: 'Below the title',
             COSTAT: 'Beside the title'
@@ -1111,6 +1115,10 @@ const translationEn: translationResourcesType = {
                     arrossega: "Drag to reorder",
                     percentageError: "Percentage columns cannot be combined with other aggregation types",
                 },
+                amagarFilesZero: "Hide rows where all values are zero",
+                senseOrdenacio: "No sorting",
+                direccioOrdenacio: "Direction",
+                limitResultats: "Result limit",
             },
             atributsVisuals: {
                 title: "Visual attributes",
@@ -1520,6 +1528,7 @@ const translationEn: translationResourcesType = {
                 msgSaveError: "Could not save the palette",
                 previewSubtitle: "Dashboard subtitle",
                 defaultValue: "Default value",
+                senseColor: "No colour",
             },
             action: {
                 createPalette: "Create palette",

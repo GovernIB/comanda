@@ -119,6 +119,33 @@ describe('useDashboardWidgets', () => {
         });
     });
 
+    it('useDashboardWidgets_quanLaPeticioDUnWidgetFalla_elMarcaComAErroniEnLlocDePerdreLoSilenciosament', async () => {
+        // Regressió: si la petició HTTP d'un widget falla (rebutja la promesa, no una resposta 200 amb
+        // error:true), el widget ha de quedar marcat com a erroni perquè es pugui mostrar el missatge, en
+        // lloc de quedar-se penjat sense actualitzar-se mai.
+        mocks.dashboardService.artifactReport.mockResolvedValue([
+            { dashboardItemId: 1, tipus: 'GRAFIC', posX: 0, posY: 0 },
+            { dashboardItemId: 2, tipus: 'TAULA', posX: 1, posY: 0 },
+        ]);
+        const exception = Object.assign(new Error('ORA-00904'), { description: 'identificador no vàlid' });
+        mocks.dashboardItemService.artifactReport
+            .mockRejectedValueOnce(exception)
+            .mockResolvedValueOnce([{ dashboardItemId: 2, titol: 'Widget 2', error: false }]);
+
+        const { result } = renderHook(() => useDashboardWidgets(30));
+
+        await waitFor(() => {
+            expect(result.current.loadingWidgetData).toBe(false);
+            expect(result.current.errorDashboardWidgets).toHaveLength(1);
+            expect(result.current.errorDashboardWidgets?.[0]).toMatchObject({
+                dashboardItemId: 1,
+                error: true,
+                errorMsg: 'ORA-00904',
+                errorTrace: 'identificador no vàlid',
+            });
+        });
+    });
+
     it('useDashboardWidgets_quanEsForcaRefresh_tornaALlançarLaCarrega', async () => {
         // Verifica que el callback de refresc reutilitza la mateixa lògica i repeteix les peticions.
         mocks.dashboardService.artifactReport.mockResolvedValue([]);
@@ -173,5 +200,38 @@ describe('useDashboardWidgets', () => {
             ]);
         });
         expect(mocks.dashboardService.artifactReport).not.toHaveBeenCalled();
+    });
+
+    it('useDashboardWidgets_quanRefreshWidgetFalla_elMarcaComAErroniSenseAfectarElsAltres', async () => {
+        mocks.dashboardService.artifactReport.mockResolvedValue([
+            { dashboardItemId: 1, tipus: 'SIMPLE', posX: 0, posY: 0 },
+            { dashboardItemId: 2, tipus: 'GRAFIC', posX: 1, posY: 0 },
+        ]);
+        mocks.dashboardItemService.artifactReport
+            .mockResolvedValueOnce([{ dashboardItemId: 1, titol: 'Widget 1' }])
+            .mockResolvedValueOnce([{ dashboardItemId: 2, titol: 'Widget 2' }]);
+
+        const { result } = renderHook(() => useDashboardWidgets(31));
+
+        await waitFor(() => {
+            expect(result.current.dashboardWidgets?.map((widget: any) => widget.titol)).toEqual([
+                'Widget 1',
+                'Widget 2',
+            ]);
+        });
+
+        const exception = Object.assign(new Error('ORA-00904'), { description: 'identificador no vàlid' });
+        mocks.dashboardItemService.artifactReport.mockRejectedValueOnce(exception);
+
+        act(() => {
+            result.current.refreshWidget(2);
+        });
+
+        await waitFor(() => {
+            const widget2 = result.current.dashboardWidgets?.find((w: any) => w.dashboardItemId === 2);
+            expect(widget2).toMatchObject({ error: true, errorMsg: 'ORA-00904', errorTrace: 'identificador no vàlid' });
+            const widget1 = result.current.dashboardWidgets?.find((w: any) => w.dashboardItemId === 1);
+            expect(widget1).toMatchObject({ titol: 'Widget 1' });
+        });
     });
 });

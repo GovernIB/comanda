@@ -170,20 +170,47 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
         String queryAgrupacio = generateGraficAgrupacioConditions(tempsAgregacio);
         String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
         String queryGrouping = generateGroupConditions(tempsAgregacio).replace("t.", "");
-        String querySubGrouping = generateGroupConditions(indicadorAgregacio.getUnitatAgregacio() != null
+        PeriodeUnitat subUnitat = indicadorAgregacio.getUnitatAgregacio() != null
                 ? indicadorAgregacio.getUnitatAgregacio()
-                : tempsAgregacio);
+                : tempsAgregacio;
+        String querySubGrouping = generateGroupConditions(subUnitat);
 
+        if (TableColumnsEnum.FIRST_SEEN.equals(indicadorAgregacio.getAgregacio()) || TableColumnsEnum.LAST_SEEN.equals(indicadorAgregacio.getAgregacio())) {
+            // Les columnes FIRST_SEEN/LAST_SEEN no tenen un "zero" natural (són dates, no sumes), així que
+            // aquest cas es manté amb el comportament anterior (sense omplir períodes sense dades).
+            return "SELECT " + queryAgrupacio + " as agrupacio, " +
+                    querySelect +
+                    " FROM ( SELECT " +
+                    querySubGrouping + ", " +
+                    getSumIndicadorQuery(indicadorAgregacio) +
+                    BASE_JOIN +
+                    BASE_WHERE +
+                    queryConditions +
+                    "GROUP BY " + querySubGrouping +
+                    ") " +
+                    "GROUP BY " + queryGrouping + " " +
+                    "ORDER BY agrupacio";
+        }
 
+        String periodeCamps = querySubGrouping.replace("t.", "");
+
+        // Els períodes sense cap fet no generaven cap fila (la consulta partia de com_est_fet), fent que
+        // desapareguessin del gràfic en lloc de mostrar-se com a zero. Es genera un calendari sintètic amb
+        // tots els períodes del rang sol·licitat (vegeu getPeriodesRangeQuery) i es fa un LEFT JOIN amb
+        // l'agregació real, per garantir una fila per període encara que no hi hagi cap fet.
         return "SELECT " + queryAgrupacio + " as agrupacio, " +
                 querySelect +
                 " FROM ( SELECT " +
+                qualifyColumns("periodes", periodeCamps) + ", COALESCE(agg.sum_fets, 0) AS sum_fets " +
+                "FROM " + getPeriodesRangeQuery(subUnitat) + " periodes " +
+                "LEFT JOIN ( SELECT " +
                 querySubGrouping + ", " +
                 getSumIndicadorQuery(indicadorAgregacio) +
                 BASE_JOIN +
                 BASE_WHERE +
                 queryConditions +
                 "GROUP BY " + querySubGrouping +
+                " ) agg ON " + getPeriodesJoinCondition("periodes", "agg", periodeCamps) +
                 ") " +
                 "GROUP BY " + queryGrouping + " " +
                 "ORDER BY agrupacio";
@@ -309,21 +336,49 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
         String subQuerySelects = getTaulaSubQuerySelects(indicadorsAgregacio);
         String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
         String subQueryGrouping = generateGroupConditions(avgUnitat);
-        String queryGrouping = generateGroupConditions(tempsAgregacio);
 
+        if (hasDataCols) {
+            // Les columnes FIRST_SEEN/LAST_SEEN no tenen un "zero" natural (són dates, no sumes), així que
+            // aquest cas es manté amb el comportament anterior (sense omplir períodes sense dades).
+            return "SELECT agrupacio, " + querySelect +
+                    " FROM ( SELECT " +
+                    "t.data, " +
+                    (hasAverage ? "" : generateGroupConditions(avgUnitat) + ", ") +
+                    queryAgrupacio + " AS agrupacio," +
+                    subQuerySelects +
+                    BASE_JOIN +
+                    BASE_WHERE +
+                    queryConditions +
+                    "GROUP BY t.data, " + subQueryGrouping + ") " +
+                    "GROUP BY agrupacio " +
+                    "ORDER BY agrupacio";
+        }
 
-        return  "SELECT agrupacio, " + querySelect +
+        // Els períodes sense cap fet no generaven cap fila. Es genera un calendari sintètic amb tots els
+        // períodes del rang sol·licitat (vegeu getPeriodesRangeQuery) i es fa un LEFT JOIN amb l'agregació
+        // real de cada indicador, per garantir una fila per període encara que no hi hagi cap fet.
+        String periodeCamps = subQueryGrouping.replace("t.", "");
+        String coalesceCols = getTaulaSubQueryCoalesceColumns(indicadorsAgregacio);
+
+        // queryAgrupacio (l'etiqueta "YYYY/MM") es calcula aquí, a l'exterior, referenciant directament les
+        // columnes de període sense prefix que exposa el FROM — no es pot calcular a dins del JOIN perquè
+        // "periodes" i "agg" exposen totes dues les mateixes columnes de període (anualitat/trimestre/...),
+        // fent el nom ambigu.
+        return  "SELECT " + queryAgrupacio + " as agrupacio, " + querySelect +
                 " FROM ( SELECT " +
-                (hasDataCols ? "t.data, " : "") +
-                (hasAverage ? "" : generateGroupConditions(avgUnitat) + ", ") +
-                queryAgrupacio + " AS agrupacio," +
+                qualifyColumns("periodes", periodeCamps) + ", " + coalesceCols +
+                " FROM " + getPeriodesRangeQuery(avgUnitat) + " periodes " +
+                "LEFT JOIN ( SELECT " +
+                subQueryGrouping + ", " +
                 subQuerySelects +
                 BASE_JOIN +
                 BASE_WHERE +
                 queryConditions +
-                "GROUP BY " + (hasDataCols ? "t.data, " : "") + subQueryGrouping + ") " +
-                "GROUP BY agrupacio " +
-                "ORDER BY agrupacio"; // + queryGrouping;
+                "GROUP BY " + subQueryGrouping +
+                " ) agg ON " + getPeriodesJoinCondition("periodes", "agg", periodeCamps) +
+                ") " +
+                "GROUP BY " + periodeCamps + " " +
+                "ORDER BY agrupacio";
     }
 
     @Override
@@ -519,6 +574,53 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
         return indicadorsAgregacio.stream()
                 .map(ind -> getSimpleQuerySelect(ind.getAgregacio(), ind.getIndicadorCodi()) )
                 .collect(Collectors.joining(", "));
+    }
+
+    /** Com {@link #getTaulaSubQuerySelects}, però només els noms d'alias (un per indicadorCodi únic). */
+    private List<String> getTaulaSubQueryAliases(List<IndicadorAgregacio> indicadorsAgregacio) {
+        Map<String, IndicadorAgregacio> unics = new LinkedHashMap<>();
+        indicadorsAgregacio.forEach(ind -> unics.putIfAbsent(ind.getIndicadorCodi(), ind));
+        return unics.keySet().stream().map(codi -> "sum_fets" + getIndicadorSuffix(codi)).collect(Collectors.toList());
+    }
+
+    /**
+     * `COALESCE(agg.sum_fets_X, 0) AS sum_fets_X` per cada indicador, per convertir en 0 el valor d'un
+     * indicador als períodes que el LEFT JOIN contra el calendari sintètic no ha trobat cap fet coincident.
+     */
+    private String getTaulaSubQueryCoalesceColumns(List<IndicadorAgregacio> indicadorsAgregacio) {
+        return getTaulaSubQueryAliases(indicadorsAgregacio).stream()
+                .map(alias -> "COALESCE(agg." + alias + ", 0) AS " + alias)
+                .collect(Collectors.joining(", "));
+    }
+
+    /** Prefixa cada columna d'una llista separada per comes (p. ex. "anualitat, trimestre") amb un alias de taula. */
+    private static String qualifyColumns(String tableAlias, String columns) {
+        return java.util.Arrays.stream(columns.split(",\\s*"))
+                .map(c -> tableAlias + "." + c.trim())
+                .collect(Collectors.joining(", "));
+    }
+
+    /** Condició d'igualtat entre dues taules per a cada columna d'una llista separada per comes. */
+    private static String getPeriodesJoinCondition(String leftAlias, String rightAlias, String columns) {
+        return java.util.Arrays.stream(columns.split(",\\s*"))
+                .map(c -> leftAlias + "." + c.trim() + " = " + rightAlias + "." + c.trim())
+                .collect(Collectors.joining(" AND "));
+    }
+
+    /**
+     * Genera un calendari sintètic amb un període (dia, setmana, mes, trimestre o any, segons {@code unitat})
+     * per cada dia entre `:dataInici` i `:dataFi`, sense duplicats — per poder fer un LEFT JOIN contra
+     * l'agregació real i garantir una fila per període encara que no hi hagi cap fet (vegeu getGraficUnIndicadorQuery
+     * / getGraficVarisIndicadorsQuery). Els càlculs d'any/trimestre/mes/setmana/dia repliquen exactament els de
+     * {@code TempsEntity} (constructor), perquè coincideixin amb els valors reals de com_est_temps.
+     */
+    private String getPeriodesRangeQuery(PeriodeUnitat unitat) {
+        String cols = generateGroupConditions(unitat).replace("t.", "");
+        return "(SELECT DISTINCT " + cols + " FROM (" +
+                "SELECT EXTRACT(YEAR FROM d)::int AS anualitat, EXTRACT(QUARTER FROM d)::int AS trimestre, " +
+                "EXTRACT(MONTH FROM d)::int AS mes, EXTRACT(WEEK FROM d)::int AS setmana, EXTRACT(DAY FROM d)::int AS dia " +
+                "FROM generate_series(:dataInici::date, :dataFi::date, interval '1 day') AS s(d)" +
+                ") cal)";
     }
 
 

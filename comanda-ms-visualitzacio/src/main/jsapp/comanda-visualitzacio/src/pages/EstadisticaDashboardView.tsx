@@ -204,6 +204,7 @@ const EstadisticaDashboardView = () => {
                                 filtres={dashboard?.filtres}
                                 value={filtreSeleccio}
                                 onChange={setFiltreSeleccio}
+                                aplicacioId={dashboard?.aplicacio?.id}
                             />
                         </MuiToolbar>
                     </Box>

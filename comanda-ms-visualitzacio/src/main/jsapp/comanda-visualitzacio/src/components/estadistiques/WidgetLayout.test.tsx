@@ -206,6 +206,34 @@ describe('WidgetFooter', () => {
         expect(descripcio).toHaveStyle({ fontSize: '16px' });
         expect(canvi).toHaveStyle({ fontSize: '18px' });
     });
+
+    it('WidgetFooter_quanCanviPercentualEsPositiu_mostraElTriangleAmunt', () => {
+        renderComponent(
+            <WidgetFooter canviPercentual="12.5" textColor="#000000" loading={false} />
+        );
+
+        expect(screen.getByText('arrow_drop_up')).toBeInTheDocument();
+        expect(screen.queryByText('arrow_drop_down')).not.toBeInTheDocument();
+    });
+
+    it('WidgetFooter_quanCanviPercentualEsNegatiu_mostraElTriangleAvall', () => {
+        renderComponent(
+            <WidgetFooter canviPercentual="-8.3" textColor="#000000" loading={false} />
+        );
+
+        expect(screen.getByText('arrow_drop_down')).toBeInTheDocument();
+        expect(screen.queryByText('arrow_drop_up')).not.toBeInTheDocument();
+    });
+
+    it('WidgetFooter_quanCanviPercentualEsZero_noMostraCapTriangle', () => {
+        renderComponent(
+            <WidgetFooter canviPercentual="0.00" textColor="#000000" loading={false} />
+        );
+
+        expect(screen.queryByText('arrow_drop_up')).not.toBeInTheDocument();
+        expect(screen.queryByText('arrow_drop_down')).not.toBeInTheDocument();
+        expect(screen.getByText('0.00%')).toBeInTheDocument();
+    });
 });
 
 describe('WidgetErrorDisplay', () => {

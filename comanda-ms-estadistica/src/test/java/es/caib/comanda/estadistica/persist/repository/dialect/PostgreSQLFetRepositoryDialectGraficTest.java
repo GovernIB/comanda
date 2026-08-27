@@ -45,17 +45,25 @@ public class PostgreSQLFetRepositoryDialectGraficTest {
                         null,
                         List.of(createIndicadorAgregacio("visites", TableColumnsEnum.SUM, null)),
                         PeriodeUnitat.MES,
-                        removeConsecutiveSpaces("SELECT agrupacio, " +
+                        removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes::text, 2, '0') as agrupacio, " +
                                 "SUM(sum_fets_visites) AS total_sum_visites " +
                                 "FROM ( " +
-                                "SELECT t.anualitat, t.trimestre, t.mes, " +
-                                "anualitat || '/' || LPAD(mes::text, 2, '0') AS agrupacio, " +
+                                "SELECT periodes.anualitat, periodes.trimestre, periodes.mes, " +
+                                "COALESCE(agg.sum_fets_visites, 0) AS sum_fets_visites " +
+                                "FROM (SELECT DISTINCT anualitat, trimestre, mes FROM (" +
+                                "SELECT EXTRACT(YEAR FROM d)::int AS anualitat, EXTRACT(QUARTER FROM d)::int AS trimestre, " +
+                                "EXTRACT(MONTH FROM d)::int AS mes, EXTRACT(WEEK FROM d)::int AS setmana, EXTRACT(DAY FROM d)::int AS dia " +
+                                "FROM generate_series(:dataInici::date, :dataFi::date, interval '1 day') AS s(d)" +
+                                ") cal) periodes " +
+                                "LEFT JOIN ( SELECT t.anualitat, t.trimestre, t.mes, " +
                                 "SUM((f.indicadors_json::jsonb->>'visites')::numeric) AS sum_fets_visites " +
                                 "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data BETWEEN :dataInici AND :dataFi " +
-                                "GROUP BY t.anualitat, t.trimestre, t.mes) " +
-                                "GROUP BY agrupacio " +
+                                "GROUP BY t.anualitat, t.trimestre, t.mes " +
+                                ") agg ON periodes.anualitat = agg.anualitat AND periodes.trimestre = agg.trimestre AND periodes.mes = agg.mes" +
+                                ") " +
+                                "GROUP BY anualitat, trimestre, mes " +
                                 "ORDER BY agrupacio")
                 ),
 
@@ -94,19 +102,29 @@ public class PostgreSQLFetRepositoryDialectGraficTest {
                             createIndicadorAgregacio("sessions", TableColumnsEnum.AVERAGE, PeriodeUnitat.ANY)
                         ),
                         PeriodeUnitat.ANY,
-                        removeConsecutiveSpaces("SELECT agrupacio, " +
+                        removeConsecutiveSpaces("SELECT anualitat as agrupacio, " +
                                 "SUM(sum_fets_visites) AS total_sum_visites, " +
                                 "AVG(sum_fets_sessions) AS average_result_sessions " +
                                 "FROM ( " +
-                                "SELECT anualitat AS agrupacio, " +
+                                "SELECT periodes.anualitat, " +
+                                "COALESCE(agg.sum_fets_visites, 0) AS sum_fets_visites, " +
+                                "COALESCE(agg.sum_fets_sessions, 0) AS sum_fets_sessions " +
+                                "FROM (SELECT DISTINCT anualitat FROM (" +
+                                "SELECT EXTRACT(YEAR FROM d)::int AS anualitat, EXTRACT(QUARTER FROM d)::int AS trimestre, " +
+                                "EXTRACT(MONTH FROM d)::int AS mes, EXTRACT(WEEK FROM d)::int AS setmana, EXTRACT(DAY FROM d)::int AS dia " +
+                                "FROM generate_series(:dataInici::date, :dataFi::date, interval '1 day') AS s(d)" +
+                                ") cal) periodes " +
+                                "LEFT JOIN ( SELECT t.anualitat, " +
                                 "SUM((f.indicadors_json::jsonb->>'visites')::numeric) AS sum_fets_visites, " +
                                 "SUM((f.indicadors_json::jsonb->>'sessions')::numeric) AS sum_fets_sessions " +
                                 "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                                 "WHERE f.entorn_app_id = :entornAppId " +
                                 "AND t.data BETWEEN :dataInici AND :dataFi " +
                                 "AND f.dimensions_json::jsonb->>'departament' IN ('RRHH','IT') " +
-                                "GROUP BY t.anualitat) " +
-                                "GROUP BY agrupacio " +
+                                "GROUP BY t.anualitat " +
+                                ") agg ON periodes.anualitat = agg.anualitat" +
+                                ") " +
+                                "GROUP BY anualitat " +
                                 "ORDER BY agrupacio")
                 )
         );

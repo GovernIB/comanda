@@ -107,22 +107,24 @@ type DimensioFiltreControlProps = {
     filtre: DashboardFiltre;
     values: string[];
     onChange: (values: string[]) => void;
+    aplicacioId: number | string | undefined;
 };
 
 type DimensioValorOption = { valor: string; label: string };
 
 const DIMENSIO_VALOR_OPTIONS_SIZE = 200;
 
-const DimensioFiltreControl = ({ filtre, values, onChange }: DimensioFiltreControlProps) => {
+const DimensioFiltreControl = ({ filtre, values, onChange, aplicacioId }: DimensioFiltreControlProps) => {
     const { isReady, find } = useResourceApiService('dimensioValor');
     const [options, setOptions] = useState<DimensioValorOption[]>([]);
 
     useEffect(() => {
         let cancelled = false;
-        if (isReady && filtre.dimensioCodi) {
+        if (isReady && filtre.dimensioCodi && aplicacioId != null) {
             find({
                 filter: `dimensio.codi:'${filtre.dimensioCodi}'`,
                 size: DIMENSIO_VALOR_OPTIONS_SIZE,
+                namedQueries: [`filterByAppGroupByValor:${aplicacioId}`],
             }).then((response) => {
                 if (cancelled) return;
                 // `codiNom` ja combina el valor amb la denominació de la unitat organitzativa/entitat quan la
@@ -144,7 +146,7 @@ const DimensioFiltreControl = ({ filtre, values, onChange }: DimensioFiltreContr
             cancelled = true;
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isReady, filtre.dimensioCodi]);
+    }, [isReady, filtre.dimensioCodi, aplicacioId]);
 
     const selectedOptions = options.filter((o) => values.includes(o.valor));
 
@@ -170,6 +172,9 @@ export type DashboardFiltreBarProps = {
     filtres: DashboardFiltre[] | undefined | null;
     value: DashboardFiltreSeleccio;
     onChange: (value: DashboardFiltreSeleccio) => void;
+    /** Id de l'aplicació del dashboard (Dashboard.aplicacio.id); restringeix les opcions dels filtres DIMENSIO
+     * als valors del mateix app-entorn que el dashboard (vegeu filterByAppGroupByValor a DimensioValorServiceImpl). */
+    aplicacioId: number | string | undefined;
 };
 
 /**
@@ -179,7 +184,7 @@ export type DashboardFiltreBarProps = {
  * els widgets (vegeu useDashboardWidgets a dashboardRequests.ts). No té padding propi: qui l'incrusta (el
  * contenidor flex de la capçalera) és qui decideix l'espaiat respecte a la resta d'elements.
  */
-const DashboardFiltreBar = ({ filtres, value, onChange }: DashboardFiltreBarProps) => {
+const DashboardFiltreBar = ({ filtres, value, onChange, aplicacioId }: DashboardFiltreBarProps) => {
     const orderedFiltres = useMemo(
         () => [...(filtres ?? [])].sort((a, b) => a.ordre - b.ordre),
         [filtres]
@@ -226,6 +231,7 @@ const DashboardFiltreBar = ({ filtres, value, onChange }: DashboardFiltreBarProp
                         filtre={filtre}
                         values={value.dimensions?.[filtre.dimensioCodi] ?? []}
                         onChange={(values) => handleDimensioChange(filtre.dimensioCodi as string, values)}
+                        aplicacioId={aplicacioId}
                     />
                 ) : null
             )}

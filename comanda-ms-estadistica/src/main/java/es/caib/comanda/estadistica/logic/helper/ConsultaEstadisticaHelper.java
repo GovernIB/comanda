@@ -7,10 +7,12 @@ import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisu
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTaula;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.*;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.OrdreDireccioEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Temps;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
@@ -19,25 +21,14 @@ import es.caib.comanda.estadistica.logic.intf.model.periode.Periode;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.*;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaGrupPaletesEntity;
-import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
-import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
-import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
-import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
-import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorFormulaTermeEntity;
-import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
-import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
-import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
-import es.caib.comanda.estadistica.persist.repository.DimensioRepository;
-import es.caib.comanda.estadistica.persist.repository.FetRepository;
-import es.caib.comanda.estadistica.persist.repository.IndicadorFormulaTermeRepository;
-import es.caib.comanda.estadistica.persist.repository.IndicadorRepository;
-import es.caib.comanda.estadistica.persist.repository.UnitatOrganitzativaRepository;
+import es.caib.comanda.estadistica.persist.repository.*;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -180,7 +171,9 @@ public class ConsultaEstadisticaHelper {
     // La clau de cache HA d'incloure l'usuari: el resultat depèn dels seus permisos d'entitat/òrgan (vegeu
     // DashboardSeguretatHelper), així que usuaris diferents no es poden compartir la mateixa entrada de cache.
     @Cacheable(value = DASHBOARD_WIDGET_CACHE, key = "#dashboardItem.id + '_' + #temaFosc + '_' + (#filtreSeleccio != null ? #filtreSeleccio.cacheKey() : '') + '_' + @authenticationHelper.getCurrentUserName() + '_' + T(java.time.LocalDate).now()")
-    public InformeWidgetItem getDadesWidget(DashboardItemEntity dashboardItem, boolean temaFosc, DashboardFiltreSeleccio filtreSeleccio) {
+    public InformeWidgetItem getDadesWidget(DashboardItemEntity dashboardItem,
+                                            boolean temaFosc,
+                                            DashboardFiltreSeleccio filtreSeleccio) {
 
         try {
             // Recarregam l'item, ja que estem en una nova transacció.
@@ -630,6 +623,8 @@ public class ConsultaEstadisticaHelper {
             }).collect(Collectors.toList());
         }
 
+        files = applyFilesFilterSortLimit(files, widget);
+
         return InformeWidgetTaulaItem.builder()
             .dashboardItemId(dashboardItem.getId())
             .widgetId(dashboardItem.getWidget().getId())
@@ -668,6 +663,50 @@ public class ConsultaEstadisticaHelper {
         }
 
         return result;
+    }
+
+    /**
+     * Aplica les opcions de tractament de resultats configurades al widget de taula (vegeu
+     * {@link es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaTaulaWidget}): amagar les files
+     * amb totes les columnes d'indicador a zero, ordenar per una columna concreta i limitar el nombre de
+     * files retornades. S'apliquen en aquest ordre — filtrar abans d'ordenar/limitar, perquè el límit s'ha
+     * d'aplicar sobre les files rellevants, no sobre les que ja s'amagaran.
+     */
+    static List<Map<String, String>> applyFilesFilterSortLimit(List<Map<String, String>> files,
+                                                               EstadisticaTaulaWidgetEntity widget) {
+        List<Map<String, String>> result = files;
+        if (Boolean.TRUE.equals(widget.getAmagarFilesZero())) {
+            result = result.stream().filter(row -> !isTotAZero(row)).collect(Collectors.toList());
+        }
+        if (widget.getColumnaOrdenacio() != null) {
+            String columnName = "col" + (widget.getColumnaOrdenacio() + 1);
+            boolean descendent = !OrdreDireccioEnum.ASC.equals(widget.getDireccioOrdenacio());
+            Comparator<Map<String, String>> comparator = Comparator.comparingDouble(row -> parseNumericValue(row.get(columnName)));
+            result = result.stream()
+                .sorted(descendent ? comparator.reversed() : comparator)
+                .collect(Collectors.toList());
+            if (widget.getLimitResultats() != null && widget.getLimitResultats() > 0 && result.size() > widget.getLimitResultats()) {
+                result = new ArrayList<>(result.subList(0, widget.getLimitResultats()));
+            }
+        }
+        return result;
+    }
+
+    private static boolean isTotAZero(Map<String, String> row) {
+        return row.entrySet().stream()
+            .filter(entry -> !"agrupacio".equals(entry.getKey()))
+            .allMatch(entry -> parseNumericValue(entry.getValue()) == 0);
+    }
+
+    private static double parseNumericValue(String value) {
+        if (value == null || value.isBlank()) {
+            return 0;
+        }
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     public static String[] getColumnNames(List indicadorsList) {
@@ -755,7 +794,9 @@ public class ConsultaEstadisticaHelper {
         throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, "Tipus de widget incorrecte");
     }
 
-    private DadesComunsWidgetConsulta getDadesComunsConsulta(DashboardItemEntity dashboardItem, boolean temaFosc, DashboardFiltreSeleccio filtreSeleccio) {
+    private DadesComunsWidgetConsulta getDadesComunsConsulta(DashboardItemEntity dashboardItem,
+                                                             boolean temaFosc,
+                                                             DashboardFiltreSeleccio filtreSeleccio) {
         EstadisticaWidgetEntity widget = dashboardItem.getWidget();
         var entornApp = estadisticaClientHelper.entornAppFindByAppAndEntorn(widget.getAppId(), dashboardItem.getEntornId());
         var entorn = estadisticaClientHelper.entornById(entornApp.getEntorn().getId());
@@ -780,7 +821,9 @@ public class ConsultaEstadisticaHelper {
      * dimensió amb aquest codi - si no, el widget pertany a una altra app i el filtre se n'ignora (no es buida
      * el widget mostrant zero resultats per un filtre que no li és aplicable).
      */
-    private Map<String, List<String>> resolveDimensionsFiltre(EstadisticaWidgetEntity widget, Long entornAppId, DashboardFiltreSeleccio filtreSeleccio) {
+    private Map<String, List<String>> resolveDimensionsFiltre(EstadisticaWidgetEntity widget,
+                                                              Long entornAppId,
+                                                              DashboardFiltreSeleccio filtreSeleccio) {
         Map<String, List<String>> result = widget.getDimensionsValor() != null && !widget.getDimensionsValor().isEmpty()
             ? createDimensionsFiltre(widget.getDimensionsValor())
             : new LinkedHashMap<>();
@@ -817,23 +860,23 @@ public class ConsultaEstadisticaHelper {
             ? dashboardItem.getPlantilla()
             : dashboardItem.getDashboard() != null ? dashboardItem.getDashboard().getPlantilla() : null;
         log.debug(
-                "resolveAtributsVisuals dashboardItem={} personalitzat={} destacat={} plantillaId={} plantillaNom={}",
-                dashboardItem.getId(), dashboardItem.getPersonalitzat(), dashboardItem.getDestacat(),
-                plantilla != null ? plantilla.getId() : null, plantilla != null ? plantilla.getNom() : null);
+            "resolveAtributsVisuals dashboardItem={} personalitzat={} destacat={} plantillaId={} plantillaNom={}",
+            dashboardItem.getId(), dashboardItem.getPersonalitzat(), dashboardItem.getDestacat(),
+            plantilla != null ? plantilla.getId() : null, plantilla != null ? plantilla.getNom() : null);
         if (plantilla != null) {
             boolean destacat = Boolean.TRUE.equals(dashboardItem.getDestacat());
             PaletteGroupType groupType = temaFosc
                 ? (destacat ? PaletteGroupType.DARK_HIGHLIGHTED : PaletteGroupType.DARK)
                 : (destacat ? PaletteGroupType.LIGHT_HIGHLIGHTED : PaletteGroupType.LIGHT);
             log.debug(
-                    "resolveAtributsVisuals dashboardItem={} groupType={} paletteGroups={} styleProperties={}",
-                    dashboardItem.getId(), groupType,
-                    plantilla.getPaletteGroups() != null
-                            ? plantilla.getPaletteGroups().stream().map(PlantillaGrupPaletesEntity::getGroupType).collect(Collectors.toList())
-                            : null,
-                    plantilla.getStyleProperties() != null
-                            ? plantilla.getStyleProperties().stream().map(p -> p.getScope() + ":" + p.getPropertyName()).collect(Collectors.toList())
-                            : null);
+                "resolveAtributsVisuals dashboardItem={} groupType={} paletteGroups={} styleProperties={}",
+                dashboardItem.getId(), groupType,
+                plantilla.getPaletteGroups() != null
+                    ? plantilla.getPaletteGroups().stream().map(PlantillaGrupPaletesEntity::getGroupType).collect(Collectors.toList())
+                    : null,
+                plantilla.getStyleProperties() != null
+                    ? plantilla.getStyleProperties().stream().map(p -> p.getScope() + ":" + p.getPropertyName()).collect(Collectors.toList())
+                    : null);
             dashboardStyleResolverHelper.applyTemplateDefaults(resolved, plantilla, groupType, widgetStyleScope(dashboardItem));
             log.debug("resolveAtributsVisuals dashboardItem={} resolved={}", dashboardItem.getId(), resolved);
         }

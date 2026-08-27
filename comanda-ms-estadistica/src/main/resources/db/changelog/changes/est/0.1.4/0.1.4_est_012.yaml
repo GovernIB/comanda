@@ -1,0 +1,45 @@
+databaseChangeLog:
+  - changeSet:
+      id: est-taula-widget-opcions-0.1.4-001
+      author: limit
+      comment: >
+        Afegir opcions de configuració als widgets de taula: amagar files amb tots els valors a zero,
+        ordenar per una columna concreta i limitar el nombre de resultats retornats.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: ${db_prefix}est_widget
+              columnName: amagar_files_zero
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}est_widget
+            columns:
+              - column:
+                  name: amagar_files_zero
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: columna_ordenacio
+                  type: INT
+              - column:
+                  name: direccio_ordenacio
+                  type: VARCHAR(4 ${varcharUnit})
+              - column:
+                  name: limit_resultats
+                  type: INT
+      rollback:
+        - dropColumn:
+            tableName: ${db_prefix}est_widget
+            columnName: amagar_files_zero
+        - dropColumn:
+            tableName: ${db_prefix}est_widget
+            columnName: columna_ordenacio
+        - dropColumn:
+            tableName: ${db_prefix}est_widget
+            columnName: direccio_ordenacio
+        - dropColumn:
+            tableName: ${db_prefix}est_widget
+            columnName: limit_resultats

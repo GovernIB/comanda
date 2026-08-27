@@ -1,25 +1,25 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
-import { Box, Typography, Skeleton } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import {useTranslation} from 'react-i18next';
+import {Box, Skeleton, Typography} from '@mui/material';
+import {useTheme} from '@mui/material/styles';
 import {
     BarChart,
-    LineChart,
-    PieChart,
-    PieArcLabel,
-    ChartsTooltip,
     ChartsLegend,
-    SparkLineChart,
+    ChartsTooltip,
     Gauge,
     gaugeClasses,
-    XAxis,
+    LineChart,
     LineSeries,
+    PieArcLabel,
+    PieChart,
+    PieSeries,
+    SparkLineChart,
+    XAxis,
     YAxis,
 } from '@mui/x-charts';
-import { PieSeries } from '@mui/x-charts';
 import estils from './WidgetEstils';
-import { useWidgetTheme } from './useWidgetTheme';
-import { WidgetContainer, WidgetHeader, WidgetFooter, WidgetErrorDisplay, WidgetNoAccessDisplay } from './WidgetLayout';
+import {useWidgetTheme} from './useWidgetTheme';
+import {WidgetContainer, WidgetErrorDisplay, WidgetFooter, WidgetHeader, WidgetNoAccessDisplay} from './WidgetLayout';
 
 interface ColumnLabel {
     id: string;
@@ -157,7 +157,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         //midaFontTitol,
         //midaFontDescripcio,
     } = props;
-    const { t } = useTranslation();
+    const {t} = useTranslation();
     const theme = useTheme();
     const {
         textColor,
@@ -177,21 +177,33 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
     });
     const chartTextColor = contrastTextColor;
     const axisStyleProps = {
-        tickLabelStyle: { fill: chartTextColor },
-        labelStyle: { fill: chartTextColor },
+        tickLabelStyle: {fill: chartTextColor},
+        labelStyle: {fill: chartTextColor},
         slotProps: {
-            axisLine: { stroke: chartTextColor, style: { stroke: chartTextColor } },
-            axisTick: { stroke: chartTextColor, style: { stroke: chartTextColor } },
+            axisLine: {stroke: chartTextColor, style: {stroke: chartTextColor}},
+            axisTick: {stroke: chartTextColor, style: {stroke: chartTextColor}},
+        },
+    };
+    // Per defecte, MUI X-Charts amaga (tickLabelInterval: 'auto') les etiquetes de categoria de l'eix que
+    // calcula que se solaparien amb l'anterior — amb prou categories (p. ex. un any complet de mesos) això
+    // acaba amagant-les TOTES en lloc de només les que no hi caben. Es força que es mostrin totes, inclinades
+    // per reduir el solapament visual.
+    const bandTickLabelProps = {
+        tickLabelInterval: () => true,
+        tickLabelStyle: {
+            fill: chartTextColor,
+            angle: -35,
+            textAnchor: 'end' as const
         },
     };
     const chartCommonSx = {
-        '& .MuiChartsAxis-line': { stroke: chartTextColor },
-        '& .MuiChartsAxis-tick': { stroke: chartTextColor },
-        '& .MuiChartsAxis-root line': { stroke: chartTextColor },
-        '& .MuiChartsAxis-root path': { stroke: chartTextColor },
-        '& .MuiChartsAxis-tickLabel': { fill: chartTextColor },
-        '& .MuiChartsAxis-label': { fill: chartTextColor },
-        '& .MuiChartsLegend-label': { fill: chartTextColor },
+        '& .MuiChartsAxis-line': {stroke: chartTextColor},
+        '& .MuiChartsAxis-tick': {stroke: chartTextColor},
+        '& .MuiChartsAxis-root line': {stroke: chartTextColor},
+        '& .MuiChartsAxis-root path': {stroke: chartTextColor},
+        '& .MuiChartsAxis-tickLabel': {fill: chartTextColor},
+        '& .MuiChartsAxis-label': {fill: chartTextColor},
+        '& .MuiChartsLegend-label': {fill: chartTextColor},
     };
 
     const paletaColors = colorsPaleta.split(',');
@@ -199,14 +211,22 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
 
     const renderChart = () => {
         switch (tipusGrafic) {
-            case 'BAR_CHART': return renderBarChart();
-            case 'LINE_CHART': return renderLineChart();
-            case 'PIE_CHART': return renderPieChart();
-            case 'SCATTER_CHART': return renderScatterChart();
-            case 'SPARK_LINE_CHART': return renderSparkLineChart();
-            case 'GAUGE_CHART': return renderGaugeChart();
-            case 'HEATMAP_CHART': return renderHeatmapChart();
-            default: return renderBarChart();
+            case 'BAR_CHART':
+                return renderBarChart();
+            case 'LINE_CHART':
+                return renderLineChart();
+            case 'PIE_CHART':
+                return renderPieChart();
+            case 'SCATTER_CHART':
+                return renderScatterChart();
+            case 'SPARK_LINE_CHART':
+                return renderSparkLineChart();
+            case 'GAUGE_CHART':
+                return renderGaugeChart();
+            case 'HEATMAP_CHART':
+                return renderHeatmapChart();
+            default:
+                return renderBarChart();
         }
     };
 
@@ -235,24 +255,56 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         const xAxis: Array<XAxis> = [];
         const yAxisLabel = preview ? t($ => $.page.plantilla.sample.yAxis) : undefined;
         if (barHorizontal) { // Si és horitzontal, l'eix X té valors numèrics
-            xAxis.push({ scaleType: 'linear', label: llegendaX || (preview ? t($ => $.page.plantilla.sample.xAxis) : undefined), ...axisStyleProps });
+            xAxis.push({
+                scaleType: 'linear',
+                label: llegendaX || (preview ? t($ => $.page.plantilla.sample.xAxis) : undefined),
+                // min: 0,
+                // max: 100,
+                ...axisStyleProps
+            });
         } else { // Si no és horitzontal, l'eix X té categories
-            xAxis.push({ scaleType: 'band', data: dades.map(item => item[discriminador]), label: llegendaX || (preview ? t($ => $.page.plantilla.sample.xAxis) : undefined), ...axisStyleProps });
+            xAxis.push({
+                scaleType: 'band',
+                // dataKey: discriminador,
+                data: dades.map(item => item[discriminador]),
+                label: llegendaX || (preview ? t($ => $.page.plantilla.sample.xAxis) : undefined),
+                ...axisStyleProps,
+                ...bandTickLabelProps,
+                tickLabelInterval: () => true,
+            });
         }
 
         const yAxis: Array<YAxis> = [];
         if (barHorizontal) { // Si és horitzontal, l'eix Y té categories
-            yAxis.push({ scaleType: 'band', data: dades.map(item => item[discriminador]), label: llegendaX || undefined, ...axisStyleProps });
+            yAxis.push({
+                scaleType: 'band',
+                data: dades.map(item => item[discriminador]),
+                label: llegendaX || undefined,
+                ...axisStyleProps,
+                tickLabelInterval: () => true,
+            });
         } else { // Si no és horitzontal, l'eix Y té valors numèrics
-            yAxis.push({ scaleType: 'linear', label: yAxisLabel, ...axisStyleProps });
+            yAxis.push({
+                scaleType: 'linear',
+                label: yAxisLabel,
+                // min: 0,
+                // max: 100,
+                ...axisStyleProps
+            });
         }
 
         const grid = barHorizontal
-            ? mostrarReticula ? { vertical: true } : { vertical: false }
-            : mostrarReticula ? { horizontal: true } : { horizontal: false };
+            ? mostrarReticula ? {vertical: true} : {vertical: false}
+            : mostrarReticula ? {horizontal: true} : {horizontal: false};
+
+        console.log(dataset);
+        console.log(dataset.map(item => item[discriminador]));
+        console.log(series);
+        console.log(xAxis);
+        console.log(yAxis);
 
         return (
-            <Box sx={{ width: '100%', height: chartHeight }}>
+            <Box sx={{width: '100%', height: chartHeight}}>
                 <BarChart
                     sx={chartCommonSx}
                     dataset={dataset}
@@ -262,17 +314,17 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                     layout={barHorizontal ? 'horizontal' : 'vertical'}
                     grid={grid}
                     height={chartHeight}
-                    margin={{ top: 10, bottom: 30, left: 40, right: 10 }}
+                    margin={{top: 10, bottom: 10, left: 10, right: 10}}
                     slotProps={{
                         legend: {
                             sx: {
-                                '& .MuiChartsLegend-label': { fill: chartTextColor, color: chartTextColor },
+                                '& .MuiChartsLegend-label': {fill: chartTextColor, color: chartTextColor},
                             },
                         },
                     }}
                 >
-                    <ChartsTooltip />
-                    <ChartsLegend />
+                    <ChartsTooltip/>
+                    <ChartsLegend/>
                 </BarChart>
             </Box>
         );
@@ -299,17 +351,18 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             scaleType: 'band',
             label: llegendaX,
             ...axisStyleProps,
+            ...bandTickLabelProps,
             // data: dades.map(d => d[datakey]),
         }];
 
-        const grid = mostrarReticula ? { horizontal: true } : { horizontal: false };
+        const grid = mostrarReticula ? {horizontal: true} : {horizontal: false};
 
         return (
             <Box sx={{width: '100%', height: chartHeight}}>
                 <LineChart
                     sx={{
                         ...chartCommonSx,
-                        '& .MuiLineElement-root': { strokeWidth: +lineWidth },
+                        '& .MuiLineElement-root': {strokeWidth: +lineWidth},
                     }}
                     xAxis={xAxisData}
                     yAxis={[{scaleType: 'linear', label: preview ? 'Eix Y' : undefined, ...axisStyleProps}]}
@@ -317,17 +370,18 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                     dataset={dades}
                     height={chartHeight}
                     grid={grid}
-                    margin={{top: 10, bottom: 30, left: 40, right: 10}}
+                    // Vegeu comentari equivalent a renderBarChart: cal espai per a les etiquetes de categoria I el títol de l'eix alhora.
+                    margin={{top: 10, bottom: 70, left: 40, right: 10}}
                     slotProps={{
                         legend: {
                             sx: {
-                                '& .MuiChartsLegend-label': { fill: chartTextColor, color: chartTextColor },
+                                '& .MuiChartsLegend-label': {fill: chartTextColor, color: chartTextColor},
                             },
                         },
                     }}
                 >
-                    <ChartsTooltip />
-                    <ChartsLegend />
+                    <ChartsTooltip/>
+                    <ChartsLegend/>
                 </LineChart>
             </Box>
         );
@@ -347,6 +401,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
 
         interface ArcLabelParams {
             label?: string;
+
             [key: string]: any;
         }
 
@@ -354,14 +409,14 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             return pieShowLabels ? (params.label ?? '') : '';
         };
 
-        const ContrastPieArcLabel = ({ color, ...other }: any) => {
+        const ContrastPieArcLabel = ({color, ...other}: any) => {
             const labelColor = theme.palette.getContrastText(color);
             return (
                 <PieArcLabel
                     {...other}
                     color={color}
                     fill={labelColor}
-                    style={{ ...(other?.style || {}), fill: labelColor, color: labelColor }}
+                    style={{...(other?.style || {}), fill: labelColor, color: labelColor}}
                 />
             );
         };
@@ -374,25 +429,25 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             cornerRadius: 4,
             arcLabel: getArcLabel,
             arcLabelMinAngle: 20,
-            highlightScope: { fade: 'global', highlight: 'item' },
-            faded: { innerRadius: 20, additionalRadius: -15, color: 'gray' },
+            highlightScope: {fade: 'global', highlight: 'item'},
+            faded: {innerRadius: 20, additionalRadius: -15, color: 'gray'},
         }];
 
         return (
-            <Box sx={{ width: '100%', height: chartHeight }}>
+            <Box sx={{width: '100%', height: chartHeight}}>
                 <PieChart
                     sx={{
                         ...chartCommonSx,
-                        '& .MuiPieArcLabel-root': { fontSize: labelSize ? labelSize + 'px' : '1em' },
+                        '& .MuiPieArcLabel-root': {fontSize: labelSize ? labelSize + 'px' : '1em'},
                     }}
-                    slots={{ pieArcLabel: ContrastPieArcLabel }}
+                    slots={{pieArcLabel: ContrastPieArcLabel}}
                     series={series}
                     height={chartHeight}
                     margin={{top: 10, bottom: 10, left: 10, right: 10}}
                     slotProps={{
                         legend: {
                             sx: {
-                                '& .MuiChartsLegend-label': { fill: chartTextColor, color: chartTextColor },
+                                '& .MuiChartsLegend-label': {fill: chartTextColor, color: chartTextColor},
                             },
                         },
                     }}
@@ -458,7 +513,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             : [];
 
         return (
-            <Box sx={{ width: '100%', height: chartHeight }}>
+            <Box sx={{width: '100%', height: chartHeight}}>
                 <SparkLineChart
                     data={numericData}
                     height={chartHeight}
@@ -467,7 +522,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                     curve={lineSmooth ? 'monotoneX' : 'linear'}
                     area={area}
                     sx={{
-                        '& .MuiLineElement-root': { strokeWidth: +lineWidth },
+                        '& .MuiLineElement-root': {strokeWidth: +lineWidth},
                     }}
                 />
             </Box>);
@@ -488,70 +543,72 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         };
 
         return (
-            <Box sx={{ width: '100%',
+            <Box sx={{
+                width: '100%',
                 height: chartHeight,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                overflow: 'hidden',}}>
-            <Gauge
-                value={valorGauge}
-                valueMin={gaugeMin}
-                valueMax={gaugeMax}
-                sx={() => ({
-                    [`& .${gaugeClasses.valueArc}`]: {
-                        fill: getColor(valorGauge),
-                    },
-                    [`& .${gaugeClasses.valueText}`]: {
-                        fill: `${chartTextColor} !important`,
-                        color: `${chartTextColor} !important`,
-                    },
-                    [`& .${gaugeClasses.valueText} *`]: {
-                        fill: `${chartTextColor} !important`,
-                        color: `${chartTextColor} !important`,
-                    },
-                })}
-            />
+                overflow: 'hidden',
+            }}>
+                <Gauge
+                    value={valorGauge}
+                    valueMin={gaugeMin}
+                    valueMax={gaugeMax}
+                    sx={() => ({
+                        [`& .${gaugeClasses.valueArc}`]: {
+                            fill: getColor(valorGauge),
+                        },
+                        [`& .${gaugeClasses.valueText}`]: {
+                            fill: `${chartTextColor} !important`,
+                            color: `${chartTextColor} !important`,
+                        },
+                        [`& .${gaugeClasses.valueText} *`]: {
+                            fill: `${chartTextColor} !important`,
+                            color: `${chartTextColor} !important`,
+                        },
+                    })}
+                />
             </Box>
         );
     };
 
     // Render a heatmap chart (simplified version)
     const renderHeatmapChart = () => {
-    // const colorArray = heatmapColors.split(',').map(c => c.trim());
+        // const colorArray = heatmapColors.split(',').map(c => c.trim());
 
-    // const xCategories = Array.from(new Set(dades.map(d => d.x)));
-    // const yCategories = Array.from(new Set(dades.map(d => d.y)));
+        // const xCategories = Array.from(new Set(dades.map(d => d.x)));
+        // const yCategories = Array.from(new Set(dades.map(d => d.y)));
 
-    // const heatmapData = dades.map(d => [
-    //         xCategories.indexOf(d.x),
-    //         yCategories.indexOf(d.y),
-    //         d.value
-    //     ]);
+        // const heatmapData = dades.map(d => [
+        //         xCategories.indexOf(d.x),
+        //         yCategories.indexOf(d.y),
+        //         d.value
+        //     ]);
 
 
-    // return (
-    //     <Box sx={{ width: '100%', height: chartHeight }}>
-    //     <Heatmap
-    //         height={chartHeight}
-    //         xAxis={[{ scaleType: 'band', data: xCategories }]}
-    //         yAxis={[{ scaleType: 'band', data: yCategories }]}
-    //         series={[
-    //         {
-    //             type: 'heatmap',
-    //             data: heatmapData,
-    //             colorMap: {
-    //             type: 'continuous',
-    //             min: heatmapMinValue,
-    //             max: heatmapMaxValue,
-    //             colors: colorArray,
-    //             },
-    //         },
-    //         ]}
-    //     />
-    //     </Box>
-    // );
-    // };
+        // return (
+        //     <Box sx={{ width: '100%', height: chartHeight }}>
+        //     <Heatmap
+        //         height={chartHeight}
+        //         xAxis={[{ scaleType: 'band', data: xCategories }]}
+        //         yAxis={[{ scaleType: 'band', data: yCategories }]}
+        //         series={[
+        //         {
+        //             type: 'heatmap',
+        //             data: heatmapData,
+        //             colorMap: {
+        //             type: 'continuous',
+        //             min: heatmapMinValue,
+        //             max: heatmapMaxValue,
+        //             colors: colorArray,
+        //             },
+        //         },
+        //         ]}
+        //     />
+        //     </Box>
+        // );
+        // };
 
         // For preview, just show a placeholder
         return (
@@ -591,15 +648,21 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             />
 
             {error ? (
-                <WidgetErrorDisplay errorMsg={errorMsg} errorTrace={errorTrace} />
+                <WidgetErrorDisplay errorMsg={errorMsg} errorTrace={errorTrace}/>
             ) : senseAccesDades ? (
-                <WidgetNoAccessDisplay />
+                <WidgetNoAccessDisplay/>
             ) : (
                 <>
                     <Box sx={estils.tableContainerBox}>
                         {loading ? (
-                            <Box sx={{ width: '100%', height: chartHeight, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                                <Skeleton variant="rectangular" width="100%" height={chartHeight} />
+                            <Box sx={{
+                                width: '100%',
+                                height: chartHeight,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'center'
+                            }}>
+                                <Skeleton variant="rectangular" width="100%" height={chartHeight}/>
                             </Box>
                         ) : (
                             renderChart()
@@ -700,12 +763,17 @@ const generateSampleLabels = (chartType?: string): ColumnLabel[] | undefined => 
 };
 const generateSampleAgregacio = (chartType?: string): string | undefined => {
     switch (chartType) {
-        case 'BAR_CHART': return 'name';
+        case 'BAR_CHART':
+            return 'name';
         case 'LINE_CHART':
-        case 'SPARK_LINE_CHART': return 'x';
-        case 'PIE_CHART': return 'name';
-        case 'SCATTER_CHART': return 'name';
-        default: return undefined;
+        case 'SPARK_LINE_CHART':
+            return 'x';
+        case 'PIE_CHART':
+            return 'name';
+        case 'SCATTER_CHART':
+            return 'name';
+        default:
+            return undefined;
     }
 };
 export default GraficWidgetVisualization;

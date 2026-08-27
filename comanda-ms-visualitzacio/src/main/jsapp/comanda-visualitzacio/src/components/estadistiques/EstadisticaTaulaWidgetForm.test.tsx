@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import EstadisticaTaulaWidgetForm from './EstadisticaTaulaWidgetForm';
 
@@ -21,6 +21,10 @@ const mocks = vi.hoisted(() => ({
                     },
                     taula: {
                         tableCols: 'Columnes de taula',
+                        amagarFilesZero: 'Amagar files a zero',
+                        senseOrdenacio: 'Sense ordenacio',
+                        direccioOrdenacio: 'Direccio',
+                        limitResultats: 'Limit resultats',
                     },
                     atributsVisuals: {
                         colorText: 'Color text',
@@ -136,5 +140,66 @@ describe('EstadisticaTaulaWidgetForm', () => {
         expect(screen.getByTestId('field-colorCapcalera')).toBeInTheDocument();
         expect(screen.getByTestId('field-colorAlternancia')).toBeInTheDocument();
         expect(screen.getByTestId('field-colorVoraTaula')).toBeInTheDocument();
+    });
+
+    it('EstadisticaTaulaWidgetForm_senseColumnaOrdenacio_noMostraDireccioNiLimit', () => {
+        // Sense cap columna d'ordenació triada, els camps de direcció i límit no s'han de mostrar.
+        mocks.useFormContextMock.mockReturnValue({
+            data: { columnes: [{ titol: 'Visites' }, { titol: 'Sessions' }] },
+            apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
+        });
+
+        render(<EstadisticaTaulaWidgetForm />);
+
+        expect(screen.getByText('Sense ordenacio')).toBeInTheDocument();
+        expect(screen.queryByTestId('field-direccioOrdenacio')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('field-limitResultats')).not.toBeInTheDocument();
+    });
+
+    it('EstadisticaTaulaWidgetForm_enTriarUnaColumnaDOrdenacio_mostraDireccioILimitIEstableixDescPerDefecte', () => {
+        // En triar una columna per ordenar, apareixen direcció i límit, i la direcció es fixa a DESC si no n'hi havia cap.
+        mocks.useFormContextMock.mockReturnValue({
+            data: { columnes: [{ titol: 'Visites' }, { titol: 'Sessions' }] },
+            apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
+        });
+
+        render(<EstadisticaTaulaWidgetForm />);
+
+        fireEvent.mouseDown(screen.getByRole('combobox'));
+        const listbox = screen.getByRole('listbox');
+        fireEvent.click(within(listbox).getByText('Sessions'));
+
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('columnaOrdenacio', 1);
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('direccioOrdenacio', 'DESC');
+    });
+
+    it('EstadisticaTaulaWidgetForm_ambColumnaOrdenacioTriada_mostraDireccioILimit', () => {
+        mocks.useFormContextMock.mockReturnValue({
+            data: { columnes: [{ titol: 'Visites' }], columnaOrdenacio: 0, direccioOrdenacio: 'ASC' },
+            apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
+        });
+
+        render(<EstadisticaTaulaWidgetForm />);
+
+        expect(screen.getByTestId('field-direccioOrdenacio')).toBeInTheDocument();
+        expect(screen.getByTestId('field-limitResultats')).toBeInTheDocument();
+    });
+
+    it('EstadisticaTaulaWidgetForm_enTreureLaColumnaDOrdenacio_esbrraDireccioILimit', () => {
+        // En tornar a "Sense ordenació" s'han de netejar direcció i límit, ja que sense columna no tenen sentit.
+        mocks.useFormContextMock.mockReturnValue({
+            data: { columnes: [{ titol: 'Visites' }], columnaOrdenacio: 0, direccioOrdenacio: 'ASC', limitResultats: 5 },
+            apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
+        });
+
+        render(<EstadisticaTaulaWidgetForm />);
+
+        fireEvent.mouseDown(screen.getByRole('combobox'));
+        const listbox = screen.getByRole('listbox');
+        fireEvent.click(within(listbox).getByText('Sense ordenacio'));
+
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('columnaOrdenacio', null);
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('direccioOrdenacio', null);
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('limitResultats', null);
     });
 });

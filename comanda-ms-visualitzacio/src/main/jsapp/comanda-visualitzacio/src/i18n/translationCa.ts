@@ -88,6 +88,10 @@ const translationCa = {
             SIMPLE: 'Simple',
             FORMULA: 'Fórmula'
         },
+        direccioOrdenacio: {
+            ASC: 'Ascendent',
+            DESC: 'Descendent'
+        },
         posicioSubtitol: {
             SOTA: 'A sota del títol',
             COSTAT: 'Al costat del títol'
@@ -1111,6 +1115,10 @@ const translationCa = {
                     arrossega: "Arrossega per reordenar",
                     percentageError: "No es poden combinar columnes de tipus percentatge amb altres tipus d'agregació",
                 },
+                amagarFilesZero: "Amagar files amb tots els valors a zero",
+                senseOrdenacio: "Sense ordenació",
+                direccioOrdenacio: "Direcció",
+                limitResultats: "Límit de resultats",
             },
             atributsVisuals: {
                 title: "Atributs visuals",
@@ -1520,6 +1528,7 @@ const translationCa = {
                 msgSaveError: "No s'ha pogut desar la paleta",
                 previewSubtitle: "Subtítol del dashboard",
                 defaultValue: "Valor per defecte",
+                senseColor: "Sense color",
             },
             action: {
                 createPalette: "Crear paleta",

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Box, Typography, Chip, Skeleton, Paper } from '@mui/material';
+import { Box, Typography, Chip, Icon, Skeleton, Paper } from '@mui/material';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -112,7 +112,16 @@ export const WidgetFooter: React.FC<WidgetFooterProps> = React.memo(({
             ) : (
                 <>
                     {descripcio && <Typography sx={descEstils}>{descripcio}</Typography>}
-                    {canviPercentual && <Typography sx={canviPercentualEstils}>{canviPercentual}%</Typography>}
+                    {canviPercentual && (
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            {Number(canviPercentual) !== 0 && (
+                                <Icon sx={{ color: canviPercentualEstils.color, fontSize: canviPercentualEstils.fontSize }}>
+                                    {Number(canviPercentual) > 0 ? 'arrow_drop_up' : 'arrow_drop_down'}
+                                </Icon>
+                            )}
+                            <Typography sx={canviPercentualEstils}>{canviPercentual}%</Typography>
+                        </Box>
+                    )}
                 </>
             )}
         </Box>

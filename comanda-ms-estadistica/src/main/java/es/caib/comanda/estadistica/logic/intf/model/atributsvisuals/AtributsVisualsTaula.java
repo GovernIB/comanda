@@ -1,7 +1,6 @@
 package es.caib.comanda.estadistica.logic.intf.model.atributsvisuals;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -111,7 +110,7 @@ public class AtributsVisualsTaula extends AtributsVisuals implements Serializabl
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class ColumnaEstil {
+    public static class ColumnaEstil implements Serializable {
         @Size(max = 64)
         private String codiColumna;           // Codi de la columna a la qual s'aplica l'estil
         @Size(max = 8)
@@ -131,7 +130,7 @@ public class AtributsVisualsTaula extends AtributsVisuals implements Serializabl
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class RangValor {
+    public static class RangValor implements Serializable {
         private Double valorMin;      // Valor mínim del rang (inclusiu)
         private Double valorMax;      // Valor màxim del rang (inclusiu)
         @Size(max = 8)
@@ -150,7 +149,7 @@ public class AtributsVisualsTaula extends AtributsVisuals implements Serializabl
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class CellaDestacada {
+    public static class CellaDestacada implements Serializable {
         @Size(max = 64)
         private String codiColumna;       // Codi de la columna on es troba la cel·la
         @Size(max = 64)
