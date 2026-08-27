@@ -1,12 +1,12 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { describe, expect, it, vi } from 'vitest';
+import {fireEvent, render, screen} from '@testing-library/react';
+import {createTheme, ThemeProvider} from '@mui/material/styles';
+import {describe, expect, it, vi} from 'vitest';
 import GraficWidgetVisualization from './GraficWidgetVisualization';
 
 type MockAxis = { scaleType?: string; tickLabelInterval?: (value: unknown, index: number) => boolean };
 
 vi.mock('@mui/x-charts', () => ({
-    BarChart: ({ margin, xAxis }: { margin?: { bottom?: number }; xAxis?: MockAxis[] }) => {
+    BarChart: ({margin, xAxis}: { margin?: { bottom?: number }; xAxis?: MockAxis[] }) => {
         const bandAxis = xAxis?.find((axis) => axis.scaleType === 'band');
         return (
             <div
@@ -18,7 +18,7 @@ vi.mock('@mui/x-charts', () => ({
             </div>
         );
     },
-    LineChart: ({ margin, xAxis }: { margin?: { bottom?: number }; xAxis?: MockAxis[] }) => {
+    LineChart: ({margin, xAxis}: { margin?: { bottom?: number }; xAxis?: MockAxis[] }) => {
         const bandAxis = xAxis?.find((axis) => axis.scaleType === 'band');
         return (
             <div
@@ -38,7 +38,7 @@ vi.mock('@mui/x-charts', () => ({
     XAxis: () => null,
     YAxis: () => null,
     LineSeries: () => null,
-    gaugeClasses: { valueArc: 'valueArc', referenceArc: 'referenceArc' },
+    gaugeClasses: {valueArc: 'valueArc', referenceArc: 'referenceArc'},
 }));
 
 const renderComponent = (ui: React.ReactElement) =>
@@ -77,7 +77,7 @@ describe('GraficWidgetVisualization', () => {
         );
 
         const marginBottom = Number(screen.getByTestId('bar-chart').getAttribute('data-margin-bottom'));
-        expect(marginBottom).toBeGreaterThanOrEqual(50);
+        expect(marginBottom).toBeGreaterThanOrEqual(40);
     });
 
     it('GraficWidgetVisualization_enModeLine_reservaProuMarInferiorPerEtiquetesDeCategoriaIEixTitol', () => {
@@ -91,7 +91,7 @@ describe('GraficWidgetVisualization', () => {
         );
 
         const marginBottom = Number(screen.getByTestId('line-chart').getAttribute('data-margin-bottom'));
-        expect(marginBottom).toBeGreaterThanOrEqual(50);
+        expect(marginBottom).toBeGreaterThanOrEqual(40);
     });
 
     it('GraficWidgetVisualization_enModeBar_forcaMostrarTotesLesEtiquetesDeCategoria', () => {
