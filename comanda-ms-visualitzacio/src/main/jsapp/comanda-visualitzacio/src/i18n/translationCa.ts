@@ -456,6 +456,20 @@ const translationCa = {
                     analyzing: "Analitzant el fitxer i verificant possibles conflictes...",
                     noConflicts: "No s'ha detectat cap conflicte.",
                     importing: "Important tauler de control i recursos associats...",
+                    groups: {
+                        dashboard: "Taulers de control",
+                        widget: "Widgets",
+                        plantilla: "Plantilles",
+                        paleta: "Paletes",
+                        other: "Altres elements",
+                    },
+                    bulkActions: {
+                        selectedCount: "{{count}} seleccionats",
+                        useExisting: "Emprar existent",
+                        createWithAnotherName: "Crear amb un altre nom",
+                        selectAll: "Seleccionar-ho tot",
+                        deselectAll: "Deseleccionar",
+                    },
                 },
             },
             alert: {

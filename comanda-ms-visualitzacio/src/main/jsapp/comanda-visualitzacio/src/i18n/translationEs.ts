@@ -456,6 +456,20 @@ const translationEs: translationResourcesType = {
                     analyzing: "Analizando el archivo y verificando posibles conflictos...",
                     noConflicts: "No se ha detectado ningún conflicto.",
                     importing: "Importando tablero de control y recursos asociados...",
+                    groups: {
+                        dashboard: "Tableros de control",
+                        widget: "Widgets",
+                        plantilla: "Plantillas",
+                        paleta: "Paletas",
+                        other: "Otros elementos",
+                    },
+                    bulkActions: {
+                        selectedCount: "{{count}} seleccionados",
+                        useExisting: "Utilizar existente",
+                        createWithAnotherName: "Crear con otro nombre",
+                        selectAll: "Seleccionar todo",
+                        deselectAll: "Deseleccionar",
+                    },
                 },
             },
             alert: {

@@ -6,6 +6,9 @@ import Typography from '@mui/material/Typography';
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import { SimpleTreeView, TreeItem } from '@mui/x-tree-view';
 import {
     MuiDataGrid,
     FormField,
@@ -26,6 +29,7 @@ import {useAclCustomPermissionManager} from "../components/AclPermissionManager.
 import {useMemo} from "react";
 import {useIsUserAdmin, useIsUserUsuari} from "../components/UserContext.ts";
 import Badge from "@mui/material/Badge";
+import { TFunction } from 'i18next';
 
 const EstadisticaDashboardForm: React.FC = () => {
     const { data } = useFormContext();
@@ -97,62 +101,331 @@ const useCloneDashboardAction = (refresh?: () => void) => {
     }
 }
 
-type Conflicte = { titol: string; overwrite?: string; nouNom?: string };
+type Conflicte = { titol: string; tipo: string; overwrite?: string; nouNom?: string; appId?: number };
 
-const ImportConflictRow: React.FC<{
-    index: number;
-    conflict: any;
-    onChange: (changes: object) => void;
-}> = ({ index, conflict, onChange }) => {
-    const { fields } = useFormContext();
+interface ConflictGroupMeta {
+    tipo: string;
+    label: string;
+    icon: string;
+    items: { index: number; conflict: Conflicte }[];
+}
 
-    const fieldOverwrite = fields?.filter(i=>i.name=='overwrite')[0];
-    const fieldNouNom = fields?.filter(i=>i.name=='nouNom')[0];
+const groupConflicts = (conflicts: Conflicte[], t: TFunction): ConflictGroupMeta[] => {
+    const knownTypes = [
+        { tipo: 'DashboardExport', getLabel: () => t($ => $.page.dashboards.action.import.groups.dashboard), icon: 'dashboard' },
+        { tipo: 'EstadisticaWidgetExport', getLabel: () => t($ => $.page.dashboards.action.import.groups.widget), icon: 'widgets' },
+        { tipo: 'PlantillaExport', getLabel: () => t($ => $.page.dashboards.action.import.groups.plantilla), icon: 'palette' },
+        { tipo: 'PaletaExport', getLabel: () => t($ => $.page.dashboards.action.import.groups.paleta), icon: 'format_color_fill' },
+    ];
 
-    return (
-        <Grid container spacing={1} alignItems="center" sx={{ mb: 1 }}>
-            <Grid size={4} sx={{display: 'flex', alignItems: 'center'}}>
-                {conflict.tipo == "DashboardExport" && <Icon>dashboard</Icon>}
-                {conflict.tipo == "EstadisticaWidgetExport" && <Icon>widgets</Icon>}
-                {conflict.tipo == "PlantillaExport" && <Icon>palette</Icon>}
-                {conflict.tipo == "PaletaExport" && <Icon>format_color_fill</Icon>}
-                <Typography variant="body2" sx={{ml: 2}}>{conflict.titol}</Typography>
-            </Grid>
-            <Grid size={4}>
-                <FormField
-                    name={`conflicts[${index}].overwrite`}
-                    value={conflict.overwrite}
-                    field={fieldOverwrite}
-                    onChange={(value)=> onChange({overwrite: value})}
-                    componentProps={{ size: "small" }}
-                    required
-                />
-            </Grid>
-            {conflict.overwrite === 'CREAR_AMB_ALTRE_NOM' && (
-                <Grid size={4}>
-                    <FormField
-                        name={`conflicts[${index}].nouNom`}
-                        field={fieldNouNom}
-                        value={conflict.nouNom}
-                        onChange={(value) => onChange({nouNom: value})}
-                    />
-                </Grid>
-            )}
-        </Grid>
-    );
+    const map = new Map<string, { index: number; conflict: Conflicte }[]>();
+    conflicts.forEach((conflict, index) => {
+        const key = conflict.tipo || 'Other';
+        if (!map.has(key)) {
+            map.set(key, []);
+        }
+        map.get(key)!.push({ index, conflict });
+    });
+
+    const groups: ConflictGroupMeta[] = [];
+
+    knownTypes.forEach(({ tipo, getLabel, icon }) => {
+        if (map.has(tipo)) {
+            groups.push({
+                tipo,
+                label: getLabel(),
+                icon,
+                items: map.get(tipo)!,
+            });
+            map.delete(tipo);
+        }
+    });
+
+    map.forEach((items, tipo) => {
+        groups.push({
+            tipo,
+            label: tipo,
+            icon: 'category',
+            items,
+        });
+    });
+
+    return groups;
 };
+
+const ConflictsTreeViewItemChild = React.memo(
+    ({
+        index,
+        conflict,
+        fieldOverwrite,
+        updateConflict,
+        fieldNouNom,
+        group,
+    }: {
+        index: number;
+        conflict: Conflicte;
+        fieldOverwrite: string;
+        updateConflict: (index: number, changes: Partial<Conflicte>) => void;
+        fieldNouNom: string;
+        group: ConflictGroupMeta;
+    }) => {
+        return (
+            <TreeItem
+                itemId={`conflict-${index}`}
+                sx={{
+                    // Afegit perquè el label del FormField no es talli
+                    "& .MuiTreeItem-label": {
+                        overflow: 'visible',
+                    }
+                }}
+                label={
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            pr: 1,
+                            gap: 1,
+                            width: '100%',
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                flex: 1,
+                                minWidth: 150,
+                            }}
+                        >
+                            <Icon fontSize="small" sx={{ color: 'text.secondary', flexShrink: 0 }}>
+                                {group.icon}
+                            </Icon>
+                            <Typography
+                                variant="body2"
+                                noWrap
+                                sx={{ fontWeight: 500 }}
+                                title={conflict.titol}
+                            >
+                                {conflict.titol}
+                            </Typography>
+                        </Box>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                flexShrink: 0,
+                            }}
+                            onClick={e => e.stopPropagation()}
+                            onKeyDown={e => e.stopPropagation()}
+                        >
+                            <Box sx={{ minWidth: 160 }}>
+                                <FormField
+                                    name={`conflicts[${index}].overwrite`}
+                                    value={conflict.overwrite}
+                                    field={fieldOverwrite}
+                                    onChange={value => updateConflict(index, { overwrite: value })}
+                                    componentProps={{ size: 'small', variant: 'standard', label: "" }}
+                                    required
+                                />
+                            </Box>
+                            {conflict.overwrite === 'CREAR_AMB_ALTRE_NOM' && (
+                                <Box sx={{ minWidth: 160 }}>
+                                    <FormField
+                                        name={`conflicts[${index}].nouNom`}
+                                        field={fieldNouNom}
+                                        value={conflict.nouNom}
+                                        onChange={value => updateConflict(index, { nouNom: value })}
+                                        componentProps={{ size: 'small', variant: 'standard', label: "", placeholder: conflict.titol + " (1)" }}
+                                    />
+                                </Box>
+                            )}
+                        </Box>
+                    </Box>
+                }
+            />
+        );
+    }
+);
+
+const ConflictsTreeViewItemGroup = React.memo(
+    ({
+        group,
+        fieldOverwrite,
+        fieldNouNom,
+        updateConflict,
+    }: {
+        group: ConflictGroupMeta;
+        fieldOverwrite: string;
+        fieldNouNom: string;
+        updateConflict: (index: number, changes: Partial<Conflicte>) => void;
+    }) => {
+        return (
+            <TreeItem
+                itemId={`group-${group.tipo}`}
+                label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.5 }}>
+                        <Icon fontSize="small" color="primary">
+                            {group.icon}
+                        </Icon>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                            {group.label}
+                        </Typography>
+                        <Chip
+                            label={group.items.length}
+                            size="small"
+                            variant="outlined"
+                            sx={{ height: 20, fontSize: '0.75rem' }}
+                        />
+                    </Box>
+                }
+            >
+                {group.items.map(({ index, conflict }) => (
+                    <ConflictsTreeViewItemChild
+                        key={`conflict-${index}`}
+                        index={index}
+                        conflict={conflict}
+                        fieldOverwrite={fieldOverwrite}
+                        updateConflict={updateConflict}
+                        fieldNouNom={fieldNouNom}
+                        group={group}
+                    />
+                ))}
+            </TreeItem>
+        );
+    }
+);
+
+const ConflictsTreeView = React.memo(
+    ({
+        groups,
+        selectedItems,
+        setSelectedItems,
+        fieldOverwrite,
+        fieldNouNom,
+        updateConflict,
+    }: {
+        groups: ConflictGroupMeta[];
+        selectedItems: string[];
+        setSelectedItems: (items: string[]) => void;
+        fieldOverwrite: string;
+        fieldNouNom: string;
+        updateConflict: (index: number, changes: Partial<Conflicte>) => void;
+    }) => {
+        const defaultExpandedItems = React.useMemo(() => {
+            return groups.map(g => `group-${g.tipo}`);
+        }, [groups]);
+
+        return (
+            <SimpleTreeView
+                checkboxSelection
+                multiSelect
+                selectionPropagation={{ parents: true, descendants: true }}
+                selectedItems={selectedItems}
+                onSelectedItemsChange={(_event, itemIds) => {
+                    setSelectedItems(Array.isArray(itemIds) ? itemIds : itemIds ? [itemIds] : []);
+                }}
+                defaultExpandedItems={defaultExpandedItems}
+                sx={{
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    p: 1,
+                    maxHeight: 400,
+                    overflow: 'auto',
+                    '& .MuiTreeItem-content': {
+                        py: 0.5,
+                    },
+                }}
+            >
+                {groups.map(group => (
+                    <ConflictsTreeViewItemGroup
+                        key={`group-${group.tipo}`}
+                        group={group}
+                        fieldOverwrite={fieldOverwrite}
+                        fieldNouNom={fieldNouNom}
+                        updateConflict={updateConflict}
+                    />
+                ))}
+            </SimpleTreeView>
+        );
+    }
+);
 
 const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean }> = ({ isAnalyzing }) => {
     const { t } = useTranslation();
-    const { data, apiRef } = useFormContext();
+    const { data, apiRef, fields } = useFormContext();
     const conflicts: Conflicte[] | undefined = data?.conflicts;
     const hasFile = data?.file != null || (conflicts != null && conflicts.length > 0);
 
-    const updateConflict = (index: number, changes: Partial<Conflicte>) => {
+    const [selectedItems, setSelectedItems] = React.useState<string[]>([]);
+
+    const groups = React.useMemo(() => {
+        if (!conflicts || conflicts.length === 0) return [];
+        return groupConflicts(conflicts, t);
+    }, [conflicts, t]);
+
+    const selectedIndices = React.useMemo(() => {
+        if (!conflicts) return [];
+        return conflicts
+            .map((_, i) => i)
+            .filter((i) => selectedItems.includes(`conflict-${i}`));
+    }, [conflicts, selectedItems]);
+
+    React.useEffect(() => {
+        if (!conflicts || conflicts.length === 0) {
+            setSelectedItems([]);
+        }
+    }, [conflicts]);
+
+    const updateConflict = React.useCallback((index: number, changes: Partial<Conflicte>) => {
         if (!conflicts) return;
         const updated = conflicts.map((c, i) => (i === index ? { ...c, ...changes } : c));
         apiRef.current?.setFieldValue('conflicts', updated);
+    }, [apiRef, conflicts]);
+
+    const handleSelectAll = () => {
+        if (!conflicts) return;
+        const allIds: string[] = [];
+        groups.forEach((g) => {
+            allIds.push(`group-${g.tipo}`);
+            g.items.forEach((item) => allIds.push(`conflict-${item.index}`));
+        });
+        setSelectedItems(allIds);
     };
+
+    const handleDeselectAll = () => {
+        setSelectedItems([]);
+    };
+
+    const handleBulkUseExisting = () => {
+        if (selectedIndices.length === 0 || !conflicts) return;
+        const updated = conflicts.map((c, i) => {
+            if (!selectedIndices.includes(i)) return c;
+            return {
+                ...c,
+                overwrite: 'EMPRAR_EXISTENT',
+            };
+        });
+        apiRef.current?.setFieldValue('conflicts', updated);
+    };
+
+    const handleBulkCreateWithAnotherName = () => {
+        if (selectedIndices.length === 0 || !conflicts) return;
+        const updated = conflicts.map((c, i) => {
+            if (!selectedIndices.includes(i)) return c;
+            return {
+                ...c,
+                overwrite: 'CREAR_AMB_ALTRE_NOM',
+            };
+        });
+        apiRef.current?.setFieldValue('conflicts', updated);
+    };
+
+    const fieldOverwrite = fields?.filter((i: any) => i.name === 'overwrite')[0];
+    const fieldNouNom = fields?.filter((i: any) => i.name === 'nouNom')[0];
 
     if (!hasFile && !isAnalyzing) {
         return null;
@@ -178,27 +451,78 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean }> = ({ isAn
     }
 
     return (
-        <>
-            <Grid size={12}>
-                <FormField name="overwrite" onChange={(value) => {
-                    const updated = conflicts.map((c) => ({ ...c, overwrite: value }));
-                    apiRef.current?.setFieldValue('conflicts', updated);
-                }} />
-            </Grid>
-            <Box sx={{ mt: 2 }}>
-                <Typography variant="subtitle2">
-                    {t($ => $.page.dashboards.action.import.dashboardConflicts)}
-                </Typography>
-                {conflicts.map((c, i) => (
-                    <ImportConflictRow
-                        key={i + c.titol}
-                        index={i}
-                        conflict={c}
-                        onChange={(changes) => updateConflict(i, changes)}
-                    />
-                ))}
+        <Box sx={{ mt: 1 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1.5 }}>
+                {t($ => $.page.dashboards.action.import.dashboardConflicts)}
+            </Typography>
+
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 1,
+                    mb: 1.5,
+                    p: 1,
+                    borderRadius: 1,
+                    backgroundColor: 'action.hover',
+                }}
+            >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                        {t($ => $.page.dashboards.action.import.bulkActions.selectedCount, {
+                            count: selectedIndices.length,
+                        })}
+                    </Typography>
+                    <Button
+                        size="small"
+                        variant="text"
+                        onClick={handleSelectAll}
+                        disabled={selectedIndices.length === conflicts.length}
+                    >
+                        {t($ => $.page.dashboards.action.import.bulkActions.selectAll)}
+                    </Button>
+                    <Button
+                        size="small"
+                        variant="text"
+                        onClick={handleDeselectAll}
+                        disabled={selectedIndices.length === 0}
+                    >
+                        {t($ => $.page.dashboards.action.import.bulkActions.deselectAll)}
+                    </Button>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={handleBulkUseExisting}
+                        disabled={selectedIndices.length === 0}
+                        startIcon={<Icon>check</Icon>}
+                    >
+                        {t($ => $.page.dashboards.action.import.bulkActions.useExisting)}
+                    </Button>
+                    <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={handleBulkCreateWithAnotherName}
+                        disabled={selectedIndices.length === 0}
+                        startIcon={<Icon>edit</Icon>}
+                    >
+                        {t($ => $.page.dashboards.action.import.bulkActions.createWithAnotherName)}
+                    </Button>
+                </Box>
             </Box>
-        </>
+
+            <ConflictsTreeView
+                groups={groups}
+                selectedItems={selectedItems}
+                setSelectedItems={setSelectedItems}
+                fieldOverwrite={fieldOverwrite}
+                fieldNouNom={fieldNouNom}
+                updateConflict={updateConflict}
+            />
+        </Box>
     );
 };
 
