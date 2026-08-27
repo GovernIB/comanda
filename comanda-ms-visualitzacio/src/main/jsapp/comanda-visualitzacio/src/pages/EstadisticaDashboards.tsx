@@ -176,14 +176,17 @@ const ConflictsTreeViewItemChild = React.memo(
                     // Afegit perquè el label del FormField no es talli
                     "& .MuiTreeItem-label": {
                         overflow: 'visible',
-                    }
+                    },
+                    "& .MuiTreeItem-content": {
+                        alignItems: 'start',
+                    },
                 }}
                 label={
                     <Box
                         sx={{
                             display: 'flex',
                             flexWrap: 'wrap',
-                            alignItems: 'center',
+                            alignItems: 'start',
                             justifyContent: 'space-between',
                             pr: 1,
                             gap: 1,
@@ -194,6 +197,7 @@ const ConflictsTreeViewItemChild = React.memo(
                             sx={{
                                 display: 'flex',
                                 alignItems: 'center',
+                                height: 24, // Aquesta altura ha de ser la mateixa de l'element MuiSimpleTreeView-itemCheckbox
                                 gap: 1,
                                 flex: 1,
                                 minWidth: 150,
@@ -214,7 +218,7 @@ const ConflictsTreeViewItemChild = React.memo(
                         <Box
                             sx={{
                                 display: 'flex',
-                                alignItems: 'center',
+                                alignItems: 'start',
                                 gap: 1,
                                 flexShrink: 0,
                             }}
