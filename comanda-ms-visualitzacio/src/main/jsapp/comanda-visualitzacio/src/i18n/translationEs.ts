@@ -470,6 +470,8 @@ const translationEs: translationResourcesType = {
                         selectAll: "Seleccionar todo",
                         deselectAll: "Deseleccionar",
                     },
+                    warningExistingTitle: "Elementos compartidos entre paneles de control",
+                    warningExistingDescription: "Los elementos con la opción \"Utilizar existente\" quedarán vinculados entre los paneles. Las modificaciones que se realicen posteriormente afectarán automáticamente a todos los paneles de control que los utilicen.",
                 },
             },
             alert: {

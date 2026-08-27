@@ -6,6 +6,8 @@ import Typography from '@mui/material/Typography';
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import Collapse from '@mui/material/Collapse';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
 import { SimpleTreeView, TreeItem } from '@mui/x-tree-view';
@@ -365,6 +367,7 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean }> = ({ isAn
     const hasFile = data?.file != null || (conflicts != null && conflicts.length > 0);
 
     const [selectedItems, setSelectedItems] = React.useState<string[]>([]);
+    const [isWarningExpanded, setIsWarningExpanded] = React.useState(false);
 
     const groups = React.useMemo(() => {
         if (!conflicts || conflicts.length === 0) return [];
@@ -431,6 +434,10 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean }> = ({ isAn
     const fieldOverwrite = fields?.filter((i: any) => i.name === 'overwrite')[0];
     const fieldNouNom = fields?.filter((i: any) => i.name === 'nouNom')[0];
 
+    const hasExistingItems = React.useMemo(() => {
+        return conflicts?.some((c) => c.overwrite === 'EMPRAR_EXISTENT' || !c.overwrite) ?? false;
+    }, [conflicts]);
+
     if (!hasFile && !isAnalyzing) {
         return null;
     }
@@ -459,6 +466,36 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean }> = ({ isAn
             <Typography variant="subtitle2" sx={{ mb: 1.5 }}>
                 {t($ => $.page.dashboards.action.import.dashboardConflicts)}
             </Typography>
+
+            {hasExistingItems && (
+                <Alert
+                    severity="warning"
+                    sx={{ mb: 1.5 }}
+                    action={
+                        <IconButton
+                            aria-label={isWarningExpanded ? "expand_less" : "expand_more"}
+                            size="small"
+                            onClick={() => setIsWarningExpanded((prev) => !prev)}
+                        >
+                            <Icon>{isWarningExpanded ? 'expand_less' : 'expand_more'}</Icon>
+                        </IconButton>
+                    }
+                >
+                    <Box
+                        sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                        onClick={() => setIsWarningExpanded((prev) => !prev)}
+                    >
+                        <AlertTitle sx={{ mb: isWarningExpanded ? 0.5 : 0, userSelect: 'none' }}>
+                            {t($ => $.page.dashboards.action.import.warningExistingTitle)}
+                        </AlertTitle>
+                    </Box>
+                    <Collapse in={isWarningExpanded}>
+                        <Typography variant="body2">
+                            {t($ => $.page.dashboards.action.import.warningExistingDescription)}
+                        </Typography>
+                    </Collapse>
+                </Alert>
+            )}
 
             <Box
                 sx={{

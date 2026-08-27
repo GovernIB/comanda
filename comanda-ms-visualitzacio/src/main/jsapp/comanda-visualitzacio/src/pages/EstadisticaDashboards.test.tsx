@@ -63,6 +63,8 @@ const mocks = vi.hoisted(() => ({
                                 selectAll: 'Seleccionar-ho tot',
                                 deselectAll: 'Deseleccionar',
                             },
+                            warningExistingTitle: 'Elements compartits entre taulers de control',
+                            warningExistingDescription: "Els elements amb l'opció \"Emprar existent\" quedaran vinculats entre els taulers. Les modificacions que s'hi facin posteriorment afectaran automàticament tots els taulers de control que els utilitzin.",
                         },
                     },
                     cloneDashboard: {
@@ -249,7 +251,7 @@ vi.mock('@mui/material/Badge', () => ({
 }));
 
 vi.mock('@mui/material/Icon', () => ({
-    default: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+    default: ({ children, ...props }: any) => <span {...props}>{children}</span>,
 }));
 
 describe('EstadisticaDashboards', () => {
@@ -539,5 +541,39 @@ describe('EstadisticaDashboards', () => {
 
         expect(screen.getByText('Altres elements')).toBeInTheDocument();
         expect(screen.getByText('Element Desconegut')).toBeInTheDocument();
+    });
+
+    it('EstadisticaDashboards_quanHiHaConflictesAmbDecisioEmprarExistent_mostraAlertDAvisPlegable', () => {
+        mocks.formContextData.conflicts = [
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget Existent', overwrite: 'EMPRAR_EXISTENT' },
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget Nou', overwrite: 'CREAR_AMB_ALTRE_NOM', nouNom: 'Widget Nou (1)' },
+        ];
+
+        const { rerender } = render(<EstadisticaDashboards />);
+
+        // Ha de mostrar el títol de l'alerta d'avís
+        const alertTitle = screen.getByText('Elements compartits entre taulers de control');
+        expect(alertTitle).toBeInTheDocument();
+
+        // Inicialment el botó mostra expand_more
+        expect(screen.getByText('expand_more')).toBeInTheDocument();
+
+        // En fer clic sobre el botó d'expandir, canvia a expand_less
+        const expandBtn = screen.getByRole('button', { name: 'expand_more' });
+        fireEvent.click(expandBtn);
+        expect(screen.getByText('expand_less')).toBeInTheDocument();
+
+        // En fer clic sobre el títol, es torna a plegar
+        fireEvent.click(alertTitle);
+        expect(screen.getByText('expand_more')).toBeInTheDocument();
+
+        // Si tots els conflictes passen a CREAR_AMB_ALTRE_NOM, l'alerta d'avís desapareix
+        mocks.formContextData.conflicts = [
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget Existent', overwrite: 'CREAR_AMB_ALTRE_NOM', nouNom: 'Widget Existent (1)' },
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget Nou', overwrite: 'CREAR_AMB_ALTRE_NOM', nouNom: 'Widget Nou (1)' },
+        ];
+        rerender(<EstadisticaDashboards />);
+
+        expect(screen.queryByText('Elements compartits entre taulers de control')).not.toBeInTheDocument();
     });
 });

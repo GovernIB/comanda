@@ -470,6 +470,8 @@ const translationCa = {
                         selectAll: "Seleccionar-ho tot",
                         deselectAll: "Deseleccionar",
                     },
+                    warningExistingTitle: "Elements compartits entre taulers de control",
+                    warningExistingDescription: "Els elements amb l'opció \"Emprar existent\" quedaran vinculats entre els taulers. Les modificacions que s'hi facin posteriorment afectaran automàticament tots els taulers de control que els utilitzin.",
                 },
             },
             alert: {

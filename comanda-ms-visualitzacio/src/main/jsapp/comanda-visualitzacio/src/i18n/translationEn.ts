@@ -470,6 +470,8 @@ const translationEn: translationResourcesType = {
                         selectAll: "Select all",
                         deselectAll: "Deselect",
                     },
+                    warningExistingTitle: "Shared items across dashboards",
+                    warningExistingDescription: "Items with the \"Use existing\" option will be linked between dashboards. Subsequent modifications will automatically affect all dashboards that use them.",
                 },
             },
             alert: {
