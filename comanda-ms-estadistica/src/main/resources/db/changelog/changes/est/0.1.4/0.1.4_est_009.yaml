@@ -1,4 +1,12 @@
 databaseChangeLog:
+  - property:
+      dbms: oracle
+      name: booleanFalse
+      value: 0
+  - property:
+      dbms: '!oracle'
+      name: booleanFalse
+      value: false
   - changeSet:
       id: est-dashboard-titol-vores-costat-0.1.4-001
       author: limit
@@ -116,15 +124,15 @@ databaseChangeLog:
         - sql:
             sql: >
               UPDATE ${db_prefix}est_dashboard_titol
-              SET mostrar_vora_top = COALESCE(mostrar_vora, false),
+              SET mostrar_vora_top = COALESCE(mostrar_vora, ${booleanFalse}),
                   color_vora_top = COALESCE(color_vora, color_vora_top),
                   ample_vora_top = COALESCE(ample_vora, ample_vora_top),
-                  mostrar_vora_right = COALESCE(mostrar_vora, false),
+                  mostrar_vora_right = COALESCE(mostrar_vora, ${booleanFalse}),
                   color_vora_right = COALESCE(color_vora, color_vora_right),
                   ample_vora_right = COALESCE(ample_vora, ample_vora_right),
                   color_vora_bottom = COALESCE(color_vora, color_vora_bottom),
                   ample_vora_bottom = COALESCE(ample_vora, ample_vora_bottom),
-                  mostrar_vora_left = COALESCE(mostrar_vora, false),
+                  mostrar_vora_left = COALESCE(mostrar_vora, ${booleanFalse}),
                   color_vora_left = COALESCE(color_vora, color_vora_left),
                   ample_vora_left = COALESCE(ample_vora, ample_vora_left)
       rollback: []
