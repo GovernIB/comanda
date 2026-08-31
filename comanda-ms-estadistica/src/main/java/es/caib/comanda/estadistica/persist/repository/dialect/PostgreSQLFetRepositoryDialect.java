@@ -81,43 +81,41 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
     public String getGraficUnIndicadorQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio,
                                             PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat) {
         String queryConditions = generateDimensionConditions(dimensionsFiltre) + generateSecurityCondition(seguretat);
+        String innerGroupingCols = getChartInnerGroupingCols(indicadorAgregacio, tempsAgregacio);
+        String innerSelectCols = innerGroupingCols.isEmpty() ? "" : innerGroupingCols + ", ";
+        String innerGroupBy = innerGroupingCols.isEmpty() ? "" : " GROUP BY " + innerGroupingCols;
+
+        String outerGroupingCols = getTimeGroupingColumns(tempsAgregacio, true).replace("t.", "");
         String queryAgrupacio = generateGraficAgrupacioConditions(tempsAgregacio);
-        String queryGrouping = getTimeGroupingColumns(tempsAgregacio, true).replace("t.", "");
+
+        PeriodeUnitat effectiveUnitat = resolveUnitat(indicadorAgregacio, tempsAgregacio);
+        TableColumnsEnum realAgregacio = getRealGraficAgregacio(indicadorAgregacio.getAgregacio(), indicadorAgregacio.getUnitatAgregacio(), tempsAgregacio);
+        String innerSumSelect = getSumIndicadorQuery(indicadorAgregacio) + getIndicadorSuffix(indicadorAgregacio.getIndicadorCodi(), effectiveUnitat);
+        String outerSelect = getSimpleQuerySelect(realAgregacio, indicadorAgregacio.getIndicadorCodi(), effectiveUnitat);
 
         if (TableColumnsEnum.FIRST_SEEN.equals(indicadorAgregacio.getAgregacio()) ||
             TableColumnsEnum.LAST_SEEN.equals(indicadorAgregacio.getAgregacio())) {
 
-            PeriodeUnitat subUnitat = resolveUnitat(indicadorAgregacio, tempsAgregacio);
-            String querySubGrouping = getTimeGroupingColumns(subUnitat, false);
-            String innerSumSelect = getSumIndicadorQuery(indicadorAgregacio) + getIndicadorSuffix(indicadorAgregacio.getIndicadorCodi(), subUnitat);
-            String outerSelect = getSimpleQuerySelect(indicadorAgregacio.getAgregacio(), indicadorAgregacio.getIndicadorCodi(), subUnitat);
-
             return "SELECT " + queryAgrupacio + " AS agrupacio, " + outerSelect +
-                " FROM ( SELECT " + querySubGrouping + ", " + innerSumSelect +
-                BASE_JOIN + BASE_WHERE + queryConditions +
-                " GROUP BY " + querySubGrouping + ") " +
-                " GROUP BY " + queryGrouping + " ORDER BY agrupacio";
+                " FROM ( SELECT " + innerSelectCols + innerSumSelect +
+                BASE_JOIN + BASE_WHERE + queryConditions + innerGroupBy + ") " +
+                " GROUP BY " + outerGroupingCols + " ORDER BY agrupacio";
         }
 
-        PeriodeUnitat subUnitat = indicadorAgregacio.getUnitatAgregacio() != null ? indicadorAgregacio.getUnitatAgregacio() : tempsAgregacio;
-        String querySubGrouping = getTimeGroupingColumns(subUnitat, false);
-        String periodeCamps = querySubGrouping.replace("t.", "");
-        String suffix = getIndicadorSuffix(indicadorAgregacio.getIndicadorCodi(), subUnitat);
-
-        String innerSumSelect = getSumIndicadorQuery(indicadorAgregacio) + suffix;
-        String outerSelect = getSimpleQuerySelect(indicadorAgregacio.getAgregacio(), indicadorAgregacio.getIndicadorCodi(), subUnitat);
+        PeriodeUnitat innerUnitat = getChartInnerUnitat(indicadorAgregacio, tempsAgregacio);
+        String periodeCamps = innerGroupingCols.replace("t.", "");
+        String suffix = getIndicadorSuffix(indicadorAgregacio.getIndicadorCodi(), effectiveUnitat);
 
         return "SELECT " + queryAgrupacio + " AS agrupacio, " + outerSelect +
             " FROM ( SELECT " +
             qualifyColumns("periodes", periodeCamps) + ", " +
             "COALESCE(agg.sum_fets" + suffix + ", 0) AS sum_fets" + suffix + " " +
-            " FROM " + getPeriodesRangeQuery(subUnitat) + " periodes " +
-            " LEFT JOIN ( SELECT " + querySubGrouping + ", " + innerSumSelect +
-            BASE_JOIN + BASE_WHERE + queryConditions +
-            " GROUP BY " + querySubGrouping +
+            " FROM " + getPeriodesRangeQuery(innerUnitat) + " periodes " +
+            " LEFT JOIN ( SELECT " + innerGroupingCols + ", " + innerSumSelect +
+            BASE_JOIN + BASE_WHERE + queryConditions + innerGroupBy +
             " ) agg ON " + getPeriodesJoinCondition("periodes", "agg", periodeCamps) +
             ") " +
-            " GROUP BY " + queryGrouping + " ORDER BY agrupacio";
+            " GROUP BY " + outerGroupingCols + " ORDER BY agrupacio";
     }
 
     @Override
@@ -239,6 +237,10 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
     }
 
     private String getChartInnerGroupingCols(IndicadorAgregacio ind, PeriodeUnitat defaultTemps) {
+        return getTimeGroupingColumns(getChartInnerUnitat(ind, defaultTemps), false);
+    }
+
+    private PeriodeUnitat getChartInnerUnitat(IndicadorAgregacio ind, PeriodeUnitat defaultTemps) {
         PeriodeUnitat effectiveUnitat = resolveUnitat(ind, defaultTemps);
         PeriodeUnitat innerUnitat = defaultTemps;
 
@@ -246,7 +248,7 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
             innerUnitat = effectiveUnitat;
         }
 
-        return getTimeGroupingColumns(innerUnitat, false);
+        return innerUnitat;
     }
 
     private String getChartGroupingKey(IndicadorAgregacio ind, PeriodeUnitat defaultTemps) {
