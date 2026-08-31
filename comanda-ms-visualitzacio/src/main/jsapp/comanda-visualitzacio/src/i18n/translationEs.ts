@@ -470,6 +470,8 @@ const translationEs: translationResourcesType = {
                 import: {
                     label: "Importar tablero",
                     title: "Importar tablero",
+                    button: "Importar",
+                    conflictsTitle: "Conflictos",
                     success: "Tablero importado correctamente",
                     dashboardConflicts: "Ya existen elementos con estos nombres. Indica qué hacer con cada uno:",
                     analyzing: "Analizando el archivo y verificando posibles conflictos...",

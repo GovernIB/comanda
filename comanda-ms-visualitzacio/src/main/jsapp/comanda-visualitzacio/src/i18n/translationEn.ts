@@ -470,6 +470,8 @@ const translationEn: translationResourcesType = {
                 import: {
                     label: "Import dashboard",
                     title: "Import dashboard",
+                    button: "Import",
+                    conflictsTitle: "Conflicts",
                     success: "Dashboard imported successfully",
                     dashboardConflicts: "Elements with these names already exist. Indicate what to do with each one:",
                     analyzing: "Analyzing the file and checking for potential conflicts...",

@@ -470,6 +470,8 @@ const translationCa = {
                 import: {
                     label: "Importar tauler",
                     title: "Importar tauler",
+                    button: "Importar",
+                    conflictsTitle: "Conflictes",
                     success: "Tauler importat correctament",
                     dashboardConflicts: "Ja existeixen elements amb aquests noms. Indica què s'ha de fer amb cadascun:",
                     analyzing: "Analitzant el fitxer i verificant possibles conflictes...",
