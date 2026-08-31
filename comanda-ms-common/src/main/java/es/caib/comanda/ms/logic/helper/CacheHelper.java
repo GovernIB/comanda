@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Set;
 
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_BY_APP_AND_ENTORN_CACHE;
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_INTEGRACIONS_SUBSISTEMES_CONTEXTS_CACHE;
 
@@ -120,6 +121,7 @@ public class CacheHelper {
         String key = id.toString();
         evictCacheItem(ENTORN_APP_CACHE, key);
         evictCacheItem(ENTORN_APP_INTEGRACIONS_SUBSISTEMES_CONTEXTS_CACHE, key);
+        evictCache(ENTORN_APP_BY_APP_AND_ENTORN_CACHE);
     }
 
 }

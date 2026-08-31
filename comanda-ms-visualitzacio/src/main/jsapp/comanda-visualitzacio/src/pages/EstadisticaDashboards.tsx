@@ -10,6 +10,7 @@ import AlertTitle from '@mui/material/AlertTitle';
 import Collapse from '@mui/material/Collapse';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
+import Tooltip from '@mui/material/Tooltip';
 import { SimpleTreeView, TreeItem } from '@mui/x-tree-view';
 import {
     MuiDataGrid,
@@ -20,6 +21,7 @@ import {
     useBaseAppContext,
     MuiFormDialogApi,
     useMuiDataGridApiRef,
+    DialogButton,
 } from 'reactlib';
 import {iniciaDescargaJSON} from "../util/commonsActions.ts";
 import FormActionDialog from '../components/FormActionDialog.tsx';
@@ -463,10 +465,6 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean }> = ({ isAn
 
     return (
         <Box sx={{ mt: 1 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1.5 }}>
-                {t($ => $.page.dashboards.action.import.dashboardConflicts)}
-            </Typography>
-
             {hasExistingItems && (
                 <Alert
                     severity="warning"
@@ -510,6 +508,16 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean }> = ({ isAn
                     backgroundColor: 'action.hover',
                 }}
             >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, width: '100%', mb: 1.5 }}>
+                    <Typography variant="h6">
+                        {t($ => $.page.dashboards.action.import.conflictsTitle)}
+                    </Typography>
+                    <Tooltip title={t($ => $.page.dashboards.action.import.dashboardConflicts)} arrow>
+                        <IconButton size="small" aria-label="info">
+                            <Icon fontSize="small">info_outline</Icon>
+                        </IconButton>
+                    </Tooltip>
+                </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Typography variant="body2" color="text.secondary">
                         {t($ => $.page.dashboards.action.import.bulkActions.selectedCount, {
@@ -620,6 +628,23 @@ const useImportDashboardAction = (refresh?: () => void) => {
         </Box>
     );
 
+    const importDialogButtons: DialogButton[] = React.useMemo(
+        () => [
+            {
+                value: false,
+                text: t($ => $.common.cancel),
+                componentProps: { variant: 'outlined' },
+            },
+            {
+                value: true,
+                text: t($ => $.page.dashboards.action.import.button),
+                icon: 'file_upload',
+                componentProps: { variant: 'contained' },
+            },
+        ],
+        [t]
+    );
+
     const formulario = (
         <FormActionDialog
             resourceName={"dashboard"}
@@ -629,6 +654,7 @@ const useImportDashboardAction = (refresh?: () => void) => {
             onSuccess={onSuccess}
             initialOnChange={false}
             formDialogLoading={importLoading}
+            formDialogButtons={importDialogButtons}
         >
             <DashboardImportFormContent />
         </FormActionDialog>

@@ -96,6 +96,7 @@ public class EstadisticaClientHelper {
 		return null;
 	}
 
+	@Cacheable(value = ENTORN_APP_BY_APP_AND_ENTORN_CACHE, key = "#appId + '-' + #entornId")
     public EntornApp entornAppFindByAppAndEntorn(Long appId, Long entornId) {
         PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
                 null,
@@ -110,14 +111,6 @@ public class EstadisticaClientHelper {
         }
         return entornApps.getContent().stream().
                 findFirst().orElseThrow(() -> new ResourceNotFoundException(EntornApp.class, "app:" + appId + ", entorn:" + entornId)).getContent();
-    }
-
-    public EntornApp entornAppFindByAppAndEntornOrDefaultNull(Long appId, Long entornId) {
-        try {
-            return this.entornAppFindByAppAndEntorn(appId, entornId);
-        } catch (ResourceNotFoundException ex) {
-            return null;
-        }
     }
 
     public List<EntornApp> entornAppFindByActivaTrue() {

@@ -16,6 +16,7 @@ const translationCa = {
         ok: "OK",
         selectAll: "Seleccionar tot",
         breadcrumb: "Fil d'Ariadna",
+        formValidationError: "Hi ha errors de validació. Si us plau, reviseu els camps del formulari.",
     },
     app: {
         logoTitle: "Logo de l'aplicació de Comanda",
@@ -469,6 +470,8 @@ const translationCa = {
                 import: {
                     label: "Importar tauler",
                     title: "Importar tauler",
+                    button: "Importar",
+                    conflictsTitle: "Conflictes",
                     success: "Tauler importat correctament",
                     dashboardConflicts: "Ja existeixen elements amb aquests noms. Indica què s'ha de fer amb cadascun:",
                     analyzing: "Analitzant el fitxer i verificant possibles conflictes...",

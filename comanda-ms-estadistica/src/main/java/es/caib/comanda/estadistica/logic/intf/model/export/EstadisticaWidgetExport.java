@@ -14,6 +14,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
@@ -51,7 +52,7 @@ public class EstadisticaWidgetExport implements Serializable {
     protected WidgetTipus tipus;
 
     // Dimensions per les que filtrar
-    @javax.validation.Valid
+    @Valid
     protected List<DimensioValorExport> dimensionsValor;
     protected PeriodeMode periodeMode;
     protected PresetPeriode presetPeriode;

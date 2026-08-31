@@ -17,6 +17,21 @@ vi.mock('reactlib', () => ({
     useMuiActionReportLogic: (...args: unknown[]) => mocks.useMuiActionReportLogicMock(...args),
 }));
 
+vi.mock('react-i18next', () => ({
+    useTranslation: () => ({
+        t: (selector: any) => {
+            if (typeof selector === 'function') {
+                return selector({
+                    common: {
+                        formValidationError: 'Hi ha errors de validació. Si us plau, reviseu els camps del formulari.',
+                    },
+                });
+            }
+            return selector;
+        },
+    }),
+}));
+
 describe('FormActionDialog', () => {
     beforeEach(() => {
         mocks.useMuiActionReportLogicMock.mockReturnValue({
@@ -119,5 +134,119 @@ describe('FormActionDialog', () => {
             expect.any(Function)
         );
         expect(mocks.execMock).toHaveBeenCalledWith(9, 'Informe', { filtre: 'ok' });
+    });
+
+    it('FormActionDialog_quanEsProdueixUnError422AmbUnSolErrorDeValidacio_mostraElMissatgeConcretDeLError', () => {
+        let passedOnError: ((error: any) => void) | undefined;
+        mocks.useMuiActionReportLogicMock.mockImplementation((...args: any[]) => {
+            passedOnError = args[16]; // onError argument
+            return {
+                available: true,
+                formDialogComponent: <div>Diàleg</div>,
+                exec: mocks.execMock,
+                close: mocks.closeMock,
+            };
+        });
+
+        render(
+            <FormActionDialog
+                title="Acció"
+                resourceName="widget"
+                action="executa"
+            >
+                <button>Fill</button>
+            </FormActionDialog>
+        );
+
+        expect(passedOnError).toBeDefined();
+
+        act(() => {
+            passedOnError?.({
+                status: 422,
+                validationErrors: [{ field: 'nom', title: 'El camp nom és obligatori' }],
+            });
+        });
+
+        expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(
+            null,
+            'El camp nom és obligatori',
+            'error'
+        );
+    });
+
+    it('FormActionDialog_quanEsProdueixUnError422AmbMultiplesErrorsDeValidacio_mostraElMissatgeGeneric', () => {
+        let passedOnError: ((error: any) => void) | undefined;
+        mocks.useMuiActionReportLogicMock.mockImplementation((...args: any[]) => {
+            passedOnError = args[16];
+            return {
+                available: true,
+                formDialogComponent: <div>Diàleg</div>,
+                exec: mocks.execMock,
+                close: mocks.closeMock,
+            };
+        });
+
+        render(
+            <FormActionDialog
+                title="Acció"
+                resourceName="widget"
+                action="executa"
+            >
+                <button>Fill</button>
+            </FormActionDialog>
+        );
+
+        act(() => {
+            passedOnError?.({
+                status: 422,
+                validationErrors: [
+                    { field: 'nom', title: 'Error 1' },
+                    { field: 'codi', title: 'Error 2' },
+                ],
+            });
+        });
+
+        expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(
+            null,
+            expect.any(String),
+            'error'
+        );
+    });
+
+    it('FormActionDialog_quanEsProdueixUnErrorGeneric_mostraLaDescripcioOElMissatge', () => {
+        let passedOnError: ((error: any) => void) | undefined;
+        mocks.useMuiActionReportLogicMock.mockImplementation((...args: any[]) => {
+            passedOnError = args[16];
+            return {
+                available: true,
+                formDialogComponent: <div>Diàleg</div>,
+                exec: mocks.execMock,
+                close: mocks.closeMock,
+            };
+        });
+
+        render(
+            <FormActionDialog
+                title="Acció"
+                resourceName="widget"
+                action="executa"
+            >
+                <button>Fill</button>
+            </FormActionDialog>
+        );
+
+        act(() => {
+            passedOnError?.({
+                status: 500,
+                description: 'Error intern del servidor',
+                message: 'Internal error',
+            });
+        });
+
+        expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(
+            null,
+            'Error intern del servidor',
+            'error'
+        );
     });
 });

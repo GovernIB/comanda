@@ -1,5 +1,22 @@
 import React, {MutableRefObject} from "react";
+import { useTranslation } from 'react-i18next';
+import { TFunction } from 'i18next';
 import {DialogButton, useBaseAppContext, useMuiActionReportLogic} from "reactlib";
+
+const getErrorMessage = (error: any, t: TFunction): string => {
+    if (error?.status === 422 && (error.validationErrors?.length || error.errors?.length)) {
+        const errors = error.validationErrors ?? error.errors;
+        const messages = errors
+            .map((e: any) => e.title || e.message)
+            .filter(Boolean);
+
+        if (messages.length === 1) {
+            return messages[0];
+        }
+        return t($ => $.common.formValidationError);
+    }
+    return error?.description ?? error?.message;
+};
 
 type CommonProps = {
     title?: string | ((data:any) => string),
@@ -24,6 +41,7 @@ type FormReportDialogProp = CommonProps & {
 }
 
 const FormActionDialog = (props:FormActionDialogProp) => {
+    const { t } = useTranslation();
     const {temporalMessageShow} = useBaseAppContext();
     const {
         title,
@@ -38,8 +56,8 @@ const FormActionDialog = (props:FormActionDialogProp) => {
         formDialogResultProcessor,
         onSuccess = () => temporalMessageShow(null, '', 'success'),
         onError = (error: any) => {
-            if (error?.message) {
-                temporalMessageShow(null, error?.description, 'error');
+            if (error?.message || error?.status) {
+                temporalMessageShow(null, getErrorMessage(error, t), 'error');
             }
         },
     } = props;
@@ -85,6 +103,7 @@ const FormActionDialog = (props:FormActionDialogProp) => {
     return formDialogComponent;
 }
 export const FormReportDialog = (props:FormReportDialogProp) => {
+    const { t } = useTranslation();
     const {temporalMessageShow} = useBaseAppContext();
     const {
         title,
@@ -99,8 +118,8 @@ export const FormReportDialog = (props:FormReportDialogProp) => {
         formDialogResultProcessor,
         onSuccess = () => temporalMessageShow(null, '', 'info'),
         onError = (error: any) => {
-            if (error?.message) {
-                temporalMessageShow(null, error?.message, 'error');
+            if (error?.message || error?.status) {
+                temporalMessageShow(null, getErrorMessage(error, t), 'error');
             }
         },
     } = props;

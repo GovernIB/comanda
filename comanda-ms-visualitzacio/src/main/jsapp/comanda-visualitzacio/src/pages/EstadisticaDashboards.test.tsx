@@ -19,6 +19,9 @@ const mocks = vi.hoisted(() => ({
     },
     tMock: vi.fn((selector: any, options?: any) => {
         const res = selector({
+            common: {
+                cancel: 'Cancel·lar',
+            },
             components: {
                 permisos: {
                     title: 'Permisos',
@@ -38,6 +41,8 @@ const mocks = vi.hoisted(() => ({
                         import: {
                             label: 'Importar',
                             title: 'Importar dashboard',
+                            button: 'Importar',
+                            conflictsTitle: 'Conflictes',
                             success: 'Dashboard importat',
                             selectDecision: 'Selecciona una opció',
                             mantenir: "Mantenir l'existent",
@@ -323,7 +328,8 @@ describe('EstadisticaDashboards', () => {
 
         render(<EstadisticaDashboards />);
 
-        expect(screen.getByText('Conflictes de tauler')).toBeInTheDocument();
+        expect(screen.getByText('Conflictes')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'info' })).toBeInTheDocument();
         expect(screen.getByText('Tauler X')).toBeInTheDocument();
 
         const overwriteField = screen.getByTestId('field-conflicts[0].overwrite');

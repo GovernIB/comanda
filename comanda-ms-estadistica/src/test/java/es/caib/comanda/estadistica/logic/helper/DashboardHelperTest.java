@@ -353,7 +353,7 @@ class DashboardHelperTest {
         dashboardHelper.beforeUpdateEntityLogic(entity, resource, (Map) answers);
 
         // Assert
-        verify(estadisticaClientHelper, never()).entornAppFindByAppAndEntornOrDefaultNull(anyLong(), anyLong());
+        verify(estadisticaClientHelper, never()).entornAppFindByAppAndEntorn(anyLong(), anyLong());
     }
 
     @Test
@@ -395,7 +395,7 @@ class DashboardHelperTest {
         dashboardHelper.beforeUpdateEntityLogic(entity, resource, (Map) answers);
 
         // Assert
-        verify(estadisticaClientHelper, never()).entornAppFindByAppAndEntornOrDefaultNull(anyLong(), anyLong());
+        verify(estadisticaClientHelper, never()).entornAppFindByAppAndEntorn(anyLong(), anyLong());
     }
 
     @Test
@@ -448,7 +448,7 @@ class DashboardHelperTest {
 
         Map<String, Object> answers = new HashMap<>();
 
-        when(estadisticaClientHelper.entornAppFindByAppAndEntornOrDefaultNull(10L, 30L)).thenReturn(newEntornApp);
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(10L, 30L)).thenReturn(newEntornApp);
 
         // Act
         dashboardHelper.beforeUpdateEntityLogic(entity, resource, (Map) answers);
@@ -479,7 +479,7 @@ class DashboardHelperTest {
 
         Map<String, Object> answers = new HashMap<>();
 
-        when(estadisticaClientHelper.entornAppFindByAppAndEntornOrDefaultNull(10L, 99L)).thenReturn(null);
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(10L, 99L)).thenThrow(new es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException(EntornApp.class, "not found"));
 //        when(estadisticaClientHelper.entornAppFindById(20L)).thenReturn(new EntornApp()); // Mock per evitar NPE intern
 
         // Act & Assert
@@ -672,9 +672,9 @@ class DashboardHelperTest {
         item.setWidget(widget);
         original.setItems(Collections.singletonList(item));
 
-        when(estadisticaClientHelper.entornAppFindByAppAndEntornOrDefaultNull(10L, 99L)).thenReturn(null);
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(10L, 99L)).thenThrow(new es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException(EntornApp.class, "not found"));
         when(estadisticaClientHelper.entornAppFindById(20L)).thenReturn(new EntornApp()); // Per evitar NPE intern
-        lenient().when(estadisticaClientHelper.entornAppFindByAppAndEntornOrDefaultNull(10L, 20L)).thenReturn(null); // Fallada final
+        lenient().when(estadisticaClientHelper.entornAppFindByAppAndEntorn(10L, 20L)).thenThrow(new es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException(EntornApp.class, "not found")); // Fallada final
 
         // Act & Assert
         assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(action, "getClonedItem", original, newDashboard))

@@ -16,6 +16,7 @@ const translationEs: translationResourcesType = {
         ok: "OK",
         selectAll: "Seleccionar todo",
         breadcrumb: "Miga de pan",
+        formValidationError: "Hay errores de validación. Por favor, revise los campos del formulario.",
     },
     app: {
         logoTitle: "Logo de la aplicación de Comanda",
@@ -469,6 +470,8 @@ const translationEs: translationResourcesType = {
                 import: {
                     label: "Importar tablero",
                     title: "Importar tablero",
+                    button: "Importar",
+                    conflictsTitle: "Conflictos",
                     success: "Tablero importado correctamente",
                     dashboardConflicts: "Ya existen elementos con estos nombres. Indica qué hacer con cada uno:",
                     analyzing: "Analizando el archivo y verificando posibles conflictos...",
