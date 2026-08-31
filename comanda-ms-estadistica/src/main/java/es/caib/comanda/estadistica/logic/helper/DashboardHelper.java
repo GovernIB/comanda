@@ -108,6 +108,14 @@ public class DashboardHelper {
         }
     }
 
+    private static EntornApp getEntornAppOrDefaultNull(EstadisticaClientHelper client, Long appId, Long entornId) {
+        try {
+            return client.entornAppFindByAppAndEntorn(appId, entornId);
+        } catch (es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException ex) {
+            return null;
+        }
+    }
+
     public void beforeUpdateEntityLogic(DashboardEntity entity,
                                         Dashboard resource,
                                         Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
@@ -137,7 +145,7 @@ public class DashboardHelper {
         Long newEntornId = canviEntornId ? resource.getEntornId() : entity.getEntornId();
 
         EntornApp newEntornApp = (Objects.nonNull(newAppId) && Objects.nonNull(newEntornId)) ?
-            estadisticaClientHelper.entornAppFindByAppAndEntornOrDefaultNull(newAppId, newEntornId) : null;
+            getEntornAppOrDefaultNull(estadisticaClientHelper, newAppId, newEntornId) : null;
 
         for (DashboardItemEntity item : entity.getItems()) {
             // Validamos si el widget tiene app compatible
@@ -246,7 +254,7 @@ public class DashboardHelper {
                 Long newAppId = newDashboard.getAppId();
                 Long newEntornId = newDashboard.getEntornId();
                 EntornApp newEntornApp = (Objects.nonNull(newAppId) && Objects.nonNull(newEntornId)) ?
-                    estadisticaClientHelper.entornAppFindByAppAndEntornOrDefaultNull(newAppId, newEntornId) : null;
+                    getEntornAppOrDefaultNull(estadisticaClientHelper, newAppId, newEntornId) : null;
                 for (DashboardItemEntity original : originalDashboard.getItems()) {
                     DashboardItemEntity clone = dashboardClonerMapper.cloneItem(original);
                     clone.setDashboard(newDashboard);
@@ -271,7 +279,7 @@ public class DashboardHelper {
                         EntornApp itemEntornApp = estadisticaClientHelper.entornAppFindById(original.getEntornId());
                         Long itemAppId = Objects.nonNull(newAppId) ? newAppId : itemEntornApp.getApp().getId();
                         Long itemEntornId = Objects.nonNull(newEntornId) ? newEntornId : itemEntornApp.getEntorn().getId();
-                        EntornApp newItemEntornApp = estadisticaClientHelper.entornAppFindByAppAndEntornOrDefaultNull(itemAppId, itemEntornId);
+                        EntornApp newItemEntornApp = getEntornAppOrDefaultNull(estadisticaClientHelper, itemAppId, itemEntornId);
                         if (Objects.isNull(newItemEntornApp)) {
                             throw new ActionExecutionException(
                                 Dashboard.class,

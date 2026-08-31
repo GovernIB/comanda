@@ -280,45 +280,6 @@ class EstadisticaClientHelperTest {
             .isInstanceOf(ResourceNotFoundException.class);
     }
 
-    // ========================================================================
-    // 5. TESTOS PER A entornAppFindByAppAndEntornOrDefaultNull
-    // ========================================================================
-
-    @Test
-    @DisplayName("entornAppFindByAppAndEntornOrDefaultNull: retorna l'EntornApp quan existeix")
-    void entornAppFindByAppAndEntornOrDefaultNull_quanExisteix_llavorsRetornaEntornApp() {
-        // Arrange
-        EntityModel<EntornApp> entityModel = EntityModel.of(entornApp);
-        PagedModel<EntityModel<EntornApp>> pagedModel = PagedModel.of(
-            Collections.singletonList(entityModel),
-            new PagedModel.PageMetadata(1, 0, 1));
-        when(entornAppServiceClient.find(isNull(), eq("app.id:10 and entorn.id:20"), isNull(), isNull(), eq("UNPAGED"), isNull(), eq(authHeader)))
-            .thenReturn(pagedModel);
-
-        // Act
-        EntornApp result = estadisticaClientHelper.entornAppFindByAppAndEntornOrDefaultNull(10L, 20L);
-
-        // Assert
-        assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(1L);
-    }
-
-    @Test
-    @DisplayName("entornAppFindByAppAndEntornOrDefaultNull: retorna null quan no existeix (captura ResourceNotFoundException)")
-    void entornAppFindByAppAndEntornOrDefaultNull_quanNoExisteix_llavorsRetornaNull() {
-        // Arrange
-        PagedModel<EntityModel<EntornApp>> pagedModel = PagedModel.of(
-            Collections.emptyList(),
-            new PagedModel.PageMetadata(0, 0, 0));
-        when(entornAppServiceClient.find(isNull(), eq("app.id:10 and entorn.id:20"), isNull(), isNull(), eq("UNPAGED"), isNull(), eq(authHeader)))
-            .thenReturn(pagedModel);
-
-        // Act
-        EntornApp result = estadisticaClientHelper.entornAppFindByAppAndEntornOrDefaultNull(10L, 20L);
-
-        // Assert
-        assertThat(result).isNull();
-    }
 
     // ========================================================================
     // 6. TESTOS PER A entornAppFindByActivaTrue
