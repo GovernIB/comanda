@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.persist.repository.dialect;
 
+import es.caib.comanda.estadistica.logic.intf.model.consulta.SeguretatFiltreSql;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,10 +39,11 @@ public class OracleFetRepositoryDialectSimpleTest {
         String indicadorCodi,
         TableColumnsEnum agregacio,
         PeriodeUnitat unitatAgregacio,
+        SeguretatFiltreSql seguretat,
         String expectedQuery) {
 
         // Act
-        String query = removeConsecutiveSpaces(dialect.getSimpleQuery(dimensionsFiltre, indicadorCodi, agregacio, unitatAgregacio));
+        String query = removeConsecutiveSpaces(dialect.getSimpleQuery(dimensionsFiltre, indicadorCodi, agregacio, unitatAgregacio, seguretat));
 
         // Assert
         assertNotNull(query);
@@ -58,6 +60,7 @@ public class OracleFetRepositoryDialectSimpleTest {
                 "visites",
                 TableColumnsEnum.SUM,
                 PeriodeUnitat.DIA,
+                null,
                 removeConsecutiveSpaces("SELECT SUM(sum_fets_visites_DIA) AS total_sum_visites_DIA " +
                     "FROM ( " +
                     "    SELECT t.data, " +
@@ -74,6 +77,7 @@ public class OracleFetRepositoryDialectSimpleTest {
                 "visites",
                 TableColumnsEnum.AVERAGE,
                 PeriodeUnitat.MES,
+                null,
                 removeConsecutiveSpaces("SELECT AVG(sum_fets_visites_MES) AS average_result_visites_MES " +
                     "FROM ( " +
                     "    SELECT t.anualitat, t.trimestre, t.mes, " +
@@ -90,6 +94,7 @@ public class OracleFetRepositoryDialectSimpleTest {
                 "visites",
                 TableColumnsEnum.PERCENTAGE,
                 PeriodeUnitat.SETMANA,
+                null,
                 removeConsecutiveSpaces("SELECT SUM(sum_fets_visites_SETMANA) AS total_sum_visites_SETMANA " +
                     "FROM ( " +
                     "    SELECT t.anualitat, t.trimestre, t.mes, t.setmana, " +
@@ -107,6 +112,7 @@ public class OracleFetRepositoryDialectSimpleTest {
                 "visites",
                 TableColumnsEnum.FIRST_SEEN,
                 PeriodeUnitat.TRIMESTRE,
+                null,
                 removeConsecutiveSpaces("SELECT CASE WHEN SUM(sum_fets_visites_DIA) > 0 THEN MIN(data) ELSE NULL END AS first_seen_visites_DIA " +
                     "FROM ( " +
                     "    SELECT t.data, " +
@@ -127,6 +133,7 @@ public class OracleFetRepositoryDialectSimpleTest {
                 "visites",
                 TableColumnsEnum.LAST_SEEN,
                 PeriodeUnitat.ANY,
+                null,
                 removeConsecutiveSpaces("SELECT CASE WHEN SUM(sum_fets_visites_DIA) > 0 THEN MAX(data) ELSE NULL END AS last_seen_visites_DIA " +
                     "FROM ( " +
                     "    SELECT t.data, " +
@@ -148,6 +155,7 @@ public class OracleFetRepositoryDialectSimpleTest {
                 "usuaris",
                 TableColumnsEnum.SUM,
                 PeriodeUnitat.DIA,
+                null,
                 removeConsecutiveSpaces("SELECT SUM(sum_fets_usuaris_DIA) AS total_sum_usuaris_DIA " +
                     "FROM ( " +
                     "    SELECT t.data, " +
@@ -166,6 +174,7 @@ public class OracleFetRepositoryDialectSimpleTest {
                 "sessions",
                 TableColumnsEnum.AVERAGE,
                 PeriodeUnitat.MES,
+                null,
                 removeConsecutiveSpaces("SELECT AVG(sum_fets_sessions_MES) AS average_result_sessions_MES " +
                     "FROM ( " +
                     "    SELECT t.anualitat, t.trimestre, t.mes, " +

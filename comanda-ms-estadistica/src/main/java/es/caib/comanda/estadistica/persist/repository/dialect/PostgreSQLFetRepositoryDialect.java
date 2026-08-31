@@ -1,7 +1,10 @@
 package es.caib.comanda.estadistica.persist.repository.dialect;
 
 import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
+import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorFormulaTermeResolt;
+import es.caib.comanda.estadistica.logic.intf.model.consulta.SeguretatFiltreSql;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.OperadorFormulaEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +15,8 @@ import java.util.stream.Collectors;
  * Implementació PostgreSQL de FetRepositoryDialect.
  * Proporciona les consultes SQL específiques per a la base de dades PostgreSQL,
  * mantenint la mateixa lògica, estructura i comentaris en català que la implementació d'Oracle.
+ *
+ * INCLOU: Suport per a SeguretatFiltreSql i protecció contra injecció SQL (escapeSqlLiteral).
  */
 @Component
 public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
@@ -25,6 +30,7 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
     // Sintaxi específica de PostgreSQL per a l'extracció i conversió de valors JSON a numèric
     private static final String SUM_INDICADOR_TEMPLATE = " SUM((f.indicadors_json->>'%s')::numeric) AS sum_fets";
     private static final String DIMENSION_VALUE_TEMPLATE = " f.dimensions_json->>'%s' ";
+    private static final String INDICADOR_VALUE_EXPR_TEMPLATE = "(f.indicadors_json->>'%s')::numeric";
 
     @Override
     public String getFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery() {
@@ -47,14 +53,17 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
     }
 
     @Override
-    public String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio) {
+    public String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio,
+                                 PeriodeUnitat unitatAgregacio, SeguretatFiltreSql seguretat) {
         // 1. Filtres
-        String queryConditions = generateDimensionConditions(dimensionsFiltre);
+        String queryConditions = generateDimensionConditions(dimensionsFiltre) + generateSecurityCondition(seguretat);
 
-        // 2. Agrupació interna
+        // Resolem la unitat efectiva (FIRST_SEEN/LAST_SEEN sempre operen a nivell de DIA)
         PeriodeUnitat effectiveUnitat = (agregacio == TableColumnsEnum.FIRST_SEEN || agregacio == TableColumnsEnum.LAST_SEEN)
             ? PeriodeUnitat.DIA
             : unitatAgregacio;
+
+        // 2. Agrupació interna
         String innerGroupingCols = getInnerGroupingColsForSingle(agregacio, effectiveUnitat);
         String innerSelectCols = innerGroupingCols.isEmpty() ? "" : innerGroupingCols + ", ";
         String innerGroupBy = innerGroupingCols.isEmpty() ? "" : " GROUP BY " + innerGroupingCols;
@@ -69,40 +78,60 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
     }
 
     @Override
-    public String getGraficUnIndicadorQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, PeriodeUnitat tempsAgregacio) {
-        // 1. Filtres i agrupacions base
-        String queryConditions = generateDimensionConditions(dimensionsFiltre);
-        String innerGroupingCols = getChartInnerGroupingCols(indicadorAgregacio, tempsAgregacio);
-        String innerSelectCols = innerGroupingCols.isEmpty() ? "" : innerGroupingCols + ", ";
-        String innerGroupBy = innerGroupingCols.isEmpty() ? "" : " GROUP BY " + innerGroupingCols;
-
-        String outerGroupingCols = getTimeGroupingColumns(tempsAgregacio, true).replace("t.", "");
+    public String getGraficUnIndicadorQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio,
+                                            PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat) {
+        String queryConditions = generateDimensionConditions(dimensionsFiltre) + generateSecurityCondition(seguretat);
         String queryAgrupacio = generateGraficAgrupacioConditions(tempsAgregacio);
+        String queryGrouping = getTimeGroupingColumns(tempsAgregacio, true).replace("t.", "");
 
-        // 2. Càlculs (depenen de la unitat resolta)
-        PeriodeUnitat effectiveUnitat = resolveUnitat(indicadorAgregacio, tempsAgregacio);
-        TableColumnsEnum realAgregacio = getRealGraficAgregacio(indicadorAgregacio.getAgregacio(), indicadorAgregacio.getUnitatAgregacio(), tempsAgregacio);
+        if (TableColumnsEnum.FIRST_SEEN.equals(indicadorAgregacio.getAgregacio()) ||
+            TableColumnsEnum.LAST_SEEN.equals(indicadorAgregacio.getAgregacio())) {
 
-        String innerSumSelect = getSumIndicadorQuery(indicadorAgregacio.getIndicadorCodi()) + getIndicadorSuffix(indicadorAgregacio.getIndicadorCodi(), effectiveUnitat);
-        String outerSelect = getSimpleQuerySelect(realAgregacio, indicadorAgregacio.getIndicadorCodi(), effectiveUnitat);
+            PeriodeUnitat subUnitat = resolveUnitat(indicadorAgregacio, tempsAgregacio);
+            String querySubGrouping = getTimeGroupingColumns(subUnitat, false);
+            String innerSumSelect = getSumIndicadorQuery(indicadorAgregacio) + getIndicadorSuffix(indicadorAgregacio.getIndicadorCodi(), subUnitat);
+            String outerSelect = getSimpleQuerySelect(indicadorAgregacio.getAgregacio(), indicadorAgregacio.getIndicadorCodi(), subUnitat);
 
-        // 3. Assemblatge
+            return "SELECT " + queryAgrupacio + " AS agrupacio, " + outerSelect +
+                " FROM ( SELECT " + querySubGrouping + ", " + innerSumSelect +
+                BASE_JOIN + BASE_WHERE + queryConditions +
+                " GROUP BY " + querySubGrouping + ") " +
+                " GROUP BY " + queryGrouping + " ORDER BY agrupacio";
+        }
+
+        PeriodeUnitat subUnitat = indicadorAgregacio.getUnitatAgregacio() != null ? indicadorAgregacio.getUnitatAgregacio() : tempsAgregacio;
+        String querySubGrouping = getTimeGroupingColumns(subUnitat, false);
+        String periodeCamps = querySubGrouping.replace("t.", "");
+        String suffix = getIndicadorSuffix(indicadorAgregacio.getIndicadorCodi(), subUnitat);
+
+        String innerSumSelect = getSumIndicadorQuery(indicadorAgregacio) + suffix;
+        String outerSelect = getSimpleQuerySelect(indicadorAgregacio.getAgregacio(), indicadorAgregacio.getIndicadorCodi(), subUnitat);
+
         return "SELECT " + queryAgrupacio + " AS agrupacio, " + outerSelect +
-            " FROM ( SELECT " + innerSelectCols + innerSumSelect +
-            BASE_JOIN + BASE_WHERE + queryConditions + innerGroupBy + ") " +
-            " GROUP BY " + outerGroupingCols + " ORDER BY agrupacio";
+            " FROM ( SELECT " +
+            qualifyColumns("periodes", periodeCamps) + ", " +
+            "COALESCE(agg.sum_fets" + suffix + ", 0) AS sum_fets" + suffix + " " +
+            " FROM " + getPeriodesRangeQuery(subUnitat) + " periodes " +
+            " LEFT JOIN ( SELECT " + querySubGrouping + ", " + innerSumSelect +
+            BASE_JOIN + BASE_WHERE + queryConditions +
+            " GROUP BY " + querySubGrouping +
+            " ) agg ON " + getPeriodesJoinCondition("periodes", "agg", periodeCamps) +
+            ") " +
+            " GROUP BY " + queryGrouping + " ORDER BY agrupacio";
     }
 
     @Override
-    public String getGraficUnIndicadorAmbDescomposicioAndAgrupacioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio) {
+    public String getGraficUnIndicadorAmbDescomposicioAndAgrupacioQuery(Map<String, List<String>> dimensionsFiltre,
+                                                                        IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat) {
         // 1. Filtres i agrupacions base
-        String queryConditions = generateDimensionConditions(dimensionsFiltre);
+        String queryConditions = generateDimensionConditions(dimensionsFiltre) + generateSecurityCondition(seguretat);
         String queryDescomposicio = getDimensionValueQuery(dimensioDescomposicioCodi);
 
         // 2. Estructura d'agrupació
         String innerGroupingCols = getChartInnerGroupingCols(indicadorAgregacio, tempsAgregacio);
-        String innerGroupBy = innerGroupingCols.isEmpty() ? "GROUP BY " + queryDescomposicio : "GROUP BY " + innerGroupingCols + ", " + queryDescomposicio;
+        String innerGroupBy = innerGroupingCols.isEmpty() ? " GROUP BY " + queryDescomposicio : " GROUP BY " + innerGroupingCols + ", " + queryDescomposicio;
         String innerSelectCols = innerGroupingCols.isEmpty() ? "" : innerGroupingCols + ", ";
+
         String outerGroupingCols = getTimeGroupingColumns(tempsAgregacio, true).replace("t.", "");
         String queryAgrupacio = generateGraficAgrupacioConditions(tempsAgregacio);
 
@@ -110,7 +139,7 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
         PeriodeUnitat effectiveUnitat = resolveUnitat(indicadorAgregacio, tempsAgregacio);
         TableColumnsEnum realAgregacio = getRealGraficAgregacio(indicadorAgregacio.getAgregacio(), indicadorAgregacio.getUnitatAgregacio(), tempsAgregacio);
 
-        String innerSumSelect = getSumIndicadorQuery(indicadorAgregacio.getIndicadorCodi()) + getIndicadorSuffix(indicadorAgregacio.getIndicadorCodi(), effectiveUnitat);
+        String innerSumSelect = getSumIndicadorQuery(indicadorAgregacio) + getIndicadorSuffix(indicadorAgregacio.getIndicadorCodi(), effectiveUnitat);
         String outerSelect = getSimpleQuerySelect(realAgregacio, indicadorAgregacio.getIndicadorCodi(), effectiveUnitat);
 
         // 4. Assemblatge
@@ -121,43 +150,50 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
     }
 
     @Override
-    public String getGraficUnIndicadorAmbDescomposicioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi) {
+    public String getGraficUnIndicadorAmbDescomposicioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio,
+                                                            String dimensioDescomposicioCodi, SeguretatFiltreSql seguretat) {
         // 1. Filtres i dimensions
-        String queryConditions = generateDimensionConditions(dimensionsFiltre);
+        String queryConditions = generateDimensionConditions(dimensionsFiltre) + generateSecurityCondition(seguretat);
         String queryDescomposicio = getDimensionValueQuery(dimensioDescomposicioCodi);
 
         // 2. Assemblatge (consulta plana, sense subconsulta)
-        return "SELECT " + queryDescomposicio + " AS agrupacio, " + getSumIndicadorQuery(indicadorAgregacio.getIndicadorCodi()) +
+        return "SELECT " + queryDescomposicio + " AS agrupacio, " + getSumIndicadorQuery(indicadorAgregacio) +
             BASE_JOIN + BASE_WHERE + queryConditions + " GROUP BY " + queryDescomposicio + " ORDER BY agrupacio";
     }
 
     @Override
-    public String getGraficVarisIndicadorsQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, PeriodeUnitat tempsAgregacio) {
+    public String getGraficVarisIndicadorsQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio,
+                                                PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat) {
         Map<String, List<IndicadorAgregacio>> indicadorsPerGrup = indicadorsAgregacio.stream()
             .collect(Collectors.groupingBy(ind -> getChartGroupingKey(ind, tempsAgregacio)));
 
+        String fullQueryConditions = generateDimensionConditions(dimensionsFiltre) + generateSecurityCondition(seguretat);
+
         if (indicadorsPerGrup.size() == 1) {
-            return generateGraficSingleGroupQuery(dimensionsFiltre, indicadorsPerGrup.values().iterator().next(), tempsAgregacio);
+            return generateGraficSingleGroupQuery(fullQueryConditions, indicadorsPerGrup.values().iterator().next(), tempsAgregacio);
         }
 
         String unionSubqueries = indicadorsPerGrup.values().stream()
-            .map(grup -> generateGraficUnionSubquery(dimensionsFiltre, grup, tempsAgregacio, indicadorsAgregacio))
+            .map(grup -> generateGraficUnionSubquery(fullQueryConditions, grup, tempsAgregacio, indicadorsAgregacio))
             .collect(Collectors.joining(" UNION ALL "));
 
         return generateGraficUnionQuery(indicadorsAgregacio, unionSubqueries, tempsAgregacio);
     }
 
     @Override
-    public String getTaulaQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, String dimensioAgrupacioCodi) {
+    public String getTaulaQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio,
+                                String dimensioAgrupacioCodi, SeguretatFiltreSql seguretat) {
         Map<String, List<IndicadorAgregacio>> indicadorsPerGrup = indicadorsAgregacio.stream()
             .collect(Collectors.groupingBy(this::getInnerGroupingCols));
 
+        String fullQueryConditions = generateDimensionConditions(dimensionsFiltre) + generateSecurityCondition(seguretat);
+
         if (indicadorsPerGrup.size() == 1) {
-            return generateTaulaQuerySingleGroup(dimensionsFiltre, indicadorsPerGrup.values().iterator().next(), dimensioAgrupacioCodi);
+            return generateTaulaQuerySingleGroup(fullQueryConditions, indicadorsPerGrup.values().iterator().next(), dimensioAgrupacioCodi);
         }
 
         String unionSubqueries = indicadorsPerGrup.values().stream()
-            .map(grup -> generateUnionSubquery(dimensionsFiltre, grup, dimensioAgrupacioCodi, indicadorsAgregacio))
+            .map(grup -> generateUnionSubquery(fullQueryConditions, grup, dimensioAgrupacioCodi, indicadorsAgregacio))
             .collect(Collectors.joining(" UNION ALL "));
 
         return generaUnionQuery(indicadorsAgregacio, unionSubqueries);
@@ -225,10 +261,9 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
     // GENERACIÓ DE CONSULTES DE TAULA (UNION)
     // ====================================================================================
 
-    private String generateTaulaQuerySingleGroup(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadors, String dimensioAgrupacioCodi) {
+    private String generateTaulaQuerySingleGroup(String queryConditions, List<IndicadorAgregacio> indicadors, String dimensioAgrupacioCodi) {
         // 1. Estructura base
         String queryAgrupacio = getDimensionValueQuery(dimensioAgrupacioCodi);
-        String queryConditions = generateDimensionConditions(dimensionsFiltre);
         PeriodeUnitat groupUnitat = resolveUnitat(indicadors.get(0), null);
 
         // 2. Agrupació interna
@@ -245,12 +280,11 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
             BASE_JOIN + BASE_WHERE + queryConditions + " " + innerGroupBy + ") GROUP BY agrupacio ORDER BY agrupacio";
     }
 
-    private String generateUnionSubquery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadors, String dimensioAgrupacioCodi, List<IndicadorAgregacio> ordenOriginal) {
+    private String generateUnionSubquery(String queryConditions, List<IndicadorAgregacio> indicadors, String dimensioAgrupacioCodi, List<IndicadorAgregacio> ordenOriginal) {
         if (indicadors.isEmpty()) return "";
 
         // 1. Estructura base
         String queryAgrupacio = getDimensionValueQuery(dimensioAgrupacioCodi);
-        String queryConditions = generateDimensionConditions(dimensionsFiltre);
         PeriodeUnitat groupUnitat = resolveUnitat(indicadors.get(0), null);
 
         // 2. Agrupació interna
@@ -299,9 +333,8 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
     // GENERACIÓ DE CONSULTES DE GRÀFIC (UNION)
     // ====================================================================================
 
-    private String generateGraficSingleGroupQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadors, PeriodeUnitat tempsAgregacio) {
+    private String generateGraficSingleGroupQuery(String queryConditions, List<IndicadorAgregacio> indicadors, PeriodeUnitat tempsAgregacio) {
         // 1. Estructura base
-        String queryConditions = generateDimensionConditions(dimensionsFiltre);
         PeriodeUnitat groupUnitat = resolveUnitat(indicadors.get(0), tempsAgregacio);
         String queryAgrupacio = generateGraficAgrupacioConditions(tempsAgregacio);
 
@@ -325,11 +358,10 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
             " GROUP BY agrupacio ORDER BY agrupacio";
     }
 
-    private String generateGraficUnionSubquery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadors, PeriodeUnitat tempsAgregacio, List<IndicadorAgregacio> ordenOriginal) {
+    private String generateGraficUnionSubquery(String queryConditions, List<IndicadorAgregacio> indicadors, PeriodeUnitat tempsAgregacio, List<IndicadorAgregacio> ordenOriginal) {
         if (indicadors.isEmpty()) return "";
 
         // 1. Estructura base
-        String queryConditions = generateDimensionConditions(dimensionsFiltre);
         String outerGroupingCols = getTimeGroupingColumns(tempsAgregacio, true).replace("t.", "");
         String queryAgrupacio = generateGraficAgrupacioConditions(tempsAgregacio);
         PeriodeUnitat groupUnitat = resolveUnitat(indicadors.get(0), tempsAgregacio);
@@ -384,10 +416,10 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
     // ====================================================================================
 
     private String getTaulaSubQuerySelects(List<IndicadorAgregacio> indicadorsAgregacio, PeriodeUnitat unitatParaSuffix) {
-        return indicadorsAgregacio.stream()
-            .map(IndicadorAgregacio::getIndicadorCodi)
-            .distinct()
-            .map(indicadorCodi -> getSumIndicadorQuery(indicadorCodi) + getIndicadorSuffix(indicadorCodi, unitatParaSuffix))
+        Map<String, IndicadorAgregacio> unics = new LinkedHashMap<>();
+        indicadorsAgregacio.forEach(ind -> unics.putIfAbsent(ind.getIndicadorCodi(), ind));
+        return unics.values().stream()
+            .map(ind -> getSumIndicadorQuery(ind) + getIndicadorSuffix(ind.getIndicadorCodi(), unitatParaSuffix))
             .collect(Collectors.joining(", "));
     }
 
@@ -395,8 +427,8 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
         String suffix = getIndicadorSuffix(indicadorCodi, unitat);
         switch (agregacio) {
             case AVERAGE: return "AVG(sum_fets" + suffix + ") AS average_result" + suffix;
-            case FIRST_SEEN: return "CASE WHEN SUM(sum_fets" + suffix + ") > 0 THEN MIN(data) ELSE NULL END AS first_seen" + suffix;
-            case LAST_SEEN: return "CASE WHEN SUM(sum_fets" + suffix + ") > 0 THEN MAX(data) ELSE NULL END AS last_seen" + suffix;
+            case FIRST_SEEN: return "CASE WHEN SUM(sum_fets" + suffix + ") > 0 THEN MIN(t.data) ELSE NULL END AS first_seen" + suffix;
+            case LAST_SEEN: return "CASE WHEN SUM(sum_fets" + suffix + ") > 0 THEN MAX(t.data) ELSE NULL END AS last_seen" + suffix;
             default: return "SUM(sum_fets" + suffix + ") AS total_sum" + suffix;
         }
     }
@@ -410,6 +442,26 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
         return String.format(SUM_INDICADOR_TEMPLATE, indicadorCodi);
     }
 
+    /**
+     * Com {@link #getSumIndicadorQuery(String)}, però si l'indicador és una FORMULA (té termesFormula), en
+     * lloc d'un únic JSON_VALUE genera la suma/resta dels JSON_VALUE de tots els seus indicadors component
+     * -dins del mateix SUM(...), perquè el càlcul es faci fila a fila abans d'agregar-.
+     */
+    private static String getSumIndicadorQuery(IndicadorAgregacio indicadorAgregacio) {
+        List<IndicadorFormulaTermeResolt> termes = indicadorAgregacio != null ? indicadorAgregacio.getTermesFormula() : null;
+        if (termes == null || termes.isEmpty()) {
+            return getSumIndicadorQuery(indicadorAgregacio.getIndicadorCodi());
+        }
+        String expressio = termes.stream()
+            .map(terme -> (OperadorFormulaEnum.RESTA.equals(terme.getOperador()) ? "- " : "+ ")
+                + String.format(INDICADOR_VALUE_EXPR_TEMPLATE, terme.getIndicadorCodi()))
+            .collect(Collectors.joining(" "));
+        if (expressio.startsWith("+ ")) {
+            expressio = expressio.substring(2);
+        }
+        return " SUM(" + expressio + ") AS sum_fets";
+    }
+
     private static String getDimensionValueQuery(String dimensioCodi) {
         return String.format(DIMENSION_VALUE_TEMPLATE, dimensioCodi);
     }
@@ -419,24 +471,25 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
         return dimensionsFiltre.entrySet().stream()
             .filter(entry -> entry.getKey() != null && entry.getValue() != null && !entry.getValue().isEmpty())
             .map(entry -> {
-                String codi = entry.getKey();
+                String codi = escapeSqlLiteral(entry.getKey());
                 List<String> valors = entry.getValue();
                 if (valors.size() == 1) {
-                    return " AND " + getDimensionValueQuery(codi) + "= '" + valors.get(0) + "' ";
+                    return " AND " + getDimensionValueQuery(codi) + "= '" + escapeSqlLiteral(valors.get(0)) + "' ";
                 } else {
-                    String valorsStr = valors.stream().map(valor -> "'" + valor + "'").collect(Collectors.joining(","));
+                    String valorsStr = valors.stream().map(valor -> "'" + escapeSqlLiteral(valor) + "'").collect(Collectors.joining(","));
                     return " AND " + getDimensionValueQuery(codi) + " IN (" + valorsStr + ") ";
                 }
             }).collect(Collectors.joining(" "));
     }
 
     private static String generateGraficAgrupacioConditions(PeriodeUnitat tempsAgregacio) {
+        // NOTA: S'afegeix ::text a LPAD per garantir compatibilitat estricta a PostgreSQL
         switch (tempsAgregacio) {
-            case SETMANA: return "anualitat || '/' || LPAD(setmana, 2, '0')";
-            case MES: return "anualitat || '/' || LPAD(mes, 2, '0')";
+            case SETMANA: return "anualitat || '/' || LPAD(setmana::text, 2, '0')";
+            case MES: return "anualitat || '/' || LPAD(mes::text, 2, '0')";
             case TRIMESTRE: return "anualitat || '/' || trimestre";
             case ANY: return "anualitat";
-            default: return "anualitat || '/' || LPAD(mes, 2, '0') || '/' || LPAD(dia, 2, '0')";
+            default: return "anualitat || '/' || LPAD(mes::text, 2, '0') || '/' || LPAD(dia::text, 2, '0')";
         }
     }
 
@@ -459,5 +512,68 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
             }
         }
         return agregacio;
+    }
+
+    // ====================================================================================
+    // SEGURETAT I PROTECCIÓ SQL
+    // ====================================================================================
+
+    /**
+     * Genera la condició de seguretat d'entitat/òrgan.
+     * Si la restricció és aplicable però no hi ha valors permesos, denega l'accés (fail-closed: "AND 1 = 0").
+     */
+    private static String generateSecurityCondition(SeguretatFiltreSql seguretat) {
+        if (seguretat == null || !seguretat.isActiva()) {
+            return "";
+        }
+        List<String> clausules = new java.util.ArrayList<>();
+        if (seguretat.getDimensioEntitatCodi() != null && seguretat.getValorsEntitatPermesos() != null && !seguretat.getValorsEntitatPermesos().isEmpty()) {
+            clausules.add(buildSecurityInClause(seguretat.getDimensioEntitatCodi(), seguretat.getValorsEntitatPermesos()));
+        }
+        if (seguretat.getDimensioOrganCodi() != null && seguretat.getValorsOrganPermesos() != null && !seguretat.getValorsOrganPermesos().isEmpty()) {
+            clausules.add(buildSecurityInClause(seguretat.getDimensioOrganCodi(), seguretat.getValorsOrganPermesos()));
+        }
+        if (clausules.isEmpty()) {
+            return " AND 1 = 0 "; // Denega la consulta si hi ha seguretat activa però sense permisos
+        }
+        return " AND (" + String.join(" OR ", clausules) + ") ";
+    }
+
+    /**
+     * Construeix una clàusula IN per a la seguretat, escapant els valors.
+     */
+    private static String buildSecurityInClause(String dimensioCodi, List<String> valors) {
+        String valorsStr = valors.stream().map(v -> "'" + escapeSqlLiteral(v) + "'").collect(Collectors.joining(","));
+        return getDimensionValueQuery(escapeSqlLiteral(dimensioCodi)) + " IN (" + valorsStr + ")";
+    }
+
+    /**
+     * Escapa cometes simples per evitar SQL Injection.
+     * Els valors de dimensions poden venir de fonts externes i no són de confiança directa.
+     */
+    private static String escapeSqlLiteral(String value) {
+        return value == null ? null : value.replace("'", "''");
+    }
+
+    private String getPeriodesRangeQuery(PeriodeUnitat unitat) {
+        String cols = getTimeGroupingColumns(unitat, false).replace("t.", "");
+        // generate_series genera un dia per cada dia entre dataInici i dataFi
+        return "(SELECT DISTINCT " + cols + " FROM (" +
+            "SELECT EXTRACT(YEAR FROM d)::int AS anualitat, EXTRACT(QUARTER FROM d)::int AS trimestre, " +
+            "EXTRACT(MONTH FROM d)::int AS mes, EXTRACT(WEEK FROM d)::int AS setmana, EXTRACT(DAY FROM d)::int AS dia " +
+            "FROM generate_series(:dataInici, :dataFi, '1 day'::interval) d" +
+            ") cal)";
+    }
+
+    private static String qualifyColumns(String tableAlias, String columns) {
+        return java.util.Arrays.stream(columns.split(",\\s*"))
+            .map(c -> tableAlias + "." + c.trim())
+            .collect(Collectors.joining(", "));
+    }
+
+    private static String getPeriodesJoinCondition(String leftAlias, String rightAlias, String columns) {
+        return java.util.Arrays.stream(columns.split(",\\s*"))
+            .map(c -> leftAlias + "." + c.trim() + " = " + rightAlias + "." + c.trim())
+            .collect(Collectors.joining(" AND "));
     }
 }

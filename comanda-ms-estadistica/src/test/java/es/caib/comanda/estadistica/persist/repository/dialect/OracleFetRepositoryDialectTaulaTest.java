@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.persist.repository.dialect;
 
 import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
+import es.caib.comanda.estadistica.logic.intf.model.consulta.SeguretatFiltreSql;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,10 +40,11 @@ public class OracleFetRepositoryDialectTaulaTest {
         Map<String, List<String>> dimensionsFiltre,
         List<IndicadorAgregacio> indicadorsAgregacio,
         String dimensioAgrupacioCodi,
+        SeguretatFiltreSql seguretat,
         String expectedQuery) {
 
         // Act
-        String query = removeConsecutiveSpaces(dialect.getTaulaQuery(dimensionsFiltre, indicadorsAgregacio, dimensioAgrupacioCodi, null));
+        String query = removeConsecutiveSpaces(dialect.getTaulaQuery(dimensionsFiltre, indicadorsAgregacio, dimensioAgrupacioCodi, seguretat));
 
         // Assert
         assertNotNull(query);
@@ -58,6 +60,7 @@ public class OracleFetRepositoryDialectTaulaTest {
                 null,
                 List.of(createIndicadorAgregacio("visites", TableColumnsEnum.SUM, PeriodeUnitat.MES)),
                 "departament",
+                null,
                 removeConsecutiveSpaces("SELECT agrupacio, " +
                     "SUM(sum_fets_visites_MES) AS total_sum_visites_MES " +
                     "FROM ( " +
@@ -81,6 +84,7 @@ public class OracleFetRepositoryDialectTaulaTest {
                     createIndicadorAgregacio("sessions", TableColumnsEnum.AVERAGE, PeriodeUnitat.MES)
                 ),
                 "area",
+                null,
                 removeConsecutiveSpaces("SELECT agrupacio, " +
                     "SUM(sum_fets_visites_MES) AS total_sum_visites_MES, " +
                     "AVG(sum_fets_sessions_MES) AS average_result_sessions_MES " +
@@ -106,6 +110,7 @@ public class OracleFetRepositoryDialectTaulaTest {
                     createIndicadorAgregacio("sessions", TableColumnsEnum.FIRST_SEEN, PeriodeUnitat.MES)
                 ),
                 "usuari",
+                null,
                 removeConsecutiveSpaces("SELECT agrupacio, " +
                     "MAX(total_sum_visites_MES) as total_sum_visites_MES, " +
                     "MAX(first_seen_sessions_DIA) as first_seen_sessions_DIA " +
@@ -151,6 +156,7 @@ public class OracleFetRepositoryDialectTaulaTest {
                     createIndicadorAgregacio("sessions", TableColumnsEnum.LAST_SEEN, PeriodeUnitat.MES)
                 ),
                 "aplicacio",
+                null,
                 removeConsecutiveSpaces("SELECT agrupacio, " +
                     "MAX(total_sum_visites_MES) as total_sum_visites_MES, " +
                     "MAX(last_seen_sessions_DIA) as last_seen_sessions_DIA " +
@@ -199,6 +205,7 @@ public class OracleFetRepositoryDialectTaulaTest {
                     createIndicadorAgregacio("sessions", TableColumnsEnum.PERCENTAGE, PeriodeUnitat.MES)
                 ),
                 "departament",
+                null,
                 removeConsecutiveSpaces("SELECT agrupacio, " +
                     "SUM(sum_fets_visites_MES) AS total_sum_visites_MES, " +
                     "SUM(sum_fets_sessions_MES) AS total_sum_sessions_MES " +
@@ -227,10 +234,11 @@ public class OracleFetRepositoryDialectTaulaTest {
         Map<String, List<String>> dimensionsFiltre,
         List<IndicadorAgregacio> indicadorsAgregacio,
         String dimensioAgrupacioCodi,
+        SeguretatFiltreSql seguretat,
         String[] expectedQueryFragments) {
 
         // Act
-        String query = removeConsecutiveSpaces(dialect.getTaulaQuery(dimensionsFiltre, indicadorsAgregacio, dimensioAgrupacioCodi, null));
+        String query = removeConsecutiveSpaces(dialect.getTaulaQuery(dimensionsFiltre, indicadorsAgregacio, dimensioAgrupacioCodi, seguretat));
 
         Arrays.stream(expectedQueryFragments)
             .filter(fragment -> !query.contains(fragment))
@@ -253,6 +261,7 @@ public class OracleFetRepositoryDialectTaulaTest {
                     createIndicadorAgregacio("sessions", TableColumnsEnum.AVERAGE, PeriodeUnitat.TRIMESTRE)
                 ),
                 "area",
+                null,
                 new String[] {
                     removeConsecutiveSpaces("SELECT agrupacio, "),
                     removeConsecutiveSpaces("MAX(average_result_visites_MES) as average_result_visites_MES"),
@@ -301,6 +310,7 @@ public class OracleFetRepositoryDialectTaulaTest {
                     createIndicadorAgregacio("sessions", TableColumnsEnum.FIRST_SEEN, PeriodeUnitat.MES)
                 ),
                 "area",
+                null,
                 new String[]{
                     removeConsecutiveSpaces("SELECT agrupacio, "),
                     removeConsecutiveSpaces("MAX(average_result_visites_MES) as average_result_visites_MES"),
@@ -349,6 +359,7 @@ public class OracleFetRepositoryDialectTaulaTest {
                     createIndicadorAgregacio("visites", TableColumnsEnum.AVERAGE, PeriodeUnitat.MES)
                 ),
                 "area",
+                null,
                 new String[]{
                     removeConsecutiveSpaces("SELECT agrupacio, "),
                     removeConsecutiveSpaces("MAX(average_result_visites_MES) as average_result_visites_MES"),
@@ -394,6 +405,7 @@ public class OracleFetRepositoryDialectTaulaTest {
                     createIndicadorAgregacio("visites", TableColumnsEnum.SUM, PeriodeUnitat.MES)
                 ),
                 "area",
+                null,
                 new String[]{
                     removeConsecutiveSpaces("SELECT agrupacio, "),
                     removeConsecutiveSpaces("MAX(total_sum_visites_MES) as total_sum_visites_MES"),

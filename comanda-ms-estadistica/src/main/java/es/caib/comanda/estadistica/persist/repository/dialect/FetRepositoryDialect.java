@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.persist.repository.dialect;
 
 import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
+import es.caib.comanda.estadistica.logic.intf.model.consulta.SeguretatFiltreSql;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 
@@ -63,7 +64,8 @@ public interface FetRepositoryDialect {
      * @param unitatAgregacio La unitat de temps per a l'agregació interna (pot ser null per a agregacions globals).
      * @return Una cadena de text que representa la consulta SQL generada per obtenir el valor agregat.
      */
-    String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio);
+    String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio, SeguretatFiltreSql seguretat);
+    //String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, SeguretatFiltreSql seguretat); TODO realment necessit el codi perque
 
     /**
      * Genera una consulta SQL per obtenir les dades d'un gràfic per a un únic indicador.
@@ -74,7 +76,7 @@ public interface FetRepositoryDialect {
      * @param tempsAgregacio La unitat de període utilitzada per agrupar les dades temporalment al gràfic (ex: DIA, MES, ANY).
      * @return La consulta SQL generada com a cadena de text, preparada per obtenir dades aplicant els filtres i agrupacions específiques.
      */
-    String getGraficUnIndicadorQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, PeriodeUnitat tempsAgregacio);
+    String getGraficUnIndicadorQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat);
 
     /**
      * Genera una consulta SQL per obtenir dades gràfiques d'un únic indicador amb descomposició per una dimensió específica,
@@ -89,7 +91,7 @@ public interface FetRepositoryDialect {
      * @param tempsAgregacio Unitat de temps que defineix com s'agreguen els períodes (diari, mensual, anual, etc.) en la consulta.
      * @return Cadena de text que conté la consulta SQL generada.
      */
-    String getGraficUnIndicadorAmbDescomposicioAndAgrupacioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio);
+    String getGraficUnIndicadorAmbDescomposicioAndAgrupacioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat);
 
     /**
      * Genera una consulta SQL per obtenir dades d'un gràfic d'un únic indicador amb descomposició per una dimensió determinada,
@@ -103,7 +105,7 @@ public interface FetRepositoryDialect {
      * @param dimensioDescomposicioCodi Codi de la dimensió sobre la qual s'aplicarà la descomposició.
      * @return Consulta SQL generada com a cadena de text per obtenir dades amb descomposició per l'indicador especificat.
      */
-    String getGraficUnIndicadorAmbDescomposicioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi);
+    String getGraficUnIndicadorAmbDescomposicioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, SeguretatFiltreSql seguretat);
 
     /**
      * Genera la consulta SQL per obtenir dades d'un gràfic amb múltiples indicadors agregats segons un període temporal i filtrat per dimensions.
@@ -116,7 +118,7 @@ public interface FetRepositoryDialect {
      * @param tempsAgregacio Unitat temporal per a l'agregació principal de les dades al gràfic.
      * @return Consulta SQL com a cadena de text per obtenir les dades del gràfic.
      */
-    String getGraficVarisIndicadorsQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, PeriodeUnitat tempsAgregacio);
+    String getGraficVarisIndicadorsQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat);
 
     /**
      * Genera la consulta SQL per obtenir dades d'una taula amb múltiples indicadors agregats, agrupats per una dimensió específica.
@@ -130,6 +132,6 @@ public interface FetRepositoryDialect {
      * @param dimensioAgrupacioCodi Codi de la dimensió que s'utilitzarà com a eix principal d'agrupació de la taula (ex: codi d'entitat, departament).
      * @return Consulta SQL com a cadena de text per obtenir les files i columnes de la taula agregada.
      */
-    String getTaulaQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, String dimensioAgrupacioCodi);
+    String getTaulaQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, String dimensioAgrupacioCodi, SeguretatFiltreSql seguretat);
 
 }
