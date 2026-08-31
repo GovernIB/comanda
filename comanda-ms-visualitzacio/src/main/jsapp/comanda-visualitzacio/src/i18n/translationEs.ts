@@ -16,6 +16,7 @@ const translationEs: translationResourcesType = {
         ok: "OK",
         selectAll: "Seleccionar todo",
         breadcrumb: "Miga de pan",
+        formValidationError: "Hay errores de validación. Por favor, revise los campos del formulario.",
     },
     app: {
         logoTitle: "Logo de la aplicación de Comanda",

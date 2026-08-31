@@ -16,6 +16,7 @@ const translationCa = {
         ok: "OK",
         selectAll: "Seleccionar tot",
         breadcrumb: "Fil d'Ariadna",
+        formValidationError: "Hi ha errors de validació. Si us plau, reviseu els camps del formulari.",
     },
     app: {
         logoTitle: "Logo de l'aplicació de Comanda",
