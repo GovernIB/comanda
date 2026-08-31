@@ -1,18 +1,11 @@
 package es.caib.comanda.estadistica.persist.repository.dialect;
 
 import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
-import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorFormulaTermeResolt;
-import es.caib.comanda.estadistica.logic.intf.model.consulta.SeguretatFiltreSql;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
-import es.caib.comanda.estadistica.logic.intf.model.estadistiques.OperadorFormulaEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import org.springframework.stereotype.Component;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -29,722 +22,415 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
     private static final String FILTER_DATE = " AND t.data = :data ";
     private static final String BASE_WHERE = BASE_WHERE_ENTORN + FILTER_BETWEEN;
     private static final String SUM_INDICADOR_TEMPLATE = " SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"%s\"'))) AS sum_fets";
-    private static final String INDICADOR_VALUE_EXPR_TEMPLATE = "TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"%s\"'))";
     private static final String DIMENSION_VALUE_TEMPLATE = " JSON_VALUE(f.dimensions_json, '$.\"%s\"') ";
 
-
-    /**
-     * Genera la consulta SQL per obtenir dades basades en el codi d'entorn de l'aplicació (entornAppId), un rang de dates i un valor de dimensió específic.
-     * La consulta limita els resultats basant-se en els paràmetres proporcionats.
-     *
-     * @return Una cadena que conté la consulta SQL per obtenir els resultats filtrats segons entornAppId, rang de dates i valor de dimensió.
-     */
     @Override
-    public String getFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery(String dimensioCodi) {
-        return "SELECT f.*" +
-                BASE_JOIN +
-                BASE_WHERE +
-                "AND" + getDimensionValueQuery(escapeSqlLiteral(dimensioCodi)) + "= :dimensioValor";
+    public String getFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery() {
+        return "SELECT f.*" + BASE_JOIN + BASE_WHERE + " AND " + getDimensionValueQuery("' || :dimensioCodi || '") + "= :dimensioValor";
     }
 
-    /**
-     * Genera la consulta SQL per obtenir fets basats en l'entornAppId, un rang de dates i múltiples valors de dimensions.
-     * Aquesta consulta selecciona els resultats de la taula `com_est_fet` filtrats per condicions específiques.
-     *
-     * Els filtres inclouen:
-     * - Identificador de l'entorn d'aplicació (entornAppId).
-     * - Rang de dates utilitzant les columnes de la taula de temps associada (com_est_temps).
-     * - Valor específic de dimensions expressat com una estructura JSON.
-     *
-     * @return Una cadena amb la consulta SQL per obtenir els resultats filtrats segons entornAppId, rang de dates i múltiples valors de dimensió.
-     */
     @Override
-    public String getFindByEntornAppIdAndTempsDataBetweenAndDimensionValuesQuery(String dimensioCodi) {
-        return "SELECT f.* " +
-                BASE_JOIN +
-                BASE_WHERE +
-                "AND" + getDimensionValueQuery(escapeSqlLiteral(dimensioCodi)) + "IN (:dimensioValor)";
+    public String getFindByEntornAppIdAndTempsDataBetweenAndDimensionValuesQuery() {
+        return "SELECT f.* " + BASE_JOIN + BASE_WHERE + " AND " + getDimensionValueQuery("' || :dimensioCodi || '") + " IN (:dimensioValor)";
     }
 
-    /**
-     * Genera una consulta SQL per obtenir dades basades en l'entorn d'aplicació (entornAppId), una data concreta i diverses
-     * dimensions indicades (amb els seus valors associats).
-     * La consulta inclou condicions bàsiques per entornAppId i la data proporcionada, i opcionalment, afegeix condicions
-     * addicionals basades en dimensions específiques passades com a paràmetre.
-     * <p>
-     * Nota: aquesta consulta només s'utilitza des del recurs Fet (només-admin, vegeu Fet.java), així que no rep
-     * ni aplica cap filtre de seguretat d'entitat/òrgan (els administradors ja veuen totes les dades).
-     *
-     * @param dimensionsFiltre Un mapa que representa les dimensions i els seus valors per aplicar com a filtre. Cada clau
-     *                         és el codi d'una dimensió, i el valor associat és una llista que conté els valors possibles
-     *                         per aquesta dimensió. Si no hi ha dimensions o valors específics, només s'apliquen les
-     *                         condicions base.
-     * @return Una cadena amb la consulta SQL generada amb les condicions proporcionades. Inclou sempre els filtres per
-     *         entornAppId i data, i opcionalment les condicions definides per les dimensions.
-     */
     @Override
     public String getFindByEntornAppIdAndTempsDataAndDimensionQuery(Map<String, List<String>> dimensionsFiltre) {
-        String query = "SELECT f.* " +
-                BASE_JOIN +
-                BASE_WHERE_ENTORN +
-                FILTER_DATE;
-
-        String conditions = generateDimensionConditions(dimensionsFiltre, null);
-        return query + conditions;
+        return "SELECT f.* " + BASE_JOIN + BASE_WHERE_ENTORN + FILTER_DATE + generateDimensionConditions(dimensionsFiltre);
     }
 
-    /**
-     * Genera una consulta SQL per obtenir fets en base a l'identificador de l'entorn d'aplicació (entornAppId), un rang de
-     * dates i els valors de diverses dimensions especificades.
-     * La consulta inclou condicions específiques per filtrar les dades segons els criteris proporcionats mitjançant el mapa
-     * de dimensions.
-     * <p>
-     * Nota: aquesta consulta només s'utilitza des del recurs Fet (només-admin), sense filtre de seguretat - vegeu el
-     * mètode anterior.
-     *
-     * @param dimensionsFiltre Un mapa que conté les dimensions i els seus valors de filtre. Cada clau correspon a un codi
-     *                         de dimensió, mentre que el valor associat és una llista que inclou els possibles valors per
-     *                         aquesta dimensió. Si el mapa és null o buit, es retorna una consulta que només inclou els
-     *                         filtres d'entornAppId i el rang de dates.
-     * @return Una cadena que representa la consulta SQL completa, amb els filtres per entornAppId, dates i, opcionalment,
-     *         les condicions generades per les dimensions indicades.
-     */
     @Override
     public String getFindByEntornAppIdAndTempsDataBetweenAndDimensionQuery(Map<String, List<String>> dimensionsFiltre) {
-        String query = "SELECT f.* " +
-                BASE_JOIN +
-                BASE_WHERE;
-
-        String conditions = generateDimensionConditions(dimensionsFiltre, null);
-        return query + conditions;
+        return "SELECT f.* " + BASE_JOIN + BASE_WHERE + generateDimensionConditions(dimensionsFiltre);
     }
 
-    /**
-     * Genera una consulta SQL per obtenir un valor agregat d'un indicador específic basat en l'entornAppId,
-     * un rang de dates específic, valors dimensionals i un tipus d'agregació.
-     * Aquesta consulta aplica l'agregació directament a la base de dades, optimitzant el rendiment.
-     *
-     * @param dimensionsFiltre Un mapa on cada clau representa el codi d'una dimensió i el valor és una llista de valors
-     *                         a filtrar. Si el mapa és null o buit, es generen només les condicions per entornAppId i rang
-     *                         de dates.
-     * @param indicadorCodi El codi de l'indicador sobre el qual s'aplicarà l'agregació.
-     * @param agregacio El tipus d'agregació a aplicar (COUNT, SUM, AVERAGE, etc.).
-     * @param seguretat Restricció de seguretat d'entitat/òrgan a aplicar (null si l'usuari n'és exempt).
-     * @return Una cadena de text que representa la consulta SQL generada per obtenir el valor agregat.
-     */
     @Override
-    public String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, SeguretatFiltreSql seguretat) {
+    public String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio) {
+        // 1. Filtres
+        String queryConditions = generateDimensionConditions(dimensionsFiltre);
 
-        TableColumnsEnum agregacio = indicadorAgregacio.getAgregacio();
-        PeriodeUnitat unitatAgregacio = indicadorAgregacio.getUnitatAgregacio();
-        String querySelect = getSimpleQuerySelect(agregacio);
-        String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
-        String queryGrouping = generateGroupConditions(TableColumnsEnum.AVERAGE.equals(agregacio), unitatAgregacio);
+        // Resolem la unitat efectiva (FIRST_SEEN/LAST_SEEN sempre operen a nivell de DIA)
+        PeriodeUnitat effectiveUnitat = (agregacio == TableColumnsEnum.FIRST_SEEN || agregacio == TableColumnsEnum.LAST_SEEN)
+            ? PeriodeUnitat.DIA
+            : unitatAgregacio;
 
-        return "SELECT " + querySelect +
-                " FROM ( SELECT " +
-                (TableColumnsEnum.AVERAGE. equals(agregacio) ? "" : "t.data as data, ") +
-                getSumIndicadorQuery(indicadorAgregacio) +
-                BASE_JOIN +
-                BASE_WHERE +
-                queryConditions +
-                queryGrouping +
-                ")";
+        // 2. Agrupació interna
+        String innerGroupingCols = getInnerGroupingColsForSingle(agregacio, effectiveUnitat);
+        String innerSelectCols = innerGroupingCols.isEmpty() ? "" : innerGroupingCols + ", ";
+        String innerGroupBy = innerGroupingCols.isEmpty() ? "" : " GROUP BY " + innerGroupingCols;
+
+        // 3. Càlculs (utilitzem effectiveUnitat per al sufix)
+        String querySelect = getSimpleQuerySelect(agregacio, indicadorCodi, effectiveUnitat);
+        String innerSumSelect = getSumIndicadorQuery(indicadorCodi) + getIndicadorSuffix(indicadorCodi, effectiveUnitat);
+
+        // 4. Assemblatge
+        return "SELECT " + querySelect + " FROM ( SELECT " + innerSelectCols + innerSumSelect +
+            BASE_JOIN + BASE_WHERE + queryConditions + innerGroupBy + ")";
     }
 
-    /**
-     * Genera una consulta SQL per obtenir les dades d'un gràfic per a un indicador específic.
-     *
-     * @param dimensionsFiltre un mapa que conté les dimensions i els seus respectius valors per aplicar els filtres corresponents.
-     * @param indicadorAgregacio l'objecte IndicadorAgregacio que conté informació sobre l'indicador a processar.
-     * @param tempsAgregacio la unitat de període utilitzada per agrupar les dades temporalment.
-     * @param seguretat Restricció de seguretat d'entitat/òrgan a aplicar (null si l'usuari n'és exempt).
-     * @return la consulta SQL generada com a cadena de text, preparada per obtenir dades aplicant els filtres i agrupacions específiques.
-     */
     @Override
-    public String getGraficUnIndicadorQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat) {
+    public String getGraficUnIndicadorQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, PeriodeUnitat tempsAgregacio) {
+        // 1. Filtres i agrupacions base
+        String queryConditions = generateDimensionConditions(dimensionsFiltre);
+        String innerGroupingCols = getChartInnerGroupingCols(indicadorAgregacio, tempsAgregacio);
+        String innerSelectCols = innerGroupingCols.isEmpty() ? "" : innerGroupingCols + ", ";
+        String innerGroupBy = innerGroupingCols.isEmpty() ? "" : " GROUP BY " + innerGroupingCols;
 
-        String querySelect = getGraficQuerySelect(indicadorAgregacio);
+        String outerGroupingCols = getTimeGroupingColumns(tempsAgregacio, true).replace("t.", "");
         String queryAgrupacio = generateGraficAgrupacioConditions(tempsAgregacio);
-        String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
-        String queryGrouping = generateGroupConditions(tempsAgregacio).replace("t.", "");
-        PeriodeUnitat subUnitat = indicadorAgregacio.getUnitatAgregacio() != null
-                ? indicadorAgregacio.getUnitatAgregacio()
-                : tempsAgregacio;
-        String querySubGrouping = generateGroupConditions(subUnitat);
 
-        if (TableColumnsEnum.FIRST_SEEN.equals(indicadorAgregacio.getAgregacio()) || TableColumnsEnum.LAST_SEEN.equals(indicadorAgregacio.getAgregacio())) {
-            // Les columnes FIRST_SEEN/LAST_SEEN no tenen un "zero" natural (són dates, no sumes), així que
-            // aquest cas es manté amb el comportament anterior (sense omplir períodes sense dades).
-            return "SELECT " + queryAgrupacio + " as agrupacio, " +
-                    querySelect +
-                    " FROM ( SELECT " +
-                    querySubGrouping + ", " +
-                    getSumIndicadorQuery(indicadorAgregacio) +
-                    BASE_JOIN +
-                    BASE_WHERE +
-                    queryConditions +
-                    "GROUP BY " + querySubGrouping +
-                    ") " +
-                    "GROUP BY " + queryGrouping + " " +
-                    "ORDER BY agrupacio";
-        }
+        // 2. Càlculs (depenen de la unitat resolta)
+        PeriodeUnitat effectiveUnitat = resolveUnitat(indicadorAgregacio, tempsAgregacio);
+        TableColumnsEnum realAgregacio = getRealGraficAgregacio(indicadorAgregacio.getAgregacio(), indicadorAgregacio.getUnitatAgregacio(), tempsAgregacio);
 
-        String periodeCamps = querySubGrouping.replace("t.", "");
+        String innerSumSelect = getSumIndicadorQuery(indicadorAgregacio.getIndicadorCodi()) + getIndicadorSuffix(indicadorAgregacio.getIndicadorCodi(), effectiveUnitat);
+        String outerSelect = getSimpleQuerySelect(realAgregacio, indicadorAgregacio.getIndicadorCodi(), effectiveUnitat);
 
-        // Els períodes sense cap fet no generaven cap fila (la consulta partia de com_est_fet), fent que
-        // desapareguessin del gràfic en lloc de mostrar-se com a zero. Es genera un calendari sintètic amb
-        // tots els períodes del rang sol·licitat (vegeu getPeriodesRangeQuery) i es fa un LEFT JOIN amb
-        // l'agregació real, per garantir una fila per període encara que no hi hagi cap fet.
-        return "SELECT " + queryAgrupacio + " as agrupacio, " +
-                querySelect +
-                " FROM ( SELECT " +
-                qualifyColumns("periodes", periodeCamps) + ", COALESCE(agg.sum_fets, 0) AS sum_fets " +
-                "FROM " + getPeriodesRangeQuery(subUnitat) + " periodes " +
-                "LEFT JOIN ( SELECT " +
-                querySubGrouping + ", " +
-                getSumIndicadorQuery(indicadorAgregacio) +
-                BASE_JOIN +
-                BASE_WHERE +
-                queryConditions +
-                "GROUP BY " + querySubGrouping +
-                " ) agg ON " + getPeriodesJoinCondition("periodes", "agg", periodeCamps) +
-                ") " +
-                "GROUP BY " + queryGrouping + " " +
-                "ORDER BY agrupacio";
+        // 3. Assemblatge
+        return "SELECT " + queryAgrupacio + " AS agrupacio, " + outerSelect +
+            " FROM ( SELECT " + innerSelectCols + innerSumSelect +
+            BASE_JOIN + BASE_WHERE + queryConditions + innerGroupBy + ") " +
+            " GROUP BY " + outerGroupingCols + " ORDER BY agrupacio";
     }
 
-    /**
-     * Genera una consulta SQL per obtenir dades gràfiques d'un indicador amb descomposició en funció de les dimensions i la unitat de temps agregada.
-     *
-     * @param dimensionsFiltre representació de les dimensions de filtratge amb les seves respectives llistes de valors.
-     * @param indicadorAgregacio indicadors d'agregació que conté el codi de l'indicador a consultar.
-     * @param dimensioDescomposicioCodi codi de la dimensió utilitzada per fer la descomposició en el resultat de la consulta.
-     * @param tempsAgregacio unitat de temps que defineix com s'agreguen els períodes (diari, mensual, anual, etc.) en la consulta.
-     * @param seguretat Restricció de seguretat d'entitat/òrgan a aplicar (null si l'usuari n'és exempt).
-     * @return cadena de text que conté la consulta SQL generada.
-     */
     @Override
-    public String getGraficUnIndicadorAmbDescomposicioAndAgrupacioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat) {
-
-        String querySelect = getGraficQuerySelect(indicadorAgregacio);
-        String queryAgrupacio = generateGraficAgrupacioConditions(tempsAgregacio);
-        String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
-        String queryGrouping = generateGroupConditions(tempsAgregacio).replace("t.", "");
+    public String getGraficUnIndicadorAmbDescomposicioAndAgrupacioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio) {
+        // 1. Filtres i agrupacions base
+        String queryConditions = generateDimensionConditions(dimensionsFiltre);
         String queryDescomposicio = getDimensionValueQuery(dimensioDescomposicioCodi);
-        String querySubGrouping = generateGroupConditions(indicadorAgregacio.getUnitatAgregacio() != null
-                ? indicadorAgregacio.getUnitatAgregacio()
-                : tempsAgregacio);
 
+        // 2. Estructura d'agrupació
+        String innerGroupingCols = getChartInnerGroupingCols(indicadorAgregacio, tempsAgregacio);
+        String innerGroupBy = innerGroupingCols.isEmpty() ? " GROUP BY " + queryDescomposicio : " GROUP BY " + innerGroupingCols + ", " + queryDescomposicio;
+        String innerSelectCols = innerGroupingCols.isEmpty() ? "" : innerGroupingCols + ", ";
 
-        return "SELECT " + queryAgrupacio + " as agrupacio, " +
-                "descomposicio, " +
-                querySelect +
-                " FROM ( SELECT " +
-                querySubGrouping + ", " +
-                queryDescomposicio + "AS descomposicio," +
-                getSumIndicadorQuery(indicadorAgregacio) +
-                BASE_JOIN +
-                BASE_WHERE +
-                queryConditions +
-                "GROUP BY " + querySubGrouping + "," + queryDescomposicio +
-                ") " +
-                "GROUP BY " + queryGrouping + ", descomposicio " +
-                "ORDER BY agrupacio, descomposicio";
-    }
-
-    /**
-     * Genera una consulta SQL per obtenir dades d'un indicador específic amb descomposició per una dimensió determinada.
-     *
-     * @param dimensionsFiltre Mapa amb les dimensions i els seus valors a filtrar en la consulta.
-     * @param indicadorAgregacio Objecte que conté la informació de l'indicador agregat, inclòs el seu codi identificador.
-     * @param dimensioDescomposicioCodi Codi de la dimensió sobre la qual s'aplicarà la descomposició.
-     * @param seguretat Restricció de seguretat d'entitat/òrgan a aplicar (null si l'usuari n'és exempt).
-     * @return Consulta SQL generada com a cadena de text per obtenir dades amb descomposició per l'indicador especificat.
-     */
-    @Override
-    public String getGraficUnIndicadorAmbDescomposicioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, SeguretatFiltreSql seguretat) {
-
-        String querySelect = getGraficQuerySelect(indicadorAgregacio);
-        String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
-        String queryDescomposicio = getDimensionValueQuery(dimensioDescomposicioCodi);
-        boolean isAverage = TableColumnsEnum.AVERAGE.equals(indicadorAgregacio.getAgregacio());
-        String innerGrouping = isAverage ? getGrupping(indicadorAgregacio.getUnitatAgregacio()) : "t.data";
-
-        return "SELECT agrupacio, " +
-                querySelect +
-                " FROM ( SELECT " +
-                (isAverage ? "" : "t.data as data, ") +
-                queryDescomposicio + " AS agrupacio," +
-                getSumIndicadorQuery(indicadorAgregacio) +
-                BASE_JOIN +
-                BASE_WHERE +
-                queryConditions +
-                "GROUP BY " + innerGrouping + ", " + queryDescomposicio +
-                ") " +
-                "GROUP BY agrupacio " +
-                "ORDER BY agrupacio";
-    }
-
-    /**
-     * Genera la consulta SQL per obtenir dades d'un gràfic amb múltiples indicadors agregats segons un període temporal i filtrat per dimensions.
-     *
-     * @param dimensionsFiltre mapa que conté les dimensions i els seus valors per aplicar com a criteris de filtre a la consulta
-     * @param indicadorsAgregacio llista d'indicadors amb informació sobre l'agregació i la unitat temporal associada
-     * @param tempsAgregacio unitat temporal per a l'agregació principal de les dades
-     * @param seguretat Restricció de seguretat d'entitat/òrgan a aplicar (null si l'usuari n'és exempt).
-     * @return consulta SQL com a cadena de text per obtenir les dades del gràfic
-     */
-    @Override
-    public String getGraficVarisIndicadorsQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat) {
-
-        boolean hasAverage = indicadorsAgregacio.stream().anyMatch(ind -> TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()));
-        boolean hasDataCols = indicadorsAgregacio.stream().anyMatch(ind -> TableColumnsEnum.FIRST_SEEN.equals(ind.getAgregacio()) || TableColumnsEnum.LAST_SEEN.equals(ind.getAgregacio()));
-
-        PeriodeUnitat avgUnitat = indicadorsAgregacio.stream()
-                .map(IndicadorAgregacio::getUnitatAgregacio)
-                .filter(java.util.Objects::nonNull)
-                .findFirst()
-                .orElse(tempsAgregacio);
-
-        if (hasAverage) {
-            PeriodeUnitat finalAvgUnitat = avgUnitat;
-            boolean thereAreDifferentUnitatAgregacio = indicadorsAgregacio.stream()
-                    .filter(ind -> TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()))
-                    .anyMatch(indicador -> !java.util.Objects.equals(finalAvgUnitat, indicador.getUnitatAgregacio()));
-
-            // Hi ha una validació per a no permetre diferents unitats d'agregació (períodes)
-            // Si hi ha columnes tipus AVERAGE amb diferents períodes, les separam per unitatAgregacio i fem UNION
-            if (thereAreDifferentUnitatAgregacio) {
-                // TODO: Modificar per funcionar semblant a taula (si es permeten difirents unitats d'agregació)
-                List<List<IndicadorAgregacio>> indicadorsAgregacioByPeriode = indicadorsAgregacio.stream()
-                        .filter(ind -> ind.getUnitatAgregacio() != null)
-                        .collect(Collectors.groupingBy(IndicadorAgregacio::getUnitatAgregacio))
-                        .values()
-                        .stream()
-                        .collect(Collectors.toList());
-
-                return indicadorsAgregacioByPeriode.stream()
-                        .map(listaIndicadors -> getGraficVarisIndicadorsQuery(dimensionsFiltre, listaIndicadors, tempsAgregacio, seguretat))
-                        .collect(Collectors.joining(" UNION "));
-            }
-        }
-
-        String querySelect = getTaulaQuerySelect(indicadorsAgregacio);
+        String outerGroupingCols = getTimeGroupingColumns(tempsAgregacio, true).replace("t.", "");
         String queryAgrupacio = generateGraficAgrupacioConditions(tempsAgregacio);
-        String subQuerySelects = getTaulaSubQuerySelects(indicadorsAgregacio);
-        String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
-        String subQueryGrouping = generateGroupConditions(avgUnitat);
 
-        if (hasDataCols) {
-            // Les columnes FIRST_SEEN/LAST_SEEN no tenen un "zero" natural (són dates, no sumes), així que
-            // aquest cas es manté amb el comportament anterior (sense omplir períodes sense dades).
-            return "SELECT agrupacio, " + querySelect +
-                    " FROM ( SELECT " +
-                    "t.data, " +
-                    (hasAverage ? "" : generateGroupConditions(avgUnitat) + ", ") +
-                    queryAgrupacio + " AS agrupacio," +
-                    subQuerySelects +
-                    BASE_JOIN +
-                    BASE_WHERE +
-                    queryConditions +
-                    "GROUP BY t.data, " + subQueryGrouping + ") " +
-                    "GROUP BY agrupacio " +
-                    "ORDER BY agrupacio";
-        }
+        // 3. Càlculs
+        PeriodeUnitat effectiveUnitat = resolveUnitat(indicadorAgregacio, tempsAgregacio);
+        TableColumnsEnum realAgregacio = getRealGraficAgregacio(indicadorAgregacio.getAgregacio(), indicadorAgregacio.getUnitatAgregacio(), tempsAgregacio);
 
-        // Els períodes sense cap fet no generaven cap fila. Es genera un calendari sintètic amb tots els
-        // períodes del rang sol·licitat (vegeu getPeriodesRangeQuery) i es fa un LEFT JOIN amb l'agregació
-        // real de cada indicador, per garantir una fila per període encara que no hi hagi cap fet.
-        String periodeCamps = subQueryGrouping.replace("t.", "");
-        String coalesceCols = getTaulaSubQueryCoalesceColumns(indicadorsAgregacio);
+        String innerSumSelect = getSumIndicadorQuery(indicadorAgregacio.getIndicadorCodi()) + getIndicadorSuffix(indicadorAgregacio.getIndicadorCodi(), effectiveUnitat);
+        String outerSelect = getSimpleQuerySelect(realAgregacio, indicadorAgregacio.getIndicadorCodi(), effectiveUnitat);
 
-        // queryAgrupacio (l'etiqueta "YYYY/MM") es calcula aquí, a l'exterior, referenciant directament les
-        // columnes de període sense prefix que exposa el FROM — no es pot calcular a dins del JOIN perquè
-        // "periodes" i "agg" exposen totes dues les mateixes columnes de període (anualitat/trimestre/...),
-        // fent el nom ambigu.
-        return  "SELECT " + queryAgrupacio + " as agrupacio, " + querySelect +
-                " FROM ( SELECT " +
-                qualifyColumns("periodes", periodeCamps) + ", " + coalesceCols +
-                " FROM " + getPeriodesRangeQuery(avgUnitat) + " periodes " +
-                "LEFT JOIN ( SELECT " +
-                subQueryGrouping + ", " +
-                subQuerySelects +
-                BASE_JOIN +
-                BASE_WHERE +
-                queryConditions +
-                "GROUP BY " + subQueryGrouping +
-                " ) agg ON " + getPeriodesJoinCondition("periodes", "agg", periodeCamps) +
-                ") " +
-                "GROUP BY " + periodeCamps + " " +
-                "ORDER BY agrupacio";
+        // 4. Assemblatge
+        return "SELECT " + queryAgrupacio + " AS agrupacio, descomposicio, " + outerSelect +
+            " FROM ( SELECT " + innerSelectCols + queryDescomposicio + " AS descomposicio, " + innerSumSelect +
+            BASE_JOIN + BASE_WHERE + queryConditions + innerGroupBy + ") " +
+            " GROUP BY " + outerGroupingCols + ", descomposicio ORDER BY agrupacio, descomposicio";
     }
 
     @Override
-    public String getTaulaQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, String dimensioAgrupacioCodi, SeguretatFiltreSql seguretat) {
+    public String getGraficUnIndicadorAmbDescomposicioQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi) {
+        // 1. Filtres i dimensions
+        String queryConditions = generateDimensionConditions(dimensionsFiltre);
+        String queryDescomposicio = getDimensionValueQuery(dimensioDescomposicioCodi);
 
-        boolean hasAverage = indicadorsAgregacio.stream().anyMatch(ind -> TableColumnsEnum.AVERAGE.equals(ind.getAgregacio()));
-        boolean hasDataCols = indicadorsAgregacio.stream().anyMatch(ind -> TableColumnsEnum.FIRST_SEEN.equals(ind.getAgregacio()) || TableColumnsEnum.LAST_SEEN.equals(ind.getAgregacio()));
+        // 2. Assemblatge (consulta plana, sense subconsulta)
+        return "SELECT " + queryDescomposicio + " AS agrupacio, " + getSumIndicadorQuery(indicadorAgregacio.getIndicadorCodi()) +
+            BASE_JOIN + BASE_WHERE + queryConditions + " GROUP BY " + queryDescomposicio + " ORDER BY agrupacio";
+    }
 
-        if (hasAverage && hasDataCols) {
-            // Dividim la consulta i fem UNION posteriorment
-            List<IndicadorAgregacio> indicadorsAverage = indicadorsAgregacio.stream().filter(ind -> TableColumnsEnum.AVERAGE.equals(ind.getAgregacio())).collect(Collectors.toList());
-            List<IndicadorAgregacio> indicadorsNotAverage = indicadorsAgregacio.stream().filter(ind -> !TableColumnsEnum.AVERAGE.equals(ind.getAgregacio())).collect(Collectors.toList());
+    @Override
+    public String getGraficVarisIndicadorsQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, PeriodeUnitat tempsAgregacio) {
+        Map<String, List<IndicadorAgregacio>> indicadorsPerGrup = indicadorsAgregacio.stream()
+            .collect(Collectors.groupingBy(ind -> getChartGroupingKey(ind, tempsAgregacio)));
 
-            // Generem una consulta amb el format especial per a UNION
-            return generaMixedUnionQuery(dimensionsFiltre, indicadorsAverage, indicadorsNotAverage, dimensioAgrupacioCodi, seguretat);
+        if (indicadorsPerGrup.size() == 1) {
+            return generateGraficSingleGroupQuery(dimensionsFiltre, indicadorsPerGrup.values().iterator().next(), tempsAgregacio);
         }
 
-        PeriodeUnitat unitat = indicadorsAgregacio.get(0).getUnitatAgregacio();
-        if (hasAverage) {
-            boolean thereAreDifferentUnitatAgregacio = indicadorsAgregacio.stream()
-                    .skip(1) // Ignora el primer element
-                    .anyMatch(indicador -> !indicador.getUnitatAgregacio().equals(unitat));
+        String unionSubqueries = indicadorsPerGrup.values().stream()
+            .map(grup -> generateGraficUnionSubquery(dimensionsFiltre, grup, tempsAgregacio, indicadorsAgregacio))
+            .collect(Collectors.joining(" UNION ALL "));
 
-            // Si hi ha columnes tipus AVERAGE amb diferents períodes, les separam per unitatAgregacio i fem UNION
-            if (thereAreDifferentUnitatAgregacio) {
-                List<List<IndicadorAgregacio>> indicadorsAgrupatsByPeriode = indicadorsAgregacio.stream()
-                        .collect(Collectors.groupingBy(IndicadorAgregacio::getUnitatAgregacio))
-                        .values()
-                        .stream()
-                        .collect(Collectors.toList());
+        return generateGraficUnionQuery(indicadorsAgregacio, unionSubqueries, tempsAgregacio);
+    }
 
-                // Generem una consulta amb el format especial per a UNION
-                return generaAvgUnionQuery(dimensionsFiltre, indicadorsAgrupatsByPeriode, dimensioAgrupacioCodi, seguretat);
-            }
+    @Override
+    public String getTaulaQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, String dimensioAgrupacioCodi) {
+        Map<String, List<IndicadorAgregacio>> indicadorsPerGrup = indicadorsAgregacio.stream()
+            .collect(Collectors.groupingBy(this::getInnerGroupingCols));
+
+        if (indicadorsPerGrup.size() == 1) {
+            return generateTaulaQuerySingleGroup(dimensionsFiltre, indicadorsPerGrup.values().iterator().next(), dimensioAgrupacioCodi);
         }
 
-        IndicadorAgregacio primerIndicador = indicadorsAgregacio.get(0);
-        String querySelect = getTaulaQuerySelect(indicadorsAgregacio);
-        String subQuerySelects = getTaulaSubQuerySelects(indicadorsAgregacio);
-        String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
-        String queryGrouping = generateGroupConditions(hasAverage, primerIndicador.getUnitatAgregacio());
+        String unionSubqueries = indicadorsPerGrup.values().stream()
+            .map(grup -> generateUnionSubquery(dimensionsFiltre, grup, dimensioAgrupacioCodi, indicadorsAgregacio))
+            .collect(Collectors.joining(" UNION ALL "));
+
+        return generaUnionQuery(indicadorsAgregacio, unionSubqueries);
+    }
+
+    // ====================================================================================
+    // UTILS DE AGRUPACIÓ I TEMPS
+    // ====================================================================================
+
+    private static PeriodeUnitat resolveUnitat(IndicadorAgregacio ind, PeriodeUnitat defaultUnitat) {
+        if (ind.getAgregacio() == TableColumnsEnum.FIRST_SEEN || ind.getAgregacio() == TableColumnsEnum.LAST_SEEN) {
+            return PeriodeUnitat.DIA;
+        }
+        return ind.getUnitatAgregacio() != null ? ind.getUnitatAgregacio() : defaultUnitat;
+    }
+
+    private String getTimeGroupingColumns(PeriodeUnitat unitat, boolean fallbackToDaily) {
+        PeriodeUnitat u = unitat != null ? unitat : (fallbackToDaily ? PeriodeUnitat.DIA : null);
+        if (u == null) return "";
+
+        switch (u) {
+            case DIA: return "t.anualitat, t.trimestre, t.mes, t.setmana, t.dia";
+            case SETMANA: return "t.anualitat, t.trimestre, t.mes, t.setmana";
+            case MES: return "t.anualitat, t.trimestre, t.mes";
+            case TRIMESTRE: return "t.anualitat, t.trimestre";
+            case ANY: return "t.anualitat";
+            default: return "t.anualitat, t.trimestre, t.mes, t.setmana, t.dia";
+        }
+    }
+
+    private String getInnerGroupingCols(IndicadorAgregacio ind) {
+        if (ind.getAgregacio() == TableColumnsEnum.FIRST_SEEN || ind.getAgregacio() == TableColumnsEnum.LAST_SEEN) {
+            return "t.data";
+        }
+        return getTimeGroupingColumns(ind.getUnitatAgregacio(), false);
+    }
+
+    private String getInnerGroupingColsForSingle(TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio) {
+        if (agregacio == TableColumnsEnum.FIRST_SEEN || agregacio == TableColumnsEnum.LAST_SEEN || unitatAgregacio == PeriodeUnitat.DIA) {
+            return "t.data";
+        }
+        return getTimeGroupingColumns(unitatAgregacio, false);
+    }
+
+    private String getChartInnerGroupingCols(IndicadorAgregacio ind, PeriodeUnitat defaultTemps) {
+        PeriodeUnitat effectiveUnitat = resolveUnitat(ind, defaultTemps);
+        PeriodeUnitat innerUnitat = defaultTemps;
+
+        if (effectiveUnitat != null && getPeriodLevel(effectiveUnitat) < getPeriodLevel(defaultTemps)) {
+            innerUnitat = effectiveUnitat;
+        }
+
+        return getTimeGroupingColumns(innerUnitat, false);
+    }
+
+    private String getChartGroupingKey(IndicadorAgregacio ind, PeriodeUnitat defaultTemps) {
+        if (ind.getAgregacio() == TableColumnsEnum.FIRST_SEEN || ind.getAgregacio() == TableColumnsEnum.LAST_SEEN) {
+            return "t.data";
+        }
+        PeriodeUnitat unitat = resolveUnitat(ind, defaultTemps);
+        return getTimeGroupingColumns(unitat, false);
+    }
+
+    // ====================================================================================
+    // GENERACIÓ DE CONSULTES DE TAULA (UNION)
+    // ====================================================================================
+
+    private String generateTaulaQuerySingleGroup(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadors, String dimensioAgrupacioCodi) {
+        // 1. Estructura base
         String queryAgrupacio = getDimensionValueQuery(dimensioAgrupacioCodi);
+        String queryConditions = generateDimensionConditions(dimensionsFiltre);
+        PeriodeUnitat groupUnitat = resolveUnitat(indicadors.get(0), null);
 
+        // 2. Agrupació interna
+        String innerGroupingCols = getInnerGroupingCols(indicadors.get(0));
+        String innerSelectCols = innerGroupingCols.isEmpty() ? "" : innerGroupingCols + ", ";
+        String innerGroupBy = innerGroupingCols.isEmpty() ? "GROUP BY " + queryAgrupacio : "GROUP BY " + innerGroupingCols + ", " + queryAgrupacio;
 
-        return "SELECT agrupacio, " + querySelect +
-                " FROM ( SELECT " +
-                (hasAverage ? generateGroupConditions(unitat) + ", " : "t.data as data, ") +
-                queryAgrupacio + " AS agrupacio," +
-                subQuerySelects +
-                BASE_JOIN +
-                BASE_WHERE +
-                queryConditions +
-                queryGrouping + "," + queryAgrupacio + ") " +
-                "GROUP BY agrupacio " +
-                "ORDER BY agrupacio";
+        // 3. Càlculs
+        String querySelect = indicadors.stream().map(ind -> getSimpleQuerySelect(ind.getAgregacio(), ind.getIndicadorCodi(), groupUnitat)).collect(Collectors.joining(", "));
+        String subQuerySelects = getTaulaSubQuerySelects(indicadors, groupUnitat);
+
+        // 4. Assemblatge
+        return "SELECT agrupacio, " + querySelect + " FROM ( SELECT " + innerSelectCols + queryAgrupacio + " AS agrupacio, " + subQuerySelects +
+            BASE_JOIN + BASE_WHERE + queryConditions + " " + innerGroupBy + ") GROUP BY agrupacio ORDER BY agrupacio";
     }
 
-    /**
-     * Genera una consulta SQL amb format especial per a UNION entre diferents llistes d'indicadors.
-     *
-     * @param dimensionsFiltre Filtre de dimensions
-     * @param indicadorsLists Llista de llistes d'indicadors agrupats per algun criteri
-     * @param dimensioAgrupacioCodi Codi de la dimensió d'agrupació
-     * @param seguretat Restricció de seguretat d'entitat/òrgan a aplicar (null si l'usuari n'és exempt).
-     * @return Consulta SQL amb format especial per a UNION
-     */
-    private String generaAvgUnionQuery(Map<String, List<String>> dimensionsFiltre, List<List<IndicadorAgregacio>> indicadorsLists, String dimensioAgrupacioCodi, SeguretatFiltreSql seguretat) {
-        // Obtenim tots els indicadors en l'ordre original
-        List<IndicadorAgregacio> allIndicadors = indicadorsLists.stream()
-                .flatMap(List::stream)
-                .collect(Collectors.toList());
+    private String generateUnionSubquery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadors, String dimensioAgrupacioCodi, List<IndicadorAgregacio> ordenOriginal) {
+        if (indicadors.isEmpty()) return "";
 
-        // Generem les subconsultes per a cada llista d'indicadors
-        String unionSubqueries = indicadorsLists.stream()
-                .map(indicadors -> generateUnionSubquery(dimensionsFiltre, indicadors, dimensioAgrupacioCodi, allIndicadors, seguretat))
-                .collect(Collectors.joining(" UNION ALL "));
+        // 1. Estructura base
+        String queryAgrupacio = getDimensionValueQuery(dimensioAgrupacioCodi);
+        String queryConditions = generateDimensionConditions(dimensionsFiltre);
+        PeriodeUnitat groupUnitat = resolveUnitat(indicadors.get(0), null);
 
-        return generaUnionQuery(allIndicadors, unionSubqueries);
-    }
+        // 2. Agrupació interna
+        String innerGroupingCols = getInnerGroupingCols(indicadors.get(0));
+        String innerSelectCols = innerGroupingCols.isEmpty() ? "" : innerGroupingCols + ", ";
+        String innerGroupBy = innerGroupingCols.isEmpty() ? "GROUP BY " + queryAgrupacio : "GROUP BY " + innerGroupingCols + ", " + queryAgrupacio;
 
-    /**
-     * Genera una consulta SQL amb format especial per a UNION entre dues llistes d'indicadors.
-     *
-     * @param dimensionsFiltre Filtre de dimensions
-     * @param indicadorsAverage Llista d'indicadors amb agregació AVERAGE
-     * @param indicadorsNotAverage Llista d'indicadors sense agregació AVERAGE
-     * @param dimensioAgrupacioCodi Codi de la dimensió d'agrupació
-     * @param seguretat Restricció de seguretat d'entitat/òrgan a aplicar (null si l'usuari n'és exempt).
-     * @return Consulta SQL amb format especial per a UNION
-     */
-    private String generaMixedUnionQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAverage, List<IndicadorAgregacio> indicadorsNotAverage, String dimensioAgrupacioCodi, SeguretatFiltreSql seguretat) {
-        // Obtenim tots els indicadors en l'ordre original
-        List<IndicadorAgregacio> allIndicadors = new java.util.ArrayList<>();
-        allIndicadors.addAll(indicadorsAverage);
-        allIndicadors.addAll(indicadorsNotAverage);
+        // 3. Càlculs
+        String querySelect = ordenOriginal.stream().map(ind -> {
+            if (indicadors.contains(ind)) {
+                return getSimpleQuerySelect(ind.getAgregacio(), ind.getIndicadorCodi(), groupUnitat);
+            }
+            String suffix = getIndicadorSuffix(ind.getIndicadorCodi(), resolveUnitat(ind, null));
+            if (ind.getAgregacio() == TableColumnsEnum.AVERAGE) return "null AS average_result" + suffix;
+            if (ind.getAgregacio() == TableColumnsEnum.FIRST_SEEN) return "null AS first_seen" + suffix;
+            if (ind.getAgregacio() == TableColumnsEnum.LAST_SEEN) return "null AS last_seen" + suffix;
+            return "null AS total_sum" + suffix;
+        }).collect(Collectors.joining(", "));
 
-        // Generem les subconsultes per a cada tipus d'indicador
-        String averageSubquery = generateUnionSubquery(dimensionsFiltre, indicadorsAverage, dimensioAgrupacioCodi, allIndicadors, seguretat);
-        String notAverageSubquery = generateUnionSubquery(dimensionsFiltre, indicadorsNotAverage, dimensioAgrupacioCodi, allIndicadors, seguretat);
-        String unionSubqueries = averageSubquery + " UNION ALL " + notAverageSubquery;
+        String subQuerySelects = getTaulaSubQuerySelects(indicadors, groupUnitat);
 
-        return generaUnionQuery(allIndicadors, unionSubqueries);
+        // 4. Assemblatge
+        return "SELECT agrupacio, " + querySelect + " FROM ( SELECT " + innerSelectCols + queryAgrupacio + " AS agrupacio, " + subQuerySelects +
+            BASE_JOIN + BASE_WHERE + queryConditions + " " + innerGroupBy + ") GROUP BY agrupacio";
     }
 
     private static String generaUnionQuery(List<IndicadorAgregacio> allIndicadors, String unionSubqueries) {
-        // Obtenim els noms de columnes en l'ordre original dels indicadors
-        Set<String> allResultColumns = allIndicadors.stream()
-                .map(ind -> {
-                    switch (ind.getAgregacio()) {
-                        case AVERAGE: return "average_result" + getIndicadorSuffix(ind.getIndicadorCodi());
-                        case FIRST_SEEN: return "first_seen" + getIndicadorSuffix(ind.getIndicadorCodi());
-                        case LAST_SEEN: return "last_seen" + getIndicadorSuffix(ind.getIndicadorCodi());
-                        default: return "total_sum" + getIndicadorSuffix(ind.getIndicadorCodi());
-                    }
-                })
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+        // 1. Càlculs de columnes externes
+        Set<String> allResultColumns = allIndicadors.stream().map(ind -> {
+            String suffix = getIndicadorSuffix(ind.getIndicadorCodi(), resolveUnitat(ind, null));
+            switch (ind.getAgregacio()) {
+                case AVERAGE: return "average_result" + suffix;
+                case FIRST_SEEN: return "first_seen" + suffix;
+                case LAST_SEEN: return "last_seen" + suffix;
+                default: return "total_sum" + suffix;
+            }
+        }).collect(Collectors.toCollection(LinkedHashSet::new));
 
-        // Generem el SELECT exterior amb MAX per a cada columna
-        String outerSelect = allResultColumns.stream()
-                .map(col -> "MAX(" + col + ") as " + col)
-                .collect(Collectors.joining(", "));
+        String outerSelect = allResultColumns.stream().map(col -> "MAX(" + col + ") as " + col).collect(Collectors.joining(", "));
 
-        // Retornem la consulta completa
-        return "SELECT agrupacio, " + outerSelect +
-                " FROM (" + unionSubqueries + ")" +
-                " GROUP BY agrupacio" +
-                " ORDER BY agrupacio";
+        // 2. Assemblatge
+        return "SELECT agrupacio, " + outerSelect + " FROM (" + unionSubqueries + ") GROUP BY agrupacio ORDER BY agrupacio";
     }
 
-    /**
-     * Genera una subconsulta per a una llista d'indicadors, incloent columnes NULL per a indicadors que no estan a la llista.
-     *
-     * @param dimensionsFiltre Filtre de dimensions
-     * @param indicadors Llista d'indicadors
-     * @param dimensioAgrupacioCodi Codi de la dimensió d'agrupació
-     * @param seguretat Restricció de seguretat d'entitat/òrgan a aplicar (null si l'usuari n'és exempt).
-     * @return Subconsulta SQL
-     */
-    private String generateUnionSubquery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadors, String dimensioAgrupacioCodi, List<IndicadorAgregacio> allIndicadors, SeguretatFiltreSql seguretat) {
-        if (indicadors.isEmpty()) {
-            return "";
-        }
+    // ====================================================================================
+    // GENERACIÓ DE CONSULTES DE GRÀFIC (UNION)
+    // ====================================================================================
 
-        IndicadorAgregacio primerIndicador = indicadors.get(0);
-        boolean hasDataQuery = indicadors.stream().anyMatch(ind -> TableColumnsEnum.FIRST_SEEN.equals(ind.getAgregacio()) || TableColumnsEnum.LAST_SEEN.equals(ind.getAgregacio()));
-        PeriodeUnitat avgUnitat = primerIndicador.getUnitatAgregacio();
+    private String generateGraficSingleGroupQuery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadors, PeriodeUnitat tempsAgregacio) {
+        // 1. Estructura base
+        String queryConditions = generateDimensionConditions(dimensionsFiltre);
+        PeriodeUnitat groupUnitat = resolveUnitat(indicadors.get(0), tempsAgregacio);
+        String queryAgrupacio = generateGraficAgrupacioConditions(tempsAgregacio);
 
-        String querySelect = allIndicadors != null
-                ? allIndicadors.stream()
-                .map(indicador -> {
-                    if (indicadors.contains(indicador)) {
-                        return getSimpleQuerySelect(indicador.getAgregacio(), indicador.getIndicadorCodi());
-                    } else if (TableColumnsEnum.AVERAGE.equals(indicador.getAgregacio())) {
-                        return " null AS average_result" + getIndicadorSuffix(indicador.getIndicadorCodi());
-                    } else if (TableColumnsEnum.FIRST_SEEN.equals(indicador.getAgregacio())) {
-                        return " null AS first_seen" + getIndicadorSuffix(indicador.getIndicadorCodi());
-                    } else if (TableColumnsEnum.LAST_SEEN.equals(indicador.getAgregacio())) {
-                        return " null AS last_seen" + getIndicadorSuffix(indicador.getIndicadorCodi());
-                    } else {
-                        return " null AS total_sum" + getIndicadorSuffix(indicador.getIndicadorCodi());
-                    }
-                })
-                .collect(Collectors.joining(", "))
-                : "";
+        // 2. Agrupació interna
+        String innerGroupingCols = getChartInnerGroupingCols(indicadors.get(0), tempsAgregacio);
+        String innerSelectCols = innerGroupingCols.isEmpty() ? "" : innerGroupingCols + ", ";
+        String innerGroupBy = innerGroupingCols.isEmpty() ? "" : "GROUP BY " + innerGroupingCols;
 
-        String subQuerySelects = getTaulaSubQuerySelects(indicadors);
-        String queryConditions = generateDimensionConditions(dimensionsFiltre, seguretat);
-        String queryGrouping = generateGroupConditions(avgUnitat) + ", ";
-        String queryAgrupacio = getDimensionValueQuery(dimensioAgrupacioCodi);
+        // 3. Càlculs
+        String querySelect = indicadors.stream().map(ind -> {
+            TableColumnsEnum realAgregacio = getRealGraficAgregacio(ind.getAgregacio(), ind.getUnitatAgregacio(), tempsAgregacio);
+            return getSimpleQuerySelect(realAgregacio, ind.getIndicadorCodi(), resolveUnitat(ind, tempsAgregacio));
+        }).collect(Collectors.joining(", "));
 
+        String subQuerySelects = getTaulaSubQuerySelects(indicadors, groupUnitat);
+
+        // 4. Assemblatge
         return "SELECT agrupacio, " + querySelect +
-                " FROM ( SELECT " +
-                (hasDataQuery ?  "t.data as data, " : queryGrouping) +
-                queryAgrupacio + " AS agrupacio," +
-                subQuerySelects +
-                BASE_JOIN +
-                BASE_WHERE +
-                queryConditions +
-                "GROUP BY " + (hasDataQuery ?  "t.data, " : queryGrouping) + queryAgrupacio + ") " +
-                "GROUP BY agrupacio";
+            " FROM ( SELECT " + innerSelectCols + queryAgrupacio + " AS agrupacio, " + subQuerySelects +
+            BASE_JOIN + BASE_WHERE + queryConditions + " " + innerGroupBy + ") " +
+            " GROUP BY agrupacio ORDER BY agrupacio";
     }
 
-    private String getTaulaSubQuerySelects(List<IndicadorAgregacio> indicadorsAgregacio) {
-        // Només volem un select per indicadorCodi
-        Map<String, IndicadorAgregacio> unics = new LinkedHashMap<>();
-        indicadorsAgregacio.forEach(ind -> unics.putIfAbsent(ind.getIndicadorCodi(), ind));
-        return unics.values().stream()
-                .map(ind -> getSumIndicadorQuery(ind) + getIndicadorSuffix(ind.getIndicadorCodi()))
-                .collect(Collectors.joining(", "));
+    private String generateGraficUnionSubquery(Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadors, PeriodeUnitat tempsAgregacio, List<IndicadorAgregacio> ordenOriginal) {
+        if (indicadors.isEmpty()) return "";
+
+        // 1. Estructura base
+        String queryConditions = generateDimensionConditions(dimensionsFiltre);
+        String outerGroupingCols = getTimeGroupingColumns(tempsAgregacio, true).replace("t.", "");
+        String queryAgrupacio = generateGraficAgrupacioConditions(tempsAgregacio);
+        PeriodeUnitat groupUnitat = resolveUnitat(indicadors.get(0), tempsAgregacio);
+
+        // 2. Agrupació interna
+        String innerGroupingCols = getChartInnerGroupingCols(indicadors.get(0), tempsAgregacio);
+        String innerSelectCols = innerGroupingCols.isEmpty() ? "" : innerGroupingCols + ", ";
+        String innerGroupBy = innerGroupingCols.isEmpty() ? "" : "GROUP BY " + innerGroupingCols;
+
+        // 3. Càlculs
+        String querySelect = ordenOriginal.stream().map(ind -> {
+            TableColumnsEnum realAgregacio = getRealGraficAgregacio(ind.getAgregacio(), ind.getUnitatAgregacio(), tempsAgregacio);
+            if (indicadors.contains(ind)) {
+                return getSimpleQuerySelect(realAgregacio, ind.getIndicadorCodi(), resolveUnitat(ind, tempsAgregacio));
+            }
+            String suffix = getIndicadorSuffix(ind.getIndicadorCodi(), resolveUnitat(ind, tempsAgregacio));
+            if (realAgregacio == TableColumnsEnum.AVERAGE) return "null AS average_result" + suffix;
+            if (realAgregacio == TableColumnsEnum.FIRST_SEEN) return "null AS first_seen" + suffix;
+            if (realAgregacio == TableColumnsEnum.LAST_SEEN) return "null AS last_seen" + suffix;
+            return "null AS total_sum" + suffix;
+        }).collect(Collectors.joining(", "));
+
+        String subQuerySelects = getTaulaSubQuerySelects(indicadors, groupUnitat);
+
+        // 4. Assemblatge
+        return "SELECT " + queryAgrupacio + " AS agrupacio, " + querySelect +
+            " FROM ( SELECT " + innerSelectCols + subQuerySelects + BASE_JOIN + BASE_WHERE + queryConditions + " " + innerGroupBy + ") " +
+            " GROUP BY " + outerGroupingCols;
     }
 
-    private String getTaulaQuerySelect(List<IndicadorAgregacio> indicadorsAgregacio) {
+    private String generateGraficUnionQuery(List<IndicadorAgregacio> allIndicadors, String unionSubqueries, PeriodeUnitat tempsAgregacio) {
+        // 1. Càlculs de columnes externes
+        Set<String> allResultColumns = allIndicadors.stream().map(ind -> {
+            TableColumnsEnum realAgregacio = getRealGraficAgregacio(ind.getAgregacio(), ind.getUnitatAgregacio(), tempsAgregacio);
+            String suffix = getIndicadorSuffix(ind.getIndicadorCodi(), resolveUnitat(ind, tempsAgregacio));
+            switch (realAgregacio) {
+                case AVERAGE: return "average_result" + suffix;
+                case FIRST_SEEN: return "first_seen" + suffix;
+                case LAST_SEEN: return "last_seen" + suffix;
+                default: return "total_sum" + suffix;
+            }
+        }).collect(Collectors.toCollection(LinkedHashSet::new));
+
+        String outerSelect = allResultColumns.stream().map(col -> "MAX(" + col + ") as " + col).collect(Collectors.joining(", "));
+
+        // 2. Assemblatge
+        return "SELECT agrupacio, " + outerSelect + " FROM (" + unionSubqueries + ") GROUP BY agrupacio ORDER BY agrupacio";
+    }
+
+    // ====================================================================================
+    // UTILS DE FORMAT I SELECT
+    // ====================================================================================
+
+    private String getTaulaSubQuerySelects(List<IndicadorAgregacio> indicadorsAgregacio, PeriodeUnitat unitatParaSuffix) {
         return indicadorsAgregacio.stream()
-                .map(ind -> getSimpleQuerySelect(ind.getAgregacio(), ind.getIndicadorCodi()) )
-                .collect(Collectors.joining(", "));
+            .map(IndicadorAgregacio::getIndicadorCodi)
+            .distinct()
+            .map(indicadorCodi -> getSumIndicadorQuery(indicadorCodi) + getIndicadorSuffix(indicadorCodi, unitatParaSuffix))
+            .collect(Collectors.joining(", "));
     }
 
-    /** Com {@link #getTaulaSubQuerySelects}, però només els noms d'alias (un per indicadorCodi únic). */
-    private List<String> getTaulaSubQueryAliases(List<IndicadorAgregacio> indicadorsAgregacio) {
-        Map<String, IndicadorAgregacio> unics = new LinkedHashMap<>();
-        indicadorsAgregacio.forEach(ind -> unics.putIfAbsent(ind.getIndicadorCodi(), ind));
-        return unics.keySet().stream().map(codi -> "sum_fets" + getIndicadorSuffix(codi)).collect(Collectors.toList());
-    }
-
-    /**
-     * `COALESCE(agg.sum_fets_X, 0) AS sum_fets_X` per cada indicador, per convertir en 0 el valor d'un
-     * indicador als períodes que el LEFT JOIN contra el calendari sintètic no ha trobat cap fet coincident.
-     */
-    private String getTaulaSubQueryCoalesceColumns(List<IndicadorAgregacio> indicadorsAgregacio) {
-        return getTaulaSubQueryAliases(indicadorsAgregacio).stream()
-                .map(alias -> "COALESCE(agg." + alias + ", 0) AS " + alias)
-                .collect(Collectors.joining(", "));
-    }
-
-    /** Prefixa cada columna d'una llista separada per comes (p. ex. "anualitat, trimestre") amb un alias de taula. */
-    private static String qualifyColumns(String tableAlias, String columns) {
-        return java.util.Arrays.stream(columns.split(",\\s*"))
-                .map(c -> tableAlias + "." + c.trim())
-                .collect(Collectors.joining(", "));
-    }
-
-    /** Condició d'igualtat entre dues taules per a cada columna d'una llista separada per comes. */
-    private static String getPeriodesJoinCondition(String leftAlias, String rightAlias, String columns) {
-        return java.util.Arrays.stream(columns.split(",\\s*"))
-                .map(c -> leftAlias + "." + c.trim() + " = " + rightAlias + "." + c.trim())
-                .collect(Collectors.joining(" AND "));
-    }
-
-    /**
-     * Genera un calendari sintètic amb un període (dia, setmana, mes, trimestre o any, segons {@code unitat})
-     * per cada dia entre `:dataInici` i `:dataFi`, sense duplicats — per poder fer un LEFT JOIN contra
-     * l'agregació real i garantir una fila per període encara que no hi hagi cap fet (vegeu getGraficUnIndicadorQuery
-     * / getGraficVarisIndicadorsQuery). Els càlculs d'any/trimestre/mes/setmana/dia repliquen exactament els de
-     * {@code TempsEntity} (constructor), perquè coincideixin amb els valors reals de com_est_temps.
-     */
-    private String getPeriodesRangeQuery(PeriodeUnitat unitat) {
-        String cols = generateGroupConditions(unitat).replace("t.", "");
-        return "(SELECT DISTINCT " + cols + " FROM (" +
-                "SELECT EXTRACT(YEAR FROM d) AS anualitat, TO_NUMBER(TO_CHAR(d,'Q')) AS trimestre, " +
-                "EXTRACT(MONTH FROM d) AS mes, TO_NUMBER(TO_CHAR(d,'IW')) AS setmana, EXTRACT(DAY FROM d) AS dia " +
-                "FROM (SELECT :dataInici + LEVEL - 1 AS d FROM dual CONNECT BY LEVEL <= (:dataFi - :dataInici + 1))" +
-                ") cal)";
-    }
-
-
-
-    private String getGraficQuerySelect(IndicadorAgregacio indicadorAgregacio) {
-        return getSimpleQuerySelect(indicadorAgregacio.getAgregacio());
-    }
-
-    private String getSimpleQuerySelect(TableColumnsEnum agregacio) {
-        return getSimpleQuerySelect(agregacio, null);
-    }
-    private String getSimpleQuerySelect(TableColumnsEnum agregacio, String indicadorCodi) {
-        String suffix = getIndicadorSuffix(indicadorCodi);
+    private String getSimpleQuerySelect(TableColumnsEnum agregacio, String indicadorCodi, PeriodeUnitat unitat) {
+        String suffix = getIndicadorSuffix(indicadorCodi, unitat);
         switch (agregacio) {
-            case AVERAGE:
-                return "AVG(sum_fets" + suffix + ") AS average_result" + suffix;
-            case FIRST_SEEN:
-                return "CASE WHEN SUM(sum_fets" + suffix + ") > 0 THEN MIN(data) ELSE NULL END AS first_seen" + suffix;
-            case LAST_SEEN:
-                return "CASE WHEN SUM(sum_fets" + suffix + ") > 0 THEN MAX(data) ELSE NULL END AS last_seen" + suffix;
-            default:
-                return "SUM(sum_fets" + suffix + ") AS total_sum" + suffix;
+            case AVERAGE: return "AVG(sum_fets" + suffix + ") AS average_result" + suffix;
+            case FIRST_SEEN: return "CASE WHEN SUM(sum_fets" + suffix + ") > 0 THEN MIN(data) ELSE NULL END AS first_seen" + suffix;
+            case LAST_SEEN: return "CASE WHEN SUM(sum_fets" + suffix + ") > 0 THEN MAX(data) ELSE NULL END AS last_seen" + suffix;
+            default: return "SUM(sum_fets" + suffix + ") AS total_sum" + suffix;
         }
+    }
+
+    private static String getIndicadorSuffix(String indicadorCodi, PeriodeUnitat unitat) {
+        String base = indicadorCodi != null ? "_" + indicadorCodi : "";
+        return unitat != null ? base + "_" + unitat.name() : base;
     }
 
     private static String getSumIndicadorQuery(String indicadorCodi) {
         return String.format(SUM_INDICADOR_TEMPLATE, indicadorCodi);
     }
 
-    /**
-     * Com {@link #getSumIndicadorQuery(String)}, però si l'indicador és una FORMULA (té termesFormula), en
-     * lloc d'un únic JSON_VALUE genera la suma/resta dels JSON_VALUE de tots els seus indicadors component
-     * -dins del mateix SUM(...), perquè el càlcul es faci fila a fila abans d'agregar-.
-     */
-    private static String getSumIndicadorQuery(IndicadorAgregacio indicadorAgregacio) {
-        List<IndicadorFormulaTermeResolt> termes = indicadorAgregacio != null ? indicadorAgregacio.getTermesFormula() : null;
-        if (termes == null || termes.isEmpty()) {
-            return getSumIndicadorQuery(indicadorAgregacio.getIndicadorCodi());
-        }
-        String expressio = termes.stream()
-                .map(terme -> (OperadorFormulaEnum.RESTA.equals(terme.getOperador()) ? "- " : "+ ")
-                        + String.format(INDICADOR_VALUE_EXPR_TEMPLATE, terme.getIndicadorCodi()))
-                .collect(Collectors.joining(" "));
-        if (expressio.startsWith("+ ")) {
-            // El primer terme sempre és positiu: no cal el "+" inicial.
-            expressio = expressio.substring(2);
-        }
-        return " SUM(" + expressio + ") AS sum_fets";
-    }
-
     private static String getDimensionValueQuery(String dimensioCodi) {
         return String.format(DIMENSION_VALUE_TEMPLATE, dimensioCodi);
     }
 
-
-    /*
-     * Genera la condició SQL per filtrar resultats segons valors de dimensions especificats.
-     * Construeix una condició SQL que inclou els valors de filtre proporcionats per a cada dimensió.
-     *
-     * @param dimensionsFiltre Un mapa on la clau és el codi de la dimensió i el valor és una llista de valors a filtrar.
-     *                         Si el mapa és null o buit, es retorna una cadena buida.
-     * @param seguretat Restricció de seguretat d'entitat/òrgan a aplicar (null si no cal cap restricció).
-     * @return Una cadena que representa la condició SQL generada. Si no hi ha condicions vàlides, retorna una cadena buida.
-     */
-    static String generateDimensionConditions(Map<String, List<String>> dimensionsFiltre, SeguretatFiltreSql seguretat) {
-        String dimensionsPart = "";
-        if (dimensionsFiltre != null && !dimensionsFiltre.isEmpty()) {
-            dimensionsPart = dimensionsFiltre.entrySet().stream()
-                    .filter(entry -> entry.getKey() != null && entry.getValue() != null && !entry.getValue().isEmpty())
-                    .map(entry -> {
-                        String codi = escapeSqlLiteral(entry.getKey());
-                        List<String> valors = entry.getValue();
-
-                        if (valors.size() == 1) {
-                            return "AND" + getDimensionValueQuery(codi) + "= '" + escapeSqlLiteral(valors.get(0)) + "' ";
-                        } else {
-                            String valorsStr = valors.stream().map(valor -> "'" + escapeSqlLiteral(valor) + "'").collect(Collectors.joining(","));
-                            return "AND" + getDimensionValueQuery(codi) + "IN (" + valorsStr + ") ";
-                        }
-                    })
-                    .collect(Collectors.joining(" "));
-        }
-        return dimensionsPart + generateSecurityCondition(seguretat);
+    static String generateDimensionConditions(Map<String, List<String>> dimensionsFiltre) {
+        if (dimensionsFiltre == null || dimensionsFiltre.isEmpty()) return "";
+        return dimensionsFiltre.entrySet().stream()
+            .filter(entry -> entry.getKey() != null && entry.getValue() != null && !entry.getValue().isEmpty())
+            .map(entry -> {
+                String codi = entry.getKey();
+                List<String> valors = entry.getValue();
+                if (valors.size() == 1) {
+                    return " AND " + getDimensionValueQuery(codi) + "= '" + valors.get(0) + "' ";
+                } else {
+                    String valorsStr = valors.stream().map(valor -> "'" + valor + "'").collect(Collectors.joining(","));
+                    return " AND " + getDimensionValueQuery(codi) + " IN (" + valorsStr + ") ";
+                }
+            }).collect(Collectors.joining(" "));
     }
 
-    /**
-     * Genera la condició de seguretat d'entitat/òrgan (vegeu DashboardSeguretatHelper): una unió (OR) entre com a
-     * màxim dues dimensions, ja que l'usuari ha de veure les dades si l'entitat és una de les permeses, O si l'òrgan
-     * (o un ascendent seu) ho és - a diferència de la resta de condicions d'aquest mètode, que sempre són un AND.
-     * <p>
-     * Si la restricció és aplicable (seguretat != null) però cap valor és permès (p. ex. l'usuari té permisos
-     * d'entitat/òrgan, però cap n'aplica a aquesta app en concret), es denega explícitament (fail-closed) en lloc de
-     * no afegir cap condició - el que deixaria veure totes les files.
-     */
-    private static String generateSecurityCondition(SeguretatFiltreSql seguretat) {
-        if (seguretat == null || !seguretat.isActiva()) {
-            return "";
-        }
-        List<String> clausules = new java.util.ArrayList<>();
-        if (seguretat.getDimensioEntitatCodi() != null && seguretat.getValorsEntitatPermesos() != null && !seguretat.getValorsEntitatPermesos().isEmpty()) {
-            clausules.add(buildSecurityInClause(seguretat.getDimensioEntitatCodi(), seguretat.getValorsEntitatPermesos()));
-        }
-        if (seguretat.getDimensioOrganCodi() != null && seguretat.getValorsOrganPermesos() != null && !seguretat.getValorsOrganPermesos().isEmpty()) {
-            clausules.add(buildSecurityInClause(seguretat.getDimensioOrganCodi(), seguretat.getValorsOrganPermesos()));
-        }
-        if (clausules.isEmpty()) {
-            return " AND 1 = 0 ";
-        }
-        return " AND (" + String.join(" OR ", clausules) + ") ";
-    }
-
-    private static String buildSecurityInClause(String dimensioCodi, List<String> valors) {
-        String valorsStr = valors.stream().map(v -> "'" + escapeSqlLiteral(v) + "'").collect(Collectors.joining(","));
-        return getDimensionValueQuery(escapeSqlLiteral(dimensioCodi)) + "IN (" + valorsStr + ")";
-    }
-
-    /**
-     * Escapa cometes simples per evitar SQL injection. Els valors de dimensions provenen de dades enviades per
-     * les apps externes (JSON arbitrari), així que no es poden considerar segures per a concatenació directa a SQL.
-     */
-    private static String escapeSqlLiteral(String value) {
-        return value == null ? null : value.replace("'", "''");
-    }
-
-    /** Retorna el camp d'agrupació, que mostrarem i emprarem al frontal. **/
     private static String generateGraficAgrupacioConditions(PeriodeUnitat tempsAgregacio) {
         switch (tempsAgregacio) {
             case SETMANA: return "anualitat || '/' || LPAD(setmana, 2, '0')";
@@ -755,43 +441,24 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
         }
     }
 
-    private static String generateGroupConditions(PeriodeUnitat tempsAgregacio) {
-        if (tempsAgregacio == null)
-            return "t.anualitat, t.trimestre, t.mes, t.setmana, t.dia";
-
-        switch (tempsAgregacio) {
-            case SETMANA: return "t.anualitat, t.trimestre, t.mes, t.setmana";
-            case MES: return "t.anualitat, t.trimestre, t.mes";
-            case TRIMESTRE: return "t.anualitat, t.trimestre";
-            case ANY: return "t.anualitat";
-            default: return "t.anualitat, t.trimestre, t.mes, t.setmana, t.dia";
+    private int getPeriodLevel(PeriodeUnitat unitat) {
+        if (unitat == null) return 0;
+        switch (unitat) {
+            case DIA: return 1;
+            case SETMANA: return 2;
+            case MES: return 3;
+            case TRIMESTRE: return 4;
+            case ANY: return 5;
+            default: return 0;
         }
     }
 
-    private static String generateGroupConditions(boolean average, PeriodeUnitat unitatAgregacio) {
-
-        if (average) {
-            return "GROUP BY " + getGrupping(unitatAgregacio);
-        } else {
-            return "GROUP BY t.data";
-        }
-    }
-
-    private static String getGrupping(PeriodeUnitat unitatAgregacio) {
-        if (unitatAgregacio != null) {
-            switch (unitatAgregacio) {
-                case DIA: return "t.anualitat, t.trimestre, t.mes, t.setmana, t.dia";
-                case SETMANA: return "t.anualitat, t.trimestre, t.mes, t.setmana";
-                case MES: return "t.anualitat, t.trimestre, t.mes";
-                case TRIMESTRE: return "t.anualitat, t.trimestre";
-                case ANY: return "t.anualitat";
+    private TableColumnsEnum getRealGraficAgregacio(TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio, PeriodeUnitat tempsAgregacio) {
+        if (agregacio == TableColumnsEnum.AVERAGE && unitatAgregacio != null && tempsAgregacio != null) {
+            if (getPeriodLevel(unitatAgregacio) > getPeriodLevel(tempsAgregacio)) {
+                return TableColumnsEnum.SUM;
             }
         }
-        return "t.data";
+        return agregacio;
     }
-
-    private static String getIndicadorSuffix(String indicadorCodi) {
-        return indicadorCodi != null ? "_" + indicadorCodi : "";
-    }
-
 }

@@ -117,7 +117,7 @@ public interface FetRepositoryCustom {
             PeriodeUnitat tempsAgregacio,
             SeguretatFiltreSql seguretat);
 
-    List<Map<String, String>> getValorsGraficUnIndicadorAmdDescomposicio(
+    List<Map<String, String>> getValorsGraficUnIndicadorAmbDescomposicio(
             Long entornAppId,
             LocalDate dataInici,
             LocalDate dataFi,
@@ -127,7 +127,7 @@ public interface FetRepositoryCustom {
             PeriodeUnitat tempsAgregacio,
             SeguretatFiltreSql seguretat);
 
-    List<Map<String, String>> getValorsGraficUnIndicadorAmdDescomposicio(
+    List<Map<String, String>> getValorsGraficUnIndicadorAmbDescomposicio(
             Long entornAppId,
             LocalDate dataInici,
             LocalDate dataFi,

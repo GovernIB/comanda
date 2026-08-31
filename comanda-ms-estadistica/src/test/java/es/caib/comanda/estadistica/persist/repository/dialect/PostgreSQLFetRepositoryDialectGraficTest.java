@@ -9,11 +9,13 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PostgreSQLFetRepositoryDialectGraficTest {
 
@@ -24,114 +26,249 @@ public class PostgreSQLFetRepositoryDialectGraficTest {
         dialect = new PostgreSQLFetRepositoryDialect();
     }
 
+    private static String removeConsecutiveSpaces(String input) {
+        if (input == null) return null;
+        return input.replaceAll("\\s+", " ").trim();
+    }
+
+    @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource("provideGetGraficUnIndicadorQueryTestCases")
+    void testGetGraficUnIndicadorQueryParameterized(String testName, Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, PeriodeUnitat tempsAgregacio, String expectedQuery) {
+        String query = removeConsecutiveSpaces(dialect.getGraficUnIndicadorQuery(dimensionsFiltre, indicadorAgregacio, tempsAgregacio));
+        assertNotNull(query);
+        assertTrue(query.equals(expectedQuery), "Query should be: " + expectedQuery + "\nActual query: " + query);
+        System.out.println("Query: " + query);
+    }
+
+    private static Stream<Arguments> provideGetGraficUnIndicadorQueryTestCases() {
+        return Stream.of(
+            Arguments.of("Null dimensions, SUM aggregation, MES period", null, createIndicadorAgregacio("visites", TableColumnsEnum.SUM, PeriodeUnitat.MES), PeriodeUnitat.MES,
+                removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes, 2, '0') AS agrupacio, SUM(sum_fets_visites_MES) AS total_sum_visites_MES " +
+                    "FROM ( SELECT t.anualitat, t.trimestre, t.mes, " +
+                    "SUM((f.indicadors_json->>'visites')::numeric) AS sum_fets_visites_MES " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes) " +
+                    "GROUP BY anualitat, trimestre, mes ORDER BY agrupacio")),
+            Arguments.of("Empty dimensions, AVERAGE aggregation, SETMANA period", new HashMap<>(), createIndicadorAgregacio("visites", TableColumnsEnum.AVERAGE, PeriodeUnitat.SETMANA), PeriodeUnitat.MES,
+                removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes, 2, '0') AS agrupacio, AVG(sum_fets_visites_SETMANA) AS average_result_visites_SETMANA " +
+                    "FROM ( SELECT t.anualitat, t.trimestre, t.mes, t.setmana, " +
+                    "SUM((f.indicadors_json->>'visites')::numeric) AS sum_fets_visites_SETMANA " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes, t.setmana) " +
+                    "GROUP BY anualitat, trimestre, mes ORDER BY agrupacio")),
+            Arguments.of("Single dimension with single value, PERCENTAGE aggregation, TRIMESTRE period", Map.of("departament", List.of("RRHH")), createIndicadorAgregacio("visites", TableColumnsEnum.PERCENTAGE, PeriodeUnitat.MES), PeriodeUnitat.TRIMESTRE,
+                removeConsecutiveSpaces("SELECT anualitat || '/' || trimestre AS agrupacio, SUM(sum_fets_visites_MES) AS total_sum_visites_MES " +
+                    "FROM ( SELECT t.anualitat, t.trimestre, t.mes, " +
+                    "SUM((f.indicadors_json->>'visites')::numeric) AS sum_fets_visites_MES " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi AND f.dimensions_json->>'departament' = 'RRHH' " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes) " +
+                    "GROUP BY anualitat, trimestre ORDER BY agrupacio")),
+            Arguments.of("Single dimension with multiple values, FIRST_SEEN aggregation, ANY period", Map.of("departament", List.of("RRHH", "IT")), createIndicadorAgregacio("visites", TableColumnsEnum.FIRST_SEEN, PeriodeUnitat.MES), PeriodeUnitat.ANY,
+                removeConsecutiveSpaces("SELECT anualitat AS agrupacio, CASE WHEN SUM(sum_fets_visites_DIA) > 0 THEN MIN(data) ELSE NULL END AS first_seen_visites_DIA " +
+                    "FROM ( SELECT t.anualitat, t.trimestre, t.mes, t.setmana, t.dia, " +
+                    "SUM((f.indicadors_json->>'visites')::numeric) AS sum_fets_visites_DIA " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi AND f.dimensions_json->>'departament' IN ('RRHH','IT') " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes, t.setmana, t.dia) " +
+                    "GROUP BY anualitat ORDER BY agrupacio")),
+            Arguments.of("Multiple dimensions with mixed values, LAST_SEEN aggregation, DIA period", new LinkedHashMap<>() {{ put("departament", List.of("RRHH", "IT")); put("area", List.of("Finance")); }}, createIndicadorAgregacio("visites", TableColumnsEnum.LAST_SEEN, PeriodeUnitat.DIA), PeriodeUnitat.MES,
+                removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes, 2, '0') AS agrupacio, CASE WHEN SUM(sum_fets_visites_DIA) > 0 THEN MAX(data) ELSE NULL END AS last_seen_visites_DIA " +
+                    "FROM ( SELECT t.anualitat, t.trimestre, t.mes, t.setmana, t.dia, " +
+                    "SUM((f.indicadors_json->>'visites')::numeric) AS sum_fets_visites_DIA " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
+                    "AND f.dimensions_json->>'departament' IN ('RRHH','IT') AND f.dimensions_json->>'area' = 'Finance' " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes, t.setmana, t.dia) " +
+                    "GROUP BY anualitat, trimestre, mes ORDER BY agrupacio"))
+        );
+    }
+
+    @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource("provideGetGraficUnIndicadorAmbDescomposicioQueryWithTempsAgregacioTestCases")
+    void testGetGraficUnIndicadorAmbDescomposicioQueryWithTempsAgregacioParameterized(String testName, Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio, String expectedQuery) {
+        String query = removeConsecutiveSpaces(dialect.getGraficUnIndicadorAmbDescomposicioAndAgrupacioQuery(dimensionsFiltre, indicadorAgregacio, dimensioDescomposicioCodi, tempsAgregacio));
+        assertNotNull(query);
+        assertTrue(query.equals(expectedQuery), "Query should be: " + expectedQuery + "\nActual query: " + query);
+        System.out.println("Query: " + query);
+    }
+
+    private static Stream<Arguments> provideGetGraficUnIndicadorAmbDescomposicioQueryWithTempsAgregacioTestCases() {
+        return Stream.of(
+            Arguments.of("Null dimensions, SUM aggregation, 'aplicacio' descomposicio, MES period", null, createIndicadorAgregacio("visites", TableColumnsEnum.SUM, PeriodeUnitat.MES), "aplicacio", PeriodeUnitat.MES,
+                removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes, 2, '0') AS agrupacio, descomposicio, SUM(sum_fets_visites_MES) AS total_sum_visites_MES " +
+                    "FROM ( SELECT t.anualitat, t.trimestre, t.mes, f.dimensions_json->>'aplicacio' AS descomposicio, " +
+                    "SUM((f.indicadors_json->>'visites')::numeric) AS sum_fets_visites_MES " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes, f.dimensions_json->>'aplicacio' ) " +
+                    "GROUP BY anualitat, trimestre, mes, descomposicio ORDER BY agrupacio, descomposicio")),
+            Arguments.of("Empty dimensions, AVERAGE aggregation, 'departament' descomposicio, SETMANA period", new HashMap<>(), createIndicadorAgregacio("visites", TableColumnsEnum.AVERAGE, PeriodeUnitat.SETMANA), "departament", PeriodeUnitat.MES,
+                removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes, 2, '0') AS agrupacio, descomposicio, AVG(sum_fets_visites_SETMANA) AS average_result_visites_SETMANA " +
+                    "FROM ( SELECT t.anualitat, t.trimestre, t.mes, t.setmana, f.dimensions_json->>'departament' AS descomposicio, " +
+                    "SUM((f.indicadors_json->>'visites')::numeric) AS sum_fets_visites_SETMANA " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes, t.setmana, f.dimensions_json->>'departament' ) " +
+                    "GROUP BY anualitat, trimestre, mes, descomposicio ORDER BY agrupacio, descomposicio")),
+            Arguments.of("Single dimension with single value, PERCENTAGE aggregation, 'area' descomposicio, TRIMESTRE period", Map.of("departament", List.of("RRHH")), createIndicadorAgregacio("visites", TableColumnsEnum.PERCENTAGE, PeriodeUnitat.MES), "area", PeriodeUnitat.TRIMESTRE,
+                removeConsecutiveSpaces("SELECT anualitat || '/' || trimestre AS agrupacio, descomposicio, SUM(sum_fets_visites_MES) AS total_sum_visites_MES " +
+                    "FROM ( SELECT t.anualitat, t.trimestre, t.mes, f.dimensions_json->>'area' AS descomposicio, " +
+                    "SUM((f.indicadors_json->>'visites')::numeric) AS sum_fets_visites_MES " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi AND f.dimensions_json->>'departament' = 'RRHH' " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes, f.dimensions_json->>'area' ) " +
+                    "GROUP BY anualitat, trimestre, descomposicio ORDER BY agrupacio, descomposicio")),
+            Arguments.of("Single dimension with multiple values, FIRST_SEEN aggregation, 'usuari' descomposicio, ANY period", Map.of("departament", List.of("RRHH", "IT")), createIndicadorAgregacio("visites", TableColumnsEnum.FIRST_SEEN, PeriodeUnitat.MES), "usuari", PeriodeUnitat.ANY,
+                removeConsecutiveSpaces("SELECT anualitat AS agrupacio, descomposicio, CASE WHEN SUM(sum_fets_visites_DIA) > 0 THEN MIN(data) ELSE NULL END AS first_seen_visites_DIA " +
+                    "FROM ( SELECT t.anualitat, t.trimestre, t.mes, t.setmana, t.dia, f.dimensions_json->>'usuari' AS descomposicio, " +
+                    "SUM((f.indicadors_json->>'visites')::numeric) AS sum_fets_visites_DIA " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi AND f.dimensions_json->>'departament' IN ('RRHH','IT') " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes, t.setmana, t.dia, f.dimensions_json->>'usuari' ) " +
+                    "GROUP BY anualitat, descomposicio ORDER BY agrupacio, descomposicio")),
+            Arguments.of("Multiple dimensions with mixed values, LAST_SEEN aggregation, 'aplicacio' descomposicio, DIA period", new LinkedHashMap<>() {{ put("departament", List.of("RRHH", "IT")); put("area", List.of("Finance")); }}, createIndicadorAgregacio("visites", TableColumnsEnum.LAST_SEEN, PeriodeUnitat.DIA), "aplicacio", PeriodeUnitat.MES,
+                removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes, 2, '0') AS agrupacio, descomposicio, CASE WHEN SUM(sum_fets_visites_DIA) > 0 THEN MAX(data) ELSE NULL END AS last_seen_visites_DIA " +
+                    "FROM ( SELECT t.anualitat, t.trimestre, t.mes, t.setmana, t.dia, f.dimensions_json->>'aplicacio' AS descomposicio, " +
+                    "SUM((f.indicadors_json->>'visites')::numeric) AS sum_fets_visites_DIA " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
+                    "AND f.dimensions_json->>'departament' IN ('RRHH','IT') AND f.dimensions_json->>'area' = 'Finance' " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes, t.setmana, t.dia, f.dimensions_json->>'aplicacio' ) " +
+                    "GROUP BY anualitat, trimestre, mes, descomposicio ORDER BY agrupacio, descomposicio"))
+        );
+    }
+
+    @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource("provideGetGraficUnIndicadorAmbDescomposicioQueryTestCases")
+    void testGetGraficUnIndicadorAmbDescomposicioQueryParameterized(String testName, Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, String expectedQuery) {
+        String query = removeConsecutiveSpaces(dialect.getGraficUnIndicadorAmbDescomposicioQuery(dimensionsFiltre, indicadorAgregacio, dimensioDescomposicioCodi));
+        assertNotNull(query);
+        assertTrue(query.equals(expectedQuery), "Query should be: " + expectedQuery + "\nActual query: " + query);
+        System.out.println("Query: " + query);
+    }
+
+    private static Stream<Arguments> provideGetGraficUnIndicadorAmbDescomposicioQueryTestCases() {
+        return Stream.of(
+            Arguments.of("Null dimensions, SUM aggregation, 'aplicacio' descomposicio", null, createIndicadorAgregacio("visites", TableColumnsEnum.SUM, PeriodeUnitat.MES), "aplicacio",
+                removeConsecutiveSpaces("SELECT f.dimensions_json->>'aplicacio' AS agrupacio, " +
+                    "SUM((f.indicadors_json->>'visites')::numeric) AS sum_fets " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
+                    "GROUP BY f.dimensions_json->>'aplicacio' ORDER BY agrupacio")),
+            Arguments.of("Empty dimensions, AVERAGE aggregation, 'departament' descomposicio", new HashMap<>(), createIndicadorAgregacio("visites", TableColumnsEnum.AVERAGE, PeriodeUnitat.MES), "departament",
+                removeConsecutiveSpaces("SELECT f.dimensions_json->>'departament' AS agrupacio, " +
+                    "SUM((f.indicadors_json->>'visites')::numeric) AS sum_fets " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
+                    "GROUP BY f.dimensions_json->>'departament' ORDER BY agrupacio")),
+            Arguments.of("Single dimension with single value, PERCENTAGE aggregation, 'area' descomposicio", Map.of("departament", List.of("RRHH")), createIndicadorAgregacio("visites", TableColumnsEnum.PERCENTAGE, PeriodeUnitat.MES), "area",
+                removeConsecutiveSpaces("SELECT f.dimensions_json->>'area' AS agrupacio, " +
+                    "SUM((f.indicadors_json->>'visites')::numeric) AS sum_fets " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi AND f.dimensions_json->>'departament' = 'RRHH' " +
+                    "GROUP BY f.dimensions_json->>'area' ORDER BY agrupacio")),
+            Arguments.of("Single dimension with multiple values, FIRST_SEEN aggregation, 'usuari' descomposicio", Map.of("departament", List.of("RRHH", "IT")), createIndicadorAgregacio("visites", TableColumnsEnum.FIRST_SEEN, PeriodeUnitat.MES), "usuari",
+                removeConsecutiveSpaces("SELECT f.dimensions_json->>'usuari' AS agrupacio, " +
+                    "SUM((f.indicadors_json->>'visites')::numeric) AS sum_fets " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi AND f.dimensions_json->>'departament' IN ('RRHH','IT') " +
+                    "GROUP BY f.dimensions_json->>'usuari' ORDER BY agrupacio")),
+            Arguments.of("Multiple dimensions with mixed values, LAST_SEEN aggregation, 'aplicacio' descomposicio", new LinkedHashMap<>() {{ put("departament", List.of("RRHH", "IT")); put("area", List.of("Finance")); }}, createIndicadorAgregacio("visites", TableColumnsEnum.LAST_SEEN, PeriodeUnitat.MES), "aplicacio",
+                removeConsecutiveSpaces("SELECT f.dimensions_json->>'aplicacio' AS agrupacio, " +
+                    "SUM((f.indicadors_json->>'visites')::numeric) AS sum_fets " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
+                    "AND f.dimensions_json->>'departament' IN ('RRHH','IT') AND f.dimensions_json->>'area' = 'Finance' " +
+                    "GROUP BY f.dimensions_json->>'aplicacio' ORDER BY agrupacio")),
+            Arguments.of("Different indicator code, SUM aggregation, 'departament' descomposicio", Map.of("area", List.of("Finance")), createIndicadorAgregacio("sessions", TableColumnsEnum.SUM, PeriodeUnitat.MES), "departament",
+                removeConsecutiveSpaces("SELECT f.dimensions_json->>'departament' AS agrupacio, " +
+                    "SUM((f.indicadors_json->>'sessions')::numeric) AS sum_fets " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi AND f.dimensions_json->>'area' = 'Finance' " +
+                    "GROUP BY f.dimensions_json->>'departament' ORDER BY agrupacio"))
+        );
+    }
+
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("provideGetGraficVarisIndicadorsQueryTestCases")
-    void testGetGraficVarisIndicadorsQueryParameterized(
-            String testName,
-            Map<String, List<String>> dimensionsFiltre,
-            List<IndicadorAgregacio> indicadorsAgregacio,
-            PeriodeUnitat tempsAgregacio,
-            String expectedQuery) {
-
-        String actualQuery = dialect.getGraficVarisIndicadorsQuery(dimensionsFiltre, indicadorsAgregacio, tempsAgregacio, null);
-        assertEquals(expectedQuery, removeConsecutiveSpaces(actualQuery), "Failed test case: " + testName);
+    void testGetGraficVarisIndicadorsQueryParameterized(String testName, Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, PeriodeUnitat tempsAgregacio, String expectedQuery) {
+        String query = removeConsecutiveSpaces(dialect.getGraficVarisIndicadorsQuery(dimensionsFiltre, indicadorsAgregacio, tempsAgregacio));
+        assertNotNull(query);
+        assertTrue(query.equals(expectedQuery), "Query should be: " + expectedQuery + "\nActual query: " + query);
+        System.out.println("Query: " + query);
     }
 
     private static Stream<Arguments> provideGetGraficVarisIndicadorsQueryTestCases() {
         return Stream.of(
-                // Test 1: Null dimensions, single indicator with SUM aggregation, MES period
-                Arguments.of(
-                        "Null dimensions, single indicator with SUM aggregation, MES period",
-                        null,
-                        List.of(createIndicadorAgregacio("visites", TableColumnsEnum.SUM, null)),
-                        PeriodeUnitat.MES,
-                        removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes::text, 2, '0') as agrupacio, " +
-                                "SUM(sum_fets_visites) AS total_sum_visites " +
-                                "FROM ( " +
-                                "SELECT periodes.anualitat, periodes.trimestre, periodes.mes, " +
-                                "COALESCE(agg.sum_fets_visites, 0) AS sum_fets_visites " +
-                                "FROM (SELECT DISTINCT anualitat, trimestre, mes FROM (" +
-                                "SELECT EXTRACT(YEAR FROM d)::int AS anualitat, EXTRACT(QUARTER FROM d)::int AS trimestre, " +
-                                "EXTRACT(MONTH FROM d)::int AS mes, EXTRACT(WEEK FROM d)::int AS setmana, EXTRACT(DAY FROM d)::int AS dia " +
-                                "FROM generate_series(:dataInici::date, :dataFi::date, interval '1 day') AS s(d)" +
-                                ") cal) periodes " +
-                                "LEFT JOIN ( SELECT t.anualitat, t.trimestre, t.mes, " +
-                                "SUM((f.indicadors_json::jsonb->>'visites')::numeric) AS sum_fets_visites " +
-                                "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
-                                "WHERE f.entorn_app_id = :entornAppId " +
-                                "AND t.data BETWEEN :dataInici AND :dataFi " +
-                                "GROUP BY t.anualitat, t.trimestre, t.mes " +
-                                ") agg ON periodes.anualitat = agg.anualitat AND periodes.trimestre = agg.trimestre AND periodes.mes = agg.mes" +
-                                ") " +
-                                "GROUP BY anualitat, trimestre, mes " +
-                                "ORDER BY agrupacio")
-                ),
-
-                // Test 2: Single dimension with single value, multiple indicators with different aggregations, TRIMESTRE period
-                Arguments.of(
-                        "Single dimension with single value, multiple indicators with different aggregations, TRIMESTRE period",
-                        Map.of("departament", List.of("RRHH")),
-                        List.of(
-                            createIndicadorAgregacio("visites", TableColumnsEnum.SUM, PeriodeUnitat.MES),
-                            createIndicadorAgregacio("sessions", TableColumnsEnum.FIRST_SEEN, PeriodeUnitat.MES)
-                        ),
-                        PeriodeUnitat.TRIMESTRE,
-                        removeConsecutiveSpaces("SELECT agrupacio, " +
-                                "SUM(sum_fets_visites) AS total_sum_visites, " +
-                                "CASE WHEN SUM(sum_fets_sessions) > 0 THEN MIN(data) ELSE NULL END AS first_seen_sessions " +
-                                "FROM ( " +
-                                "SELECT t.data, t.anualitat, t.trimestre, t.mes, " +
-                                "anualitat || '/' || trimestre AS agrupacio, " +
-                                "SUM((f.indicadors_json::jsonb->>'visites')::numeric) AS sum_fets_visites, " +
-                                "SUM((f.indicadors_json::jsonb->>'sessions')::numeric) AS sum_fets_sessions " +
-                                "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
-                                "WHERE f.entorn_app_id = :entornAppId " +
-                                "AND t.data BETWEEN :dataInici AND :dataFi " +
-                                "AND f.dimensions_json::jsonb->>'departament' = 'RRHH' " +
-                                "GROUP BY t.data, t.anualitat, t.trimestre, t.mes) " +
-                                "GROUP BY agrupacio " +
-                                "ORDER BY agrupacio")
-                ),
-
-                // Test 3: Multiple indicators, one is AVERAGE, ANY period
-                Arguments.of(
-                        "Multiple indicators, one is AVERAGE, ANY period",
-                        Map.of("departament", List.of("RRHH", "IT")),
-                        List.of(
-                            createIndicadorAgregacio("visites", TableColumnsEnum.SUM, PeriodeUnitat.ANY),
-                            createIndicadorAgregacio("sessions", TableColumnsEnum.AVERAGE, PeriodeUnitat.ANY)
-                        ),
-                        PeriodeUnitat.ANY,
-                        removeConsecutiveSpaces("SELECT anualitat as agrupacio, " +
-                                "SUM(sum_fets_visites) AS total_sum_visites, " +
-                                "AVG(sum_fets_sessions) AS average_result_sessions " +
-                                "FROM ( " +
-                                "SELECT periodes.anualitat, " +
-                                "COALESCE(agg.sum_fets_visites, 0) AS sum_fets_visites, " +
-                                "COALESCE(agg.sum_fets_sessions, 0) AS sum_fets_sessions " +
-                                "FROM (SELECT DISTINCT anualitat FROM (" +
-                                "SELECT EXTRACT(YEAR FROM d)::int AS anualitat, EXTRACT(QUARTER FROM d)::int AS trimestre, " +
-                                "EXTRACT(MONTH FROM d)::int AS mes, EXTRACT(WEEK FROM d)::int AS setmana, EXTRACT(DAY FROM d)::int AS dia " +
-                                "FROM generate_series(:dataInici::date, :dataFi::date, interval '1 day') AS s(d)" +
-                                ") cal) periodes " +
-                                "LEFT JOIN ( SELECT t.anualitat, " +
-                                "SUM((f.indicadors_json::jsonb->>'visites')::numeric) AS sum_fets_visites, " +
-                                "SUM((f.indicadors_json::jsonb->>'sessions')::numeric) AS sum_fets_sessions " +
-                                "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
-                                "WHERE f.entorn_app_id = :entornAppId " +
-                                "AND t.data BETWEEN :dataInici AND :dataFi " +
-                                "AND f.dimensions_json::jsonb->>'departament' IN ('RRHH','IT') " +
-                                "GROUP BY t.anualitat " +
-                                ") agg ON periodes.anualitat = agg.anualitat" +
-                                ") " +
-                                "GROUP BY anualitat " +
-                                "ORDER BY agrupacio")
-                )
+            Arguments.of("Null dimensions, single indicator with SUM aggregation, MES period", null, List.of(createIndicadorAgregacio("visites", TableColumnsEnum.SUM, PeriodeUnitat.MES)), PeriodeUnitat.MES,
+                removeConsecutiveSpaces("SELECT agrupacio, " +
+                    "SUM(sum_fets_visites_MES) AS total_sum_visites_MES " +
+                    "FROM ( SELECT t.anualitat, t.trimestre, t.mes, " +
+                    "anualitat || '/' || LPAD(mes, 2, '0') AS agrupacio, " +
+                    "SUM((f.indicadors_json->>'visites')::numeric) AS sum_fets_visites_MES " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes) " +
+                    "GROUP BY agrupacio ORDER BY agrupacio")),
+            Arguments.of("Empty dimensions, multiple indicators with same aggregation unit, SETMANA period", new HashMap<>(), List.of(createIndicadorAgregacio("visites", TableColumnsEnum.SUM, PeriodeUnitat.SETMANA), createIndicadorAgregacio("sessions", TableColumnsEnum.AVERAGE, PeriodeUnitat.SETMANA)), PeriodeUnitat.MES,
+                removeConsecutiveSpaces("SELECT agrupacio, " +
+                    "SUM(sum_fets_visites_SETMANA) AS total_sum_visites_SETMANA, " +
+                    "AVG(sum_fets_sessions_SETMANA) AS average_result_sessions_SETMANA " +
+                    "FROM ( SELECT t.anualitat, t.trimestre, t.mes, t.setmana, " +
+                    "anualitat || '/' || LPAD(mes, 2, '0') AS agrupacio, " +
+                    "SUM((f.indicadors_json->>'visites')::numeric) AS sum_fets_visites_SETMANA, " +
+                    "SUM((f.indicadors_json->>'sessions')::numeric) AS sum_fets_sessions_SETMANA " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes, t.setmana) " +
+                    "GROUP BY agrupacio ORDER BY agrupacio")),
+            Arguments.of("Single dimension, mixed aggregations requiring UNION (SUM MES + FIRST_SEEN)", Map.of("departament", List.of("RRHH")), List.of(createIndicadorAgregacio("visites", TableColumnsEnum.SUM, PeriodeUnitat.MES), createIndicadorAgregacio("sessions", TableColumnsEnum.FIRST_SEEN, PeriodeUnitat.MES)), PeriodeUnitat.TRIMESTRE,
+                removeConsecutiveSpaces("SELECT agrupacio, MAX(total_sum_visites_MES) as total_sum_visites_MES, MAX(first_seen_sessions_DIA) as first_seen_sessions_DIA " +
+                    "FROM (SELECT anualitat || '/' || trimestre AS agrupacio, SUM(sum_fets_visites_MES) AS total_sum_visites_MES, null AS first_seen_sessions_DIA " +
+                    "FROM ( SELECT t.anualitat, t.trimestre, t.mes, " +
+                    "SUM((f.indicadors_json->>'visites')::numeric) AS sum_fets_visites_MES " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi AND f.dimensions_json->>'departament' = 'RRHH' " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes) GROUP BY anualitat, trimestre " +
+                    "UNION ALL SELECT anualitat || '/' || trimestre AS agrupacio, null AS total_sum_visites_MES, CASE WHEN SUM(sum_fets_sessions_DIA) > 0 THEN MIN(data) ELSE NULL END AS first_seen_sessions_DIA " +
+                    "FROM ( SELECT t.anualitat, t.trimestre, t.mes, t.setmana, t.dia, " +
+                    "SUM((f.indicadors_json->>'sessions')::numeric) AS sum_fets_sessions_DIA " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi AND f.dimensions_json->>'departament' = 'RRHH' " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes, t.setmana, t.dia) GROUP BY anualitat, trimestre) " +
+                    "GROUP BY agrupacio ORDER BY agrupacio")),
+            Arguments.of("Single dimension, mixed aggregations requiring UNION (SUM MES + LAST_SEEN)", Map.of("departament", List.of("RRHH", "IT")), List.of(createIndicadorAgregacio("visites", TableColumnsEnum.SUM, PeriodeUnitat.MES), createIndicadorAgregacio("sessions", TableColumnsEnum.LAST_SEEN, PeriodeUnitat.MES)), PeriodeUnitat.ANY,
+                removeConsecutiveSpaces("SELECT agrupacio, MAX(total_sum_visites_MES) as total_sum_visites_MES, MAX(last_seen_sessions_DIA) as last_seen_sessions_DIA " +
+                    "FROM (SELECT anualitat AS agrupacio, SUM(sum_fets_visites_MES) AS total_sum_visites_MES, null AS last_seen_sessions_DIA " +
+                    "FROM ( SELECT t.anualitat, t.trimestre, t.mes, " +
+                    "SUM((f.indicadors_json->>'visites')::numeric) AS sum_fets_visites_MES " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi AND f.dimensions_json->>'departament' IN ('RRHH','IT') " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes) GROUP BY anualitat " +
+                    "UNION ALL SELECT anualitat AS agrupacio, null AS total_sum_visites_MES, CASE WHEN SUM(sum_fets_sessions_DIA) > 0 THEN MAX(data) ELSE NULL END AS last_seen_sessions_DIA " +
+                    "FROM ( SELECT t.anualitat, t.trimestre, t.mes, t.setmana, t.dia, " +
+                    "SUM((f.indicadors_json->>'sessions')::numeric) AS sum_fets_sessions_DIA " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi AND f.dimensions_json->>'departament' IN ('RRHH','IT') " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes, t.setmana, t.dia) GROUP BY anualitat) " +
+                    "GROUP BY agrupacio ORDER BY agrupacio")),
+            Arguments.of("Multiple dimensions with mixed values, multiple indicators with same aggregation unit, DIA period", new LinkedHashMap<>() {{ put("departament", List.of("RRHH", "IT")); put("area", List.of("Finance")); }}, List.of(createIndicadorAgregacio("visites", TableColumnsEnum.SUM, PeriodeUnitat.DIA), createIndicadorAgregacio("sessions", TableColumnsEnum.PERCENTAGE, PeriodeUnitat.DIA)), PeriodeUnitat.MES,
+                removeConsecutiveSpaces("SELECT agrupacio, " +
+                    "SUM(sum_fets_visites_DIA) AS total_sum_visites_DIA, " +
+                    "SUM(sum_fets_sessions_DIA) AS total_sum_sessions_DIA " +
+                    "FROM ( SELECT t.anualitat, t.trimestre, t.mes, t.setmana, t.dia, " +
+                    "anualitat || '/' || LPAD(mes, 2, '0') AS agrupacio, " +
+                    "SUM((f.indicadors_json->>'visites')::numeric) AS sum_fets_visites_DIA, " +
+                    "SUM((f.indicadors_json->>'sessions')::numeric) AS sum_fets_sessions_DIA " +
+                    "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
+                    "AND f.dimensions_json->>'departament' IN ('RRHH','IT') AND f.dimensions_json->>'area' = 'Finance' " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes, t.setmana, t.dia) " +
+                    "GROUP BY agrupacio ORDER BY agrupacio"))
         );
-    }
-
-    private static String removeConsecutiveSpaces(String sql) {
-        return sql.replaceAll("\\s+", " ").trim();
     }
 
     private static IndicadorAgregacio createIndicadorAgregacio(String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio) {

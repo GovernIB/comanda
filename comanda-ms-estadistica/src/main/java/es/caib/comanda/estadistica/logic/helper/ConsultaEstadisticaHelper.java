@@ -301,12 +301,12 @@ public class ConsultaEstadisticaHelper {
 
             } else if (UN_INDICADOR_AMB_DESCOMPOSICIO.equals(widget.getTipusDades())) {
 
-                DimensioEntity descomposicioDimensio = widget.getDescomposicioDimensio() != null ? widget.getDescomposicioDimensio() : null;
+                DimensioEntity descomposicioDimensio = widget.getDescomposicioDimensio();
                 boolean agruparPerDimensioDescomposicio = Boolean.TRUE.equals(widget.getAgruparPerDimensioDescomposicio());
                 if (agruparPerDimensioDescomposicio) {
                     labels.add(Map.of("id", "agrupacio", "label", descomposicioDimensio.getNom()));
                     labels.add(Map.of("id", indicadorAgregacio.getIndicadorCodi(), "label", StringUtils.defaultString(indicadorInfo.getTitol())));
-                    files = fetRepository.getValorsGraficUnIndicadorAmdDescomposicio(
+                    files = fetRepository.getValorsGraficUnIndicadorAmbDescomposicio(
                         dadesComunsConsulta.getEntornAppId(),
                         dadesComunsConsulta.getPeriodeDates().getStart(),
                         dadesComunsConsulta.getPeriodeDates().getEnd(),
@@ -320,7 +320,7 @@ public class ConsultaEstadisticaHelper {
                     labels.add(Map.of("id", "agrupacio", "label", getLabelAgrupacioTemporal(tempsAgrupacio)));
                     labels.add(Map.of("id", "descomposicio", "label", descomposicioDimensio.getNom()));
                     labels.add(Map.of("id", indicadorAgregacio.getIndicadorCodi(), "label", StringUtils.defaultString(indicadorInfo.getTitol())));
-                    files = fetRepository.getValorsGraficUnIndicadorAmdDescomposicio(
+                    files = fetRepository.getValorsGraficUnIndicadorAmbDescomposicio(
                         dadesComunsConsulta.getEntornAppId(),
                         dadesComunsConsulta.getPeriodeDates().getStart(),
                         dadesComunsConsulta.getPeriodeDates().getEnd(),

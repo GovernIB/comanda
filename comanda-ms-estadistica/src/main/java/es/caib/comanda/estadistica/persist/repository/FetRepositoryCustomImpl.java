@@ -1,7 +1,6 @@
 package es.caib.comanda.estadistica.persist.repository;
 
 import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
-import es.caib.comanda.estadistica.logic.intf.model.consulta.SeguretatFiltreSql;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
@@ -9,8 +8,7 @@ import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 import es.caib.comanda.estadistica.persist.repository.dialect.FetRepositoryDialectFactory;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
@@ -32,15 +30,14 @@ import java.util.stream.Collectors;
  *
  * @author Límit Tecnologies
  */
-@Slf4j
+@RequiredArgsConstructor
 @Repository
 public class FetRepositoryCustomImpl implements FetRepositoryCustom {
 
     @PersistenceContext
     private EntityManager entityManager;
 
-    @Autowired
-    private FetRepositoryDialectFactory dialectFactory;
+    private final FetRepositoryDialectFactory dialectFactory;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final NumberFormat NUMBER_FORMAT = NumberFormat.getInstance(Locale.ENGLISH);
@@ -60,12 +57,13 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
             String dimensioCodi,
             String dimensioValor) {
 
-        String sql = dialectFactory.getDialect().getFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery(dimensioCodi);
+        String sql = dialectFactory.getDialect().getFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery();
 
         Query query = entityManager.createNativeQuery(sql, FetEntity.class);
         query.setParameter("entornAppId", entornAppId);
         query.setParameter("dataInici", dataInici);
         query.setParameter("dataFi", dataFi);
+        query.setParameter("dimensioCodi", dimensioCodi);
         query.setParameter("dimensioValor", dimensioValor);
 
         return query.getResultList();
@@ -79,12 +77,13 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
             String dimensioCodi,
             List<String> valors) {
 
-        String sql = dialectFactory.getDialect().getFindByEntornAppIdAndTempsDataBetweenAndDimensionValuesQuery(dimensioCodi);
+        String sql = dialectFactory.getDialect().getFindByEntornAppIdAndTempsDataBetweenAndDimensionValuesQuery();
 
         Query query = entityManager.createNativeQuery(sql, FetEntity.class);
         query.setParameter("entornAppId", entornAppId);
         query.setParameter("dataInici", dataInici);
         query.setParameter("dataFi", dataFi);
+        query.setParameter("dimensioCodi", dimensioCodi);
         query.setParameter("dimensioValor", valors);
 
         return query.getResultList();
@@ -128,12 +127,13 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
             LocalDate dataInici,
             LocalDate dataFi,
             Map<String, List<String>> dimensionsFiltre,
-            IndicadorAgregacio indicadorAgregacio,
-            SeguretatFiltreSql seguretat) {
+            IndicadorAgregacio indicadorAgregacio) {
 
+        String indicadorCodi = indicadorAgregacio.getIndicadorCodi();
         TableColumnsEnum agregacio = indicadorAgregacio.getAgregacio();
+        PeriodeUnitat unitatAgregacio = indicadorAgregacio.getUnitatAgregacio();
 
-        String sql = dialectFactory.getDialect().getSimpleQuery(dimensionsFiltre, indicadorAgregacio, seguretat);
+        String sql = dialectFactory.getDialect().getSimpleQuery(dimensionsFiltre, indicadorCodi, agregacio, unitatAgregacio);
 
         Query query = entityManager.createNativeQuery(sql);
         query.setParameter("entornAppId", entornAppId);
@@ -144,9 +144,9 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
     }
 
     @Override
-    public List<Map<String, String>> getValorsGraficUnIndicador(Long entornAppId, LocalDate dataInici, LocalDate dataFi, Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat) {
+    public List<Map<String, String>> getValorsGraficUnIndicador(Long entornAppId, LocalDate dataInici, LocalDate dataFi, Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, PeriodeUnitat tempsAgregacio) {
 
-        String sql = dialectFactory.getDialect().getGraficUnIndicadorQuery(dimensionsFiltre, indicadorAgregacio, tempsAgregacio, seguretat);
+        String sql = dialectFactory.getDialect().getGraficUnIndicadorQuery(dimensionsFiltre, indicadorAgregacio, tempsAgregacio);
 
         Query query = entityManager.createNativeQuery(sql);
         query.setParameter("entornAppId", entornAppId);
@@ -171,9 +171,9 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
     }
 
     @Override
-    public List<Map<String, String>> getValorsGraficUnIndicadorAmdDescomposicio(Long entornAppId, LocalDate dataInici, LocalDate dataFi, Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat) {
+    public List<Map<String, String>> getValorsGraficUnIndicadorAmbDescomposicio(Long entornAppId, LocalDate dataInici, LocalDate dataFi, Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, PeriodeUnitat tempsAgregacio) {
 
-        String sql = dialectFactory.getDialect().getGraficUnIndicadorAmbDescomposicioAndAgrupacioQuery(dimensionsFiltre, indicadorAgregacio, dimensioDescomposicioCodi, tempsAgregacio, seguretat);
+        String sql = dialectFactory.getDialect().getGraficUnIndicadorAmbDescomposicioAndAgrupacioQuery(dimensionsFiltre, indicadorAgregacio, dimensioDescomposicioCodi, tempsAgregacio);
 
         Query query = entityManager.createNativeQuery(sql);
         query.setParameter("entornAppId", entornAppId);
@@ -199,9 +199,9 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
     }
 
     @Override
-    public List<Map<String, String>> getValorsGraficUnIndicadorAmdDescomposicio(Long entornAppId, LocalDate dataInici, LocalDate dataFi, Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi, SeguretatFiltreSql seguretat) {
+    public List<Map<String, String>> getValorsGraficUnIndicadorAmbDescomposicio(Long entornAppId, LocalDate dataInici, LocalDate dataFi, Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, String dimensioDescomposicioCodi) {
 
-        String sql = dialectFactory.getDialect().getGraficUnIndicadorAmbDescomposicioQuery(dimensionsFiltre, indicadorAgregacio, dimensioDescomposicioCodi, seguretat);
+        String sql = dialectFactory.getDialect().getGraficUnIndicadorAmbDescomposicioQuery(dimensionsFiltre, indicadorAgregacio, dimensioDescomposicioCodi);
 
         Query query = entityManager.createNativeQuery(sql);
         query.setParameter("entornAppId", entornAppId);
@@ -226,10 +226,10 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
     }
 
     @Override
-    public List<Map<String, String>> getValorsGraficVarisIndicadors(Long entornAppId, LocalDate dataInici, LocalDate dataFi, Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, PeriodeUnitat tempsAgregacio, SeguretatFiltreSql seguretat) {
+    public List<Map<String, String>> getValorsGraficVarisIndicadors(Long entornAppId, LocalDate dataInici, LocalDate dataFi, Map<String, List<String>> dimensionsFiltre, List<IndicadorAgregacio> indicadorsAgregacio, PeriodeUnitat tempsAgregacio) {
 
         ColumnesConsulta columnesConsulta = new ColumnesConsulta(indicadorsAgregacio);
-        String sql = dialectFactory.getDialect().getGraficVarisIndicadorsQuery(dimensionsFiltre, columnesConsulta.getIndicadorsFiltrats(), tempsAgregacio, seguretat);
+        String sql = dialectFactory.getDialect().getGraficVarisIndicadorsQuery(dimensionsFiltre, columnesConsulta.getIndicadorsFiltrats(), tempsAgregacio);
 
         Query query = entityManager.createNativeQuery(sql);
         query.setParameter("entornAppId", entornAppId);
@@ -263,12 +263,11 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
             LocalDate dataFi,
             Map<String, List<String>> dimensionsFiltre,
             List<IndicadorAgregacio> indicadorsAgregacio,
-            String dimensioAgrupacioCodi,
-            SeguretatFiltreSql seguretat) throws ReportGenerationException {
+            String dimensioAgrupacioCodi) throws ReportGenerationException {
 
         try {
             ColumnesConsulta columnesConsulta = new ColumnesConsulta(indicadorsAgregacio);
-            String sql = dialectFactory.getDialect().getTaulaQuery(dimensionsFiltre, columnesConsulta.getIndicadorsFiltrats(), dimensioAgrupacioCodi, seguretat);
+            String sql = dialectFactory.getDialect().getTaulaQuery(dimensionsFiltre, columnesConsulta.getIndicadorsFiltrats(), dimensioAgrupacioCodi);
 
             Query query = entityManager.createNativeQuery(sql);
             query.setParameter("entornAppId", entornAppId);
@@ -370,18 +369,7 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
     }
 
     private double parseRowValue(Map<String, String> row, String columnName) {
-        String value = row.get(columnName);
-        if (value == null || value.isBlank()) {
-            return 0;
-        }
-        try {
-            return Double.parseDouble(value.replace(",", "."));
-        } catch (NumberFormatException e) {
-            // Pot passar si la columna base d'un percentatge no és numèrica (p. ex. FIRST_SEEN/LAST_SEEN, una data)
-            // en widgets guardats abans de la validació que ho impedeix. Es tracta com a 0 en lloc de trencar la consulta.
-            log.warn("Valor no numèric a la columna {} en calcular un percentatge: {}", columnName, value);
-            return 0;
-        }
+        return Double.parseDouble(row.get(columnName).replace(",", "."));
     }
 
 
@@ -450,12 +438,15 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
         }
 
         private List<IndicadorAgregacio> filterIndicadorsQuery(List<IndicadorAgregacio> indicadors) {
+            Map<String, List<IndicadorAgregacio>> porCodigo = indicadors.stream()
+                .collect(Collectors.groupingBy(IndicadorAgregacio::getIndicadorCodi));
             return indicadors.stream()
-                    .filter(i -> !TableColumnsEnum.PERCENTAGE.equals(i.getAgregacio()) ||
-                            indicadors.stream()
-                                    .filter(j -> j.getIndicadorCodi().equals(i.getIndicadorCodi()))
-                                    .allMatch(j -> isPercentageOrAverage(j.getAgregacio())))
-                    .collect(Collectors.toList());
+                .filter(i -> {
+                    List<IndicadorAgregacio> delMismoCodigo = porCodigo.get(i.getIndicadorCodi());
+                    boolean todosSonPercOAvg = delMismoCodigo.stream().allMatch(j -> isPercentageOrAverage(j.getAgregacio()));
+                    return !TableColumnsEnum.PERCENTAGE.equals(i.getAgregacio()) || todosSonPercOAvg;
+                })
+                .collect(Collectors.toList());
         }
 
         private String[] generateColumnNames(List<IndicadorAgregacio> indicadors) {

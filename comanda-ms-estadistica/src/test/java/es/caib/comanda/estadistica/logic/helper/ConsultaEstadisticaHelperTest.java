@@ -9,13 +9,10 @@ import es.caib.comanda.client.model.EntornRef;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisuals;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.*;
-import es.caib.comanda.estadistica.logic.intf.model.enumerats.OrdreDireccioEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
-import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus;
-import es.caib.comanda.estadistica.logic.intf.model.estadistiques.OperadorFormulaEnum;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeMode;
@@ -33,8 +30,6 @@ import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DimensioRepository;
 import es.caib.comanda.estadistica.persist.repository.FetRepository;
-import es.caib.comanda.estadistica.persist.repository.IndicadorFormulaTermeRepository;
-import es.caib.comanda.estadistica.persist.repository.IndicadorRepository;
 import es.caib.comanda.estadistica.persist.repository.UnitatOrganitzativaRepository;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import org.apache.commons.lang3.NotImplementedException;
@@ -71,13 +66,9 @@ class ConsultaEstadisticaHelperTest {
     @Mock private DashboardItemRepository dashboardItemRepository;
     @Mock private UnitatOrganitzativaRepository unitatOrganitzativaRepository;
     @Mock private DimensioRepository dimensioRepository;
-    @Mock private IndicadorRepository indicadorRepository;
-    @Mock private IndicadorFormulaTermeRepository indicadorFormulaTermeRepository;
     @Mock private AtributsVisualsHelper atributsVisualsHelper;
     @Mock private EstadisticaClientHelper estadisticaClientHelper;
     @Mock private DashboardStyleResolverHelper dashboardStyleResolverHelper;
-    @Mock private DashboardSeguretatHelper dashboardSeguretatHelper;
-    @Mock private es.caib.comanda.ms.logic.helper.AuthenticationHelper authenticationHelper;
 
     @InjectMocks
     private ConsultaEstadisticaHelper consultaEstadisticaHelper;
@@ -115,9 +106,6 @@ class ConsultaEstadisticaHelperTest {
 
         lenient().when(atributsVisualsHelper.getAtributsVisuals(any(DashboardItemEntity.class))).thenReturn(null);
         lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class))).thenReturn(null);
-        // Per defecte l'usuari és exempt (administrador/consulta): sense restricció de seguretat de dades.
-        // Els testos que verifiquen específicament la lògica de DashboardSeguretatHelper sobreescriuen aquest mock.
-        lenient().when(dashboardSeguretatHelper.resoldre(any())).thenReturn(SeguretatDadesResultat.builder().exempt(true).build());
     }
 
     // ========================================================================
@@ -282,7 +270,7 @@ class ConsultaEstadisticaHelperTest {
         item.setId(1L);
         when(dashboardItemRepository.findById(1L)).thenThrow(new RuntimeException("DB Error"));
 
-        assertThatThrownBy(() -> consultaEstadisticaHelper.getDadesWidget(item, false, null))
+        assertThatThrownBy(() -> consultaEstadisticaHelper.getDadesWidget(item, false))
             .isInstanceOf(ReportGenerationException.class)
             .hasMessageContaining("DB Error");
     }
@@ -320,11 +308,11 @@ class ConsultaEstadisticaHelperTest {
     void calculateValorSimple_quanPeriodeNull_llavorsRetornaNull() {
         EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
 
-        String result = (String) ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "calculateValorSimple", widget, (PeriodeResolverHelper.PeriodeDates) null, 1L, null, null);
+        String result = (String) ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "calculateValorSimple", widget, (PeriodeResolverHelper.PeriodeDates) null, 1L);
         assertThat(result).isNull();
 
         PeriodeResolverHelper.PeriodeDates periode = new PeriodeResolverHelper.PeriodeDates(null, null);
-        result = (String) ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "calculateValorSimple", widget, periode, 1L, null, null);
+        result = (String) ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "calculateValorSimple", widget, periode, 1L);
         assertThat(result).isNull();
     }
 
@@ -337,7 +325,7 @@ class ConsultaEstadisticaHelperTest {
         PeriodeResolverHelper.PeriodeDates periode = new PeriodeResolverHelper.PeriodeDates(LocalDate.now(), LocalDate.now());
 
         // Act
-        String result = (String) ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "calculateCanviPercentual", widget, "100", periode, 1L, null, null);
+        String result = (String) ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "calculateCanviPercentual", widget, "100", periode, 1L);
 
         // Assert
         assertThat(result).isNull();
@@ -352,7 +340,7 @@ class ConsultaEstadisticaHelperTest {
         PeriodeResolverHelper.PeriodeDates periode = new PeriodeResolverHelper.PeriodeDates(LocalDate.now(), LocalDate.now());
 
         // Act
-        String result = (String) ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "calculateCanviPercentual", widget, "no-numero", periode, 1L, null, null);
+        String result = (String) ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "calculateCanviPercentual", widget, "no-numero", periode, 1L);
 
         // Assert
         assertThat(result).isNull();
@@ -369,10 +357,10 @@ class ConsultaEstadisticaHelperTest {
         widget.setIndicadorInfo(indicadorTaula);
         widget.setCompararPeriodeAnterior(true);
         PeriodeResolverHelper.PeriodeDates periode = new PeriodeResolverHelper.PeriodeDates(LocalDate.now(), LocalDate.now());
-        when(fetRepository.getValorSimpleAgregat(any(), any(), any(), any(), any(), any())).thenReturn("no-numero");
+        when(fetRepository.getValorSimpleAgregat(any(), any(), any(), any(), any())).thenReturn("no-numero");
 
         // Act
-        String result = (String) ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "calculateCanviPercentual", widget, "100", periode, 1L, null, null);
+        String result = (String) ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "calculateCanviPercentual", widget, "100", periode, 1L);
 
         // Assert
         assertThat(result).isNull();
@@ -410,7 +398,7 @@ class ConsultaEstadisticaHelperTest {
 
         List<Map<String, String>> mockFiles = new ArrayList<>();
         mockFiles.add(new HashMap<>(Map.of("agrupacio", "CODI_1", "col1", "100")));
-        when(fetRepository.getValorsTaulaAgregat(any(), any(), any(), any(), any(), any(), any())).thenReturn(mockFiles);
+        when(fetRepository.getValorsTaulaAgregat(any(), any(), any(), any(), any(), any())).thenReturn(mockFiles);
 
         DimensioEntity dimensioEntity = new DimensioEntity();
         dimensioEntity.setTipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum.ORGAN_GESTOR);
@@ -422,7 +410,7 @@ class ConsultaEstadisticaHelperTest {
         when(unitatOrganitzativaRepository.findByCodiIn(anyList())).thenReturn(Collections.singletonList(uo));
 
         // Act
-        InformeWidgetItem result = (InformeWidgetItem) ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "getDadesWidgetTaula", dashboardItem, dadesComuns, null, null);
+        InformeWidgetItem result = (InformeWidgetItem) ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "getDadesWidgetTaula", dashboardItem, dadesComuns);
 
         // Assert
         assertThat(result).isNotNull();
@@ -449,7 +437,7 @@ class ConsultaEstadisticaHelperTest {
             .build();
 
         // Act & Assert (Cridant directament al mètode privat via reflexió)
-        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "getDadesWidgetGrafic", dashboardItem, dadesComuns, null, null))
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "getDadesWidgetGrafic", dashboardItem, dadesComuns))
             .isInstanceOf(NotImplementedException.class)
             .hasMessageContaining("La configuració de 2 indicadors encara no ha estat implementada");
     }
@@ -564,15 +552,15 @@ class ConsultaEstadisticaHelperTest {
             .periodeDates(new PeriodeResolverHelper.PeriodeDates(LocalDate.of(2023, 1, 1), LocalDate.of(2023, 1, 31)))
             .build();
 
-        when(fetRepository.getValorsGraficVarisIndicadors(any(), any(), any(), any(), any(), any(), any()))
+        when(fetRepository.getValorsGraficVarisIndicadors(any(), any(), any(), any(), any(), any()))
             .thenReturn(Collections.emptyList());
 
         // Act
-        Object result = ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "getDadesWidgetGrafic", dashboardItem, dadesComuns, null, null);
+        Object result = ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "getDadesWidgetGrafic", dashboardItem, dadesComuns);
 
         // Assert
         assertThat(result).isInstanceOf(InformeWidgetGraficItem.class);
-        verify(fetRepository).getValorsGraficVarisIndicadors(any(), any(), any(), any(), any(), any(), any());
+        verify(fetRepository).getValorsGraficVarisIndicadors(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -605,15 +593,15 @@ class ConsultaEstadisticaHelperTest {
             .periodeDates(new PeriodeResolverHelper.PeriodeDates(LocalDate.of(2023, 1, 1), LocalDate.of(2023, 1, 31)))
             .build();
 
-        when(fetRepository.getValorsGraficUnIndicadorAmdDescomposicio(any(), any(), any(), any(), any(), anyString(), any()))
+        when(fetRepository.getValorsGraficUnIndicadorAmbDescomposicio(any(), any(), any(), any(), any(), anyString()))
             .thenReturn(Collections.emptyList());
 
         // Act
-        Object result = ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "getDadesWidgetGrafic", dashboardItem, dadesComuns, null, null);
+        Object result = ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "getDadesWidgetGrafic", dashboardItem, dadesComuns);
 
         // Assert
         assertThat(result).isInstanceOf(InformeWidgetGraficItem.class);
-        verify(fetRepository).getValorsGraficUnIndicadorAmdDescomposicio(any(), any(), any(), any(), any(), eq("dep"), any());
+        verify(fetRepository).getValorsGraficUnIndicadorAmbDescomposicio(any(), any(), any(), any(), any(), eq("dep"));
     }
 
     @Test
@@ -644,11 +632,11 @@ class ConsultaEstadisticaHelperTest {
             .periodeDates(new PeriodeResolverHelper.PeriodeDates(LocalDate.of(2023, 1, 1), LocalDate.of(2023, 1, 31)))
             .build();
 
-        when(fetRepository.getValorsTaulaAgregat(any(), any(), any(), any(), any(), any(), any())).thenReturn(Collections.emptyList());
+        when(fetRepository.getValorsTaulaAgregat(any(), any(), any(), any(), any(), any())).thenReturn(Collections.emptyList());
         when(dimensioRepository.findByCodiAndEntornAppId(anyString(), anyLong())).thenReturn(Optional.of(dimensio));
 
         // Act
-        ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "getDadesWidgetTaula", dashboardItem, dadesComuns, null, null);
+        ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "getDadesWidgetTaula", dashboardItem, dadesComuns);
 
         // Assert
         verify(unitatOrganitzativaRepository, never()).findByCodiIn(anyList());
@@ -738,10 +726,10 @@ class ConsultaEstadisticaHelperTest {
         when(dashboardItemRepository.findById(1L)).thenReturn(Optional.of(item));
         when(estadisticaClientHelper.entornAppFindByAppAndEntorn(any(), any())).thenReturn(EntornApp.builder().id(1L).entorn(EntornRef.builder().id(1L).build()).build());
         when(estadisticaClientHelper.entornById(any())).thenReturn(Entorn.builder().codi("DEV").build());
-        when(fetRepository.getValorsGraficUnIndicador(any(), any(), any(), any(), any(), any(), any())).thenReturn(Collections.emptyList());
+        when(fetRepository.getValorsGraficUnIndicador(any(), any(), any(), any(), any(), any())).thenReturn(Collections.emptyList());
 
         // Act: Cridem al mètode PÚBLIC per cobrir el switch
-        InformeWidgetItem result = consultaEstadisticaHelper.getDadesWidget(item, false, null);
+        InformeWidgetItem result = consultaEstadisticaHelper.getDadesWidget(item, false);
 
         // Assert
         assertThat(result).isInstanceOf(InformeWidgetGraficItem.class);
@@ -772,11 +760,11 @@ class ConsultaEstadisticaHelperTest {
         when(dashboardItemRepository.findById(1L)).thenReturn(Optional.of(item));
         when(estadisticaClientHelper.entornAppFindByAppAndEntorn(any(), any())).thenReturn(EntornApp.builder().id(1L).entorn(EntornRef.builder().id(1L).build()).build());
         when(estadisticaClientHelper.entornById(any())).thenReturn(Entorn.builder().codi("DEV").build());
-        when(fetRepository.getValorsTaulaAgregat(any(), any(), any(), any(), any(), any(), any())).thenReturn(Collections.emptyList());
+        when(fetRepository.getValorsTaulaAgregat(any(), any(), any(), any(), any(), any())).thenReturn(Collections.emptyList());
         when(dimensioRepository.findByCodiAndEntornAppId(any(), any())).thenReturn(Optional.empty());
 
         // Act: Cridem al mètode PÚBLIC per cobrir el switch
-        InformeWidgetItem result = consultaEstadisticaHelper.getDadesWidget(item, false, null);
+        InformeWidgetItem result = consultaEstadisticaHelper.getDadesWidget(item, false);
 
         // Assert
         assertThat(result).isInstanceOf(InformeWidgetTaulaItem.class);
@@ -811,15 +799,15 @@ class ConsultaEstadisticaHelperTest {
             .periodeDates(new PeriodeResolverHelper.PeriodeDates(LocalDate.of(2023, 1, 1), LocalDate.of(2023, 1, 31)))
             .build();
 
-        when(fetRepository.getValorsGraficUnIndicadorAmdDescomposicio(any(), any(), any(), any(), any(), anyString(), any(), any()))
+        when(fetRepository.getValorsGraficUnIndicadorAmbDescomposicio(any(), any(), any(), any(), any(), anyString(), any()))
             .thenReturn(Collections.emptyList());
 
         // Act
-        Object result = ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "getDadesWidgetGrafic", dashboardItem, dadesComuns, null, null);
+        Object result = ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "getDadesWidgetGrafic", dashboardItem, dadesComuns);
 
         // Assert
         assertThat(result).isInstanceOf(InformeWidgetGraficItem.class);
-        verify(fetRepository).getValorsGraficUnIndicadorAmdDescomposicio(any(), any(), any(), any(), any(), eq("dep"), any(), any());
+        verify(fetRepository).getValorsGraficUnIndicadorAmbDescomposicio(any(), any(), any(), any(), any(), eq("dep"), any());
     }
 
     @Test
@@ -848,11 +836,11 @@ class ConsultaEstadisticaHelperTest {
             .periodeDates(new PeriodeResolverHelper.PeriodeDates(LocalDate.of(2023, 1, 1), LocalDate.of(2023, 1, 31)))
             .build();
 
-        when(fetRepository.getValorsTaulaAgregat(any(), any(), any(), any(), any(), any(), any())).thenReturn(Collections.emptyList());
+        when(fetRepository.getValorsTaulaAgregat(any(), any(), any(), any(), any(), any())).thenReturn(Collections.emptyList());
         when(dimensioRepository.findByCodiAndEntornAppId(anyString(), anyLong())).thenReturn(Optional.empty()); // <-- CLAU: EMPTY
 
         // Act
-        Object result = ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "getDadesWidgetTaula", dashboardItem, dadesComuns, null, null);
+        Object result = ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "getDadesWidgetTaula", dashboardItem, dadesComuns);
 
         // Assert
         assertThat(result).isNotNull();
@@ -883,15 +871,15 @@ class ConsultaEstadisticaHelperTest {
             .periodeDates(new PeriodeResolverHelper.PeriodeDates(LocalDate.of(2023, 1, 1), LocalDate.of(2023, 1, 31)))
             .build();
 
-        when(fetRepository.getValorSimpleAgregat(any(), any(), any(), any(), any(), any())).thenReturn("100");
+        when(fetRepository.getValorSimpleAgregat(any(), any(), any(), any(), any())).thenReturn("100");
 
         // Act
-        Object result = ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "getDadesWidgetSimple", dashboardItem, dadesComuns, null, null);
+        Object result = ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "getDadesWidgetSimple", dashboardItem, dadesComuns);
 
         // Assert
         assertThat(result).isInstanceOf(InformeWidgetSimpleItem.class);
         // S'ha de cridar 2 vegades: una per al valor actual i una altra per al previ
-        verify(fetRepository, times(2)).getValorSimpleAgregat(any(), any(), any(), any(), any(), any());
+        verify(fetRepository, times(2)).getValorSimpleAgregat(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -916,15 +904,15 @@ class ConsultaEstadisticaHelperTest {
             .periodeDates(new PeriodeResolverHelper.PeriodeDates(LocalDate.of(2023, 1, 1), LocalDate.of(2023, 1, 31)))
             .build();
 
-        when(fetRepository.getValorSimpleAgregat(any(), any(), any(), any(), any(), any())).thenReturn("100");
+        when(fetRepository.getValorSimpleAgregat(any(), any(), any(), any(), any())).thenReturn("100");
 
         // Act
-        Object result = ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "getDadesWidgetSimple", dashboardItem, dadesComuns, null, null);
+        Object result = ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "getDadesWidgetSimple", dashboardItem, dadesComuns);
 
         // Assert
         assertThat(result).isInstanceOf(InformeWidgetSimpleItem.class);
         // Només es crida 1 vegada, no es calcula el previ
-        verify(fetRepository, times(1)).getValorSimpleAgregat(any(), any(), any(), any(), any(), any());
+        verify(fetRepository, times(1)).getValorSimpleAgregat(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -1083,198 +1071,5 @@ class ConsultaEstadisticaHelperTest {
 
         // Assert
         assertThat(result).isNull();
-    }
-
-    @Test
-    @DisplayName("resoldreTermesFormula: retorna els termes (codi component + operador) quan l'indicador és FORMULA")
-    void resoldreTermesFormula_quanIndicadorEsFormula_llavorsRetornaElsTermesOrdenats() {
-        // Arrange
-        IndicadorEntity formula = new IndicadorEntity();
-        formula.setId(1L);
-        formula.setTipus(IndicadorTipus.FORMULA);
-        when(indicadorRepository.findByCodiAndEntornAppId("TOTAL", 10L)).thenReturn(Optional.of(formula));
-
-        IndicadorEntity ind1 = new IndicadorEntity();
-        ind1.setCodi("IND1");
-        IndicadorEntity ind2 = new IndicadorEntity();
-        ind2.setCodi("IND2");
-
-        IndicadorFormulaTermeEntity terme1 = new IndicadorFormulaTermeEntity();
-        terme1.setIndicadorComponent(ind1);
-        terme1.setOperador(OperadorFormulaEnum.SUMA);
-        IndicadorFormulaTermeEntity terme2 = new IndicadorFormulaTermeEntity();
-        terme2.setIndicadorComponent(ind2);
-        terme2.setOperador(OperadorFormulaEnum.RESTA);
-        when(indicadorFormulaTermeRepository.findByIndicadorFormulaIdOrderByOrdreAsc(1L))
-            .thenReturn(List.of(terme1, terme2));
-
-        // Act
-        @SuppressWarnings("unchecked")
-        List<IndicadorFormulaTermeResolt> result = (List<IndicadorFormulaTermeResolt>) ReflectionTestUtils.invokeMethod(
-            consultaEstadisticaHelper, "resoldreTermesFormula", "TOTAL", 10L);
-
-        // Assert
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).getIndicadorCodi()).isEqualTo("IND1");
-        assertThat(result.get(0).getOperador()).isEqualTo(OperadorFormulaEnum.SUMA);
-        assertThat(result.get(1).getIndicadorCodi()).isEqualTo("IND2");
-        assertThat(result.get(1).getOperador()).isEqualTo(OperadorFormulaEnum.RESTA);
-    }
-
-    @Test
-    @DisplayName("resoldreTermesFormula: retorna null quan l'indicador és SIMPLE (comportament habitual, sense fórmula)")
-    void resoldreTermesFormula_quanIndicadorEsSimple_llavorsRetornaNull() {
-        // Arrange
-        IndicadorEntity simple = new IndicadorEntity();
-        simple.setId(2L);
-        simple.setTipus(IndicadorTipus.SIMPLE);
-        when(indicadorRepository.findByCodiAndEntornAppId("visites", 10L)).thenReturn(Optional.of(simple));
-
-        // Act
-        Object result = ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "resoldreTermesFormula", "visites", 10L);
-
-        // Assert
-        assertThat(result).isNull();
-        verifyNoInteractions(indicadorFormulaTermeRepository);
-    }
-
-    @Test
-    @DisplayName("resoldreTermesFormula: retorna null quan l'indicador no existeix")
-    void resoldreTermesFormula_quanIndicadorNoExisteix_llavorsRetornaNull() {
-        // Arrange
-        when(indicadorRepository.findByCodiAndEntornAppId("INEXISTENT", 10L)).thenReturn(Optional.empty());
-
-        // Act
-        Object result = ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "resoldreTermesFormula", "INEXISTENT", 10L);
-
-        // Assert
-        assertThat(result).isNull();
-    }
-
-    // ========================================================================
-    // applyFilesFilterSortLimit
-    // ========================================================================
-
-    private static Map<String, String> fila(String agrupacio, String... colValues) {
-        Map<String, String> row = new LinkedHashMap<>();
-        row.put("agrupacio", agrupacio);
-        for (int i = 0; i < colValues.length; i++) {
-            row.put("col" + (i + 1), colValues[i]);
-        }
-        return row;
-    }
-
-    @Test
-    @DisplayName("applyFilesFilterSortLimit: sense cap opció activa, retorna les files sense canvis")
-    void applyFilesFilterSortLimit_senseOpcions_retornaFilesSenseCanvis() {
-        EstadisticaTaulaWidgetEntity widget = new EstadisticaTaulaWidgetEntity();
-        widget.setAmagarFilesZero(false);
-        List<Map<String, String>> files = List.of(fila("A", "5"), fila("B", "0"));
-
-        List<Map<String, String>> result = ConsultaEstadisticaHelper.applyFilesFilterSortLimit(files, widget);
-
-        assertThat(result).isEqualTo(files);
-    }
-
-    @Test
-    @DisplayName("applyFilesFilterSortLimit: amb amagarFilesZero, elimina només les files amb totes les columnes a zero")
-    void applyFilesFilterSortLimit_ambAmagarFilesZero_eliminaFilesTotesAZero() {
-        EstadisticaTaulaWidgetEntity widget = new EstadisticaTaulaWidgetEntity();
-        widget.setAmagarFilesZero(true);
-        List<Map<String, String>> files = List.of(
-            fila("A", "5", "0"),
-            fila("B", "0", "0"),
-            fila("C", "0", "3")
-        );
-
-        List<Map<String, String>> result = ConsultaEstadisticaHelper.applyFilesFilterSortLimit(files, widget);
-
-        assertThat(result).extracting(row -> row.get("agrupacio")).containsExactly("A", "C");
-    }
-
-    @Test
-    @DisplayName("applyFilesFilterSortLimit: amb columnaOrdenacio i DESC, ordena de major a menor per la columna indicada")
-    void applyFilesFilterSortLimit_ambColumnaOrdenacioDesc_ordenaDeMajorAMenor() {
-        EstadisticaTaulaWidgetEntity widget = new EstadisticaTaulaWidgetEntity();
-        widget.setColumnaOrdenacio(0);
-        widget.setDireccioOrdenacio(OrdreDireccioEnum.DESC);
-        List<Map<String, String>> files = List.of(fila("A", "5"), fila("B", "20"), fila("C", "10"));
-
-        List<Map<String, String>> result = ConsultaEstadisticaHelper.applyFilesFilterSortLimit(files, widget);
-
-        assertThat(result).extracting(row -> row.get("agrupacio")).containsExactly("B", "C", "A");
-    }
-
-    @Test
-    @DisplayName("applyFilesFilterSortLimit: amb columnaOrdenacio i ASC, ordena de menor a major per la columna indicada")
-    void applyFilesFilterSortLimit_ambColumnaOrdenacioAsc_ordenaDeMenorAMajor() {
-        EstadisticaTaulaWidgetEntity widget = new EstadisticaTaulaWidgetEntity();
-        widget.setColumnaOrdenacio(0);
-        widget.setDireccioOrdenacio(OrdreDireccioEnum.ASC);
-        List<Map<String, String>> files = List.of(fila("A", "5"), fila("B", "20"), fila("C", "10"));
-
-        List<Map<String, String>> result = ConsultaEstadisticaHelper.applyFilesFilterSortLimit(files, widget);
-
-        assertThat(result).extracting(row -> row.get("agrupacio")).containsExactly("A", "C", "B");
-    }
-
-    @Test
-    @DisplayName("applyFilesFilterSortLimit: amb columnaOrdenacio i limitResultats, retalla la llista al nombre indicat un cop ordenada")
-    void applyFilesFilterSortLimit_ambLimitResultats_retallaLaLlistaOrdenada() {
-        EstadisticaTaulaWidgetEntity widget = new EstadisticaTaulaWidgetEntity();
-        widget.setColumnaOrdenacio(0);
-        widget.setDireccioOrdenacio(OrdreDireccioEnum.DESC);
-        widget.setLimitResultats(2);
-        List<Map<String, String>> files = List.of(fila("A", "5"), fila("B", "20"), fila("C", "10"));
-
-        List<Map<String, String>> result = ConsultaEstadisticaHelper.applyFilesFilterSortLimit(files, widget);
-
-        assertThat(result).extracting(row -> row.get("agrupacio")).containsExactly("B", "C");
-    }
-
-    @Test
-    @DisplayName("applyFilesFilterSortLimit: limitResultats sense columnaOrdenacio no té cap efecte")
-    void applyFilesFilterSortLimit_ambLimitResultatsSenseColumnaOrdenacio_noTeEfecte() {
-        EstadisticaTaulaWidgetEntity widget = new EstadisticaTaulaWidgetEntity();
-        widget.setLimitResultats(1);
-        List<Map<String, String>> files = List.of(fila("A", "5"), fila("B", "20"));
-
-        List<Map<String, String>> result = ConsultaEstadisticaHelper.applyFilesFilterSortLimit(files, widget);
-
-        assertThat(result).hasSize(2);
-    }
-
-    @Test
-    @DisplayName("applyFilesFilterSortLimit: limitResultats superior al nombre de files no en descarta cap")
-    void applyFilesFilterSortLimit_ambLimitResultatsSuperiorAlNombreDeFiles_noDescartaCap() {
-        EstadisticaTaulaWidgetEntity widget = new EstadisticaTaulaWidgetEntity();
-        widget.setColumnaOrdenacio(0);
-        widget.setDireccioOrdenacio(OrdreDireccioEnum.DESC);
-        widget.setLimitResultats(10);
-        List<Map<String, String>> files = List.of(fila("A", "5"), fila("B", "20"));
-
-        List<Map<String, String>> result = ConsultaEstadisticaHelper.applyFilesFilterSortLimit(files, widget);
-
-        assertThat(result).hasSize(2);
-    }
-
-    @Test
-    @DisplayName("applyFilesFilterSortLimit: combina amagarFilesZero, ordenació i límit en aquest ordre")
-    void applyFilesFilterSortLimit_ambTotesLesOpcions_lesCombinaEnLordreCorrecte() {
-        EstadisticaTaulaWidgetEntity widget = new EstadisticaTaulaWidgetEntity();
-        widget.setAmagarFilesZero(true);
-        widget.setColumnaOrdenacio(0);
-        widget.setDireccioOrdenacio(OrdreDireccioEnum.DESC);
-        widget.setLimitResultats(1);
-        List<Map<String, String>> files = List.of(
-            fila("A", "5"),
-            fila("B", "0"),
-            fila("C", "20")
-        );
-
-        List<Map<String, String>> result = ConsultaEstadisticaHelper.applyFilesFilterSortLimit(files, widget);
-
-        // B (zero) queda exclosa pel filtre, i del que queda (A=5, C=20) el límit 1 amb DESC es queda amb C.
-        assertThat(result).extracting(row -> row.get("agrupacio")).containsExactly("C");
     }
 }
