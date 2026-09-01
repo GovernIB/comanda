@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.persist.repository.dialect;
 
+import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.SeguretatFiltreSql;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
@@ -42,8 +43,14 @@ public class OracleFetRepositoryDialectSimpleTest {
         SeguretatFiltreSql seguretat,
         String expectedQuery) {
 
+        IndicadorAgregacio indicadorAgregacio = IndicadorAgregacio.builder()
+            .indicadorCodi(indicadorCodi)
+            .agregacio(agregacio)
+            .unitatAgregacio(unitatAgregacio)
+            .build();
+
         // Act
-        String query = removeConsecutiveSpaces(dialect.getSimpleQuery(dimensionsFiltre, indicadorCodi, agregacio, unitatAgregacio, seguretat));
+        String query = removeConsecutiveSpaces(dialect.getSimpleQuery(dimensionsFiltre, indicadorAgregacio, seguretat));
 
         // Assert
         assertNotNull(query);

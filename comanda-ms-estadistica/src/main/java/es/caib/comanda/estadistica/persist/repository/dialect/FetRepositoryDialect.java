@@ -59,13 +59,14 @@ public interface FetRepositoryDialect {
      * @param dimensionsFiltre Un mapa on cada clau representa el codi d'una dimensió i el valor és una llista de valors
      *                         a filtrar. Si el mapa és null o buit, es generen només les condicions per entornAppId i rang
      *                         de dates.
-     * @param indicadorCodi El codi de l'indicador sobre el qual s'aplicarà l'agregació.
-     * @param agregacio El tipus d'agregació a aplicar (COUNT, SUM, AVERAGE, FIRST_SEEN, LAST_SEEN, etc.).
-     * @param unitatAgregacio La unitat de temps per a l'agregació interna (pot ser null per a agregacions globals).
+     * @param indicadorAgregacio L'objecte {@link IndicadorAgregacio} amb el codi de l'indicador, el tipus d'agregació
+     *                           (COUNT, SUM, AVERAGE, FIRST_SEEN, LAST_SEEN, etc.), la unitat de temps per a l'agregació
+     *                           interna (pot ser null per a agregacions globals) i, si l'indicador és de tipus FORMULA,
+     *                           els seus termesFormula (necessaris perquè la suma es resolgui fila a fila en lloc de
+     *                           cercar-los directament al JSON de fets, on una fórmula mai hi apareix com a clau).
      * @return Una cadena de text que representa la consulta SQL generada per obtenir el valor agregat.
      */
-    String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio, PeriodeUnitat unitatAgregacio, SeguretatFiltreSql seguretat);
-    //String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, SeguretatFiltreSql seguretat); TODO realment necessit el codi perque
+    String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, SeguretatFiltreSql seguretat);
 
     /**
      * Genera una consulta SQL per obtenir les dades d'un gràfic per a un únic indicador.

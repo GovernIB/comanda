@@ -1,8 +1,10 @@
 package es.caib.comanda.estadistica.persist.repository.dialect;
 
 import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
+import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorFormulaTermeResolt;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.SeguretatFiltreSql;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.OperadorFormulaEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -135,7 +137,7 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
 
     @Test
     void simpleQuery_sum_senseFiltreDimensions_sumaTotesLesFiles() {
-        String sql = dialect().getSimpleQuery(null, "visites", TableColumnsEnum.SUM, null, null);
+        String sql = dialect().getSimpleQuery(null, indicador("visites", TableColumnsEnum.SUM, null), null);
         Map<String, Object> row = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
 
         assertEquals(142.0, num(row, "total_sum"));
@@ -143,7 +145,7 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
 
     @Test
     void simpleQuery_sum_filtreDimensioValorUnic() {
-        String sql = dialect().getSimpleQuery(Map.of("departament", List.of("RRHH")), "visites", TableColumnsEnum.SUM, null, null);
+        String sql = dialect().getSimpleQuery(Map.of("departament", List.of("RRHH")), indicador("visites", TableColumnsEnum.SUM, null), null);
         Map<String, Object> row = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
 
         assertEquals(30.0, num(row, "total_sum"));
@@ -151,7 +153,7 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
 
     @Test
     void simpleQuery_sum_valorDimensioAmbCometaSimple_escapatCorrectament() {
-        String sql = dialect().getSimpleQuery(Map.of("departament", List.of("O'Higgins")), "visites", TableColumnsEnum.SUM, null, null);
+        String sql = dialect().getSimpleQuery(Map.of("departament", List.of("O'Higgins")), indicador("visites", TableColumnsEnum.SUM, null), null);
         Map<String, Object> row = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
 
         assertEquals(100.0, num(row, "total_sum"));
@@ -159,7 +161,7 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
 
     @Test
     void simpleQuery_sum_filtreMultiplesValorsIN() {
-        String sql = dialect().getSimpleQuery(Map.of("departament", List.of("RRHH", "IT")), "visites", TableColumnsEnum.SUM, null, null);
+        String sql = dialect().getSimpleQuery(Map.of("departament", List.of("RRHH", "IT")), indicador("visites", TableColumnsEnum.SUM, null), null);
         Map<String, Object> row = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
 
         assertEquals(42.0, num(row, "total_sum"));
@@ -169,7 +171,7 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
     void simpleQuery_sum_filtreMultiplesDimensionsAND() {
         String sql = dialect().getSimpleQuery(
                 Map.of("departament", List.of("RRHH"), "canal", List.of("web")),
-                "visites", TableColumnsEnum.SUM, null, null);
+                indicador("visites", TableColumnsEnum.SUM, null), null);
         Map<String, Object> row = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
 
         assertEquals(10.0, num(row, "total_sum"));
@@ -177,7 +179,7 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
 
     @Test
     void simpleQuery_average_agrupatPerMes() {
-        String sql = dialect().getSimpleQuery(Map.of("departament", List.of("IT")), "visites", TableColumnsEnum.AVERAGE, PeriodeUnitat.MES, null);
+        String sql = dialect().getSimpleQuery(Map.of("departament", List.of("IT")), indicador("visites", TableColumnsEnum.AVERAGE, PeriodeUnitat.MES), null);
         Map<String, Object> row = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
 
         // IT té dos mesos diferents amb un valor cadascun (mes 2 = 5, mes 4 = 7) -> mitjana (5+7)/2
@@ -189,10 +191,10 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
         Map<String, List<String>> filtre = Map.of("departament", List.of("RRHH"));
 
         Map<String, Object> first = query(
-                dialect().getSimpleQuery(filtre, "visites", TableColumnsEnum.FIRST_SEEN, null, null),
+                dialect().getSimpleQuery(filtre, indicador("visites", TableColumnsEnum.FIRST_SEEN, null), null),
                 baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
         Map<String, Object> last = query(
-                dialect().getSimpleQuery(filtre, "visites", TableColumnsEnum.LAST_SEEN, null, null),
+                dialect().getSimpleQuery(filtre, indicador("visites", TableColumnsEnum.LAST_SEEN, null), null),
                 baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
 
         assertEquals(LocalDate.of(2024, 1, 10), asLocalDate(first, "first_seen"));
@@ -203,7 +205,7 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
     void simpleQuery_aillamentPerEntornAppId() {
         // Entorn 1 amb rang que cobreix 2024 i 2025: ha d'incloure el fet de 2025 (mateix entorn) però mai el
         // fet 6 (visites=9999), que pertany a l'entorn 2.
-        String sql = dialect().getSimpleQuery(null, "visites", TableColumnsEnum.SUM, null, null);
+        String sql = dialect().getSimpleQuery(null, indicador("visites", TableColumnsEnum.SUM, null), null);
         Map<String, Object> row = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2025)).get(0);
 
         assertEquals(192.0, num(row, "total_sum"));
@@ -211,7 +213,7 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
 
     @Test
     void simpleQuery_rangDeDatesInclusiuAAmbduesBandes() {
-        String sql = dialect().getSimpleQuery(Map.of("departament", List.of("RRHH")), "visites", TableColumnsEnum.SUM, null, null);
+        String sql = dialect().getSimpleQuery(Map.of("departament", List.of("RRHH")), indicador("visites", TableColumnsEnum.SUM, null), null);
         Map<String, Object> row = query(sql, baseParams(1L, LocalDate.of(2024, 1, 10), LocalDate.of(2024, 1, 20))).get(0);
 
         assertEquals(30.0, num(row, "total_sum"));
@@ -224,7 +226,7 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
                 .dimensioOrganCodi("canal").valorsOrganPermesos(List.of("presencial"))
                 .build();
 
-        String sql = dialect().getSimpleQuery(null, "visites", TableColumnsEnum.SUM, null, seguretat);
+        String sql = dialect().getSimpleQuery(null, indicador("visites", TableColumnsEnum.SUM, null), seguretat);
         Map<String, Object> row = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
 
         // dept=RRHH OR canal=presencial -> fet1(RRHH,web)=10, fet2(RRHH,presencial)=20, fet4(IT,presencial)=7
@@ -237,7 +239,7 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
                 .dimensioEntitatCodi("departament").valorsEntitatPermesos(List.of())
                 .build();
 
-        String sql = dialect().getSimpleQuery(null, "visites", TableColumnsEnum.SUM, null, seguretat);
+        String sql = dialect().getSimpleQuery(null, indicador("visites", TableColumnsEnum.SUM, null), seguretat);
         Map<String, Object> row = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
 
         assertNull(num(row, "total_sum"));
@@ -247,10 +249,30 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
     void simpleQuery_seguretat_inactivaNoAplicaCapRestriccio() {
         SeguretatFiltreSql seguretat = SeguretatFiltreSql.builder().build(); // cap codi establert -> isActiva()==false
 
-        String sql = dialect().getSimpleQuery(null, "visites", TableColumnsEnum.SUM, null, seguretat);
+        String sql = dialect().getSimpleQuery(null, indicador("visites", TableColumnsEnum.SUM, null), seguretat);
         Map<String, Object> row = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
 
         assertEquals(142.0, num(row, "total_sum"));
+    }
+
+    @Test
+    void simpleQuery_indicadorFormula_sumaElsTermesEnLlocDeCercarElCodiDeLaFormulaAlJson() {
+        // Regressió: un indicador de tipus FORMULA mai apareix com a clau al indicadors_json dels fets (només hi
+        // apareixen els indicadors SIMPLE que la componen), així que getSimpleQuery ha de resoldre'l a partir dels
+        // seus termesFormula igual que ja fan getGraficUnIndicadorQuery/getTaulaQuery, no cercar-lo directament.
+        IndicadorAgregacio formula = IndicadorAgregacio.builder()
+                .indicadorCodi("total")
+                .agregacio(TableColumnsEnum.SUM)
+                .termesFormula(List.of(
+                        IndicadorFormulaTermeResolt.builder().indicadorCodi("visites").operador(OperadorFormulaEnum.SUMA).build(),
+                        IndicadorFormulaTermeResolt.builder().indicadorCodi("sessions").operador(OperadorFormulaEnum.SUMA).build()))
+                .build();
+
+        String sql = dialect().getSimpleQuery(Map.of("departament", List.of("RRHH")), formula, null);
+        Map<String, Object> row = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
+
+        // dept=RRHH -> fet1(visites=10,sessions=2) + fet2(visites=20,sessions=4) = 36
+        assertEquals(36.0, num(row, "total_sum_total"));
     }
 
     // ============================================================================ getGraficUnIndicadorQuery

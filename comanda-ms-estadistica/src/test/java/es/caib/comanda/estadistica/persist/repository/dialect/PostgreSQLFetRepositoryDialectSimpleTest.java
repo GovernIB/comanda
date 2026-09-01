@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.persist.repository.dialect;
 
+import es.caib.comanda.estadistica.logic.intf.model.consulta.IndicadorAgregacio;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.SeguretatFiltreSql;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
@@ -42,7 +43,13 @@ public class PostgreSQLFetRepositoryDialectSimpleTest {
         SeguretatFiltreSql seguretat,
         String expectedQuery) {
 
-        String query = removeConsecutiveSpaces(dialect.getSimpleQuery(dimensionsFiltre, indicadorCodi, agregacio, unitatAgregacio, seguretat));
+        IndicadorAgregacio indicadorAgregacio = IndicadorAgregacio.builder()
+            .indicadorCodi(indicadorCodi)
+            .agregacio(agregacio)
+            .unitatAgregacio(unitatAgregacio)
+            .build();
+
+        String query = removeConsecutiveSpaces(dialect.getSimpleQuery(dimensionsFiltre, indicadorAgregacio, seguretat));
 
         assertNotNull(query);
         assertTrue(query.equals(expectedQuery), "Query should be: " + expectedQuery + "\nActual query: " + query);

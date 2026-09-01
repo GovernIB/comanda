@@ -53,24 +53,28 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
     }
 
     @Override
-    public String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, String indicadorCodi, TableColumnsEnum agregacio,
-                                 PeriodeUnitat unitatAgregacio, SeguretatFiltreSql seguretat) {
+    public String getSimpleQuery(Map<String, List<String>> dimensionsFiltre, IndicadorAgregacio indicadorAgregacio, SeguretatFiltreSql seguretat) {
         // 1. Filtres
         String queryConditions = generateDimensionConditions(dimensionsFiltre) + generateSecurityCondition(seguretat);
+
+        String indicadorCodi = indicadorAgregacio.getIndicadorCodi();
+        TableColumnsEnum agregacio = indicadorAgregacio.getAgregacio();
 
         // Resolem la unitat efectiva (FIRST_SEEN/LAST_SEEN sempre operen a nivell de DIA)
         PeriodeUnitat effectiveUnitat = (agregacio == TableColumnsEnum.FIRST_SEEN || agregacio == TableColumnsEnum.LAST_SEEN)
             ? PeriodeUnitat.DIA
-            : unitatAgregacio;
+            : indicadorAgregacio.getUnitatAgregacio();
 
         // 2. Agrupació interna
         String innerGroupingCols = getInnerGroupingColsForSingle(agregacio, effectiveUnitat);
         String innerSelectCols = innerGroupingCols.isEmpty() ? "" : innerGroupingCols + ", ";
         String innerGroupBy = innerGroupingCols.isEmpty() ? "" : " GROUP BY " + innerGroupingCols;
 
-        // 3. Càlculs (utilitzem effectiveUnitat per al sufix)
+        // 3. Càlculs (utilitzem effectiveUnitat per al sufix). Si l'indicador és una FORMULA, getSumIndicadorQuery
+        // resol els seus termesFormula en lloc de cercar el codi de la fórmula directament al JSON de fets (on mai
+        // hi apareix, perquè només s'hi registren els indicadors SIMPLE que la componen).
         String querySelect = getSimpleQuerySelect(agregacio, indicadorCodi, effectiveUnitat);
-        String innerSumSelect = getSumIndicadorQuery(indicadorCodi) + getIndicadorSuffix(indicadorCodi, effectiveUnitat);
+        String innerSumSelect = getSumIndicadorQuery(indicadorAgregacio) + getIndicadorSuffix(indicadorCodi, effectiveUnitat);
 
         // 4. Assemblatge
         return "SELECT " + querySelect + " FROM ( SELECT " + innerSelectCols + innerSumSelect +

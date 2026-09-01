@@ -133,11 +133,9 @@ public class FetRepositoryCustomImpl implements FetRepositoryCustom {
             IndicadorAgregacio indicadorAgregacio,
             SeguretatFiltreSql seguretat) {
 
-        String indicadorCodi = indicadorAgregacio.getIndicadorCodi();
         TableColumnsEnum agregacio = indicadorAgregacio.getAgregacio();
-        PeriodeUnitat unitatAgregacio = indicadorAgregacio.getUnitatAgregacio();
 
-        String sql = dialectFactory.getDialect().getSimpleQuery(dimensionsFiltre, indicadorCodi, agregacio, unitatAgregacio, seguretat);
+        String sql = dialectFactory.getDialect().getSimpleQuery(dimensionsFiltre, indicadorAgregacio, seguretat);
 
         Query query = entityManager.createNativeQuery(sql);
         query.setParameter("entornAppId", entornAppId);
