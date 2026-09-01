@@ -12,7 +12,7 @@ import java.lang.annotation.*;
 @Constraint(validatedBy = ValidIndicadorFormulaTermeValidator.class)
 public @interface ValidIndicadorFormulaTerme {
 
-    String message() default "Error en la validació del terme de fórmula d'indicador.";
+    String message() default "{es.caib.comanda.estadistica.back.validation.ValidIndicadorFormulaTerme.message}";
 
     Class<?>[] groups() default {};
 

@@ -39,7 +39,7 @@ public class ValidIndicadorFormulaTermeValidator implements ConstraintValidator<
         Long componentId = resource.getIndicadorComponent().getId();
 
         if (formulaId != null && componentId != null && formulaId.equals(componentId)) {
-            context.buildConstraintViolationWithTemplate("Un indicador no es pot referenciar a si mateix")
+            context.buildConstraintViolationWithTemplate("{es.caib.comanda.estadistica.back.validation.ValidIndicadorFormulaTermeValidator.referenciaSiMateix}")
                     .addPropertyNode(IndicadorFormulaTerme.Fields.indicadorComponent)
                     .addConstraintViolation();
             return false;
@@ -47,7 +47,7 @@ public class ValidIndicadorFormulaTermeValidator implements ConstraintValidator<
 
         IndicadorEntity formula = formulaId != null ? indicadorRepository.findById(formulaId).orElse(null) : null;
         if (formula == null || formula.getTipus() != IndicadorTipus.FORMULA) {
-            context.buildConstraintViolationWithTemplate("L'indicador de fórmula no existeix o no és de tipus FORMULA")
+            context.buildConstraintViolationWithTemplate("{es.caib.comanda.estadistica.back.validation.ValidIndicadorFormulaTermeValidator.formulaNoValida}")
                     .addPropertyNode(IndicadorFormulaTerme.Fields.indicadorFormula)
                     .addConstraintViolation();
             isValid = false;
@@ -55,14 +55,14 @@ public class ValidIndicadorFormulaTermeValidator implements ConstraintValidator<
 
         IndicadorEntity component = componentId != null ? indicadorRepository.findById(componentId).orElse(null) : null;
         if (component == null || component.getTipus() != IndicadorTipus.SIMPLE) {
-            context.buildConstraintViolationWithTemplate("L'indicador component no existeix o no és de tipus SIMPLE (no es permeten fórmules niades)")
+            context.buildConstraintViolationWithTemplate("{es.caib.comanda.estadistica.back.validation.ValidIndicadorFormulaTermeValidator.componentNoValid}")
                     .addPropertyNode(IndicadorFormulaTerme.Fields.indicadorComponent)
                     .addConstraintViolation();
             isValid = false;
         }
 
         if (formula != null && component != null && !formula.getEntornAppId().equals(component.getEntornAppId())) {
-            context.buildConstraintViolationWithTemplate("L'indicador component ha de pertànyer al mateix entornApp que la fórmula")
+            context.buildConstraintViolationWithTemplate("{es.caib.comanda.estadistica.back.validation.ValidIndicadorFormulaTermeValidator.entornAppDiferent}")
                     .addPropertyNode(IndicadorFormulaTerme.Fields.indicadorComponent)
                     .addConstraintViolation();
             isValid = false;
