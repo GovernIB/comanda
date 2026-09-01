@@ -26,15 +26,15 @@ const LARGE_SCREEN_MODE_STORAGE_KEY = 'comanda.dashboardView.largeScreenMode';
 const NO_DASHBOARD_FOUND = 'NO_DASHBOARD_FOUND';
 
 /**
- * Recorda, entre sessions, si l'usuari prefereix veure els dashboards a mida real de disseny (1920px,
- * centrats) o escalats per ocupar tot l'ample de pantalles més grans (vegeu DashboardLargeScreenMode).
+ * Recorda, entre sessions, si l'usuari prefereix veure els dashboards escalats per ocupar tot l'ample
+ * disponible (per defecte) o a mida real de disseny (1920px, centrats) — vegeu DashboardLargeScreenMode.
  */
 function useStoredLargeScreenMode(): [DashboardLargeScreenMode, (mode: DashboardLargeScreenMode) => void] {
     const [largeScreenMode, setLargeScreenModeState] = useState<DashboardLargeScreenMode>(() => {
         try {
-            return localStorage.getItem(LARGE_SCREEN_MODE_STORAGE_KEY) === 'fit' ? 'fit' : 'centered';
+            return localStorage.getItem(LARGE_SCREEN_MODE_STORAGE_KEY) === 'centered' ? 'centered' : 'fit';
         } catch {
-            return 'centered';
+            return 'fit';
         }
     });
     const setLargeScreenMode = (mode: DashboardLargeScreenMode) => {

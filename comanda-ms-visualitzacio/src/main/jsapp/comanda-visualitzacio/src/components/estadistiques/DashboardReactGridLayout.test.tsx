@@ -169,7 +169,8 @@ describe('DashboardReactGridLayout', () => {
 
     it('DashboardReactGridLayout_lagraellaTe60ColumnesIFilesQuadrades', () => {
         // Regressió: la graella ha de tenir 60 columnes d'amplada i files el més quadrades possible a
-        // l'amplada de disseny (1920px / 60 columnes = 32px de costat, tant en ample com en alt).
+        // l'amplada de disseny (1680px / 60 columnes = 28px de costat, tant en ample com en alt). 1680px
+        // correspon a una pantalla de 1920px menys els 240px del menú lateral (vegeu DASHBOARD_DESIGN_WIDTH).
         mocks.isEqualMock.mockReturnValue(true);
 
         render(
@@ -182,15 +183,15 @@ describe('DashboardReactGridLayout', () => {
         );
 
         expect(horizontalSubdivisions).toBe(60);
-        expect(DASHBOARD_DESIGN_WIDTH).toBe(1920);
+        expect(DASHBOARD_DESIGN_WIDTH).toBe(1680);
         expect(dashboardRowHeight).toBe(DASHBOARD_DESIGN_WIDTH / horizontalSubdivisions);
         expect(mocks.responsiveProps.cols).toEqual({ md: horizontalSubdivisions });
         expect(mocks.responsiveProps.rowHeight).toBe(dashboardRowHeight);
     });
 
     it('DashboardReactGridLayout_quanElModeEsCenteredIPantallaMesEstreta_noEncongeixIPermetScrollHoritzontal', () => {
-        // Regressió: en mode 'centered', a pantalles més estretes que 1920px NO s'ha d'escalar cap avall
-        // (a diferència del mode 'fit'); s'ha de mantenir la mida real i mostrar scroll horitzontal.
+        // Regressió: en mode 'centered', a pantalles més estretes que l'amplada de disseny NO s'ha d'escalar
+        // cap avall (a diferència del mode 'fit'); s'ha de mantenir la mida real i mostrar scroll horitzontal.
 
         render(
             <DashboardReactGridLayout
@@ -204,7 +205,7 @@ describe('DashboardReactGridLayout', () => {
 
         act(() => triggerResize('dashboard-scale-container', 800));
 
-        expect(screen.getByTestId('dashboard-scaled-box')).toHaveStyle({ width: '1920px' });
+        expect(screen.getByTestId('dashboard-scaled-box')).toHaveStyle({ width: `${DASHBOARD_DESIGN_WIDTH}px` });
         expect(screen.getByTestId('dashboard-scale-design')).toHaveStyle({ transform: 'scale(1)' });
         expect(screen.getByTestId('dashboard-scale-container')).toHaveStyle({ overflowX: 'auto' });
     });
@@ -222,9 +223,9 @@ describe('DashboardReactGridLayout', () => {
             />
         );
 
-        act(() => triggerResize('dashboard-scale-container', 960));
+        act(() => triggerResize('dashboard-scale-container', DASHBOARD_DESIGN_WIDTH / 2));
 
-        expect(screen.getByTestId('dashboard-scaled-box')).toHaveStyle({ width: '960px' });
+        expect(screen.getByTestId('dashboard-scaled-box')).toHaveStyle({ width: `${DASHBOARD_DESIGN_WIDTH / 2}px` });
         expect(screen.getByTestId('dashboard-scale-design')).toHaveStyle({ transform: 'scale(0.5)' });
     });
 

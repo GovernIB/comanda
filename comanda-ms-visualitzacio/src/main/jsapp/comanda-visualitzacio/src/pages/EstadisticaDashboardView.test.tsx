@@ -194,42 +194,43 @@ describe('EstadisticaDashboardView', () => {
         expect(mocks.setItemMock).toHaveBeenCalledWith('lastViewedDashboardId', '12');
     });
 
-    it('EstadisticaDashboardView_perDefecte_usaElModeCentradoAmbAmplada1920', async () => {
-        // Sense preferència guardada, el dashboard s'ha de mostrar a mida real de disseny (1920px), centrat.
+    it('EstadisticaDashboardView_perDefecte_usaElModeEscalatPerAjustarSe', async () => {
+        // Sense preferència guardada, el dashboard s'ha de mostrar escalat per ocupar tot l'ample disponible.
         render(<EstadisticaDashboardView />);
 
         await waitFor(() => {
-            expect(screen.getByTestId('large-screen-mode')).toHaveTextContent('centered');
+            expect(screen.getByTestId('large-screen-mode')).toHaveTextContent('fit');
         });
 
         const toggle = screen.getByRole('button', { name: 'Escalar per ajustar-se a la pantalla' });
-        expect(toggle).toHaveAttribute('aria-pressed', 'false');
+        expect(toggle).toHaveAttribute('aria-pressed', 'true');
     });
 
-    it('EstadisticaDashboardView_enPremerElToggle_escalaPerAjustarSeIhoRecorda', async () => {
-        // Clicar el toggle ha de commutar a mode 'fit' i recordar-ho per a properes visites (localStorage).
+    it('EstadisticaDashboardView_enPremerElToggle_passaAMidaRealCentradaIhoRecorda', async () => {
+        // Clicar el toggle (actiu per defecte) ha de commutar a mida real centrada i recordar-ho per a
+        // properes visites (localStorage).
         render(<EstadisticaDashboardView />);
 
         await waitFor(() => {
-            expect(screen.getByTestId('large-screen-mode')).toHaveTextContent('centered');
+            expect(screen.getByTestId('large-screen-mode')).toHaveTextContent('fit');
         });
 
         fireEvent.click(screen.getByRole('button', { name: 'Escalar per ajustar-se a la pantalla' }));
 
-        expect(screen.getByTestId('large-screen-mode')).toHaveTextContent('fit');
-        expect(mocks.setItemMock).toHaveBeenCalledWith('comanda.dashboardView.largeScreenMode', 'fit');
+        expect(screen.getByTestId('large-screen-mode')).toHaveTextContent('centered');
+        expect(mocks.setItemMock).toHaveBeenCalledWith('comanda.dashboardView.largeScreenMode', 'centered');
     });
 
     it('EstadisticaDashboardView_quanHiHaPreferenciaGuardada_larespecta', async () => {
-        // Si l'usuari ja havia triat "escalar per ajustar-se", s'ha de recordar entre sessions.
+        // Si l'usuari ja havia triat mida real centrada, s'ha de recordar entre sessions.
         mocks.getItemMock.mockImplementation((key: string) =>
-            key === 'comanda.dashboardView.largeScreenMode' ? 'fit' : null
+            key === 'comanda.dashboardView.largeScreenMode' ? 'centered' : null
         );
 
         render(<EstadisticaDashboardView />);
 
         await waitFor(() => {
-            expect(screen.getByTestId('large-screen-mode')).toHaveTextContent('fit');
+            expect(screen.getByTestId('large-screen-mode')).toHaveTextContent('centered');
         });
     });
 

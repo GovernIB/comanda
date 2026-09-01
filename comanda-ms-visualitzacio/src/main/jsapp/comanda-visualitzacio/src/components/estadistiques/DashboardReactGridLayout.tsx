@@ -149,7 +149,7 @@ type DashboardReactGridLayoutProps = {
     dashboardEntornCodi?: string;
     editable: boolean;
     backgroundColor?: string;
-    /** Vegeu DashboardLargeScreenMode. Per defecte 'centered'. */
+    /** Vegeu DashboardLargeScreenMode. Per defecte 'fit'. */
     largeScreenMode?: DashboardLargeScreenMode;
 };
 
@@ -169,11 +169,14 @@ export const useMapDashboardItems = (dashboardWidgets: unknown[]) => {
 };
 
 /**
- * Amplada de disseny de referència del dashboard, en píxels. Tots els widgets es dissenyen i posicionen
- * pensant en una pantalla d'aquesta amplada; a pantalles més petites o més grans el canvas s'escala (vegeu
- * DashboardScaledCanvas) mantenint sempre la mateixa proporció visual (mides de fonts, icones, etc.).
+ * Amplada de disseny de referència del dashboard, en píxels: és l'amplada a la qual el canvas es mostra a
+ * escala 100% (sense necessitat d'escalar). Correspon a una pantalla de 1920px menys els 240px que ocupa el
+ * menú lateral de l'aplicació (vegeu `drawerWidth` a SideMenu.tsx), és a dir l'espai real disponible pel
+ * canvas en aquesta pantalla de referència. Tots els widgets es dissenyen i posicionen pensant en aquesta
+ * amplada; a pantalles més petites o més grans el canvas s'escala (vegeu DashboardScaledCanvas) mantenint
+ * sempre la mateixa proporció visual (mides de fonts, icones, etc.).
  */
-export const DASHBOARD_DESIGN_WIDTH = 1920;
+export const DASHBOARD_DESIGN_WIDTH = 1680;
 
 export const horizontalSubdivisions = 60;
 
@@ -263,7 +266,7 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                                                                                       selectedItemId,
                                                                                       dashboardEntornCodi,
                                                                                       backgroundColor,
-                                                                                      largeScreenMode = 'centered',
+                                                                                      largeScreenMode = 'fit',
                                                                                   }) => {
     const {t} = useTranslation();
     const canvasRef = useRef<HTMLCanvasElement>(null);
