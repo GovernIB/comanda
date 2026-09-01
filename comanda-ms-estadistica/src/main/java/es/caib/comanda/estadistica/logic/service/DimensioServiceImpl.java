@@ -263,7 +263,7 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
                     Dimensio.class,
                     null,
                     code,
-                    "Aquesta acció només és vàlida per a dimensions de tipus ENTITAT");
+                    es.caib.comanda.ms.logic.intf.util.I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DimensioServiceImpl.UpdateEntitatsActionExecutor.nomesEntitat"));
             }
             try {
                 actualitzaEntitats(entity);

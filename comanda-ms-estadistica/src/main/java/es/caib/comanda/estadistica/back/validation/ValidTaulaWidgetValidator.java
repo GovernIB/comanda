@@ -47,7 +47,7 @@ public class ValidTaulaWidgetValidator extends ValidWidgetValidator implements C
     private boolean validateDimensioAgrupacio(EstadisticaTaulaWidget widget, ConstraintValidatorContext context) {
         // ConsultaEstadisticaHelper.getDadesWidgetTaula sempre desreferencia dimensioAgrupacio; sense
         // aquesta validació, un widget guardat sense agrupació provoca un NullPointerException en consultar-lo.
-        return validateField(widget.getDimensioAgrupacio() != null, context, "dimensioAgrupacio", "És obligatori emplenar aquest camp");
+        return validateField(widget.getDimensioAgrupacio() != null, context, "dimensioAgrupacio", MSG_CAMP_OBLIGATORI);
     }
 
     private boolean validateColumnes(EstadisticaTaulaWidget widget, ConstraintValidatorContext context) {

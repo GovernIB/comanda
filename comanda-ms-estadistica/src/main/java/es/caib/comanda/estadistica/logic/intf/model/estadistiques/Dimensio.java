@@ -126,7 +126,7 @@ public class Dimensio extends BaseResource<Long> {
     /** Només rellevant si tipus=ENTITAT: com s'ha d'interpretar el valor per relacionar-lo amb una Entitat. */
     private EntitatValorTipus entitatValorTipus;
 
-    @AssertTrue(message = "Aquest camp només és vàlid quan el tipus de la dimensió és ENTITAT")
+    @AssertTrue(message = "{es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio.entitatValorTipusCoherent}")
     public boolean isEntitatValorTipusCoherent() {
         return entitatValorTipus == null || TipusDimensioEnum.ENTITAT.equals(tipus);
     }
@@ -170,7 +170,7 @@ public class Dimensio extends BaseResource<Long> {
          */
         private Long dimensioId;
 
-        @AssertTrue(message = "Aquest camp només és vàlid quan el tipus és ENTITAT")
+        @AssertTrue(message = "{es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio.entitatValorTipusCoherent}")
         public boolean isEntitatValorTipusCoherent() {
             return entitatValorTipus == null || TipusDimensioEnum.ENTITAT.equals(tipus);
         }

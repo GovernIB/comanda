@@ -69,7 +69,7 @@ public class DashboardFiltre extends BaseResource<Long> {
     /** Només aplica a tipus=DIMENSIO: permet seleccionar més d'un valor alhora. **/
     private Boolean multiple = true;
 
-    @AssertTrue(message = "El codi de dimensió és obligatori per a filtres de tipus DIMENSIO i no s'ha d'emplenar per a PERIODE")
+    @AssertTrue(message = "{es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltre.dimensioCodiCoherent}")
     public boolean isDimensioCodiCoherent() {
         if (tipus == null) {
             return true; // ja es valida per separat amb @NotNull

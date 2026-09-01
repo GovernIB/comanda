@@ -571,7 +571,7 @@ public class ConsultaEstadisticaHelper {
                                                   SeguretatFiltreSql seguretat) throws ReportGenerationException {
         EstadisticaTaulaWidgetEntity widget = (EstadisticaTaulaWidgetEntity) dashboardItem.getWidget();
         if (widget.getDimensioAgrupacio() == null) {
-            throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, "El widget de taula no té cap dimensió d'agrupació configurada");
+            throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, es.caib.comanda.ms.logic.intf.util.I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper.widgetTaulaSenseDimensio"));
         }
         // Mapa de dimensions per filtrar la consulta (pròpies del widget + selecció de filtres del dashboard)
         Map<String, List<String>> dimensionsFiltre = resolveDimensionsFiltre(widget, dadesComunsConsulta.getEntornAppId(), filtreSeleccio);
