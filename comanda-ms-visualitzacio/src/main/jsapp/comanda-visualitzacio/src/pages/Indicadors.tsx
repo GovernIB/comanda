@@ -29,8 +29,11 @@ import {
 import { FormFieldDataActionType } from '../../lib/components/form/FormContext.tsx';
 import { columnesIndicador } from '../components/sharedAdvancedSearch/advancedSearchColumns';
 import FormFieldCustomAdvancedSearch from '../components/FormFieldCustomAdvancedSearch';
+import FormActionDialog from '../components/FormActionDialog.tsx';
 import PageTitle from '../components/PageTitle.tsx';
 import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
+import { findOptions } from '../util/requestUtils.ts';
+import type { MuiFormDialogApi } from 'reactlib';
 
 const IndicadorsFilter = (props: { onSpringFilterChange: (springFilter?: string) => void }) => {
     const { onSpringFilterChange } = props;
@@ -287,6 +290,75 @@ const FormulaTermesEditor: React.FC<{
     );
 };
 
+/**
+ * Referència mutable amb l'App i l'entorn de l'indicador d'origen que s'està copiant, emprada per filtrar les
+ * opcions del selector d'entorn destí a IndicadorCopiarEntornForm (mateix patró que termesRef, vegeu el
+ * comentari de FormulaTermesEditor: el diàleg no es tornar a renderitzar amb noves props en cridar `show()`,
+ * per això cal aquest canal en lloc de passar-ho com a prop).
+ */
+const copiarEntornOrigenRef: React.MutableRefObject<{ appId: any; entornId: any }> = { current: { appId: null, entornId: null } };
+
+/** Filtre del selector d'entorn destí: entorns amb la mateixa App que l'indicador d'origen, excloent-ne el propi entorn. */
+export const buildCopiarEntornDestiFilter = (appId: any, entornId: any): string =>
+    springFilterBuilder.and(
+        springFilterBuilder.exists(springFilterBuilder.and(springFilterBuilder.eq('entornAppEntities.app.id', appId))),
+        springFilterBuilder.neq('id', entornId)
+    );
+
+/**
+ * Formulari de l'acció "Copiar a un altre entorn": selector de l'entorn destí, restringit als entorns on ja hi
+ * ha configurada la mateixa App que la de l'indicador d'origen, excloent l'entorn al qual ja pertany l'indicador.
+ */
+const IndicadorCopiarEntornForm: React.FC = () => {
+    const { t } = useTranslation();
+    const { isReady: entornIsReady, find: entornFind } = useResourceApiService('entorn');
+    const { appId, entornId } = copiarEntornOrigenRef.current;
+    const filterEntorn = buildCopiarEntornDestiFilter(appId, entornId);
+
+    if (!entornIsReady) return null;
+    return (
+        <Grid container spacing={2}>
+            <Grid size={12}>
+                <FormField
+                    name="entornDesti"
+                    label={t($ => $.page.indicadors.copiarEntorn.entornDesti)}
+                    optionsRequest={(quickFilter: string) => findOptions(entornFind, 'nom', quickFilter, filterEntorn)}
+                />
+            </Grid>
+        </Grid>
+    );
+};
+
+/** Acció per copiar un indicador de tipus FORMULA a un altre entorn de la mateixa App (vegeu IndicadorServiceImpl.CopiarIndicadorEntornAction). */
+const useCopiarIndicadorEntornAction = (refresh?: () => void) => {
+    const { t } = useTranslation();
+    const apiRef = React.useRef<MuiFormDialogApi>(null);
+    const { temporalMessageShow } = useBaseAppContext();
+    const handleShow = (id: any, row: any, appId: any, entornId: any): void => {
+        copiarEntornOrigenRef.current = { appId, entornId };
+        apiRef.current?.show?.(id, row);
+    };
+    const onSuccess = (): void => {
+        refresh?.();
+        temporalMessageShow(null, t($ => $.page.indicadors.copiarEntorn.success), 'success');
+    };
+    const formulario =
+        <FormActionDialog
+            resourceName={"indicador"}
+            action={"copiar_indicador_entorn"}
+            apiRef={apiRef}
+            title={t($ => $.page.indicadors.copiarEntorn.title)}
+            onSuccess={onSuccess}
+            initialOnChange={false}
+        >
+            <IndicadorCopiarEntornForm />
+        </FormActionDialog>;
+    return {
+        handleShow,
+        content: formulario,
+    };
+};
+
 const Indicadors: React.FC = () => {
     const { t } = useTranslation();
     const gestorReadOnly = useReadOnlyGestor();
@@ -296,7 +368,7 @@ const Indicadors: React.FC = () => {
     const gridApiRef = useMuiDataGridApiRef();
     const formulaDialogApiRef = useMuiFormDialogApiRef();
     const formulaDialogButtons = useFormDialogButtons();
-    const { isReady: entornAppApiIsReady, find: entornAppGetAll } = useResourceApiService('entornApp');
+    const { isReady: entornAppApiIsReady, find: entornAppGetAll, getOne: entornAppGetOne } = useResourceApiService('entornApp');
     const [entornAppOptions, setEntornAppOptions] = useState<Array<{ id?: number | string; entornAppDescription?: string }>>([]);
     const termesRef = React.useRef<FormulaTerme[]>(buildDefaultFormulaTermes());
     const {
@@ -306,6 +378,8 @@ const Indicadors: React.FC = () => {
         delete: deleteTerme,
     } = useResourceApiService('indicadorFormulaTerme');
     const { delete: deleteIndicador } = useResourceApiService('indicador');
+    const { handleShow: showCopiarEntorn, content: contentCopiarEntorn } =
+        useCopiarIndicadorEntornAction(() => gridApiRef.current?.refresh?.());
 
     useEffect(() => {
         if (entornAppApiIsReady) {
@@ -349,6 +423,15 @@ const Indicadors: React.FC = () => {
         const loadedTermes = mapTermeRowsToFormulaTermes(response.rows ?? []);
         termesRef.current = loadedTermes.length > 0 ? loadedTermes : buildDefaultFormulaTermes();
         formulaDialogApiRef.current?.show(id, undefined, t($ => $.page.indicadors.formulaForm.editTitle));
+    };
+
+    // Cal l'App i l'entorn de l'entornApp d'origen per restringir el selector d'entorn destí a
+    // IndicadorCopiarEntornForm (vegeu copiarEntornOrigenRef) als entorns amb la mateixa App, excloent el
+    // propi entorn de l'indicador.
+    const openCopiarEntorn = async (id: any, row: any) => {
+        if (row?.entornAppId == null) return;
+        const entornApp = await entornAppGetOne(row.entornAppId);
+        showCopiarEntorn(id, row, entornApp?.app?.id, entornApp?.entorn?.id);
     };
 
     const saveFormulaTermes = async (indicadorId: any) => {
@@ -487,6 +570,13 @@ const Indicadors: React.FC = () => {
                         onClick: (id: any) => openEditFormula(id),
                         hidden: (row: any) => row?.tipus !== 'FORMULA',
                     },
+                    {
+                        label: t($ => $.page.indicadors.action.copiarEntorn),
+                        icon: 'content_copy',
+                        showInMenu: true,
+                        onClick: (id: any, row: any) => openCopiarEntorn(id, row),
+                        hidden: (row: any) => row?.tipus !== 'FORMULA',
+                    },
                 ]}
             />
             <MuiFormDialog
@@ -501,6 +591,7 @@ const Indicadors: React.FC = () => {
             >
                 <IndicadorFormulaForm />
             </MuiFormDialog>
+            {contentCopiarEntorn}
         </>
     );
 };

@@ -2,22 +2,35 @@ package es.caib.comanda.estadistica.logic.service;
 
 import com.turkraft.springfilter.FilterBuilder;
 import com.turkraft.springfilter.parser.Filter;
+import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Indicador;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus;
 import es.caib.comanda.estadistica.logic.intf.service.IndicadorService;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorFormulaTermeEntity;
+import es.caib.comanda.estadistica.persist.repository.IndicadorFormulaTermeRepository;
+import es.caib.comanda.estadistica.persist.repository.IndicadorRepository;
+import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
+import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -41,6 +54,13 @@ import java.util.stream.Collectors;
 public class IndicadorServiceImpl extends BaseMutableResourceService<Indicador, Long, IndicadorEntity> implements IndicadorService {
     private final SpringFilterHelper springFilterHelper;
     private final EstadisticaClientHelper estadisticaClientHelper;
+    private final IndicadorRepository indicadorRepository;
+    private final IndicadorFormulaTermeRepository indicadorFormulaTermeRepository;
+
+    @PostConstruct
+    public void init() {
+        register(Indicador.COPIAR_ENTORN_ACTION, new CopiarIndicadorEntornAction());
+    }
 
 	@Override
 	protected Specification<IndicadorEntity> namedFilterToSpecification(String name) {
@@ -96,5 +116,99 @@ public class IndicadorServiceImpl extends BaseMutableResourceService<Indicador, 
         return result.isEmpty() ? null : FilterBuilder.and(result).generate();
     }
 
+    /**
+     * Acció per copiar un indicador de tipus FORMULA (amb els seus termes) a un altre entorn de la mateixa App.
+     * Els indicadors component de la fórmula (sempre SIMPLE) han d'existir ja a l'entornApp destí: es
+     * gestionen només per sincronització automàtica des de les apps, mai es creen des d'aquí.
+     */
+    public class CopiarIndicadorEntornAction implements BaseMutableResourceService.ActionExecutor<IndicadorEntity, Indicador.CopiarIndicadorEntornParams, Indicador> {
+
+        @Override
+        public Indicador exec(String code, IndicadorEntity entity, Indicador.CopiarIndicadorEntornParams params) throws ActionExecutionException {
+            if (entity == null || !IndicadorTipus.FORMULA.equals(entity.getTipus())) {
+                throw new ActionExecutionException(Indicador.class, entity != null ? entity.getId() : null, code,
+                        I18nUtil.getInstance().getI18nMessage(
+                                "es.caib.comanda.estadistica.logic.service.IndicadorServiceImpl.error.nomesFormula"));
+            }
+            if (params == null || params.getEntornDesti() == null || params.getEntornDesti().getId() == null) {
+                throw new ActionExecutionException(Indicador.class, entity.getId(), code,
+                        I18nUtil.getInstance().getI18nMessage(
+                                "es.caib.comanda.estadistica.logic.service.IndicadorServiceImpl.error.entornRequerit"));
+            }
+
+            EntornApp origenEntornApp = estadisticaClientHelper.entornAppFindById(entity.getEntornAppId());
+            if (origenEntornApp == null || origenEntornApp.getApp() == null) {
+                throw new ActionExecutionException(Indicador.class, entity.getId(), code,
+                        I18nUtil.getInstance().getI18nMessage(
+                                "es.caib.comanda.estadistica.logic.service.IndicadorServiceImpl.error.entornAppInexistent"));
+            }
+            Long appId = origenEntornApp.getApp().getId();
+            Long entornDestiId = params.getEntornDesti().getId();
+            if (origenEntornApp.getEntorn() != null && Objects.equals(origenEntornApp.getEntorn().getId(), entornDestiId)) {
+                throw new ActionExecutionException(Indicador.class, entity.getId(), code,
+                        I18nUtil.getInstance().getI18nMessage(
+                                "es.caib.comanda.estadistica.logic.service.IndicadorServiceImpl.error.mateixEntorn"));
+            }
+
+            EntornApp destiEntornApp = estadisticaClientHelper.entornAppFindByAppAndEntorn(appId, entornDestiId);
+            if (destiEntornApp == null) {
+                throw new ActionExecutionException(Indicador.class, entity.getId(), code,
+                        I18nUtil.getInstance().getI18nMessage(
+                                "es.caib.comanda.estadistica.logic.service.IndicadorServiceImpl.error.entornAppInexistent"));
+            }
+            if (indicadorRepository.findByCodiAndEntornAppId(entity.getCodi(), destiEntornApp.getId()).isPresent()) {
+                throw new ActionExecutionException(Indicador.class, entity.getId(), code,
+                        I18nUtil.getInstance().getI18nMessage(
+                                "es.caib.comanda.estadistica.logic.service.IndicadorServiceImpl.error.jaExisteix",
+                                entity.getCodi()));
+            }
+
+            List<IndicadorFormulaTermeEntity> termesOrigen =
+                    indicadorFormulaTermeRepository.findByIndicadorFormulaIdOrderByOrdreAsc(entity.getId());
+            Map<String, IndicadorEntity> componentsDesti = new HashMap<>();
+            List<String> componentsInexistents = new ArrayList<>();
+            for (IndicadorFormulaTermeEntity terme : termesOrigen) {
+                String componentCodi = terme.getIndicadorComponent() != null ? terme.getIndicadorComponent().getCodi() : null;
+                if (componentCodi == null || componentsDesti.containsKey(componentCodi)) continue;
+                indicadorRepository.findByCodiAndEntornAppId(componentCodi, destiEntornApp.getId())
+                        .ifPresentOrElse(
+                                component -> componentsDesti.put(componentCodi, component),
+                                () -> componentsInexistents.add(componentCodi));
+            }
+            if (!componentsInexistents.isEmpty()) {
+                throw new ActionExecutionException(Indicador.class, entity.getId(), code,
+                        I18nUtil.getInstance().getI18nMessage(
+                                "es.caib.comanda.estadistica.logic.service.IndicadorServiceImpl.error.componentsInexistents",
+                                String.join(", ", componentsInexistents)));
+            }
+
+            IndicadorEntity nou = new IndicadorEntity();
+            nou.setCodi(entity.getCodi());
+            nou.setNom(entity.getNom());
+            nou.setDescripcio(entity.getDescripcio());
+            nou.setEntornAppId(destiEntornApp.getId());
+            nou.setFormat(entity.getFormat());
+            nou.setTipus(IndicadorTipus.FORMULA);
+            nou.setCompactable(false);
+            indicadorRepository.save(nou);
+
+            for (IndicadorFormulaTermeEntity termeOrigen : termesOrigen) {
+                String componentCodi = termeOrigen.getIndicadorComponent() != null ? termeOrigen.getIndicadorComponent().getCodi() : null;
+                IndicadorFormulaTermeEntity nouTerme = new IndicadorFormulaTermeEntity();
+                nouTerme.setIndicadorFormula(nou);
+                nouTerme.setIndicadorComponent(componentsDesti.get(componentCodi));
+                nouTerme.setOperador(termeOrigen.getOperador());
+                nouTerme.setOrdre(termeOrigen.getOrdre());
+                indicadorFormulaTermeRepository.save(nouTerme);
+            }
+
+            return null;
+        }
+
+        @Override
+        public void onChange(Serializable id, Indicador.CopiarIndicadorEntornParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Indicador.CopiarIndicadorEntornParams target) {
+            // No es necessari implementar aquest mètode
+        }
+    }
 
 }

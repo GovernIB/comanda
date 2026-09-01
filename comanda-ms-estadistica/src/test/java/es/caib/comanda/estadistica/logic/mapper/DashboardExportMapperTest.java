@@ -310,6 +310,64 @@ class DashboardExportMapperTest {
         assertEquals(indicador.getCodi(), result.getIndicadorCodi());
     }
 
+    @Test
+    void testToIndicadorExport_Formula() {
+        // Given
+        IndicadorEntity component = new IndicadorEntity();
+        component.setCodi("COMP");
+
+        es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorFormulaTermeEntity terme =
+                new es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorFormulaTermeEntity();
+        terme.setIndicadorComponent(component);
+        terme.setOperador(es.caib.comanda.estadistica.logic.intf.model.estadistiques.OperadorFormulaEnum.SUMA);
+        terme.setOrdre(0);
+
+        IndicadorEntity comptadorPerMitjana = new IndicadorEntity();
+        comptadorPerMitjana.setCodi("COMPTADOR");
+
+        IndicadorEntity indicador = new IndicadorEntity();
+        indicador.setCodi("FORM");
+        indicador.setNom("Formula");
+        indicador.setEntornAppId(30L);
+        indicador.setTipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus.FORMULA);
+        indicador.setIndicadorComptadorPerMitjana(comptadorPerMitjana);
+        indicador.setFormula(List.of(terme));
+
+        when(estadisticaClientHelper.entornAppFindById(30L)).thenReturn(entornApp);
+        entornApp.setEntorn(new es.caib.comanda.client.model.EntornRef(10L, "Entorn"));
+        entornApp.setApp(new es.caib.comanda.client.model.AppRef(20L, "App"));
+
+        // When
+        IndicadorExport result = mapper.toIndicadorExport(indicador, estadisticaClientHelper);
+
+        // Then
+        assertNotNull(result);
+        assertEquals("FORM", result.getCodi());
+        assertEquals("ENTORN001", result.getEntornCodi());
+        assertEquals("APP001", result.getAppCodi());
+        assertEquals("COMPTADOR", result.getIndicadorComptadorPerMitjanaCodi());
+        assertEquals(1, result.getFormula().size());
+        assertEquals("COMP", result.getFormula().get(0).getIndicadorComponentCodi());
+    }
+
+    @Test
+    void testToIndicadorExport_EntornAppInexistent() {
+        // Given
+        IndicadorEntity indicador = new IndicadorEntity();
+        indicador.setCodi("IND1");
+        indicador.setEntornAppId(99L);
+
+        when(estadisticaClientHelper.entornAppFindById(99L)).thenReturn(null);
+
+        // When
+        IndicadorExport result = mapper.toIndicadorExport(indicador, estadisticaClientHelper);
+
+        // Then
+        assertNotNull(result);
+        assertNull(result.getEntornCodi());
+        assertNull(result.getAppCodi());
+    }
+
     // ============================================================================
     // TESTS DE CONVERSIÓN INVERSA: Export → Entity
     // ============================================================================

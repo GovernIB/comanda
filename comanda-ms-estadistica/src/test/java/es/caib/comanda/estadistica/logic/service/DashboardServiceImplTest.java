@@ -9,6 +9,7 @@ import es.caib.comanda.estadistica.logic.helper.DashboardHelper;
 import es.caib.comanda.estadistica.logic.helper.DashboardImportHelper;
 import es.caib.comanda.estadistica.logic.helper.DashboardStyleResolverHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
+import es.caib.comanda.estadistica.logic.helper.IndicadorExportHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTitol;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetItem;
@@ -80,6 +81,7 @@ class DashboardServiceImplTest {
     @Mock private ObjectMapper objectMapper;
     @Mock private DashboardStyleResolverHelper dashboardStyleResolverHelper;
     @Mock private DashboardImportHelper dashboardImportHelper;
+    @Mock private IndicadorExportHelper indicadorExportHelper;
     @Mock private AuthenticationHelper authenticationHelper;
     @Mock private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     @Mock private AclServiceClient aclServiceClient;

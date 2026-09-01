@@ -76,6 +76,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     private final DashboardClonerMapper dashboardClonerMapper;
     private final ObjectMapper objectMapper;
     private final DashboardHelper dashboardHelper;
+    private final IndicadorExportHelper indicadorExportHelper;
     private final DashboardRepository dashboardRepository;
     private final DashboardTitolRepository dashboardTitolRepository;
     private final DashboardItemRepository dashboardItemRepository;
@@ -302,11 +303,15 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
             // Si s'ha especificat una entitat, només exportem aquesta
             if (entity != null) {
                 DashboardExport dashboard = dashboardExportMapper.toDashboardExport(entity, estadisticaClientHelper, atributsVisualsHelper);
+                dashboard.setIndicadors(indicadorExportHelper.collectIndicadorExports(entity));
                 result.add(dashboard);
             } else {
                 // Si no s'ha especificat una entitat, exportem tots els dashboards
                 List<DashboardEntity> entities = entityRepository.findAll();
                 List<DashboardExport> dashboards = dashboardExportMapper.toDashboardExport(entities, estadisticaClientHelper, atributsVisualsHelper);
+                for (int i = 0; i < entities.size(); i++) {
+                    dashboards.get(i).setIndicadors(indicadorExportHelper.collectIndicadorExports(entities.get(i)));
+                }
                 result.addAll(dashboards);
             }
 

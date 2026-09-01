@@ -2,7 +2,7 @@ import * as React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import Indicadors, { buildDefaultFormulaTermes, computeFormulaTermePayloads, mapTermeRowsToFormulaTermes } from './Indicadors';
+import Indicadors, { buildCopiarEntornDestiFilter, buildDefaultFormulaTermes, computeFormulaTermePayloads, mapTermeRowsToFormulaTermes } from './Indicadors';
 
 const mocks = vi.hoisted(() => ({
     clearMock: vi.fn(),
@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => ({
                     action: {
                         createFormula: 'Crear indicador de fórmula',
                         editFormula: 'Editar fórmula',
+                        copiarEntorn: 'Copiar a un altre entorn',
                     },
                     formulaForm: {
                         createTitle: 'Crear indicador de fórmula',
@@ -29,6 +30,11 @@ const mocks = vi.hoisted(() => ({
                         addTerme: 'Afegir terme',
                         removeTerme: 'Eliminar terme',
                         success: 'Fórmula desada correctament',
+                    },
+                    copiarEntorn: {
+                        title: 'Copiar indicador a un altre entorn',
+                        entornDesti: 'Entorn destí',
+                        success: 'Indicador copiat correctament',
                     },
                 },
             },
@@ -42,6 +48,8 @@ const mocks = vi.hoisted(() => ({
     ),
     findMock: vi.fn(),
     entornAppFindMock: vi.fn(),
+    entornAppGetOneMock: vi.fn(),
+    entornFindMock: vi.fn(),
     indicadorFindMock: vi.fn(),
     indicadorDeleteMock: vi.fn(),
     termeFindMock: vi.fn(),
@@ -49,6 +57,7 @@ const mocks = vi.hoisted(() => ({
     termeDeleteMock: vi.fn(),
     gridRefreshMock: vi.fn(),
     formDialogShowMock: vi.fn(),
+    copiarEntornExecMock: vi.fn(),
     temporalMessageShowMock: vi.fn(),
     dataDispatchActionMock: vi.fn(),
     formComponentPropsCapture: undefined as any,
@@ -111,8 +120,10 @@ vi.mock('reactlib', () => ({
     ),
     springFilterBuilder: {
         eq: (field: string, value: unknown) => `${field}=${String(value)}`,
+        neq: (field: string, value: unknown) => `${field}!=${String(value)}`,
         like: (field: string, value: unknown) => `${field}~${String(value)}`,
         and: (...parts: Array<string | undefined | false>) => parts.filter(Boolean).join(' && '),
+        exists: (value: string) => `exists(${value})`,
     },
     useFilterApiRef: () => ({
         current: {
@@ -135,9 +146,23 @@ vi.mock('reactlib', () => ({
     useBaseAppContext: () => ({
         temporalMessageShow: mocks.temporalMessageShowMock,
     }),
+    useMuiActionReportLogic: vi.fn((_resourceName: string, action?: string) => {
+        if (action === 'copiar_indicador_entorn') {
+            return {
+                available: true,
+                formDialogComponent: <div data-testid="copiar-entorn-dialog">Diàleg copiar entorn</div>,
+                exec: mocks.copiarEntornExecMock,
+                close: vi.fn(),
+            };
+        }
+        return { available: false, formDialogComponent: null, exec: vi.fn(), close: vi.fn() };
+    }),
     useResourceApiService: (resourceName?: string) => {
         if (resourceName === 'entornApp') {
-            return { isReady: true, find: mocks.entornAppFindMock };
+            return { isReady: true, find: mocks.entornAppFindMock, getOne: mocks.entornAppGetOneMock };
+        }
+        if (resourceName === 'entorn') {
+            return { isReady: true, find: mocks.entornFindMock };
         }
         if (resourceName === 'indicadorFormulaTerme') {
             return {
@@ -193,6 +218,7 @@ describe('Indicadors', () => {
         });
         mocks.termeFindMock.mockResolvedValue({ rows: [] });
         mocks.indicadorFindMock.mockResolvedValue({ rows: [] });
+        mocks.entornAppGetOneMock.mockResolvedValue({ id: 7, app: { id: 3 }, entorn: { id: 5 } });
     });
 
     afterEach(() => {
@@ -326,6 +352,43 @@ describe('Indicadors', () => {
         expect(action).toBeDefined();
         expect(action.hidden({ tipus: 'FORMULA' })).toBe(false);
         expect(action.hidden({ tipus: 'SIMPLE' })).toBe(true);
+    });
+
+    it('Indicadors_laccioCopiarEntorn_nomesEsVisibleAFilesDeTipusFormula', async () => {
+        // L'acció de fila "Copiar a un altre entorn" només s'ha de mostrar quan tipus === 'FORMULA'.
+        render(<Indicadors />);
+
+        await waitFor(() => {
+            expect(mocks.entornAppFindMock).toHaveBeenCalled();
+        });
+
+        const action = mocks.rowAdditionalActionsCapture?.[1];
+        expect(action).toBeDefined();
+        expect(action.hidden({ tipus: 'FORMULA' })).toBe(false);
+        expect(action.hidden({ tipus: 'SIMPLE' })).toBe(true);
+    });
+
+    it('Indicadors_enPremerCopiarEntorn_resolLAppDeLEntornAppOrigenIExecutaLaccio', async () => {
+        // Clicar "Copiar a un altre entorn" ha de resoldre l'App de l'entornApp d'origen (per restringir el
+        // selector d'entorn destí) i executar l'acció del backend amb l'id de l'indicador.
+        render(<Indicadors />);
+
+        await waitFor(() => {
+            expect(mocks.entornAppFindMock).toHaveBeenCalled();
+        });
+
+        const action = mocks.rowAdditionalActionsCapture?.[1];
+        const row = { id: 99, tipus: 'FORMULA', entornAppId: 7 };
+        await act(async () => {
+            await action.onClick(99, row);
+        });
+
+        expect(mocks.entornAppGetOneMock).toHaveBeenCalledWith(7);
+        expect(mocks.copiarEntornExecMock).toHaveBeenCalledWith(
+            99,
+            'Copiar indicador a un altre entorn',
+            row
+        );
     });
 
     it('Indicadors_enPremerEditarFormula_carregaElsTermesIObreElDialegEnModeEdicio', async () => {
@@ -474,5 +537,15 @@ describe('computeFormulaTermePayloads', () => {
 
     it('computeFormulaTermePayloads_ambLlistaBuida_retornaLlistaBuida', () => {
         expect(computeFormulaTermePayloads([], 42)).toEqual([]);
+    });
+});
+
+describe('buildCopiarEntornDestiFilter', () => {
+    it('buildCopiarEntornDestiFilter_exclouLentornDorigenIRestringeixPerApp', () => {
+        // Regressió: el desplegable d'entorns destí no ha de mostrar l'entorn al qual ja pertany l'indicador.
+        const filter = buildCopiarEntornDestiFilter(3, 5);
+
+        expect(filter).toContain('exists(entornAppEntities.app.id=3)');
+        expect(filter).toContain('id!=5');
     });
 });

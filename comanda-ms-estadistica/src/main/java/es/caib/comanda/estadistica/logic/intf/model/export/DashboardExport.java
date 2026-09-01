@@ -46,4 +46,9 @@ public class DashboardExport implements Serializable {
     @Valid
     private List<DashboardTitolExport> titols;
 
+    // Indicadors utilitzats pels widgets d'aquest dashboard (vegeu IndicadorExport). Permet que, en importar-lo
+    // a un altre entorn, els indicadors de tipus FORMULA es puguin crear automàticament si encara no hi existeixen.
+    @Valid
+    private List<IndicadorExport> indicadors;
+
 }

@@ -3,6 +3,7 @@ package es.caib.comanda.estadistica.logic.helper;
 import es.caib.comanda.client.model.App;
 import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus;
 import es.caib.comanda.estadistica.logic.intf.model.export.*;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
@@ -52,6 +53,7 @@ public class DashboardImportHelper {
     private final DimensioRepository dimensioRepository;
     private final DimensioValorRepository dimensioValorRepository;
     private final PaletaRepository paletaRepository;
+    private final IndicadorExportHelper indicadorExportHelper;
     private final Validator validator;
 
     public void validateDashboardExport(List<DashboardExport> dashboards) {
@@ -94,6 +96,10 @@ public class DashboardImportHelper {
     }
 
     public List<DashboardEntity> importDashboardFromExport(List<DashboardExport> dashboardExportList, @NotNull List<Conflict> conflicts) {
+        // Cal crear els indicadors de tipus FORMULA inclosos a l'exportació abans de convertir els dashboards a
+        // entity, ja que aquesta conversió resol les referències dels widgets als indicadors pel seu codi
+        // (vegeu DashboardExportMapper#toIndicadorEntity), que ha de trobar-los ja creats a l'entornApp destí.
+        dashboardExportList.forEach(dashboard -> indicadorExportHelper.importIndicadorsFormula(dashboard.getIndicadors()));
         List<DashboardEntity> dashboardsToImport = this.toDashboardEntity(dashboardExportList);
         return this.importDashboardFromEntity(dashboardsToImport, conflicts);
     }
@@ -374,7 +380,7 @@ public class DashboardImportHelper {
 
         if (dashboard.getItems() != null) {
             for (DashboardItemExport item : dashboard.getItems()) {
-                this.checkDashboardItemConflicts(item, conflicts);
+                this.checkDashboardItemConflicts(item, dashboard, conflicts);
             }
         }
 
@@ -386,9 +392,28 @@ public class DashboardImportHelper {
             }
         }
         this.checkPlantillaConflicts(dashboard.getPlantilla(), conflicts);
+
+        // Els indicadors de tipus FORMULA inclosos a l'exportació es crearan automàticament (vegeu
+        // importDashboardFromExport), però els seus components (sempre SIMPLE) han d'existir ja a l'entornApp
+        // destí: es gestionen només per sincronització automàtica des de les apps, mai es creen des d'aquí.
+        if (dashboard.getIndicadors() != null) {
+            for (IndicadorExport indicadorExport : dashboard.getIndicadors()) {
+                if (IndicadorTipus.FORMULA.equals(indicadorExport.getTipus()) && indicadorExport.getFormula() != null) {
+                    for (IndicadorFormulaTermeExport terme : indicadorExport.getFormula()) {
+                        this.checkIndicador(terme.getIndicadorComponentCodi(), indicadorExport.getEntornCodi(), indicadorExport.getAppCodi());
+                    }
+                }
+            }
+        }
     }
 
     private void checkDashboardItemConflicts(DashboardItemExport item,
+                                             List<Conflict> conflicts) {
+        this.checkDashboardItemConflicts(item, null, conflicts);
+    }
+
+    private void checkDashboardItemConflicts(DashboardItemExport item,
+                                             DashboardExport dashboard,
                                              List<Conflict> conflicts) {
         if (item == null) return;
         App app = item.getAppCodi() != null ? this.checkApp(item.getAppCodi()) : null;
@@ -410,15 +435,27 @@ public class DashboardImportHelper {
         if (widget instanceof EstadisticaSimpleWidgetExport) {
             EstadisticaSimpleWidgetExport w = (EstadisticaSimpleWidgetExport) widget;
             if (w.getIndicadorInfo() != null)
-                this.checkIndicador(w.getIndicadorInfo().getIndicadorCodi(), item.getEntornCodi(), item.getAppCodi());
+                this.checkIndicador(w.getIndicadorInfo().getIndicadorCodi(), item.getEntornCodi(), item.getAppCodi(), dashboard);
         } else if (widget instanceof EstadisticaGraficWidgetExport) {
             EstadisticaGraficWidgetExport w = (EstadisticaGraficWidgetExport) widget;
             if (w.getIndicadorInfo() != null)
-                this.checkIndicador(w.getIndicadorInfo().getIndicadorCodi(), item.getEntornCodi(), item.getAppCodi());
+                this.checkIndicador(w.getIndicadorInfo().getIndicadorCodi(), item.getEntornCodi(), item.getAppCodi(), dashboard);
+            if (w.getIndicadorsInfo() != null) {
+                for (IndicadorTaulaExport info : w.getIndicadorsInfo()) {
+                    if (info != null && info.getIndicadorCodi() != null)
+                        this.checkIndicador(info.getIndicadorCodi(), item.getEntornCodi(), item.getAppCodi(), dashboard);
+                }
+            }
             if (w.getDescomposicioDimensioCodi() != null)
                 this.checkDimensio(w.getDescomposicioDimensioCodi(), item.getEntornCodi(), item.getAppCodi());
         } else if (widget instanceof EstadisticaTaulaWidgetExport) {
             EstadisticaTaulaWidgetExport w = (EstadisticaTaulaWidgetExport) widget;
+            if (w.getColumnes() != null) {
+                for (IndicadorTaulaExport columna : w.getColumnes()) {
+                    if (columna != null && columna.getIndicadorCodi() != null)
+                        this.checkIndicador(columna.getIndicadorCodi(), item.getEntornCodi(), item.getAppCodi(), dashboard);
+                }
+            }
             if (w.getDimensioAgrupacioCodi() != null)
                 this.checkDimensio(w.getDimensioAgrupacioCodi(), item.getEntornCodi(), item.getAppCodi());
         }
@@ -535,9 +572,26 @@ public class DashboardImportHelper {
     }
 
     private IndicadorEntity checkIndicador(String indicadorCodi, String entornCodi, String appCodi) {
+        return this.checkIndicador(indicadorCodi, entornCodi, appCodi, null);
+    }
+
+    /**
+     * Igual que {@link #checkIndicador(String, String, String)}, però si l'indicador no existeix encara a
+     * l'entornApp destí, no es considera un conflicte quan es tracta d'un indicador de tipus FORMULA inclòs a
+     * {@code dashboard.getIndicadors()}: es crearà automàticament en importar (vegeu importDashboardFromExport
+     * i IndicadorExportHelper#importIndicadorsFormula), per això aquí no cal bloquejar la importació.
+     */
+    private IndicadorEntity checkIndicador(String indicadorCodi, String entornCodi, String appCodi, DashboardExport dashboard) {
         EntornApp entornApp = this.checkEntornApp(entornCodi, appCodi);
         IndicadorEntity indicador = indicadorRepository.findByCodiAndEntornAppId(indicadorCodi, entornApp.getId()).orElse(null);
         if (indicador == null) {
+            boolean pendentImportacio = dashboard != null && dashboard.getIndicadors() != null
+                    && dashboard.getIndicadors().stream().anyMatch(indicadorExport ->
+                            IndicadorTipus.FORMULA.equals(indicadorExport.getTipus())
+                                    && Objects.equals(indicadorCodi, indicadorExport.getCodi())
+                                    && Objects.equals(entornCodi, indicadorExport.getEntornCodi())
+                                    && Objects.equals(appCodi, indicadorExport.getAppCodi()));
+            if (pendentImportacio) return null;
             throw new AnswerRequiredException(
                     DashboardServiceImpl.DashboardImportParams.class,
                     "INDICADOR",

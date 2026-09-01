@@ -60,6 +60,7 @@ class DashboardImportHelperTest {
     @Mock private DimensioRepository dimensioRepository;
     @Mock private DimensioValorRepository dimensioValorRepository;
     @Mock private PaletaRepository paletaRepository;
+    @Mock private IndicadorExportHelper indicadorExportHelper;
     @Mock private javax.validation.Validator validator;
     @Mock private I18nUtil i18nUtil;
     @Mock private ApplicationContext applicationContext;
@@ -701,5 +702,71 @@ class DashboardImportHelperTest {
         dashboardImportHelper.validateDashboardExport(Collections.singletonList(export));
 
         verify(validator).validate(export);
+    }
+
+    // ========================================================================
+    // 6. TESTOS PER A INDICADORS INCLOSOS A L'EXPORTACIÓ (FORMULA auto-creables)
+    // ========================================================================
+
+    @Test
+    @DisplayName("checkDashboardItemConflicts: no llança excepció quan l'indicador FORMULA que falta és a dashboard.indicadors")
+    void checkDashboardItemConflicts_quanFormulaPendentImportacio_noLlancaExcepcio() {
+        // Arrange
+        DashboardItemExport item = new DashboardItemExport();
+        item.setEntornCodi("ENT");
+        item.setAppCodi("APP");
+
+        EstadisticaSimpleWidgetExport widget = new EstadisticaSimpleWidgetExport();
+        widget.setTitol("Widget");
+        IndicadorTaulaExport indInfo = new IndicadorTaulaExport();
+        indInfo.setIndicadorCodi("FORM");
+        widget.setIndicadorInfo(indInfo);
+        widget.setDimensionsValor(new ArrayList<>());
+        item.setWidget(widget);
+
+        DashboardExport dashboard = new DashboardExport();
+        IndicadorExport indicadorExport = IndicadorExport.builder()
+                .codi("FORM").entornCodi("ENT").appCodi("APP")
+                .tipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus.FORMULA)
+                .build();
+        dashboard.setIndicadors(List.of(indicadorExport));
+
+        Entorn entorn = new Entorn();
+        ReflectionTestUtils.setField(entorn, "id", 1L);
+        App app = new App();
+        ReflectionTestUtils.setField(app, "id", 2L);
+        EntornApp entornApp = new EntornApp();
+        entornApp.setId(10L);
+        when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(entorn);
+        when(estadisticaClientHelper.appFindByCodi("APP")).thenReturn(app);
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(anyLong(), anyLong())).thenReturn(entornApp);
+        when(indicadorRepository.findByCodiAndEntornAppId("FORM", 10L)).thenReturn(Optional.empty());
+
+        // Act & Assert (no ha de llançar excepció)
+        ReflectionTestUtils.invokeMethod(dashboardImportHelper, "checkDashboardItemConflicts", item, dashboard, new ArrayList<Conflict>());
+    }
+
+    @Test
+    @DisplayName("importDashboardFromExport: crea prèviament els indicadors FORMULA de l'exportació")
+    void importDashboardFromExport_quanDashboardTeIndicadors_creaIndicadorsFormulaAbansDeConvertir() {
+        // Arrange
+        DashboardExport export = new DashboardExport();
+        IndicadorExport indicadorExport = IndicadorExport.builder().codi("FORM")
+                .tipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus.FORMULA).build();
+        export.setIndicadors(List.of(indicadorExport));
+        List<DashboardExport> exports = Collections.singletonList(export);
+
+        DashboardEntity entity = new DashboardEntity();
+        entity.setTitols(new ArrayList<>());
+        entity.setItems(new ArrayList<>());
+        when(dashboardExportMapper.toDashboardEntity(eq(exports), any(), any(), any(), any(), any()))
+                .thenReturn(Collections.singletonList(entity));
+
+        // Act
+        dashboardImportHelper.importDashboardFromExport(exports, Collections.emptyList());
+
+        // Assert
+        verify(indicadorExportHelper).importIndicadorsFormula(export.getIndicadors());
+        verify(dashboardExportMapper).toDashboardEntity(eq(exports), any(), any(), any(), any(), any());
     }
 }

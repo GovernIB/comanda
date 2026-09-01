@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.model.estadistiques;
 
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.estadistica.logic.intf.model.widget.EntornResource;
 import es.caib.comanda.model.v1.estadistica.Format;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
@@ -74,7 +75,15 @@ import java.util.List;
                 )
         },
 		artifacts = {
-				@ResourceArtifact(type = ResourceArtifactType.FILTER, code = Indicador.INDICADOR_FILTER, formClass = Indicador.IndicadorFilter.class)
+				@ResourceArtifact(type = ResourceArtifactType.FILTER, code = Indicador.INDICADOR_FILTER, formClass = Indicador.IndicadorFilter.class),
+				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = Indicador.COPIAR_ENTORN_ACTION, requiresId = true, formClass = Indicador.CopiarIndicadorEntornParams.class,
+						accessConstraints = {
+								@ResourceAccessConstraint(
+										type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+										roles = { BaseConfig.ROLE_ADMIN },
+										grantedPermissions = { PermissionEnum.WRITE }
+								)
+						})
 		}
 )
 public class Indicador extends BaseResource<Long> {
@@ -83,6 +92,8 @@ public class Indicador extends BaseResource<Long> {
     public static final String NAMED_FILTER_BY_APP_GROUP_BY_NOM = "filterByAppGroupByNom";
     public static final String INDICADOR_FILTER = "indicadorFilter";
     public static final String FILTER_BY_APP_NAMEDFILTER = "filterByApp";
+    /** Acció per copiar un indicador de tipus FORMULA a un altre entorn de la mateixa App (vegeu IndicadorServiceImpl). */
+    public static final String COPIAR_ENTORN_ACTION = "copiar_indicador_entorn";
 
     @NotNull
     @Pattern(regexp = "^[a-zA-Z0-9_]*$", message = "El codi només pot contenir caràcters alfanumèrics")
@@ -119,6 +130,17 @@ public class Indicador extends BaseResource<Long> {
     public static class IndicadorFilter implements Serializable {
         private String codi;
         private String nom;
+    }
+
+    /** Paràmetres de l'acció {@link #COPIAR_ENTORN_ACTION}: entorn destí (dins la mateixa App) on copiar l'indicador. */
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @FieldNameConstants
+    public static class CopiarIndicadorEntornParams implements Serializable {
+        @NotNull
+        private ResourceReference<EntornResource, Long> entornDesti;
     }
 
 }

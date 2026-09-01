@@ -895,6 +895,7 @@ const translationEn: translationResourcesType = {
             action: {
                 createFormula: "Create formula indicator",
                 editFormula: "Edit formula",
+                copiarEntorn: "Copy to another environment",
             },
             formulaForm: {
                 createTitle: "Create formula indicator",
@@ -904,6 +905,11 @@ const translationEn: translationResourcesType = {
                 addTerme: "Add term",
                 removeTerme: "Remove term",
                 success: "Formula saved successfully",
+            },
+            copiarEntorn: {
+                title: "Copy indicator to another environment",
+                entornDesti: "Target environment",
+                success: "Indicator copied successfully",
             },
         },
         monitorDb: {

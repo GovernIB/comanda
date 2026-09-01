@@ -895,6 +895,7 @@ const translationCa = {
             action: {
                 createFormula: "Crear indicador de fórmula",
                 editFormula: "Editar fórmula",
+                copiarEntorn: "Copiar a un altre entorn",
             },
             formulaForm: {
                 createTitle: "Crear indicador de fórmula",
@@ -904,6 +905,11 @@ const translationCa = {
                 addTerme: "Afegir terme",
                 removeTerme: "Eliminar terme",
                 success: "Fórmula desada correctament",
+            },
+            copiarEntorn: {
+                title: "Copiar indicador a un altre entorn",
+                entornDesti: "Entorn destí",
+                success: "Indicador copiat correctament",
             },
         },
         monitorDb: {

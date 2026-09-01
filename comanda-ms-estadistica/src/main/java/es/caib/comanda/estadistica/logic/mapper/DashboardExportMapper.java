@@ -13,6 +13,7 @@ import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorFormulaTermeEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.*;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
@@ -163,6 +164,37 @@ public interface DashboardExportMapper {
 
     @Mapping(target = "indicadorCodi", source = "indicador.codi")
     IndicadorTaulaExport toIndicadorTaulaExport(IndicadorTaulaEntity indicadorTaulaEntity);
+
+    /**
+     * Converteix un IndicadorEntity a un IndicadorExport (vegeu DashboardExport#getIndicadors()).
+     * L'entornAppId de l'indicador es resol a entornCodi/appCodi consultant EntornApp per id (l'IndicadorEntity
+     * només guarda l'entornAppId, no l'entornId/appId per separat com els altres entities exportables).
+     */
+    @Mapping(target = "entornCodi", source = "entornAppId", qualifiedByName = "toEntornCodiFromEntornAppId")
+    @Mapping(target = "appCodi", source = "entornAppId", qualifiedByName = "toAppCodiFromEntornAppId")
+    @Mapping(target = "indicadorComptadorPerMitjanaCodi", source = "indicadorComptadorPerMitjana.codi")
+    IndicadorExport toIndicadorExport(IndicadorEntity indicadorEntity, @Context EstadisticaClientHelper estadisticaClientHelper);
+
+    @Mapping(target = "indicadorComponentCodi", source = "indicadorComponent.codi")
+    IndicadorFormulaTermeExport toIndicadorFormulaTermeExport(IndicadorFormulaTermeEntity indicadorFormulaTermeEntity);
+
+    @Named("toEntornCodiFromEntornAppId")
+    default String toEntornCodiFromEntornAppId(Long entornAppId, @Context EstadisticaClientHelper estadisticaClientHelper) {
+        if (entornAppId == null) return null;
+        EntornApp entornApp = estadisticaClientHelper.entornAppFindById(entornAppId);
+        if (entornApp == null || entornApp.getEntorn() == null) return null;
+        Entorn entorn = estadisticaClientHelper.entornById(entornApp.getEntorn().getId());
+        return entorn != null ? entorn.getCodi() : null;
+    }
+
+    @Named("toAppCodiFromEntornAppId")
+    default String toAppCodiFromEntornAppId(Long entornAppId, @Context EstadisticaClientHelper estadisticaClientHelper) {
+        if (entornAppId == null) return null;
+        EntornApp entornApp = estadisticaClientHelper.entornAppFindById(entornAppId);
+        if (entornApp == null || entornApp.getApp() == null) return null;
+        App app = estadisticaClientHelper.appFindById(entornApp.getApp().getId());
+        return app != null ? app.getCodi() : null;
+    }
 
 
     // ============================================================================
