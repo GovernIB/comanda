@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.logic.helper;
 
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.IndicadorRolEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTaula;
@@ -21,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -237,17 +239,42 @@ class EstadisticaGraficWidgetHelperTest {
     // ========================================================================
 
     @Test
-    @DisplayName("upsertColumnes: executa sense errors quan el tipus és DOS_INDICADORS (cobertura de línia TODO)")
-    void upsertColumnes_quanDosIndicadors_llavorsExecutaSenseErrors() {
+    @DisplayName("upsertColumnes: quan és DOS_INDICADORS, persisteix 2 files amb rol VALOR i MAXIM")
+    void upsertColumnes_quanDosIndicadorsAmbIndicadorMax_llavorsPersisteixDuesFilesAmbRolCorrecte() {
         // Arrange
         entity.setTipusDades(TipusGraficDataEnum.DOS_INDICADORS);
         entity.setIndicadorsInfo(new ArrayList<>());
-        resource.setAgregacio(TableColumnsEnum.SUM);
 
-        // Act & Assert
-        // No ha de llançar cap excepció, només cobrir la línia del TODO
+        IndicadorEntity indicadorValor = new IndicadorEntity();
+        indicadorValor.setId(1L);
+        IndicadorEntity indicadorMaxim = new IndicadorEntity();
+        indicadorMaxim.setId(2L);
+
+        resource.setIndicador(ResourceReference.toResourceReference(1L));
+        resource.setTitolIndicador("Valor");
+        resource.setAgregacio(TableColumnsEnum.SUM);
+        resource.setIndicadorMax(ResourceReference.toResourceReference(2L));
+        resource.setTitolIndicadorMax("Màxim");
+        resource.setAgregacioMax(TableColumnsEnum.SUM);
+
+        when(indicadorRepository.findById(1L)).thenReturn(Optional.of(indicadorValor));
+        when(indicadorRepository.findById(2L)).thenReturn(Optional.of(indicadorMaxim));
+        when(indicadorTaulaRepository.save(any(IndicadorTaulaEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // Act
         estadisticaGraficWidgetHelper.upsertColumnes(entity, resource);
-        verify(indicadorTaulaRepository, times(1)).save(any(IndicadorTaulaEntity.class));
+
+        // Assert
+        assertThat(entity.getIndicadorsInfo()).hasSize(2);
+        IndicadorTaulaEntity filaValor = entity.getIndicadorsInfo().stream()
+            .filter(f -> IndicadorRolEnum.VALOR.equals(f.getRol())).findFirst().orElseThrow();
+        IndicadorTaulaEntity filaMaxim = entity.getIndicadorsInfo().stream()
+            .filter(f -> IndicadorRolEnum.MAXIM.equals(f.getRol())).findFirst().orElseThrow();
+        assertThat(filaValor.getTitol()).isEqualTo("Valor");
+        assertThat(filaValor.getIndicador().getId()).isEqualTo(1L);
+        assertThat(filaMaxim.getTitol()).isEqualTo("Màxim");
+        assertThat(filaMaxim.getIndicador().getId()).isEqualTo(2L);
+        verify(indicadorTaulaRepository, times(2)).save(any(IndicadorTaulaEntity.class));
     }
 
     // ========================================================================
@@ -348,14 +375,41 @@ class EstadisticaGraficWidgetHelperTest {
     // ========================================================================
 
     @Test
-    @DisplayName("afterCoversionGetColumnes: executa sense errors quan el tipus és DOS_INDICADORS (cobertura de línia TODO)")
-    void afterCoversionGetColumnes_quanDosIndicadors_llavorsExecutaSenseErrors() {
+    @DisplayName("afterCoversionGetColumnes: llegeix per rol, no per posició, encara que la llista arribi en ordre invers")
+    void afterCoversionGetColumnes_quanDosIndicadorsAmbFilesEnOrdreInvers_llavorsOmpleIndicadorIIndicadorMaxCorrectament() {
         // Arrange
         entity.setTipusDades(TipusGraficDataEnum.DOS_INDICADORS);
-        entity.setIndicadorsInfo(Collections.emptyList());
 
-        // Act & Assert
-        // No ha de llançar cap excepció, només cobrir la línia del TODO
+        IndicadorEntity indicadorValor = new IndicadorEntity();
+        indicadorValor.setId(10L);
+        indicadorValor.setCodi("IND_VALOR");
+        IndicadorEntity indicadorMaxim = new IndicadorEntity();
+        indicadorMaxim.setId(20L);
+        indicadorMaxim.setCodi("IND_MAXIM");
+
+        IndicadorTaulaEntity filaMaxim = new IndicadorTaulaEntity();
+        filaMaxim.setRol(IndicadorRolEnum.MAXIM);
+        filaMaxim.setIndicador(indicadorMaxim);
+        filaMaxim.setTitol("Màxim");
+        filaMaxim.setAgregacio(TableColumnsEnum.SUM);
+
+        IndicadorTaulaEntity filaValor = new IndicadorTaulaEntity();
+        filaValor.setRol(IndicadorRolEnum.VALOR);
+        filaValor.setIndicador(indicadorValor);
+        filaValor.setTitol("Valor");
+        filaValor.setAgregacio(TableColumnsEnum.SUM);
+
+        // Deliberadament en ordre invers (MAXIM abans que VALOR) per demostrar que la
+        // lectura és per rol, no per get(0)/get(1).
+        entity.setIndicadorsInfo(List.of(filaMaxim, filaValor));
+
+        // Act
         estadisticaGraficWidgetHelper.afterCoversionGetColumnes(entity, resource);
+
+        // Assert
+        assertThat(resource.getIndicador().getId()).isEqualTo(10L);
+        assertThat(resource.getTitolIndicador()).isEqualTo("Valor");
+        assertThat(resource.getIndicadorMax().getId()).isEqualTo(20L);
+        assertThat(resource.getTitolIndicadorMax()).isEqualTo("Màxim");
     }
 }

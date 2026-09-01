@@ -2,6 +2,7 @@ package es.caib.comanda.estadistica.persist.entity.widget;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.GraficValueTypeEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
@@ -54,10 +55,10 @@ public class EstadisticaGraficWidgetEntity extends EstadisticaWidgetEntity<Estad
 //    @OneToOne(mappedBy = "widget", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 //    private IndicadorTaulaEntity indicadorInfo;
 
-//    // Format dels valors a mostrar: NO_MOSTRAR, NUMERIC, PERCENTATGE
-//    @Column(name = "tipus_valors", length = 16, nullable = false)
-//    @Enumerated(EnumType.STRING)
-//    private GraficValueTypeEnum tipusValors;
+    // Format dels valors a mostrar quan tipusDades == DOS_INDICADORS: NUMERIC, PERCENTAGE
+    @Column(name = "tipus_valors", length = 16)
+    @Enumerated(EnumType.STRING)
+    private GraficValueTypeEnum tipusValors;
 
     @OneToMany(mappedBy="widget", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<IndicadorTaulaEntity> indicadorsInfo;
