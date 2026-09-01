@@ -435,6 +435,9 @@ const translationEn: translationResourcesType = {
                 },
                 dashboardElements: "Dashboard items",
                 darkModeToggle: "Dark mode",
+                multiSelection: {
+                    message: "{{count}} elements selected",
+                },
             },
             edit: "Edit",
             dashboardView: "Go to dashboard",

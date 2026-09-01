@@ -435,6 +435,9 @@ const translationEs: translationResourcesType = {
                 },
                 dashboardElements: "Elementos del cuadro de mando",
                 darkModeToggle: "Modo oscuro",
+                multiSelection: {
+                    message: "{{count}} elementos seleccionados",
+                },
             },
             edit: "Editar",
             dashboardView: "Ir al panel de control",

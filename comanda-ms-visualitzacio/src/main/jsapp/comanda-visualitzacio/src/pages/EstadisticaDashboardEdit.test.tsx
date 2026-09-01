@@ -240,6 +240,8 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', () => ({
         onGridLayoutItemsChange,
         onDeleteItem,
         onDuplicateItem,
+        onSelectItems,
+        multiSelectedItemIds,
         backgroundColor,
         largeScreenMode,
     }: {
@@ -249,6 +251,8 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', () => ({
         onGridLayoutItemsChange?: (items: Array<{ id: number; x: number; y: number; w: number; h: number; type?: string }>) => void;
         onDeleteItem?: (entity: any) => void;
         onDuplicateItem?: (entity: any) => void;
+        onSelectItems?: (entities: any[]) => void;
+        multiSelectedItemIds?: string[];
         backgroundColor?: string;
         largeScreenMode?: string;
     }) => (
@@ -257,6 +261,7 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', () => ({
             <div data-testid="dashboard-canvas-background-color">{backgroundColor}</div>
             <div data-testid="dashboard-large-screen-mode">{largeScreenMode}</div>
             <div data-testid="dashboard-widgets-json">{JSON.stringify(dashboardWidgets)}</div>
+            <div data-testid="dashboard-multi-selected-ids">{JSON.stringify(multiSelectedItemIds ?? [])}</div>
             <button
                 type="button"
                 onClick={() =>
@@ -264,6 +269,17 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', () => ({
                 }
             >
                 Moure layout
+            </button>
+            <button
+                type="button"
+                onClick={() =>
+                    onGridLayoutItemsChange?.([
+                        { id: 1, x: 1, y: 1, w: 4, h: 4 },
+                        { id: 2, x: 6, y: 6, w: 3, h: 3 },
+                    ])
+                }
+            >
+                Moure layout (grup)
             </button>
             <button
                 type="button"
@@ -276,6 +292,20 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', () => ({
                 onClick={() => onDuplicateItem?.({ tipus: 'SIMPLE', dashboardItemId: 1, widgetId: 5 })}
             >
                 Duplicar element de test
+            </button>
+            <button
+                type="button"
+                onClick={() =>
+                    onSelectItems?.([
+                        { tipus: 'SIMPLE', dashboardItemId: 1, widgetId: 5 },
+                        { tipus: 'SIMPLE', dashboardItemId: 2, widgetId: 6 },
+                    ])
+                }
+            >
+                Simular selecció múltiple
+            </button>
+            <button type="button" onClick={() => onSelectItems?.([])}>
+                Simular selecció múltiple buida
             </button>
         </div>
     ),
@@ -292,14 +322,17 @@ vi.mock('../components/CenteredCircularProgress.tsx', () => ({
 
 vi.mock('../components/estadistiques/DashboardEditorSidePanel.tsx', () => ({
     default: ({
+        selection,
         onLiveTitleDataChange,
         onSaved,
     }: {
+        selection?: { kind: string; ids?: string[] };
         onLiveTitleDataChange?: (dashboardTitolId: any, data: any) => void;
         onSaved?: (dashboardItemId?: any) => void;
     }) => (
         <div>
             Editor side panel
+            <div data-testid="editor-selection">{JSON.stringify(selection)}</div>
             <button type="button" onClick={() => onLiveTitleDataChange?.(2, { colorTitol: '#ff0000' })}>
                 Simular edició en viu
             </button>
@@ -436,6 +469,42 @@ describe('EstadisticaDashboardEdit', () => {
         // Al disseny sempre s'aprofita tot l'ample disponible del canvas (a diferència de la visualització,
         // on l'usuari pot triar veure'l a mida real de disseny centrat, vegeu EstadisticaDashboardView).
         expect(screen.getByTestId('dashboard-large-screen-mode')).toHaveTextContent('fit');
+    });
+
+    it('EstadisticaDashboardEdit_enSeleccionarMultiplesElements_esMostraComASeleccioMultipleAlPanell', async () => {
+        // Amb 2 o més elements seleccionats (marc de selecció al canvas) el panell de propietats no ha de
+        // mostrar el formulari de cap dels dos, ni cap element ha de quedar com a "selectedItemId" únic.
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Simular selecció múltiple' }));
+
+        expect(screen.getByTestId('editor-selection')).toHaveTextContent(
+            JSON.stringify({ kind: 'multi', ids: ['1', '2'] })
+        );
+        expect(screen.getByTestId('dashboard-multi-selected-ids')).toHaveTextContent(
+            JSON.stringify(['1', '2'])
+        );
+    });
+
+    it('EstadisticaDashboardEdit_enSeleccionarUnSolElementAmbElMarc_esComportaComUnaSeleccioNormal', async () => {
+        // Un marc de selecció que només capturi un element s'ha de tractar com una selecció normal
+        // (mostra les seves propietats), no com a selecció múltiple.
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
+        });
+
+        // Reutilitzem el botó de "Eliminar element de test" indirectament: simulem selecció múltiple i
+        // després la netegem, per comprovar el cas 0 elements també.
+        fireEvent.click(screen.getByRole('button', { name: 'Simular selecció múltiple buida' }));
+
+        expect(screen.getByTestId('editor-selection')).toHaveTextContent(JSON.stringify({ kind: 'none' }));
+        expect(screen.getByTestId('dashboard-multi-selected-ids')).toHaveTextContent(JSON.stringify([]));
     });
 
     it('EstadisticaDashboardEdit_quanEsDesaLaConfiguracioDelDashboardSenseCapSeleccio_refrescaElDashboard', async () => {
@@ -595,6 +664,70 @@ describe('EstadisticaDashboardEdit', () => {
         });
 
         expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Guardat', 'success');
+    });
+
+    it('EstadisticaDashboardEdit_quanNomesEsMouUnElement_noRefrescaElsWidgets', async () => {
+        // Un moviment/redimensionament normal (com a màxim 1 element afectat) ja es reflecteix correctament
+        // al canvas gràcies a l'estat intern de react-grid-layout: no cal refrescar (evita un flaix de càrrega).
+        const forceRefreshMock = vi.fn();
+        mocks.useDashboardWidgetsMock.mockReturnValue({
+            dashboardWidgets: [{ dashboardItemId: 1 }],
+            errorDashboardWidgets: [],
+            loadingWidgetPositions: false,
+            forceRefresh: forceRefreshMock,
+        });
+
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Moure layout' }));
+
+        await waitFor(() => {
+            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Guardat', 'success');
+        });
+
+        expect(forceRefreshMock).not.toHaveBeenCalled();
+    });
+
+    it('EstadisticaDashboardEdit_quanEsMouUnGrupDeMultiplesElements_refrescaElsWidgetsPerActualitzarLaRestaAlCanvas', async () => {
+        // Regressió: en moure un grup (selecció múltiple), react-grid-layout només mostra internament la
+        // posició de l'element realment arrossegat; encara que la resta ja s'han desat correctament, calia
+        // refrescar les dades perquè el canvas les reflecteixi sense haver de recarregar manualment la pàgina.
+        const forceRefreshMock = vi.fn();
+        mocks.useDashboardWidgetsMock.mockReturnValue({
+            dashboardWidgets: [{ dashboardItemId: 1 }, { dashboardItemId: 2 }],
+            errorDashboardWidgets: [],
+            loadingWidgetPositions: false,
+            forceRefresh: forceRefreshMock,
+        });
+        mocks.useMapDashboardItemsMock.mockReturnValue([
+            { id: 1, x: 0, y: 0, w: 3, h: 3 },
+            { id: 2, x: 5, y: 5, w: 3, h: 3 },
+        ]);
+
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Moure layout (grup)' }));
+
+        await waitFor(() => {
+            expect(mocks.patchDashboardItemMock).toHaveBeenCalledWith(1, {
+                data: { posX: 1, posY: 1, width: 4, height: 4 },
+            });
+            expect(mocks.patchDashboardItemMock).toHaveBeenCalledWith(2, {
+                data: { posX: 6, posY: 6, width: 3, height: 3 },
+            });
+        });
+
+        await waitFor(() => {
+            expect(forceRefreshMock).toHaveBeenCalled();
+        });
     });
 
     it('EstadisticaDashboardEdit_quanFallaLaCreacioDunWidget_mostraLError', async () => {

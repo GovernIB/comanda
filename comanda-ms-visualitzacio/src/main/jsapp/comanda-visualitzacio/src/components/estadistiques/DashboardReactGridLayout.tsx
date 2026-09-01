@@ -46,7 +46,7 @@ const TitolChartWrapper = React.memo<{ dashboardTitol: any }>(({dashboardTitol})
 
 const CustomGridItemComponent = React.forwardRef<HTMLDivElement, any>(
     (
-        {style, className, onMouseDown, onMouseUp, onTouchEnd, editable, selected, entity, onItemContextMenu, children},
+        {style, className, onMouseDown, onMouseUp, onTouchEnd, editable, selected, itemId, entity, onItemContextMenu, children},
         ref
     ) => {
         // onMouseDown/onMouseUp aquí són els mètodes propis de react-draggable (GridItem els injecta
@@ -57,6 +57,7 @@ const CustomGridItemComponent = React.forwardRef<HTMLDivElement, any>(
         return (
             <div
                 data-testid="grid-item"
+                data-grid-item-id={itemId}
                 style={{
                     ...style,
                     cursor: editable ? 'pointer' : style?.cursor,
@@ -142,10 +143,14 @@ type DashboardReactGridLayoutProps = {
     gridLayoutItems: GridLayoutItem[];
     onGridLayoutItemsChange?: (gridLayoutItems: GridLayoutItem[]) => void;
     onSelectItem?: (entity: any) => void;
+    /** Notifica una selecció múltiple feta arrossegant un marc de selecció sobre el canvas. Buit = neteja la selecció. */
+    onSelectItems?: (entities: any[]) => void;
     onDeleteItem?: (entity: any) => void;
     onDuplicateItem?: (entity: any) => void;
     onClearSelection?: () => void;
     selectedItemId?: string | null;
+    /** Ids seleccionats en una selecció múltiple (vegeu onSelectItems). Es ressalten igual que selectedItemId. */
+    multiSelectedItemIds?: string[];
     dashboardEntornCodi?: string;
     editable: boolean;
     backgroundColor?: string;
@@ -202,10 +207,18 @@ export type DashboardLargeScreenMode = 'centered' | 'fit';
  * natural (sense escalar) del contingut, ja que un `transform` no altera la mida de caixa que un element
  * reporta al seu contenidor (cal calcular-la manualment perquè el contenidor extern ocupi l'espai correcte
  * i, en mode 'centered', es pugui centrar amb `margin: auto`).
+ *
+ * `children` és una render-prop (rep l'`scale` efectiu) perquè `<CustomGridLayout>` necessita conèixer'l:
+ * react-draggable/react-resizable (que hi ha per sota de react-grid-layout) calculen els desplaçaments de
+ * ratolí en píxels reals de pantalla, sense tenir en compte cap `transform: scale` dels seus avantpassats.
+ * Sense compensar-ho, qualsevol clic o arrossegament dins d'un canvas escalat es tradueix a una posició de
+ * graella incorrecta (per exemple, un simple clic per seleccionar un component es detecta com un petit
+ * arrossegament i el component "salta" unes files). Es compensa passant aquest mateix `scale` a la prop
+ * `transformScale` de react-grid-layout (vegeu el seu ús a <CustomGridLayout>).
  */
 const DashboardScaledCanvas: React.FC<{
     largeScreenMode: DashboardLargeScreenMode;
-    children: React.ReactNode;
+    children: (scale: number) => React.ReactNode;
 }> = ({largeScreenMode, children}) => {
     const {size: containerSize, refCallback: containerRef} = useSizeTracker(100);
     const {size: designSize, refCallback: designRef} = useSizeTracker(100);
@@ -244,7 +257,7 @@ const DashboardScaledCanvas: React.FC<{
                         transformOrigin: 'top left',
                     }}
                 >
-                    {children}
+                    {children(scale)}
                 </Box>
             </Box>
         </Box>
@@ -254,16 +267,21 @@ const DashboardScaledCanvas: React.FC<{
 /** Distància màxima (en px) entre l'inici i el final d'un arrossegament perquè es consideri un simple clic */
 const CLICK_MOVEMENT_THRESHOLD = 5;
 
+/** Files buides addicionals que es deixen sota l'últim component en mode edició, per facilitar arrossegar-los cap avall. */
+const EXTRA_EDIT_SCROLL_ROWS = 20;
+
 export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> = ({
                                                                                       dashboardWidgets,
                                                                                       editable,
                                                                                       gridLayoutItems,
                                                                                       onGridLayoutItemsChange,
                                                                                       onSelectItem,
+                                                                                      onSelectItems,
                                                                                       onDeleteItem,
                                                                                       onDuplicateItem,
                                                                                       onClearSelection,
                                                                                       selectedItemId,
+                                                                                      multiSelectedItemIds,
                                                                                       dashboardEntornCodi,
                                                                                       backgroundColor,
                                                                                       largeScreenMode = 'fit',
@@ -276,6 +294,9 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
 
     const [contextMenu, setContextMenu] = React.useState<{ mouseX: number; mouseY: number; entity: any } | null>(null);
     const handleItemContextMenu = (event: React.MouseEvent, entity: any) => {
+        // Per ara, amb una selecció múltiple activa no s'obre el menú contextual (vegeu comentari a
+        // multiSelectedItemIds a les props del component).
+        if (multiSelectedItemIds && multiSelectedItemIds.length > 1) return;
         setContextMenu({mouseX: event.clientX, mouseY: event.clientY, entity});
     };
     const closeContextMenu = () => setContextMenu(null);
@@ -302,6 +323,10 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
     // l'arrossegament deixa de reflectir-se. Per això aquest handler mai llança (try/catch) i la
     // selecció es dispara al següent tick (setTimeout), un cop ReactGridLayout ja ha acabat.
     const dragStartPosRef = useRef<{ x: number; y: number } | null>(null);
+    // Quan es finalitza un arrossegament real d'un element que forma part d'una selecció múltiple, es guarda
+    // aquí el desplaçament (en columnes/files) perquè onLayoutChange l'apliqui també a la resta d'elements
+    // seleccionats (react-grid-layout només mou nativament l'element arrossegat).
+    const multiDragDeltaRef = useRef<{ draggedId: string; deltaX: number; deltaY: number } | null>(null);
     const onItemDragStart = (
         _layout: Layout[],
         _oldItem: Layout,
@@ -319,7 +344,7 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
     const onItemDragStop = (
         _layout: Layout[],
         oldItem: Layout,
-        _newItem: Layout,
+        newItem: Layout,
         _placeholder: Layout,
         event: MouseEvent
     ) => {
@@ -334,6 +359,14 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                 if (entity) {
                     setTimeout(() => onSelectItem?.(entity), 0);
                 }
+            } else if (multiSelectedItemIds && multiSelectedItemIds.length > 1 && multiSelectedItemIds.includes(oldItem.i)) {
+                // Arrossegament real d'un element seleccionat dins un grup: la resta d'elements
+                // seleccionats s'han de moure amb el mateix desplaçament (vegeu onLayoutChange).
+                multiDragDeltaRef.current = {
+                    draggedId: oldItem.i,
+                    deltaX: newItem.x - oldItem.x,
+                    deltaY: newItem.y - oldItem.y,
+                };
             }
         } catch (error) {
             console.error('Error detectant si l\'acció era un clic o un arrossegament', error);
@@ -342,6 +375,8 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
 
     const onLayoutChange = (_currentLayout: Layout[], allLayouts: Layouts) => {
         drawGrid();
+        const pendingDelta = multiDragDeltaRef.current;
+        multiDragDeltaRef.current = null;
         const mappedLayouts: (GridLayoutItem | undefined)[] = allLayouts.md.map((item) => {
             const typeInGridLayoutItems = gridLayoutItems.find((i) => i.id === item.i)?.type;
             const typeFromAutogeneratedId: string = item.i.split('-')[1];
@@ -352,11 +387,18 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                 return undefined;
             }
 
+            let x = item.x;
+            let y = item.y;
+            if (pendingDelta && item.i !== pendingDelta.draggedId && multiSelectedItemIds?.includes(item.i)) {
+                x = Math.max(0, Math.min(horizontalSubdivisions - item.w, x + pendingDelta.deltaX));
+                y = Math.max(0, y + pendingDelta.deltaY);
+            }
+
             return {
                 id: item.i,
                 type: mergedType,
-                x: item.x,
-                y: item.y,
+                x,
+                y,
                 w: item.w,
                 h: item.h,
             };
@@ -434,10 +476,72 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
 
     const isReadonly = sizeLock || !editable;
 
+    // Selecció múltiple arrossegant un marc (marquee) sobre el fons del canvas: mousedown fora de qualsevol
+    // element inicia el marc, es va actualitzant amb mousemove i, en soltar, se selecciona tot element el
+    // requadre (getBoundingClientRect) del qual intersecti amb el marc. S'usa getBoundingClientRect en lloc
+    // de calcular files/columnes perquè ja reflecteix l'escalat CSS aplicat pel canvas (vegeu DashboardScaledCanvas).
+    const canvasContainerRef = useRef<HTMLDivElement>(null);
+    const justFinishedMarqueeRef = useRef(false);
+    const [marqueeRect, setMarqueeRect] = React.useState<{ left: number; top: number; width: number; height: number } | null>(null);
+    const MARQUEE_MOVEMENT_THRESHOLD = 4;
+
+    const handleCanvasMouseDown = (event: React.MouseEvent) => {
+        if (!editable) return;
+        const target = event.target as HTMLElement;
+        if (target.closest('[data-grid-item-id]')) return;
+        const startX = event.clientX;
+        const startY = event.clientY;
+
+        const onMouseMove = (ev: MouseEvent) => {
+            const container = canvasContainerRef.current;
+            if (!container) return;
+            const containerRect = container.getBoundingClientRect();
+            setMarqueeRect({
+                left: Math.min(startX, ev.clientX) - containerRect.left,
+                top: Math.min(startY, ev.clientY) - containerRect.top,
+                width: Math.abs(ev.clientX - startX),
+                height: Math.abs(ev.clientY - startY),
+            });
+        };
+        const onMouseUp = (ev: MouseEvent) => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            setMarqueeRect(null);
+
+            const dx = Math.abs(ev.clientX - startX);
+            const dy = Math.abs(ev.clientY - startY);
+            if (dx <= MARQUEE_MOVEMENT_THRESHOLD && dy <= MARQUEE_MOVEMENT_THRESHOLD) return; // simple clic: ja el gestiona onClick
+
+            justFinishedMarqueeRef.current = true;
+            const selRect = {
+                left: Math.min(startX, ev.clientX),
+                top: Math.min(startY, ev.clientY),
+                right: Math.max(startX, ev.clientX),
+                bottom: Math.max(startY, ev.clientY),
+            };
+            const matchedIds: string[] = [];
+            canvasContainerRef.current?.querySelectorAll('[data-grid-item-id]').forEach((node) => {
+                const rect = node.getBoundingClientRect();
+                const intersects = rect.left < selRect.right && rect.right > selRect.left
+                    && rect.top < selRect.bottom && rect.bottom > selRect.top;
+                if (intersects) {
+                    const id = node.getAttribute('data-grid-item-id');
+                    if (id) matchedIds.push(id);
+                }
+            });
+            const matchedEntities = matchedIds.map(findEntityById).filter((entity) => entity != null);
+            onSelectItems?.(matchedEntities);
+        };
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    };
+
     return (
         <>
             <Box
                 data-testid="dashboard-canvas"
+                ref={canvasContainerRef}
                 sx={{
                     position: 'relative',
                     width: '100%',
@@ -446,9 +550,33 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                     // (clar/fosc) en lloc de quedar transparent i mostrar el fons real de l'aplicació.
                     backgroundColor: backgroundColor || 'background.default',
                 }}
-                onClick={() => editable && onClearSelection?.()}
+                onMouseDown={handleCanvasMouseDown}
+                onClick={() => {
+                    if (justFinishedMarqueeRef.current) {
+                        justFinishedMarqueeRef.current = false;
+                        return;
+                    }
+                    if (editable) onClearSelection?.();
+                }}
             >
+                {marqueeRect && (
+                    <Box
+                        data-testid="selection-marquee"
+                        sx={{
+                            position: 'absolute',
+                            left: `${marqueeRect.left}px`,
+                            top: `${marqueeRect.top}px`,
+                            width: `${marqueeRect.width}px`,
+                            height: `${marqueeRect.height}px`,
+                            border: '1px solid #1976d2',
+                            backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                            pointerEvents: 'none',
+                            zIndex: 30,
+                        }}
+                    />
+                )}
                 <DashboardScaledCanvas largeScreenMode={largeScreenMode}>
+                    {(scale) => (<>
                     {editable && (
                         <canvas
                             style={{
@@ -482,6 +610,7 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                         resizeHandles={!isReadonly ? ['s', 'w', 'e', 'n', 'sw', 'nw', 'se', 'ne'] : []}
                         onDragStart={onItemDragStart}
                         onDragStop={onItemDragStop}
+                        transformScale={scale}
                     >
                         {gridLayoutItems.map((item) => {
                             const dashboardWidget = dashboardWidgets.find(
@@ -496,7 +625,8 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                                 <CustomGridItemComponent
                                     key={item.id}
                                     editable={editable}
-                                    selected={selectedItemId === item.id}
+                                    selected={selectedItemId === item.id || !!multiSelectedItemIds?.includes(item.id)}
+                                    itemId={item.id}
                                     entity={dashboardWidget ?? dashboardTitol}
                                     onItemContextMenu={handleItemContextMenu}
                                 >
@@ -521,6 +651,14 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                             );
                         })}
                     </CustomGridLayout>
+                    {editable && (
+                        <Box
+                            data-testid="dashboard-extra-scroll-space"
+                            aria-hidden="true"
+                            sx={{height: `${EXTRA_EDIT_SCROLL_ROWS * rowHeight}px`}}
+                        />
+                    )}
+                    </>)}
                 </DashboardScaledCanvas>
             </Box>
             <Menu

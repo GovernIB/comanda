@@ -435,6 +435,9 @@ const translationCa = {
                 },
                 dashboardElements: "Elements del tauler",
                 darkModeToggle: "Mode fosc",
+                multiSelection: {
+                    message: "{{count}} elements seleccionats",
+                },
             },
             edit: "Editar",
             dashboardView: "Anar al tauler de control",

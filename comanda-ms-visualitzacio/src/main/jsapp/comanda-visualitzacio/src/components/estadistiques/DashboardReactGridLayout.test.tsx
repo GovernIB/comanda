@@ -230,6 +230,26 @@ describe('DashboardReactGridLayout', () => {
         expect(screen.getByTestId('dashboard-scale-design')).toHaveStyle({ transform: 'scale(0.5)' });
     });
 
+    it('DashboardReactGridLayout_quanElCanvasEsEscala_passaLescalaATransformScale', () => {
+        // Regressió: react-draggable/react-resizable (per sota de react-grid-layout) calculen els
+        // desplaçaments de ratolí en píxels reals de pantalla i no coneixen el `transform: scale` aplicat
+        // pel canvas (DashboardScaledCanvas). Sense compensar-ho amb `transformScale`, un simple clic per
+        // seleccionar un component es detecta com un petit arrossegament i el component "salta" de posició.
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable
+                dashboardWidgets={[]}
+                gridLayoutItems={[]}
+                largeScreenMode="fit"
+            />
+        );
+
+        act(() => triggerResize('dashboard-scale-container', DASHBOARD_DESIGN_WIDTH / 2));
+
+        expect(mocks.responsiveProps.transformScale).toBe(0.5);
+    });
+
     it('DashboardReactGridLayout_quanEsRenderitza_mostraElsWidgetsSegonsElTipus', () => {
         // Verifica que el component escull el renderitzador correcte per a cada tipus de widget.
         mocks.isEqualMock.mockReturnValue(true);
@@ -470,5 +490,192 @@ describe('DashboardReactGridLayout', () => {
         const darkBackground = getComputedStyle(screen.getByTestId('dashboard-canvas')).backgroundColor;
 
         expect(lightBackground).not.toBe(darkBackground);
+    });
+
+    // ========================================================================
+    // Espai extra de scroll en mode edició
+    // ========================================================================
+
+    it('DashboardReactGridLayout_enModeEdicio_afegeix20FilesBuidesSotaLUltimComponent', () => {
+        mocks.isEqualMock.mockReturnValue(true);
+
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={true}
+                dashboardWidgets={[]}
+                gridLayoutItems={[]}
+            />
+        );
+
+        expect(screen.getByTestId('dashboard-extra-scroll-space')).toHaveStyle({
+            height: `${20 * dashboardRowHeight}px`,
+        });
+    });
+
+    it('DashboardReactGridLayout_enModeVisualitzacio_noAfegeixFilesBuidesExtra', () => {
+        mocks.isEqualMock.mockReturnValue(true);
+
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={false}
+                dashboardWidgets={[]}
+                gridLayoutItems={[]}
+            />
+        );
+
+        expect(screen.queryByTestId('dashboard-extra-scroll-space')).not.toBeInTheDocument();
+    });
+
+    // ========================================================================
+    // Selecció múltiple amb marc de selecció (marquee)
+    // ========================================================================
+
+    it('DashboardReactGridLayout_enArrossegarUnMarcDeSeleccioSobreElFons_seleccionaElsElementsQueIntersecten', () => {
+        mocks.isEqualMock.mockReturnValue(true);
+        const onSelectItems = vi.fn();
+
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={true}
+                dashboardWidgets={[
+                    { dashboardItemId: 1, titol: 'Widget 1', tipus: 'SIMPLE' },
+                    { dashboardItemId: 2, titol: 'Widget 2', tipus: 'SIMPLE' },
+                ]}
+                gridLayoutItems={[
+                    { id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 },
+                    { id: '2', type: 'SIMPLE', x: 5, y: 5, w: 2, h: 2 },
+                ]}
+                onSelectItems={onSelectItems}
+            />
+        );
+
+        const canvas = screen.getByTestId('dashboard-canvas');
+        const items = screen.getAllByTestId('grid-item');
+        canvas.getBoundingClientRect = () => ({left: 0, top: 0, right: 1000, bottom: 1000, width: 1000, height: 1000}) as DOMRect;
+        // Item 1 queda dins el marc que s'arrossegarà (0,0)-(100,100); item 2 en queda fora.
+        items[0].getBoundingClientRect = () => ({left: 10, top: 10, right: 50, bottom: 50, width: 40, height: 40}) as DOMRect;
+        items[1].getBoundingClientRect = () => ({left: 500, top: 500, right: 540, bottom: 540, width: 40, height: 40}) as DOMRect;
+
+        fireEvent.mouseDown(canvas, {clientX: 0, clientY: 0});
+        fireEvent.mouseMove(document, {clientX: 100, clientY: 100});
+        fireEvent.mouseUp(document, {clientX: 100, clientY: 100});
+
+        expect(onSelectItems).toHaveBeenCalledTimes(1);
+        expect(onSelectItems).toHaveBeenCalledWith([
+            expect.objectContaining({dashboardItemId: 1}),
+        ]);
+    });
+
+    it('DashboardReactGridLayout_quanElMousedownComencaSobreUnElement_noIniciaElMarcDeSeleccio', () => {
+        mocks.isEqualMock.mockReturnValue(true);
+        const onSelectItems = vi.fn();
+
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={true}
+                dashboardWidgets={[{ dashboardItemId: 1, titol: 'Widget 1', tipus: 'SIMPLE' }]}
+                gridLayoutItems={[{ id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
+                onSelectItems={onSelectItems}
+            />
+        );
+
+        const item = screen.getByTestId('grid-item');
+        fireEvent.mouseDown(item, {clientX: 10, clientY: 10});
+        fireEvent.mouseMove(document, {clientX: 200, clientY: 200});
+        fireEvent.mouseUp(document, {clientX: 200, clientY: 200});
+
+        expect(onSelectItems).not.toHaveBeenCalled();
+    });
+
+    it('DashboardReactGridLayout_ressaltaVisualmentElsElementsDUnaSeleccioMultiple', () => {
+        mocks.isEqualMock.mockReturnValue(true);
+
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={true}
+                dashboardWidgets={[
+                    { dashboardItemId: 1, tipus: 'SIMPLE' },
+                    { dashboardItemId: 2, tipus: 'SIMPLE' },
+                ]}
+                gridLayoutItems={[
+                    { id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 },
+                    { id: '2', type: 'SIMPLE', x: 5, y: 5, w: 2, h: 2 },
+                ]}
+                multiSelectedItemIds={['1', '2']}
+            />
+        );
+
+        screen.getAllByTestId('grid-item').forEach((item) => {
+            expect(item).toHaveStyle({ outline: '2px solid #1976d2' });
+        });
+    });
+
+    it('DashboardReactGridLayout_ambSeleccioMultipleActiva_noObreElMenuContextual', () => {
+        mocks.isEqualMock.mockReturnValue(true);
+
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={true}
+                dashboardWidgets={[{ dashboardItemId: 1, titol: 'Widget simple', tipus: 'SIMPLE' }]}
+                gridLayoutItems={[{ id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
+                multiSelectedItemIds={['1', '2']}
+            />
+        );
+
+        fireEvent.contextMenu(screen.getByTestId('grid-item'), {clientX: 50, clientY: 60});
+
+        expect(screen.queryByText('Modificar')).not.toBeInTheDocument();
+    });
+
+    it('DashboardReactGridLayout_enArrossegarUnElementDUnaSeleccioMultiple_moulaRestaAmbElMateixDesplacament', () => {
+        // Regressió: react-grid-layout només mou nativament l'element arrossegat; la resta d'elements
+        // seleccionats han de rebre el mateix desplaçament (vegeu multiDragDeltaRef a onItemDragStop/onLayoutChange).
+        mocks.isEqualMock.mockReturnValue(false);
+        const onGridLayoutItemsChange = vi.fn();
+
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={true}
+                dashboardWidgets={[
+                    { dashboardItemId: 1, tipus: 'SIMPLE' },
+                    { dashboardItemId: 2, tipus: 'SIMPLE' },
+                ]}
+                gridLayoutItems={[
+                    { id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 },
+                    { id: '2', type: 'SIMPLE', x: 10, y: 10, w: 2, h: 2 },
+                ]}
+                multiSelectedItemIds={['1', '2']}
+                onGridLayoutItemsChange={onGridLayoutItemsChange}
+            />
+        );
+
+        const oldItem = {i: '1', x: 0, y: 0, w: 2, h: 2};
+        const newItem = {i: '1', x: 3, y: 4, w: 2, h: 2};
+        act(() => {
+            mocks.responsiveProps.onDragStart([], oldItem, oldItem, oldItem, {clientX: 100, clientY: 100});
+            mocks.responsiveProps.onDragStop([], oldItem, newItem, newItem, {clientX: 160, clientY: 200});
+        });
+
+        act(() => {
+            // Layout tal com el reportaria react-grid-layout: només l'element arrossegat s'ha mogut.
+            mocks.responsiveProps.onLayoutChange([], {
+                md: [
+                    {i: '1', x: 3, y: 4, w: 2, h: 2},
+                    {i: '2', x: 10, y: 10, w: 2, h: 2},
+                ],
+            });
+        });
+
+        expect(onGridLayoutItemsChange).toHaveBeenCalledWith([
+            {id: '1', type: 'SIMPLE', x: 3, y: 4, w: 2, h: 2},
+            {id: '2', type: 'SIMPLE', x: 13, y: 14, w: 2, h: 2},
+        ]);
     });
 });

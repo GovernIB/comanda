@@ -347,6 +347,10 @@ const EstadisticaDashboardEdit: React.FC = () => {
         return null;
     }, [editorSelection]);
 
+    const multiSelectedGridItemIds = React.useMemo(() => {
+        return editorSelection.kind === 'multi' ? editorSelection.ids : [];
+    }, [editorSelection]);
+
     const selectedFiltreId = React.useMemo(() => {
         if (editorSelection.kind === 'filtre' && editorSelection.mode === 'edit') {
             return String(editorSelection.dashboardFiltreId);
@@ -392,6 +396,24 @@ const EstadisticaDashboardEdit: React.FC = () => {
                 widgetId: entity.widgetId,
             });
         }
+    };
+
+    /**
+     * Selecció múltiple (marc de selecció amb el ratolí, vegeu DashboardReactGridLayout). Amb 0 elements es
+     * comporta com netejar la selecció i amb exactament 1 com una selecció normal (mostra les seves
+     * propietats); només amb 2 o més es mostra com a selecció múltiple (sense panell de propietats).
+     */
+    const selectDashboardElements = (entities: Array<{ tipus?: string; id?: string | number; dashboardTitolId?: string | number; dashboardItemId?: string | number; widgetId?: string | number }>) => {
+        if (!entities || entities.length === 0) {
+            setEditorSelection({ kind: 'none' });
+            return;
+        }
+        if (entities.length === 1) {
+            selectDashboardElement(entities[0]);
+            return;
+        }
+        const ids = entities.map((entity) => String(entity.dashboardItemId ?? entity.dashboardTitolId ?? entity.id));
+        setEditorSelection({ kind: 'multi', ids });
     };
 
     const cloneWithoutFields = (data: any, fields: string[]): any => {
@@ -509,6 +531,14 @@ const EstadisticaDashboardEdit: React.FC = () => {
         Promise.all(promises)
             .then(() => {
                 temporalMessageShow(null, t($ => $.page.dashboards.action.patchItem.success), 'success');
+                // Quan es mou un grup (selecció múltiple), react-grid-layout només reflecteix internament
+                // la posició de l'element realment arrossegat: la resta s'han mogut igualment (i s'acaben de
+                // desar aquí a sobre), però el canvas no ho mostra fins que `gridLayoutItems` es refresca amb
+                // dades noves. En un moviment/redimensionament normal (com a màxim 1 item afectat) no cal, ja
+                // que react-grid-layout ja mostra l'element arrossegat/redimensionat a la posició correcta.
+                if (promises.length > 1) {
+                    forceRefreshDashboardWidgets();
+                }
             })
             .catch((reason) => {
                 temporalMessageShow(null, t($ => $.page.dashboards.action.patchItem.error), 'error');
@@ -608,10 +638,12 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                     gridLayoutItems={mappedDashboardItems}
                                     onGridLayoutItemsChange={onGridLayoutItemsChange}
                                     onSelectItem={selectDashboardElement}
+                                    onSelectItems={selectDashboardElements}
                                     onDeleteItem={handleDeleteItem}
                                     onDuplicateItem={handleDuplicateItem}
                                     onClearSelection={() => setEditorSelection({ kind: 'none' })}
                                     selectedItemId={selectedGridItemId}
+                                    multiSelectedItemIds={multiSelectedGridItemIds}
                                     dashboardEntornCodi={dashboardEntornCodi}
                                     backgroundColor={designDarkMode ? dashboard.colorFonsFosc : dashboard.colorFonsClar}
                                     // Al disseny s'aprofita sempre tot l'ample disponible del canvas (a

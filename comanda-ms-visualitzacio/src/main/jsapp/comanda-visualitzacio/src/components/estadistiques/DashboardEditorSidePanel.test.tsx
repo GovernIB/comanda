@@ -18,6 +18,13 @@ const mocks = vi.hoisted(() => ({
     tMock: vi.fn((selector: any) =>
         selector({
             page: {
+                dashboards: {
+                    editor: {
+                        multiSelection: {
+                            message: '{{count}} elements seleccionats',
+                        },
+                    },
+                },
                 widget: {
                     form: {
                         preview: 'Previsualització',
@@ -410,6 +417,38 @@ describe('DashboardEditorSidePanel', () => {
         expect(screen.getByTestId('field-tipusTitol')).toBeInTheDocument();
         expect(screen.getByTestId('widget-preview')).toHaveTextContent('TITOL');
         expect(screen.getByTestId('personalitzat-fields')).toBeInTheDocument();
+    });
+
+    it('DashboardEditorSidePanel_quanSelectionEsMulti_noMostraCapFormulariIDeshabilitaEliminarIDesar', () => {
+        const selection: DashboardEditorSelection = {kind: 'multi', ids: ['1', '2']};
+        const onSaved = vi.fn();
+        const onDeleted = vi.fn();
+
+        render(
+            <DashboardEditorSidePanel
+                dashboard={defaultDashboard}
+                dashboardId="1"
+                selection={selection}
+                onSelectionChange={vi.fn()}
+                onSaved={onSaved}
+                onDeleted={onDeleted}
+            />
+        );
+
+        // Ni el formulari del dashboard (kind 'none'), ni el de widget/títol, s'ha de mostrar.
+        expect(screen.queryByTestId('field-aplicacio')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('field-titol')).not.toBeInTheDocument();
+        expect(screen.getByText('{{count}} elements seleccionats')).toBeInTheDocument();
+
+        const deleteButton = screen.getByRole('button', {name: 'Eliminar'});
+        const saveButton = screen.getByRole('button', {name: 'Desar'});
+        expect(deleteButton).toBeDisabled();
+        expect(saveButton).toBeDisabled();
+
+        fireEvent.click(deleteButton);
+        fireEvent.click(saveButton);
+        expect(onSaved).not.toHaveBeenCalled();
+        expect(onDeleted).not.toHaveBeenCalled();
     });
 
     it('DashboardEditorSidePanel_editantUnTitolExistent_notificaElsCanvisEnViuIElsNetejaEnDesmuntar', () => {

@@ -77,6 +77,14 @@ export type DashboardEditorSelection =
           kind: 'filtre';
           mode: 'edit';
           dashboardFiltreId: any;
+      }
+    | {
+          /**
+           * Diversos elements seleccionats alhora (marc de selecció amb el ratolí, vegeu
+           * DashboardReactGridLayout). No es mostren propietats editables per a una selecció múltiple.
+           */
+          kind: 'multi';
+          ids: string[];
       };
 
 type DashboardEditorSidePanelProps = {
@@ -504,6 +512,9 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
         if (selection.kind === 'filtre') {
             return `filtre-${selection.mode}-${selection.mode === 'edit' ? selection.dashboardFiltreId : 'new'}`;
         }
+        if (selection.kind === 'multi') {
+            return `multi-${selection.ids.join(',')}`;
+        }
         return 'none';
     }, [selection]);
 
@@ -512,6 +523,7 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
     }, [selectionKey]);
 
     const handleSave = async () => {
+        if (selection.kind === 'multi') return; // sense propietats editables per a una selecció múltiple
         setSaving(true);
         try {
             if (selection.kind === 'none') {
@@ -604,6 +616,7 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
     };
 
     const handleDelete = () => {
+        if (selection.kind === 'multi') return; // sense acció d'esborrat per a una selecció múltiple
         if (selection.kind === 'widget' && selection.mode === 'edit') {
             confirmDelete(() => deleteDashboardItem(selection.dashboardItemId));
         } else if (selection.kind === 'title' && selection.mode === 'edit') {
@@ -661,7 +674,7 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
                         onLiveDataChange={onLiveTitleDataChange}
                         onHasOverridesChange={(value) => { titleHasOverridesRef.current = value; }}
                     />
-                ) : (
+                ) : selection.kind === 'filtre' ? (
                     <FiltreEditor
                         key={selectionKey}
                         dashboard={dashboard}
@@ -670,6 +683,12 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
                         filtreFormApiRef={filtreFormApiRef}
                         dashboardFiltres={dashboardFiltres}
                     />
+                ) : (
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'text.secondary' }}>
+                        <Typography variant="body2">
+                            {t($ => $.page.dashboards.editor.multiSelection.message, { count: selection.ids.length })}
+                        </Typography>
+                    </Box>
                 )}
             </Box>
             <Divider />
@@ -679,7 +698,7 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
                     color="error"
                     startIcon={<Icon>delete</Icon>}
                     onClick={handleDelete}
-                    disabled={selection.kind === 'none' || saving}
+                    disabled={selection.kind === 'none' || selection.kind === 'multi' || saving}
                 >
                     {t($ => $.common.delete)}
                 </Button>
@@ -687,7 +706,7 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
                     variant="contained"
                     startIcon={<Icon>save</Icon>}
                     onClick={handleSave}
-                    disabled={saving}
+                    disabled={selection.kind === 'multi' || saving}
                 >
                     {t($ => $.common.save)}
                 </Button>
