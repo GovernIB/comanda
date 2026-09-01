@@ -73,6 +73,7 @@ export interface GraficWidgetVisualizationProps {
     gaugeMax?: number;
     gaugeColors?: string;
     gaugeRangs?: string;
+    tipusValors?: 'NUMERIC' | 'PERCENTAGE';
 
     // Heatmap chart
     heatmapColors?: string;
@@ -138,6 +139,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         gaugeMax = 100,
         // gaugeColors = '#d4e6f1,#3498db,#1a5276',
         gaugeRangs = '50,75,100',
+        tipusValors,
 
         // Heatmap chart specific
         // heatmapColors = '#d4e6f1,#3498db,#1a5276',
@@ -530,7 +532,20 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
 
     // Render a gauge chart
     const renderGaugeChart = () => {
-        const valorGauge = Array.isArray(dades) && dades.length > 0 ? Number(dades[0].value) : 0;
+        const primeraFila = Array.isArray(dades) && dades.length > 0 ? dades[0] : undefined;
+        const valorGauge = primeraFila && primeraFila.value !== undefined && primeraFila.value !== null ? Number(primeraFila.value) : 0;
+        const maxValueRaw = primeraFila && primeraFila.max !== undefined && primeraFila.max !== null ? Number(primeraFila.max) : undefined;
+        const maximDisponible = maxValueRaw !== undefined && !isNaN(maxValueRaw) && maxValueRaw !== 0;
+        const esPercentatge = tipusValors === 'PERCENTAGE';
+
+        const valorMostrat = esPercentatge
+            ? (maximDisponible ? (valorGauge / (maxValueRaw as number)) * 100 : 0)
+            : valorGauge;
+        const valueMinMostrat = esPercentatge ? 0 : gaugeMin;
+        const valueMaxMostrat = esPercentatge
+            ? 100
+            : (maxValueRaw !== undefined && !isNaN(maxValueRaw) ? maxValueRaw : gaugeMax);
+
         const colors = colorsPaleta ? colorsPaleta.split(',').map(c => c.trim()) : ["#000000"];
         const rangs = gaugeRangs ? gaugeRangs.split(',').map(r => Number(r.trim())).filter(v => !isNaN(v)) : [];
         const getColor = (value: number) => {
@@ -552,12 +567,13 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                 overflow: 'hidden',
             }}>
                 <Gauge
-                    value={valorGauge}
-                    valueMin={gaugeMin}
-                    valueMax={gaugeMax}
+                    value={valorMostrat}
+                    valueMin={valueMinMostrat}
+                    valueMax={valueMaxMostrat}
+                    text={esPercentatge ? ({value}) => `${Math.round(value ?? 0)}%` : undefined}
                     sx={() => ({
                         [`& .${gaugeClasses.valueArc}`]: {
-                            fill: getColor(valorGauge),
+                            fill: getColor(valorMostrat),
                         },
                         [`& .${gaugeClasses.valueText}`]: {
                             fill: `${chartTextColor} !important`,
@@ -718,7 +734,7 @@ const generateSampleData = (chartType?: string): Record<string, unknown>[] => {
                 {label: 'Grup D', value: 200},
             ];
         case 'GAUGE_CHART':
-            return [{value: 75}];
+            return [{ value: 75, max: 100 }];
         case 'HEATMAP_CHART':
             return [
                 {x: 'A', y: 'X', value: 10},

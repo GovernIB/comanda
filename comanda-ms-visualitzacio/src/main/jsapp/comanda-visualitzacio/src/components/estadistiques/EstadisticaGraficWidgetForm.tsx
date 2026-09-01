@@ -69,6 +69,7 @@ const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = 
         gaugeMax: data.gaugeMax,
         gaugeColors: data.gaugeColors,
         gaugeRangs: data.gaugeRangs,
+        tipusValors: data.tipusValors,
         heatmapColors: data.heatmapColors,
         heatmapMinValue: data.heatmapMinValue,
         heatmapMaxValue: data.heatmapMaxValue,
