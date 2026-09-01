@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.logic.intf.model.export;
 
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.IndicadorRolEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import lombok.AllArgsConstructor;
@@ -23,5 +24,6 @@ public class IndicadorTaulaExport implements Serializable {
     private TableColumnsEnum agregacio;
     private PeriodeUnitat unitatAgregacio;
     private String titol;
+    private IndicadorRolEnum rol;
 
 }

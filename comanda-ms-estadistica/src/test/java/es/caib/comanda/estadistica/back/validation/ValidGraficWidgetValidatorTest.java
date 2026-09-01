@@ -138,4 +138,56 @@ public class ValidGraficWidgetValidatorTest {
 
         assertFalse(validator.isValid(widget, context));
     }
+
+    @Test
+    void testInvalidDosIndicadorsSenseIndicadorMax() {
+        EstadisticaGraficWidget widget = new EstadisticaGraficWidget();
+        widget.setTipusDades(TipusGraficDataEnum.DOS_INDICADORS);
+        widget.setTempsAgrupacio(PeriodeUnitat.MES);
+        widget.setIndicador(es.caib.comanda.ms.logic.intf.model.ResourceReference.toResourceReference(1L));
+        widget.setAgregacio(TableColumnsEnum.SUM);
+
+        assertFalse(validator.isValid(widget, context));
+    }
+
+    @Test
+    void testValidDosIndicadorsAmbTotsElsCamps() {
+        EstadisticaGraficWidget widget = new EstadisticaGraficWidget();
+        widget.setTipusDades(TipusGraficDataEnum.DOS_INDICADORS);
+        widget.setTempsAgrupacio(PeriodeUnitat.MES);
+        widget.setIndicador(es.caib.comanda.ms.logic.intf.model.ResourceReference.toResourceReference(1L));
+        widget.setAgregacio(TableColumnsEnum.SUM);
+        widget.setIndicadorMax(es.caib.comanda.ms.logic.intf.model.ResourceReference.toResourceReference(2L));
+        widget.setAgregacioMax(TableColumnsEnum.SUM);
+
+        assertTrue(validator.isValid(widget, context));
+    }
+
+    @Test
+    void testInvalidDosIndicadorsPercentatgeMesclat() {
+        EstadisticaGraficWidget widget = new EstadisticaGraficWidget();
+        widget.setTipusDades(TipusGraficDataEnum.DOS_INDICADORS);
+        widget.setTempsAgrupacio(PeriodeUnitat.MES);
+        widget.setIndicador(es.caib.comanda.ms.logic.intf.model.ResourceReference.toResourceReference(1L));
+        widget.setAgregacio(TableColumnsEnum.PERCENTAGE);
+        widget.setIndicadorMax(es.caib.comanda.ms.logic.intf.model.ResourceReference.toResourceReference(2L));
+        widget.setAgregacioMax(TableColumnsEnum.SUM);
+
+        assertFalse(validator.isValid(widget, context));
+    }
+
+    @Test
+    void testInvalidDosIndicadorsUnitatsDiferents() {
+        EstadisticaGraficWidget widget = new EstadisticaGraficWidget();
+        widget.setTipusDades(TipusGraficDataEnum.DOS_INDICADORS);
+        widget.setTempsAgrupacio(PeriodeUnitat.MES);
+        widget.setIndicador(es.caib.comanda.ms.logic.intf.model.ResourceReference.toResourceReference(1L));
+        widget.setAgregacio(TableColumnsEnum.AVERAGE);
+        widget.setUnitatAgregacio(PeriodeUnitat.DIA);
+        widget.setIndicadorMax(es.caib.comanda.ms.logic.intf.model.ResourceReference.toResourceReference(2L));
+        widget.setAgregacioMax(TableColumnsEnum.AVERAGE);
+        widget.setUnitatAgregacioMax(PeriodeUnitat.MES);
+
+        assertFalse(validator.isValid(widget, context));
+    }
 }

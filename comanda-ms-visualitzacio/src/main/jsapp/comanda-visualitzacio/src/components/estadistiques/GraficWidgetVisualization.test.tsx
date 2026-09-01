@@ -34,7 +34,9 @@ vi.mock('@mui/x-charts', () => ({
     ChartsTooltip: () => <div data-testid="charts-tooltip">Tooltip</div>,
     ChartsLegend: () => <div data-testid="charts-legend">Legend</div>,
     SparkLineChart: () => <div data-testid="spark-line-chart">SparkLine</div>,
-    Gauge: () => <div data-testid="gauge-chart">Gauge</div>,
+    Gauge: ({value, valueMin, valueMax, text}: { value?: number; valueMin?: number; valueMax?: number; text?: (params: { value: number | null }) => string }) => (
+        <div data-testid="gauge-chart" data-value={value} data-value-min={valueMin} data-value-max={valueMax} data-text={text ? text({ value: value ?? null }) : undefined}>Gauge</div>
+    ),
     XAxis: () => null,
     YAxis: () => null,
     LineSeries: () => null,
@@ -195,6 +197,57 @@ describe('GraficWidgetVisualization', () => {
         );
 
         expect(screen.getByTestId('gauge-chart')).toBeInTheDocument();
+    });
+
+    it('GraficWidgetVisualization_quanEsGaugeAmbDosIndicadorsIModeNumeric_elMaximVeDelSegonIndicador', () => {
+        renderComponent(
+            <GraficWidgetVisualization
+                titol="Gràfic gauge"
+                tipusGrafic="GAUGE_CHART"
+                tipusValors="NUMERIC"
+                dades={[{ value: 40, max: 200 }]}
+                mostrarVora={false}
+                ampleVora={1}
+            />
+        );
+
+        const gauge = screen.getByTestId('gauge-chart');
+        expect(gauge).toHaveAttribute('data-value', '40');
+        expect(gauge).toHaveAttribute('data-value-max', '200');
+    });
+
+    it('GraficWidgetVisualization_quanEsGaugeAmbDosIndicadorsIModePercentatge_calculaElPercentatge', () => {
+        renderComponent(
+            <GraficWidgetVisualization
+                titol="Gràfic gauge"
+                tipusGrafic="GAUGE_CHART"
+                tipusValors="PERCENTAGE"
+                dades={[{ value: 40, max: 200 }]}
+                mostrarVora={false}
+                ampleVora={1}
+            />
+        );
+
+        const gauge = screen.getByTestId('gauge-chart');
+        expect(gauge).toHaveAttribute('data-value', '20');
+        expect(gauge).toHaveAttribute('data-value-min', '0');
+        expect(gauge).toHaveAttribute('data-value-max', '100');
+    });
+
+    it('GraficWidgetVisualization_quanEsGaugePercentatgeSenseMaxim_noDividiuPerZeroIMostraZero', () => {
+        renderComponent(
+            <GraficWidgetVisualization
+                titol="Gràfic gauge"
+                tipusGrafic="GAUGE_CHART"
+                tipusValors="PERCENTAGE"
+                dades={[{ value: 40 }]}
+                mostrarVora={false}
+                ampleVora={1}
+            />
+        );
+
+        const gauge = screen.getByTestId('gauge-chart');
+        expect(gauge).toHaveAttribute('data-value', '0');
     });
 
     it('GraficWidgetVisualization_quanEsRenderitzaEnModeSparkLine_mostraElSparkLine', () => {

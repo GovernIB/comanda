@@ -97,6 +97,11 @@ const isIndicatorsStepValid = (kind: WidgetKind | undefined, data: any): boolean
             if (isEmpty(data?.indicador) || isEmpty(data?.agregacio)) return false;
             if (data.agregacio === 'AVERAGE' && isEmpty(data?.unitatAgregacio)) return false;
         }
+        if (tipusDades === 'DOS_INDICADORS') {
+            if (isEmpty(data?.indicadorMax) || isEmpty(data?.agregacioMax)) return false;
+            if (data.agregacioMax === 'AVERAGE' && isEmpty(data?.unitatAgregacioMax)) return false;
+            if (isEmpty(data?.tipusValors)) return false;
+        }
         if (tipusDades === 'UN_INDICADOR_AMB_DESCOMPOSICIO' && isEmpty(data?.descomposicioDimensio)) return false;
         const skipTempsAgrupacio = tipusDades === 'UN_INDICADOR_AMB_DESCOMPOSICIO' && data?.agruparPerDimensioDescomposicio === true;
         if (!skipTempsAgrupacio && isEmpty(data?.tempsAgrupacio)) return false;

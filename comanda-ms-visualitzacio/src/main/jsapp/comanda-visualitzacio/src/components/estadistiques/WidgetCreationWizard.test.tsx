@@ -487,4 +487,37 @@ describe('WidgetCreationWizard', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Següent' })); // dimensions -> period
         expect(screen.getByTestId('period-fields')).toBeInTheDocument();
     });
+
+    it('WidgetCreationWizard_quanEsGraficGaugeDosIndicadorsSenseIndicadorMax_noEsPotAvancar', () => {
+        mocks.useFormContextMock.mockReturnValue({
+            data: {
+                aplicacio: { id: 3 },
+                titol: 'El meu widget',
+                tipusGrafic: 'GAUGE_CHART',
+                tipusDades: 'DOS_INDICADORS',
+                indicador: { id: 1 },
+                agregacio: 'SUM',
+                tempsAgrupacio: 'MES',
+                // falten indicadorMax, agregacioMax i tipusValors
+            },
+            apiRef: { current: { setFieldValue: vi.fn() } },
+        });
+
+        render(
+            <WidgetCreationWizard
+                open
+                dashboard={defaultDashboard}
+                dashboardId="1"
+                initialWidgetType="GRAFIC"
+                initialEntornId={5}
+                initialAplicacio={{ id: 3 }}
+                onClose={vi.fn()}
+                onCreated={vi.fn()}
+            />
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: 'Següent' }));
+        expect(screen.getByTestId('grafic-widget-form')).toHaveTextContent('indicators');
+        expect(screen.getByRole('button', { name: 'Següent' })).toBeDisabled();
+    });
 });

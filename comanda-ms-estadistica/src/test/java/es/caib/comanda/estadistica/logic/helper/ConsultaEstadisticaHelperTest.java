@@ -9,6 +9,8 @@ import es.caib.comanda.client.model.EntornRef;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisuals;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.*;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.GraficValueTypeEnum;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.IndicadorRolEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.OrdreDireccioEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum;
@@ -37,7 +39,6 @@ import es.caib.comanda.estadistica.persist.repository.IndicadorFormulaTermeRepos
 import es.caib.comanda.estadistica.persist.repository.IndicadorRepository;
 import es.caib.comanda.estadistica.persist.repository.UnitatOrganitzativaRepository;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
-import org.apache.commons.lang3.NotImplementedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -428,15 +429,74 @@ class ConsultaEstadisticaHelperTest {
     }
 
     @Test
-    @DisplayName("getDadesWidgetGrafic: llança excepció encapsulada per a DOS_INDICADORS")
-    void getDadesWidgetGrafic_quanDosIndicadors_llancaNotImplementedException() {
+    @DisplayName("filesToSeries: GAUGE_CHART amb DOS_INDICADORS produeix value i max separats")
+    void filesToSeries_quanGaugeChartIDosIndicadors_llavorsRetornaValueIMaxSeparats() {
+        // Arrange
+        List<Map<String, String>> files = Collections.singletonList(
+            Map.of("agrupacio", "Total", "col1", "40", "col2", "200"));
+
+        // Act
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> result = (List<Map<String, Object>>) ReflectionTestUtils.invokeMethod(
+            consultaEstadisticaHelper, "filesToSeries", files, TipusGraficEnum.GAUGE_CHART, TipusGraficDataEnum.DOS_INDICADORS);
+
+        // Assert
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0)).containsEntry("value", 40.0);
+        assertThat(result.get(0)).containsEntry("max", 200.0);
+    }
+
+    @Test
+    @DisplayName("filesToSeries: GAUGE_CHART amb DOS_INDICADORS i sense dades de màxim retorna max null, no 0")
+    void filesToSeries_quanGaugeChartIDosIndicadorsSenseMaxim_llavorsRetornaMaxNull() {
+        // Arrange
+        Map<String, String> fila = new java.util.HashMap<>();
+        fila.put("agrupacio", "Total");
+        fila.put("col1", "40");
+        fila.put("col2", null);
+        List<Map<String, String>> files = Collections.singletonList(fila);
+
+        // Act
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> result = (List<Map<String, Object>>) ReflectionTestUtils.invokeMethod(
+            consultaEstadisticaHelper, "filesToSeries", files, TipusGraficEnum.GAUGE_CHART, TipusGraficDataEnum.DOS_INDICADORS);
+
+        // Assert
+        assertThat(result.get(0).get("max")).isNull();
+    }
+
+    @Test
+    @DisplayName("getDadesWidgetGrafic: DOS_INDICADORS consulta ambdós indicadors i no llança excepció")
+    void getDadesWidgetGrafic_quanDosIndicadors_llavorsConsultaAmbdosIndicadorsSenseError() {
         // Arrange
         DashboardItemEntity dashboardItem = new DashboardItemEntity();
         dashboardItem.setId(1L);
         dashboardItem.setEntornId(1L);
 
+        IndicadorEntity indicadorValor = new IndicadorEntity();
+        indicadorValor.setId(1L);
+        indicadorValor.setCodi("IND_VALOR");
+        IndicadorTaulaEntity filaValor = new IndicadorTaulaEntity();
+        filaValor.setRol(IndicadorRolEnum.VALOR);
+        filaValor.setIndicador(indicadorValor);
+        filaValor.setTitol("Valor");
+        filaValor.setAgregacio(TableColumnsEnum.SUM);
+
+        IndicadorEntity indicadorMaxim = new IndicadorEntity();
+        indicadorMaxim.setId(2L);
+        indicadorMaxim.setCodi("IND_MAXIM");
+        IndicadorTaulaEntity filaMaxim = new IndicadorTaulaEntity();
+        filaMaxim.setRol(IndicadorRolEnum.MAXIM);
+        filaMaxim.setIndicador(indicadorMaxim);
+        filaMaxim.setTitol("Màxim");
+        filaMaxim.setAgregacio(TableColumnsEnum.SUM);
+
         EstadisticaGraficWidgetEntity widget = new EstadisticaGraficWidgetEntity();
         widget.setTipusDades(TipusGraficDataEnum.DOS_INDICADORS);
+        widget.setTipusGrafic(TipusGraficEnum.GAUGE_CHART);
+        widget.setTempsAgrupacio(PeriodeUnitat.DIA);
+        widget.setIndicadorsInfo(List.of(filaValor, filaMaxim));
+        widget.setTipusValors(GraficValueTypeEnum.PERCENTAGE);
         dashboardItem.setWidget(widget);
 
         DadesComunsWidgetConsulta dadesComuns = DadesComunsWidgetConsulta.builder()
@@ -444,10 +504,59 @@ class ConsultaEstadisticaHelperTest {
             .periodeDates(new PeriodeResolverHelper.PeriodeDates(LocalDate.of(2023, 1, 1), LocalDate.of(2023, 1, 31)))
             .build();
 
-        // Act & Assert (Cridant directament al mètode privat via reflexió)
-        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "getDadesWidgetGrafic", dashboardItem, dadesComuns, null, null))
-            .isInstanceOf(NotImplementedException.class)
-            .hasMessageContaining("La configuració de 2 indicadors encara no ha estat implementada");
+        when(fetRepository.getValorsGraficVarisIndicadors(any(), any(), any(), any(), any(), any(), any()))
+            .thenReturn(Collections.singletonList(Map.of("agrupacio", "Total", "col1", "40", "col2", "200")));
+
+        // Act
+        InformeWidgetItem result = (InformeWidgetItem) ReflectionTestUtils.invokeMethod(
+            consultaEstadisticaHelper, "getDadesWidgetGrafic", dashboardItem, dadesComuns, null, null);
+
+        // Assert
+        assertThat(result).isInstanceOf(InformeWidgetGraficItem.class);
+        InformeWidgetGraficItem graficItem = (InformeWidgetGraficItem) result;
+        assertThat(graficItem.getDades()).hasSize(1);
+        assertThat(graficItem.getDades().get(0)).containsEntry("value", 40.0);
+        assertThat(graficItem.getDades().get(0)).containsEntry("max", 200.0);
+        assertThat(graficItem.getTipusValors()).isEqualTo(GraficValueTypeEnum.PERCENTAGE);
+    }
+
+    @Test
+    @DisplayName("getDadesWidgetGrafic: DOS_INDICADORS sense indicador de màxim configurat llança ReportGenerationException")
+    void getDadesWidgetGrafic_quanDosIndicadorsSenseMaxim_llavorsLlancaReportGenerationException() {
+        // Arrange
+        DashboardItemEntity dashboardItem = new DashboardItemEntity();
+        dashboardItem.setId(1L);
+        dashboardItem.setEntornId(1L);
+
+        IndicadorEntity indicadorValor = new IndicadorEntity();
+        indicadorValor.setId(1L);
+        indicadorValor.setCodi("IND_VALOR");
+        IndicadorTaulaEntity filaValor = new IndicadorTaulaEntity();
+        filaValor.setRol(IndicadorRolEnum.VALOR);
+        filaValor.setIndicador(indicadorValor);
+        filaValor.setTitol("Valor");
+        filaValor.setAgregacio(TableColumnsEnum.SUM);
+
+        EstadisticaGraficWidgetEntity widget = new EstadisticaGraficWidgetEntity();
+        widget.setTipusDades(TipusGraficDataEnum.DOS_INDICADORS);
+        widget.setTipusGrafic(TipusGraficEnum.GAUGE_CHART);
+        widget.setTempsAgrupacio(PeriodeUnitat.DIA);
+        // Simula el buit que pot deixar un export/import: només hi ha fila de VALOR, sense fila de MAXIM
+        widget.setIndicadorsInfo(List.of(filaValor));
+        dashboardItem.setWidget(widget);
+
+        DadesComunsWidgetConsulta dadesComuns = DadesComunsWidgetConsulta.builder()
+            .entornAppId(1L).entornCodi("DEV")
+            .periodeDates(new PeriodeResolverHelper.PeriodeDates(LocalDate.of(2023, 1, 1), LocalDate.of(2023, 1, 31)))
+            .build();
+
+        // Act & Assert
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(
+            consultaEstadisticaHelper, "getDadesWidgetGrafic", dashboardItem, dadesComuns, null, null))
+            .isInstanceOf(ReportGenerationException.class)
+            .hasMessageContaining("indicador de màxim");
+
+        verify(fetRepository, never()).getValorsGraficVarisIndicadors(any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test

@@ -253,4 +253,45 @@ describe('EstadisticaGraficWidgetForm', () => {
         expect(screen.getByTestId('field-tempsAgrupacio')).toHaveAttribute('data-required', 'false');
         expect(screen.getByTestId('field-tempsAgrupacio')).toHaveAttribute('data-disabled', 'true');
     });
+
+    it('EstadisticaGraficWidgetForm_quanEsGaugeChartAmbDosIndicadors_mostraElsCampsDelIndicadorMaxIElSelectorTipusValors', () => {
+        mocks.useFormContextMock.mockReturnValue({
+            data: {
+                aplicacio: { id: 7 },
+                tipusGrafic: 'GAUGE_CHART',
+                tipusDades: 'DOS_INDICADORS',
+                agregacio: 'SUM',
+                agregacioMax: 'SUM',
+            },
+            apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
+        });
+
+        render(<EstadisticaGraficWidgetForm />);
+
+        expect(screen.getByTestId('advanced-search-indicador')).toBeInTheDocument();
+        expect(screen.getByTestId('advanced-search-indicadorMax')).toBeInTheDocument();
+        expect(screen.getByTestId('field-titolIndicadorMax')).toBeInTheDocument();
+        expect(screen.getByTestId('field-agregacioMax')).toBeInTheDocument();
+        expect(screen.getByTestId('field-unitatAgregacioMax')).toBeInTheDocument();
+        expect(screen.getByTestId('field-tipusValors')).toBeInTheDocument();
+        expect(screen.queryByTestId('field-gaugeMax')).not.toBeInTheDocument();
+    });
+
+    it('EstadisticaGraficWidgetForm_quanEsGaugeChartAmbUnIndicador_mostraGaugeMaxIAmagaCampsDeDosIndicadors', () => {
+        mocks.useFormContextMock.mockReturnValue({
+            data: {
+                aplicacio: { id: 7 },
+                tipusGrafic: 'GAUGE_CHART',
+                tipusDades: 'UN_INDICADOR',
+                agregacio: 'SUM',
+            },
+            apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
+        });
+
+        render(<EstadisticaGraficWidgetForm />);
+
+        expect(screen.getByTestId('field-gaugeMax')).toBeInTheDocument();
+        expect(screen.queryByTestId('advanced-search-indicadorMax')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('field-tipusValors')).not.toBeInTheDocument();
+    });
 });

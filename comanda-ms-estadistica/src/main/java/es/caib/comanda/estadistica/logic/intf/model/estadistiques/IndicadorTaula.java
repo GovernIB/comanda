@@ -3,6 +3,7 @@ package es.caib.comanda.estadistica.logic.intf.model.estadistiques;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.IndicadorRolEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaTaulaWidget;
@@ -75,5 +76,6 @@ public class IndicadorTaula extends BaseResource<Long> {
     @NotNull
     @Size(max = 64)
     private String titol;
+    private IndicadorRolEnum rol;
 
 }

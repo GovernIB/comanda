@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.Nulls;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.back.intf.validation.ValidGraficWidget;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.GraficValueTypeEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
@@ -112,8 +113,7 @@ public class EstadisticaGraficWidget extends EstadisticaWidget { // WidgetBaseRe
     private TipusGraficDataEnum tipusDades;
     private ResourceReference<IndicadorTaula, Long> indicadorInfo;
     private List<IndicadorTaula> indicadorsInfo;
-//    @NotNull
-//    private GraficValueTypeEnum tipusValors;
+    private GraficValueTypeEnum tipusValors;
     private ResourceReference<Dimensio, Long> descomposicioDimensio;
     private Boolean agruparPerDimensioDescomposicio;
 
@@ -139,4 +139,17 @@ public class EstadisticaGraficWidget extends EstadisticaWidget { // WidgetBaseRe
     @Transient
     @JsonSetter(nulls = Nulls.SKIP)
     private PeriodeUnitat unitatAgregacio;
+
+    // Segon indicador (màxim), només per a tipusDades == DOS_INDICADORS
+    @Transient
+    private ResourceReference<Indicador, Long> indicadorMax;
+    @Size(max = 64)
+    @Transient
+    private String titolIndicadorMax;
+    @Transient
+    @JsonSetter(nulls = Nulls.SKIP)
+    private TableColumnsEnum agregacioMax;
+    @Transient
+    @JsonSetter(nulls = Nulls.SKIP)
+    private PeriodeUnitat unitatAgregacioMax;
 }

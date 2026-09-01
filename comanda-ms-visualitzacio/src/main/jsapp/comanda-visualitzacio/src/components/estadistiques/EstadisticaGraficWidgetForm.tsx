@@ -69,6 +69,7 @@ const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = 
         gaugeMax: data.gaugeMax,
         gaugeColors: data.gaugeColors,
         gaugeRangs: data.gaugeRangs,
+        tipusValors: data.tipusValors,
         heatmapColors: data.heatmapColors,
         heatmapMinValue: data.heatmapMinValue,
         heatmapMaxValue: data.heatmapMaxValue,
@@ -103,7 +104,7 @@ const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = 
             return ['DOS_INDICADORS', 'UN_INDICADOR_AMB_DESCOMPOSICIO', 'VARIS_INDICADORS'];
         }
         if (isGaugeTypeVisible) {
-            return ['UN_INDICADOR', 'VARIS_INDICADORS'];
+            return ['UN_INDICADOR_AMB_DESCOMPOSICIO', 'VARIS_INDICADORS'];
         }
         return [];
     }, [isPieTypeVisible, isScatterTypeVisible, isHeatTypeVisible, isBarTypeVisible, isLineTypeVisible, isSparkLineTypeVisible, isGaugeTypeVisible]);
@@ -204,6 +205,30 @@ const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = 
                                 </Grid>
                             </>
                         )}
+                        { isDosIndicadors && (
+                            <>
+                                <Grid size={4}>
+                                    <FormFieldCustomAdvancedSearch
+                                        name="indicadorMax"
+                                        namedQueries={indicadorDimensioNamedQueries}
+                                        advancedSearchColumns={columnesIndicador}
+                                        advancedSearchDataGridProps={{ rowHeight: 30, }}
+                                        advancedSearchDialogHeight={500}
+                                        required
+                                    />
+                                </Grid>
+                                <Grid size={4}><FormField name="titolIndicadorMax" required={false} /></Grid>
+                                <Grid size={2}>
+                                    <FormField name="agregacioMax" hiddenEnumValues={['FIRST_SEEN', 'LAST_SEEN']} required/>
+                                </Grid>
+                                <Grid size={2}>
+                                    <FormField name="unitatAgregacioMax" required={data.agregacioMax === 'AVERAGE'} disabled={data.agregacioMax !== 'AVERAGE'}/>
+                                </Grid>
+                                <Grid size={4}>
+                                    <FormField name="tipusValors" required/>
+                                </Grid>
+                            </>
+                        )}
                         {/* 3a fila: agrupació temporal i, si escau, dimensió de descomposició */}
                         <Grid size={isUnIndicadorAmbDescomposicio ? 4 : 12}>
                             <FormField
@@ -239,7 +264,6 @@ const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = 
                                 />
                             </Grid>
                         )}
-                        {/*<Grid size={4}><FormField name="tipusValors" /></Grid>*/}
                     </>
                 )}
             </>
@@ -314,7 +338,9 @@ const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = 
                     <>
                         <Grid size={12}><Typography variant="subtitle2" sx={{ mt: 1, mb: 1 }}>{t($ => $.page.widget.form.graficGug)}</Typography></Grid>
                         <Grid size={6} sx={{backgroundColor: 'background.paper'}}><FormField name="gaugeMin" label={t($ => $.page.widget.atributsVisuals.gaugeMin)} type="number" required={false} /></Grid>
-                        <Grid size={6} sx={{backgroundColor: 'background.paper'}}><FormField name="gaugeMax" label={t($ => $.page.widget.atributsVisuals.gaugeMax)} type="number" required={false} /></Grid>
+                        { !isDosIndicadors && (
+                            <Grid size={6} sx={{backgroundColor: 'background.paper'}}><FormField name="gaugeMax" label={t($ => $.page.widget.atributsVisuals.gaugeMax)} type="number" required={false} /></Grid>
+                        )}
                         {/*<Grid size={12}><FormField name="atributsVisuals.gaugeColors" label="Colors (separats per comes)" /></Grid>*/}
                         <Grid size={12} sx={{backgroundColor: 'background.paper'}}><FormField name="gaugeRangs" label={t($ => $.page.widget.atributsVisuals.gaugeRangs)} /></Grid>
                     </>

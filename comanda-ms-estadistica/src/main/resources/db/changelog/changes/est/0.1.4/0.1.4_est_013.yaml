@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: est-gauge-dos-indicadors-rol-0.1.4-001
+      author: limit
+      comment: >
+        Afegir la columna 'rol' a est_indicador_table per distingir, quan un widget
+        gràfic de tipus GAUGE_CHART utilitza dos indicadors (DOS_INDICADORS), quina
+        fila és l'indicador de valor (VALOR) i quina és l'indicador de màxim (MAXIM).
+        Per a la resta de tipusDades aquesta columna es queda a null.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: ${db_prefix}est_indicador_table
+              columnName: rol
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}est_indicador_table
+            columns:
+              - column:
+                  name: rol
+                  type: VARCHAR(16 ${varcharUnit})
+      rollback:
+        - dropColumn:
+            tableName: ${db_prefix}est_indicador_table
+            columns:
+              - column:
+                  name: rol
