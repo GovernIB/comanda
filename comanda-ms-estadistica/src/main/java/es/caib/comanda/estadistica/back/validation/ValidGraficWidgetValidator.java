@@ -70,7 +70,29 @@ public class ValidGraficWidgetValidator extends ValidWidgetValidator implements 
         } else if (TipusGraficDataEnum.VARIS_INDICADORS.equals(widget.getTipusDades())) {
             isValid = validateField(widget.getIndicadorsInfo() != null && !widget.getIndicadorsInfo().isEmpty(), context, "indicadorsInfo[0].indicador", MSG_CAMP_OBLIGATORI) && isValid;
         } else if (TipusGraficDataEnum.DOS_INDICADORS.equals(widget.getTipusDades())) {
-            // Pendent
+            isValid = validateField(widget.getIndicador() != null, context, "indicador", MSG_CAMP_OBLIGATORI) && isValid;
+            isValid = validateField(widget.getAgregacio() != null, context, "agregacio", MSG_CAMP_OBLIGATORI) && isValid;
+            if (TableColumnsEnum.AVERAGE.equals(widget.getAgregacio())) {
+                isValid = validateField(widget.getUnitatAgregacio() != null, context, "unitatAgregacio", MSG_CAMP_OBLIGATORI) && isValid;
+            }
+            isValid = validateField(widget.getIndicadorMax() != null, context, "indicadorMax", MSG_CAMP_OBLIGATORI) && isValid;
+            isValid = validateField(widget.getAgregacioMax() != null, context, "agregacioMax", MSG_CAMP_OBLIGATORI) && isValid;
+            if (TableColumnsEnum.AVERAGE.equals(widget.getAgregacioMax())) {
+                isValid = validateField(widget.getUnitatAgregacioMax() != null, context, "unitatAgregacioMax", MSG_CAMP_OBLIGATORI) && isValid;
+            }
+
+            boolean valorEsPercentatge = TableColumnsEnum.PERCENTAGE.equals(widget.getAgregacio());
+            boolean maximEsPercentatge = TableColumnsEnum.PERCENTAGE.equals(widget.getAgregacioMax());
+            if (valorEsPercentatge != maximEsPercentatge) {
+                addConstraintViolation(context, MSG_PERCENTATGE_MIX, "agregacioMax");
+                isValid = false;
+            }
+
+            if (TableColumnsEnum.AVERAGE.equals(widget.getAgregacio()) && TableColumnsEnum.AVERAGE.equals(widget.getAgregacioMax())
+                    && widget.getUnitatAgregacio() != null && !widget.getUnitatAgregacio().equals(widget.getUnitatAgregacioMax())) {
+                addConstraintViolation(context, MSG_DIFERENTS_UNITATS, "unitatAgregacioMax");
+                isValid = false;
+            }
         }
 
         return isValid;
