@@ -2,6 +2,7 @@ package es.caib.comanda.estadistica.persist.entity.estadistiques;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTaula;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.IndicadorRolEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
@@ -91,4 +92,7 @@ public class IndicadorTaulaEntity extends BaseAuditableEntity<IndicadorTaula> {
     private PeriodeUnitat unitatAgregacio;
     @Column(name = "titol", length = 64)
     private String titol;
+    @Column(name = "rol", length = 16)
+    @Enumerated(EnumType.STRING)
+    private IndicadorRolEnum rol;
 }
