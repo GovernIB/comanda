@@ -51,7 +51,7 @@ public class AtributsVisualsTitol extends AtributsVisuals implements Serializabl
         }
 
         AtributsVisualsTitol other = (AtributsVisualsTitol) otherAtributsVisuals;
-        this.colorTitol = mergeField(this.colorTitol, other.getColorText());
+        this.colorTitol = mergeField(this.colorTitol, other.getColorTitol());
         this.midaFontTitol = mergeField(this.midaFontTitol, other.getMidaFontTitol());
         this.colorSubtitol = mergeField(this.colorSubtitol, other.getColorSubtitol());
         this.midaFontSubtitol = mergeField(this.midaFontSubtitol, other.getMidaFontSubtitol());
@@ -72,6 +72,16 @@ public class AtributsVisualsTitol extends AtributsVisuals implements Serializabl
         this.ampleVoraLeft = mergeField(this.ampleVoraLeft, other.getAmpleVoraLeft());
 
         return this;
+    }
+
+    @Override
+    public boolean hasOverrides() {
+        return colorTitol != null || midaFontTitol != null || colorSubtitol != null || midaFontSubtitol != null
+            || colorFons != null || posicioSubtitol != null || separacioSubtitol != null
+            || mostrarVoraTop != null || colorVoraTop != null || ampleVoraTop != null
+            || mostrarVoraRight != null || colorVoraRight != null || ampleVoraRight != null
+            || mostrarVoraBottom != null || colorVoraBottom != null || ampleVoraBottom != null
+            || mostrarVoraLeft != null || colorVoraLeft != null || ampleVoraLeft != null;
     }
 
 }

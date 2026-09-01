@@ -12,9 +12,11 @@ import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisu
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetItem;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams;
+import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
+import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
@@ -189,6 +191,94 @@ class DashboardItemServiceImplTest {
 
         // Assert
         assertThat(entity.getAtributsVisualsJson()).isEqualTo("{\"test\":\"value\"}");
+    }
+
+    @Test
+    @DisplayName("beforeCreateSave: marca personalitzat=true quan els atributs propis del dashboardItem tenen overrides")
+    void beforeCreateSave_quanAtributsPropisTenenOverrides_llavorsMarcaPersonalitzat() {
+        // Arrange
+        DashboardItemEntity entity = new DashboardItemEntity();
+        DashboardItem resource = new DashboardItem();
+        AtributsVisualsGrafic atributs = new AtributsVisualsGrafic();
+        atributs.setPieDonut(true);
+        resource.setAtributsVisuals(atributs);
+
+        when(atributsVisualsHelper.getAtributsVisualsJson(atributs)).thenReturn("{\"pieDonut\":true}");
+
+        // Act
+        dashboardItemService.beforeCreateSave(entity, resource, null);
+
+        // Assert
+        assertThat(entity.getPersonalitzat()).isTrue();
+    }
+
+    @Test
+    @DisplayName("beforeCreateSave: marca personalitzat=true quan els atributs propis del widget tenen overrides")
+    void beforeCreateSave_quanAtributsDelWidgetTenenOverrides_llavorsMarcaPersonalitzat() {
+        // Arrange
+        EstadisticaGraficWidgetEntity widget = new EstadisticaGraficWidgetEntity();
+        DashboardItemEntity entity = new DashboardItemEntity();
+        entity.setWidget(widget);
+        DashboardItem resource = new DashboardItem();
+        AtributsVisualsGrafic atributsDash = new AtributsVisualsGrafic();
+        resource.setAtributsVisuals(atributsDash);
+        AtributsVisualsGrafic atributsWidget = new AtributsVisualsGrafic();
+        atributsWidget.setOuterRadius(100);
+
+        when(atributsVisualsHelper.getAtributsVisualsJson(atributsDash)).thenReturn("{}");
+        when(atributsVisualsHelper.getAtributsVisuals(widget)).thenReturn(atributsWidget);
+
+        // Act
+        dashboardItemService.beforeCreateSave(entity, resource, null);
+
+        // Assert
+        assertThat(entity.getPersonalitzat()).isTrue();
+    }
+
+    @Test
+    @DisplayName("beforeCreateSave: marca personalitzat=false quan cap nivell té overrides")
+    void beforeCreateSave_quanCapNivellTeOverrides_llavorsNoMarcaPersonalitzat() {
+        // Arrange
+        EstadisticaGraficWidgetEntity widget = new EstadisticaGraficWidgetEntity();
+        DashboardItemEntity entity = new DashboardItemEntity();
+        entity.setWidget(widget);
+        DashboardItem resource = new DashboardItem();
+        AtributsVisualsGrafic atributsDash = new AtributsVisualsGrafic();
+        resource.setAtributsVisuals(atributsDash);
+        AtributsVisualsGrafic atributsWidget = new AtributsVisualsGrafic();
+
+        when(atributsVisualsHelper.getAtributsVisualsJson(atributsDash)).thenReturn("{}");
+        when(atributsVisualsHelper.getAtributsVisuals(widget)).thenReturn(atributsWidget);
+
+        // Act
+        dashboardItemService.beforeCreateSave(entity, resource, null);
+
+        // Assert
+        assertThat(entity.getPersonalitzat()).isFalse();
+    }
+
+    @Test
+    @DisplayName("beforeUpdateSave: marca personalitzat=true quan els atributs propis del widget tenen overrides")
+    void beforeUpdateSave_quanAtributsDelWidgetTenenOverrides_llavorsMarcaPersonalitzat() {
+        // Arrange
+        EstadisticaGraficWidgetEntity widget = new EstadisticaGraficWidgetEntity();
+        DashboardItemEntity entity = new DashboardItemEntity();
+        entity.setId(1L);
+        entity.setWidget(widget);
+        DashboardItem resource = new DashboardItem();
+        AtributsVisualsGrafic atributsDash = new AtributsVisualsGrafic();
+        resource.setAtributsVisuals(atributsDash);
+        AtributsVisualsGrafic atributsWidget = new AtributsVisualsGrafic();
+        atributsWidget.setPieShowLabels(false);
+
+        when(atributsVisualsHelper.getAtributsVisualsJson(atributsDash)).thenReturn("{}");
+        when(atributsVisualsHelper.getAtributsVisuals(widget)).thenReturn(atributsWidget);
+
+        // Act
+        dashboardItemService.beforeUpdateSave(entity, resource, null);
+
+        // Assert
+        assertThat(entity.getPersonalitzat()).isTrue();
     }
 
     @Test

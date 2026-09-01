@@ -84,8 +84,12 @@ public class AtributsVisualsGrafic extends AtributsVisuals implements Serializab
         this.lineShowPoints = mergeField(this.lineShowPoints, other.getLineShowPoints());
         this.lineSmooth = mergeField(this.lineSmooth, other.getLineSmooth());
         this.lineWidth = mergeField(this.lineWidth, other.getLineWidth());
+        this.area = mergeField(this.area, other.getArea());
         this.pieDonut = mergeField(this.pieDonut, other.getPieDonut());
         this.pieShowLabels = mergeField(this.pieShowLabels, other.getPieShowLabels());
+        this.outerRadius = mergeField(this.outerRadius, other.getOuterRadius());
+        this.innerRadius = mergeField(this.innerRadius, other.getInnerRadius());
+        this.labelSize = mergeField(this.labelSize, other.getLabelSize());
         this.gaugeMin = mergeField(this.gaugeMin, other.getGaugeMin());
         this.gaugeMax = mergeField(this.gaugeMax, other.getGaugeMax());
         this.gaugeColors = mergeField(this.gaugeColors, other.getGaugeColors());
@@ -95,6 +99,18 @@ public class AtributsVisualsGrafic extends AtributsVisuals implements Serializab
         this.heatmapMaxValue = mergeField(this.heatmapMaxValue, other.getHeatmapMaxValue());
 
         return this;
+    }
+
+    @Override
+    public boolean hasOverrides() {
+        return hasBaseOverrides()
+            || colorsPaleta != null || mostrarReticula != null
+            || barStacked != null || barHorizontal != null
+            || lineShowPoints != null || lineSmooth != null || lineWidth != null || area != null
+            || pieDonut != null || pieShowLabels != null
+            || outerRadius != null || innerRadius != null || labelSize != null
+            || gaugeMin != null || gaugeMax != null || gaugeColors != null || gaugeRangs != null
+            || heatmapColors != null || heatmapMinValue != null || heatmapMaxValue != null;
     }
 
 }

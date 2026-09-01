@@ -9,6 +9,7 @@ import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.logic.helper.*;
+import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisuals;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetItem;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
@@ -122,6 +123,7 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
         try {
             String atributsVisualsJson = atributsVisualsHelper.getAtributsVisualsJson(resource.getAtributsVisuals());
             entity.setAtributsVisualsJson(atributsVisualsJson);
+            entity.setPersonalitzat(resolvePersonalitzat(entity, resource));
         } catch (Exception e) {
             log.error("Error convertint atributs visuals a JSON", e);
             throw new ResourceNotCreatedException(resource.getClass(), "Error convertint atributs visuals a JSON");
@@ -133,10 +135,27 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
         try {
             String atributsVisualsJson = atributsVisualsHelper.getAtributsVisualsJson(resource.getAtributsVisuals());
             entity.setAtributsVisualsJson(atributsVisualsJson);
+            entity.setPersonalitzat(resolvePersonalitzat(entity, resource));
         } catch (Exception e) {
             log.error("Error convertint atributs visuals a JSON", e);
             throw new ResourceNotUpdatedException(resource.getClass(), String.valueOf(entity.getId()), "Error convertint atributs visuals a JSON");
         }
+    }
+
+    /**
+     * "personalitzat" es calcula sempre al backend a partir dels atributs visuals realment
+     * emmagatzemats (propis del dashboardItem i del widget), en lloc de confiar en el valor que
+     * enviï el client: evita que quedi desincronitzat de la resta de camps (vegeu
+     * ConsultaEstadisticaHelper.resolveAtributsVisuals, que només aplica els overrides quan aquest
+     * flag és cert).
+     */
+    private boolean resolvePersonalitzat(DashboardItemEntity entity, DashboardItem resource) {
+        AtributsVisuals atributsVisualsDash = resource.getAtributsVisuals();
+        AtributsVisuals atributsVisualsWidget = entity.getWidget() != null
+            ? atributsVisualsHelper.getAtributsVisuals(entity.getWidget())
+            : null;
+        return (atributsVisualsDash != null && atributsVisualsDash.hasOverrides())
+            || (atributsVisualsWidget != null && atributsVisualsWidget.hasOverrides());
     }
 
     @Override

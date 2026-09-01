@@ -102,6 +102,20 @@ public class AtributsVisualsTaula extends AtributsVisuals implements Serializabl
         return this;
     }
 
+    @Override
+    public boolean hasOverrides() {
+        return hasBaseOverrides()
+            || colorTextTaula != null || colorFonsTaula != null
+            || mostrarCapcalera != null || colorCapcalera != null || colorFonsCapcalera != null
+            || mostrarAlternancia != null || colorAlternancia != null
+            || mostrarVoraTaula != null || colorVoraTaula != null || ampleVoraTaula != null
+            || mostrarSeparadorHoritzontal != null || colorSeparadorHoritzontal != null || ampleSeparadorHoritzontal != null
+            || mostrarSeparadorVertical != null || colorSeparadorVertical != null || ampleSeparadorVertical != null
+            || paginada != null
+            || (columnesEstils != null && !columnesEstils.isEmpty())
+            || (cellesDestacades != null && !cellesDestacades.isEmpty());
+    }
+
     /**
      * Classe interna que representa l'estil d'una columna.
      * Permet definir colors i formats específics per a una columna.

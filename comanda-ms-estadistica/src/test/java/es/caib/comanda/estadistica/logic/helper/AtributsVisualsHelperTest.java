@@ -37,6 +37,11 @@ class AtributsVisualsHelperTest {
         public AtributsVisuals merge(AtributsVisuals other) {
             return null;
         }
+
+        @Override
+        public boolean hasOverrides() {
+            return valorProva != null;
+        }
     }
 
     // ========================================================================

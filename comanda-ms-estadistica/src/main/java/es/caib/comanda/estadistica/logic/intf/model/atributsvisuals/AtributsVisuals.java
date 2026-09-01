@@ -34,6 +34,18 @@ public abstract class AtributsVisuals implements Serializable {
 
     public abstract AtributsVisuals merge(AtributsVisuals other);
 
+    /**
+     * Indica si aquest objecte conté cap valor de personalització (algun camp no nul).
+     * S'utilitza per determinar si un dashboardItem/widget s'ha de marcar com a "personalitzat".
+     */
+    public abstract boolean hasOverrides();
+
+    protected boolean hasBaseOverrides() {
+        return colorText != null || colorFons != null || mostrarVora != null
+            || colorVora != null || ampleVora != null
+            || midaFontTitol != null || midaFontDescripcio != null;
+    }
+
     <T> T mergeField(T currentValue, T otherValue) {
         return currentValue != null ? currentValue : otherValue;
     }
