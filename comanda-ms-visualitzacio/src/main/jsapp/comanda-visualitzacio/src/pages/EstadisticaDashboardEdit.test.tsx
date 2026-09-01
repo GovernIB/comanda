@@ -241,6 +241,7 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', () => ({
         onDeleteItem,
         onDuplicateItem,
         backgroundColor,
+        largeScreenMode,
     }: {
         dashboardId: number;
         editable: boolean;
@@ -249,10 +250,12 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', () => ({
         onDeleteItem?: (entity: any) => void;
         onDuplicateItem?: (entity: any) => void;
         backgroundColor?: string;
+        largeScreenMode?: string;
     }) => (
         <div>
             <div>{`DashboardGrid ${dashboardId} ${String(editable)}`}</div>
             <div data-testid="dashboard-canvas-background-color">{backgroundColor}</div>
+            <div data-testid="dashboard-large-screen-mode">{largeScreenMode}</div>
             <div data-testid="dashboard-widgets-json">{JSON.stringify(dashboardWidgets)}</div>
             <button
                 type="button"
@@ -430,6 +433,9 @@ describe('EstadisticaDashboardEdit', () => {
         expect(screen.getByRole('heading', { name: 'Dashboards' })).toBeInTheDocument();
         expect(screen.getByText('Dashboard 12')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Crear component' })).toBeInTheDocument();
+        // Al disseny sempre s'aprofita tot l'ample disponible del canvas (a diferència de la visualització,
+        // on l'usuari pot triar veure'l a mida real de disseny centrat, vegeu EstadisticaDashboardView).
+        expect(screen.getByTestId('dashboard-large-screen-mode')).toHaveTextContent('fit');
     });
 
     it('EstadisticaDashboardEdit_quanEsDesaLaConfiguracioDelDashboardSenseCapSeleccio_refrescaElDashboard', async () => {

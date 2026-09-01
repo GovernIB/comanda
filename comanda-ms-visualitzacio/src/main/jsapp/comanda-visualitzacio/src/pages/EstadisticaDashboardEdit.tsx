@@ -614,6 +614,10 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                     selectedItemId={selectedGridItemId}
                                     dashboardEntornCodi={dashboardEntornCodi}
                                     backgroundColor={designDarkMode ? dashboard.colorFonsFosc : dashboard.colorFonsClar}
+                                    // Al disseny s'aprofita sempre tot l'ample disponible del canvas (a
+                                    // diferència de la visualització, on l'usuari pot triar veure el dashboard
+                                    // a mida real de disseny -1920px- centrat, vegeu EstadisticaDashboardView).
+                                    largeScreenMode="fit"
                                     editable
                                 />
                             )}

@@ -405,6 +405,9 @@ const translationEs: translationResourcesType = {
         },
         dashboards: {
             title: "Cuadros de control",
+            view: {
+                largeScreenModeFit: "Escalar para ajustarse a la pantalla",
+            },
             editor: {
                 errorAlert: {
                     errorsHeader: "Errores",

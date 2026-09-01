@@ -1,7 +1,8 @@
 import MenuIcon from '@mui/icons-material/Menu';
 import MuiToolbar from '@mui/material/Toolbar';
-import { Alert, Box, Button, Typography } from '@mui/material';
+import { Alert, Box, Button, Icon, ToggleButton, Tooltip, Typography } from '@mui/material';
 import {
+    DashboardLargeScreenMode,
     DashboardReactGridLayout,
     useMapDashboardItems,
 } from '../components/estadistiques/DashboardReactGridLayout.tsx';
@@ -21,7 +22,31 @@ import DashboardFiltreBar from '../components/estadistiques/DashboardFiltreBar.t
 import { DashboardFiltreSeleccio } from '../types/dashboardFiltre.model.ts';
 
 const LAST_VIEWED_STORAGE_KEY = 'lastViewedDashboardId';
+const LARGE_SCREEN_MODE_STORAGE_KEY = 'comanda.dashboardView.largeScreenMode';
 const NO_DASHBOARD_FOUND = 'NO_DASHBOARD_FOUND';
+
+/**
+ * Recorda, entre sessions, si l'usuari prefereix veure els dashboards a mida real de disseny (1920px,
+ * centrats) o escalats per ocupar tot l'ample de pantalles més grans (vegeu DashboardLargeScreenMode).
+ */
+function useStoredLargeScreenMode(): [DashboardLargeScreenMode, (mode: DashboardLargeScreenMode) => void] {
+    const [largeScreenMode, setLargeScreenModeState] = useState<DashboardLargeScreenMode>(() => {
+        try {
+            return localStorage.getItem(LARGE_SCREEN_MODE_STORAGE_KEY) === 'fit' ? 'fit' : 'centered';
+        } catch {
+            return 'centered';
+        }
+    });
+    const setLargeScreenMode = (mode: DashboardLargeScreenMode) => {
+        setLargeScreenModeState(mode);
+        try {
+            localStorage.setItem(LARGE_SCREEN_MODE_STORAGE_KEY, mode);
+        } catch {
+            // localStorage no disponible (mode privat, etc.): es descarta silenciosament
+        }
+    };
+    return [largeScreenMode, setLargeScreenMode];
+}
 
 function useDashboardSelect(currentDashboardId: string | number | null) {
     const { t } = useTranslation();
@@ -97,6 +122,7 @@ const EstadisticaDashboardView = () => {
         setFiltreSeleccio({});
     }, [dashboardId]);
     const { dashboardWidgets, loadingWidgetPositions } = useDashboardWidgets(dashboardId, temaFosc, filtreSeleccio);
+    const [largeScreenMode, setLargeScreenMode] = useStoredLargeScreenMode();
     const { isReady: apiDashboardIsReady, find: findDashboard } =
         useResourceApiService('dashboard');
     const mappedDashboardItems = useMapDashboardItems(dashboardWidgets);
@@ -206,6 +232,19 @@ const EstadisticaDashboardView = () => {
                                 onChange={setFiltreSeleccio}
                                 aplicacioId={dashboard?.aplicacio?.id}
                             />
+                            <Tooltip title={t($ => $.page.dashboards.view.largeScreenModeFit)}>
+                                <ToggleButton
+                                    value="fit"
+                                    size="small"
+                                    selected={largeScreenMode === 'fit'}
+                                    color="primary"
+                                    onChange={() => setLargeScreenMode(largeScreenMode === 'fit' ? 'centered' : 'fit')}
+                                    aria-label={t($ => $.page.dashboards.view.largeScreenModeFit)}
+                                    sx={{ height: '32px' }}
+                                >
+                                    <Icon fontSize="small">aspect_ratio</Icon>
+                                </ToggleButton>
+                            </Tooltip>
                         </MuiToolbar>
                     </Box>
                 }
@@ -218,6 +257,7 @@ const EstadisticaDashboardView = () => {
                         gridLayoutItems={mappedDashboardItems}
                         dashboardEntornCodi={dashboardEntornCodi}
                         backgroundColor={temaFosc ? dashboard.colorFonsFosc : dashboard.colorFonsClar}
+                        largeScreenMode={largeScreenMode}
                     />
                 )}
                 <FooterHeightPlaceholder />

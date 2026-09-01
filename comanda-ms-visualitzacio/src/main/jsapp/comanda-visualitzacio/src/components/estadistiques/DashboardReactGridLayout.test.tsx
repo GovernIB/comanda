@@ -1,17 +1,31 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { act, renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import {
+    DASHBOARD_DESIGN_WIDTH,
+    dashboardRowHeight,
     DashboardReactGridLayout,
+    horizontalSubdivisions,
     useMapDashboardItems,
 } from './DashboardReactGridLayout';
 
 const mocks = vi.hoisted(() => ({
     responsiveProps: null as any,
     isEqualMock: vi.fn(),
+    resizeObserverCallbacksByNode: new Map<Element, ResizeObserverCallback>(),
 }));
+
+/** Simula que el ResizeObserver del node amb el testid indicat notifica una nova amplada/alçada. */
+const triggerResize = (testId: string, width: number, height = 0) => {
+    const node = screen.getByTestId(testId);
+    const callback = mocks.resizeObserverCallbacksByNode.get(node);
+    callback?.(
+        [{contentRect: {width, height}} as ResizeObserverEntry],
+        {} as ResizeObserver
+    );
+};
 
 vi.mock('react-grid-layout', () => ({
     WidthProvider: (component: React.ComponentType<any>) => component,
@@ -23,6 +37,11 @@ vi.mock('react-grid-layout', () => ({
 
 vi.mock('lodash', () => ({
     isEqual: (...args: unknown[]) => mocks.isEqualMock(...args),
+    throttle: (fn: (...args: unknown[]) => void) => {
+        const throttled = (...args: unknown[]) => fn(...args);
+        throttled.cancel = () => undefined;
+        return throttled;
+    },
 }));
 
 vi.mock('./SimpleWidgetVisualization.tsx', () => ({
@@ -121,6 +140,92 @@ describe('DashboardReactGridLayout', () => {
             strokeStyle: '',
             lineWidth: 1,
         })) as any;
+
+        // Comportament per defecte fidel a isEqual real (comparació estructural): useSizeTracker (usat per
+        // DashboardScaledCanvas) també depèn d'isEqual per detectar canvis de mida, i si es deixés sempre a
+        // `true` (com fan alguns tests per a la comparació de layouts) mai detectaria cap resize simulat.
+        // Els tests que necessiten forçar un resultat concret ho poden sobreescriure amb mockReturnValue.
+        mocks.isEqualMock.mockImplementation((a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b));
+
+        // DashboardScaledCanvas usa useSizeTracker (ResizeObserver) per escalar el canvas. Es guarda el
+        // callback associat a cada node observat perquè els tests puguin simular una mida concreta.
+        mocks.resizeObserverCallbacksByNode = new Map();
+        class ResizeObserverMock {
+            callback: ResizeObserverCallback;
+            constructor(callback: ResizeObserverCallback) {
+                this.callback = callback;
+            }
+            observe(node: Element) {
+                mocks.resizeObserverCallbacksByNode.set(node, this.callback);
+            }
+            disconnect() {}
+        }
+        vi.stubGlobal('ResizeObserver', ResizeObserverMock);
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it('DashboardReactGridLayout_lagraellaTe60ColumnesIFilesQuadrades', () => {
+        // Regressió: la graella ha de tenir 60 columnes d'amplada i files el més quadrades possible a
+        // l'amplada de disseny (1920px / 60 columnes = 32px de costat, tant en ample com en alt).
+        mocks.isEqualMock.mockReturnValue(true);
+
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={false}
+                dashboardWidgets={[]}
+                gridLayoutItems={[]}
+            />
+        );
+
+        expect(horizontalSubdivisions).toBe(60);
+        expect(DASHBOARD_DESIGN_WIDTH).toBe(1920);
+        expect(dashboardRowHeight).toBe(DASHBOARD_DESIGN_WIDTH / horizontalSubdivisions);
+        expect(mocks.responsiveProps.cols).toEqual({ md: horizontalSubdivisions });
+        expect(mocks.responsiveProps.rowHeight).toBe(dashboardRowHeight);
+    });
+
+    it('DashboardReactGridLayout_quanElModeEsCenteredIPantallaMesEstreta_noEncongeixIPermetScrollHoritzontal', () => {
+        // Regressió: en mode 'centered', a pantalles més estretes que 1920px NO s'ha d'escalar cap avall
+        // (a diferència del mode 'fit'); s'ha de mantenir la mida real i mostrar scroll horitzontal.
+
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={false}
+                dashboardWidgets={[]}
+                gridLayoutItems={[]}
+                largeScreenMode="centered"
+            />
+        );
+
+        act(() => triggerResize('dashboard-scale-container', 800));
+
+        expect(screen.getByTestId('dashboard-scaled-box')).toHaveStyle({ width: '1920px' });
+        expect(screen.getByTestId('dashboard-scale-design')).toHaveStyle({ transform: 'scale(1)' });
+        expect(screen.getByTestId('dashboard-scale-container')).toHaveStyle({ overflowX: 'auto' });
+    });
+
+    it('DashboardReactGridLayout_quanElModeEsFitIPantallaMesEstreta_escalaCapAvall', () => {
+        // En mode 'fit', a diferència de 'centered', sí que s'ha d'escalar cap avall per ajustar-se.
+
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={false}
+                dashboardWidgets={[]}
+                gridLayoutItems={[]}
+                largeScreenMode="fit"
+            />
+        );
+
+        act(() => triggerResize('dashboard-scale-container', 960));
+
+        expect(screen.getByTestId('dashboard-scaled-box')).toHaveStyle({ width: '960px' });
+        expect(screen.getByTestId('dashboard-scale-design')).toHaveStyle({ transform: 'scale(0.5)' });
     });
 
     it('DashboardReactGridLayout_quanEsRenderitza_mostraElsWidgetsSegonsElTipus', () => {

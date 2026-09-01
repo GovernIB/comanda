@@ -12,6 +12,7 @@ import './react-resizable-custom.css';
 import TitolWidgetVisualization from "./TitolWidgetVisualization.tsx";
 import {SalutErrorBoundaryFallback} from '../salut/SalutErrorBoundaryFallback';
 import {useTranslation} from 'react-i18next';
+import useSizeTracker from '../../hooks/useSizeTracker.ts';
 
 const CustomGridLayout = WidthProvider(Responsive);
 
@@ -148,6 +149,8 @@ type DashboardReactGridLayoutProps = {
     dashboardEntornCodi?: string;
     editable: boolean;
     backgroundColor?: string;
+    /** Vegeu DashboardLargeScreenMode. Per defecte 'centered'. */
+    largeScreenMode?: DashboardLargeScreenMode;
 };
 
 export const useMapDashboardItems = (dashboardWidgets: unknown[]) => {
@@ -165,7 +168,85 @@ export const useMapDashboardItems = (dashboardWidgets: unknown[]) => {
     );
 };
 
-export const horizontalSubdivisions = 24;
+/**
+ * Amplada de disseny de referència del dashboard, en píxels. Tots els widgets es dissenyen i posicionen
+ * pensant en una pantalla d'aquesta amplada; a pantalles més petites o més grans el canvas s'escala (vegeu
+ * DashboardScaledCanvas) mantenint sempre la mateixa proporció visual (mides de fonts, icones, etc.).
+ */
+export const DASHBOARD_DESIGN_WIDTH = 1920;
+
+export const horizontalSubdivisions = 60;
+
+/** Alçada de fila del grid, calculada perquè les cel·les siguin el més quadrades possible a l'amplada de disseny. */
+export const dashboardRowHeight = DASHBOARD_DESIGN_WIDTH / horizontalSubdivisions;
+
+/**
+ * Comportament del canvas:
+ * - 'centered': el canvas es mostra sempre a mida real (1 a 1, sense escalar). A pantalles més amples que
+ *   DASHBOARD_DESIGN_WIDTH es centra horitzontalment; a pantalles més estretes, en lloc d'escalar-lo cap
+ *   avall, es manté la mida original i cal fer scroll horitzontal per veure'l sencer.
+ * - 'fit': el canvas s'escala (cap amunt o cap avall) per ocupar sempre tot l'ample disponible.
+ */
+export type DashboardLargeScreenMode = 'centered' | 'fit';
+
+/**
+ * Envolta el contingut del dashboard (canvas de graella + overlay) en un contenidor d'amplada fixa
+ * (DASHBOARD_DESIGN_WIDTH) i, en mode 'fit', l'escala amb un `transform: scale(...)` perquè ocupi tot l'ample
+ * disponible. Com que és un transform CSS, TOT el contingut (mides de widgets, fonts, icones, espaiats...)
+ * s'escala de manera proporcional i coherent, sense haver de tocar cap component individual.
+ *
+ * S'utilitza `useSizeTracker` (ResizeObserver) tant per l'ample disponible del contenidor com per l'alçada
+ * natural (sense escalar) del contingut, ja que un `transform` no altera la mida de caixa que un element
+ * reporta al seu contenidor (cal calcular-la manualment perquè el contenidor extern ocupi l'espai correcte
+ * i, en mode 'centered', es pugui centrar amb `margin: auto`).
+ */
+const DashboardScaledCanvas: React.FC<{
+    largeScreenMode: DashboardLargeScreenMode;
+    children: React.ReactNode;
+}> = ({largeScreenMode, children}) => {
+    const {size: containerSize, refCallback: containerRef} = useSizeTracker(100);
+    const {size: designSize, refCallback: designRef} = useSizeTracker(100);
+
+    const containerWidth = containerSize?.width || DASHBOARD_DESIGN_WIDTH;
+    const designHeight = designSize?.height || 0;
+    // En mode 'centered' mai s'escala (ni cap amunt ni cap avall): a pantalles més estretes es manté la
+    // mida real i es mostra scroll horitzontal en lloc d'encongir el contingut.
+    const scale = largeScreenMode === 'fit' ? containerWidth / DASHBOARD_DESIGN_WIDTH : 1;
+
+    return (
+        <Box
+            ref={containerRef}
+            data-testid="dashboard-scale-container"
+            sx={{width: '100%', overflowX: largeScreenMode === 'centered' ? 'auto' : 'hidden'}}
+        >
+            <Box
+                data-testid="dashboard-scaled-box"
+                sx={{
+                    width: `${DASHBOARD_DESIGN_WIDTH * scale}px`,
+                    height: designHeight ? `${designHeight * scale}px` : undefined,
+                    mx: largeScreenMode === 'centered' ? 'auto' : 0,
+                    position: 'relative',
+                    overflow: 'hidden',
+                }}
+            >
+                <Box
+                    ref={designRef}
+                    data-testid="dashboard-scale-design"
+                    sx={{
+                        width: `${DASHBOARD_DESIGN_WIDTH}px`,
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        transform: `scale(${scale})`,
+                        transformOrigin: 'top left',
+                    }}
+                >
+                    {children}
+                </Box>
+            </Box>
+        </Box>
+    );
+};
 
 /** Distància màxima (en px) entre l'inici i el final d'un arrossegament perquè es consideri un simple clic */
 const CLICK_MOVEMENT_THRESHOLD = 5;
@@ -182,6 +263,7 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                                                                                       selectedItemId,
                                                                                       dashboardEntornCodi,
                                                                                       backgroundColor,
+                                                                                      largeScreenMode = 'centered',
                                                                                   }) => {
     const {t} = useTranslation();
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -297,7 +379,7 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
         [gridLayoutItems]
     );
 
-    const rowHeight = 50;
+    const rowHeight = dashboardRowHeight;
 
     const drawGrid = () => {
         const canvas = canvasRef.current;
@@ -359,78 +441,80 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                 }}
                 onClick={() => editable && onClearSelection?.()}
             >
-                {editable && (
-                    <canvas
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            zIndex: 0,
-                            pointerEvents: 'none',
+                <DashboardScaledCanvas largeScreenMode={largeScreenMode}>
+                    {editable && (
+                        <canvas
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                zIndex: 0,
+                                pointerEvents: 'none',
+                            }}
+                            ref={canvasRef}
+                        />
+                    )}
+                    <CustomGridLayout
+                        className="layout"
+                        breakpoints={{md: 0}}
+                        layouts={{md: layout}}
+                        onLayoutChange={onLayoutChange}
+                        cols={{md: horizontalSubdivisions}}
+                        margin={[0, 0]}
+                        rowHeight={rowHeight}
+                        compactType={null}
+                        preventCollision
+                        onWidthChange={() => {
+                            setSizeLock(false);
                         }}
-                        ref={canvasRef}
-                    />
-                )}
-                <CustomGridLayout
-                    className="layout"
-                    breakpoints={{md: 0}}
-                    layouts={{md: layout}}
-                    onLayoutChange={onLayoutChange}
-                    cols={{md: horizontalSubdivisions}}
-                    margin={[0, 0]}
-                    rowHeight={rowHeight}
-                    compactType={null}
-                    preventCollision
-                    onWidthChange={() => {
-                        setSizeLock(false);
-                    }}
-                    isDraggable={!isReadonly}
-                    isResizable={!isReadonly}
-                    resizeHandle={<CustomHandle/>}
-                    resizeHandles={!isReadonly ? ['s', 'w', 'e', 'n', 'sw', 'nw', 'se', 'ne'] : []}
-                    onDragStart={onItemDragStart}
-                    onDragStop={onItemDragStop}
-                >
-                    {gridLayoutItems.map((item) => {
-                        const dashboardWidget = dashboardWidgets.find(
-                            (dashboardWidget) => String(dashboardWidget.dashboardItemId) === item.id
-                        );
-                        if (dashboardWidget) dashboardWidget.id = dashboardWidget?.dashboardItemId;
-                        const dashboardTitol = dashboardWidgets.find(
-                            (dashboardWidget) => String(dashboardWidget.dashboardTitolId) === item.id
-                        );
-                        if (dashboardTitol) dashboardTitol.id = dashboardTitol?.dashboardTitolId;
-                        return (
-                            <CustomGridItemComponent
-                                key={item.id}
-                                editable={editable}
-                                selected={selectedItemId === item.id}
-                                entity={dashboardWidget ?? dashboardTitol}
-                                onItemContextMenu={handleItemContextMenu}
-                            >
-                                <ErrorBoundary fallback={<SalutErrorBoundaryFallback/>}>
-                                    {(() => {
-                                        switch (item.type) {
-                                            case 'SIMPLE':
-                                                return (<SimpleChartWrapper dashboardWidget={dashboardWidget}
-                                                                            dashboardEntornCodi={dashboardEntornCodi}/>);
-                                            case 'GRAFIC':
-                                                return (<GraficChartWrapper dashboardWidget={dashboardWidget}
-                                                                            dashboardEntornCodi={dashboardEntornCodi}/>);
-                                            case 'TAULA':
-                                                return (<TaulaChartWrapper dashboardWidget={dashboardWidget}
-                                                                           dashboardEntornCodi={dashboardEntornCodi}/>);
-                                            case 'TITOL':
-                                                return (<TitolChartWrapper dashboardTitol={dashboardTitol}/>);
-                                        }
-                                    })()}
-                                </ErrorBoundary>
-                            </CustomGridItemComponent>
-                        );
-                    })}
-                </CustomGridLayout>
+                        isDraggable={!isReadonly}
+                        isResizable={!isReadonly}
+                        resizeHandle={<CustomHandle/>}
+                        resizeHandles={!isReadonly ? ['s', 'w', 'e', 'n', 'sw', 'nw', 'se', 'ne'] : []}
+                        onDragStart={onItemDragStart}
+                        onDragStop={onItemDragStop}
+                    >
+                        {gridLayoutItems.map((item) => {
+                            const dashboardWidget = dashboardWidgets.find(
+                                (dashboardWidget) => String(dashboardWidget.dashboardItemId) === item.id
+                            );
+                            if (dashboardWidget) dashboardWidget.id = dashboardWidget?.dashboardItemId;
+                            const dashboardTitol = dashboardWidgets.find(
+                                (dashboardWidget) => String(dashboardWidget.dashboardTitolId) === item.id
+                            );
+                            if (dashboardTitol) dashboardTitol.id = dashboardTitol?.dashboardTitolId;
+                            return (
+                                <CustomGridItemComponent
+                                    key={item.id}
+                                    editable={editable}
+                                    selected={selectedItemId === item.id}
+                                    entity={dashboardWidget ?? dashboardTitol}
+                                    onItemContextMenu={handleItemContextMenu}
+                                >
+                                    <ErrorBoundary fallback={<SalutErrorBoundaryFallback/>}>
+                                        {(() => {
+                                            switch (item.type) {
+                                                case 'SIMPLE':
+                                                    return (<SimpleChartWrapper dashboardWidget={dashboardWidget}
+                                                                                dashboardEntornCodi={dashboardEntornCodi}/>);
+                                                case 'GRAFIC':
+                                                    return (<GraficChartWrapper dashboardWidget={dashboardWidget}
+                                                                                dashboardEntornCodi={dashboardEntornCodi}/>);
+                                                case 'TAULA':
+                                                    return (<TaulaChartWrapper dashboardWidget={dashboardWidget}
+                                                                               dashboardEntornCodi={dashboardEntornCodi}/>);
+                                                case 'TITOL':
+                                                    return (<TitolChartWrapper dashboardTitol={dashboardTitol}/>);
+                                            }
+                                        })()}
+                                    </ErrorBoundary>
+                                </CustomGridItemComponent>
+                            );
+                        })}
+                    </CustomGridLayout>
+                </DashboardScaledCanvas>
             </Box>
             <Menu
                 open={contextMenu !== null}

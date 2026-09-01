@@ -15,6 +15,9 @@ const mocks = vi.hoisted(() => ({
             page: {
                 dashboards: {
                     title: 'Dashboards',
+                    view: {
+                        largeScreenModeFit: 'Escalar per ajustar-se a la pantalla',
+                    },
                     action: {
                         select: {
                             title: 'Seleccionar dashboard',
@@ -94,16 +97,19 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', () => ({
         gridLayoutItems,
         dashboardEntornCodi,
         backgroundColor,
+        largeScreenMode,
     }: {
         dashboardId: number;
         gridLayoutItems: unknown[];
         dashboardEntornCodi?: string;
         backgroundColor?: string;
+        largeScreenMode?: string;
     }) => (
         <div>
             {`Grid ${dashboardId} (${gridLayoutItems.length})`}
             {dashboardEntornCodi && <span data-testid="entorn-codi">{dashboardEntornCodi}</span>}
             <span data-testid="background-color">{backgroundColor}</span>
+            <span data-testid="large-screen-mode">{largeScreenMode}</span>
         </div>
     ),
     useMapDashboardItems: (widgets: unknown[]) => mocks.useMapDashboardItemsMock(widgets),
@@ -186,6 +192,45 @@ describe('EstadisticaDashboardView', () => {
         expect(screen.getByText('Grid 12 (1)')).toBeInTheDocument();
         expect(screen.getByTestId('entorn-codi')).toHaveTextContent('ENT-5');
         expect(mocks.setItemMock).toHaveBeenCalledWith('lastViewedDashboardId', '12');
+    });
+
+    it('EstadisticaDashboardView_perDefecte_usaElModeCentradoAmbAmplada1920', async () => {
+        // Sense preferència guardada, el dashboard s'ha de mostrar a mida real de disseny (1920px), centrat.
+        render(<EstadisticaDashboardView />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('large-screen-mode')).toHaveTextContent('centered');
+        });
+
+        const toggle = screen.getByRole('button', { name: 'Escalar per ajustar-se a la pantalla' });
+        expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it('EstadisticaDashboardView_enPremerElToggle_escalaPerAjustarSeIhoRecorda', async () => {
+        // Clicar el toggle ha de commutar a mode 'fit' i recordar-ho per a properes visites (localStorage).
+        render(<EstadisticaDashboardView />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('large-screen-mode')).toHaveTextContent('centered');
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Escalar per ajustar-se a la pantalla' }));
+
+        expect(screen.getByTestId('large-screen-mode')).toHaveTextContent('fit');
+        expect(mocks.setItemMock).toHaveBeenCalledWith('comanda.dashboardView.largeScreenMode', 'fit');
+    });
+
+    it('EstadisticaDashboardView_quanHiHaPreferenciaGuardada_larespecta', async () => {
+        // Si l'usuari ja havia triat "escalar per ajustar-se", s'ha de recordar entre sessions.
+        mocks.getItemMock.mockImplementation((key: string) =>
+            key === 'comanda.dashboardView.largeScreenMode' ? 'fit' : null
+        );
+
+        render(<EstadisticaDashboardView />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('large-screen-mode')).toHaveTextContent('fit');
+        });
     });
 
     it('EstadisticaDashboardView_quanElDashboardTeColorFonsClar_lAplicaAlGridEnTemaClar', async () => {

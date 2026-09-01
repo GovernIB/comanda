@@ -405,6 +405,9 @@ const translationCa = {
         },
         dashboards: {
             title: "Taulers de control",
+            view: {
+                largeScreenModeFit: "Escalar per ajustar-se a la pantalla",
+            },
             editor: {
                 errorAlert: {
                     errorsHeader: "Errors",
