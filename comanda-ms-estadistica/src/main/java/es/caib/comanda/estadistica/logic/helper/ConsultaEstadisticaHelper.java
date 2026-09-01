@@ -7,6 +7,7 @@ import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisu
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsTaula;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.*;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.IndicadorRolEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.OrdreDireccioEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum;
@@ -99,6 +100,26 @@ public class ConsultaEstadisticaHelper {
                 .operador(terme.getOperador())
                 .build())
             .collect(Collectors.toList());
+    }
+
+    /**
+     * Resol l'indicador d'un widget gràfic segons el seu rol dins la llista d'indicadors. Per a
+     * DOS_INDICADORS, la llista pot contenir dos elements (VALOR i MAXIM) l'ordre dels quals no està
+     * garantit per JPA en un @OneToMany sense @OrderBy després d'una recàrrega des de BD, per la qual cosa
+     * no es pot confiar en la posició (get(0)) per identificar quin és quin. Per a la resta de tipusDades,
+     * el rol no s'utilitza i es manté el comportament existent (primer element de la llista).
+     */
+    private IndicadorTaulaEntity resolveIndicadorInfoPerRol(EstadisticaGraficWidgetEntity widget, IndicadorRolEnum rol) {
+        if (widget.getIndicadorsInfo() == null || widget.getIndicadorsInfo().isEmpty()) {
+            return null;
+        }
+        if (!DOS_INDICADORS.equals(widget.getTipusDades())) {
+            return widget.getIndicadorsInfo().get(0);
+        }
+        return widget.getIndicadorsInfo().stream()
+            .filter(ind -> rol.equals(ind.getRol()))
+            .findFirst()
+            .orElse(rol == IndicadorRolEnum.VALOR ? widget.getIndicadorsInfo().get(0) : null);
     }
 
 
@@ -276,7 +297,7 @@ public class ConsultaEstadisticaHelper {
 
         if (UN_INDICADOR.equals(widget.getTipusDades()) || UN_INDICADOR_AMB_DESCOMPOSICIO.equals(widget.getTipusDades()) || DOS_INDICADORS.equals(widget.getTipusDades())) {
 
-            IndicadorTaulaEntity indicadorInfo = widget.getIndicadorsInfo() != null ? widget.getIndicadorsInfo().get(0) : null;
+            IndicadorTaulaEntity indicadorInfo = resolveIndicadorInfoPerRol(widget, IndicadorRolEnum.VALOR);
             IndicadorAgregacio indicadorAgregacio = indicadorInfo != null ?
                 IndicadorAgregacio.builder()
                     .indicadorCodi(indicadorInfo.getIndicador().getCodi())
@@ -334,7 +355,29 @@ public class ConsultaEstadisticaHelper {
                 }
 
             } else if (DOS_INDICADORS.equals(widget.getTipusDades())) {
-                throw new NotImplementedException("La configuració de 2 indicadors encara no ha estat implementada");
+                IndicadorTaulaEntity indicadorMaxInfo = resolveIndicadorInfoPerRol(widget, IndicadorRolEnum.MAXIM);
+                IndicadorAgregacio indicadorMaxAgregacio = indicadorMaxInfo != null ?
+                    IndicadorAgregacio.builder()
+                        .indicadorCodi(indicadorMaxInfo.getIndicador().getCodi())
+                        .agregacio(indicadorMaxInfo.getAgregacio())
+                        .unitatAgregacio(indicadorMaxInfo.getUnitatAgregacio())
+                        .termesFormula(resoldreTermesFormula(indicadorMaxInfo.getIndicador().getCodi(), dadesComunsConsulta.getEntornAppId()))
+                        .build()
+                    : null;
+
+                labels.add(Map.of("id", "agrupacio", "label", getLabelAgrupacioTemporal(tempsAgrupacio)));
+                labels.add(Map.of("id", "col1", "label", StringUtils.defaultString(indicadorInfo.getTitol())));
+                labels.add(Map.of("id", "col2", "label", indicadorMaxInfo != null ? StringUtils.defaultString(indicadorMaxInfo.getTitol()) : ""));
+
+                files = fetRepository.getValorsGraficVarisIndicadors(
+                    dadesComunsConsulta.getEntornAppId(),
+                    dadesComunsConsulta.getPeriodeDates().getStart(),
+                    dadesComunsConsulta.getPeriodeDates().getEnd(),
+                    dimensionsFiltre,
+                    List.of(indicadorAgregacio, indicadorMaxAgregacio),
+                    tempsAgrupacio,
+                    seguretat);
+                // files: [{'agrupacio': '', 'col1': '<valor>', 'col2': '<màxim>'}]
             }
         } else if (VARIS_INDICADORS.equals(widget.getTipusDades())) {
             List<IndicadorAgregacio> indicadorsAgregacio = widget.getIndicadorsInfo().stream()
@@ -407,6 +450,10 @@ public class ConsultaEstadisticaHelper {
                 SPARK_LINE_CHART://Si se cambia la respuesta por el de una lista de valores en lugar de un mapa de {x: value, y: number} es necessario editar el front.
             case PIE_CHART:
             case GAUGE_CHART:
+                if (TipusGraficDataEnum.DOS_INDICADORS.equals(tipusDades)) {
+                    return convertToGaugeChartSeriesDosIndicadors(files);
+                }
+
                 boolean isSimpleMapping = files.get(0).size() == 2;
 
                 if (isSimpleMapping) {
@@ -467,6 +514,17 @@ public class ConsultaEstadisticaHelper {
                     .mapToDouble(entry -> toDouble(entry.getValue()))
                     .sum();
                 return Map.of("value", (Object) total);
+            })
+            .collect(Collectors.toList());
+    }
+
+    private List<Map<String, Object>> convertToGaugeChartSeriesDosIndicadors(List<Map<String, String>> files) {
+        return files.stream()
+            .map(file -> {
+                Map<String, Object> row = new HashMap<>();
+                row.put("value", file.get("col1") != null ? (Object) toDouble(file.get("col1")) : null);
+                row.put("max", file.get("col2") != null ? (Object) toDouble(file.get("col2")) : null);
+                return row;
             })
             .collect(Collectors.toList());
     }
