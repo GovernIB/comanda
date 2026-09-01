@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.intf.model.export;
 
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.GraficValueTypeEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficDataEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
@@ -25,6 +26,7 @@ public class EstadisticaGraficWidgetExport extends EstadisticaWidgetExport imple
 
     private TipusGraficEnum tipusGrafic;
     private TipusGraficDataEnum tipusDades;
+    private GraficValueTypeEnum tipusValors;
     @javax.validation.Valid
     private IndicadorTaulaExport indicadorInfo;
     @javax.validation.Valid

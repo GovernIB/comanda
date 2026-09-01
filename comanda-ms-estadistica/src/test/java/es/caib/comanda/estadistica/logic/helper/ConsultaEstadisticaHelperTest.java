@@ -9,6 +9,7 @@ import es.caib.comanda.client.model.EntornRef;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisuals;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.*;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.GraficValueTypeEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.IndicadorRolEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.OrdreDireccioEnum;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TableColumnsEnum;
@@ -495,6 +496,7 @@ class ConsultaEstadisticaHelperTest {
         widget.setTipusGrafic(TipusGraficEnum.GAUGE_CHART);
         widget.setTempsAgrupacio(PeriodeUnitat.DIA);
         widget.setIndicadorsInfo(List.of(filaValor, filaMaxim));
+        widget.setTipusValors(GraficValueTypeEnum.PERCENTAGE);
         dashboardItem.setWidget(widget);
 
         DadesComunsWidgetConsulta dadesComuns = DadesComunsWidgetConsulta.builder()
@@ -515,6 +517,46 @@ class ConsultaEstadisticaHelperTest {
         assertThat(graficItem.getDades()).hasSize(1);
         assertThat(graficItem.getDades().get(0)).containsEntry("value", 40.0);
         assertThat(graficItem.getDades().get(0)).containsEntry("max", 200.0);
+        assertThat(graficItem.getTipusValors()).isEqualTo(GraficValueTypeEnum.PERCENTAGE);
+    }
+
+    @Test
+    @DisplayName("getDadesWidgetGrafic: DOS_INDICADORS sense indicador de màxim configurat llança ReportGenerationException")
+    void getDadesWidgetGrafic_quanDosIndicadorsSenseMaxim_llavorsLlancaReportGenerationException() {
+        // Arrange
+        DashboardItemEntity dashboardItem = new DashboardItemEntity();
+        dashboardItem.setId(1L);
+        dashboardItem.setEntornId(1L);
+
+        IndicadorEntity indicadorValor = new IndicadorEntity();
+        indicadorValor.setId(1L);
+        indicadorValor.setCodi("IND_VALOR");
+        IndicadorTaulaEntity filaValor = new IndicadorTaulaEntity();
+        filaValor.setRol(IndicadorRolEnum.VALOR);
+        filaValor.setIndicador(indicadorValor);
+        filaValor.setTitol("Valor");
+        filaValor.setAgregacio(TableColumnsEnum.SUM);
+
+        EstadisticaGraficWidgetEntity widget = new EstadisticaGraficWidgetEntity();
+        widget.setTipusDades(TipusGraficDataEnum.DOS_INDICADORS);
+        widget.setTipusGrafic(TipusGraficEnum.GAUGE_CHART);
+        widget.setTempsAgrupacio(PeriodeUnitat.DIA);
+        // Simula el buit que pot deixar un export/import: només hi ha fila de VALOR, sense fila de MAXIM
+        widget.setIndicadorsInfo(List.of(filaValor));
+        dashboardItem.setWidget(widget);
+
+        DadesComunsWidgetConsulta dadesComuns = DadesComunsWidgetConsulta.builder()
+            .entornAppId(1L).entornCodi("DEV")
+            .periodeDates(new PeriodeResolverHelper.PeriodeDates(LocalDate.of(2023, 1, 1), LocalDate.of(2023, 1, 31)))
+            .build();
+
+        // Act & Assert
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(
+            consultaEstadisticaHelper, "getDadesWidgetGrafic", dashboardItem, dadesComuns, null, null))
+            .isInstanceOf(ReportGenerationException.class)
+            .hasMessageContaining("indicador de màxim");
+
+        verify(fetRepository, never()).getValorsGraficVarisIndicadors(any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test

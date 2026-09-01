@@ -365,6 +365,10 @@ public class ConsultaEstadisticaHelper {
                         .build()
                     : null;
 
+                if (indicadorMaxAgregacio == null) {
+                    throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, "El widget DOS_INDICADORS no té indicador de màxim configurat");
+                }
+
                 labels.add(Map.of("id", "agrupacio", "label", getLabelAgrupacioTemporal(tempsAgrupacio)));
                 labels.add(Map.of("id", "col1", "label", StringUtils.defaultString(indicadorInfo.getTitol())));
                 labels.add(Map.of("id", "col2", "label", indicadorMaxInfo != null ? StringUtils.defaultString(indicadorMaxInfo.getTitol()) : ""));
@@ -420,6 +424,7 @@ public class ConsultaEstadisticaHelper {
             .descripcio(widget.getDescripcio())
             .tipusGrafic(widget.getTipusGrafic())
             .tipusDades(widget.getTipusDades())
+            .tipusValors(widget.getTipusValors())
             .labels(labels)
             .dades(filesToSeries(files, widget.getTipusGrafic(), widget.getTipusDades()))
             .columnaAgregacio(columnaAgrupacio)
