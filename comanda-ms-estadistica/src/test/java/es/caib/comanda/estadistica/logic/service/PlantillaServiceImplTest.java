@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.logic.service;
 
+import es.caib.comanda.estadistica.logic.helper.EstadisticaWidgetHelper;
 import es.caib.comanda.estadistica.logic.helper.PaletaHelper;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.*;
 import es.caib.comanda.estadistica.persist.entity.paleta.*;
@@ -35,6 +36,7 @@ class PlantillaServiceImplTest {
     @Mock private PaletaHelper paletaHelper;
     @Mock private DashboardTemplatePaletteGroupRepository paletteGroupRepository;
     @Mock private WidgetStylePropertyRepository stylePropertyRepository;
+    @Mock private EstadisticaWidgetHelper estadisticaWidgetHelper;
 
     @InjectMocks private PlantillaServiceImpl plantillaService;
 
@@ -102,6 +104,16 @@ class PlantillaServiceImplTest {
             .isInstanceOf(ResourceNotUpdatedException.class)
             .hasMessageContaining("Error en actualització")
             .hasMessageContaining(String.valueOf(plantillaEntity.getId()));
+    }
+
+    @Test
+    @DisplayName("afterUpdateSave: invalida la cache d'estil resolt dels dashboards que utilitzen la plantilla")
+    void afterUpdateSave_quanEsModificaLaPlantilla_llavorsInvalidaLaCacheDEstil() {
+        // Act
+        plantillaService.afterUpdateSave(plantillaEntity, plantillaResource, answers, false);
+
+        // Assert
+        verify(estadisticaWidgetHelper).clearDashboardWidgetCacheByPlantilla(plantillaEntity.getId());
     }
 
     @Test

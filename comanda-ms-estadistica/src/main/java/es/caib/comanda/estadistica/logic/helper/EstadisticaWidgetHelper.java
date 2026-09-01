@@ -110,4 +110,24 @@ public class EstadisticaWidgetHelper {
         cacheHelper.evictCacheItemByPrefix(DASHBOARD_WIDGET_CACHE, dashboardItemId + "_");
     }
 
+    /**
+     * Invalida la cache d'estils resolts (DASHBOARD_WIDGET_CACHE, vegeu ConsultaEstadisticaHelper#getDadesWidget)
+     * de tots els items la plantilla efectiva dels quals sigui la indicada, perquè es recalculin amb la
+     * plantilla actualitzada. S'ha de cridar en modificar una plantilla (vegeu PlantillaServiceImpl) o una
+     * paleta que hi estigui associada (vegeu PaletaServiceImpl).
+     */
+    public void clearDashboardWidgetCacheByPlantilla(Long plantillaId) {
+        try {
+            if (plantillaId == null) return;
+            List<DashboardItemEntity> dashboardItems = dashboardItemRepository.findByEffectivePlantillaId(plantillaId);
+            if (dashboardItems == null || dashboardItems.isEmpty()) return;
+
+            dashboardItems.forEach(dashboardItem -> {
+                cacheHelper.evictCacheItemByPrefix(DASHBOARD_WIDGET_CACHE, dashboardItem.getId() + "_");
+            });
+        } catch (Exception e) {
+            log.error("Error en la crida a clearDashboardWidgetCacheByPlantilla: " + e.getMessage(), e);
+        }
+    }
+
 }

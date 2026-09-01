@@ -22,4 +22,14 @@ public interface DashboardItemRepository extends BaseRepository<DashboardItemEnt
     @Query("SELECT MAX(d.posY + d.height) FROM DashboardItemEntity d WHERE d.dashboard.id = :dashboardId")
     Integer findMaxBottomPositionByDashboardId(@Param("dashboardId") Long dashboardId);
 
+    /**
+     * Cerca els items la plantilla efectiva dels quals és la indicada: la seva pròpia plantilla si en té una
+     * de pròpia, o si no la del dashboard al qual pertanyen (vegeu ConsultaEstadisticaHelper#resolveAtributsVisuals).
+     * S'utilitza per invalidar la cache d'estils resolts quan es modifica una plantilla (vegeu
+     * EstadisticaWidgetHelper#clearDashboardWidgetCacheByPlantilla).
+     */
+    @Query("SELECT d FROM DashboardItemEntity d WHERE d.plantilla.id = :plantillaId " +
+            "OR (d.plantilla IS NULL AND d.dashboard.plantilla.id = :plantillaId)")
+    List<DashboardItemEntity> findByEffectivePlantillaId(@Param("plantillaId") Long plantillaId);
+
 }

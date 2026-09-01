@@ -1,9 +1,13 @@
 package es.caib.comanda.estadistica.logic.service;
 
+import es.caib.comanda.estadistica.logic.helper.EstadisticaWidgetHelper;
 import es.caib.comanda.estadistica.logic.helper.PaletaHelper;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.Paleta;
 import es.caib.comanda.estadistica.logic.intf.service.PaletaService;
 import es.caib.comanda.estadistica.persist.entity.paleta.PaletaEntity;
+import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
+import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaGrupPaletesEntity;
+import es.caib.comanda.estadistica.persist.repository.DashboardTemplatePaletteGroupRepository;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +39,8 @@ import java.util.*;
 public class PaletaServiceImpl extends BaseMutableResourceService<Paleta, Long, PaletaEntity> implements PaletaService {
 
     private final PaletaHelper paletaHelper;
+    private final DashboardTemplatePaletteGroupRepository dashboardTemplatePaletteGroupRepository;
+    private final EstadisticaWidgetHelper estadisticaWidgetHelper;
 
     @Override
     protected void afterCreateSave(PaletaEntity entity, Paleta resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
@@ -44,6 +50,19 @@ public class PaletaServiceImpl extends BaseMutableResourceService<Paleta, Long, 
     @Override
     protected void beforeUpdateSave(PaletaEntity entity, Paleta resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
         paletaHelper.syncColors(entity, resource);
+    }
+
+    @Override
+    protected void afterUpdateSave(PaletaEntity entity, Paleta resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
+        // Els colors d'una paleta poden estar compartits per diverses plantilles (com a paleta de widget i/o
+        // de gràfic de qualsevol dels seus grups): cal invalidar la cache d'estil resolt de totes elles,
+        // igual que en modificar la plantilla directament (vegeu PlantillaServiceImpl#afterUpdateSave).
+        dashboardTemplatePaletteGroupRepository.findByWidgetPaletteIdOrChartPaletteId(entity.getId(), entity.getId()).stream()
+                .map(PlantillaGrupPaletesEntity::getPlantilla)
+                .filter(Objects::nonNull)
+                .map(PlantillaEntity::getId)
+                .distinct()
+                .forEach(estadisticaWidgetHelper::clearDashboardWidgetCacheByPlantilla);
     }
 
     @Override

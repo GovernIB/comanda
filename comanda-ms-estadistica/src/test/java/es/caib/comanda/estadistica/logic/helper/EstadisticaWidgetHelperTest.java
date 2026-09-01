@@ -294,7 +294,66 @@ class EstadisticaWidgetHelperTest {
     }
 
     // ========================================================================
-    // 5. TESTOS PER A clearDashboardWidgetCache
+    // 5. TESTOS PER A clearDashboardWidgetCacheByPlantilla
+    // ========================================================================
+
+    @Test
+    @DisplayName("clearDashboardWidgetCacheByPlantilla: esborra la caché per a cada item amb aquesta plantilla efectiva")
+    void clearDashboardWidgetCacheByPlantilla_quanHiHaItems_llavorsEsborraCachéDeCadaUn() {
+        // Arrange
+        Long plantillaId = 200L;
+        DashboardItemEntity item1 = new DashboardItemEntity();
+        item1.setId(1L);
+        DashboardItemEntity item2 = new DashboardItemEntity();
+        item2.setId(2L);
+
+        when(dashboardItemRepository.findByEffectivePlantillaId(plantillaId)).thenReturn(List.of(item1, item2));
+
+        // Act
+        estadisticaWidgetHelper.clearDashboardWidgetCacheByPlantilla(plantillaId);
+
+        // Assert
+        verify(cacheHelper, times(1)).evictCacheItemByPrefix(eq(DASHBOARD_WIDGET_CACHE), eq("1_"));
+        verify(cacheHelper, times(1)).evictCacheItemByPrefix(eq(DASHBOARD_WIDGET_CACHE), eq("2_"));
+    }
+
+    @Test
+    @DisplayName("clearDashboardWidgetCacheByPlantilla: no fa res quan l'id de plantilla és null")
+    void clearDashboardWidgetCacheByPlantilla_quanPlantillaIdEsNull_llavorsNoFaRes() {
+        // Act
+        estadisticaWidgetHelper.clearDashboardWidgetCacheByPlantilla(null);
+
+        // Assert
+        verify(cacheHelper, never()).evictCacheItemByPrefix(anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("clearDashboardWidgetCacheByPlantilla: no fa res quan la llista d'items és buida")
+    void clearDashboardWidgetCacheByPlantilla_quanItemsSonBuits_llavorsNoFaRes() {
+        // Arrange
+        when(dashboardItemRepository.findByEffectivePlantillaId(anyLong())).thenReturn(Collections.emptyList());
+
+        // Act
+        estadisticaWidgetHelper.clearDashboardWidgetCacheByPlantilla(200L);
+
+        // Assert
+        verify(cacheHelper, never()).evictCacheItemByPrefix(anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("clearDashboardWidgetCacheByPlantilla: captura l'excepció i no falla quan el repositori llança error")
+    void clearDashboardWidgetCacheByPlantilla_quanRepositoriLlancaExcepcio_llavorsNoFalla() {
+        // Arrange
+        when(dashboardItemRepository.findByEffectivePlantillaId(anyLong())).thenThrow(new RuntimeException("Error de BD"));
+
+        // Act & Assert
+        assertThatCode(() -> estadisticaWidgetHelper.clearDashboardWidgetCacheByPlantilla(200L))
+            .doesNotThrowAnyException();
+        verify(cacheHelper, never()).evictCacheItemByPrefix(anyString(), anyString());
+    }
+
+    // ========================================================================
+    // 6. TESTOS PER A clearDashboardWidgetCache
     // ========================================================================
 
     @Test

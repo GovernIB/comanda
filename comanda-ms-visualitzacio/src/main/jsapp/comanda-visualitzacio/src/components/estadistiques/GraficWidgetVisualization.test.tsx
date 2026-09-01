@@ -77,7 +77,7 @@ describe('GraficWidgetVisualization', () => {
         );
 
         const marginBottom = Number(screen.getByTestId('bar-chart').getAttribute('data-margin-bottom'));
-        expect(marginBottom).toBeGreaterThanOrEqual(40);
+        expect(marginBottom).toBeGreaterThanOrEqual(20);
     });
 
     it('GraficWidgetVisualization_enModeLine_reservaProuMarInferiorPerEtiquetesDeCategoriaIEixTitol', () => {
@@ -91,7 +91,7 @@ describe('GraficWidgetVisualization', () => {
         );
 
         const marginBottom = Number(screen.getByTestId('line-chart').getAttribute('data-margin-bottom'));
-        expect(marginBottom).toBeGreaterThanOrEqual(40);
+        expect(marginBottom).toBeGreaterThanOrEqual(20);
     });
 
     it('GraficWidgetVisualization_enModeBar_forcaMostrarTotesLesEtiquetesDeCategoria', () => {

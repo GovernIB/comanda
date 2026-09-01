@@ -1,9 +1,13 @@
 package es.caib.comanda.estadistica.logic.service;
 
+import es.caib.comanda.estadistica.logic.helper.EstadisticaWidgetHelper;
 import es.caib.comanda.estadistica.logic.helper.PaletaHelper;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.Paleta;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletaColor;
 import es.caib.comanda.estadistica.persist.entity.paleta.PaletaEntity;
+import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
+import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaGrupPaletesEntity;
+import es.caib.comanda.estadistica.persist.repository.DashboardTemplatePaletteGroupRepository;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -28,6 +34,10 @@ class PaletaServiceImplTest {
 
     @Mock
     private PaletaHelper paletaHelper;
+    @Mock
+    private DashboardTemplatePaletteGroupRepository dashboardTemplatePaletteGroupRepository;
+    @Mock
+    private EstadisticaWidgetHelper estadisticaWidgetHelper;
 
     @InjectMocks
     private PaletaServiceImpl paletaService;
@@ -69,6 +79,61 @@ class PaletaServiceImplTest {
 
         // Assert
         verify(paletaHelper, times(1)).syncColors(entity, resource);
+    }
+
+    // ========================================================================
+    // 2b. TESTOS PER A afterUpdateSave
+    // ========================================================================
+
+    @Test
+    @DisplayName("afterUpdateSave: invalida la cache d'estil resolt de totes les plantilles que utilitzen la paleta")
+    void afterUpdateSave_quanPaletaUtilitzadaPerVariesPlantilles_llavorsInvalidaCadaUnaUnCop() {
+        // Arrange
+        PaletaEntity entity = new PaletaEntity();
+        entity.setId(50L);
+        Paleta resource = new Paleta();
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+
+        PlantillaEntity plantilla1 = new PlantillaEntity();
+        plantilla1.setId(1L);
+        PlantillaEntity plantilla2 = new PlantillaEntity();
+        plantilla2.setId(2L);
+
+        PlantillaGrupPaletesEntity grupWidget = new PlantillaGrupPaletesEntity();
+        grupWidget.setPlantilla(plantilla1);
+        PlantillaGrupPaletesEntity grupChart = new PlantillaGrupPaletesEntity();
+        grupChart.setPlantilla(plantilla2);
+        // Mateixa plantilla que grupWidget: la paleta hi apareix dues vegades (widget i gràfic) però
+        // només s'ha d'invalidar un cop.
+        PlantillaGrupPaletesEntity grupDuplicat = new PlantillaGrupPaletesEntity();
+        grupDuplicat.setPlantilla(plantilla1);
+
+        when(dashboardTemplatePaletteGroupRepository.findByWidgetPaletteIdOrChartPaletteId(50L, 50L))
+            .thenReturn(List.of(grupWidget, grupChart, grupDuplicat));
+
+        // Act
+        paletaService.afterUpdateSave(entity, resource, answers, false);
+
+        // Assert
+        verify(estadisticaWidgetHelper, times(1)).clearDashboardWidgetCacheByPlantilla(1L);
+        verify(estadisticaWidgetHelper, times(1)).clearDashboardWidgetCacheByPlantilla(2L);
+    }
+
+    @Test
+    @DisplayName("afterUpdateSave: no fa res quan cap plantilla utilitza la paleta")
+    void afterUpdateSave_quanCapPlantillaLaUtilitza_llavorsNoFaRes() {
+        // Arrange
+        PaletaEntity entity = new PaletaEntity();
+        entity.setId(50L);
+
+        when(dashboardTemplatePaletteGroupRepository.findByWidgetPaletteIdOrChartPaletteId(anyLong(), anyLong()))
+            .thenReturn(Collections.emptyList());
+
+        // Act
+        paletaService.afterUpdateSave(entity, new Paleta(), new HashMap<>(), false);
+
+        // Assert
+        verify(estadisticaWidgetHelper, never()).clearDashboardWidgetCacheByPlantilla(anyLong());
     }
 
     // ========================================================================

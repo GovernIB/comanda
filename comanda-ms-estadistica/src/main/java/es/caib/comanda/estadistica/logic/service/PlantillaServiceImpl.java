@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.logic.service;
 
+import es.caib.comanda.estadistica.logic.helper.EstadisticaWidgetHelper;
 import es.caib.comanda.estadistica.logic.helper.PaletaHelper;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.DashboardTemplatePaletteGroup;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.Paleta;
@@ -42,6 +43,7 @@ public class PlantillaServiceImpl extends BaseMutableResourceService<Plantilla, 
     private final PaletaHelper paletaHelper;
     private final DashboardTemplatePaletteGroupRepository DashboardTemplatePaletteGroupRepository;
     private final WidgetStylePropertyRepository widgetStylePropertyRepository;
+    private final EstadisticaWidgetHelper estadisticaWidgetHelper;
 
     @Override
     protected void beforeCreateSave(PlantillaEntity entity, Plantilla resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
@@ -59,6 +61,14 @@ public class PlantillaServiceImpl extends BaseMutableResourceService<Plantilla, 
         } catch (RuntimeException ex) {
             throw new ResourceNotUpdatedException(resource.getClass(), String.valueOf(entity.getId()), ex.getMessage(), ex);
         }
+    }
+
+    @Override
+    protected void afterUpdateSave(PlantillaEntity entity, Plantilla resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
+        // Els dashboards que utilitzen aquesta plantilla (directament o heretada del dashboard) tenen l'estil
+        // resolt en cache (vegeu ConsultaEstadisticaHelper#getDadesWidget); cal invalidar-la perquè reflecteixin
+        // la nova configuració de seguida, respectant igualment les personalitzacions pròpies de cada item.
+        estadisticaWidgetHelper.clearDashboardWidgetCacheByPlantilla(entity.getId());
     }
 
     @Override

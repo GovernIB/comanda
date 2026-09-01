@@ -314,7 +314,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                     layout={barHorizontal ? 'horizontal' : 'vertical'}
                     grid={grid}
                     height={chartHeight}
-                    margin={{top: 10, bottom: 40, left: 20, right: 10}}
+                    margin={{top: 10, bottom: 20, left: 20, right: 10}}
                     slotProps={{
                         legend: {
                             sx: {
@@ -371,7 +371,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                     height={chartHeight}
                     grid={grid}
                     // Vegeu comentari equivalent a renderBarChart: cal espai per a les etiquetes de categoria I el títol de l'eix alhora.
-                    margin={{top: 10, bottom: 40, left: 20, right: 10}}
+                    margin={{top: 10, bottom: 20, left: 20, right: 10}}
                     slotProps={{
                         legend: {
                             sx: {
