@@ -176,7 +176,7 @@ export const useMapDashboardItems = (dashboardWidgets: unknown[]) => {
  * amplada; a pantalles més petites o més grans el canvas s'escala (vegeu DashboardScaledCanvas) mantenint
  * sempre la mateixa proporció visual (mides de fonts, icones, etc.).
  */
-export const DASHBOARD_DESIGN_WIDTH = 1680;
+export const DASHBOARD_DESIGN_WIDTH = 1640;
 
 export const horizontalSubdivisions = 60;
 
@@ -400,13 +400,19 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
 
         ctx.clearRect(0, 0, canvas.width, canvas.height); // Netejar el canvas
 
+        // Línies a punts (en lloc de contínues): un segment de traç mínim amb extrem arrodonit ("lineCap
+        // round") dibuixa un punt rodó a cada interval, en lloc d'un guionet.
+        ctx.strokeStyle = '#ccc';
+        ctx.lineWidth = 0.5;
+        ctx.lineCap = 'round';
+        ctx.setLineDash([1, 3]);
+
         // Dibuixar línies verticals
         for (let i = 0; i <= cols; i++) {
             const x = i * colWidth;
             ctx.beginPath();
             ctx.moveTo(x, 0);
             ctx.lineTo(x, canvas.height);
-            ctx.strokeStyle = '#ccc';
             ctx.stroke();
         }
 
@@ -415,8 +421,6 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
             ctx.beginPath();
             ctx.moveTo(0, y);
             ctx.lineTo(canvas.width, y);
-            ctx.strokeStyle = '#ccc';
-            ctx.lineWidth = 1;
             ctx.stroke();
         }
     };

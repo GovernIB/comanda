@@ -137,8 +137,10 @@ describe('DashboardReactGridLayout', () => {
             moveTo: vi.fn(),
             lineTo: vi.fn(),
             stroke: vi.fn(),
+            setLineDash: vi.fn(),
             strokeStyle: '',
             lineWidth: 1,
+            lineCap: 'butt',
         })) as any;
 
         // Comportament per defecte fidel a isEqual real (comparació estructural): useSizeTracker (usat per
@@ -169,8 +171,8 @@ describe('DashboardReactGridLayout', () => {
 
     it('DashboardReactGridLayout_lagraellaTe60ColumnesIFilesQuadrades', () => {
         // Regressió: la graella ha de tenir 60 columnes d'amplada i files el més quadrades possible a
-        // l'amplada de disseny (1680px / 60 columnes = 28px de costat, tant en ample com en alt). 1680px
-        // correspon a una pantalla de 1920px menys els 240px del menú lateral (vegeu DASHBOARD_DESIGN_WIDTH).
+        // l'amplada de disseny (vegeu DASHBOARD_DESIGN_WIDTH, l'espai real disponible pel canvas un cop
+        // descomptat el menú lateral).
         mocks.isEqualMock.mockReturnValue(true);
 
         render(
@@ -183,7 +185,6 @@ describe('DashboardReactGridLayout', () => {
         );
 
         expect(horizontalSubdivisions).toBe(60);
-        expect(DASHBOARD_DESIGN_WIDTH).toBe(1680);
         expect(dashboardRowHeight).toBe(DASHBOARD_DESIGN_WIDTH / horizontalSubdivisions);
         expect(mocks.responsiveProps.cols).toEqual({ md: horizontalSubdivisions });
         expect(mocks.responsiveProps.rowHeight).toBe(dashboardRowHeight);
