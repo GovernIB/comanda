@@ -734,7 +734,10 @@ const generateSampleData = (chartType?: string): Record<string, unknown>[] => {
                 {label: 'Grup D', value: 200},
             ];
         case 'GAUGE_CHART':
-            return [{ value: 75, max: 100 }];
+            // 35 (no 75) perquè no coincideixi amb cap llindar per defecte de gaugeRangs
+            // ('50,75,100'): amb 75 el getColor() de renderGaugeChart saltava sempre al
+            // tercer color de la paleta i el primer mai es mostrava a la previsualització.
+            return [{ value: 35, max: 100 }];
         case 'HEATMAP_CHART':
             return [
                 {x: 'A', y: 'X', value: 10},

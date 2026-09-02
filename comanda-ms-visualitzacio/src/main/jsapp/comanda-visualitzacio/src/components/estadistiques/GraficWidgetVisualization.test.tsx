@@ -34,9 +34,13 @@ vi.mock('@mui/x-charts', () => ({
     ChartsTooltip: () => <div data-testid="charts-tooltip">Tooltip</div>,
     ChartsLegend: () => <div data-testid="charts-legend">Legend</div>,
     SparkLineChart: () => <div data-testid="spark-line-chart">SparkLine</div>,
-    Gauge: ({value, valueMin, valueMax, text}: { value?: number; valueMin?: number; valueMax?: number; text?: (params: { value: number | null }) => string }) => (
-        <div data-testid="gauge-chart" data-value={value} data-value-min={valueMin} data-value-max={valueMax} data-text={text ? text({ value: value ?? null }) : undefined}>Gauge</div>
-    ),
+    Gauge: ({value, valueMin, valueMax, text, sx}: { value?: number; valueMin?: number; valueMax?: number; text?: (params: { value: number | null }) => string; sx?: () => Record<string, { fill?: string }> }) => {
+        const style = sx ? sx() : undefined;
+        const arcFill = style?.['& .valueArc']?.fill;
+        return (
+            <div data-testid="gauge-chart" data-value={value} data-value-min={valueMin} data-value-max={valueMax} data-text={text ? text({ value: value ?? null }) : undefined} data-value-arc-fill={arcFill}>Gauge</div>
+        );
+    },
     XAxis: () => null,
     YAxis: () => null,
     LineSeries: () => null,
@@ -197,6 +201,23 @@ describe('GraficWidgetVisualization', () => {
         );
 
         expect(screen.getByTestId('gauge-chart')).toBeInTheDocument();
+    });
+
+    it('GraficWidgetVisualization_quanEsGaugeSenseDadesIAmbRangsPerDefecte_usaElPrimerColorDeLaPaleta', () => {
+        // El valor de mostra (75) coincidia exactament amb el segon llindar per defecte de
+        // gaugeRangs ('50,75,100'), fent que getColor saltés sempre al tercer color de la
+        // paleta i el primer (i el segon) mai es mostressin a la previsualització.
+        renderComponent(
+            <GraficWidgetVisualization
+                titol="Gràfic gauge"
+                tipusGrafic="GAUGE_CHART"
+                mostrarVora={false}
+                ampleVora={1}
+            />
+        );
+
+        const gauge = screen.getByTestId('gauge-chart');
+        expect(gauge).toHaveAttribute('data-value-arc-fill', '#1f77b4');
     });
 
     it('GraficWidgetVisualization_quanEsGaugeAmbDosIndicadorsIModeNumeric_elMaximVeDelSegonIndicador', () => {
