@@ -11,6 +11,7 @@ import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class ComandaSseServiceImpl implements ComandaSseService, ComandaSseSubscriberRegistry {
 
     private static final long SSE_TIMEOUT_MS = 0L;
+    // El proxy revers (Apache mod_proxy) davant del backend talla les connexions proxied inactives als 30 s
+    // (Timeout per defecte, no configurable en aquest desplegament). Sense tràfic, el client detecta el tall
+    // i reconnecta contínuament (vegeu SseProvider.tsx al frontend), provocant refrescs visibles sense cap
+    // interacció de l'usuari. Enviant un comentari SSE cada 25 s mantenim la connexió activa per sota d'aquest
+    // llindar.
+    private static final long HEARTBEAT_INTERVAL_MS = 25_000L;
 
     private final List<Subscription> subscriptions = new CopyOnWriteArrayList<>();
     private final AuthenticationHelper authenticationHelper;
@@ -65,6 +72,28 @@ public class ComandaSseServiceImpl implements ComandaSseService, ComandaSseSubsc
         List<Subscription> inactiveSubscriptions = new ArrayList<>();
         for (Subscription subscription : subscriptions) {
             if (!sendToSubscription(subscription, event)) {
+                inactiveSubscriptions.add(subscription);
+            }
+        }
+        subscriptions.removeAll(inactiveSubscriptions);
+    }
+
+    /**
+     * Envia un comentari SSE (sense nom d'event ni dades) a totes les subscripcions actives, per mantenir viva
+     * la connexió a través del proxy revers. El client (SseProvider.tsx) ignora els comentaris SSE.
+     */
+    @Scheduled(fixedRate = HEARTBEAT_INTERVAL_MS)
+    public void sendHeartbeat() {
+        if (subscriptions.isEmpty()) {
+            return;
+        }
+        List<Subscription> inactiveSubscriptions = new ArrayList<>();
+        for (Subscription subscription : subscriptions) {
+            try {
+                subscription.emitter.send(SseEmitter.event().comment("heartbeat"));
+            } catch (IOException ex) {
+                log.debug("No s'ha pogut enviar l'heartbeat SSE", ex);
+                subscription.emitter.completeWithError(ex);
                 inactiveSubscriptions.add(subscription);
             }
         }

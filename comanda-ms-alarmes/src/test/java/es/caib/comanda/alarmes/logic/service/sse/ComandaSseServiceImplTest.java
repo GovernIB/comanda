@@ -258,7 +258,67 @@ class ComandaSseServiceImplTest {
     }
 
     // ========================================================================
-    // 4. TESTOS PER A resolveEventPayload
+    // 4. TESTOS PER A sendHeartbeat
+    // ========================================================================
+
+    @Test
+    @DisplayName("sendHeartbeat: envia un comentari SSE a totes les subscripcions actives")
+    void sendHeartbeat_quanHiHaSubscriptorsActius_enviaComentariATots() throws IOException {
+        // Arrange
+        mockAuthenticatedUser("usuari1", false);
+
+        try (MockedConstruction<SseEmitter> mocked = mockConstruction(SseEmitter.class)) {
+            comandaSseService.subscribe();
+            assertThat(getSubscriptions()).hasSize(1);
+
+            SseEmitter emitter = mocked.constructed().get(0);
+
+            // Act
+            comandaSseService.sendHeartbeat();
+
+            // Assert
+            // 1 crida per CONNECTION_READY (al subscribe) + 1 crida pel comentari d'heartbeat
+            verify(emitter, org.mockito.Mockito.times(2)).send(any(SseEmitter.SseEventBuilder.class));
+            assertThat(getSubscriptions()).hasSize(1); // La subscripció continua activa
+            verifyNoInteractions(alarmaService); // Un heartbeat no ha de resoldre alarmes
+        }
+    }
+
+    @Test
+    @DisplayName("sendHeartbeat: elimina les subscripcions que fallen en l'enviament (IOException)")
+    void sendHeartbeat_quanEnviamentFalla_eliminaSubscripcioInactiva() throws IOException {
+        // Arrange
+        mockAuthenticatedUser("usuari1", false);
+
+        try (MockedConstruction<SseEmitter> mocked = mockConstruction(SseEmitter.class)) {
+            comandaSseService.subscribe();
+            assertThat(getSubscriptions()).hasSize(1);
+
+            SseEmitter emitter = mocked.constructed().get(0);
+            doThrow(new IOException("Client desconnectat")).when(emitter).send(any(SseEmitter.SseEventBuilder.class));
+
+            // Act
+            comandaSseService.sendHeartbeat();
+
+            // Assert
+            assertThat(getSubscriptions()).isEmpty();
+            verify(emitter).completeWithError(any(IOException.class));
+        }
+    }
+
+    @Test
+    @DisplayName("sendHeartbeat: no fa res si no hi ha subscripcions")
+    void sendHeartbeat_quanNoHiHaSubscripcions_noFaRes() {
+        // Act
+        comandaSseService.sendHeartbeat();
+
+        // Assert
+        assertThat(getSubscriptions()).isEmpty();
+        verifyNoInteractions(alarmaService);
+    }
+
+    // ========================================================================
+    // 5. TESTOS PER A resolveEventPayload
     // ========================================================================
 
     @Test
