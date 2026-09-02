@@ -246,13 +246,20 @@ public class OracleFetRepositoryDialectGraficTest {
                 removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes, 2, '0') AS agrupacio, descomposicio, " +
                     "SUM(sum_fets_visites_MES) AS total_sum_visites_MES " +
                     "FROM ( " +
-                    "SELECT t.anualitat, t.trimestre, t.mes, " +
+                    "SELECT periodes.anualitat, periodes.trimestre, periodes.mes, descomposicio, " +
+                    "COALESCE(agg.sum_fets_visites_MES, 0) AS sum_fets_visites_MES " +
+                    "FROM (SELECT DISTINCT anualitat, trimestre, mes FROM (" +
+                    "SELECT EXTRACT(YEAR FROM d) AS anualitat, TO_NUMBER(TO_CHAR(d,'Q')) AS trimestre, " +
+                    "EXTRACT(MONTH FROM d) AS mes, TO_NUMBER(TO_CHAR(d,'IW')) AS setmana, EXTRACT(DAY FROM d) AS dia " +
+                    "FROM (SELECT :dataInici + LEVEL - 1 AS d FROM dual CONNECT BY LEVEL <= (:dataFi - :dataInici + 1))" +
+                    ") cal) periodes " +
+                    "LEFT JOIN ( SELECT t.anualitat, t.trimestre, t.mes, " +
                     "JSON_VALUE(f.dimensions_json, '$.\"aplicacio\"') AS descomposicio, " +
                     "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites_MES " +
                     "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
-                    "WHERE f.entorn_app_id = :entornAppId " +
-                    "AND t.data BETWEEN :dataInici AND :dataFi " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
                     "GROUP BY t.anualitat, t.trimestre, t.mes, JSON_VALUE(f.dimensions_json, '$.\"aplicacio\"') " +
+                    ") agg ON periodes.anualitat = agg.anualitat AND periodes.trimestre = agg.trimestre AND periodes.mes = agg.mes" +
                     ") " +
                     "GROUP BY anualitat, trimestre, mes, descomposicio " +
                     "ORDER BY agrupacio, descomposicio")
@@ -269,13 +276,20 @@ public class OracleFetRepositoryDialectGraficTest {
                 removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes, 2, '0') AS agrupacio, descomposicio, " +
                     "AVG(sum_fets_visites_SETMANA) AS average_result_visites_SETMANA " +
                     "FROM ( " +
-                    "SELECT t.anualitat, t.trimestre, t.mes, t.setmana, " +
+                    "SELECT periodes.anualitat, periodes.trimestre, periodes.mes, periodes.setmana, descomposicio, " +
+                    "COALESCE(agg.sum_fets_visites_SETMANA, 0) AS sum_fets_visites_SETMANA " +
+                    "FROM (SELECT DISTINCT anualitat, trimestre, mes, setmana FROM (" +
+                    "SELECT EXTRACT(YEAR FROM d) AS anualitat, TO_NUMBER(TO_CHAR(d,'Q')) AS trimestre, " +
+                    "EXTRACT(MONTH FROM d) AS mes, TO_NUMBER(TO_CHAR(d,'IW')) AS setmana, EXTRACT(DAY FROM d) AS dia " +
+                    "FROM (SELECT :dataInici + LEVEL - 1 AS d FROM dual CONNECT BY LEVEL <= (:dataFi - :dataInici + 1))" +
+                    ") cal) periodes " +
+                    "LEFT JOIN ( SELECT t.anualitat, t.trimestre, t.mes, t.setmana, " +
                     "JSON_VALUE(f.dimensions_json, '$.\"departament\"') AS descomposicio, " +
                     "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites_SETMANA " +
                     "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
-                    "WHERE f.entorn_app_id = :entornAppId " +
-                    "AND t.data BETWEEN :dataInici AND :dataFi " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
                     "GROUP BY t.anualitat, t.trimestre, t.mes, t.setmana, JSON_VALUE(f.dimensions_json, '$.\"departament\"') " +
+                    ") agg ON periodes.anualitat = agg.anualitat AND periodes.trimestre = agg.trimestre AND periodes.mes = agg.mes AND periodes.setmana = agg.setmana" +
                     ") " +
                     "GROUP BY anualitat, trimestre, mes, descomposicio " +
                     "ORDER BY agrupacio, descomposicio")
@@ -292,14 +306,21 @@ public class OracleFetRepositoryDialectGraficTest {
                 removeConsecutiveSpaces("SELECT anualitat || '/' || trimestre AS agrupacio, descomposicio, " +
                     "SUM(sum_fets_visites_MES) AS total_sum_visites_MES " +
                     "FROM ( " +
-                    "SELECT t.anualitat, t.trimestre, t.mes, " +
+                    "SELECT periodes.anualitat, periodes.trimestre, periodes.mes, descomposicio, " +
+                    "COALESCE(agg.sum_fets_visites_MES, 0) AS sum_fets_visites_MES " +
+                    "FROM (SELECT DISTINCT anualitat, trimestre, mes FROM (" +
+                    "SELECT EXTRACT(YEAR FROM d) AS anualitat, TO_NUMBER(TO_CHAR(d,'Q')) AS trimestre, " +
+                    "EXTRACT(MONTH FROM d) AS mes, TO_NUMBER(TO_CHAR(d,'IW')) AS setmana, EXTRACT(DAY FROM d) AS dia " +
+                    "FROM (SELECT :dataInici + LEVEL - 1 AS d FROM dual CONNECT BY LEVEL <= (:dataFi - :dataInici + 1))" +
+                    ") cal) periodes " +
+                    "LEFT JOIN ( SELECT t.anualitat, t.trimestre, t.mes, " +
                     "JSON_VALUE(f.dimensions_json, '$.\"area\"') AS descomposicio, " +
                     "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites_MES " +
                     "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
-                    "WHERE f.entorn_app_id = :entornAppId " +
-                    "AND t.data BETWEEN :dataInici AND :dataFi " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
                     "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') = 'RRHH' " +
                     "GROUP BY t.anualitat, t.trimestre, t.mes, JSON_VALUE(f.dimensions_json, '$.\"area\"') " +
+                    ") agg ON periodes.anualitat = agg.anualitat AND periodes.trimestre = agg.trimestre AND periodes.mes = agg.mes" +
                     ") " +
                     "GROUP BY anualitat, trimestre, descomposicio " +
                     "ORDER BY agrupacio, descomposicio")
@@ -320,8 +341,7 @@ public class OracleFetRepositoryDialectGraficTest {
                     "JSON_VALUE(f.dimensions_json, '$.\"usuari\"') AS descomposicio, " +
                     "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites_DIA " +
                     "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
-                    "WHERE f.entorn_app_id = :entornAppId " +
-                    "AND t.data BETWEEN :dataInici AND :dataFi " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
                     "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') IN ('RRHH','IT') " +
                     "GROUP BY t.anualitat, t.trimestre, t.mes, t.setmana, t.dia, JSON_VALUE(f.dimensions_json, '$.\"usuari\"') " +
                     ") " +
@@ -347,8 +367,7 @@ public class OracleFetRepositoryDialectGraficTest {
                     "JSON_VALUE(f.dimensions_json, '$.\"aplicacio\"') AS descomposicio, " +
                     "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites_DIA " +
                     "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
-                    "WHERE f.entorn_app_id = :entornAppId " +
-                    "AND t.data BETWEEN :dataInici AND :dataFi " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
                     "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') IN ('RRHH','IT') " +
                     "AND JSON_VALUE(f.dimensions_json, '$.\"area\"') = 'Finance' " +
                     "GROUP BY t.anualitat, t.trimestre, t.mes, t.setmana, t.dia, JSON_VALUE(f.dimensions_json, '$.\"aplicacio\"') " +
@@ -368,14 +387,21 @@ public class OracleFetRepositoryDialectGraficTest {
                 removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes, 2, '0') AS agrupacio, descomposicio, " +
                     "SUM(sum_fets_sessions_MES) AS total_sum_sessions_MES " +
                     "FROM ( " +
-                    "SELECT t.anualitat, t.trimestre, t.mes, " +
+                    "SELECT periodes.anualitat, periodes.trimestre, periodes.mes, descomposicio, " +
+                    "COALESCE(agg.sum_fets_sessions_MES, 0) AS sum_fets_sessions_MES " +
+                    "FROM (SELECT DISTINCT anualitat, trimestre, mes FROM (" +
+                    "SELECT EXTRACT(YEAR FROM d) AS anualitat, TO_NUMBER(TO_CHAR(d,'Q')) AS trimestre, " +
+                    "EXTRACT(MONTH FROM d) AS mes, TO_NUMBER(TO_CHAR(d,'IW')) AS setmana, EXTRACT(DAY FROM d) AS dia " +
+                    "FROM (SELECT :dataInici + LEVEL - 1 AS d FROM dual CONNECT BY LEVEL <= (:dataFi - :dataInici + 1))" +
+                    ") cal) periodes " +
+                    "LEFT JOIN ( SELECT t.anualitat, t.trimestre, t.mes, " +
                     "JSON_VALUE(f.dimensions_json, '$.\"departament\"') AS descomposicio, " +
                     "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions_MES " +
                     "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
-                    "WHERE f.entorn_app_id = :entornAppId " +
-                    "AND t.data BETWEEN :dataInici AND :dataFi " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
                     "AND JSON_VALUE(f.dimensions_json, '$.\"area\"') = 'Finance' " +
                     "GROUP BY t.anualitat, t.trimestre, t.mes, JSON_VALUE(f.dimensions_json, '$.\"departament\"') " +
+                    ") agg ON periodes.anualitat = agg.anualitat AND periodes.trimestre = agg.trimestre AND periodes.mes = agg.mes" +
                     ") " +
                     "GROUP BY anualitat, trimestre, mes, descomposicio " +
                     "ORDER BY agrupacio, descomposicio")
@@ -539,17 +565,23 @@ public class OracleFetRepositoryDialectGraficTest {
                 List.of(createIndicadorAgregacio("visites", TableColumnsEnum.SUM, PeriodeUnitat.MES)),
                 PeriodeUnitat.MES,
                 null,
-                removeConsecutiveSpaces("SELECT agrupacio, " +
+                removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes, 2, '0') AS agrupacio, " +
                     "SUM(sum_fets_visites_MES) AS total_sum_visites_MES " +
                     "FROM ( " +
-                    "SELECT t.anualitat, t.trimestre, t.mes, " +
-                    "anualitat || '/' || LPAD(mes, 2, '0') AS agrupacio, " +
+                    "SELECT periodes.anualitat, periodes.trimestre, periodes.mes, " +
+                    "COALESCE(agg.sum_fets_visites_MES, 0) AS sum_fets_visites_MES " +
+                    "FROM (SELECT DISTINCT anualitat, trimestre, mes FROM (" +
+                    "SELECT EXTRACT(YEAR FROM d) AS anualitat, TO_NUMBER(TO_CHAR(d,'Q')) AS trimestre, " +
+                    "EXTRACT(MONTH FROM d) AS mes, TO_NUMBER(TO_CHAR(d,'IW')) AS setmana, EXTRACT(DAY FROM d) AS dia " +
+                    "FROM (SELECT :dataInici + LEVEL - 1 AS d FROM dual CONNECT BY LEVEL <= (:dataFi - :dataInici + 1))" +
+                    ") cal) periodes " +
+                    "LEFT JOIN ( SELECT t.anualitat, t.trimestre, t.mes, " +
                     "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites_MES " +
                     "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
-                    "WHERE f.entorn_app_id = :entornAppId " +
-                    "AND t.data BETWEEN :dataInici AND :dataFi " +
-                    "GROUP BY t.anualitat, t.trimestre, t.mes) " +
-                    "GROUP BY agrupacio " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes ) " +
+                    "agg ON periodes.anualitat = agg.anualitat AND periodes.trimestre = agg.trimestre AND periodes.mes = agg.mes) " +
+                    "GROUP BY anualitat, trimestre, mes " +
                     "ORDER BY agrupacio")
             ),
 
@@ -563,19 +595,26 @@ public class OracleFetRepositoryDialectGraficTest {
                 ),
                 PeriodeUnitat.MES,
                 null,
-                removeConsecutiveSpaces("SELECT agrupacio, " +
+                removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes, 2, '0') AS agrupacio, " +
                     "SUM(sum_fets_visites_SETMANA) AS total_sum_visites_SETMANA, " +
                     "AVG(sum_fets_sessions_SETMANA) AS average_result_sessions_SETMANA " +
                     "FROM ( " +
-                    "SELECT t.anualitat, t.trimestre, t.mes, t.setmana, " +
-                    "anualitat || '/' || LPAD(mes, 2, '0') AS agrupacio, " +
+                    "SELECT periodes.anualitat, periodes.trimestre, periodes.mes, periodes.setmana, " +
+                    "COALESCE(agg.sum_fets_visites_SETMANA, 0) AS sum_fets_visites_SETMANA, " +
+                    "COALESCE(agg.sum_fets_sessions_SETMANA, 0) AS sum_fets_sessions_SETMANA " +
+                    "FROM (SELECT DISTINCT anualitat, trimestre, mes, setmana FROM (" +
+                    "SELECT EXTRACT(YEAR FROM d) AS anualitat, TO_NUMBER(TO_CHAR(d,'Q')) AS trimestre, " +
+                    "EXTRACT(MONTH FROM d) AS mes, TO_NUMBER(TO_CHAR(d,'IW')) AS setmana, EXTRACT(DAY FROM d) AS dia " +
+                    "FROM (SELECT :dataInici + LEVEL - 1 AS d FROM dual CONNECT BY LEVEL <= (:dataFi - :dataInici + 1))" +
+                    ") cal) periodes " +
+                    "LEFT JOIN ( SELECT t.anualitat, t.trimestre, t.mes, t.setmana, " +
                     "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites_SETMANA, " +
                     "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions_SETMANA " +
                     "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
-                    "WHERE f.entorn_app_id = :entornAppId " +
-                    "AND t.data BETWEEN :dataInici AND :dataFi " +
-                    "GROUP BY t.anualitat, t.trimestre, t.mes, t.setmana) " +
-                    "GROUP BY agrupacio " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes, t.setmana ) " +
+                    "agg ON periodes.anualitat = agg.anualitat AND periodes.trimestre = agg.trimestre AND periodes.mes = agg.mes AND periodes.setmana = agg.setmana) " +
+                    "GROUP BY anualitat, trimestre, mes " +
                     "ORDER BY agrupacio")
             ),
 
@@ -596,12 +635,20 @@ public class OracleFetRepositoryDialectGraficTest {
                     "SELECT anualitat || '/' || trimestre AS agrupacio, " +
                     "SUM(sum_fets_visites_MES) AS total_sum_visites_MES, " +
                     "null AS first_seen_sessions_DIA " +
-                    "FROM ( SELECT t.anualitat, t.trimestre, t.mes, " +
+                    "FROM ( SELECT periodes.anualitat, periodes.trimestre, periodes.mes, " +
+                    "COALESCE(agg.sum_fets_visites_MES, 0) AS sum_fets_visites_MES " +
+                    "FROM (SELECT DISTINCT anualitat, trimestre, mes FROM (" +
+                    "SELECT EXTRACT(YEAR FROM d) AS anualitat, TO_NUMBER(TO_CHAR(d,'Q')) AS trimestre, " +
+                    "EXTRACT(MONTH FROM d) AS mes, TO_NUMBER(TO_CHAR(d,'IW')) AS setmana, EXTRACT(DAY FROM d) AS dia " +
+                    "FROM (SELECT :dataInici + LEVEL - 1 AS d FROM dual CONNECT BY LEVEL <= (:dataFi - :dataInici + 1))" +
+                    ") cal) periodes " +
+                    "LEFT JOIN ( SELECT t.anualitat, t.trimestre, t.mes, " +
                     "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites_MES " +
                     "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                     "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
                     "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') = 'RRHH' " +
-                    "GROUP BY t.anualitat, t.trimestre, t.mes) " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes ) " +
+                    "agg ON periodes.anualitat = agg.anualitat AND periodes.trimestre = agg.trimestre AND periodes.mes = agg.mes) " +
                     "GROUP BY anualitat, trimestre " +
                     "UNION ALL " +
                     "SELECT anualitat || '/' || trimestre AS agrupacio, " +
@@ -634,12 +681,20 @@ public class OracleFetRepositoryDialectGraficTest {
                     "SELECT anualitat AS agrupacio, " +
                     "SUM(sum_fets_visites_MES) AS total_sum_visites_MES, " +
                     "null AS last_seen_sessions_DIA " +
-                    "FROM ( SELECT t.anualitat, t.trimestre, t.mes, " +
+                    "FROM ( SELECT periodes.anualitat, periodes.trimestre, periodes.mes, " +
+                    "COALESCE(agg.sum_fets_visites_MES, 0) AS sum_fets_visites_MES " +
+                    "FROM (SELECT DISTINCT anualitat, trimestre, mes FROM (" +
+                    "SELECT EXTRACT(YEAR FROM d) AS anualitat, TO_NUMBER(TO_CHAR(d,'Q')) AS trimestre, " +
+                    "EXTRACT(MONTH FROM d) AS mes, TO_NUMBER(TO_CHAR(d,'IW')) AS setmana, EXTRACT(DAY FROM d) AS dia " +
+                    "FROM (SELECT :dataInici + LEVEL - 1 AS d FROM dual CONNECT BY LEVEL <= (:dataFi - :dataInici + 1))" +
+                    ") cal) periodes " +
+                    "LEFT JOIN ( SELECT t.anualitat, t.trimestre, t.mes, " +
                     "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites_MES " +
                     "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                     "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
                     "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') IN ('RRHH','IT') " +
-                    "GROUP BY t.anualitat, t.trimestre, t.mes) " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes ) " +
+                    "agg ON periodes.anualitat = agg.anualitat AND periodes.trimestre = agg.trimestre AND periodes.mes = agg.mes) " +
                     "GROUP BY anualitat " +
                     "UNION ALL " +
                     "SELECT anualitat AS agrupacio, " +
@@ -668,21 +723,28 @@ public class OracleFetRepositoryDialectGraficTest {
                 ),
                 PeriodeUnitat.MES,
                 null,
-                removeConsecutiveSpaces("SELECT agrupacio, " +
+                removeConsecutiveSpaces("SELECT anualitat || '/' || LPAD(mes, 2, '0') AS agrupacio, " +
                     "SUM(sum_fets_visites_DIA) AS total_sum_visites_DIA, " +
                     "SUM(sum_fets_sessions_DIA) AS total_sum_sessions_DIA " +
                     "FROM ( " +
-                    "SELECT t.anualitat, t.trimestre, t.mes, t.setmana, t.dia, " +
-                    "anualitat || '/' || LPAD(mes, 2, '0') AS agrupacio, " +
+                    "SELECT periodes.anualitat, periodes.trimestre, periodes.mes, periodes.setmana, periodes.dia, " +
+                    "COALESCE(agg.sum_fets_visites_DIA, 0) AS sum_fets_visites_DIA, " +
+                    "COALESCE(agg.sum_fets_sessions_DIA, 0) AS sum_fets_sessions_DIA " +
+                    "FROM (SELECT DISTINCT anualitat, trimestre, mes, setmana, dia FROM (" +
+                    "SELECT EXTRACT(YEAR FROM d) AS anualitat, TO_NUMBER(TO_CHAR(d,'Q')) AS trimestre, " +
+                    "EXTRACT(MONTH FROM d) AS mes, TO_NUMBER(TO_CHAR(d,'IW')) AS setmana, EXTRACT(DAY FROM d) AS dia " +
+                    "FROM (SELECT :dataInici + LEVEL - 1 AS d FROM dual CONNECT BY LEVEL <= (:dataFi - :dataInici + 1))" +
+                    ") cal) periodes " +
+                    "LEFT JOIN ( SELECT t.anualitat, t.trimestre, t.mes, t.setmana, t.dia, " +
                     "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"visites\"'))) AS sum_fets_visites_DIA, " +
                     "SUM(TO_NUMBER(JSON_VALUE(f.indicadors_json, '$.\"sessions\"'))) AS sum_fets_sessions_DIA " +
                     "FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
-                    "WHERE f.entorn_app_id = :entornAppId " +
-                    "AND t.data BETWEEN :dataInici AND :dataFi " +
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
                     "AND JSON_VALUE(f.dimensions_json, '$.\"departament\"') IN ('RRHH','IT') " +
                     "AND JSON_VALUE(f.dimensions_json, '$.\"area\"') = 'Finance' " +
-                    "GROUP BY t.anualitat, t.trimestre, t.mes, t.setmana, t.dia) " +
-                    "GROUP BY agrupacio " +
+                    "GROUP BY t.anualitat, t.trimestre, t.mes, t.setmana, t.dia ) " +
+                    "agg ON periodes.anualitat = agg.anualitat AND periodes.trimestre = agg.trimestre AND periodes.mes = agg.mes AND periodes.setmana = agg.setmana AND periodes.dia = agg.dia) " +
+                    "GROUP BY anualitat, trimestre, mes " +
                     "ORDER BY agrupacio")
             )
         );
