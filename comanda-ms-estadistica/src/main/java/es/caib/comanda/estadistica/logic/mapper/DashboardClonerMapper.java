@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.logic.mapper;
 
+import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardFiltreEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
@@ -31,6 +32,15 @@ public interface DashboardClonerMapper {
     @Mapping(target = "widget", ignore = true)
     @Mapping(target = "entornId", ignore = true)
     DashboardItemEntity cloneItem(DashboardItemEntity original);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "lastModifiedBy", ignore = true)
+    @Mapping(target = "lastModifiedDate", ignore = true)
+    @Mapping(target = "v", ignore = true)
+    @Mapping(target = "dashboard", ignore = true)
+    DashboardFiltreEntity cloneFiltre(DashboardFiltreEntity original);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdBy", ignore = true)

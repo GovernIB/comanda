@@ -16,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -49,11 +50,23 @@ class DashboardTitolServiceImplTest {
     @Mock
     private AclServiceClient aclServiceClient;
 
+    @Mock
+    private es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper dashboardClonerMapper;
+
+    @Mock
+    private es.caib.comanda.estadistica.persist.repository.DashboardTitolRepository dashboardTitolRepository;
+
+    @Mock
+    private es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper resourceEntityMappingHelper;
+
     @InjectMocks
     private DashboardTitolServiceImpl dashboardTitolService;
 
     @BeforeEach
     void setUp() {
+        dashboardTitolService.init();
+        ReflectionTestUtils.setField(dashboardTitolService, "entityRepository", dashboardTitolRepository);
+        ReflectionTestUtils.setField(dashboardTitolService, "resourceEntityMappingHelper", resourceEntityMappingHelper);
         // Configuració lenient per evitar NPEs en crides internes de getAllowedIds
         lenient().when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
         lenient().when(authenticationHelper.getCurrentUserName()).thenReturn("testUser");
@@ -196,5 +209,59 @@ class DashboardTitolServiceImplTest {
 
         // Assert
         verify(dashboardItemTitolHelper, times(1)).completeResourceTitolLogic(resource);
+    }
+
+    // ========================================================================
+    // 4. TESTOS PER A DuplicateDashboardTitolAction
+    // ========================================================================
+
+    @Test
+    @DisplayName("DuplicateDashboardTitolAction: clona correctament el títol generant nom seqüencial i copiant propietats visuals")
+    void duplicateDashboardTitolAction_quanTitolValid_llavorsClonaTitol() throws Exception {
+        // Arrange
+        es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity dashboard =
+            new es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity();
+        dashboard.setId(1L);
+
+        es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity originalTitol =
+            new es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity();
+        originalTitol.setId(10L);
+        originalTitol.setDashboard(dashboard);
+        originalTitol.setTitol("Títol Secció");
+        originalTitol.setDestacat(true);
+        originalTitol.setPersonalitzat(true);
+        originalTitol.setWidth(24);
+        originalTitol.setHeight(1);
+
+        es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity clonedTitol =
+            new es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity();
+        clonedTitol.setDestacat(true);
+        clonedTitol.setPersonalitzat(true);
+        clonedTitol.setWidth(24);
+        clonedTitol.setHeight(1);
+
+        when(dashboardClonerMapper.cloneTitol(originalTitol)).thenReturn(clonedTitol);
+        when(dashboardTitolRepository.findByDashboardId(1L)).thenReturn(List.of(originalTitol));
+        when(dashboardItemTitolHelper.findFirstAvailableSpace(1L, 24, 1))
+            .thenReturn(new DashboardItemTitolHelper.GridPosition(0, 5));
+        when(dashboardTitolRepository.save(any(es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity.class)))
+            .thenAnswer(inv -> inv.getArgument(0));
+        when(resourceEntityMappingHelper.entityToResource(clonedTitol, DashboardTitol.class)).thenReturn(new DashboardTitol());
+
+        DashboardTitolServiceImpl.DuplicateDashboardTitolAction action =
+            dashboardTitolService.new DuplicateDashboardTitolAction();
+
+        // Act
+        DashboardTitol result = action.exec(DashboardTitol.DUPLICATE_ACTION, originalTitol, null);
+
+        // Assert
+        assertThat(result).isNotNull();
+        assertThat(clonedTitol.getDashboard()).isEqualTo(dashboard);
+        assertThat(clonedTitol.getTitol()).isEqualTo("Títol Secció (2)");
+        assertThat(clonedTitol.getPosX()).isEqualTo(0);
+        assertThat(clonedTitol.getPosY()).isEqualTo(5);
+        assertThat(clonedTitol.getDestacat()).isTrue();
+        assertThat(clonedTitol.getPersonalitzat()).isTrue();
+        verify(dashboardTitolRepository).save(clonedTitol);
     }
 }

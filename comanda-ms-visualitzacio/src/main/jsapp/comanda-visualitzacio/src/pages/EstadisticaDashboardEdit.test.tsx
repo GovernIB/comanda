@@ -24,6 +24,9 @@ const mocks = vi.hoisted(() => ({
     deleteDashboardTitolMock: vi.fn(),
     getOneSimpleWidgetMock: vi.fn(),
     createSimpleWidgetMock: vi.fn(),
+    executeDashboardActionMock: vi.fn(),
+    executeDashboardItemActionMock: vi.fn(),
+    executeDashboardTitolActionMock: vi.fn(),
     messageDialogShowMock: vi.fn(),
     findWidgetsMock: vi.fn(),
     tMock: vi.fn((selector: any, options?: any) => {
@@ -140,6 +143,7 @@ vi.mock('reactlib', async (importOriginal) => {
                 find: mocks.findWidgetsMock,
                 getOne: mocks.getOneDashboardItemMock,
                 delete: mocks.deleteDashboardItemMock,
+                artifactAction: mocks.executeDashboardItemActionMock,
             };
         }
         if (resourceName === 'dashboardTitol') {
@@ -150,6 +154,7 @@ vi.mock('reactlib', async (importOriginal) => {
                 find: mocks.findWidgetsMock,
                 getOne: mocks.getOneDashboardTitolMock,
                 delete: mocks.deleteDashboardTitolMock,
+                artifactAction: mocks.executeDashboardTitolActionMock,
             };
         }
         if (resourceName === 'estadisticaSimpleWidget') {
@@ -158,6 +163,15 @@ vi.mock('reactlib', async (importOriginal) => {
                 getOne: mocks.getOneSimpleWidgetMock,
                 create: mocks.createSimpleWidgetMock,
                 find: mocks.findWidgetsMock,
+            };
+        }
+        if (resourceName === 'dashboard') {
+            return {
+                isReady: true,
+                artifactAction: mocks.executeDashboardActionMock,
+                find: mocks.findWidgetsMock,
+                delete: vi.fn(),
+                getOne: vi.fn(),
             };
         }
         if (resourceName === 'entorn') {
@@ -274,6 +288,12 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', () => ({
             >
                 Duplicar element de test
             </button>
+            <button
+                type="button"
+                onClick={() => onDuplicateItem?.({ tipus: 'TITOL', dashboardTitolId: 2, id: 2 })}
+            >
+                Duplicar titol de test
+            </button>
         </div>
     ),
     useMapDashboardItems: (widgets: unknown[]) => mocks.useMapDashboardItemsMock(widgets),
@@ -363,6 +383,9 @@ describe('EstadisticaDashboardEdit', () => {
         mocks.deleteDashboardTitolMock.mockResolvedValue(undefined);
         mocks.getOneSimpleWidgetMock.mockResolvedValue({ id: 5, titol: 'Widget test', aplicacio: { id: 1 } });
         mocks.createSimpleWidgetMock.mockResolvedValue({ id: 6 });
+        mocks.executeDashboardActionMock.mockResolvedValue(undefined);
+        mocks.executeDashboardItemActionMock.mockResolvedValue(undefined);
+        mocks.executeDashboardTitolActionMock.mockResolvedValue(undefined);
         mocks.messageDialogShowMock.mockResolvedValue(true);
         mocks.findWidgetsMock.mockResolvedValue({ rows: [{ id: 5, titol: 'Widget test' }] });
         mocks.showContentDialogMock.mockImplementation(() => undefined);
@@ -724,13 +747,14 @@ describe('EstadisticaDashboardEdit', () => {
         expect(mocks.deleteDashboardItemMock).not.toHaveBeenCalled();
     });
 
-    it('EstadisticaDashboardEdit_quanEsPremDuplicarDesDelMenuContextual_creaUnNouWidgetAmbTitolSeqüencial', async () => {
-        // "Duplicar" ha de crear un widget nou amb les mateixes dades, afegint un número seqüencial al títol.
+    it('EstadisticaDashboardEdit_quanEsPremDuplicarElementDesDelMenuContextual_executaAccioDuplicateDashboardItem', async () => {
+        // "Duplicar" un widget ha de cridar l'acció duplicate sobre el dashboardItem.
+        const forceRefreshMock = vi.fn();
         mocks.useDashboardWidgetsMock.mockReturnValue({
             dashboardWidgets: [{ dashboardItemId: 1, titol: 'Widget test' }],
             errorDashboardWidgets: [],
             loadingWidgetPositions: false,
-            forceRefresh: vi.fn(),
+            forceRefresh: forceRefreshMock,
         });
 
         render(<EstadisticaDashboardEdit />);
@@ -742,25 +766,36 @@ describe('EstadisticaDashboardEdit', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Duplicar element de test' }));
 
         await waitFor(() => {
-            expect(mocks.createSimpleWidgetMock).toHaveBeenCalledWith({
-                data: expect.objectContaining({ titol: 'Widget test (2)', aplicacio: { id: 1 } }),
+            expect(mocks.executeDashboardItemActionMock).toHaveBeenCalledWith(1, {
+                code: 'duplicate',
             });
         });
-        expect(mocks.createSimpleWidgetMock.mock.calls[0][0].data.id).toBeUndefined();
+        expect(forceRefreshMock).toHaveBeenCalled();
+    });
+
+    it('EstadisticaDashboardEdit_quanEsPremDuplicarTitolDesDelMenuContextual_executaAccioDuplicateDashboardTitol', async () => {
+        // "Duplicar" un títol ha de cridar l'acció duplicate sobre el dashboardTitol.
+        const forceRefreshMock = vi.fn();
+        mocks.useDashboardWidgetsMock.mockReturnValue({
+            dashboardWidgets: [{ dashboardTitolId: 2, titol: 'Títol' }],
+            errorDashboardWidgets: [],
+            loadingWidgetPositions: false,
+            forceRefresh: forceRefreshMock,
+        });
+
+        render(<EstadisticaDashboardEdit />);
 
         await waitFor(() => {
-            expect(mocks.createDashboardItemMock).toHaveBeenCalledWith({
-                data: expect.objectContaining({
-                    posX: 0,
-                    width: 3,
-                    height: 3,
-                    entornId: 2,
-                    dashboard: { id: '12' },
-                    widget: { id: 6 },
-                }),
+            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Duplicar titol de test' }));
+
+        await waitFor(() => {
+            expect(mocks.executeDashboardTitolActionMock).toHaveBeenCalledWith(2, {
+                code: 'duplicate',
             });
         });
-        expect(mocks.createDashboardItemMock.mock.calls[0][0].data.posY).toBeUndefined();
-        expect(mocks.createDashboardItemMock.mock.calls[0][0].data.id).toBeUndefined();
+        expect(forceRefreshMock).toHaveBeenCalled();
     });
 });

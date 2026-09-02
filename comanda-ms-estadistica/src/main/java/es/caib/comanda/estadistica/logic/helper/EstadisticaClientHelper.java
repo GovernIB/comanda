@@ -42,6 +42,9 @@ public class EstadisticaClientHelper {
 
 	@Cacheable(value = APP_CACHE, key = "#appId?.toString()")
 	public App appFindById(Long appId) {
+		if (appId == null) {
+			return null;
+		}
 		try {
 			EntityModel<App> app = appServiceClient.getOne(
 					appId,
@@ -58,6 +61,9 @@ public class EstadisticaClientHelper {
 
 	@Cacheable(value = APP_CACHE, key = "#appCodi?.toString()")
 	public App appFindByCodi(String appCodi) {
+		if (appCodi == null) {
+			return null;
+		}
 		try {
 			List<EntityModel<App>> apps = new ArrayList(appServiceClient.find(
                     null,
@@ -82,6 +88,9 @@ public class EstadisticaClientHelper {
 
 	@Cacheable(value = ENTORN_APP_CACHE, key = "#entornAppId?.toString()")
 	public EntornApp entornAppFindById(Long entornAppId) {
+		if (entornAppId == null) {
+			return null;
+		}
 		try {
 			EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
 					entornAppId,
@@ -98,6 +107,9 @@ public class EstadisticaClientHelper {
 
 	@Cacheable(value = ENTORN_APP_BY_APP_AND_ENTORN_CACHE, key = "#appId + '-' + #entornId")
     public EntornApp entornAppFindByAppAndEntorn(Long appId, Long entornId) {
+        if (appId == null || entornId == null) {
+            return null;
+        }
         PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
                 null,
                 "app.id:" + appId + " and entorn.id:" + entornId,
@@ -155,6 +167,9 @@ public class EstadisticaClientHelper {
 
 	@Cacheable(value = ENTORN_CACHE, key = "#entornId?.toString()")
 	public Entorn entornById(Long entornId) {
+		if (entornId == null) {
+			return null;
+		}
 		try {
 			EntityModel<Entorn> entorn = entornServiceClient.getOne(
 					entornId,
@@ -171,6 +186,9 @@ public class EstadisticaClientHelper {
 
 	@Cacheable(value = ENTORN_CACHE, key = "#entornCodi?.toString()")
 	public Entorn entornByCodi(String entornCodi) {
+		if (entornCodi == null) {
+			return null;
+		}
 		try {
             List<EntityModel<Entorn>> entorns = new ArrayList<>(entornServiceClient.find(
                     null,

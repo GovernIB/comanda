@@ -62,4 +62,12 @@ public class AtributsVisualsSimple extends AtributsVisuals implements Serializab
         return this;
     }
 
+    @Override
+    public boolean hasVisualOverrides() {
+        return super.hasVisualOverrides()
+                || isNotEmpty(icona) || isNotEmpty(colorIcona) || isNotEmpty(colorFonsIcona)
+                || isNotEmpty(colorTextDestacat) || midaFontValor != null || midaFontUnitats != null
+                || midaFontCanviPercentual != null;
+    }
+
 }

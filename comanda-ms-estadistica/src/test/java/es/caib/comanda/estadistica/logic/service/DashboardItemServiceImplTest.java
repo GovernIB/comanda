@@ -14,9 +14,11 @@ import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetItem;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
+import es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
+import es.caib.comanda.estadistica.persist.repository.EstadisticaWidgetRepository;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
@@ -58,17 +60,21 @@ class DashboardItemServiceImplTest {
     @Mock private DashboardItemTitolHelper dashboardItemTitolHelper;
     @Mock private DashboardItemRepository dashboardItemRepository;
 
-    // Mocks afegits per cobrir la lògica de filtres i permisos
     @Mock private AuthenticationHelper authenticationHelper;
     @Mock private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     @Mock private AclServiceClient aclServiceClient;
+    @Mock private EstadisticaWidgetRepository estadisticaWidgetRepository;
+    @Mock private DashboardClonerMapper dashboardClonerMapper;
+    @Mock private es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper resourceEntityMappingHelper;
 
     @InjectMocks
     private DashboardItemServiceImpl dashboardItemService;
 
     @BeforeEach
     void setUp() {
+        dashboardItemService.init();
         ReflectionTestUtils.setField(dashboardItemService, "entityRepository", dashboardItemRepository);
+        ReflectionTestUtils.setField(dashboardItemService, "resourceEntityMappingHelper", resourceEntityMappingHelper);
         lenient().when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
         lenient().when(authenticationHelper.getCurrentUserName()).thenReturn("testUser");
         lenient().when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"ROLE_USER"});
@@ -373,5 +379,64 @@ class DashboardItemServiceImplTest {
         assertThatThrownBy(() -> generator.generateData(DashboardItem.WIDGET_REPORT, entity, null))
             .isInstanceOf(ReportGenerationException.class)
             .hasMessageContaining("No existeix");
+    }
+
+    // ========================================================================
+    // 5. TESTOS PER A DuplicateDashboardItemAction
+    // ========================================================================
+
+    @Test
+    @DisplayName("DuplicateDashboardItemAction: clona correctament l'item i el widget associat copiant destacat i personalitzat")
+    void duplicateDashboardItemAction_quanItemValid_llavorsClonaItemIWidget() throws Exception {
+        // Arrange
+        es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity dashboard =
+            new es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity();
+        dashboard.setId(1L);
+        dashboard.setAppId(10L);
+
+        EstadisticaSimpleWidgetEntity originalWidget = new EstadisticaSimpleWidgetEntity();
+        originalWidget.setId(100L);
+        originalWidget.setAppId(10L);
+        originalWidget.setTitol("Widget Simple");
+
+        DashboardItemEntity originalItem = new DashboardItemEntity();
+        originalItem.setId(50L);
+        originalItem.setDashboard(dashboard);
+        originalItem.setWidget(originalWidget);
+        originalItem.setEntornId(2L);
+        originalItem.setWidth(3);
+        originalItem.setHeight(3);
+        originalItem.setDestacat(true);
+        originalItem.setPersonalitzat(true);
+
+        DashboardItemEntity clonedItem = new DashboardItemEntity();
+        clonedItem.setWidth(3);
+        clonedItem.setHeight(3);
+        clonedItem.setDestacat(true);
+        clonedItem.setPersonalitzat(true);
+
+        when(dashboardClonerMapper.cloneItem(originalItem)).thenReturn(clonedItem);
+        when(dashboardClonerMapper.cloneSimpleWidget(originalWidget)).thenReturn(new EstadisticaSimpleWidgetEntity());
+        when(dashboardItemTitolHelper.findFirstAvailableSpace(1L, 3, 3))
+            .thenReturn(new DashboardItemTitolHelper.GridPosition(6, 0));
+        when(dashboardItemRepository.save(any(DashboardItemEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(resourceEntityMappingHelper.entityToResource(clonedItem, DashboardItem.class)).thenReturn(new DashboardItem());
+
+        DashboardItemServiceImpl.DuplicateDashboardItemAction action =
+            dashboardItemService.new DuplicateDashboardItemAction();
+
+        // Act
+        DashboardItem result = action.exec(DashboardItem.DUPLICATE_ACTION, originalItem, null);
+
+        // Assert
+        assertThat(result).isNotNull();
+        assertThat(clonedItem.getDashboard()).isEqualTo(dashboard);
+        assertThat(clonedItem.getEntornId()).isEqualTo(2L);
+        assertThat(clonedItem.getPosX()).isEqualTo(6);
+        assertThat(clonedItem.getPosY()).isEqualTo(0);
+        assertThat(clonedItem.getDestacat()).isTrue();
+        assertThat(clonedItem.getPersonalitzat()).isTrue();
+        verify(estadisticaWidgetRepository).save(any());
+        verify(dashboardItemRepository).save(clonedItem);
     }
 }

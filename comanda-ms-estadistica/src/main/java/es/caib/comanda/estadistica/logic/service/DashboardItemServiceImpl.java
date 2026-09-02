@@ -13,9 +13,13 @@ import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetItem;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
 import es.caib.comanda.estadistica.logic.intf.service.DashboardItemService;
+import es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
+import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
+import es.caib.comanda.estadistica.persist.repository.EstadisticaWidgetRepository;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
@@ -54,6 +58,8 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
     private final AuthenticationHelper authenticationHelper;
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     private final AclServiceClient aclServiceClient;
+    private final EstadisticaWidgetRepository estadisticaWidgetRepository;
+    private final DashboardClonerMapper dashboardClonerMapper;
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
     static {
@@ -66,6 +72,7 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
     @PostConstruct
     public void init() {
         register(DashboardItem.WIDGET_REPORT, new InformeWidget());
+        register(DashboardItem.DUPLICATE_ACTION, new DuplicateDashboardItemAction());
     }
 
     @Override
@@ -195,6 +202,52 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
 
         @Override
         public void onChange(Serializable id, InformeWidgetParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, InformeWidgetParams target) {
+        }
+
+    }
+
+    // ========================================================================
+    // ACCIÓ PER DUPLICAR UN DASHBOARD ITEM AMB TOTES LES SEVES PROPIETATS
+    // ========================================================================
+    public class DuplicateDashboardItemAction implements ActionExecutor<DashboardItemEntity, Serializable, DashboardItem> {
+
+        @Override
+        public DashboardItem exec(String code, DashboardItemEntity entity, Serializable params) throws ActionExecutionException {
+            if (entity == null || entity.getDashboard() == null) {
+                throw new ActionExecutionException(DashboardItem.class, entity != null ? entity.getId() : null, code, "Dashboard item or dashboard is null");
+            }
+
+            EstadisticaWidgetEntity<?> originalWidget = entity.getWidget();
+            if (originalWidget == null) {
+                throw new ActionExecutionException(DashboardItem.class, entity.getId(), code, "Original widget not found");
+            }
+
+            // 1. Clona l'entitat DashboardItem amb MapStruct (copia destacat, personalitzat, plantilla, atributsVisualsJson, width, height)
+            DashboardItemEntity newItem = dashboardClonerMapper.cloneItem(entity);
+            newItem.setDashboard(entity.getDashboard());
+            newItem.setEntornId(entity.getEntornId());
+
+            // 2. Clona el widget associat amb títol únic (Copia)
+            Map<Long, EstadisticaWidgetEntity> clonedWidgetsMap = new HashMap<>();
+            Long appId = entity.getDashboard().getAppId() != null ? entity.getDashboard().getAppId() : originalWidget.getAppId();
+            EstadisticaWidgetEntity newWidget = DashboardHelper.cloneWidgetLogic(originalWidget, appId, clonedWidgetsMap, estadisticaWidgetRepository, dashboardClonerMapper);
+            newItem.setWidget(newWidget);
+
+            // 3. Auto-posiciona al primer espai lliure 2D
+            int width = newItem.getWidth() > 0 ? newItem.getWidth() : 3;
+            int height = newItem.getHeight() > 0 ? newItem.getHeight() : 3;
+            if (dashboardItemTitolHelper != null) {
+                DashboardItemTitolHelper.GridPosition pos = dashboardItemTitolHelper.findFirstAvailableSpace(entity.getDashboard().getId(), width, height);
+                newItem.setPosX(pos.getPosX());
+                newItem.setPosY(pos.getPosY());
+            }
+
+            DashboardItemEntity saved = entityRepository.save(newItem);
+            return entityDetachConvertAndMerge(saved, null, true);
+        }
+
+        @Override
+        public void onChange(Serializable id, Serializable previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Serializable target) {
         }
 
     }

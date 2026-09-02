@@ -59,11 +59,13 @@ import javax.validation.constraints.NotNull;
         },
         artifacts = {
                 @ResourceArtifact(type = ResourceArtifactType.REPORT, code = DashboardItem.WIDGET_REPORT, requiresId = true, formClass=InformeWidgetParams.class),
+                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = DashboardItem.DUPLICATE_ACTION, requiresId = true),
         }
 )
 public class DashboardItem extends BaseResource<Long> {
 
     public final static String WIDGET_REPORT = "widget_data";
+    public final static String DUPLICATE_ACTION = "duplicate";
 
 
     @NotNull

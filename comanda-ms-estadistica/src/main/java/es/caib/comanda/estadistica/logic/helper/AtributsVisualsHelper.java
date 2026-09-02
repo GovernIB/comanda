@@ -88,4 +88,17 @@ public class AtributsVisualsHelper {
                     "Error al serialitzar la informació d'atributs visuals: " + e.getMessage());
         }
     }
+
+    public boolean hasVisualOverrides(EstadisticaWidgetEntity<?> entity) {
+        if (entity == null || entity.getAtributsVisualsJson() == null || entity.getAtributsVisualsJson().trim().isEmpty() || "{}".equals(entity.getAtributsVisualsJson().trim())) {
+            return false;
+        }
+        try {
+            AtributsVisuals av = getAtributsVisuals(entity);
+            return av != null && av.hasVisualOverrides();
+        } catch (Exception e) {
+            log.warn("Error verificant atributs visuals per al widget {}: {}", entity.getId(), e.getMessage());
+            return true;
+        }
+    }
 }

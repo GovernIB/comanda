@@ -34,6 +34,15 @@ public abstract class AtributsVisuals implements Serializable {
 
     public abstract AtributsVisuals merge(AtributsVisuals other);
 
+    public boolean hasVisualOverrides() {
+        return isNotEmpty(colorText) || isNotEmpty(colorFons) || mostrarVora != null || isNotEmpty(colorVora)
+                || ampleVora != null || midaFontTitol != null || midaFontDescripcio != null;
+    }
+
+    protected static boolean isNotEmpty(String str) {
+        return str != null && !str.trim().isEmpty();
+    }
+
     <T> T mergeField(T currentValue, T otherValue) {
         return currentValue != null ? currentValue : otherValue;
     }
