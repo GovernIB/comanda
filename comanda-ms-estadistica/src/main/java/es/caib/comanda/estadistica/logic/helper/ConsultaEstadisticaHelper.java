@@ -906,18 +906,23 @@ public class ConsultaEstadisticaHelper {
 
     public AtributsVisuals resolveAtributsVisuals(DashboardItemEntity dashboardItem, boolean temaFosc) {
         AtributsVisuals resolved = ensureAtributsVisualsType(dashboardItem, null);
-        // Els camps propis del widget/dashboardItem només sobreescriuen la plantilla si l'usuari ha
-        // activat "personalitzat" explícitament; en cas contrari (encara que hi hagi valors residuals
-        // guardats) s'ha d'aplicar sempre la plantilla amb prioritat (i el seu tema destacat).
-        if (Boolean.TRUE.equals(dashboardItem.getPersonalitzat())) {
-            AtributsVisuals atributsVisualsDash = atributsVisualsHelper.getAtributsVisuals(dashboardItem);
-            if (atributsVisualsDash != null) {
-                resolved = resolved.merge(atributsVisualsDash);
-            }
-            AtributsVisuals atributsVisualsWidget = atributsVisualsHelper.getAtributsVisuals(dashboardItem.getWidget());
-            if (atributsVisualsWidget != null) {
-                resolved = resolved.merge(atributsVisualsWidget);
-            }
+        // Els camps propis del widget/dashboardItem sempre es fusionen primer; merge() només
+        // sobreescriu els camps encara buits (veure AtributsVisuals.mergeField), i
+        // applyTemplateDefaults() més avall també només emplena els que quedin a null, així que
+        // el valor propi sempre guanya sobre la plantilla si està present. No es filtra per
+        // "personalitzat": aquest camp és purament informatiu (indica si l'usuari ha tocat algun
+        // valor) i es calcula en punts diversos (creació/edició del dashboardItem, importació,
+        // clonació) que no sempre estan sincronitzats amb l'últim estat real dels atributs visuals
+        // del widget (p. ex. si el widget s'edita des de la pantalla de gestió de widgets, fora del
+        // dashboard) — fer-lo servir com a filtre feia que els canvis quedessin sense efecte al
+        // dashboard fins que es tornés a desar el dashboardItem en si.
+        AtributsVisuals atributsVisualsDash = atributsVisualsHelper.getAtributsVisuals(dashboardItem);
+        if (atributsVisualsDash != null) {
+            resolved = resolved.merge(atributsVisualsDash);
+        }
+        AtributsVisuals atributsVisualsWidget = atributsVisualsHelper.getAtributsVisuals(dashboardItem.getWidget());
+        if (atributsVisualsWidget != null) {
+            resolved = resolved.merge(atributsVisualsWidget);
         }
         PlantillaEntity plantilla = dashboardItem.getPlantilla() != null
             ? dashboardItem.getPlantilla()

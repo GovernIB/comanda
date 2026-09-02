@@ -7,6 +7,7 @@ import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.EntornRef;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisuals;
+import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.*;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.GraficValueTypeEnum;
@@ -583,8 +584,11 @@ class ConsultaEstadisticaHelperTest {
     }
 
     @Test
-    @DisplayName("resolveAtributsVisuals: ignora camps propis si personalitzat és false")
-    void resolveAtributsVisuals_quanNoPersonalitzat_ignoraCampsPropis() {
+    @DisplayName("resolveAtributsVisuals: aplica els camps propis del widget encara que personalitzat sigui false")
+    void resolveAtributsVisuals_quanNoPersonalitzat_aplicaIgualmentElsCampsPropisDelWidget() {
+        // "personalitzat" és purament informatiu: es pot quedar desactualitzat si el widget
+        // s'edita des de fora del dashboardItem (p. ex. la pantalla de gestió de widgets), així
+        // que resolveAtributsVisuals no s'hi ha de basar per decidir si aplica els valors propis.
         // Arrange
         DashboardItemEntity dashboardItem = new DashboardItemEntity();
         dashboardItem.setId(1L);
@@ -600,8 +604,34 @@ class ConsultaEstadisticaHelperTest {
 
         // Assert
         assertThat(result).isInstanceOf(AtributsVisualsSimple.class);
-        assertThat(((AtributsVisualsSimple) result).getColorText()).isNull();
-        verify(atributsVisualsHelper, never()).getAtributsVisuals(any(EstadisticaWidgetEntity.class));
+        assertThat(((AtributsVisualsSimple) result).getColorText()).isEqualTo("#AAAAAA");
+        verify(atributsVisualsHelper).getAtributsVisuals(any(EstadisticaWidgetEntity.class));
+    }
+
+    @Test
+    @DisplayName("resolveAtributsVisuals: colorsPaleta i gaugeRangs propis del widget arriben encara que personalitzat sigui false")
+    void resolveAtributsVisuals_quanGraficAmbColorsPaletaIGaugeRangsPropisIPersonalitzatFalse_llavorsElsAplica() {
+        // Reproducció exacta del bug reportat: un widget GAUGE_CHART amb colorsPaleta/gaugeRangs
+        // configurats des de la pantalla de gestió de widgets (que no recalcula "personalitzat"
+        // al dashboardItem) es mostrava a la previsualització però no al dashboard real.
+        // Arrange
+        DashboardItemEntity dashboardItem = new DashboardItemEntity();
+        dashboardItem.setId(1L);
+        dashboardItem.setPersonalitzat(false);
+        dashboardItem.setWidget(new EstadisticaGraficWidgetEntity());
+
+        AtributsVisualsGrafic dummyAtributs = new AtributsVisualsGrafic();
+        dummyAtributs.setColorsPaleta("#111111,#222222,#333333");
+        dummyAtributs.setGaugeRangs("10,20,30");
+        lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class))).thenReturn(dummyAtributs);
+
+        // Act
+        Object result = consultaEstadisticaHelper.resolveAtributsVisuals(dashboardItem, false);
+
+        // Assert
+        assertThat(result).isInstanceOf(AtributsVisualsGrafic.class);
+        assertThat(((AtributsVisualsGrafic) result).getColorsPaleta()).isEqualTo("#111111,#222222,#333333");
+        assertThat(((AtributsVisualsGrafic) result).getGaugeRangs()).isEqualTo("10,20,30");
     }
 
     // ========================================================================
