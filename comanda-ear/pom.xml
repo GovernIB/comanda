@@ -5,10 +5,10 @@
 	<parent>
 		<groupId>es.caib.comanda</groupId>
 		<artifactId>comanda</artifactId>
-		<version>0.1.4</version>
+		<version>0.1.5</version>
 	</parent>
 	<artifactId>comanda-ear</artifactId>
-	<version>0.1.4</version>
+	<version>0.1.5</version>
 	<packaging>ear</packaging>
 	<properties>
 		<maven.site.skip>true</maven.site.skip>
