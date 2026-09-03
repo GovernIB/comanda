@@ -18,7 +18,6 @@ import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Temps;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
-import es.caib.comanda.estadistica.logic.intf.model.periode.Periode;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
@@ -864,11 +863,13 @@ public class ConsultaEstadisticaHelper {
         EstadisticaWidgetEntity widget = dashboardItem.getWidget();
         var entornApp = estadisticaClientHelper.entornAppFindByAppAndEntorn(widget.getAppId(), dashboardItem.getEntornId());
         var entorn = estadisticaClientHelper.entornById(entornApp.getEntorn().getId());
-        // El període seleccionat pel filtre de capçalera del dashboard, si n'hi ha, sobreescriu el període propi del widget.
-        Periode periodeEfectiu = filtreSeleccio != null && filtreSeleccio.hasPeriodeOverride()
-            ? filtreSeleccio.getPeriode()
-            : widget.getPeriode();
-        PeriodeDates periodeDates = PeriodeResolverHelper.resolvePeriod(periodeEfectiu);
+        // El període seleccionat pel filtre de capçalera del dashboard, si n'hi ha, no sobreescriu el període
+        // propi del widget: en manté el tipus (p. ex. "darrer dia complet" o "darrers 30 dies"), però ancorat i
+        // limitat al període configurat al filtre (vegeu PeriodeResolverHelper#resolvePeriod amb filterBounds).
+        PeriodeDates filtreDates = filtreSeleccio != null && filtreSeleccio.hasPeriodeOverride()
+            ? PeriodeResolverHelper.resolvePeriod(filtreSeleccio.getPeriode())
+            : null;
+        PeriodeDates periodeDates = PeriodeResolverHelper.resolvePeriod(widget.getPeriode(), filtreDates);
         AtributsVisuals atributsVisuals = resolveAtributsVisuals(dashboardItem, temaFosc);
 
         return DadesComunsWidgetConsulta.builder()

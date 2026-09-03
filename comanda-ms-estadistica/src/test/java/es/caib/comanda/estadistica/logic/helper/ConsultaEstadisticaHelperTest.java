@@ -972,6 +972,53 @@ class ConsultaEstadisticaHelperTest {
     }
 
     @Test
+    @DisplayName("getDadesWidget: el filtre de capçalera del dashboard manté el tipus de període del widget, "
+        + "però limitat al període configurat al filtre, en lloc de sobreescriure'l completament")
+    void getDadesWidget_quanFiltreCapcaleraAmbPeriodeMesCurtQueElWidget_llavorsLimitaAlPeriodeDelFiltre() {
+        // Arrange
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setId(1L);
+        item.setEntornId(1L);
+
+        EstadisticaGraficWidgetEntity widget = new EstadisticaGraficWidgetEntity();
+        widget.setTipusDades(TipusGraficDataEnum.UN_INDICADOR);
+        widget.setTempsAgrupacio(PeriodeUnitat.DIA);
+        widget.setPeriodeMode(PeriodeMode.PRESET);
+        widget.setPresetPeriode(PresetPeriode.DARRERS_30_DIES);
+        IndicadorTaulaEntity ind = new IndicadorTaulaEntity();
+        ReflectionTestUtils.setField(ind, "titol", "Titol");
+        ReflectionTestUtils.setField(ind, "indicador", new IndicadorEntity() {{ setCodi("c"); }});
+        widget.setIndicadorsInfo(Collections.singletonList(ind));
+        item.setWidget(widget);
+
+        LocalDate filtreInici = LocalDate.of(2026, 6, 1);
+        LocalDate filtreFi = LocalDate.of(2026, 6, 5); // 5 dies, menys que els 30 configurats al widget
+        es.caib.comanda.estadistica.logic.intf.model.periode.Periode filtrePeriode =
+            es.caib.comanda.estadistica.logic.intf.model.periode.Periode.builder()
+                .periodeMode(PeriodeMode.ABSOLUT)
+                .absolutTipus(es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeAbsolutTipus.DATE_RANGE)
+                .absolutDataInici(filtreInici)
+                .absolutDataFi(filtreFi)
+                .build();
+        DashboardFiltreSeleccio filtreSeleccio = DashboardFiltreSeleccio.builder().periode(filtrePeriode).build();
+
+        when(dashboardItemRepository.findById(1L)).thenReturn(Optional.of(item));
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(any(), any())).thenReturn(EntornApp.builder().id(1L).entorn(EntornRef.builder().id(1L).build()).build());
+        when(estadisticaClientHelper.entornById(any())).thenReturn(Entorn.builder().codi("DEV").build());
+        when(fetRepository.getValorsGraficUnIndicador(any(), any(), any(), any(), any(), any(), any())).thenReturn(Collections.emptyList());
+
+        // Act
+        consultaEstadisticaHelper.getDadesWidget(item, false, filtreSeleccio);
+
+        // Assert: com que "darrers 30 dies" no hi càpiguen, s'agafa el període sencer del filtre (5 dies)
+        ArgumentCaptor<LocalDate> iniciCaptor = ArgumentCaptor.forClass(LocalDate.class);
+        ArgumentCaptor<LocalDate> fiCaptor = ArgumentCaptor.forClass(LocalDate.class);
+        verify(fetRepository).getValorsGraficUnIndicador(any(), iniciCaptor.capture(), fiCaptor.capture(), any(), any(), any(), any());
+        assertThat(iniciCaptor.getValue()).isEqualTo(filtreInici);
+        assertThat(fiCaptor.getValue()).isEqualTo(filtreFi);
+    }
+
+    @Test
     @DisplayName("getDadesWidget: executa la branca TAULA del switch públic correctament")
     void getDadesWidget_quanTipusTaula_llavorsExecutaRamaTaula() {
         // Arrange

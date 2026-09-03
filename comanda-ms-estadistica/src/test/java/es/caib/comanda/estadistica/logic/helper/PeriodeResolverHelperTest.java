@@ -349,4 +349,145 @@ class PeriodeResolverHelperTest {
         assertThat(result.start.getMonthValue()).isEqualTo(2);
         assertThat(result.end.getMonthValue()).isEqualTo(2);
     }
+
+    // ========================================================================
+    // 5. TESTOS PER A resolvePeriod AMB FILTRE DE CAPÇALERA (filterBounds)
+    // ========================================================================
+
+    @Test
+    @DisplayName("resolvePeriod amb filtre: DARRER_COMPLET_DIA agafa l'últim dia del període del filtre")
+    void resolvePeriod_quanDarrerCompletDiaAmbFiltre_llavorsAgafaUltimDiaDelFiltre() {
+        // Arrange
+        Periode periode = Periode.builder().periodeMode(PeriodeMode.PRESET).presetPeriode(PresetPeriode.DARRER_COMPLET_DIA).build();
+        PeriodeResolverHelper.PeriodeDates filtre = new PeriodeResolverHelper.PeriodeDates(
+            LocalDate.of(2026, 3, 1), LocalDate.of(2026, 3, 20));
+
+        // Act
+        PeriodeResolverHelper.PeriodeDates result = PeriodeResolverHelper.resolvePeriod(periode, filtre);
+
+        // Assert: no s'ha de restar un dia respecte de l'extrem del filtre, ja és tancat/complet
+        assertThat(result.start).isEqualTo(LocalDate.of(2026, 3, 20));
+        assertThat(result.end).isEqualTo(LocalDate.of(2026, 3, 20));
+    }
+
+    @Test
+    @DisplayName("resolvePeriod amb filtre: DARRERA_COMPLETA_SETMANA queda ancorada al final del filtre")
+    void resolvePeriod_quanDarreraCompletaSetmanaAmbFiltre_llavorsNoSuperaElFinalDelFiltre() {
+        // Arrange
+        Periode periode = Periode.builder().periodeMode(PeriodeMode.PRESET).presetPeriode(PresetPeriode.DARRERA_COMPLETA_SETMANA).build();
+        LocalDate filterEnd = LocalDate.of(2026, 3, 20); // divendres
+        PeriodeResolverHelper.PeriodeDates filtre = new PeriodeResolverHelper.PeriodeDates(LocalDate.of(2026, 1, 1), filterEnd);
+
+        // Act
+        PeriodeResolverHelper.PeriodeDates result = PeriodeResolverHelper.resolvePeriod(periode, filtre);
+
+        // Assert: la setmana completa ha d'acabar abans (o com a molt) del final del filtre
+        assertThat(result.end).isBeforeOrEqualTo(filterEnd);
+        assertThat(ChronoUnit.DAYS.between(result.start, result.end)).isEqualTo(6);
+    }
+
+    @Test
+    @DisplayName("resolvePeriod amb filtre: DARRERS_30_DIES agafa els últims 30 dies del període del filtre quan hi càpiguen")
+    void resolvePeriod_quanDarrers30DiesAmbFiltreMesLlarg_llavorsAgafaUltims30DiesDinsDelFiltre() {
+        // Arrange
+        Periode periode = Periode.builder().periodeMode(PeriodeMode.PRESET).presetPeriode(PresetPeriode.DARRERS_30_DIES).build();
+        LocalDate filterEnd = LocalDate.of(2026, 6, 15);
+        PeriodeResolverHelper.PeriodeDates filtre = new PeriodeResolverHelper.PeriodeDates(LocalDate.of(2026, 1, 1), filterEnd);
+
+        // Act
+        PeriodeResolverHelper.PeriodeDates result = PeriodeResolverHelper.resolvePeriod(periode, filtre);
+
+        // Assert
+        assertThat(result.start).isEqualTo(filterEnd.minusDays(30));
+        assertThat(result.end).isEqualTo(filterEnd);
+    }
+
+    @Test
+    @DisplayName("resolvePeriod amb filtre: DARRERS_30_DIES agafa tot el període del filtre quan aquest és més curt")
+    void resolvePeriod_quanDarrers30DiesAmbFiltreMesCurt_llavorsAgafaTotElPeriodeDelFiltre() {
+        // Arrange
+        Periode periode = Periode.builder().periodeMode(PeriodeMode.PRESET).presetPeriode(PresetPeriode.DARRERS_30_DIES).build();
+        LocalDate filterStart = LocalDate.of(2026, 6, 1);
+        LocalDate filterEnd = LocalDate.of(2026, 6, 10); // només 10 dies, menys que els 30 sol·licitats
+        PeriodeResolverHelper.PeriodeDates filtre = new PeriodeResolverHelper.PeriodeDates(filterStart, filterEnd);
+
+        // Act
+        PeriodeResolverHelper.PeriodeDates result = PeriodeResolverHelper.resolvePeriod(periode, filtre);
+
+        // Assert: com que els 30 dies no hi càpiguen, s'agafa el període sencer del filtre
+        assertThat(result.start).isEqualTo(filterStart);
+        assertThat(result.end).isEqualTo(filterEnd);
+    }
+
+    @Test
+    @DisplayName("resolvePeriod amb filtre: si el filtre no té data d'inici, no es limita l'inici del període del component")
+    void resolvePeriod_quanFiltreSenseDataInici_llavorsNoLimitaInici() {
+        // Arrange
+        Periode periode = Periode.builder().periodeMode(PeriodeMode.PRESET).presetPeriode(PresetPeriode.DARRERS_7_DIES).build();
+        LocalDate filterEnd = LocalDate.of(2026, 6, 15);
+        PeriodeResolverHelper.PeriodeDates filtre = new PeriodeResolverHelper.PeriodeDates(null, filterEnd);
+
+        // Act
+        PeriodeResolverHelper.PeriodeDates result = PeriodeResolverHelper.resolvePeriod(periode, filtre);
+
+        // Assert
+        assertThat(result.start).isEqualTo(filterEnd.minusDays(7));
+        assertThat(result.end).isEqualTo(filterEnd);
+    }
+
+    @Test
+    @DisplayName("resolvePeriod amb filtre: RELATIU també queda ancorat i limitat pel filtre")
+    void resolvePeriod_quanRelatiuAmbFiltre_llavorsAncoraAlFinalDelFiltre() {
+        // Arrange
+        Periode periode = Periode.builder()
+            .periodeMode(PeriodeMode.RELATIU)
+            .relatiuPuntReferencia(PeriodeAnchor.ARA)
+            .relatiuCount(10)
+            .relatiueUnitat(PeriodeUnitat.DIA)
+            .build();
+        LocalDate filterStart = LocalDate.of(2026, 6, 1);
+        LocalDate filterEnd = LocalDate.of(2026, 6, 5); // període de 5 dies, més curt que els 10 sol·licitats
+        PeriodeResolverHelper.PeriodeDates filtre = new PeriodeResolverHelper.PeriodeDates(filterStart, filterEnd);
+
+        // Act
+        PeriodeResolverHelper.PeriodeDates result = PeriodeResolverHelper.resolvePeriod(periode, filtre);
+
+        // Assert
+        assertThat(result.start).isEqualTo(filterStart);
+        assertThat(result.end).isEqualTo(filterEnd);
+    }
+
+    @Test
+    @DisplayName("resolvePeriod: sense filterBounds (null) el comportament és idèntic al d'un sol paràmetre")
+    void resolvePeriod_quanFilterBoundsNull_llavorsComportamentIdenticASenseFiltre() {
+        // Arrange
+        Periode periode = Periode.builder().periodeMode(PeriodeMode.PRESET).presetPeriode(PresetPeriode.DARRER_COMPLET_DIA).build();
+
+        // Act
+        PeriodeResolverHelper.PeriodeDates result = PeriodeResolverHelper.resolvePeriod(periode, null);
+
+        // Assert
+        assertThat(result.start).isEqualTo(today.minusDays(1));
+        assertThat(result.end).isEqualTo(today.minusDays(1));
+    }
+
+    @Test
+    @DisplayName("resolveAbsolutePeriod: DATE_RANGE amb només data de fi no falla i deixa la data d'inici sense limitar")
+    void resolveAbsolutePeriod_quanDateRangeSenseDataInici_llavorsNoFallaINoLimitaInici() {
+        // Arrange
+        LocalDate end = LocalDate.of(2026, 3, 20);
+        Periode periode = Periode.builder()
+            .periodeMode(PeriodeMode.ABSOLUT)
+            .absolutTipus(PeriodeAbsolutTipus.DATE_RANGE)
+            .absolutDataInici(null)
+            .absolutDataFi(end)
+            .build();
+
+        // Act
+        PeriodeResolverHelper.PeriodeDates result = PeriodeResolverHelper.resolvePeriod(periode);
+
+        // Assert: no llança excepció, i la data d'inici es tracta com si no es filtrés per període (sense límit)
+        assertThat(result.start).isNull();
+        assertThat(result.end).isEqualTo(end);
+    }
 }
