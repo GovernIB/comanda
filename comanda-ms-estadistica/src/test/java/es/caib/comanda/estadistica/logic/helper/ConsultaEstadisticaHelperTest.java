@@ -79,6 +79,7 @@ class ConsultaEstadisticaHelperTest {
     @Mock private EstadisticaClientHelper estadisticaClientHelper;
     @Mock private DashboardStyleResolverHelper dashboardStyleResolverHelper;
     @Mock private DashboardSeguretatHelper dashboardSeguretatHelper;
+    @Mock private OrganitzativaTreeHelper organitzativaTreeHelper;
     @Mock private es.caib.comanda.ms.logic.helper.AuthenticationHelper authenticationHelper;
 
     @InjectMocks
@@ -787,6 +788,94 @@ class ConsultaEstadisticaHelperTest {
 
         // Assert
         verify(unitatOrganitzativaRepository, never()).findByCodiIn(anyList());
+    }
+
+    @Test
+    @DisplayName("resolveDimensionsFiltre: seleccionar una CONSELLERIA al filtre del dashboard filtra per ORGAN_GESTOR incloent-hi els òrgans descendents")
+    void resolveDimensionsFiltre_quanFiltreSeleccioEsConselleria_llavorsFiltraPerOrganGestorAmbDescendents() {
+        // Arrange
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+
+        DimensioEntity dimensioConselleria = new DimensioEntity();
+        dimensioConselleria.setCodi("CONS");
+        dimensioConselleria.setTipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum.CONSELLERIA);
+        when(dimensioRepository.findByCodiAndEntornAppId("CONS", 1L)).thenReturn(Optional.of(dimensioConselleria));
+
+        DimensioEntity dimensioOrgan = new DimensioEntity();
+        dimensioOrgan.setCodi("ORG");
+        dimensioOrgan.setTipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum.ORGAN_GESTOR);
+        when(dimensioRepository.findByEntornAppIdAndTipus(1L, es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum.ORGAN_GESTOR))
+            .thenReturn(Optional.of(dimensioOrgan));
+
+        UnitatOrganitzativaEntity conselleria = mock(UnitatOrganitzativaEntity.class);
+        when(unitatOrganitzativaRepository.findByCodiIn(List.of("CONS_A"))).thenReturn(List.of(conselleria));
+        when(organitzativaTreeHelper.getDescendentsIElMateix(List.of(conselleria)))
+            .thenReturn(new LinkedHashSet<>(List.of("CONS_A", "ORG_FILL_1", "ORG_FILL_2")));
+
+        DashboardFiltreSeleccio filtreSeleccio = DashboardFiltreSeleccio.builder()
+            .dimensions(Map.of("CONS", List.of("CONS_A")))
+            .build();
+
+        // Act
+        @SuppressWarnings("unchecked")
+        Map<String, List<String>> result = (Map<String, List<String>>) ReflectionTestUtils.invokeMethod(
+            consultaEstadisticaHelper, "resolveDimensionsFiltre", widget, 1L, filtreSeleccio);
+
+        // Assert
+        assertThat(result).containsOnlyKeys("ORG");
+        assertThat(result.get("ORG")).containsExactlyInAnyOrder("CONS_A", "ORG_FILL_1", "ORG_FILL_2");
+    }
+
+    @Test
+    @DisplayName("resolveDimensionsFiltre: ignora la selecció de CONSELLERIA si l'app no té cap dimensió ORGAN_GESTOR configurada")
+    void resolveDimensionsFiltre_quanAppNoTeDimensioOrganGestor_llavorsIgnoraSeleccio() {
+        // Arrange
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+
+        DimensioEntity dimensioConselleria = new DimensioEntity();
+        dimensioConselleria.setCodi("CONS");
+        dimensioConselleria.setTipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum.CONSELLERIA);
+        when(dimensioRepository.findByCodiAndEntornAppId("CONS", 1L)).thenReturn(Optional.of(dimensioConselleria));
+        when(dimensioRepository.findByEntornAppIdAndTipus(1L, es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum.ORGAN_GESTOR))
+            .thenReturn(Optional.empty());
+
+        DashboardFiltreSeleccio filtreSeleccio = DashboardFiltreSeleccio.builder()
+            .dimensions(Map.of("CONS", List.of("CONS_A")))
+            .build();
+
+        // Act
+        @SuppressWarnings("unchecked")
+        Map<String, List<String>> result = (Map<String, List<String>>) ReflectionTestUtils.invokeMethod(
+            consultaEstadisticaHelper, "resolveDimensionsFiltre", widget, 1L, filtreSeleccio);
+
+        // Assert
+        assertThat(result).isEmpty();
+        verify(unitatOrganitzativaRepository, never()).findByCodiIn(any());
+    }
+
+    @Test
+    @DisplayName("resolveDimensionsFiltre: una dimensió que no és d'unitat organitzativa es filtra pel codi exacte, sense expandir descendents")
+    void resolveDimensionsFiltre_quanDimensioNoEsUnitatOrganitzativa_llavorsFiltraPerCodiExacte() {
+        // Arrange
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+
+        DimensioEntity dimensioEntitat = new DimensioEntity();
+        dimensioEntitat.setCodi("ENT");
+        dimensioEntitat.setTipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum.ENTITAT);
+        when(dimensioRepository.findByCodiAndEntornAppId("ENT", 1L)).thenReturn(Optional.of(dimensioEntitat));
+
+        DashboardFiltreSeleccio filtreSeleccio = DashboardFiltreSeleccio.builder()
+            .dimensions(Map.of("ENT", List.of("ENTITAT_A")))
+            .build();
+
+        // Act
+        @SuppressWarnings("unchecked")
+        Map<String, List<String>> result = (Map<String, List<String>>) ReflectionTestUtils.invokeMethod(
+            consultaEstadisticaHelper, "resolveDimensionsFiltre", widget, 1L, filtreSeleccio);
+
+        // Assert
+        assertThat(result).containsEntry("ENT", List.of("ENTITAT_A"));
+        verify(organitzativaTreeHelper, never()).getDescendentsIElMateix(anyList());
     }
 
     @Test
