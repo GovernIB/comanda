@@ -209,6 +209,11 @@ const EstadisticaDashboardEdit: React.FC = () => {
     const [panelCollapsed, setPanelCollapsed] = useStoredPanelCollapsed('right');
     const panelWidthRef = useRef(panelWidth);
     panelWidthRef.current = panelWidth;
+    // Amplada del plafó lateral dret (propietats) a descomptar de l'ample disponible del canvas en mode
+    // 'fit', perquè el plafó (flotant per sobre, no forma part del flux) no acabi tapant el contingut
+    // escalat. Contret és només una franja transparent amb el botó d'expandir (igual que a l'esquerra):
+    // no cal reservar-li espai, el dashboard hi pot ocupar tot l'ample igualment.
+    const rightPanelReservedWidth = panelCollapsed ? 0 : panelWidth;
 
     const handleResizeMouseDown = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
@@ -611,6 +616,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                     dashboardEntornCodi={dashboardEntornCodi}
                                     backgroundColor={designDarkMode ? dashboard.colorFonsFosc : dashboard.colorFonsClar}
                                     largeScreenMode={largeScreenMode}
+                                    reservedRightWidth={rightPanelReservedWidth}
                                     editable
                                 />
                             )}

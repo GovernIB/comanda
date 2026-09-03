@@ -262,6 +262,7 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', async () => 
         multiSelectedItemIds,
         backgroundColor,
         largeScreenMode,
+        reservedRightWidth,
     }: {
         dashboardId: number;
         editable: boolean;
@@ -273,11 +274,13 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', async () => 
         multiSelectedItemIds?: string[];
         backgroundColor?: string;
         largeScreenMode?: string;
+        reservedRightWidth?: number;
     }) => (
         <div>
             <div>{`DashboardGrid ${dashboardId} ${String(editable)}`}</div>
             <div data-testid="dashboard-canvas-background-color">{backgroundColor}</div>
             <div data-testid="dashboard-large-screen-mode">{largeScreenMode}</div>
+            <div data-testid="dashboard-reserved-right-width">{reservedRightWidth}</div>
             <div data-testid="dashboard-widgets-json">{JSON.stringify(dashboardWidgets)}</div>
             <div data-testid="dashboard-multi-selected-ids">{JSON.stringify(multiSelectedItemIds ?? [])}</div>
             <button
@@ -890,6 +893,45 @@ describe('EstadisticaDashboardEdit', () => {
 
         await waitFor(() => {
             expect(screen.getByTestId('dashboard-large-screen-mode')).toHaveTextContent('centered');
+        });
+    });
+
+    it('EstadisticaDashboardEdit_perDefecte_reservaLAmpladaDelPlafoDePropietatsExpandit', async () => {
+        // El plafó de propietats (dret) està expandit per defecte (440px): en mode 'fit' aquesta amplada
+        // s'ha de descomptar de l'ample disponible del canvas perquè el plafó no en tapi el contingut.
+        localStorage.clear();
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('dashboard-reserved-right-width')).toHaveTextContent('440');
+        });
+    });
+
+    it('EstadisticaDashboardEdit_quanEsContrauElPlafoDePropietats_noEsReservaEspai', async () => {
+        // Contret, el plafó és només una franja transparent amb el botó d'expandir (igual que a
+        // l'esquerra): el canvas n'ha de poder ocupar tot l'ample, sense reservar-hi espai.
+        localStorage.clear();
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('dashboard-reserved-right-width')).toHaveTextContent('440');
+        });
+
+        // El botó "Compactar panell" del plafó dret és el segon (l'esquerre és el primer).
+        fireEvent.click(screen.getAllByTitle('Compactar panell')[1]);
+
+        expect(screen.getByTestId('dashboard-reserved-right-width')).toHaveTextContent('0');
+    });
+
+    it('EstadisticaDashboardEdit_quanElPlafoTeUnaAmpladaPersonalitzada_laReservaLaReflecteix', async () => {
+        // Si l'usuari ha redimensionat el plafó de propietats, la reserva ha de reflectir la nova amplada.
+        localStorage.clear();
+        localStorage.setItem('comanda.dashboardEdit.panelWidth.right', '600');
+
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('dashboard-reserved-right-width')).toHaveTextContent('600');
         });
     });
 

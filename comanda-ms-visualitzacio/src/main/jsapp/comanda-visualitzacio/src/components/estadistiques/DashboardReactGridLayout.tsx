@@ -156,6 +156,12 @@ type DashboardReactGridLayoutProps = {
     backgroundColor?: string;
     /** Vegeu DashboardLargeScreenMode. Per defecte 'fit'. */
     largeScreenMode?: DashboardLargeScreenMode;
+    /**
+     * Amplada (px) d'un panell flotant que se superposa a la dreta del canvas (p. ex. el panell de
+     * propietats del disseny) i que, en mode 'fit', s'ha de descomptar de l'ample disponible perquè el
+     * contingut escalat no acabi tapat per sota. Sense efecte en mode 'centered'. Per defecte 0.
+     */
+    reservedRightWidth?: number;
 };
 
 export const useMapDashboardItems = (dashboardWidgets: unknown[]) => {
@@ -244,16 +250,20 @@ export const useStoredLargeScreenMode = (
  */
 const DashboardScaledCanvas: React.FC<{
     largeScreenMode: DashboardLargeScreenMode;
+    /** Vegeu `reservedRightWidth` a DashboardReactGridLayoutProps. */
+    reservedRightWidth?: number;
     children: (scale: number) => React.ReactNode;
-}> = ({largeScreenMode, children}) => {
+}> = ({largeScreenMode, reservedRightWidth = 0, children}) => {
     const {size: containerSize, refCallback: containerRef} = useSizeTracker(100);
     const {size: designSize, refCallback: designRef} = useSizeTracker(100);
 
     const containerWidth = containerSize?.width || DASHBOARD_DESIGN_WIDTH;
     const designHeight = designSize?.height || 0;
     // En mode 'centered' mai s'escala (ni cap amunt ni cap avall): a pantalles més estretes es manté la
-    // mida real i es mostra scroll horitzontal en lloc d'encongir el contingut.
-    const scale = largeScreenMode === 'fit' ? containerWidth / DASHBOARD_DESIGN_WIDTH : 1;
+    // mida real i es mostra scroll horitzontal en lloc d'encongir el contingut. Només en mode 'fit' es
+    // descompta reservedRightWidth, perquè el contingut escalat no quedi tapat per un panell flotant.
+    const availableWidth = Math.max(containerWidth - reservedRightWidth, 0);
+    const scale = largeScreenMode === 'fit' ? availableWidth / DASHBOARD_DESIGN_WIDTH : 1;
 
     return (
         <Box
@@ -311,6 +321,7 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                                                                                       dashboardEntornCodi,
                                                                                       backgroundColor,
                                                                                       largeScreenMode = 'fit',
+                                                                                      reservedRightWidth,
                                                                                   }) => {
     const {t} = useTranslation();
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -601,7 +612,7 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                         }}
                     />
                 )}
-                <DashboardScaledCanvas largeScreenMode={largeScreenMode}>
+                <DashboardScaledCanvas largeScreenMode={largeScreenMode} reservedRightWidth={reservedRightWidth}>
                     {(scale) => (<>
                     {editable && (
                         <canvas

@@ -230,6 +230,70 @@ describe('DashboardReactGridLayout', () => {
         expect(screen.getByTestId('dashboard-scale-design')).toHaveStyle({ transform: 'scale(0.5)' });
     });
 
+    it('DashboardReactGridLayout_quanElModeEsFitIHiHaReservedRightWidth_lEscalaDescompta', () => {
+        // Amb el plafó de propietats obert (flotant per sobre, no forma part del flux), en mode 'fit'
+        // s'ha de descomptar la seva amplada de l'ample disponible perquè no tapi el contingut escalat.
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={false}
+                dashboardWidgets={[]}
+                gridLayoutItems={[]}
+                largeScreenMode="fit"
+                reservedRightWidth={440}
+            />
+        );
+
+        act(() => triggerResize('dashboard-scale-container', DASHBOARD_DESIGN_WIDTH));
+
+        const expectedScale = (DASHBOARD_DESIGN_WIDTH - 440) / DASHBOARD_DESIGN_WIDTH;
+        expect(screen.getByTestId('dashboard-scaled-box')).toHaveStyle({
+            width: `${DASHBOARD_DESIGN_WIDTH - 440}px`,
+        });
+        expect(screen.getByTestId('dashboard-scale-design')).toHaveStyle({
+            transform: `scale(${expectedScale})`,
+        });
+    });
+
+    it('DashboardReactGridLayout_quanElModeEsCenteredIHiHaReservedRightWidth_noTeEfecte', () => {
+        // reservedRightWidth només afecta el mode 'fit': en 'centered' el contingut sempre es mostra a
+        // mida real, independentment de si el plafó de propietats està obert.
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={false}
+                dashboardWidgets={[]}
+                gridLayoutItems={[]}
+                largeScreenMode="centered"
+                reservedRightWidth={440}
+            />
+        );
+
+        act(() => triggerResize('dashboard-scale-container', 800));
+
+        expect(screen.getByTestId('dashboard-scaled-box')).toHaveStyle({ width: `${DASHBOARD_DESIGN_WIDTH}px` });
+        expect(screen.getByTestId('dashboard-scale-design')).toHaveStyle({ transform: 'scale(1)' });
+    });
+
+    it('DashboardReactGridLayout_quanReservedRightWidthEsMesGranQueLContenidor_noBaixaDeZero', () => {
+        // Cas extrem (finestra molt estreta amb el plafó obert): l'escala mai ha de ser negativa.
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={false}
+                dashboardWidgets={[]}
+                gridLayoutItems={[]}
+                largeScreenMode="fit"
+                reservedRightWidth={1000}
+            />
+        );
+
+        act(() => triggerResize('dashboard-scale-container', 500));
+
+        expect(screen.getByTestId('dashboard-scaled-box')).toHaveStyle({ width: '0px' });
+        expect(screen.getByTestId('dashboard-scale-design')).toHaveStyle({ transform: 'scale(0)' });
+    });
+
     it('DashboardReactGridLayout_quanElCanvasEsEscala_passaLescalaATransformScale', () => {
         // Regressió: react-draggable/react-resizable (per sota de react-grid-layout) calculen els
         // desplaçaments de ratolí en píxels reals de pantalla i no coneixen el `transform: scale` aplicat
