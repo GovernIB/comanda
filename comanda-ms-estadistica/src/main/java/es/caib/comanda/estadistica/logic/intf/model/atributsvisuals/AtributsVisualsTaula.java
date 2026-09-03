@@ -105,13 +105,13 @@ public class AtributsVisualsTaula extends AtributsVisuals implements Serializabl
     @Override
     public boolean hasOverrides() {
         return hasBaseOverrides()
-            || colorTextTaula != null || colorFonsTaula != null
-            || mostrarCapcalera != null || colorCapcalera != null || colorFonsCapcalera != null
-            || mostrarAlternancia != null || colorAlternancia != null
-            || mostrarVoraTaula != null || colorVoraTaula != null || ampleVoraTaula != null
-            || mostrarSeparadorHoritzontal != null || colorSeparadorHoritzontal != null || ampleSeparadorHoritzontal != null
-            || mostrarSeparadorVertical != null || colorSeparadorVertical != null || ampleSeparadorVertical != null
-            || paginada != null
+            || isNotEmpty(colorTextTaula) || isNotEmpty(colorFonsTaula)
+            || mostrarAlternancia != null || isNotEmpty(colorAlternancia)
+            || mostrarCapcalera != null || isNotEmpty(colorCapcalera) || isNotEmpty(colorFonsCapcalera)
+            || mostrarVoraTaula != null || isNotEmpty(colorVoraTaula) || ampleVoraTaula != null
+            || mostrarSeparadorHoritzontal != null || isNotEmpty(colorSeparadorHoritzontal)
+            || ampleSeparadorHoritzontal != null || mostrarSeparadorVertical != null
+            || isNotEmpty(colorSeparadorVertical) || ampleSeparadorVertical != null || paginada != null
             || (columnesEstils != null && !columnesEstils.isEmpty())
             || (cellesDestacades != null && !cellesDestacades.isEmpty());
     }

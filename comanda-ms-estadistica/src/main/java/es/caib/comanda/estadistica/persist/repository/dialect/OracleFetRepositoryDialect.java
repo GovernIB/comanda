@@ -141,9 +141,26 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
         String outerSelect = getSimpleQuerySelect(realAgregacio, indicadorAgregacio.getIndicadorCodi(), effectiveUnitat);
 
         // 4. Assemblatge
+        if (TableColumnsEnum.FIRST_SEEN.equals(indicadorAgregacio.getAgregacio()) ||
+            TableColumnsEnum.LAST_SEEN.equals(indicadorAgregacio.getAgregacio())) {
+            return "SELECT " + queryAgrupacio + " AS agrupacio, descomposicio, " + outerSelect +
+                " FROM ( SELECT " + innerSelectCols + queryDescomposicio + " AS descomposicio, " + innerSumSelect +
+                BASE_JOIN + BASE_WHERE + queryConditions + innerGroupBy + ") " +
+                " GROUP BY " + outerGroupingCols + ", descomposicio ORDER BY agrupacio, descomposicio";
+        }
+
+        PeriodeUnitat innerUnitat = getChartInnerUnitat(indicadorAgregacio, tempsAgregacio);
+        String periodeCamps = innerGroupingCols.replace("t.", "");
+        String suffix = getIndicadorSuffix(indicadorAgregacio.getIndicadorCodi(), effectiveUnitat);
+
         return "SELECT " + queryAgrupacio + " AS agrupacio, descomposicio, " + outerSelect +
-            " FROM ( SELECT " + innerSelectCols + queryDescomposicio + " AS descomposicio, " + innerSumSelect +
-            BASE_JOIN + BASE_WHERE + queryConditions + innerGroupBy + ") " +
+            " FROM ( SELECT " + qualifyColumns("periodes", periodeCamps) + ", descomposicio, " +
+            "COALESCE(agg.sum_fets" + suffix + ", 0) AS sum_fets" + suffix + " " +
+            " FROM " + getPeriodesRangeQuery(innerUnitat) + " periodes " +
+            " LEFT JOIN ( SELECT " + innerGroupingCols + ", " + queryDescomposicio + " AS descomposicio, " + innerSumSelect +
+            BASE_JOIN + BASE_WHERE + queryConditions + innerGroupBy +
+            " ) agg ON " + getPeriodesJoinCondition("periodes", "agg", periodeCamps) +
+            ") " +
             " GROUP BY " + outerGroupingCols + ", descomposicio ORDER BY agrupacio, descomposicio";
     }
 
@@ -337,10 +354,10 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
         // 1. Estructura base
         PeriodeUnitat groupUnitat = resolveUnitat(indicadors.get(0), tempsAgregacio);
         String queryAgrupacio = generateGraficAgrupacioConditions(tempsAgregacio);
+        String outerGroupingCols = getTimeGroupingColumns(tempsAgregacio, true).replace("t.", "");
 
         // 2. Agrupació interna
         String innerGroupingCols = getChartInnerGroupingCols(indicadors.get(0), tempsAgregacio);
-        String innerSelectCols = innerGroupingCols.isEmpty() ? "" : innerGroupingCols + ", ";
         String innerGroupBy = innerGroupingCols.isEmpty() ? "" : "GROUP BY " + innerGroupingCols;
 
         // 3. Càlculs
@@ -352,10 +369,26 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
         String subQuerySelects = getTaulaSubQuerySelects(indicadors, groupUnitat);
 
         // 4. Assemblatge
-        return "SELECT agrupacio, " + querySelect +
-            " FROM ( SELECT " + innerSelectCols + queryAgrupacio + " AS agrupacio, " + subQuerySelects +
-            BASE_JOIN + BASE_WHERE + queryConditions + " " + innerGroupBy + ") " +
-            " GROUP BY agrupacio ORDER BY agrupacio";
+        boolean hasDataCols = indicadors.stream().anyMatch(ind -> TableColumnsEnum.FIRST_SEEN.equals(ind.getAgregacio()) || TableColumnsEnum.LAST_SEEN.equals(ind.getAgregacio()));
+        if (hasDataCols) {
+            return "SELECT agrupacio, " + querySelect +
+                " FROM ( SELECT " + innerGroupingCols + ", " + queryAgrupacio + " AS agrupacio, " + subQuerySelects +
+                BASE_JOIN + BASE_WHERE + queryConditions + " " + innerGroupBy + ") " +
+                " GROUP BY agrupacio ORDER BY agrupacio";
+        }
+
+        PeriodeUnitat innerUnitat = getChartInnerUnitat(indicadors.get(0), tempsAgregacio);
+        String periodeCamps = innerGroupingCols.replace("t.", "");
+        String coalesceCols = getTaulaSubQueryCoalesceColumns(indicadors, groupUnitat);
+
+        return "SELECT " + queryAgrupacio + " AS agrupacio, " + querySelect +
+            " FROM ( SELECT " + qualifyColumns("periodes", periodeCamps) + ", " + coalesceCols +
+            " FROM " + getPeriodesRangeQuery(innerUnitat) + " periodes " +
+            " LEFT JOIN ( SELECT " + innerGroupingCols + ", " + subQuerySelects +
+            BASE_JOIN + BASE_WHERE + queryConditions + " " + innerGroupBy +
+            " ) agg ON " + getPeriodesJoinCondition("periodes", "agg", periodeCamps) +
+            ") " +
+            " GROUP BY " + outerGroupingCols + " ORDER BY agrupacio";
     }
 
     private String generateGraficUnionSubquery(String queryConditions, List<IndicadorAgregacio> indicadors, PeriodeUnitat tempsAgregacio, List<IndicadorAgregacio> ordenOriginal) {
@@ -368,7 +401,6 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
 
         // 2. Agrupació interna
         String innerGroupingCols = getChartInnerGroupingCols(indicadors.get(0), tempsAgregacio);
-        String innerSelectCols = innerGroupingCols.isEmpty() ? "" : innerGroupingCols + ", ";
         String innerGroupBy = innerGroupingCols.isEmpty() ? "" : "GROUP BY " + innerGroupingCols;
 
         // 3. Càlculs
@@ -387,8 +419,24 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
         String subQuerySelects = getTaulaSubQuerySelects(indicadors, groupUnitat);
 
         // 4. Assemblatge
+        boolean hasDataCols = indicadors.stream().anyMatch(ind -> TableColumnsEnum.FIRST_SEEN.equals(ind.getAgregacio()) || TableColumnsEnum.LAST_SEEN.equals(ind.getAgregacio()));
+        if (hasDataCols) {
+            return "SELECT " + queryAgrupacio + " AS agrupacio, " + querySelect +
+                " FROM ( SELECT " + innerGroupingCols + ", " + subQuerySelects + BASE_JOIN + BASE_WHERE + queryConditions + " " + innerGroupBy + ") " +
+                " GROUP BY " + outerGroupingCols;
+        }
+
+        PeriodeUnitat innerUnitat = getChartInnerUnitat(indicadors.get(0), tempsAgregacio);
+        String periodeCamps = innerGroupingCols.replace("t.", "");
+        String coalesceCols = getTaulaSubQueryCoalesceColumns(indicadors, groupUnitat);
+
         return "SELECT " + queryAgrupacio + " AS agrupacio, " + querySelect +
-            " FROM ( SELECT " + innerSelectCols + subQuerySelects + BASE_JOIN + BASE_WHERE + queryConditions + " " + innerGroupBy + ") " +
+            " FROM ( SELECT " + qualifyColumns("periodes", periodeCamps) + ", " + coalesceCols +
+            " FROM " + getPeriodesRangeQuery(innerUnitat) + " periodes " +
+            " LEFT JOIN ( SELECT " + innerGroupingCols + ", " + subQuerySelects +
+            BASE_JOIN + BASE_WHERE + queryConditions + " " + innerGroupBy +
+            " ) agg ON " + getPeriodesJoinCondition("periodes", "agg", periodeCamps) +
+            ") " +
             " GROUP BY " + outerGroupingCols;
     }
 
@@ -409,6 +457,21 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
 
         // 2. Assemblatge
         return "SELECT agrupacio, " + outerSelect + " FROM (" + unionSubqueries + ") GROUP BY agrupacio ORDER BY agrupacio";
+    }
+
+    /**
+     * Genera les columnes de la subconsulta envoltades amb COALESCE(..., 0)
+     * per garantir que els períodes sense dades del calendari sintètic mostrin 0 en lloc de NULL.
+     */
+    private String getTaulaSubQueryCoalesceColumns(List<IndicadorAgregacio> indicadorsAgregacio, PeriodeUnitat unitatParaSuffix) {
+        Map<String, IndicadorAgregacio> unics = new LinkedHashMap<>();
+        indicadorsAgregacio.forEach(ind -> unics.putIfAbsent(ind.getIndicadorCodi(), ind));
+        return unics.values().stream()
+            .map(ind -> {
+                String suffix = getIndicadorSuffix(ind.getIndicadorCodi(), unitatParaSuffix);
+                return "COALESCE(agg.sum_fets" + suffix + ", 0) AS sum_fets" + suffix;
+            })
+            .collect(Collectors.joining(", "));
     }
 
     // ====================================================================================

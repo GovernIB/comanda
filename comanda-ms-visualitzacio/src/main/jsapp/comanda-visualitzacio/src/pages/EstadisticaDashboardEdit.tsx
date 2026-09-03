@@ -101,29 +101,8 @@ function WidgetsErrorAlert({ errorWidgets }: WidgetsErrorAlertProps) {
 }
 
 const defaultSizeAndPosition = {
-    posX: 0,
-    // posY: 0, //Sense valor, el back el possicionara abaix de tot.
     width: 3,
     height: 3,
-};
-
-/**
- * Genera un títol de duplicat afegint un número seqüencial entre parèntesis, evitant col·lisions amb
- * els títols ja existents al dashboard (p. ex. "Widget" -> "Widget (2)" -> "Widget (3)").
- */
-const buildDuplicateTitle = (originalTitle: string, existingTitles: string[]): string => {
-    const match = originalTitle?.match(/^(.*) \((\d+)\)$/);
-    const baseTitle = match ? match[1] : (originalTitle ?? '');
-    const escapedBase = baseTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const pattern = new RegExp(`^${escapedBase} \\((\\d+)\\)$`);
-    let maxSeq = 1;
-    existingTitles.forEach(title => {
-        const titleMatch = title?.match(pattern);
-        if (titleMatch) {
-            maxSeq = Math.max(maxSeq, parseInt(titleMatch[1], 10));
-        }
-    });
-    return `${baseTitle} (${maxSeq + 1})`;
 };
 
 const PANEL_COLLAPSED_STORAGE_PREFIX = 'comanda.dashboardEdit.panelCollapsed.';
@@ -183,20 +162,16 @@ const EstadisticaDashboardEdit: React.FC = () => {
     const {
         isReady: apiDashboardItemIsReady,
         patch: patchDashboardItem,
-        create: createDashboardItem,
-        getOne: getOneDashboardItem,
         delete: deleteDashboardItem,
+        artifactAction: executeDashboardItemAction,
     } = useResourceApiService('dashboardItem');
     const {
         isReady: apiDashboardTitolIsReady,
         patch: patchDashboardTitol,
-        create: createDashboardTitol,
-        getOne: getOneDashboardTitol,
         delete: deleteDashboardTitol,
+        artifactAction: executeDashboardTitolAction,
     } = useResourceApiService('dashboardTitol');
-    const { getOne: getOneSimpleWidget, create: createSimpleWidget } = useResourceApiService('estadisticaSimpleWidget');
-    const { getOne: getOneGraficWidget, create: createGraficWidget } = useResourceApiService('estadisticaGraficWidget');
-    const { getOne: getOneTaulaWidget, create: createTaulaWidget } = useResourceApiService('estadisticaTaulaWidget');
+    const { artifactAction: executeDashboardAction } = useResourceApiService('dashboard');
     const { temporalMessageShow, messageDialogShow, t: tLib, goBack } = useBaseAppContext();
     const confirmDialogButtons = useConfirmDialogButtons();
     const {
@@ -307,32 +282,34 @@ const EstadisticaDashboardEdit: React.FC = () => {
     };
     const closeWizard = () => setWizardState(state => ({ ...state, open: false }));
 
-    const addWidget = (widgetId: string | number, entornId: string | number, widgetType?: DashboardWidgetType) => {
-        createDashboardItem({
-            data: {
-                dashboard: { id: dashboardId },
-                widget: { id: widgetId },
-                entornId,
-                ...defaultSizeAndPosition,
-            },
-        })
-            .then(async (createdItem: { id?: string | number }) => {
-                temporalMessageShow(null, t($ => $.page.dashboards.action.addWidget.success), 'success');
-                forceRefreshDashboardWidgets();
-                if (createdItem?.id && widgetType) {
-                    setEditorSelection({
-                        kind: 'widget',
-                        mode: 'edit',
-                        widgetType,
-                        dashboardItemId: createdItem.id,
-                        widgetId,
-                    });
-                }
-            })
-            .catch((reason) => {
-                temporalMessageShow(null, t($ => $.page.dashboards.action.addWidget.error), 'error');
-                console.error('Widget add error', reason);
+    const addWidget = async (widgetId: string | number, entornId: string | number, widgetType?: DashboardWidgetType) => {
+        if (!widgetType) return;
+        try {
+            const createdItem = await executeDashboardAction(dashboardId, {
+                code: 'clone_and_add_widget',
+                data: {
+                    widgetId,
+                    entornId,
+                    ...defaultSizeAndPosition,
+                },
             });
+
+            temporalMessageShow(null, t($ => $.page.dashboards.action.addWidget.success), 'success');
+            forceRefreshDashboardWidgets();
+
+            if (createdItem?.id) {
+                setEditorSelection({
+                    kind: 'widget',
+                    mode: 'edit',
+                    widgetType,
+                    dashboardItemId: createdItem.id,
+                    widgetId: createdItem.widget?.id ?? widgetId,
+                });
+            }
+        } catch (error: any) {
+            temporalMessageShow(null, error?.message ?? t($ => $.page.dashboards.action.addWidget.error), 'error');
+            console.error('Widget clone add error', error);
+        }
     };
 
     const mappedDashboardItems = useMapDashboardItems(dashboardWidgets);
@@ -416,12 +393,6 @@ const EstadisticaDashboardEdit: React.FC = () => {
         setEditorSelection({ kind: 'multi', ids });
     };
 
-    const cloneWithoutFields = (data: any, fields: string[]): any => {
-        const clone = { ...data };
-        fields.forEach(field => delete clone[field]);
-        return clone;
-    };
-
     const handleDeleteItem = (entity: any) => {
         if (!entity) return;
         const isTitol = entity.tipus === 'TITOL';
@@ -455,41 +426,15 @@ const EstadisticaDashboardEdit: React.FC = () => {
     const handleDuplicateItem = async (entity: any) => {
         if (!entity) return;
         try {
-            const existingTitles = (dashboardWidgets ?? []).map((widget: any) => widget.titol).filter(Boolean);
             if (entity.tipus === 'TITOL') {
                 const titolId = entity.dashboardTitolId ?? entity.id;
-                const rawTitol = await getOneDashboardTitol(titolId);
-                const newTitol = buildDuplicateTitle(rawTitol.titol, existingTitles);
-                await createDashboardTitol({
-                    data: {
-                        ...cloneWithoutFields(rawTitol, ['id', 'posY']),
-                        titol: newTitol,
-                        dashboard: { id: dashboardId },
-                    },
+                await executeDashboardTitolAction(titolId, {
+                    code: 'duplicate',
                 });
             } else if (entity.tipus === 'SIMPLE' || entity.tipus === 'GRAFIC' || entity.tipus === 'TAULA') {
-                const widgetType = entity.tipus as DashboardWidgetType;
                 const dashboardItemId = entity.dashboardItemId ?? entity.id;
-                const widgetId = entity.widgetId;
-                const getOneWidget = widgetType === 'SIMPLE' ? getOneSimpleWidget : widgetType === 'GRAFIC' ? getOneGraficWidget : getOneTaulaWidget;
-                const createWidget = widgetType === 'SIMPLE' ? createSimpleWidget : widgetType === 'GRAFIC' ? createGraficWidget : createTaulaWidget;
-                const [rawWidget, rawDashboardItem] = await Promise.all([
-                    getOneWidget(widgetId),
-                    getOneDashboardItem(dashboardItemId),
-                ]);
-                const newTitol = buildDuplicateTitle(rawWidget.titol, existingTitles);
-                const newWidget = await createWidget({
-                    data: {
-                        ...cloneWithoutFields(rawWidget, ['id']),
-                        titol: newTitol,
-                    },
-                });
-                await createDashboardItem({
-                    data: {
-                        ...cloneWithoutFields(rawDashboardItem, ['id', 'posY']),
-                        dashboard: { id: dashboardId },
-                        widget: { id: newWidget?.id },
-                    },
+                await executeDashboardItemAction(dashboardItemId, {
+                    code: 'duplicate',
                 });
             } else {
                 return;
@@ -919,62 +864,64 @@ const SideMenu = ({
     </Box>} />
 
     return <Paper elevation={1} sx={{ p: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 0.5 }}>
-            <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
-                {t($ => $.page.dashboards.sideMenu.filtresTitle)}
-            </Typography>
-            <IconButton
-                size="small"
-                aria-label={t($ => $.page.dashboards.sideMenu.addFiltre)}
-                title={t($ => $.page.dashboards.sideMenu.addFiltre)}
-                onClick={onAddFiltre}
-                disabled={dashboard?.id == null}
-            >
-                <Icon sx={{ fontSize: '1rem' }}>add</Icon>
-            </IconButton>
-        </Box>
-        <Box sx={{ maxHeight: 160, overflow: 'auto', mb: 0.5 }}>
-            {!dashboardFiltres?.length ? (
-                <Typography variant="body2" sx={{ px: 1, py: 0.25, color: 'text.secondary', fontStyle: 'italic' }}>
-                    {t($ => $.page.dashboards.sideMenu.noFiltres)}
+        <Box sx={{ flexShrink: 0 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 0.5 }}>
+                <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
+                    {t($ => $.page.dashboards.sideMenu.filtresTitle)}
                 </Typography>
-            ) : (
-                dashboardFiltres.map((filtre) => {
-                    const filtreId = String(filtre.id);
-                    const isSelected = selectedFiltreId === filtreId;
-                    return (
-                        <Box
-                            key={filtreId}
-                            onClick={() => onSelectFiltre?.(filtre)}
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 0.5,
-                                px: 1,
-                                py: 0.25,
-                                cursor: 'pointer',
-                                borderRadius: 1,
-                                fontSize: '0.875rem',
-                                backgroundColor: isSelected ? 'primary.main' : 'transparent',
-                                color: isSelected ? 'primary.contrastText' : 'inherit',
-                                '&:hover': { backgroundColor: isSelected ? 'primary.dark' : 'action.hover' },
-                            }}
-                        >
-                            <Icon sx={{ fontSize: '0.875rem' }}>{filtre.tipus === 'PERIODE' ? 'event' : 'filter_alt'}</Icon>
-                            <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {filtre.titol || (filtre.tipus === 'PERIODE' ? t($ => $.page.dashboards.sideMenu.periode) : filtre.dimensioCodi)}
+                <IconButton
+                    size="small"
+                    aria-label={t($ => $.page.dashboards.sideMenu.addFiltre)}
+                    title={t($ => $.page.dashboards.sideMenu.addFiltre)}
+                    onClick={onAddFiltre}
+                    disabled={dashboard?.id == null}
+                >
+                    <Icon sx={{ fontSize: '1rem' }}>add</Icon>
+                </IconButton>
+            </Box>
+            <Box sx={{ maxHeight: 160, overflow: 'auto', mb: 0.5 }}>
+                {!dashboardFiltres?.length ? (
+                    <Typography variant="body2" sx={{ px: 1, py: 0.25, color: 'text.secondary', fontStyle: 'italic' }}>
+                        {t($ => $.page.dashboards.sideMenu.noFiltres)}
+                    </Typography>
+                ) : (
+                    dashboardFiltres.map((filtre) => {
+                        const filtreId = String(filtre.id);
+                        const isSelected = selectedFiltreId === filtreId;
+                        return (
+                            <Box
+                                key={filtreId}
+                                onClick={() => onSelectFiltre?.(filtre)}
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 0.5,
+                                    px: 1,
+                                    py: 0.25,
+                                    cursor: 'pointer',
+                                    borderRadius: 1,
+                                    fontSize: '0.875rem',
+                                    backgroundColor: isSelected ? 'primary.main' : 'transparent',
+                                    color: isSelected ? 'primary.contrastText' : 'inherit',
+                                    '&:hover': { backgroundColor: isSelected ? 'primary.dark' : 'action.hover' },
+                                }}
+                            >
+                                <Icon sx={{ fontSize: '0.875rem' }}>{filtre.tipus === 'PERIODE' ? 'event' : 'filter_alt'}</Icon>
+                                <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {filtre.titol || (filtre.tipus === 'PERIODE' ? t($ => $.page.dashboards.sideMenu.periode) : filtre.dimensioCodi)}
+                                </Box>
                             </Box>
-                        </Box>
-                    );
-                })
-            )}
+                        );
+                    })
+                )}
+            </Box>
+
+            <Divider sx={{ my: 1 }}/>
+
+            <Typography variant="caption" sx={{ px: 0.5, fontWeight: 700, color: 'text.secondary', display: 'block' }}>
+                {t($ => $.page.dashboards.editor.availableElements)}
+            </Typography>
         </Box>
-
-        <Divider sx={{ my: 1 }}/>
-
-        <Typography variant="caption" sx={{ px: 0.5, fontWeight: 700, color: 'text.secondary', display: 'block' }}>
-            {t($ => $.page.dashboards.editor.availableElements)}
-        </Typography>
 
         <Box sx={{
             overflow: 'auto',

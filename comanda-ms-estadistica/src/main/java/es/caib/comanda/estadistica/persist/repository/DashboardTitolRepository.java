@@ -7,6 +7,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface DashboardTitolRepository extends BaseRepository<DashboardTitolEntity, Long> {
 
+	java.util.List<DashboardTitolEntity> findByDashboardId(Long dashboardId);
+
 	@Query("SELECT MAX(t.posY + t.height) FROM DashboardTitolEntity t WHERE t.dashboard.id = :dashboardId")
 	Integer findMaxBottomPositionByDashboardId(@Param("dashboardId") Long dashboardId);
 

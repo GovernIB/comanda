@@ -6,6 +6,7 @@ import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltre;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltreTipus;
+import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.PosicioSubtitol;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardFiltreEntity;
@@ -19,6 +20,7 @@ import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidget
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
+import es.caib.comanda.estadistica.persist.repository.DashboardFiltreRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardTitolRepository;
@@ -68,6 +70,9 @@ class DashboardHelperTest {
 
     @Mock
     private DashboardItemRepository dashboardItemRepository;
+
+    @Mock
+    private DashboardFiltreRepository dashboardFiltreRepository;
 
     @Mock
     private PlantillaRepository plantillaRepository;
@@ -570,6 +575,40 @@ class DashboardHelperTest {
     }
 
     @Test
+    @DisplayName("CloneDashboardAction.exec: clona correctament els filtres del dashboard")
+    void cloneDashboardAction_exec_quanTeFiltres_llavorsClonaFiltres() throws ActionExecutionException {
+        // Arrange
+        DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
+            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, dashboardFiltreRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper);
+
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        entity.setTitol("Dashboard Amb Filtres");
+
+        DashboardFiltreEntity filtre = new DashboardFiltreEntity();
+        filtre.setId(100L);
+        filtre.setTitol("Filtre Període");
+        filtre.setTipus(DashboardFiltreTipus.PERIODE);
+        filtre.setOrdre(1);
+        filtre.setMultiple(true);
+        entity.setFiltres(List.of(filtre));
+
+        // Act
+        action.exec(Dashboard.CLONE_ACTION, entity, null);
+
+        // Assert
+        verify(dashboardRepository, times(1)).save(any(DashboardEntity.class));
+        verify(dashboardFiltreRepository, times(1)).saveAll(argThat((List<DashboardFiltreEntity> list) ->
+            list.size() == 1 &&
+            "Filtre Període".equals(list.get(0).getTitol()) &&
+            DashboardFiltreTipus.PERIODE.equals(list.get(0).getTipus()) &&
+            list.get(0).getOrdre() == 1 &&
+            list.get(0).isMultiple() &&
+            list.get(0).getId() == null
+        ));
+    }
+
+    @Test
     @DisplayName("CloneDashboardAction.getClonedTitulos: clona correctament tots els títols incloent personalitzat, destacat i plantilla")
     void cloneDashboardAction_getClonedTitulos_quanTitolsNoNuls_llavorsClonaTitols() throws Exception {
         // Arrange
@@ -673,7 +712,6 @@ class DashboardHelperTest {
         original.setItems(Collections.singletonList(item));
 
         when(estadisticaClientHelper.entornAppFindByAppAndEntorn(10L, 99L)).thenThrow(new es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException(EntornApp.class, "not found"));
-        when(estadisticaClientHelper.entornAppFindById(20L)).thenReturn(new EntornApp()); // Per evitar NPE intern
         lenient().when(estadisticaClientHelper.entornAppFindByAppAndEntorn(10L, 20L)).thenThrow(new es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException(EntornApp.class, "not found")); // Fallada final
 
         // Act & Assert
@@ -820,19 +858,262 @@ class DashboardHelperTest {
     }
 
     @Test
-    @DisplayName("CloneDashboardAction.getWidgetNewTitol: llança IllegalStateException quan es supera el màxim d'intents (1000)")
+    @DisplayName("getWidgetNewTitolLogic: llança IllegalStateException quan es supera el màxim d'intents (1000)")
     void cloneDashboardAction_getWidgetNewTitol_quanSuperaMaximIntents_llavorsLlancaIllegalStateException() {
         // Arrange
-        DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
-            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper);
-
         // Sempre retorna un widget existent per forçar el límit de 1000 intents
         when(estadisticaWidgetRepository.findByAppIdAndTitol(eq(10L), anyString()))
             .thenReturn(new EstadisticaSimpleWidgetEntity());
 
         // Act & Assert
-        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(action, "getWidgetNewTitol", "Widget Test", 10L))
+        assertThatThrownBy(() -> DashboardHelper.getWidgetNewTitolLogic("Widget Test", 10L, estadisticaWidgetRepository))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("S'ha superat el nombre màxim d'intents (1000)");
+    }
+
+    // ========================================================================
+    // TESTOS PER A CloneAndAddWidgetAction
+    // ========================================================================
+
+    @Test
+    @DisplayName("CloneAndAddWidgetAction: clona correctament el widget i crea el DashboardItem quan el dashboard té appId null")
+    void cloneAndAddWidgetAction_quanDashboardAppIdNull_llavorsClonaICreaItemCorrectament() throws Exception {
+        // Arrange
+        DashboardHelper.CloneAndAddWidgetAction action = new DashboardHelper.CloneAndAddWidgetAction(
+            estadisticaClientHelper, dashboardItemRepository, estadisticaWidgetRepository, dashboardClonerMapper);
+
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setId(1L);
+        dashboard.setAppId(null); // appId null com en l'error
+        dashboard.setEntornId(1L);
+
+        EstadisticaSimpleWidgetEntity originalWidget = new EstadisticaSimpleWidgetEntity();
+        originalWidget.setId(100L);
+        originalWidget.setAppId(10L);
+        originalWidget.setTitol("Widget Simple");
+
+        when(estadisticaWidgetRepository.findById(100L)).thenReturn(Optional.of(originalWidget));
+        when(dashboardItemRepository.save(any(DashboardItemEntity.class))).thenAnswer(invocation -> {
+            DashboardItemEntity item = invocation.getArgument(0);
+            ReflectionTestUtils.setField(item, "id", 500L);
+            return item;
+        });
+
+        es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.CloneAndAddWidgetParams params =
+            new es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.CloneAndAddWidgetParams();
+        params.setWidgetId(100L);
+        params.setEntornId(1L);
+        params.setPosX(2);
+        params.setPosY(3);
+        params.setWidth(4);
+        params.setHeight(5);
+
+        // Act
+        DashboardItem result = action.exec(Dashboard.CLONE_AND_ADD_WIDGET_ACTION, dashboard, params);
+
+        // Assert
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(500L);
+        assertThat(result.getEntornId()).isEqualTo(1L);
+        assertThat(result.getWidget()).isNotNull();
+
+        verify(estadisticaWidgetRepository).save(any(EstadisticaWidgetEntity.class));
+        verify(dashboardItemRepository).save(any(DashboardItemEntity.class));
+    }
+
+    @Test
+    @DisplayName("CloneAndAddWidgetAction: calcula automàticament posX i posY quan són nulls")
+    void cloneAndAddWidgetAction_quanCoordsNull_llavorsCalculaEspaiLliure() throws Exception {
+        // Arrange
+        DashboardItemTitolHelper dashboardItemTitolHelperMock = org.mockito.Mockito.mock(DashboardItemTitolHelper.class);
+        DashboardHelper.CloneAndAddWidgetAction action = new DashboardHelper.CloneAndAddWidgetAction(
+            estadisticaClientHelper, dashboardItemRepository, estadisticaWidgetRepository, dashboardClonerMapper, dashboardItemTitolHelperMock);
+
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setId(1L);
+        dashboard.setAppId(10L);
+        dashboard.setEntornId(1L);
+
+        EstadisticaSimpleWidgetEntity originalWidget = new EstadisticaSimpleWidgetEntity();
+        originalWidget.setId(100L);
+        originalWidget.setAppId(10L);
+        originalWidget.setTitol("Widget Simple");
+
+        when(estadisticaWidgetRepository.findById(100L)).thenReturn(Optional.of(originalWidget));
+        when(dashboardItemTitolHelperMock.findFirstAvailableSpace(1L, 3, 3))
+            .thenReturn(new DashboardItemTitolHelper.GridPosition(6, 0));
+        when(dashboardItemRepository.save(any(DashboardItemEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.CloneAndAddWidgetParams params =
+            new es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.CloneAndAddWidgetParams();
+        params.setWidgetId(100L);
+        params.setEntornId(1L);
+        params.setPosX(null);
+        params.setPosY(null);
+        params.setWidth(3);
+        params.setHeight(3);
+
+        // Act
+        DashboardItem result = action.exec(Dashboard.CLONE_AND_ADD_WIDGET_ACTION, dashboard, params);
+
+        // Assert
+        assertThat(result).isNotNull();
+        assertThat(result.getPosX()).isEqualTo(6);
+        assertThat(result.getPosY()).isEqualTo(0);
+        verify(dashboardItemTitolHelperMock).findFirstAvailableSpace(1L, 3, 3);
+    }
+
+    @Test
+    @DisplayName("CloneAndAddWidgetAction: llança ActionExecutionException quan widgetId és null")
+    void cloneAndAddWidgetAction_quanWidgetIdNull_llavorsLlancaActionExecutionException() {
+        // Arrange
+        DashboardHelper.CloneAndAddWidgetAction action = new DashboardHelper.CloneAndAddWidgetAction(
+            estadisticaClientHelper, dashboardItemRepository, estadisticaWidgetRepository, dashboardClonerMapper);
+
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setId(1L);
+
+        es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.CloneAndAddWidgetParams params =
+            new es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.CloneAndAddWidgetParams();
+        params.setWidgetId(null);
+
+        // Act & Assert
+        assertThatThrownBy(() -> action.exec(Dashboard.CLONE_AND_ADD_WIDGET_ACTION, dashboard, params))
+            .isInstanceOf(ActionExecutionException.class)
+            .hasMessageContaining("widgetId is required");
+    }
+
+    @Test
+    @DisplayName("CloneAndAddWidgetAction: llança ActionExecutionException quan el widget no existeix")
+    void cloneAndAddWidgetAction_quanWidgetNoExisteix_llavorsLlancaActionExecutionException() {
+        // Arrange
+        DashboardHelper.CloneAndAddWidgetAction action = new DashboardHelper.CloneAndAddWidgetAction(
+            estadisticaClientHelper, dashboardItemRepository, estadisticaWidgetRepository, dashboardClonerMapper);
+
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setId(1L);
+
+        when(estadisticaWidgetRepository.findById(999L)).thenReturn(Optional.empty());
+
+        es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.CloneAndAddWidgetParams params =
+            new es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.CloneAndAddWidgetParams();
+        params.setWidgetId(999L);
+
+        // Act & Assert
+        assertThatThrownBy(() -> action.exec(Dashboard.CLONE_AND_ADD_WIDGET_ACTION, dashboard, params))
+            .isInstanceOf(ActionExecutionException.class)
+            .hasMessageContaining("Original widget not found");
+    }
+
+    @Test
+    @DisplayName("CloneAndAddWidgetAction: quan el widget té overrides visuals, personalitzat s'estableix a true")
+    void cloneAndAddWidgetAction_quanWidgetTeVisualOverrides_llavorsPersonalitzatEsCert() {
+        // Arrange
+        AtributsVisualsHelper atributsVisualsHelper = new AtributsVisualsHelper();
+        DashboardHelper.CloneAndAddWidgetAction action = new DashboardHelper.CloneAndAddWidgetAction(
+            estadisticaClientHelper, dashboardItemRepository, estadisticaWidgetRepository, dashboardClonerMapper, null, atributsVisualsHelper);
+
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setId(1L);
+        dashboard.setAppId(10L);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setTitol("Widget Amb Overrides");
+        widget.setAppId(10L);
+        widget.setAtributsVisualsJson("{\"colorText\":\"#123456\",\"colorFons\":\"#abcdef\"}");
+
+        when(estadisticaWidgetRepository.findById(100L)).thenReturn(Optional.of(widget));
+        when(estadisticaWidgetRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(dashboardItemRepository.save(any(DashboardItemEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.CloneAndAddWidgetParams params =
+            new es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.CloneAndAddWidgetParams();
+        params.setWidgetId(100L);
+        params.setEntornId(1L);
+
+        // Act
+        DashboardItem result = action.exec(Dashboard.CLONE_AND_ADD_WIDGET_ACTION, dashboard, params);
+
+        // Assert
+        assertThat(result).isNotNull();
+        assertThat(result.getPersonalitzat()).isTrue();
+    }
+
+    @Test
+    @DisplayName("CloneAndAddWidgetAction: quan el widget NO té overrides visuals, personalitzat és null/false")
+    void cloneAndAddWidgetAction_quanWidgetNoTeVisualOverrides_llavorsPersonalitzatEsFals() {
+        // Arrange
+        AtributsVisualsHelper atributsVisualsHelper = new AtributsVisualsHelper();
+        DashboardHelper.CloneAndAddWidgetAction action = new DashboardHelper.CloneAndAddWidgetAction(
+            estadisticaClientHelper, dashboardItemRepository, estadisticaWidgetRepository, dashboardClonerMapper, null, atributsVisualsHelper);
+
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setId(1L);
+        dashboard.setAppId(10L);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setTitol("Widget Sense Overrides");
+        widget.setAppId(10L);
+        widget.setAtributsVisualsJson("{}");
+
+        when(estadisticaWidgetRepository.findById(100L)).thenReturn(Optional.of(widget));
+        when(estadisticaWidgetRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(dashboardItemRepository.save(any(DashboardItemEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.CloneAndAddWidgetParams params =
+            new es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.CloneAndAddWidgetParams();
+        params.setWidgetId(100L);
+        params.setEntornId(1L);
+
+        // Act
+        DashboardItem result = action.exec(Dashboard.CLONE_AND_ADD_WIDGET_ACTION, dashboard, params);
+
+        // Assert
+        assertThat(result).isNotNull();
+        assertThat(result.getPersonalitzat()).isNull();
+    }
+
+    @Test
+    @DisplayName("CloneDashboardAction: quan un item clonat té un widget amb overrides visuals, s'estableix personalitzat a true")
+    void cloneDashboardAction_quanItemTeWidgetAmbOverrides_llavorsPersonalitzatEsCert() {
+        // Arrange
+        AtributsVisualsHelper atributsVisualsHelper = new AtributsVisualsHelper();
+        DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
+            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository,
+            dashboardFiltreRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper, atributsVisualsHelper);
+
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setId(1L);
+        dashboard.setTitol("Original Dashboard");
+        dashboard.setAppId(10L);
+        dashboard.setEntornId(20L);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setTitol("Widget Overrides");
+        widget.setAppId(10L);
+        widget.setAtributsVisualsJson("{\"icona\":\"TrendingUp\"}");
+
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setId(50L);
+        item.setDashboard(dashboard);
+        item.setWidget(widget);
+        item.setPersonalitzat(false); // Estava a false però té visual overrides
+        item.setEntornId(20L);
+
+        dashboard.setItems(List.of(item));
+
+        when(dashboardRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(estadisticaWidgetRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        // Act
+        action.exec(Dashboard.CLONE_ACTION, dashboard, null);
+
+        // Assert
+        verify(dashboardItemRepository).saveAll(argThat((List<DashboardItemEntity> items) ->
+            items != null && items.size() == 1 && Boolean.TRUE.equals(items.get(0).getPersonalitzat())
+        ));
     }
 }

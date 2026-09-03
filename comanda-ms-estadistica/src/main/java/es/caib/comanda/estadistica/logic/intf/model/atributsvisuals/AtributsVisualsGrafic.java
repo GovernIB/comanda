@@ -104,13 +104,13 @@ public class AtributsVisualsGrafic extends AtributsVisuals implements Serializab
     @Override
     public boolean hasOverrides() {
         return hasBaseOverrides()
-            || colorsPaleta != null || mostrarReticula != null
+            || isNotEmpty(colorsPaleta) || mostrarReticula != null
             || barStacked != null || barHorizontal != null
             || lineShowPoints != null || lineSmooth != null || lineWidth != null || area != null
             || pieDonut != null || pieShowLabels != null
             || outerRadius != null || innerRadius != null || labelSize != null
-            || gaugeMin != null || gaugeMax != null || gaugeColors != null || gaugeRangs != null
-            || heatmapColors != null || heatmapMinValue != null || heatmapMaxValue != null;
+            || gaugeMin != null || gaugeMax != null || isNotEmpty(gaugeColors) || isNotEmpty(gaugeRangs)
+            || isNotEmpty(heatmapColors) || heatmapMinValue != null || heatmapMaxValue != null;
     }
 
 }

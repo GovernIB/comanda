@@ -80,6 +80,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     private final DashboardRepository dashboardRepository;
     private final DashboardTitolRepository dashboardTitolRepository;
     private final DashboardItemRepository dashboardItemRepository;
+    private final DashboardFiltreRepository dashboardFiltreRepository;
     private final PlantillaRepository plantillaRepository;
     private final EstadisticaWidgetRepository estadisticaWidgetRepository;
     private final DashboardStyleResolverHelper dashboardStyleResolverHelper;
@@ -87,6 +88,21 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     private final AuthenticationHelper authenticationHelper;
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     private final AclServiceClient aclServiceClient;
+    private final DashboardItemTitolHelper dashboardItemTitolHelper;
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @FieldNameConstants
+    public static class CloneAndAddWidgetParams implements Serializable {
+        @NotNull private Long widgetId;
+        @NotNull private Long entornId;
+        private Integer posX;
+        private Integer posY;
+        private Integer width;
+        private Integer height;
+    }
 
     @PostConstruct
     public void init() {
@@ -94,7 +110,8 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
         register(Dashboard.WIDGETS_REPORT, new InformeWidgets());
         register(Dashboard.DASHBOARD_EXPORT, new DashboardExportReportGenerator());
         register(Dashboard.DASHBOARD_IMPORT, new DashboardImportActionExecutor());
-        register(Dashboard.CLONE_ACTION, (ActionExecutor<DashboardEntity, ?, ?>) new DashboardHelper.CloneDashboardAction(estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper));
+        register(Dashboard.CLONE_ACTION, (ActionExecutor<DashboardEntity, ?, ?>) new DashboardHelper.CloneDashboardAction(estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, dashboardFiltreRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper, atributsVisualsHelper));
+        register(Dashboard.CLONE_AND_ADD_WIDGET_ACTION, new DashboardHelper.CloneAndAddWidgetAction(estadisticaClientHelper, dashboardItemRepository, estadisticaWidgetRepository, dashboardClonerMapper, dashboardItemTitolHelper, atributsVisualsHelper));
     }
 
     @Override

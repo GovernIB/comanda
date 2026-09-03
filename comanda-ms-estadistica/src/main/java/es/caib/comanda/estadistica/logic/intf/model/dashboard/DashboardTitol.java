@@ -3,8 +3,10 @@ package es.caib.comanda.estadistica.logic.intf.model.dashboard;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.Plantilla;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
+import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.Getter;
@@ -52,10 +54,14 @@ import javax.validation.constraints.NotNull;
                         roles = { BaseConfig.ROLE_CONSULTA },
                         grantedPermissions = { PermissionEnum.READ }
                 )
+        },
+        artifacts = {
+                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = DashboardTitol.DUPLICATE_ACTION, requiresId = true),
         }
 )
 public class DashboardTitol extends BaseResource<Long> {
 
+    public final static String DUPLICATE_ACTION = "duplicate";
     public final static String WIDGET_REPORT = "widget_data";
 
 
