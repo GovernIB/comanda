@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>Silent check-sso</title>
+</head>
+<body>
+<script>
+    // Pàgina mínima requerida per Keycloak per confinar la comprovació periòdica de la sessió SSO
+    // (checkLoginIframe) a un iframe ocult, evitant que faci un redirect de tota la finestra.
+    // Vegeu: https://www.keycloak.org/securing-apps/javascript-adapter
+    parent.postMessage(location.href, location.origin);
+</script>
+</body>
+</html>

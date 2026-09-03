@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useEffect, useMemo, useRef} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import {Layout, Layouts, Responsive, WidthProvider} from 'react-grid-layout';
 import {isEqual} from 'lodash';
 import SimpleWidgetVisualization from './SimpleWidgetVisualization.tsx';
@@ -196,6 +196,32 @@ export const dashboardRowHeight = DASHBOARD_DESIGN_WIDTH / horizontalSubdivision
  * - 'fit': el canvas s'escala (cap amunt o cap avall) per ocupar sempre tot l'ample disponible.
  */
 export type DashboardLargeScreenMode = 'centered' | 'fit';
+
+/**
+ * Recorda, entre sessions, la preferència de l'usuari sobre `DashboardLargeScreenMode` (escalar per
+ * ajustar-se a la pantalla, per defecte, o mida real de disseny -1920px- centrada). `storageKey` permet que
+ * cada pantalla (visualització, disseny...) recordi la seva pròpia preferència de manera independent.
+ */
+export const useStoredLargeScreenMode = (
+    storageKey: string
+): [DashboardLargeScreenMode, (mode: DashboardLargeScreenMode) => void] => {
+    const [largeScreenMode, setLargeScreenModeState] = useState<DashboardLargeScreenMode>(() => {
+        try {
+            return localStorage.getItem(storageKey) === 'centered' ? 'centered' : 'fit';
+        } catch {
+            return 'fit';
+        }
+    });
+    const setLargeScreenMode = (mode: DashboardLargeScreenMode) => {
+        setLargeScreenModeState(mode);
+        try {
+            localStorage.setItem(storageKey, mode);
+        } catch {
+            // localStorage no disponible (mode privat, etc.): es descarta silenciosament
+        }
+    };
+    return [largeScreenMode, setLargeScreenMode];
+};
 
 /**
  * Envolta el contingut del dashboard (canvas de graella + overlay) en un contenidor d'amplada fixa

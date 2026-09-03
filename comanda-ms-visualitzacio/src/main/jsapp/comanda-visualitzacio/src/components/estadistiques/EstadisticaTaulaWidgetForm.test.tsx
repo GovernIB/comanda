@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import EstadisticaTaulaWidgetForm from './EstadisticaTaulaWidgetForm';
+import EstadisticaTaulaWidgetForm, { TAULA_OVERRIDE_FIELDS, hasVisualOverrides } from './EstadisticaTaulaWidgetForm';
 
 const mocks = vi.hoisted(() => ({
     useFormContextMock: vi.fn(),
@@ -42,6 +42,10 @@ const mocks = vi.hoisted(() => ({
                         mostrarVoraTaula: 'Mostrar vora taula',
                         colorVoraTaula: 'Color vora taula',
                         ampleVoraTaula: 'Ample vora taula',
+                        compacte: 'Taula compacta',
+                        midaFontTitol: 'Mida títol',
+                        midaFontDescripcio: 'Mida descripció',
+                        midaFontTaula: 'Mida font taula',
                     },
                 },
                 plantilla: {
@@ -201,5 +205,41 @@ describe('EstadisticaTaulaWidgetForm', () => {
         expect(mocks.setFieldValueMock).toHaveBeenCalledWith('columnaOrdenacio', null);
         expect(mocks.setFieldValueMock).toHaveBeenCalledWith('direccioOrdenacio', null);
         expect(mocks.setFieldValueMock).toHaveBeenCalledWith('limitResultats', null);
+    });
+
+    it('EstadisticaTaulaWidgetForm_quanEsRenderitza_mostraElCampCompacte', () => {
+        // El selector de densitat (estàndard/compacte) ha d'estar sempre present al formulari de taula.
+        mocks.useFormContextMock.mockReturnValue({
+            data: {},
+            apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
+        });
+
+        render(<EstadisticaTaulaWidgetForm />);
+
+        expect(screen.getByTestId('field-compacte')).toBeInTheDocument();
+    });
+
+    it('TAULA_OVERRIDE_FIELDS_inclouCompacte_iHasVisualOverridesElDetecta', () => {
+        // "compacte" ha de comptar com a sobreescriptura de la plantilla (mostra l'indicador de "personalitzat").
+        expect(TAULA_OVERRIDE_FIELDS).toContain('compacte');
+        expect(hasVisualOverrides({ compacte: true })).toBe(true);
+        expect(hasVisualOverrides({})).toBe(false);
+    });
+
+    it('EstadisticaTaulaWidgetForm_quanEsRenderitza_mostraElCampMidaFontTaula', () => {
+        // El camp de mida de font de la taula ha d'estar sempre present al formulari.
+        mocks.useFormContextMock.mockReturnValue({
+            data: {},
+            apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
+        });
+
+        render(<EstadisticaTaulaWidgetForm />);
+
+        expect(screen.getByTestId('field-midaFontTaula')).toBeInTheDocument();
+    });
+
+    it('TAULA_OVERRIDE_FIELDS_inclouMidaFontTaula_iHasVisualOverridesElDetecta', () => {
+        expect(TAULA_OVERRIDE_FIELDS).toContain('midaFontTaula');
+        expect(hasVisualOverrides({ midaFontTaula: 18 })).toBe(true);
     });
 });

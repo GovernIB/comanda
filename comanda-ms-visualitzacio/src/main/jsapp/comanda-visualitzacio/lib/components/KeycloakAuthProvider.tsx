@@ -14,6 +14,14 @@ type KeycloakAuthProviderProps = React.PropsWithChildren & {
     offlineAccess?: true;
     /** Indica si s'ha de forçar el valor 'check-sso' a l'onLoad */
     forceCheckSso?: true;
+    /**
+     * URL (relativa o absoluta) d'una pàgina estàtica mínima (vegeu public/silent-check-sso.html) que confina la
+     * comprovació periòdica de la sessió SSO (checkLoginIframe, per defecte cada 5 s) a un iframe ocult. Sense
+     * això, quan aquesta comprovació detecta la sessió com a "canviada", keycloak-js fa un redirect de tota la
+     * finestra cap a l'endpoint /auth i tornada, que es percep com un refresc de la interfície sense interacció
+     * de l'usuari. Molt recomanable configurar-ho sempre que s'usi 'check-sso'.
+     */
+    silentCheckSsoRedirectUri?: string;
     /** Indica si s'han d'imprimir a la consola missatges de depuració */
     debug?: true;
 };
@@ -23,6 +31,7 @@ const kcInit = async (
     mandatory: boolean | undefined,
     offlineAccess: boolean | undefined,
     forceCheckSso: boolean | undefined,
+    silentCheckSsoRedirectUri: string | undefined,
     debug: boolean | undefined,
     logConsole: LogConsoleType
 ) => {
@@ -30,6 +39,11 @@ const kcInit = async (
         const isAuthenticated = await keycloak.init({
             onLoad: forceCheckSso ? 'check-sso' : mandatory ? 'login-required' : 'check-sso',
             scope: offlineAccess ? 'offline_access' : undefined,
+            silentCheckSsoRedirectUri,
+            // Sense això, si el navegador bloqueja les cookies de tercers, keycloak-js sobreescriu en
+            // silenci silentCheckSsoRedirectUri a 'false' i torna a caure en el redirect de finestra
+            // completa que precisament volem evitar.
+            silentCheckSsoFallback: silentCheckSsoRedirectUri ? false : undefined,
             enableLogging: debug,
         });
         debug && logConsole.debug('Initialized', '(isAuthenticated=' + isAuthenticated + ')');
@@ -44,6 +58,7 @@ const kcNewInstance = (
     mandatory: boolean | undefined,
     offlineToken: boolean | undefined,
     forceCheckSso: boolean | undefined,
+    silentCheckSsoRedirectUri: string | undefined,
     setIsLoading: React.Dispatch<React.SetStateAction<boolean>>,
     setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>,
     setToken: (token: string | undefined) => void,
@@ -52,7 +67,7 @@ const kcNewInstance = (
     logConsole: LogConsoleType
 ) => {
     const keycloak = new Keycloak(authConfig);
-    kcInit(keycloak, mandatory, offlineToken, forceCheckSso, debug, logConsole);
+    kcInit(keycloak, mandatory, offlineToken, forceCheckSso, silentCheckSsoRedirectUri, debug, logConsole);
     keycloak.onReady = (isAuthenticated) => {
         debug && logConsole.debug('Callback onReady', isAuthenticated);
         setIsLoading(false);
@@ -108,7 +123,7 @@ const kcNewInstance = (
 };
 
 export const AuthProvider = (props: KeycloakAuthProviderProps) => {
-    const { config, mandatory, offlineAccess, forceCheckSso, debug, children } = props;
+    const { config, mandatory, offlineAccess, forceCheckSso, silentCheckSsoRedirectUri, debug, children } = props;
     const logConsole = useLogConsole(LOG_PREFIX);
     const [isLoading, setIsLoading] = React.useState<boolean>(true);
     const [isAuthenticated, setIsAuthenticated] = React.useState<boolean>(false);
@@ -123,6 +138,7 @@ export const AuthProvider = (props: KeycloakAuthProviderProps) => {
                 mandatory,
                 offlineAccess,
                 forceCheckSso,
+                silentCheckSsoRedirectUri,
                 setIsLoading,
                 setIsAuthenticated,
                 (token: string | undefined) => (tokenRef.current = token),

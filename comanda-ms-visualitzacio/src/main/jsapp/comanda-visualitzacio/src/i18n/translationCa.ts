@@ -1164,6 +1164,7 @@ const translationCa = {
                 ampleVora: "Ample de la vora",
                 midaFontTitol: "Mida de la font del títol",
                 midaFontDescripcio: "Mida de la font de la descripció",
+                midaFontTaula: "Mida de la font de la taula",
                 midaFontValor: "Mida de la font del valor",
                 midaFontUnitats: "Mida de la font de les unitats",
                 midaFontCanviPercentual: "Mida de la font del canvi percentual",
@@ -1202,6 +1203,7 @@ const translationCa = {
                 mostrarSeparadorVertical: "Mostrar separador vertical",
                 colorSeparadorVertical: "Color del separador",
                 ampleSeparadorVertical: "Ample del separador",
+                compacte: "Taula compacta (marges de cel·la menors)",
             },
             editorPaleta: {
                 title: "Editor de Paleta de Colors",

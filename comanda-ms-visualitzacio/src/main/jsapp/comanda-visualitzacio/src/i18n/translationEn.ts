@@ -1164,6 +1164,7 @@ const translationEn: translationResourcesType = {
                 ampleVora: "Border width",
                 midaFontTitol: "Title font size",
                 midaFontDescripcio: "Description font size",
+                midaFontTaula: "Table font size",
                 midaFontValor: "Value font size",
                 midaFontUnitats: "Units font size",
                 midaFontCanviPercentual: "Percentual change font size",
@@ -1202,6 +1203,7 @@ const translationEn: translationResourcesType = {
                 mostrarSeparadorVertical: "Show vertical separator",
                 colorSeparadorVertical: "Separator color",
                 ampleSeparadorVertical: "Separator width",
+                compacte: "Compact table (smaller cell margins)",
             },
             editorPaleta: {
                 title: "Color Palette Editor",

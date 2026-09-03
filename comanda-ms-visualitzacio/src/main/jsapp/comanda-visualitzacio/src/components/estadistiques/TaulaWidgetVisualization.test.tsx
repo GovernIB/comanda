@@ -146,6 +146,60 @@ describe('TaulaWidgetVisualization', () => {
         expect(rows.length).toBe(1);
     });
 
+    it('TaulaWidgetVisualization_quanTeMidaFontTitolIDescripcio_lesAplicaAlTitolIALaDescripcio', () => {
+        // Regressió: midaFontTitol/midaFontDescripcio es declaraven a les props però no s'aplicaven mai.
+        renderComponent(
+            <TaulaWidgetVisualization
+                titol="Resum"
+                descripcio="Dades agregades"
+                columnes={[{ id: 'name', label: 'Nom' }]}
+                files={[{ name: 'Fila A', dimensio: 'fila-a' }]}
+                midaFontTitol={28}
+                midaFontDescripcio={18}
+            />
+        );
+
+        expect(screen.getByText('Resum')).toHaveStyle({ fontSize: '28px' });
+        expect(screen.getByText('Dades agregades')).toHaveStyle({ fontSize: '18px' });
+    });
+
+    it('TaulaWidgetVisualization_quanTeMidaFontTaula_LAplicaALaCapcaleraIALesFiles', () => {
+        renderComponent(
+            <TaulaWidgetVisualization
+                columnes={[{ id: 'name', label: 'Nom' }]}
+                files={[{ name: 'Fila A', dimensio: 'fila-a' }]}
+                midaFontTaula={20}
+            />
+        );
+
+        expect(screen.getByText('Nom')).toHaveStyle({ fontSize: '20px' });
+        expect(screen.getByText('Fila A')).toHaveStyle({ fontSize: '20px' });
+    });
+
+    it('TaulaWidgetVisualization_quanCompacteEsTrue_usaLaMidaCompactaDeLaTaula', () => {
+        // La versió compacta ha d'usar la mida "small" de MUI (marges de cel·la menors).
+        renderComponent(
+            <TaulaWidgetVisualization
+                columnes={[{ id: 'name', label: 'Nom' }]}
+                files={[{ name: 'Fila A', dimensio: 'fila-a' }]}
+                compacte={true}
+            />
+        );
+
+        expect(screen.getByText('Fila A').closest('td')).toHaveClass('MuiTableCell-sizeSmall');
+    });
+
+    it('TaulaWidgetVisualization_quanCompacteEsFalsIPreviewEsFals_usaLaMidaEstandard', () => {
+        renderComponent(
+            <TaulaWidgetVisualization
+                columnes={[{ id: 'name', label: 'Nom' }]}
+                files={[{ name: 'Fila A', dimensio: 'fila-a' }]}
+            />
+        );
+
+        expect(screen.getByText('Fila A').closest('td')).toHaveClass('MuiTableCell-sizeMedium');
+    });
+
     it('TaulaWidgetVisualization_quanUsaDadesPerDefecte_renderitzaCorrectament', () => {
         renderComponent(
             <TaulaWidgetVisualization

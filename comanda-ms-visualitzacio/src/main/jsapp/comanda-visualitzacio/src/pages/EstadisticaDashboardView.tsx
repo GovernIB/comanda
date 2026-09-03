@@ -2,9 +2,9 @@ import MenuIcon from '@mui/icons-material/Menu';
 import MuiToolbar from '@mui/material/Toolbar';
 import { Alert, Box, Button, Icon, ToggleButton, Tooltip, Typography } from '@mui/material';
 import {
-    DashboardLargeScreenMode,
     DashboardReactGridLayout,
     useMapDashboardItems,
+    useStoredLargeScreenMode,
 } from '../components/estadistiques/DashboardReactGridLayout.tsx';
 import { BasePage, MuiDataGrid, useCloseDialogButtons, useResourceApiService } from 'reactlib';
 import { useTheme } from '@mui/material/styles';
@@ -24,29 +24,6 @@ import { DashboardFiltreSeleccio } from '../types/dashboardFiltre.model.ts';
 const LAST_VIEWED_STORAGE_KEY = 'lastViewedDashboardId';
 const LARGE_SCREEN_MODE_STORAGE_KEY = 'comanda.dashboardView.largeScreenMode';
 const NO_DASHBOARD_FOUND = 'NO_DASHBOARD_FOUND';
-
-/**
- * Recorda, entre sessions, si l'usuari prefereix veure els dashboards escalats per ocupar tot l'ample
- * disponible (per defecte) o a mida real de disseny (1920px, centrats) — vegeu DashboardLargeScreenMode.
- */
-function useStoredLargeScreenMode(): [DashboardLargeScreenMode, (mode: DashboardLargeScreenMode) => void] {
-    const [largeScreenMode, setLargeScreenModeState] = useState<DashboardLargeScreenMode>(() => {
-        try {
-            return localStorage.getItem(LARGE_SCREEN_MODE_STORAGE_KEY) === 'centered' ? 'centered' : 'fit';
-        } catch {
-            return 'fit';
-        }
-    });
-    const setLargeScreenMode = (mode: DashboardLargeScreenMode) => {
-        setLargeScreenModeState(mode);
-        try {
-            localStorage.setItem(LARGE_SCREEN_MODE_STORAGE_KEY, mode);
-        } catch {
-            // localStorage no disponible (mode privat, etc.): es descarta silenciosament
-        }
-    };
-    return [largeScreenMode, setLargeScreenMode];
-}
 
 function useDashboardSelect(currentDashboardId: string | number | null) {
     const { t } = useTranslation();
@@ -122,7 +99,7 @@ const EstadisticaDashboardView = () => {
         setFiltreSeleccio({});
     }, [dashboardId]);
     const { dashboardWidgets, loadingWidgetPositions } = useDashboardWidgets(dashboardId, temaFosc, filtreSeleccio);
-    const [largeScreenMode, setLargeScreenMode] = useStoredLargeScreenMode();
+    const [largeScreenMode, setLargeScreenMode] = useStoredLargeScreenMode(LARGE_SCREEN_MODE_STORAGE_KEY);
     const { isReady: apiDashboardIsReady, find: findDashboard } =
         useResourceApiService('dashboard');
     const mappedDashboardItems = useMapDashboardItems(dashboardWidgets);

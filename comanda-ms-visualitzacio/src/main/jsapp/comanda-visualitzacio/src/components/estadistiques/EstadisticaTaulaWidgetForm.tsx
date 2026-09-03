@@ -22,7 +22,7 @@ export const TAULA_OVERRIDE_FIELDS = [
     'mostrarVoraTaula', 'colorVoraTaula', 'ampleVoraTaula',
     'colorSeparadorHoritzontal', 'ampleSeparadorHoritzontal',
     'mostrarSeparadorVertical', 'colorSeparadorVertical', 'ampleSeparadorVertical',
-    'midaFontTitol', 'midaFontDescripcio',
+    'midaFontTitol', 'midaFontDescripcio', 'midaFontTaula', 'compacte',
 ];
 
 /** Indica si el widget té algun valor que sobreescrigui la plantilla (per mostrar l'indicador de "personalitzat") */
@@ -58,6 +58,7 @@ const EstadisticaTaulaWidgetForm: React.FC<EstadisticaTaulaWidgetFormProps> = ({
             // Taula
             colorTextTaula: data.colorTextTaula,
             colorFonsTaula: data.colorFonsTaula,
+            midaFontTaula: data.midaFontTaula,
             mostrarCapcalera: data.mostrarCapcalera ?? true,
             colorCapcalera: data.colorCapcalera,
             colorFonsCapcalera: data.colorFonsCapcalera,
@@ -73,6 +74,7 @@ const EstadisticaTaulaWidgetForm: React.FC<EstadisticaTaulaWidgetFormProps> = ({
             colorSeparadorVertical: data.colorSeparadorVertical,
             ampleSeparadorVertical: data.ampleSeparadorVertical,
             paginada: data.paginada,
+            compacte: data.compacte,
             columnesEstils: data.columnesEstils || [],
             cellesDestacades: data.cellesDestacades || [],
             midaFontTitol: data.midaFontTitol,
@@ -301,6 +303,13 @@ const EstadisticaTaulaWidgetForm: React.FC<EstadisticaTaulaWidgetFormProps> = ({
                         {t($ => $.page.widget.form.configTaula)}
                     </Typography>
                 </Grid>
+                <Grid size={12}>
+                    <FormField
+                        name="compacte"
+                        label={t($ => $.page.widget.atributsVisuals.compacte)}
+                        type="checkbox"
+                    />
+                </Grid>
                 <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
                     <FormField
                         name="colorTextTaula"
@@ -516,6 +525,14 @@ const EstadisticaTaulaWidgetForm: React.FC<EstadisticaTaulaWidgetFormProps> = ({
                     <FormField
                         name="midaFontDescripcio"
                         label={t($ => $.page.widget.atributsVisuals.midaFontDescripcio)}
+                        type="number"
+                        required={false}
+                    />
+                </Grid>
+                <Grid size={6} sx={{ backgroundColor: 'background.paper' }}>
+                    <FormField
+                        name="midaFontTaula"
+                        label={t($ => $.page.widget.atributsVisuals.midaFontTaula)}
                         type="number"
                         required={false}
                     />

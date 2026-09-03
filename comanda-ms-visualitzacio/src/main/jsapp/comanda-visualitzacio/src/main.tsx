@@ -26,7 +26,12 @@ const AuthProvider = isAuthUrlPresent() ? KeycloakAuthProvider : ContainerAuthPr
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <HelmetProvider>
-            <AuthProvider logoutUrl={import.meta.env.BASE_URL} config={getAuthConfig()} mandatory>
+            <AuthProvider
+                logoutUrl={import.meta.env.BASE_URL}
+                config={getAuthConfig()}
+                mandatory
+                silentCheckSsoRedirectUri={`${import.meta.env.BASE_URL}silent-check-sso.html`}
+            >
                 <ResourceApiProvider apiUrl={getEnvApiUrl()} userSessionActive>
                     <UserProvider>
                         <SseProvider>

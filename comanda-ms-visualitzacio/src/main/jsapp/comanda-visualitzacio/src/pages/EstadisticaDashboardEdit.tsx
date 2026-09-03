@@ -30,12 +30,15 @@ import {
     TableContainer,
     TableHead,
     TableRow,
+    Tooltip,
+    ToggleButton,
     Typography,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useContentDialog } from '../../lib/components/mui/Dialog.tsx';
 import TableBody from '@mui/material/TableBody';
 import { useDashboard, useDashboardFiltres, useDashboardWidgets } from '../hooks/dashboardRequests.ts';
+import { useStoredLargeScreenMode } from '../components/estadistiques/DashboardReactGridLayout.tsx';
 import { DASHBOARDS_PATH } from '../AppRoutes.tsx';
 import AddIcon from '@mui/icons-material/Add';
 import Icon from '@mui/material/Icon';
@@ -104,6 +107,8 @@ const defaultSizeAndPosition = {
     width: 3,
     height: 3,
 };
+
+const LARGE_SCREEN_MODE_STORAGE_KEY = 'comanda.dashboardEdit.largeScreenMode';
 
 const PANEL_COLLAPSED_STORAGE_PREFIX = 'comanda.dashboardEdit.panelCollapsed.';
 
@@ -199,6 +204,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
             forceRefreshDashboardWidgets();
         }
     };
+    const [largeScreenMode, setLargeScreenMode] = useStoredLargeScreenMode(LARGE_SCREEN_MODE_STORAGE_KEY);
     const [panelWidth, setPanelWidth] = useStoredPanelWidth('right', 440);
     const [panelCollapsed, setPanelCollapsed] = useStoredPanelCollapsed('right');
     const panelWidthRef = useRef(panelWidth);
@@ -553,6 +559,19 @@ const EstadisticaDashboardEdit: React.FC = () => {
                         <Box><WidgetsErrorAlert errorWidgets={errorDashboardWidgets} /></Box>
                     ) : undefined}
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Tooltip title={t($ => $.page.dashboards.view.largeScreenModeFit)}>
+                            <ToggleButton
+                                value="fit"
+                                size="small"
+                                selected={largeScreenMode === 'fit'}
+                                color="primary"
+                                onChange={() => setLargeScreenMode(largeScreenMode === 'fit' ? 'centered' : 'fit')}
+                                aria-label={t($ => $.page.dashboards.view.largeScreenModeFit)}
+                                sx={{ height: '32px' }}
+                            >
+                                <Icon fontSize="small">aspect_ratio</Icon>
+                            </ToggleButton>
+                        </Tooltip>
                         <Icon fontSize="small">light_mode</Icon>
                         <IOSSwitch
                             checked={designDarkMode}
@@ -591,10 +610,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                     multiSelectedItemIds={multiSelectedGridItemIds}
                                     dashboardEntornCodi={dashboardEntornCodi}
                                     backgroundColor={designDarkMode ? dashboard.colorFonsFosc : dashboard.colorFonsClar}
-                                    // Al disseny s'aprofita sempre tot l'ample disponible del canvas (a
-                                    // diferència de la visualització, on l'usuari pot triar veure el dashboard
-                                    // a mida real de disseny -1920px- centrat, vegeu EstadisticaDashboardView).
-                                    largeScreenMode="fit"
+                                    largeScreenMode={largeScreenMode}
                                     editable
                                 />
                             )}

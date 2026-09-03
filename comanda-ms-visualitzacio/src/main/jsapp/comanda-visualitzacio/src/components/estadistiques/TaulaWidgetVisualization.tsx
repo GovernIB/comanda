@@ -64,6 +64,8 @@ export interface TaulaWidgetVisualizationProps {
     // Taula
     colorTextTaula?: string;
     colorFonsTaula?: string;
+    /** Mida de la font del text de la taula (capçalera i files), en píxels */
+    midaFontTaula?: number;
     mostrarCapcalera?: boolean;
     colorCapcalera?: string;
     colorFonsCapcalera?: string;
@@ -79,6 +81,8 @@ export interface TaulaWidgetVisualizationProps {
     colorSeparadorVertical?: string;
     ampleSeparadorVertical?: number;
     paginada?: boolean;
+    /** Densitat de la taula: marges de cel·la menors quan és `true` */
+    compacte?: boolean;
 
     columnesEstils?: ColumnaEstil[];
     cellesDestacades?: CellaDestacada[];
@@ -119,6 +123,7 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
         ampleSeparadorVertical = 1,
         columnesEstils = [],
         cellesDestacades = [],
+        compacte = false,
         loading = false,
         preview = false,
         error = false,
@@ -127,7 +132,12 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
         senseAccesDades = false,
         onClick,
         dashboardEntornCodi,
+        midaFontTitol,
+        midaFontDescripcio,
+        midaFontTaula,
     } = props;
+
+    const taulaFontSize = midaFontTaula ? `${midaFontTaula}px` : undefined;
 
     const theme = useTheme();
 
@@ -240,6 +250,7 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
                 titol={titol}
                 entornCodi={entornCodi}
                 loading={loading}
+                midaFontTitol={midaFontTitol}
                 isWhiteBackground={isWhiteBackground}
                 backgroundColor={backgroundColor}
                 voraColor={voraColor}
@@ -265,7 +276,7 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
                             <TableContainer sx={{ height: '100%' }}>
                                 <Table
                                     stickyHeader
-                                    size={preview ? "small" : "medium"}
+                                    size={preview || compacte ? "small" : "medium"}
                                     sx={estils.tableContainer(mostrarVoraTaula, ampleVoraTaula, voraTaulaColor, taulaBgColor)}
                                 >
                                     {mostrarCapcalera && (
@@ -289,6 +300,7 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
                                                             fontWeight: '600',
                                                             color: textHeaderColor,
                                                             backgroundColor: headerBgColor,
+                                                            fontSize: taulaFontSize,
                                                         }}
                                                     >
                                                         {column.label}
@@ -323,6 +335,7 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
                                                             sx={{
                                                                 color: textTaulaColor,
                                                                 backgroundColor: taulaBgColor,
+                                                                fontSize: taulaFontSize,
                                                                 ...getCellStyle(column.id, rowIndex, value, row),
                                                             }}
                                                         >
@@ -342,6 +355,7 @@ const TaulaWidgetVisualization: React.FC<TaulaWidgetVisualizationProps> = (props
                         descripcio={descripcio}
                         textColor={textColor}
                         loading={loading}
+                        midaFontDescripcio={midaFontDescripcio}
                     />
                 </>
             )}

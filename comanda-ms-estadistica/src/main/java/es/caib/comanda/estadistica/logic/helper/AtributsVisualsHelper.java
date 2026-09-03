@@ -23,6 +23,7 @@ import java.lang.reflect.Type;
 public class AtributsVisualsHelper {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
+
     static {
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
@@ -35,21 +36,21 @@ public class AtributsVisualsHelper {
         try {
             Class<? extends AtributsVisuals> atributsVisualsType = entity.getAtributsVisualsType();
             AtributsVisuals atributsVisuals = objectMapper.readValue(
-                    entity.getAtributsVisualsJson(),
-                    new TypeReference<>() {
-                        @Override
-                        public Type getType() {
-                            return atributsVisualsType;
-                        }
+                entity.getAtributsVisualsJson(),
+                new TypeReference<>() {
+                    @Override
+                    public Type getType() {
+                        return atributsVisualsType;
                     }
+                }
             );
             return atributsVisuals;
         } catch (Exception e) {
             e.printStackTrace();
             throw new ObjectMappingException(
-                    EstadisticaWidgetEntity.class,
-                    EstadisticaWidget.class,
-                    "Error al deserialitzar la informació d'atributs visuals del widget: " + e.getMessage());
+                EstadisticaWidgetEntity.class,
+                EstadisticaWidget.class,
+                "Error al deserialitzar la informació d'atributs visuals del widget: " + e.getMessage());
         }
     }
 
@@ -58,21 +59,21 @@ public class AtributsVisualsHelper {
         try {
             Class<? extends AtributsVisuals> atributsVisualsType = entity.getWidget().getAtributsVisualsType();
             AtributsVisuals atributsVisuals = objectMapper.readValue(
-                    entity.getAtributsVisualsJson(),
-                    new TypeReference<>() {
-                        @Override
-                        public Type getType() {
-                            return atributsVisualsType;
-                        }
+                entity.getAtributsVisualsJson(),
+                new TypeReference<>() {
+                    @Override
+                    public Type getType() {
+                        return atributsVisualsType;
                     }
+                }
             );
             return atributsVisuals;
         } catch (Exception e) {
             e.printStackTrace();
             throw new ObjectMappingException(
-                    DashboardItemEntity.class,
-                    DashboardItem.class,
-                    "Error al deserialitzar la informació d'atributs visuals del dashboardItem: " + e.getMessage());
+                DashboardItemEntity.class,
+                DashboardItem.class,
+                "Error al deserialitzar la informació d'atributs visuals del dashboardItem: " + e.getMessage());
         }
     }
 
@@ -83,9 +84,9 @@ public class AtributsVisualsHelper {
         } catch (Exception e) {
             e.printStackTrace();
             throw new ObjectMappingException(
-                    AtributsVisuals.class,
-                    AtributsVisuals.class,
-                    "Error al serialitzar la informació d'atributs visuals: " + e.getMessage());
+                AtributsVisuals.class,
+                AtributsVisuals.class,
+                "Error al serialitzar la informació d'atributs visuals: " + e.getMessage());
         }
     }
 
@@ -95,7 +96,7 @@ public class AtributsVisualsHelper {
         }
         try {
             AtributsVisuals av = getAtributsVisuals(entity);
-            return av != null && av.hasVisualOverrides();
+            return av != null && av.hasOverrides();
         } catch (Exception e) {
             log.warn("Error verificant atributs visuals per al widget {}: {}", entity.getId(), e.getMessage());
             return true;

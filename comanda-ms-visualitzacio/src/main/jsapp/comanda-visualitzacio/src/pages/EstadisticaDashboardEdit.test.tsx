@@ -246,7 +246,11 @@ vi.mock('../hooks/dashboardRequests.ts', () => ({
     useDashboardFiltres: (id: string) => mocks.useDashboardFiltresMock(id),
 }));
 
-vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', () => ({
+vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', async () => {
+    const actual = await vi.importActual<typeof import('../components/estadistiques/DashboardReactGridLayout.tsx')>(
+        '../components/estadistiques/DashboardReactGridLayout.tsx'
+    );
+    return {
     DashboardReactGridLayout: ({
         dashboardId,
         editable,
@@ -330,7 +334,10 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', () => ({
         </div>
     ),
     useMapDashboardItems: (widgets: unknown[]) => mocks.useMapDashboardItemsMock(widgets),
-}));
+    // "Real" per validar el comportament de lectura/escriptura a localStorage.
+    useStoredLargeScreenMode: actual.useStoredLargeScreenMode,
+    };
+});
 
 vi.mock('../components/PageTitle.tsx', () => ({
     default: ({ title }: { title: string }) => <h1>{title}</h1>,
@@ -843,6 +850,47 @@ describe('EstadisticaDashboardEdit', () => {
             '[data-testid="right-panel-resize-handle"]'
         )?.parentElement as HTMLElement;
         expect(getComputedStyle(restoredHandle).width).toBe('500px');
+    });
+
+    it('EstadisticaDashboardEdit_perDefecte_usaElModeEscalatPerAjustarSe', async () => {
+        // Sense preferència guardada, el canvas de disseny s'ha de mostrar escalat per ocupar tot l'ample.
+        localStorage.clear();
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('dashboard-large-screen-mode')).toHaveTextContent('fit');
+        });
+
+        const toggle = screen.getByRole('button', { name: 'Escalar per ajustar-se a la pantalla' });
+        expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    it('EstadisticaDashboardEdit_enPremerElToggleDEscalat_passaAMidaRealCentradaIhoRecorda', async () => {
+        // Clicar el toggle (actiu per defecte) ha de commutar a mida real centrada i recordar-ho al
+        // localStorage, de manera independent de la preferència de la pantalla de visualització.
+        localStorage.clear();
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('dashboard-large-screen-mode')).toHaveTextContent('fit');
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Escalar per ajustar-se a la pantalla' }));
+
+        expect(screen.getByTestId('dashboard-large-screen-mode')).toHaveTextContent('centered');
+        expect(localStorage.getItem('comanda.dashboardEdit.largeScreenMode')).toBe('centered');
+    });
+
+    it('EstadisticaDashboardEdit_quanHiHaPreferenciaDEscalatGuardada_larespecta', async () => {
+        // Si l'usuari ja havia triat mida real centrada al disseny, s'ha de recordar entre sessions.
+        localStorage.clear();
+        localStorage.setItem('comanda.dashboardEdit.largeScreenMode', 'centered');
+
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('dashboard-large-screen-mode')).toHaveTextContent('centered');
+        });
     });
 
     it('EstadisticaDashboardEdit_quanEsConfirmaEliminarDesDelMenuContextual_esborraIRefrescaElDashboard', async () => {

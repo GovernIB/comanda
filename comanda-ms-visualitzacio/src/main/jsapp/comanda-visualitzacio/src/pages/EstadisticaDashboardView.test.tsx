@@ -91,29 +91,36 @@ vi.mock('../hooks/dashboardRequests.ts', () => ({
     useDashboardWidgets: (dashboardId: string | null) => mocks.useDashboardWidgetsMock(dashboardId),
 }));
 
-vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', () => ({
-    DashboardReactGridLayout: ({
-        dashboardId,
-        gridLayoutItems,
-        dashboardEntornCodi,
-        backgroundColor,
-        largeScreenMode,
-    }: {
-        dashboardId: number;
-        gridLayoutItems: unknown[];
-        dashboardEntornCodi?: string;
-        backgroundColor?: string;
-        largeScreenMode?: string;
-    }) => (
-        <div>
-            {`Grid ${dashboardId} (${gridLayoutItems.length})`}
-            {dashboardEntornCodi && <span data-testid="entorn-codi">{dashboardEntornCodi}</span>}
-            <span data-testid="background-color">{backgroundColor}</span>
-            <span data-testid="large-screen-mode">{largeScreenMode}</span>
-        </div>
-    ),
-    useMapDashboardItems: (widgets: unknown[]) => mocks.useMapDashboardItemsMock(widgets),
-}));
+vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', async () => {
+    const actual = await vi.importActual<typeof import('../components/estadistiques/DashboardReactGridLayout.tsx')>(
+        '../components/estadistiques/DashboardReactGridLayout.tsx'
+    );
+    return {
+        DashboardReactGridLayout: ({
+            dashboardId,
+            gridLayoutItems,
+            dashboardEntornCodi,
+            backgroundColor,
+            largeScreenMode,
+        }: {
+            dashboardId: number;
+            gridLayoutItems: unknown[];
+            dashboardEntornCodi?: string;
+            backgroundColor?: string;
+            largeScreenMode?: string;
+        }) => (
+            <div>
+                {`Grid ${dashboardId} (${gridLayoutItems.length})`}
+                {dashboardEntornCodi && <span data-testid="entorn-codi">{dashboardEntornCodi}</span>}
+                <span data-testid="background-color">{backgroundColor}</span>
+                <span data-testid="large-screen-mode">{largeScreenMode}</span>
+            </div>
+        ),
+        useMapDashboardItems: (widgets: unknown[]) => mocks.useMapDashboardItemsMock(widgets),
+        // "Real" per validar el comportament de lectura/escriptura a localStorage (mockejat més avall).
+        useStoredLargeScreenMode: actual.useStoredLargeScreenMode,
+    };
+});
 
 vi.mock('../../lib/components/mui/Dialog.tsx', () => ({
     default: ({

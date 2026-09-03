@@ -30,6 +30,7 @@ public class AtributsVisualsTaula extends AtributsVisuals implements Serializabl
     private String colorTextTaula;        // Color del text de la taula (opcional)
     @Size(max = 8)
     private String colorFonsTaula;        // Color de fons per la taula (opcional)
+    private Integer midaFontTaula;        // Mida de la font del text de la taula (capçalera i files)
 
     private Boolean mostrarCapcalera;     // Indica si s'ha de mostrar la capçalera de la taula
     @Size(max = 8)
@@ -58,6 +59,8 @@ public class AtributsVisualsTaula extends AtributsVisuals implements Serializabl
 
     private Boolean paginada;
 
+    private Boolean compacte;             // Indica si la taula s'ha de mostrar en versió compacta (marges de cel·la menors)
+
     // Configuració de columnes
     private List<ColumnaEstil> columnesEstils;        // Estils per a les columnes
 
@@ -80,6 +83,7 @@ public class AtributsVisualsTaula extends AtributsVisuals implements Serializabl
         this.ampleVora = mergeField(this.ampleVora, other.getAmpleVora());
         this.colorTextTaula = mergeField(this.colorTextTaula, other.getColorTextTaula());
         this.colorFonsTaula = mergeField(this.colorFonsTaula, other.getColorFonsTaula());
+        this.midaFontTaula = mergeField(this.midaFontTaula, other.getMidaFontTaula());
         this.mostrarCapcalera = mergeField(this.mostrarCapcalera, other.getMostrarCapcalera());
         this.colorCapcalera = mergeField(this.colorCapcalera, other.getColorCapcalera());
         this.colorFonsCapcalera = mergeField(this.colorFonsCapcalera, other.getColorFonsCapcalera());
@@ -95,6 +99,7 @@ public class AtributsVisualsTaula extends AtributsVisuals implements Serializabl
         this.colorSeparadorVertical = mergeField(this.colorSeparadorVertical, other.getColorSeparadorVertical());
         this.ampleSeparadorVertical = mergeField(this.ampleSeparadorVertical, other.getAmpleSeparadorVertical());
         this.paginada = mergeField(this.paginada, other.getPaginada());
+        this.compacte = mergeField(this.compacte, other.getCompacte());
 
         this.columnesEstils = mergeField(this.columnesEstils, other.getColumnesEstils());
         this.cellesDestacades = mergeField(this.cellesDestacades, other.getCellesDestacades());
@@ -105,13 +110,14 @@ public class AtributsVisualsTaula extends AtributsVisuals implements Serializabl
     @Override
     public boolean hasOverrides() {
         return hasBaseOverrides()
-            || isNotEmpty(colorTextTaula) || isNotEmpty(colorFonsTaula)
+            || isNotEmpty(colorTextTaula) || isNotEmpty(colorFonsTaula) || midaFontTaula != null
             || mostrarAlternancia != null || isNotEmpty(colorAlternancia)
             || mostrarCapcalera != null || isNotEmpty(colorCapcalera) || isNotEmpty(colorFonsCapcalera)
             || mostrarVoraTaula != null || isNotEmpty(colorVoraTaula) || ampleVoraTaula != null
             || mostrarSeparadorHoritzontal != null || isNotEmpty(colorSeparadorHoritzontal)
             || ampleSeparadorHoritzontal != null || mostrarSeparadorVertical != null
-            || isNotEmpty(colorSeparadorVertical) || ampleSeparadorVertical != null || paginada != null
+            || isNotEmpty(colorSeparadorVertical) || ampleSeparadorVertical != null
+            || paginada != null || compacte != null
             || (columnesEstils != null && !columnesEstils.isEmpty())
             || (cellesDestacades != null && !cellesDestacades.isEmpty());
     }
