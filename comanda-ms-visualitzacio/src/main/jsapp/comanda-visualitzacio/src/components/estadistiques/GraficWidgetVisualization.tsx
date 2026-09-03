@@ -14,8 +14,6 @@ import {
     PieChart,
     PieSeries,
     SparkLineChart,
-    XAxis,
-    YAxis,
 } from '@mui/x-charts';
 import estils from './WidgetEstils';
 import {useWidgetTheme} from './useWidgetTheme';
@@ -95,6 +93,17 @@ export interface GraficWidgetVisualizationProps {
     // Dashboard context
     dashboardEntornCodi?: string;
 }
+
+/**  Funció reutilitzable per calcular l'interval d'etiquetes de l'eix X */
+const getTickLabelInterval = (totalCategories: number) => {
+    if (totalCategories <= 10) {
+        return () => true;
+    }
+    const step = Math.ceil(totalCategories / 10);
+    return (_value: any, index: number) => {
+        return index % step === 0;
+    };
+};
 
 const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (props) => {
     const {
@@ -178,32 +187,12 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         ampleVora,
     });
     const chartTextColor = contrastTextColor;
-    const axisStyleProps = {
-        tickLabelStyle: {fill: chartTextColor},
-        labelStyle: {fill: chartTextColor},
-        slotProps: {
-            axisLine: {stroke: chartTextColor, style: {stroke: chartTextColor}},
-            axisTick: {stroke: chartTextColor, style: {stroke: chartTextColor}},
-        },
-    };
-    // Per defecte, MUI X-Charts amaga (tickLabelInterval: 'auto') les etiquetes de categoria de l'eix que
-    // calcula que se solaparien amb l'anterior — amb prou categories (p. ex. un any complet de mesos) això
-    // acaba amagant-les TOTES en lloc de només les que no hi caben. Es força que es mostrin totes, inclinades
-    // per reduir el solapament visual.
-    const bandTickLabelProps = {
-        tickLabelInterval: () => true,
-        tickLabelStyle: {
-            fill: chartTextColor,
-            angle: -35,
-            textAnchor: 'end' as const
-        },
-    };
     const chartCommonSx = {
         '& .MuiChartsAxis-line': {stroke: chartTextColor},
         '& .MuiChartsAxis-tick': {stroke: chartTextColor},
         '& .MuiChartsAxis-root line': {stroke: chartTextColor},
         '& .MuiChartsAxis-root path': {stroke: chartTextColor},
-        '& .MuiChartsAxis-tickLabel': {fill: chartTextColor},
+        '& .MuiChartsAxis-tickLabel': {fill: chartTextColor, fontSize: labelSize ? `${labelSize}px !important` : '1em !important',},
         '& .MuiChartsAxis-label': {fill: chartTextColor},
         '& .MuiChartsLegend-label': {fill: chartTextColor},
     };
@@ -239,80 +228,44 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             ? Object.keys(dades[0]).filter(key => key !== discriminador)
             : [];
 
-        const dataset = dades.map(item => ({
-            [discriminador]: item[discriminador],
-            ...dataKeys.reduce((acc: Record<string, unknown>, key: string) => {
-                acc[key] = item[key] || 0;
-                return acc;
-            }, {}),
-        }));
+        const xCategories = dades.map(item => String(item[discriminador] ?? ''));
 
         const series = dataKeys.map((key, index) => ({
-            dataKey: key,
+            data: dades.map(item => Number(item[key]) || 0),
             label: labels?.find(label => label.id === key)?.label || key,
             color: paletaColors[index % paletaColors.length],
             stack: barStacked ? 'stack' : undefined,
         }));
 
-        const xAxis: Array<XAxis> = [];
-        const yAxisLabel = preview ? t($ => $.page.plantilla.sample.yAxis) : undefined;
-        if (barHorizontal) { // Si és horitzontal, l'eix X té valors numèrics
-            xAxis.push({
-                scaleType: 'linear',
-                label: llegendaX || (preview ? t($ => $.page.plantilla.sample.xAxis) : undefined),
-                // min: 0,
-                // max: 100,
-                ...axisStyleProps
-            });
-        } else { // Si no és horitzontal, l'eix X té categories
-            xAxis.push({
-                scaleType: 'band',
-                // dataKey: discriminador,
-                data: dades.map(item => item[discriminador]),
-                label: llegendaX || (preview ? t($ => $.page.plantilla.sample.xAxis) : undefined),
-                ...axisStyleProps,
-                ...bandTickLabelProps,
-                tickLabelInterval: () => true,
-            });
-        }
+        const xAxisConfig = {
+            scaleType: 'band' as const,
+            data: xCategories,
+            label: llegendaX || (preview ? t($ => $.page.plantilla.sample.xAxis) : undefined),
+            tickLabelStyle: {
+                fill: chartTextColor,
+                fontSize: 9,
+            },
+            tickLabelInterval: getTickLabelInterval(xCategories.length),
+        };
 
-        const yAxis: Array<YAxis> = [];
-        if (barHorizontal) { // Si és horitzontal, l'eix Y té categories
-            yAxis.push({
-                scaleType: 'band',
-                data: dades.map(item => item[discriminador]),
-                label: llegendaX || undefined,
-                ...axisStyleProps,
-                tickLabelInterval: () => true,
-            });
-        } else { // Si no és horitzontal, l'eix Y té valors numèrics
-            yAxis.push({
-                scaleType: 'linear',
-                label: yAxisLabel,
-                // min: 0,
-                // max: 100,
-                ...axisStyleProps
-            });
-        }
+        const yAxisConfig = {
+            scaleType: 'linear' as const,
+            label: preview ? t($ => $.page.plantilla.sample.yAxis) : undefined,
+            tickLabelStyle: { fill: chartTextColor },
+            labelStyle: { fill: chartTextColor },
+        };
 
         const grid = barHorizontal
             ? mostrarReticula ? {vertical: true} : {vertical: false}
             : mostrarReticula ? {horizontal: true} : {horizontal: false};
 
-        console.log(dataset);
-        console.log(dataset.map(item => item[discriminador]));
-        console.log(series);
-        console.log(xAxis);
-        console.log(yAxis);
-
         return (
             <Box sx={{width: '100%', height: chartHeight}}>
                 <BarChart
                     sx={chartCommonSx}
-                    dataset={dataset}
                     series={series}
-                    xAxis={xAxis}
-                    yAxis={yAxis}
+                    xAxis={[xAxisConfig]}
+                    yAxis={[yAxisConfig]}
                     layout={barHorizontal ? 'horizontal' : 'vertical'}
                     grid={grid}
                     height={chartHeight}
@@ -339,8 +292,10 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             ? Object.keys(dades[0]).filter(key => key !== discriminador)
             : [];
 
+        const xCategories = dades.map(item => String(item[discriminador] ?? ''));
+
         const series: LineSeries[] = dataKeys.map((key, index) => ({
-            dataKey: key,
+            data: dades.map(item => Number(item[key]) || 0),
             label: labels?.find((label) => label.id === key)?.label || key,
             color: paletaColors[index % paletaColors.length],
             curve: lineSmooth ? 'natural' : 'linear',
@@ -348,14 +303,23 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             area: area,
         }));
 
-        const xAxisData: ReadonlyArray<XAxis<'band'>> = [{
-            dataKey: discriminador,
-            scaleType: 'band',
+        const xAxisConfig = {
+            scaleType: 'band' as const,
+            data: xCategories,
             label: llegendaX,
-            ...axisStyleProps,
-            ...bandTickLabelProps,
-            // data: dades.map(d => d[datakey]),
-        }];
+            tickLabelStyle: {
+                fill: chartTextColor,
+                fontSize: 9,
+            },
+            tickLabelInterval: getTickLabelInterval(xCategories.length),
+        };
+
+        const yAxisConfig = {
+            scaleType: 'linear' as const,
+            label: preview ? 'Eix Y' : undefined,
+            tickLabelStyle: { fill: chartTextColor },
+            labelStyle: { fill: chartTextColor },
+        };
 
         const grid = mostrarReticula ? {horizontal: true} : {horizontal: false};
 
@@ -366,10 +330,9 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                         ...chartCommonSx,
                         '& .MuiLineElement-root': {strokeWidth: +lineWidth},
                     }}
-                    xAxis={xAxisData}
-                    yAxis={[{scaleType: 'linear', label: preview ? 'Eix Y' : undefined, ...axisStyleProps}]}
+                    xAxis={[xAxisConfig]}
+                    yAxis={[yAxisConfig]}
                     series={series}
-                    dataset={dades}
                     height={chartHeight}
                     grid={grid}
                     // Vegeu comentari equivalent a renderBarChart: cal espai per a les etiquetes de categoria I el títol de l'eix alhora.
