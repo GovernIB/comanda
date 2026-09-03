@@ -23,7 +23,6 @@ import java.time.Duration;
 public class RestTemplateConfig {
 
     @Bean
-    @Lazy
     public RestTemplate restTemplate(RestTemplateBuilder builder) {
         RestTemplate restTemplate = builder
                 .setConnectTimeout(Duration.ofSeconds(5))   // timeout de connexió

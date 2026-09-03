@@ -27,7 +27,6 @@ import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS
 public class RestTemplateConfig {
 
     @Bean
-    @Lazy
     public RestTemplate restTemplate(RestTemplateBuilder builder) {
         RestTemplate restTemplate = builder
                 .setConnectTimeout(Duration.ofSeconds(5))   // timeout de connexió
