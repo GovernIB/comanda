@@ -884,6 +884,16 @@ function parseStorageSizeToMB(value?: string): number {
     }
 }
 
+const getColorForPercentage = (percentage: number): "success" | "warning" | "error" => {
+    if (percentage <= 69) {
+        return "success";
+    } else if (percentage < 90) {
+        return "warning";
+    } else {
+        return "error";
+    }
+};
+
 const MeoriaInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
     const { t } = useTranslation();
 
@@ -901,7 +911,7 @@ const MeoriaInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp
             <Grid container sx={{display: "flex", alignItems: 'center', justifyContent: 'center'}}>
                 <Grid size={1} textAlign={'center'}><Icon>desktop_windows</Icon></Grid>
                 <Grid size={9}>
-                    <LinearProgress variant="determinate" color={'success'} value={memoriaEmprada} sx={{width: '100%', height: 15, borderRadius: '4px'}} />
+                    <LinearProgress variant="determinate" color={getColorForPercentage(memoriaEmprada)} value={memoriaEmprada} sx={{width: '100%', height: 15, borderRadius: '4px'}} />
                 </Grid>
                 <Grid size={10} sx={{ textAlign: 'end'}} >
                     <Trans
@@ -919,7 +929,7 @@ const MeoriaInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp
             <Grid container sx={{display: "flex", alignItems: 'center', justifyContent: 'center'}}>
                 <Grid size={1} textAlign={'center'}><Icon>folder</Icon></Grid>
                 <Grid size={9}>
-                    <LinearProgress variant="determinate" color={'success'} value={discEmprada} sx={{width: '100%', height: 15, borderRadius: '4px'}} />
+                    <LinearProgress variant="determinate" color={getColorForPercentage(discEmprada)} value={discEmprada} sx={{width: '100%', height: 15, borderRadius: '4px'}} />
                 </Grid>
                 <Grid size={10} sx={{ textAlign: 'end'}} >
                     <Trans
