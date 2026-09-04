@@ -15,7 +15,9 @@ import es.caib.comanda.configuracio.persist.entity.EntornEntity;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import es.caib.comanda.ms.logic.config.HazelCastCacheConfig;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.sse.ComandaSseEventTypes;
 import es.caib.comanda.ms.sse.ComandaSsePublishRequest;
@@ -71,6 +73,11 @@ public class AppServiceImplTest {
         @Override
         public void afterCreateSave(AppEntity entity, App resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
             super.afterCreateSave(entity, resource, answers, anyOrderChanged);
+        }
+
+        @Override
+        public void beforeUpdateEntity(AppEntity entity, App resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
+            super.beforeUpdateEntity(entity, resource, answers);
         }
 
         @Override
@@ -139,10 +146,12 @@ public class AppServiceImplTest {
         // Setup test data
         appEntity = new AppEntity();
         appEntity.setId(1L);
+        appEntity.setCodi("APP1");
         appEntity.setNom("Test App");
 
         entornEntity = new EntornEntity();
         entornEntity.setId(1L);
+        entornEntity.setCodi("ENT1");
         entornEntity.setNom("Test Entorn");
 
         entornAppEntity = new EntornAppEntity();
@@ -174,12 +183,36 @@ public class AppServiceImplTest {
     }
 
     @Test
+    void testBeforeUpdateEntity_codiChanged() throws Exception {
+        appEntity.setCodi("OLD_CODE");
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+        App resourceWithNewCodi = new App();
+        resourceWithNewCodi.setCodi("NEW_CODE");
+
+        appService.beforeUpdateEntity(appEntity, resourceWithNewCodi, answers);
+
+        verify(cacheHelper, times(1)).evictCacheItem(HazelCastCacheConfig.APP_BY_CODI_CACHE, "OLD_CODE");
+    }
+
+    @Test
+    void testBeforeUpdateEntity_codiNotChanged() throws Exception {
+        appEntity.setCodi("SAME_CODE");
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+        App resourceWithSameCodi = new App();
+        resourceWithSameCodi.setCodi("SAME_CODE");
+
+        appService.beforeUpdateEntity(appEntity, resourceWithSameCodi, answers);
+
+        verify(cacheHelper, never()).evictCacheItem(eq(HazelCastCacheConfig.APP_BY_CODI_CACHE), anyString());
+    }
+
+    @Test
     void testAfterUpdateSave() {
         Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
 
         appService.afterUpdateSave(appEntity, appResource, answers, false);
 
-        verify(cacheHelper, times(1)).evictCacheItem(APP_CACHE, appEntity.getId().toString());
+        verify(cacheHelper, times(1)).evictAppCacheItem(appEntity.getId(), appEntity.getCodi());
 
         ArgumentCaptor<ComandaSsePublishRequest> captor = ArgumentCaptor.forClass(ComandaSsePublishRequest.class);
         verify(eventPublisher).publishEvent(captor.capture());
@@ -193,7 +226,7 @@ public class AppServiceImplTest {
 
         appService.afterDelete(appEntity, answers);
 
-        verify(cacheHelper, times(1)).evictCacheItem(APP_CACHE, appEntity.getId().toString());
+        verify(cacheHelper, times(1)).evictAppCacheItem(appEntity.getId(), appEntity.getCodi());
         verify(entornAppHelper, times(1)).logicAfterDelete(entornAppEntity.getId());
 
         ArgumentCaptor<ComandaSsePublishRequest> captor = ArgumentCaptor.forClass(ComandaSsePublishRequest.class);

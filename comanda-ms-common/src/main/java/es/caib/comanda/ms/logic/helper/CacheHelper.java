@@ -9,9 +9,13 @@ import org.springframework.stereotype.Component;
 
 import java.util.Set;
 
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.APP_BY_CODI_CACHE;
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.APP_CACHE;
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_BY_APP_AND_ENTORN_CACHE;
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_CACHE;
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_APP_INTEGRACIONS_SUBSISTEMES_CONTEXTS_CACHE;
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_BY_CODI_CACHE;
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_CACHE;
 
 @Slf4j
 @Component
@@ -122,6 +126,38 @@ public class CacheHelper {
         evictCacheItem(ENTORN_APP_CACHE, key);
         evictCacheItem(ENTORN_APP_INTEGRACIONS_SUBSISTEMES_CONTEXTS_CACHE, key);
         evictCache(ENTORN_APP_BY_APP_AND_ENTORN_CACHE);
+    }
+
+    public void evictAppCacheItem(Long id, String codi) {
+        evictAppCacheItem(id, codi, null);
+    }
+
+    public void evictAppCacheItem(Long id, String oldCodi, String newCodi) {
+        if (id != null) {
+            evictCacheItem(APP_CACHE, id.toString());
+        }
+        if (oldCodi != null) {
+            evictCacheItem(APP_BY_CODI_CACHE, oldCodi);
+        }
+        if (newCodi != null && !newCodi.equals(oldCodi)) {
+            evictCacheItem(APP_BY_CODI_CACHE, newCodi);
+        }
+    }
+
+    public void evictEntornCacheItem(Long id, String codi) {
+        evictEntornCacheItem(id, codi, null);
+    }
+
+    public void evictEntornCacheItem(Long id, String oldCodi, String newCodi) {
+        if (id != null) {
+            evictCacheItem(ENTORN_CACHE, id.toString());
+        }
+        if (oldCodi != null) {
+            evictCacheItem(ENTORN_BY_CODI_CACHE, oldCodi);
+        }
+        if (newCodi != null && !newCodi.equals(oldCodi)) {
+            evictCacheItem(ENTORN_BY_CODI_CACHE, newCodi);
+        }
     }
 
 }

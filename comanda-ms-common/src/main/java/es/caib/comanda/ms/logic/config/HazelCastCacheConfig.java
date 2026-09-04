@@ -24,13 +24,15 @@ public class HazelCastCacheConfig {
     public static final String DASHBOARD_WIDGET_CACHE = "dashboardWidgetCache";
     public static final String PARAMETRE_CACHE = "parametreCache";
     public static final String ACL_CACHE = "aclCache";
-    public static final String ACL_HAS_PERMISSION_CACHE = "aclCountCache";
-    public static final String ACL_IDS_WITH_PERMISSION_CACHE = "aclCountCache";
+    public static final String ACL_HAS_PERMISSION_CACHE = "aclHasPermissionCache";
+    public static final String ACL_IDS_WITH_PERMISSION_CACHE = "aclIdsWithPermissionCache";
     public static final String ACL_COUNT_CACHE = "aclCountCache";
 //    public static final String ACL_CHECK_CACHE = "aclCheckCache";
     public static final String USUARI_CACHE = "usuariCache";
     public static final String ORG_TREE_CACHE = "orgTreeCache";
     public static final String ORGANIGRAMA_CACHE = "organigramaCache";
+    public static final String APP_BY_CODI_CACHE = "appByCodiCache";
+    public static final String ENTORN_BY_CODI_CACHE = "entornByCodiCache";
 
     @Bean
     public Config hazelcastConfig() {
@@ -48,6 +50,8 @@ public class HazelCastCacheConfig {
         config.addMapConfig(new MapConfig().setName(ENTORN_APP_INTEGRACIONS_SUBSISTEMES_CONTEXTS_CACHE).setTimeToLiveSeconds(3600).setEvictionConfig(getEvictionConfig()));
         config.addMapConfig(new MapConfig().setName(APP_CACHE).setTimeToLiveSeconds(3600).setEvictionConfig(getEvictionConfig()));
         config.addMapConfig(new MapConfig().setName(ENTORN_CACHE).setTimeToLiveSeconds(3600).setEvictionConfig(getEvictionConfig()));
+        config.addMapConfig(new MapConfig().setName(APP_BY_CODI_CACHE).setTimeToLiveSeconds(3600).setEvictionConfig(getEvictionConfig()));
+        config.addMapConfig(new MapConfig().setName(ENTORN_BY_CODI_CACHE).setTimeToLiveSeconds(3600).setEvictionConfig(getEvictionConfig()));
         config.addMapConfig(new MapConfig().setName(DASHBOARD_WIDGET_CACHE).setTimeToLiveSeconds(28800).setEvictionConfig(getEvictionConfig())); // 8 hores de TTL
         config.addMapConfig(new MapConfig().setName(PARAMETRE_CACHE).setTimeToLiveSeconds(3600).setEvictionConfig(getEvictionConfig()));
         config.addMapConfig(new MapConfig().setName(ACL_CACHE).setTimeToLiveSeconds(900).setEvictionConfig(getEvictionConfig()));

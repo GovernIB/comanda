@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Component;
 
 import javax.transaction.Transactional;
@@ -23,6 +24,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ORGANIGRAMA_CACHE;
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ORG_TREE_CACHE;
 
 @Slf4j
 @Component
@@ -45,8 +47,11 @@ public class UnitatOrganitzativaHelper {
         return unitatOrganitzativaRepository.findByCodiUnitatArrel(codiUnitatArrel);
     }
 
-    /** Invalida la cache de l'organigrama d'un arrel - cal cridar-la després de sincronitzar amb Dir3. */
-    @CacheEvict(value = ORGANIGRAMA_CACHE, key = "#codiUnitatArrel")
+    /** Invalida la cache de l'organigrama d'un arrel (llista i arbre fill-pare) - cal cridar-la després de sincronitzar amb Dir3. */
+    @Caching(evict = {
+        @CacheEvict(value = ORGANIGRAMA_CACHE, key = "#codiUnitatArrel"),
+        @CacheEvict(value = ORG_TREE_CACHE, key = "#codiUnitatArrel")
+    })
     public void evictOrganigramaCache(String codiUnitatArrel) {
     }
 

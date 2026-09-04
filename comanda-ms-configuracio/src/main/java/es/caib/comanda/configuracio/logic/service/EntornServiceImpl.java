@@ -8,6 +8,7 @@ import es.caib.comanda.configuracio.persist.entity.EntornEntity;
 import es.caib.comanda.configuracio.persist.repository.EntornRepository;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import es.caib.comanda.ms.sse.ComandaSseEvent;
 import es.caib.comanda.ms.sse.ComandaSseEventTypes;
@@ -21,7 +22,9 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_BY_CODI_CACHE;
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_CACHE;
 
 /**
@@ -53,9 +56,17 @@ public class EntornServiceImpl extends BaseMutableResourceService<Entorn, Long, 
     }
 
     @Override
+    protected void beforeUpdateEntity(EntornEntity entity, Entorn resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
+        super.beforeUpdateEntity(entity, resource, answers);
+        if (entity.getCodi() != null && !Objects.equals(entity.getCodi(), resource.getCodi())) {
+            cacheHelper.evictCacheItem(ENTORN_BY_CODI_CACHE, entity.getCodi());
+        }
+    }
+
+    @Override
     protected void afterUpdateSave(EntornEntity entity, Entorn resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
         super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
-        cacheHelper.evictCacheItem(ENTORN_CACHE, entity.getId().toString());
+        cacheHelper.evictEntornCacheItem(entity.getId(), entity.getCodi());
         eventPublisher.publishEvent(new ComandaSsePublishRequest(
             new ComandaSseEvent(ComandaSseEventTypes.ENTORN_CHANGED, entity.getId(), LocalDateTime.now())));
     }
@@ -64,7 +75,7 @@ public class EntornServiceImpl extends BaseMutableResourceService<Entorn, Long, 
     protected void afterDelete(EntornEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
         super.afterDelete(entity, answers);
 
-        cacheHelper.evictCacheItem(ENTORN_CACHE, entity.getId().toString());
+        cacheHelper.evictEntornCacheItem(entity.getId(), entity.getCodi());
         for (EntornAppEntity entornApp : entity.getEntornAppEntities()) {
             entornAppHelper.logicAfterDelete(entornApp.getId());
         }

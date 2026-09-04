@@ -80,6 +80,30 @@ class ParametreServiceImplTest {
     }
 
     @Test
+    void beforeUpdateEntity_codiChanged_evictsOldCodi() throws Exception {
+        ParametreEntity e = entity(12L, "old.code");
+        e.setEditable(true);
+        Parametre res = new Parametre();
+        res.setCodi("new.code");
+
+        service.beforeUpdateEntity(e, res, Map.of());
+
+        verify(cacheHelper).evictCacheItem(PARAMETRE_CACHE, "old.code");
+    }
+
+    @Test
+    void beforeUpdateEntity_codiNotChanged_doesNotEvict() throws Exception {
+        ParametreEntity e = entity(12L, "same.code");
+        e.setEditable(true);
+        Parametre res = new Parametre();
+        res.setCodi("same.code");
+
+        service.beforeUpdateEntity(e, res, Map.of());
+
+        verify(cacheHelper, never()).evictCacheItem(eq(PARAMETRE_CACHE), anyString());
+    }
+
+    @Test
     void afterUpdateSave_evictsCache_and_publishesEvent() {
         ParametreEntity e = entity(12L, "other.code");
         service.afterUpdateSave(e, (Parametre) null, Map.of(), false);

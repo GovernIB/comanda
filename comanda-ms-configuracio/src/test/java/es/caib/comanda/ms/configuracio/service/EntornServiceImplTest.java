@@ -8,6 +8,7 @@ import es.caib.comanda.configuracio.persist.entity.EntornEntity;
 import es.caib.comanda.configuracio.persist.repository.EntornRepository;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.sse.ComandaSseEventTypes;
 import es.caib.comanda.ms.sse.ComandaSsePublishRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,9 +26,13 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_BY_CODI_CACHE;
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_CACHE;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,6 +49,11 @@ public class EntornServiceImplTest {
         @Override
         public void afterCreateSave(EntornEntity entity, Entorn resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
             super.afterCreateSave(entity, resource, answers, anyOrderChanged);
+        }
+
+        @Override
+        public void beforeUpdateEntity(EntornEntity entity, Entorn resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
+            super.beforeUpdateEntity(entity, resource, answers);
         }
 
         @Override
@@ -85,6 +95,7 @@ public class EntornServiceImplTest {
         // Setup test data
         entornEntity = new EntornEntity();
         entornEntity.setId(1L);
+        entornEntity.setCodi("ENT1");
         entornEntity.setNom("Test Entorn");
         entornEntity.setEntornAppEntities(new HashSet<>());
 
@@ -111,12 +122,36 @@ public class EntornServiceImplTest {
     }
 
     @Test
+    void testBeforeUpdateEntity_codiChanged() throws Exception {
+        entornEntity.setCodi("OLD_ENTORN");
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+        Entorn resourceWithNewCodi = new Entorn();
+        resourceWithNewCodi.setCodi("NEW_ENTORN");
+
+        entornService.beforeUpdateEntity(entornEntity, resourceWithNewCodi, answers);
+
+        verify(cacheHelper, times(1)).evictCacheItem(ENTORN_BY_CODI_CACHE, "OLD_ENTORN");
+    }
+
+    @Test
+    void testBeforeUpdateEntity_codiNotChanged() throws Exception {
+        entornEntity.setCodi("SAME_ENTORN");
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+        Entorn resourceWithSameCodi = new Entorn();
+        resourceWithSameCodi.setCodi("SAME_ENTORN");
+
+        entornService.beforeUpdateEntity(entornEntity, resourceWithSameCodi, answers);
+
+        verify(cacheHelper, never()).evictCacheItem(eq(ENTORN_BY_CODI_CACHE), anyString());
+    }
+
+    @Test
     void testAfterUpdateSave() {
         Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
 
         entornService.afterUpdateSave(entornEntity, entornResource, answers, false);
 
-        verify(cacheHelper, times(1)).evictCacheItem(ENTORN_CACHE, entornEntity.getId().toString());
+        verify(cacheHelper, times(1)).evictEntornCacheItem(entornEntity.getId(), entornEntity.getCodi());
 
         ArgumentCaptor<ComandaSsePublishRequest> captor = ArgumentCaptor.forClass(ComandaSsePublishRequest.class);
         verify(eventPublisher).publishEvent(captor.capture());
@@ -134,7 +169,7 @@ public class EntornServiceImplTest {
 
         entornService.afterDelete(entornEntity, answers);
 
-        verify(cacheHelper, times(1)).evictCacheItem(ENTORN_CACHE, entornEntity.getId().toString());
+        verify(cacheHelper, times(1)).evictEntornCacheItem(entornEntity.getId(), entornEntity.getCodi());
         verify(entornAppHelper, times(1)).logicAfterDelete(10L);
 
         ArgumentCaptor<ComandaSsePublishRequest> captor = ArgumentCaptor.forClass(ComandaSsePublishRequest.class);

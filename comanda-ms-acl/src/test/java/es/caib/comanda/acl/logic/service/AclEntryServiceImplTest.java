@@ -5,6 +5,7 @@ import es.caib.comanda.acl.logic.intf.model.AclEntry;
 import es.caib.comanda.acl.logic.intf.model.ResourceType;
 import es.caib.comanda.acl.logic.intf.model.SubjectType;
 import es.caib.comanda.acl.persist.entity.AclEntryEntity;
+import es.caib.comanda.ms.logic.config.HazelCastCacheConfig;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
@@ -374,6 +375,50 @@ class AclEntryServiceImplTest {
         List<?> entries = org.springframework.test.util.ReflectionTestUtils.invokeMethod(service, "toAclEntries", acl);
 
         assertThat(entries).isEmpty();
+    }
+
+    @Test
+    void afterCreate_evictsCaches() {
+        AclEntryEntity entity = new AclEntryEntity();
+        AclEntry res = resource(SubjectType.ROLE, "ROLE_ADMIN");
+        res.setResourceType(ResourceType.ENTORN_APP);
+        res.setResourceId(10L);
+        entity.setResource(res);
+
+        service.afterCreate(entity, null, Map.of());
+
+        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_IDS_WITH_PERMISSION_CACHE, "ENTORN_APP");
+        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_COUNT_CACHE, "ENTORN_APP");
+    }
+
+    @Test
+    void afterUpdate_evictsCaches() {
+        AclEntryEntity entity = new AclEntryEntity();
+        AclEntry res = resource(SubjectType.ROLE, "ROLE_ADMIN");
+        res.setResourceType(ResourceType.ENTORN_APP);
+        res.setResourceId(10L);
+        entity.setResource(res);
+
+        service.afterUpdate(entity, null, Map.of());
+
+        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_HAS_PERMISSION_CACHE, "ENTORN_APP_10");
+        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_IDS_WITH_PERMISSION_CACHE, "ENTORN_APP");
+        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_COUNT_CACHE, "ENTORN_APP");
+    }
+
+    @Test
+    void afterDelete_evictsCaches() {
+        AclEntryEntity entity = new AclEntryEntity();
+        AclEntry res = resource(SubjectType.ROLE, "ROLE_ADMIN");
+        res.setResourceType(ResourceType.ENTORN_APP);
+        res.setResourceId(10L);
+        entity.setResource(res);
+
+        service.afterDelete(entity, Map.of());
+
+        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_HAS_PERMISSION_CACHE, "ENTORN_APP_10");
+        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_IDS_WITH_PERMISSION_CACHE, "ENTORN_APP");
+        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_COUNT_CACHE, "ENTORN_APP");
     }
 
     private static AclEntry resource(SubjectType subjectType, String subjectValue) {

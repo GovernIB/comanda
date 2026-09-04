@@ -7,6 +7,7 @@ import com.hazelcast.spring.cache.HazelcastCache;
 import es.caib.comanda.client.ParametreServiceClient;
 import es.caib.comanda.client.model.ParamTipus;
 import es.caib.comanda.client.model.Parametre;
+import es.caib.comanda.ms.logic.config.HazelCastCacheConfig;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.exception.ParametreTipusException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
@@ -123,6 +124,31 @@ class MappingAndInfraHelpersTest {
         helper.evictCacheByPrefix("cache");
         helper.evictCacheItem("cacheA", "k1");
         helper.evictCacheItemByPrefix("cacheA", "p1");
+
+        // Test evictAppCacheItem i evictEntornCacheItem
+        HazelcastCache appCache = mock(HazelcastCache.class);
+        @SuppressWarnings("unchecked")
+        IMap<Object, Object> appNativeMap = mock(IMap.class);
+        when(appCache.getNativeCache()).thenReturn(appNativeMap);
+        when(cacheManager.getCache(HazelCastCacheConfig.APP_CACHE)).thenReturn(appCache);
+        when(cacheManager.getCache(HazelCastCacheConfig.APP_BY_CODI_CACHE)).thenReturn(appCache);
+
+        helper.evictAppCacheItem(10L, "APP_OLD", "APP_NEW");
+        verify(appNativeMap).remove("10");
+        verify(appNativeMap).remove("APP_OLD");
+        verify(appNativeMap).remove("APP_NEW");
+
+        HazelcastCache entornCache = mock(HazelcastCache.class);
+        @SuppressWarnings("unchecked")
+        IMap<Object, Object> entornNativeMap = mock(IMap.class);
+        when(entornCache.getNativeCache()).thenReturn(entornNativeMap);
+        when(cacheManager.getCache(HazelCastCacheConfig.ENTORN_CACHE)).thenReturn(entornCache);
+        when(cacheManager.getCache(HazelCastCacheConfig.ENTORN_BY_CODI_CACHE)).thenReturn(entornCache);
+
+        helper.evictEntornCacheItem(20L, "ENT_OLD", "ENT_NEW");
+        verify(entornNativeMap).remove("20");
+        verify(entornNativeMap).remove("ENT_OLD");
+        verify(entornNativeMap).remove("ENT_NEW");
 
         assertThat(helper.getCache("cacheA")).isSameAs(cache);
         assertThat(helper.getCacheNames()).contains("cacheA");

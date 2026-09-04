@@ -59,7 +59,7 @@ public class EstadisticaClientHelper {
 		return null;
 	}
 
-	@Cacheable(value = APP_CACHE, key = "#appCodi?.toString()")
+	@Cacheable(value = APP_BY_CODI_CACHE, key = "#appCodi")
 	public App appFindByCodi(String appCodi) {
 		if (appCodi == null) {
 			return null;
@@ -184,7 +184,7 @@ public class EstadisticaClientHelper {
 		return null;
 	}
 
-	@Cacheable(value = ENTORN_CACHE, key = "#entornCodi?.toString()")
+	@Cacheable(value = ENTORN_BY_CODI_CACHE, key = "#entornCodi")
 	public Entorn entornByCodi(String entornCodi) {
 		if (entornCodi == null) {
 			return null;

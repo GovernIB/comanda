@@ -248,7 +248,7 @@ public class AppImportExportTest {
                         && !entornApp.isEstadisticaAuth()));
 
         // Verify side effects
-        verify(cacheHelper, times(1)).evictCacheItem(anyString(), eq("100"));
+        verify(cacheHelper, times(1)).evictAppCacheItem(eq(100L), any());
     }
 
     @Test
@@ -365,7 +365,7 @@ public class AppImportExportTest {
         assertNotNull(result);
         verify(appRepository).saveAndFlush(existing);
         verify(appRepository).refresh(existing);
-        verify(cacheHelper).evictCacheItem(anyString(), eq("7"));
+        verify(cacheHelper).evictAppCacheItem(eq(7L), any());
         verify(entornAppRepository, never()).save(any());
         // Also ensure no delete took place
         verify(entornAppRepository, never()).delete(any());
@@ -449,8 +449,8 @@ public class AppImportExportTest {
         assertNotNull(result);
         assertEquals(2, result.getApps().size());
         assertEquals(Arrays.asList(101L, 102L), result.getApps().stream().map(App::getId).collect(Collectors.toList()));
-        verify(cacheHelper).evictCacheItem(anyString(), eq("101"));
-        verify(cacheHelper).evictCacheItem(anyString(), eq("102"));
+        verify(cacheHelper).evictAppCacheItem(eq(101L), any());
+        verify(cacheHelper).evictAppCacheItem(eq(102L), any());
     }
 
     @Test
