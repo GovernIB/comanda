@@ -11,6 +11,7 @@ import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetItem;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetTitolItem;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
+import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardPreferit;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardTitolTipus;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.OverwriteEnum;
 import es.caib.comanda.estadistica.logic.intf.model.export.DashboardExport;
@@ -22,6 +23,7 @@ import es.caib.comanda.estadistica.logic.intf.validation.ValidConflict;
 import es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper;
 import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
+import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardPreferitEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.estadistica.persist.repository.*;
@@ -83,6 +85,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     private final DashboardFiltreRepository dashboardFiltreRepository;
     private final PlantillaRepository plantillaRepository;
     private final EstadisticaWidgetRepository estadisticaWidgetRepository;
+    private final DashboardPreferitRepository dashboardPreferitRepository;
     private final DashboardStyleResolverHelper dashboardStyleResolverHelper;
     private final DashboardImportHelper dashboardImportHelper;
     private final AuthenticationHelper authenticationHelper;
@@ -107,11 +110,13 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     @PostConstruct
     public void init() {
         register(Dashboard.PERSP_PERMIS_NUM, new PermisPerspective());
+        register(Dashboard.PERSP_PREFERIT_USUARI_ACTUAL, new PreferitUsuariActualPerspective());
         register(Dashboard.WIDGETS_REPORT, new InformeWidgets());
         register(Dashboard.DASHBOARD_EXPORT, new DashboardExportReportGenerator());
         register(Dashboard.DASHBOARD_IMPORT, new DashboardImportActionExecutor());
         register(Dashboard.CLONE_ACTION, (ActionExecutor<DashboardEntity, ?, ?>) new DashboardHelper.CloneDashboardAction(estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, dashboardFiltreRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper, atributsVisualsHelper));
         register(Dashboard.CLONE_AND_ADD_WIDGET_ACTION, new DashboardHelper.CloneAndAddWidgetAction(estadisticaClientHelper, dashboardItemRepository, estadisticaWidgetRepository, dashboardClonerMapper, dashboardItemTitolHelper, atributsVisualsHelper));
+        register(Dashboard.MARCAR_PREFERIT_ACTION, new MarcarPreferitActionExecutor());
     }
 
     @Override
@@ -172,6 +177,14 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     @Override
     protected void afterConversion(DashboardEntity entity, Dashboard resource) {
         dashboardHelper.afterConversionLogic(entity, resource);
+    }
+
+    @Override
+    protected String namedFilterToSpringFilter(String name) {
+        if (Dashboard.NAMED_FILTER_PREFERIT_USUARI_ACTUAL.equals(name)) {
+            return "exists(" + DashboardEntity.Fields.preferits + "." + DashboardPreferit.Fields.usuariCodi + ":'" + authenticationHelper.getCurrentUserName() + "')";
+        }
+        return null;
     }
 
     private DashboardEntity getDashboard(String code, DashboardEntity entity) {
@@ -306,6 +319,27 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                         .countSidsWithPermission(ResourceType.DASHBOARD, entity.getId(),
                             httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
                     .orElse(0));
+        }
+    }
+
+    /** Perspectiva per indicar si el dashboard actual és preferit per l'usuari en sessió. */
+    public class PreferitUsuariActualPerspective implements PerspectiveApplicator<DashboardEntity, Dashboard> {
+        @Override
+        public void applySingle(String code, DashboardEntity entity, Dashboard resource) throws PerspectiveApplicationException {
+            logicaEsPreferit(entity, resource, authenticationHelper.getCurrentUserName());
+        }
+
+        @Override
+        public boolean applyMultiple(String code, List<DashboardEntity> entities, List<Dashboard> resources) throws PerspectiveApplicationException {
+            String usuariCodi = authenticationHelper.getCurrentUserName();
+            for (int i= 0; i < entities.size(); i++) {
+                logicaEsPreferit(entities.get(i), resources.get(i), usuariCodi);
+            }
+            return true;
+        }
+
+        private void logicaEsPreferit(DashboardEntity entity, Dashboard resource, String usuariCodi) {
+            resource.setEsPreferit(dashboardPreferitRepository.existsByUsuariCodiAndDashboardId(usuariCodi, entity.getId()));
         }
     }
 
@@ -528,5 +562,38 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                 }
             }
         }
+    }
+
+    public class MarcarPreferitActionExecutor implements ActionExecutor<DashboardEntity, MarcarPreferitParams, Boolean> {
+        @Override
+        public Boolean exec(String code, DashboardEntity entity, MarcarPreferitParams params) throws ActionExecutionException {
+            String usuariCodi = authenticationHelper.getCurrentUserName();
+            Long dashboardId = entity.getId();
+            boolean actualmentEsPreferit = dashboardPreferitRepository.existsByUsuariCodiAndDashboardId(usuariCodi, dashboardId);
+            if (params.isMarcar() && !actualmentEsPreferit) {
+                DashboardPreferitEntity nouPreferit = new DashboardPreferitEntity();
+                nouPreferit.setUsuariCodi(usuariCodi);
+                nouPreferit.setDashboard(entity);
+                dashboardPreferitRepository.save(nouPreferit);
+                return true;
+            } else if (!params.isMarcar() && actualmentEsPreferit) {
+                dashboardPreferitRepository.deleteByUsuariCodiAndDashboardId(usuariCodi, dashboardId);
+                return false;
+            }
+            return params.isMarcar();
+        }
+
+        @Override
+        public void onChange(Serializable id, MarcarPreferitParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, MarcarPreferitParams target) {
+        }
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @FieldNameConstants
+    public static class MarcarPreferitParams implements Serializable {
+        private boolean marcar = true;
     }
 }

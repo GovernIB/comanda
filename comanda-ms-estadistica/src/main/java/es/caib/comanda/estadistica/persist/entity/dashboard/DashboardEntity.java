@@ -7,6 +7,7 @@ import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 
 import javax.persistence.*;
 import java.util.List;
@@ -32,6 +33,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@FieldNameConstants
 public class DashboardEntity extends BaseAuditableEntity<Dashboard> {
 
     public static final int TITOL_MAX_LENGTH = 64;
@@ -65,5 +67,8 @@ public class DashboardEntity extends BaseAuditableEntity<Dashboard> {
     @OneToMany(mappedBy = "dashboard", cascade = {CascadeType.MERGE, CascadeType.REMOVE})
     @OrderBy("ordre")
     private List<DashboardFiltreEntity> filtres;
+
+    @OneToMany(mappedBy = "dashboard", cascade = {CascadeType.REMOVE})
+    private List<DashboardPreferitEntity> preferits;
 
 }

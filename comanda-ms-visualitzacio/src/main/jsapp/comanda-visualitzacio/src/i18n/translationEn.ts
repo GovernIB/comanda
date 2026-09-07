@@ -407,6 +407,19 @@ const translationEn: translationResourcesType = {
             title: "Dashboards",
             view: {
                 largeScreenModeFit: "Scale to fit the screen",
+                selector: {
+                    loading: "Loading...",
+                    seeAll: "See all dashboards",
+                },
+                favorite: {
+                    added: "Added to favorites",
+                    removed: "Removed from favorites",
+                },
+                columns: {
+                    titol: "Title",
+                    descripcio: "Description",
+                    esPreferit: "Favorite",
+                },
             },
             editor: {
                 errorAlert: {
@@ -507,7 +520,7 @@ const translationEn: translationResourcesType = {
                 notExists: "The dashboard does not exist.",
                 notDefined: "No dashboard is defined.",
                 carregar: "Error loading the dashboard.",
-            }
+            },
         },
         tasques: {
             filter: {

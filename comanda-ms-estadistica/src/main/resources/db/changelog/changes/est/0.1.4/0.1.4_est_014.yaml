@@ -1,0 +1,44 @@
+databaseChangeLog:
+  - changeSet:
+      id: est-create-dashboard-preferit-table-0.1.4-001
+      author: limit
+      comment: "Creació de la taula per gestionar els dashboards preferits dels usuaris (relació codi Keycloak - dashboard)"
+      changes:
+        - createTable:
+            tableName: ${db_prefix}est_dashboard_preferit
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: ${db_prefix}est_dashboard_preferit_pk
+              - column:
+                  name: usuari_codi
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: est_dashboard_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: ${db_prefix}est_dashboard_preferit
+            columnNames: usuari_codi, est_dashboard_id
+            constraintName: ${db_prefix}est_dashboard_preferit_uk
+        - createIndex:
+            indexName: ${db_prefix}idx_dashboard_preferit_usuari_codi
+            tableName: ${db_prefix}est_dashboard_preferit
+            columns:
+              - column:
+                  name: usuari_codi
+        - addForeignKeyConstraint:
+            baseTableName: ${db_prefix}est_dashboard_preferit
+            baseColumnNames: est_dashboard_id
+            referencedTableName: ${db_prefix}est_dashboard
+            referencedColumnNames: id
+            constraintName: ${db_prefix}est_dashboard_preferit_dashboard_fk
+            onDelete: CASCADE
