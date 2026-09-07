@@ -391,8 +391,8 @@ const AppsEntorns: React.FC<{ appNom?: string }> = ({ appNom }) => {
         sortable: false,
         flex: 4
     }, {
-        field: 'readAllowed',
-        headerName: t($ => $.page.appsEntorns.acl.readAllowed),
+        field: 'perm2Allowed',
+        headerName: t($ => $.page.appsEntorns.acl.perm2Allowed),
         sortable: false,
         flex: 1
     }, {
@@ -630,7 +630,7 @@ const AppsAclEntryForm: React.FC = () => {
             <FormField name="subjectValue" />
         </Grid>
         <Grid size={12}>
-            <FormField name="readAllowed" label={t($ => $.page.appsEntorns.acl.readAllowed)} />
+            <FormField name="perm2Allowed" label={t($ => $.page.appsEntorns.acl.perm2Allowed)} />
         </Grid>
         <Grid size={12}>
             <FormField name="perm0Allowed" label={t($ => $.page.appsEntorns.acl.perm0Allowed)} />
@@ -675,8 +675,8 @@ const Apps: React.FC = () => {
         sortable: false,
         flex: 4
     }, {
-        field: 'readAllowed',
-        headerName: t($ => $.page.appsEntorns.acl.readAllowed),
+        field: 'perm2Allowed',
+        headerName: t($ => $.page.appsEntorns.acl.perm2Allowed),
         sortable: false,
         flex: 1
     }, {

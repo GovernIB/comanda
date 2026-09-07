@@ -773,7 +773,7 @@ const translationEs: translationResourcesType = {
             title: "Entornos",
             resourceTitle: "entorno",
             acl: {
-                readAllowed: "Salud",
+                perm2Allowed: "Salud",
                 perm0Allowed: "Consulta de paneles de control",
                 perm1Allowed: "Diseño de paneles de control",
             },

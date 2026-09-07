@@ -773,7 +773,7 @@ const translationEn: translationResourcesType = {
             title: "Environments",
             resourceTitle: "environment",
             acl: {
-                readAllowed: "Health",
+                perm2Allowed: "Health",
                 perm0Allowed: "View dashboards",
                 perm1Allowed: "Design dashboards",
             },

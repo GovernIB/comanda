@@ -773,7 +773,7 @@ const translationCa = {
             title: "Entorns",
             resourceTitle: "entorn",
             acl: {
-                readAllowed: "Salut",
+                perm2Allowed: "Salut",
                 perm0Allowed: "Consulta de taulers de control",
                 perm1Allowed: "Disseny de taulers de control",
             },
