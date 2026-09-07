@@ -65,7 +65,11 @@ import java.util.List;
                 @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Dashboard.PERSP_PREFERIT_USUARI_ACTUAL),
                 @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Dashboard.DASHBOARD_IMPORT, formClass = DashboardServiceImpl.DashboardImportParams.class),
                 @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Dashboard.CLONE_ACTION, requiresId = true, formClass = Dashboard.class),
-                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Dashboard.MARCAR_PREFERIT_ACTION, requiresId = true, formClass = DashboardServiceImpl.MarcarPreferitParams.class),
+                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Dashboard.MARCAR_PREFERIT_ACTION, requiresId = true, formClass = DashboardServiceImpl.MarcarPreferitParams.class,
+                    accessConstraints = {
+                        @ResourceAccessConstraint(
+                            type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED
+                        )}),
                 @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Dashboard.CLONE_AND_ADD_WIDGET_ACTION, requiresId = true, formClass = DashboardServiceImpl.CloneAndAddWidgetParams.class),
                 @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Dashboard.WIDGETS_REPORT, requiresId = true, formClass= InformeWidgetParams.class,
                     accessConstraints = {
