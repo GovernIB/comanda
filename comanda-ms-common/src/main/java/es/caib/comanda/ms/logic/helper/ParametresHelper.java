@@ -4,7 +4,6 @@ import es.caib.comanda.client.ParametreServiceClient;
 import es.caib.comanda.client.model.ParamTipus;
 import es.caib.comanda.client.model.Parametre;
 import es.caib.comanda.ms.logic.intf.exception.ParametreTipusException;
-import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +43,9 @@ public class ParametresHelper {
             return null;
         }
         return parametres.getContent().stream()
-                .findFirst().orElseThrow(() -> new ResourceNotFoundException(Parametre.class, "codi:" + codi)).getContent();
+                .findFirst()
+                .map(EntityModel::getContent)
+                .orElse(null);
     }
 
     public Parametre perametreFindByCodi(String codi, String defaultValue) {
