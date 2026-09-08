@@ -26,10 +26,12 @@ import es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper;
 import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
+import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardPreferitEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
+import es.caib.comanda.estadistica.persist.repository.DashboardPreferitRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardTitolRepository;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
@@ -72,6 +74,7 @@ class DashboardServiceImplTest {
     @Mock private DashboardRepository dashboardRepository;
     @Mock private DashboardItemRepository dashboardItemRepository;
     @Mock private DashboardTitolRepository dashboardTitolRepository;
+    @Mock private DashboardPreferitRepository dashboardPreferitRepository;
     @Mock private EstadisticaClientHelper estadisticaClientHelper;
     @Mock private AtributsVisualsHelper atributsVisualsHelper;
     @Mock private DashboardExportMapper dashboardExportMapper;
@@ -124,6 +127,22 @@ class DashboardServiceImplTest {
         java.lang.reflect.Constructor<?> constructor = executorClass.getDeclaredConstructor(DashboardServiceImpl.class);
         constructor.setAccessible(true);
         return (DashboardServiceImpl.DashboardImportActionExecutor) constructor.newInstance(dashboardService);
+    }
+
+    @SuppressWarnings("unchecked")
+    private DashboardServiceImpl.PreferitUsuariActualPerspective createPreferitUsuariActualPerspective() throws Exception {
+        Class<?> perspectiveClass = Class.forName("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl$PreferitUsuariActualPerspective");
+        java.lang.reflect.Constructor<?> constructor = perspectiveClass.getDeclaredConstructor(DashboardServiceImpl.class);
+        constructor.setAccessible(true);
+        return (DashboardServiceImpl.PreferitUsuariActualPerspective) constructor.newInstance(dashboardService);
+    }
+
+    @SuppressWarnings("unchecked")
+    private DashboardServiceImpl.MarcarPreferitActionExecutor createMarcarPreferitActionExecutor() throws Exception {
+        Class<?> executorClass = Class.forName("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl$MarcarPreferitActionExecutor");
+        java.lang.reflect.Constructor<?> constructor = executorClass.getDeclaredConstructor(DashboardServiceImpl.class);
+        constructor.setAccessible(true);
+        return (DashboardServiceImpl.MarcarPreferitActionExecutor) constructor.newInstance(dashboardService);
     }
 
     // ==========================================
@@ -1008,4 +1027,135 @@ class DashboardServiceImplTest {
 
         ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
     }
+
+    @Test
+    @DisplayName("PreferitUsuariActualPerspective: applySingle marca esPreferit=true quan existeix")
+    void preferitPerspective_applySingle_esPreferitTrue() throws Exception {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        Dashboard resource = new Dashboard();
+
+        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari_test");
+        when(dashboardPreferitRepository.existsByUsuariCodiAndDashboardId("usuari_test", 1L)).thenReturn(true);
+
+        DashboardServiceImpl.PreferitUsuariActualPerspective perspective = createPreferitUsuariActualPerspective();
+        perspective.applySingle("test_code", entity, resource);
+
+        assertThat(resource.isEsPreferit()).isTrue();
+    }
+
+    @Test
+    @DisplayName("PreferitUsuariActualPerspective: applySingle marca esPreferit=false quan no existeix")
+    void preferitPerspective_applySingle_esPreferitFalse() throws Exception {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        Dashboard resource = new Dashboard();
+
+        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari_test");
+        when(dashboardPreferitRepository.existsByUsuariCodiAndDashboardId("usuari_test", 1L)).thenReturn(false);
+
+        DashboardServiceImpl.PreferitUsuariActualPerspective perspective = createPreferitUsuariActualPerspective();
+        perspective.applySingle("test_code", entity, resource);
+
+        assertThat(resource.isEsPreferit()).isFalse();
+    }
+
+    @Test
+    @DisplayName("PreferitUsuariActualPerspective: applyMultiple aplica la lògica a tots els elements")
+    void preferitPerspective_applyMultiple_aplicaCorrectament() throws Exception {
+        DashboardEntity entity1 = new DashboardEntity(); entity1.setId(1L);
+        DashboardEntity entity2 = new DashboardEntity(); entity2.setId(2L);
+        Dashboard resource1 = new Dashboard();
+        Dashboard resource2 = new Dashboard();
+
+        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari_test");
+        when(dashboardPreferitRepository.existsByUsuariCodiAndDashboardId("usuari_test", 1L)).thenReturn(true);
+        when(dashboardPreferitRepository.existsByUsuariCodiAndDashboardId("usuari_test", 2L)).thenReturn(false);
+
+        DashboardServiceImpl.PreferitUsuariActualPerspective perspective = createPreferitUsuariActualPerspective();
+        boolean result = perspective.applyMultiple("test_code", List.of(entity1, entity2), List.of(resource1, resource2));
+
+        assertThat(result).isTrue();
+        assertThat(resource1.isEsPreferit()).isTrue();
+        assertThat(resource2.isEsPreferit()).isFalse();
+    }
+
+    @Test
+    @DisplayName("MarcarPreferitActionExecutor: exec afegeix un preferit quan no existia")
+    void marcarPreferit_exec_afegeixQuanNoExisteix() throws Exception {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        DashboardServiceImpl.MarcarPreferitParams params = new DashboardServiceImpl.MarcarPreferitParams();
+        params.setMarcar(true);
+
+        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari_test");
+        when(dashboardPreferitRepository.existsByUsuariCodiAndDashboardId("usuari_test", 1L)).thenReturn(false);
+
+        DashboardServiceImpl.MarcarPreferitActionExecutor executor = createMarcarPreferitActionExecutor();
+        Boolean result = executor.exec("marcar_preferit", entity, params);
+
+        assertThat(result).isTrue();
+        verify(dashboardPreferitRepository).save(argThat(preferit ->
+            preferit.getUsuariCodi().equals("usuari_test") && preferit.getDashboard().equals(entity)
+        ));
+        verify(dashboardPreferitRepository, never()).deleteByUsuariCodiAndDashboardId(anyString(), anyLong());
+    }
+
+    @Test
+    @DisplayName("MarcarPreferitActionExecutor: exec esborra un preferit quan existia")
+    void marcarPreferit_exec_esborraQuanExisteix() throws Exception {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        DashboardServiceImpl.MarcarPreferitParams params = new DashboardServiceImpl.MarcarPreferitParams();
+        params.setMarcar(false);
+
+        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari_test");
+        when(dashboardPreferitRepository.existsByUsuariCodiAndDashboardId("usuari_test", 1L)).thenReturn(true);
+
+        DashboardServiceImpl.MarcarPreferitActionExecutor executor = createMarcarPreferitActionExecutor();
+        Boolean result = executor.exec("marcar_preferit", entity, params);
+
+        assertThat(result).isFalse();
+        verify(dashboardPreferitRepository).deleteByUsuariCodiAndDashboardId("usuari_test", 1L);
+        verify(dashboardPreferitRepository, never()).save(any(DashboardPreferitEntity.class));
+    }
+
+    @Test
+    @DisplayName("MarcarPreferitActionExecutor: exec és idempotent (no fa res si ja està en l'estat desitjat: marcar)")
+    void marcarPreferit_exec_idempotentJaMarcats() throws Exception {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        DashboardServiceImpl.MarcarPreferitParams params = new DashboardServiceImpl.MarcarPreferitParams();
+        params.setMarcar(true);
+
+        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari_test");
+        when(dashboardPreferitRepository.existsByUsuariCodiAndDashboardId("usuari_test", 1L)).thenReturn(true);
+
+        DashboardServiceImpl.MarcarPreferitActionExecutor executor = createMarcarPreferitActionExecutor();
+        Boolean result = executor.exec("marcar_preferit", entity, params);
+
+        assertThat(result).isTrue();
+        verify(dashboardPreferitRepository, never()).save(any(DashboardPreferitEntity.class));
+        verify(dashboardPreferitRepository, never()).deleteByUsuariCodiAndDashboardId(anyString(), anyLong());
+    }
+
+    @Test
+    @DisplayName("MarcarPreferitActionExecutor: exec és idempotent (no fa res si ja està en l'estat desitjat: desmarcar)")
+    void marcarPreferit_exec_idempotentJaDesmarcats() throws Exception {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        DashboardServiceImpl.MarcarPreferitParams params = new DashboardServiceImpl.MarcarPreferitParams();
+        params.setMarcar(false);
+
+        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari_test");
+        when(dashboardPreferitRepository.existsByUsuariCodiAndDashboardId("usuari_test", 1L)).thenReturn(false);
+
+        DashboardServiceImpl.MarcarPreferitActionExecutor executor = createMarcarPreferitActionExecutor();
+        Boolean result = executor.exec("marcar_preferit", entity, params);
+
+        assertThat(result).isFalse();
+        verify(dashboardPreferitRepository, never()).save(any(DashboardPreferitEntity.class));
+        verify(dashboardPreferitRepository, never()).deleteByUsuariCodiAndDashboardId(anyString(), anyLong());
+    }
+
 }

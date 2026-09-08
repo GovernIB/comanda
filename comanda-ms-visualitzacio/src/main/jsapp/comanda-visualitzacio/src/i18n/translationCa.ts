@@ -407,6 +407,19 @@ const translationCa = {
             title: "Taulers de control",
             view: {
                 largeScreenModeFit: "Escalar per ajustar-se a la pantalla",
+                selector: {
+                    loading: "Carregant...",
+                    seeAll: "Veure tots els taulers de control",
+                },
+                favorite: {
+                    added: "Afegit a preferits",
+                    removed: "Eliminat de preferits",
+                },
+                columns: {
+                    titol: "Títol",
+                    descripcio: "Descripció",
+                    esPreferit: "Preferit",
+                },
             },
             editor: {
                 errorAlert: {
@@ -507,7 +520,7 @@ const translationCa = {
                 notExists: "El tauler de control no existeix.",
                 notDefined: "No hi ha cap tauler de control definit.",
                 carregar: "Error en carregar el tauler de control.",
-            }
+            },
         },
         tasques: {
             filter: {
@@ -760,7 +773,7 @@ const translationCa = {
             title: "Entorns",
             resourceTitle: "entorn",
             acl: {
-                readAllowed: "Salut",
+                perm2Allowed: "Salut",
                 perm0Allowed: "Consulta de taulers de control",
                 perm1Allowed: "Disseny de taulers de control",
             },

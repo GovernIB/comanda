@@ -64,6 +64,25 @@ class ParametresHelperTest {
     }
 
     @Test
+    @DisplayName("Retorna null quan el paràmetre no existeix")
+    void perametreFindByCodi_quanNoExisteix_retornaNull() {
+        // Arrange
+        PagedModel<EntityModel<Parametre>> pagedModel = PagedModel.of(
+                Collections.emptyList(),
+                new PagedModel.PageMetadata(0, 0, 0));
+
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
+        when(parametreServiceClient.find(any(), eq("codi:'" + CODI_PARAM + "'"), any(), any(), eq("UNPAGED"), any(), eq(AUTH_HEADER)))
+                .thenReturn(pagedModel);
+
+        // Act
+        Parametre result = parametresHelper.perametreFindByCodi(CODI_PARAM);
+
+        // Assert
+        assertThat(result).isNull();
+    }
+
+    @Test
     @DisplayName("Obté paràmetre de text amb valor per defecte")
     void getParametreText_quanNoExisteix_retornaDefault() {
         // Arrange

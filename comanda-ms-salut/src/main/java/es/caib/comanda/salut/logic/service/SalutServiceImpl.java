@@ -135,7 +135,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	private Set<Serializable> getAllowedIds(ResourceType resourceType) {
 		return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
 				resourceType,
-				Collections.singletonList(PermissionEnum.READ),
+				Collections.singletonList(PermissionEnum.PERM2),
 				authenticationHelper.getCurrentUserName(),
 				Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
 				httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
