@@ -28,18 +28,18 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
     private static final String BASE_WHERE = BASE_WHERE_ENTORN + FILTER_BETWEEN;
 
     // Sintaxi específica de PostgreSQL per a l'extracció i conversió de valors JSON a numèric
-    private static final String SUM_INDICADOR_TEMPLATE = " SUM((f.indicadors_json->>'%s')::numeric) AS sum_fets";
-    private static final String DIMENSION_VALUE_TEMPLATE = " f.dimensions_json->>'%s' ";
-    private static final String INDICADOR_VALUE_EXPR_TEMPLATE = "(f.indicadors_json->>'%s')::numeric";
+    private static final String SUM_INDICADOR_TEMPLATE = " SUM((f.indicadors_json::jsonb->>'%s')::numeric) AS sum_fets";
+    private static final String DIMENSION_VALUE_TEMPLATE = " f.dimensions_json::jsonb->>'%s' ";
+    private static final String INDICADOR_VALUE_EXPR_TEMPLATE = "(f.indicadors_json::jsonb->>'%s')::numeric";
 
     @Override
     public String getFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery() {
-        return "SELECT f.*" + BASE_JOIN + BASE_WHERE + " AND " + getDimensionValueQuery("' || :dimensioCodi || '") + "= :dimensioValor";
+        return "SELECT f.*" + BASE_JOIN + BASE_WHERE + " AND f.dimensions_json::jsonb->>:dimensioCodi = :dimensioValor";
     }
 
     @Override
     public String getFindByEntornAppIdAndTempsDataBetweenAndDimensionValuesQuery() {
-        return "SELECT f.* " + BASE_JOIN + BASE_WHERE + " AND " + getDimensionValueQuery("' || :dimensioCodi || '") + " IN (:dimensioValor)";
+        return "SELECT f.* " + BASE_JOIN + BASE_WHERE + " AND f.dimensions_json::jsonb->>:dimensioCodi IN (:dimensioValor)";
     }
 
     @Override
@@ -496,8 +496,8 @@ public class PostgreSQLFetRepositoryDialect implements FetRepositoryDialect {
         String suffix = getIndicadorSuffix(indicadorCodi, unitat);
         switch (agregacio) {
             case AVERAGE: return "AVG(sum_fets" + suffix + ") AS average_result" + suffix;
-            case FIRST_SEEN: return "CASE WHEN SUM(sum_fets" + suffix + ") > 0 THEN MIN(t.data) ELSE NULL END AS first_seen" + suffix;
-            case LAST_SEEN: return "CASE WHEN SUM(sum_fets" + suffix + ") > 0 THEN MAX(t.data) ELSE NULL END AS last_seen" + suffix;
+            case FIRST_SEEN: return "CASE WHEN SUM(sum_fets" + suffix + ") > 0 THEN MIN(data) ELSE NULL END AS first_seen" + suffix;
+            case LAST_SEEN: return "CASE WHEN SUM(sum_fets" + suffix + ") > 0 THEN MAX(data) ELSE NULL END AS last_seen" + suffix;
             default: return "SUM(sum_fets" + suffix + ") AS total_sum" + suffix;
         }
     }
