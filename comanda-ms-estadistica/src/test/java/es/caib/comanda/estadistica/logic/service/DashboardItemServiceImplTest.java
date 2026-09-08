@@ -68,6 +68,8 @@ class DashboardItemServiceImplTest {
     @Mock private EstadisticaWidgetRepository estadisticaWidgetRepository;
     @Mock private DashboardClonerMapper dashboardClonerMapper;
     @Mock private es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper resourceEntityMappingHelper;
+    @Mock private es.caib.comanda.estadistica.persist.repository.DashboardRepository dashboardRepository;
+    @Mock private es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper estadisticaClientHelper;
 
     @InjectMocks
     private DashboardItemServiceImpl dashboardItemService;
@@ -528,5 +530,26 @@ class DashboardItemServiceImplTest {
         assertThat(clonedItem.getPersonalitzat()).isTrue();
         verify(estadisticaWidgetRepository).save(any());
         verify(dashboardItemRepository).save(clonedItem);
+    }
+
+    @Test
+    @DisplayName("beforeCreateEntity: permet quan l'usuari és ADMIN")
+    void beforeCreateEntity_quanAdmin_permetCrear() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        DashboardItemEntity entity = new DashboardItemEntity();
+        DashboardItem resource = new DashboardItem();
+
+        ReflectionTestUtils.invokeMethod(dashboardItemService, "beforeCreateEntity", entity, resource, Collections.emptyMap());
+    }
+
+    @Test
+    @DisplayName("beforeCreateEntity: llança AccessDeniedException quan no té permís")
+    void beforeCreateEntity_quanSensePermis_llancaAccessDeniedException() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        DashboardItemEntity entity = new DashboardItemEntity();
+        DashboardItem resource = new DashboardItem();
+
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(dashboardItemService, "beforeCreateEntity", entity, resource, Collections.emptyMap()))
+            .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
     }
 }

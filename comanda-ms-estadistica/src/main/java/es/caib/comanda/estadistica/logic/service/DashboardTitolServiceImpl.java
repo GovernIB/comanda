@@ -5,12 +5,16 @@ import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.logic.helper.DashboardItemTitolHelper;
+import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardTitol;
 import es.caib.comanda.estadistica.logic.intf.service.DashboardTitolService;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
+import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +22,6 @@ import org.springframework.stereotype.Service;
 import es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper;
 import es.caib.comanda.estadistica.persist.repository.DashboardTitolRepository;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
-import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
@@ -35,12 +38,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DashboardTitolServiceImpl extends BaseMutableResourceService<DashboardTitol, Long, DashboardTitolEntity> implements DashboardTitolService {
 
-	private final DashboardItemTitolHelper dashboardItemTitolHelper;
+    private final DashboardItemTitolHelper dashboardItemTitolHelper;
     private final AuthenticationHelper authenticationHelper;
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     private final AclServiceClient aclServiceClient;
     private final DashboardClonerMapper dashboardClonerMapper;
     private final DashboardTitolRepository dashboardTitolRepository;
+    private final DashboardRepository dashboardRepository;
+    private final EstadisticaClientHelper estadisticaClientHelper;
 
     @PostConstruct
     public void init() {
@@ -61,7 +66,7 @@ public class DashboardTitolServiceImpl extends BaseMutableResourceService<Dashbo
 
         Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP,
             List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
-        String entornAppFilter = SpringFilterHelper.buildOrFilter("dashboard.entornId", entornAppPermissionIds);
+        String entornAppFilter = buildEntornAppFilter(entornAppPermissionIds);
 
         Set<Serializable> dashboardPermissionIds = getAllowedIds(ResourceType.DASHBOARD,
             List.of(PermissionEnum.READ, PermissionEnum.WRITE));
@@ -81,6 +86,63 @@ public class DashboardTitolServiceImpl extends BaseMutableResourceService<Dashbo
         );
     }
 
+    private String buildEntornAppFilter(Set<Serializable> entornAppPermissionIds) {
+        if (entornAppPermissionIds == null || entornAppPermissionIds.isEmpty()) {
+            return null;
+        }
+        List<String> clauses = new ArrayList<>();
+        for (Serializable id : entornAppPermissionIds) {
+            try {
+                Long entornAppId = Long.parseLong(String.valueOf(id));
+                es.caib.comanda.client.model.EntornApp ea = estadisticaClientHelper.entornAppFindById(entornAppId);
+                if (ea != null && ea.getApp() != null && ea.getEntorn() != null) {
+                    clauses.add("(dashboard.appId:" + ea.getApp().getId() + " and dashboard.entornId:" + ea.getEntorn().getId() + ")");
+                }
+            } catch (Exception e) {
+                log.error("Error resolvent EntornApp per a filtre de títol de dashboard: " + id, e);
+            }
+        }
+        return clauses.isEmpty() ? null : String.join(" or ", clauses);
+    }
+
+    public boolean hasPermission(ResourceType resourceType, Serializable resourceId, List<PermissionEnum> permissions) {
+        if (resourceId == null) return false;
+        try {
+            return Boolean.TRUE.equals(aclServiceClient.anyPermissionGranted(
+                    resourceType,
+                    resourceId,
+                    permissions,
+                    authenticationHelper.getCurrentUserName(),
+                    Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
+                    httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody());
+        } catch (Exception e) {
+            log.error("Error comprovant permisos per " + resourceType + " amb id=" + resourceId, e);
+            return false;
+        }
+    }
+
+    public boolean canDesignDashboard(Long dashboardId) {
+        if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)) {
+            return true;
+        }
+        if (dashboardId == null) return false;
+        es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity dashboard = dashboardRepository.findById(dashboardId).orElse(null);
+        if (dashboard == null) return false;
+        if (hasPermission(ResourceType.DASHBOARD, dashboard.getId(), List.of(PermissionEnum.WRITE))) {
+            return true;
+        }
+        if (dashboard.getAppId() != null && hasPermission(ResourceType.APP, dashboard.getAppId(), List.of(PermissionEnum.PERM1))) {
+            return true;
+        }
+        if (dashboard.getAppId() != null && dashboard.getEntornId() != null) {
+            es.caib.comanda.client.model.EntornApp entornApp = estadisticaClientHelper.entornAppFindByAppAndEntorn(dashboard.getAppId(), dashboard.getEntornId());
+            if (entornApp != null && hasPermission(ResourceType.ENTORN_APP, entornApp.getId(), List.of(PermissionEnum.PERM1))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public Set<Serializable> getAllowedIds(ResourceType resourceType, List<PermissionEnum> permissions) {
         return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
                 resourceType,
@@ -91,10 +153,34 @@ public class DashboardTitolServiceImpl extends BaseMutableResourceService<Dashbo
             .orElse(Collections.emptySet());
     }
 
-	@Override
-	protected void completeResource(DashboardTitol resource) {
-		dashboardItemTitolHelper.completeResourceTitolLogic(resource);
-	}
+    @Override
+    protected void beforeCreateEntity(DashboardTitolEntity entity, DashboardTitol resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        Long dashboardId = resource.getDashboard() != null ? resource.getDashboard().getId() : null;
+        if (!canDesignDashboard(dashboardId)) {
+            throw new org.springframework.security.access.AccessDeniedException("No teniu permisos de disseny per afegir títols a aquest quadre de control");
+        }
+    }
+
+    @Override
+    protected void beforeUpdateEntity(DashboardTitolEntity entity, DashboardTitol resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
+        Long dashboardId = entity.getDashboard() != null ? entity.getDashboard().getId() : (resource.getDashboard() != null ? resource.getDashboard().getId() : null);
+        if (!canDesignDashboard(dashboardId)) {
+            throw new org.springframework.security.access.AccessDeniedException("No teniu permisos de disseny per modificar títols d'aquest quadre de control");
+        }
+    }
+
+    @Override
+    protected void beforeDelete(DashboardTitolEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        Long dashboardId = entity.getDashboard() != null ? entity.getDashboard().getId() : null;
+        if (!canDesignDashboard(dashboardId)) {
+            throw new org.springframework.security.access.AccessDeniedException("No teniu permisos de disseny per eliminar títols d'aquest quadre de control");
+        }
+    }
+
+    @Override
+    protected void completeResource(DashboardTitol resource) {
+        dashboardItemTitolHelper.completeResourceTitolLogic(resource);
+    }
 
     // ========================================================================
     // ACCIÓ PER DUPLICAR UN DASHBOARD TITOL AMB TOTES LES SEVES PROPIETATS

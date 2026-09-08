@@ -127,17 +127,19 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
             || authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
             return currentSpringFilter;
         }
-        List<String> namedQueriesList = namedQueries!= null ? List.of(namedQueries) :Collections.emptyList();
+        List<String> namedQueriesList = namedQueries != null ? List.of(namedQueries) : Collections.emptyList();
+        boolean isWrite = namedQueriesList.contains("WRITE");
+
         Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP,
-            namedQueriesList.contains("WRITE") ?List.of(PermissionEnum.PERM1) :List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
+            isWrite ? List.of(PermissionEnum.PERM1) : List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
         String appFilter = SpringFilterHelper.buildOrFilter("appId", appPermissionIds);
 
         Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP,
-            namedQueriesList.contains("WRITE") ?List.of(PermissionEnum.PERM1) :List.of(PermissionEnum.PERM0, PermissionEnum.PERM1) );
-        String entornAppFilter = SpringFilterHelper.buildOrFilter("entornId", entornAppPermissionIds);
+            isWrite ? List.of(PermissionEnum.PERM1) : List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
+        String entornAppFilter = buildEntornAppFilter(entornAppPermissionIds);
 
         Set<Serializable> dashboardPermissionIds = getAllowedIds(ResourceType.DASHBOARD,
-            namedQueriesList.contains("WRITE") ?List.of(PermissionEnum.WRITE) :List.of(PermissionEnum.READ, PermissionEnum.WRITE));
+            isWrite ? List.of(PermissionEnum.WRITE) : List.of(PermissionEnum.READ, PermissionEnum.WRITE));
         String dashboardFilter = SpringFilterHelper.buildOrFilter("id", dashboardPermissionIds);
 
         String filter = SpringFilterHelper.or(
@@ -152,6 +154,76 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                 ? "id:0"
                 : filter
         );
+    }
+
+    private String buildEntornAppFilter(Set<Serializable> entornAppPermissionIds) {
+        if (entornAppPermissionIds == null || entornAppPermissionIds.isEmpty()) {
+            return null;
+        }
+        List<String> clauses = new ArrayList<>();
+        for (Serializable id : entornAppPermissionIds) {
+            try {
+                Long entornAppId = Long.parseLong(String.valueOf(id));
+                es.caib.comanda.client.model.EntornApp ea = estadisticaClientHelper.entornAppFindById(entornAppId);
+                if (ea != null && ea.getApp() != null && ea.getEntorn() != null) {
+                    clauses.add("(appId:" + ea.getApp().getId() + " and entornId:" + ea.getEntorn().getId() + ")");
+                }
+            } catch (Exception e) {
+                log.error("Error resolvent EntornApp per a filtre de dashboard: " + id, e);
+            }
+        }
+        return clauses.isEmpty() ? null : String.join(" or ", clauses);
+    }
+
+    public boolean hasPermission(ResourceType resourceType, Serializable resourceId, List<PermissionEnum> permissions) {
+        if (resourceId == null) return false;
+        try {
+            return Boolean.TRUE.equals(aclServiceClient.anyPermissionGranted(
+                    resourceType,
+                    resourceId,
+                    permissions,
+                    authenticationHelper.getCurrentUserName(),
+                    Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
+                    httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody());
+        } catch (Exception e) {
+            log.error("Error comprovant permisos per " + resourceType + " amb id=" + resourceId, e);
+            return false;
+        }
+    }
+
+    public boolean canDesign(Long dashboardId, Long appId, Long entornId) {
+        if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)) {
+            return true;
+        }
+        if (dashboardId != null && hasPermission(ResourceType.DASHBOARD, dashboardId, List.of(PermissionEnum.WRITE))) {
+            return true;
+        }
+        if (appId != null && hasPermission(ResourceType.APP, appId, List.of(PermissionEnum.PERM1))) {
+            return true;
+        }
+        if (appId != null && entornId != null) {
+            es.caib.comanda.client.model.EntornApp entornApp = estadisticaClientHelper.entornAppFindByAppAndEntorn(appId, entornId);
+            if (entornApp != null && hasPermission(ResourceType.ENTORN_APP, entornApp.getId(), List.of(PermissionEnum.PERM1))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean canCreate(Long appId, Long entornId) {
+        if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)) {
+            return true;
+        }
+        if (appId != null && hasPermission(ResourceType.APP, appId, List.of(PermissionEnum.PERM1))) {
+            return true;
+        }
+        if (appId != null && entornId != null) {
+            es.caib.comanda.client.model.EntornApp entornApp = estadisticaClientHelper.entornAppFindByAppAndEntorn(appId, entornId);
+            if (entornApp != null && hasPermission(ResourceType.ENTORN_APP, entornApp.getId(), List.of(PermissionEnum.PERM1))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public Set<Serializable> getAllowedIds(ResourceType resourceType, List<PermissionEnum> permissions) {
@@ -170,8 +242,27 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     }
 
     @Override
+    protected void beforeCreateEntity(DashboardEntity entity, Dashboard resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        Long appId = resource.getAplicacio() != null ? resource.getAplicacio().getId() : resource.getAppId();
+        Long entornId = resource.getEntorn() != null ? resource.getEntorn().getId() : resource.getEntornId();
+        if (!canCreate(appId, entornId)) {
+            throw new org.springframework.security.access.AccessDeniedException("No teniu permisos de disseny per crear quadres de control per a aquesta aplicació/entorn");
+        }
+    }
+
+    @Override
     protected void beforeUpdateEntity(DashboardEntity entity, Dashboard resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
+        if (!canDesign(entity.getId(), entity.getAppId(), entity.getEntornId())) {
+            throw new org.springframework.security.access.AccessDeniedException("No teniu permisos de disseny per modificar aquest quadre de control");
+        }
         dashboardHelper.beforeUpdateEntityLogic(entity, resource, answers);
+    }
+
+    @Override
+    protected void beforeDelete(DashboardEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        if (!canDesign(entity.getId(), entity.getAppId(), entity.getEntornId())) {
+            throw new org.springframework.security.access.AccessDeniedException("No teniu permisos de disseny per eliminar aquest quadre de control");
+        }
     }
 
     @Override

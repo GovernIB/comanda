@@ -59,6 +59,12 @@ class DashboardTitolServiceImplTest {
     @Mock
     private es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper resourceEntityMappingHelper;
 
+    @Mock
+    private es.caib.comanda.estadistica.persist.repository.DashboardRepository dashboardRepository;
+
+    @Mock
+    private es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper estadisticaClientHelper;
+
     @InjectMocks
     private DashboardTitolServiceImpl dashboardTitolService;
 

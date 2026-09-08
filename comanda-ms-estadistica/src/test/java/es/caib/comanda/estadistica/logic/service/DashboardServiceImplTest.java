@@ -759,13 +759,83 @@ class DashboardServiceImplTest {
     // ==========================================
 
     @Test
-    @DisplayName("beforeUpdateEntity delega a dashboardHelper")
+    @DisplayName("beforeUpdateEntity delega a dashboardHelper quan és admin")
     void beforeUpdateEntity_delegaAHelper() throws Exception {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
         DashboardEntity entity = new DashboardEntity();
         Dashboard resource = new Dashboard();
         Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
         ReflectionTestUtils.invokeMethod(dashboardService, "beforeUpdateEntity", entity, resource, answers);
         verify(dashboardHelper).beforeUpdateEntityLogic(entity, resource, answers);
+    }
+
+    @Test
+    @DisplayName("beforeCreateEntity: permet crear quan és ADMIN")
+    void beforeCreateEntity_quanAdmin_permetCrear() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        DashboardEntity entity = new DashboardEntity();
+        Dashboard resource = new Dashboard();
+        resource.setAppId(1L);
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+
+        ReflectionTestUtils.invokeMethod(dashboardService, "beforeCreateEntity", entity, resource, answers);
+    }
+
+    @Test
+    @DisplayName("beforeCreateEntity: llança AccessDeniedException quan no té permisos de disseny")
+    void beforeCreateEntity_quanSensePermisos_llancaAccessDeniedException() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("user");
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"ROLE_USER"});
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("auth");
+        when(aclServiceClient.anyPermissionGranted(any(), any(), any(), any(), any(), any()))
+            .thenReturn(ResponseEntity.ok(false));
+
+        DashboardEntity entity = new DashboardEntity();
+        Dashboard resource = new Dashboard();
+        resource.setAppId(1L);
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(dashboardService, "beforeCreateEntity", entity, resource, answers))
+            .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
+    }
+
+    @Test
+    @DisplayName("beforeUpdateEntity: llança AccessDeniedException quan no té permisos de disseny")
+    void beforeUpdateEntity_quanSensePermisos_llancaAccessDeniedException() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("user");
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"ROLE_USER"});
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("auth");
+        when(aclServiceClient.anyPermissionGranted(any(), any(), any(), any(), any(), any()))
+            .thenReturn(ResponseEntity.ok(false));
+
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(10L);
+        entity.setAppId(1L);
+        Dashboard resource = new Dashboard();
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(dashboardService, "beforeUpdateEntity", entity, resource, answers))
+            .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
+    }
+
+    @Test
+    @DisplayName("beforeDelete: llança AccessDeniedException quan no té permisos de disseny")
+    void beforeDelete_quanSensePermisos_llancaAccessDeniedException() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("user");
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"ROLE_USER"});
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("auth");
+        when(aclServiceClient.anyPermissionGranted(any(), any(), any(), any(), any(), any()))
+            .thenReturn(ResponseEntity.ok(false));
+
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(10L);
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(dashboardService, "beforeDelete", entity, answers))
+            .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
     }
 
     @Test
@@ -805,7 +875,7 @@ class DashboardServiceImplTest {
 
         try (MockedStatic<SpringFilterHelper> mockedStatic = mockStatic(SpringFilterHelper.class)) {
             mockedStatic.when(() -> SpringFilterHelper.buildOrFilter(anyString(), any())).thenReturn("");
-            mockedStatic.when(() -> SpringFilterHelper.or(anyString(), anyString(), anyString())).thenReturn("");
+            mockedStatic.when(() -> SpringFilterHelper.or(any(), any(), any())).thenReturn("");
             mockedStatic.when(() -> SpringFilterHelper.and(eq("current"), eq("id:0"))).thenReturn("current AND id:0");
 
             String result = ReflectionTestUtils.invokeMethod(dashboardService, "additionalSpringFilter", "current", new String[]{});

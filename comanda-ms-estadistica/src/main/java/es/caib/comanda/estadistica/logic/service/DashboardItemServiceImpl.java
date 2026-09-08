@@ -18,6 +18,7 @@ import es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.EstadisticaWidgetRepository;
+import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
@@ -61,6 +62,8 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
     private final AclServiceClient aclServiceClient;
     private final EstadisticaWidgetRepository estadisticaWidgetRepository;
     private final DashboardClonerMapper dashboardClonerMapper;
+    private final DashboardRepository dashboardRepository;
+    private final EstadisticaClientHelper estadisticaClientHelper;
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
     static {
@@ -90,6 +93,7 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
 
         Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP,
             List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
+        // TODO Pendent de revisar els usos del camp entornId i corregir el seu nom
         String entornAppFilter = SpringFilterHelper.buildOrFilter("entornId", entornAppPermissionIds);
 
         Set<Serializable> dashboardPermissionIds = getAllowedIds(ResourceType.DASHBOARD,
@@ -110,6 +114,44 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
         );
     }
 
+    public boolean hasPermission(ResourceType resourceType, Serializable resourceId, List<PermissionEnum> permissions) {
+        if (resourceId == null) return false;
+        try {
+            return Boolean.TRUE.equals(aclServiceClient.anyPermissionGranted(
+                    resourceType,
+                    resourceId,
+                    permissions,
+                    authenticationHelper.getCurrentUserName(),
+                    Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
+                    httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody());
+        } catch (Exception e) {
+            log.error("Error comprovant permisos per " + resourceType + " amb id=" + resourceId, e);
+            return false;
+        }
+    }
+
+    public boolean canDesignDashboard(Long dashboardId) {
+        if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)) {
+            return true;
+        }
+        if (dashboardId == null) return false;
+        es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity dashboard = dashboardRepository.findById(dashboardId).orElse(null);
+        if (dashboard == null) return false;
+        if (hasPermission(ResourceType.DASHBOARD, dashboard.getId(), List.of(PermissionEnum.WRITE))) {
+            return true;
+        }
+        if (dashboard.getAppId() != null && hasPermission(ResourceType.APP, dashboard.getAppId(), List.of(PermissionEnum.PERM1))) {
+            return true;
+        }
+        if (dashboard.getAppId() != null && dashboard.getEntornId() != null) {
+            es.caib.comanda.client.model.EntornApp entornApp = estadisticaClientHelper.entornAppFindByAppAndEntorn(dashboard.getAppId(), dashboard.getEntornId());
+            if (entornApp != null && hasPermission(ResourceType.ENTORN_APP, entornApp.getId(), List.of(PermissionEnum.PERM1))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public Set<Serializable> getAllowedIds(ResourceType resourceType, List<PermissionEnum> permissions) {
         return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
                 resourceType,
@@ -118,6 +160,30 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
                 Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
                 httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
             .orElse(Collections.emptySet());
+    }
+
+    @Override
+    protected void beforeCreateEntity(DashboardItemEntity entity, DashboardItem resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        Long dashboardId = resource.getDashboard() != null ? resource.getDashboard().getId() : null;
+        if (!canDesignDashboard(dashboardId)) {
+            throw new org.springframework.security.access.AccessDeniedException("No teniu permisos de disseny per afegir elements a aquest quadre de control");
+        }
+    }
+
+    @Override
+    protected void beforeUpdateEntity(DashboardItemEntity entity, DashboardItem resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
+        Long dashboardId = entity.getDashboard() != null ? entity.getDashboard().getId() : (resource.getDashboard() != null ? resource.getDashboard().getId() : null);
+        if (!canDesignDashboard(dashboardId)) {
+            throw new org.springframework.security.access.AccessDeniedException("No teniu permisos de disseny per modificar elements d'aquest quadre de control");
+        }
+    }
+
+    @Override
+    protected void beforeDelete(DashboardItemEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        Long dashboardId = entity.getDashboard() != null ? entity.getDashboard().getId() : null;
+        if (!canDesignDashboard(dashboardId)) {
+            throw new org.springframework.security.access.AccessDeniedException("No teniu permisos de disseny per eliminar elements d'aquest quadre de control");
+        }
     }
 
     @Override
