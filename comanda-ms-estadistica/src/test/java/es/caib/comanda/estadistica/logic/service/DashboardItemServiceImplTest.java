@@ -26,8 +26,10 @@ import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
+import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService.ReportGenerator;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -71,11 +73,19 @@ class DashboardItemServiceImplTest {
     @Mock private es.caib.comanda.estadistica.persist.repository.DashboardRepository dashboardRepository;
     @Mock private es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper estadisticaClientHelper;
 
-    @InjectMocks
-    private DashboardItemServiceImpl dashboardItemService;
+    @Mock private es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper dashboardPermisosHelper;
+    @InjectMocks private DashboardItemServiceImpl dashboardItemService;
 
     @BeforeEach
     void setUp() {
+        dashboardPermisosHelper = org.mockito.Mockito.spy(new es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper(
+            authenticationHelper,
+            httpAuthorizationHeaderHelper,
+            aclServiceClient,
+            dashboardRepository,
+            estadisticaClientHelper
+        ));
+        ReflectionTestUtils.setField(dashboardItemService, "dashboardPermisosHelper", dashboardPermisosHelper);
         dashboardItemService.init();
         ReflectionTestUtils.setField(dashboardItemService, "entityRepository", dashboardItemRepository);
         ReflectionTestUtils.setField(dashboardItemService, "resourceEntityMappingHelper", resourceEntityMappingHelper);
@@ -151,19 +161,6 @@ class DashboardItemServiceImplTest {
 
         // Assert
         assertThat(result).isEqualTo("base and id:0");
-    }
-
-    @Test
-    @DisplayName("getAllowedIds: retorna conjunt buit quan el client ACL retorna null")
-    void getAllowedIds_quanAclRetornaNull_llavorsRetornaConjuntBuit() {
-        // Arrange
-        when(aclServiceClient.findIdsWithAnyPermission(any(), any(), any(), any(), anyString())).thenReturn(ResponseEntity.ok(null));
-
-        // Act
-        Set<Serializable> result = dashboardItemService.getAllowedIds(ResourceType.APP, List.of(PermissionEnum.READ));
-
-        // Assert
-        assertThat(result).isEmpty();
     }
 
     // ========================================================================
@@ -481,6 +478,7 @@ class DashboardItemServiceImplTest {
     @DisplayName("DuplicateDashboardItemAction: clona correctament l'item i el widget associat copiant destacat i personalitzat")
     void duplicateDashboardItemAction_quanItemValid_llavorsClonaItemIWidget() throws Exception {
         // Arrange
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
         es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity dashboard =
             new es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity();
         dashboard.setId(1L);
@@ -551,5 +549,123 @@ class DashboardItemServiceImplTest {
 
         assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(dashboardItemService, "beforeCreateEntity", entity, resource, Collections.emptyMap()))
             .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
+    }
+
+    @Test
+    @DisplayName("DuplicateDashboardItemAction: llança AccessDeniedException quan no es tenen permisos de disseny")
+    void duplicateDashboardItemAction_quanSensePermis_llancaAccessDeniedException() {
+        es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity dashboard =
+            new es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity();
+        dashboard.setId(999L);
+
+        DashboardItemEntity entity = new DashboardItemEntity();
+        entity.setId(50L);
+        entity.setDashboard(dashboard);
+
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(dashboardRepository.findById(999L)).thenReturn(Optional.empty());
+
+        DashboardItemServiceImpl.DuplicateDashboardItemAction action =
+            dashboardItemService.new DuplicateDashboardItemAction();
+
+        assertThatThrownBy(() -> action.exec(DashboardItem.DUPLICATE_ACTION, entity, null))
+            .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
+    }
+
+    @Test
+    @DisplayName("beforeUpdateEntity: llança AccessDeniedException si es mou a un dashboard de destí sense permisos")
+    void beforeUpdateEntity_quanMoureDashboardSensePermisDesti_llancaAccessDeniedException() {
+        es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity currentDashboard =
+            new es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity();
+        currentDashboard.setId(1L);
+
+        DashboardItemEntity entity = new DashboardItemEntity();
+        entity.setId(50L);
+        entity.setDashboard(currentDashboard);
+
+        DashboardItem resource = new DashboardItem();
+        ResourceReference dashboardRef = new ResourceReference();
+        dashboardRef.setId(2L);
+        resource.setDashboard(dashboardRef);
+
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(dashboardRepository.findById(1L)).thenReturn(Optional.of(currentDashboard));
+        when(dashboardRepository.findById(2L)).thenReturn(Optional.empty());
+        when(aclServiceClient.anyPermissionGranted(any(), eq(1L), any(), any(), any(), any()))
+            .thenReturn(ResponseEntity.ok(true));
+
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(dashboardItemService, "beforeUpdateEntity", entity, resource, Collections.emptyMap()))
+            .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
+    }
+
+    @Test
+    @Disabled("Pendent de revisar els permisos d'accés al widget segons TODO")
+    @DisplayName("beforeCreateEntity: llança AccessDeniedException si el widget és d'una app sense accés")
+    void beforeCreateEntity_quanWidgetAltraAppSensePermis_llancaAccessDeniedException() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+
+        es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity dashboard =
+            new es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity();
+        dashboard.setId(1L);
+        dashboard.setAppId(10L);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setAppId(20L); // Diferent app
+
+        when(dashboardRepository.findById(1L)).thenReturn(Optional.of(dashboard));
+        when(aclServiceClient.anyPermissionGranted(any(), eq(1L), any(), any(), any(), any()))
+            .thenReturn(ResponseEntity.ok(true));
+        when(estadisticaWidgetRepository.findById(100L)).thenReturn(Optional.of(widget));
+        // L'usuari només té accés a l'app 10, no a la 20
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), any(), any(), any(), any()))
+            .thenReturn(ResponseEntity.ok(Set.of(10L)));
+
+        DashboardItemEntity entity = new DashboardItemEntity();
+        DashboardItem resource = new DashboardItem();
+        ResourceReference dRef = new ResourceReference();
+        dRef.setId(1L);
+        resource.setDashboard(dRef);
+        ResourceReference wRef = new ResourceReference();
+        wRef.setId(100L);
+        resource.setWidget(wRef);
+
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(dashboardItemService, "beforeCreateEntity", entity, resource, Collections.emptyMap()))
+            .isInstanceOf(org.springframework.security.access.AccessDeniedException.class)
+            .hasMessageContaining("utilitzar");
+    }
+
+    @Test
+    @DisplayName("beforeCreateEntity: llança AccessDeniedException si el widget pertany a una app diferent del dashboard")
+    void beforeCreateEntity_quanWidgetDiferentAppQueDashboard_llancaAccessDeniedException() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+
+        es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity dashboard =
+            new es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity();
+        dashboard.setId(1L);
+        dashboard.setAppId(10L);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setAppId(20L);
+
+        when(dashboardRepository.findById(1L)).thenReturn(Optional.of(dashboard));
+        when(aclServiceClient.anyPermissionGranted(any(), eq(1L), any(), any(), any(), any()))
+            .thenReturn(ResponseEntity.ok(true));
+        when(estadisticaWidgetRepository.findById(100L)).thenReturn(Optional.of(widget));
+
+        DashboardItemEntity entity = new DashboardItemEntity();
+        DashboardItem resource = new DashboardItem();
+        ResourceReference dRef = new ResourceReference();
+        dRef.setId(1L);
+        resource.setDashboard(dRef);
+        ResourceReference wRef = new ResourceReference();
+        wRef.setId(100L);
+        resource.setWidget(wRef);
+
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(dashboardItemService, "beforeCreateEntity", entity, resource, Collections.emptyMap()))
+            .isInstanceOf(org.springframework.security.access.AccessDeniedException.class)
+            .hasMessageContaining("mateixa aplicació");
     }
 }

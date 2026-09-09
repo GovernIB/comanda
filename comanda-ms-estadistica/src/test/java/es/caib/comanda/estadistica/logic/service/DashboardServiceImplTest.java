@@ -3,6 +3,7 @@ package es.caib.comanda.estadistica.logic.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.AclServiceClient;
+import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.logic.helper.AtributsVisualsHelper;
 import es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper;
 import es.caib.comanda.estadistica.logic.helper.DashboardHelper;
@@ -53,8 +54,11 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import es.caib.comanda.client.model.App;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -88,14 +92,26 @@ class DashboardServiceImplTest {
     @Mock private AuthenticationHelper authenticationHelper;
     @Mock private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     @Mock private AclServiceClient aclServiceClient;
+    @Mock private es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper dashboardPermisosHelper;
 
     @InjectMocks
     private DashboardServiceImpl dashboardService;
 
     @BeforeEach
     void setUp() {
+        dashboardPermisosHelper = org.mockito.Mockito.spy(new es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper(
+            authenticationHelper,
+            httpAuthorizationHeaderHelper,
+            aclServiceClient,
+            dashboardRepository,
+            estadisticaClientHelper
+        ));
+        ReflectionTestUtils.setField(dashboardService, "dashboardPermisosHelper", dashboardPermisosHelper);
         ReflectionTestUtils.setField(dashboardService, "entityRepository", dashboardRepository);
         dashboardService.init();
+        lenient().when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
+        lenient().when(authenticationHelper.getCurrentUserName()).thenReturn("testUser");
+        lenient().when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"ROLE_USER"});
     }
 
     /**
@@ -742,7 +758,7 @@ class DashboardServiceImplTest {
 
         List<DashboardExport> exports = Arrays.asList(new DashboardExport(), new DashboardExport());
 
-        when(dashboardRepository.findAll()).thenReturn(entities);
+        when(dashboardRepository.findAll(nullable(Specification.class))).thenReturn(entities);
         when(dashboardExportMapper.toDashboardExport(entities, estadisticaClientHelper, atributsVisualsHelper))
                 .thenReturn(exports);
 
@@ -750,7 +766,7 @@ class DashboardServiceImplTest {
         List<DashboardExport> result = reportGenerator.generateData(Dashboard.DASHBOARD_EXPORT, null, null);
 
         assertThat(result).hasSize(2);
-        verify(dashboardRepository).findAll();
+        verify(dashboardRepository).findAll(nullable(Specification.class));
         verify(dashboardExportMapper).toDashboardExport(entities, estadisticaClientHelper, atributsVisualsHelper);
     }
 
@@ -947,6 +963,7 @@ class DashboardServiceImplTest {
     @Test
     @DisplayName("DashboardImport: exec importa dashboards correctament")
     void dashboardImport_exec_importaCorrectament() throws Exception {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
         DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
 
         String json = "[{\"titol\":\"Titol\"}]";
@@ -1028,6 +1045,7 @@ class DashboardServiceImplTest {
     @Test
     @DisplayName("DashboardImport: exec amb objecte JSON únic importa correctament")
     void dashboardImport_exec_ambObjecteUnic_importaCorrectament() throws Exception {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
         DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
         ObjectMapper realMapper = new ObjectMapper();
         ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
@@ -1226,6 +1244,57 @@ class DashboardServiceImplTest {
         assertThat(result).isFalse();
         verify(dashboardPreferitRepository, never()).save(any(DashboardPreferitEntity.class));
         verify(dashboardPreferitRepository, never()).deleteByUsuariCodiAndDashboardId(anyString(), anyLong());
+    }
+
+    @Test
+    @DisplayName("DashboardImport: exec llança AccessDeniedException si l'usuari no té permisos a l'app destí")
+    void dashboardImport_exec_quanSensePermisos_llancaAccessDeniedException() throws Exception {
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+
+        String json = "[{\"titol\":\"Titol\",\"appCodi\":\"APP_PROTECTED\"}]";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.DashboardImportParams params = new DashboardServiceImpl.DashboardImportParams();
+        params.setFile(fileRef);
+
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        App protectedApp = new App();
+        ReflectionTestUtils.setField(protectedApp, "id", 99L);
+        when(estadisticaClientHelper.appFindByCodi("APP_PROTECTED")).thenReturn(protectedApp);
+        when(aclServiceClient.anyPermissionGranted(any(), eq(99L), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(false));
+
+        assertThatThrownBy(() -> executor.exec(Dashboard.DASHBOARD_IMPORT, new DashboardEntity(), params))
+                .isInstanceOf(AccessDeniedException.class);
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
+    @DisplayName("beforeUpdateEntity llança AccessDeniedException si es canvia d'aplicació sense permisos a la destí")
+    void beforeUpdateEntity_quanCanviarAppSensePermis_llancaAccessDeniedException() throws Exception {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        entity.setAppId(10L);
+
+        Dashboard resource = new Dashboard();
+        resource.setAppId(20L);
+
+        // Permís de disseny sobre el dashboard actual 1
+        when(aclServiceClient.anyPermissionGranted(eq(ResourceType.DASHBOARD), eq(1L), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(true));
+        // Sense permís sobre la nova app 20
+        when(aclServiceClient.anyPermissionGranted(eq(ResourceType.APP), eq(20L), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(false));
+
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(dashboardService, "beforeUpdateEntity", entity, resource, Collections.emptyMap()))
+                .isInstanceOf(AccessDeniedException.class);
     }
 
 }

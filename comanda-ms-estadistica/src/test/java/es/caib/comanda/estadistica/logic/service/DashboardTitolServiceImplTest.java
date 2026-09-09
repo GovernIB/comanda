@@ -21,9 +21,14 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
+import es.caib.comanda.ms.logic.intf.model.ResourceReference;
+import org.springframework.security.access.AccessDeniedException;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -65,11 +70,22 @@ class DashboardTitolServiceImplTest {
     @Mock
     private es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper estadisticaClientHelper;
 
+    @Mock
+    private es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper dashboardPermisosHelper;
+
     @InjectMocks
     private DashboardTitolServiceImpl dashboardTitolService;
 
     @BeforeEach
     void setUp() {
+        dashboardPermisosHelper = org.mockito.Mockito.spy(new es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper(
+            authenticationHelper,
+            httpAuthorizationHeaderHelper,
+            aclServiceClient,
+            dashboardRepository,
+            estadisticaClientHelper
+        ));
+        ReflectionTestUtils.setField(dashboardTitolService, "dashboardPermisosHelper", dashboardPermisosHelper);
         dashboardTitolService.init();
         ReflectionTestUtils.setField(dashboardTitolService, "entityRepository", dashboardTitolRepository);
         ReflectionTestUtils.setField(dashboardTitolService, "resourceEntityMappingHelper", resourceEntityMappingHelper);
@@ -225,6 +241,7 @@ class DashboardTitolServiceImplTest {
     @DisplayName("DuplicateDashboardTitolAction: clona correctament el títol generant nom seqüencial i copiant propietats visuals")
     void duplicateDashboardTitolAction_quanTitolValid_llavorsClonaTitol() throws Exception {
         // Arrange
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
         es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity dashboard =
             new es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity();
         dashboard.setId(1L);
@@ -269,5 +286,55 @@ class DashboardTitolServiceImplTest {
         assertThat(clonedTitol.getDestacat()).isTrue();
         assertThat(clonedTitol.getPersonalitzat()).isTrue();
         verify(dashboardTitolRepository).save(clonedTitol);
+    }
+
+    @Test
+    @DisplayName("DuplicateDashboardTitolAction: llança AccessDeniedException quan no es tenen permisos de disseny")
+    void duplicateDashboardTitolAction_quanSensePermis_llancaAccessDeniedException() {
+        es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity dashboard =
+            new es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity();
+        dashboard.setId(999L);
+
+        es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity entity =
+            new es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity();
+        entity.setId(10L);
+        entity.setDashboard(dashboard);
+
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(dashboardRepository.findById(999L)).thenReturn(Optional.empty());
+
+        DashboardTitolServiceImpl.DuplicateDashboardTitolAction action =
+            dashboardTitolService.new DuplicateDashboardTitolAction();
+
+        assertThatThrownBy(() -> action.exec(DashboardTitol.DUPLICATE_ACTION, entity, null))
+            .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    @DisplayName("beforeUpdateEntity: llança AccessDeniedException si es mou a un dashboard sense permisos")
+    void beforeUpdateEntity_quanMoureDashboardSensePermisDesti_llancaAccessDeniedException() {
+        es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity currentDashboard =
+            new es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity();
+        currentDashboard.setId(1L);
+
+        es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity entity =
+            new es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity();
+        entity.setId(10L);
+        entity.setDashboard(currentDashboard);
+
+        DashboardTitol resource = new DashboardTitol();
+        ResourceReference dashboardRef = new ResourceReference();
+        dashboardRef.setId(2L);
+        resource.setDashboard(dashboardRef);
+
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        // Té permís pel dashboard 1 però no pel 2
+        when(dashboardRepository.findById(1L)).thenReturn(Optional.of(currentDashboard));
+        when(dashboardRepository.findById(2L)).thenReturn(Optional.empty());
+        when(aclServiceClient.anyPermissionGranted(any(), eq(1L), any(), any(), any(), any()))
+            .thenReturn(ResponseEntity.ok(true));
+
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(dashboardTitolService, "beforeUpdateEntity", entity, resource, Collections.emptyMap()))
+            .isInstanceOf(AccessDeniedException.class);
     }
 }

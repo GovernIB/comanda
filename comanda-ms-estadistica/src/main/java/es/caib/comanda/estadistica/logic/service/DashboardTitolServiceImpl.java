@@ -1,18 +1,13 @@
 package es.caib.comanda.estadistica.logic.service;
 
-import es.caib.comanda.base.config.BaseConfig;
-import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.logic.helper.DashboardItemTitolHelper;
-import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
+import es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardTitol;
 import es.caib.comanda.estadistica.logic.intf.service.DashboardTitolService;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
-import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
-import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
-import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
@@ -39,13 +34,9 @@ import java.util.stream.Collectors;
 public class DashboardTitolServiceImpl extends BaseMutableResourceService<DashboardTitol, Long, DashboardTitolEntity> implements DashboardTitolService {
 
     private final DashboardItemTitolHelper dashboardItemTitolHelper;
-    private final AuthenticationHelper authenticationHelper;
-    private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
-    private final AclServiceClient aclServiceClient;
     private final DashboardClonerMapper dashboardClonerMapper;
     private final DashboardTitolRepository dashboardTitolRepository;
-    private final DashboardRepository dashboardRepository;
-    private final EstadisticaClientHelper estadisticaClientHelper;
+    private final DashboardPermisosHelper dashboardPermisosHelper;
 
     @PostConstruct
     public void init() {
@@ -56,19 +47,18 @@ public class DashboardTitolServiceImpl extends BaseMutableResourceService<Dashbo
     protected String additionalSpringFilter(
         String currentSpringFilter,
         String[] namedQueries) {
-        if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
-            || authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
+        if (dashboardPermisosHelper.isAdminOrConsulta()) {
             return currentSpringFilter;
         }
-        Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP,
+        Set<Serializable> appPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.APP,
             List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
         String appFilter = SpringFilterHelper.buildOrFilter("dashboard.appId", appPermissionIds);
 
-        Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP,
+        Set<Serializable> entornAppPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.ENTORN_APP,
             List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
-        String entornAppFilter = buildEntornAppFilter(entornAppPermissionIds);
+        String entornAppFilter = dashboardPermisosHelper.buildEntornAppFilter(entornAppPermissionIds, "dashboard");
 
-        Set<Serializable> dashboardPermissionIds = getAllowedIds(ResourceType.DASHBOARD,
+        Set<Serializable> dashboardPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.DASHBOARD,
             List.of(PermissionEnum.READ, PermissionEnum.WRITE));
         String dashboardFilter = SpringFilterHelper.buildOrFilter("dashboard.id", dashboardPermissionIds);
 
@@ -86,95 +76,31 @@ public class DashboardTitolServiceImpl extends BaseMutableResourceService<Dashbo
         );
     }
 
-    private String buildEntornAppFilter(Set<Serializable> entornAppPermissionIds) {
-        if (entornAppPermissionIds == null || entornAppPermissionIds.isEmpty()) {
-            return null;
-        }
-        List<String> clauses = new ArrayList<>();
-        for (Serializable id : entornAppPermissionIds) {
-            try {
-                Long entornAppId = Long.parseLong(String.valueOf(id));
-                es.caib.comanda.client.model.EntornApp ea = estadisticaClientHelper.entornAppFindById(entornAppId);
-                if (ea != null && ea.getApp() != null && ea.getEntorn() != null) {
-                    clauses.add("(dashboard.appId:" + ea.getApp().getId() + " and dashboard.entornId:" + ea.getEntorn().getId() + ")");
-                }
-            } catch (Exception e) {
-                log.error("Error resolvent EntornApp per a filtre de títol de dashboard: " + id, e);
-            }
-        }
-        return clauses.isEmpty() ? null : String.join(" or ", clauses);
-    }
-
-    public boolean hasPermission(ResourceType resourceType, Serializable resourceId, List<PermissionEnum> permissions) {
-        if (resourceId == null) return false;
-        try {
-            return Boolean.TRUE.equals(aclServiceClient.anyPermissionGranted(
-                    resourceType,
-                    resourceId,
-                    permissions,
-                    authenticationHelper.getCurrentUserName(),
-                    Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
-                    httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody());
-        } catch (Exception e) {
-            log.error("Error comprovant permisos per " + resourceType + " amb id=" + resourceId, e);
-            return false;
-        }
-    }
-
-    public boolean canDesignDashboard(Long dashboardId) {
-        if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)) {
-            return true;
-        }
-        if (dashboardId == null) return false;
-        es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity dashboard = dashboardRepository.findById(dashboardId).orElse(null);
-        if (dashboard == null) return false;
-        if (hasPermission(ResourceType.DASHBOARD, dashboard.getId(), List.of(PermissionEnum.WRITE))) {
-            return true;
-        }
-        if (dashboard.getAppId() != null && hasPermission(ResourceType.APP, dashboard.getAppId(), List.of(PermissionEnum.PERM1))) {
-            return true;
-        }
-        if (dashboard.getAppId() != null && dashboard.getEntornId() != null) {
-            es.caib.comanda.client.model.EntornApp entornApp = estadisticaClientHelper.entornAppFindByAppAndEntorn(dashboard.getAppId(), dashboard.getEntornId());
-            if (entornApp != null && hasPermission(ResourceType.ENTORN_APP, entornApp.getId(), List.of(PermissionEnum.PERM1))) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public Set<Serializable> getAllowedIds(ResourceType resourceType, List<PermissionEnum> permissions) {
-        return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
-                resourceType,
-                permissions,
-                authenticationHelper.getCurrentUserName(),
-                Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
-                httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
-            .orElse(Collections.emptySet());
+        return dashboardPermisosHelper.getAllowedIds(resourceType, permissions);
     }
 
     @Override
     protected void beforeCreateEntity(DashboardTitolEntity entity, DashboardTitol resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
         Long dashboardId = resource.getDashboard() != null ? resource.getDashboard().getId() : null;
-        if (!canDesignDashboard(dashboardId)) {
-            throw new org.springframework.security.access.AccessDeniedException("No teniu permisos de disseny per afegir títols a aquest quadre de control");
-        }
+        dashboardPermisosHelper.checkCanDesignDashboard(dashboardId, "No teniu permisos de disseny per afegir títols a aquest quadre de control");
     }
 
     @Override
     protected void beforeUpdateEntity(DashboardTitolEntity entity, DashboardTitol resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
-        Long dashboardId = entity.getDashboard() != null ? entity.getDashboard().getId() : (resource.getDashboard() != null ? resource.getDashboard().getId() : null);
-        if (!canDesignDashboard(dashboardId)) {
-            throw new org.springframework.security.access.AccessDeniedException("No teniu permisos de disseny per modificar títols d'aquest quadre de control");
+        Long currentDashboardId = entity.getDashboard() != null ? entity.getDashboard().getId() : null;
+        dashboardPermisosHelper.checkCanDesignDashboard(currentDashboardId, "No teniu permisos de disseny per modificar títols d'aquest quadre de control");
+
+        if (resource.getDashboard() != null && !Objects.equals(resource.getDashboard().getId(), currentDashboardId)) {
+            Long targetDashboardId = resource.getDashboard().getId();
+            dashboardPermisosHelper.checkCanDesignDashboard(targetDashboardId, "No teniu permisos de disseny per moure títols a aquest quadre de control");
         }
     }
 
     @Override
     protected void beforeDelete(DashboardTitolEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
         Long dashboardId = entity.getDashboard() != null ? entity.getDashboard().getId() : null;
-        if (!canDesignDashboard(dashboardId)) {
-            throw new org.springframework.security.access.AccessDeniedException("No teniu permisos de disseny per eliminar títols d'aquest quadre de control");
-        }
+        dashboardPermisosHelper.checkCanDesignDashboard(dashboardId, "No teniu permisos de disseny per eliminar títols d'aquest quadre de control");
     }
 
     @Override
@@ -192,6 +118,8 @@ public class DashboardTitolServiceImpl extends BaseMutableResourceService<Dashbo
             if (entity == null || entity.getDashboard() == null) {
                 throw new ActionExecutionException(DashboardTitol.class, entity != null ? entity.getId() : null, code, "Dashboard title or dashboard is null");
             }
+
+            dashboardPermisosHelper.checkCanDesignDashboard(entity.getDashboard().getId(), "No teniu permisos de disseny per duplicar títols d'aquest quadre de control");
 
             // 1. Clona l'entitat DashboardTitol amb MapStruct (copia colors, vores, subtítols, destacat, personalitzat, plantilla, width, height)
             DashboardTitolEntity newTitol = dashboardClonerMapper.cloneTitol(entity);

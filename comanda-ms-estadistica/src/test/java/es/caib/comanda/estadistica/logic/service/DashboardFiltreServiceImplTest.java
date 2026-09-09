@@ -42,11 +42,7 @@ class DashboardFiltreServiceImplTest {
     private static final Long DASHBOARD_ID = 1L;
 
     @Mock
-    private AuthenticationHelper authenticationHelper;
-    @Mock
-    private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
-    @Mock
-    private AclServiceClient aclServiceClient;
+    private es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper dashboardPermisosHelper;
     @Mock
     private DashboardFiltreRepository dashboardFiltreRepository;
     @Mock
@@ -231,6 +227,63 @@ class DashboardFiltreServiceImplTest {
         DashboardFiltre resource = resource(DASHBOARD_ID, DashboardFiltreTipus.DIMENSIO, "ORGAN_GESTOR");
 
         assertThatCode(() -> service.beforeUpdateEntity(entity, resource, null))
+                .doesNotThrowAnyException();
+    }
+
+    // ------------------------------------------------------------------------------------------------------
+    // Comprovacions de seguretat
+    // ------------------------------------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("beforeCreateEntity: rebutja si l'usuari no té permisos de disseny")
+    void beforeCreateEntity_sensePermisos_llancaAccessDeniedException() {
+        org.mockito.Mockito.doThrow(new org.springframework.security.access.AccessDeniedException("Accés denegat"))
+                .when(dashboardPermisosHelper).checkCanDesignDashboard(org.mockito.ArgumentMatchers.eq(DASHBOARD_ID), org.mockito.ArgumentMatchers.anyString());
+
+        DashboardFiltreEntity entity = newEntity(DASHBOARD_ID);
+        DashboardFiltre resource = resource(DASHBOARD_ID, DashboardFiltreTipus.PERIODE, null);
+
+        assertThatThrownBy(() -> service.beforeCreateEntity(entity, resource, null))
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class)
+                .hasMessageContaining("Accés denegat");
+    }
+
+    @Test
+    @DisplayName("beforeUpdateEntity: rebutja si l'usuari no té permisos de disseny per al dashboard destí")
+    void beforeUpdateEntity_reparentingSensePermisos_llancaAccessDeniedException() {
+        Long destDashboardId = 2L;
+        org.mockito.Mockito.doNothing()
+                .when(dashboardPermisosHelper).checkCanDesignDashboard(org.mockito.ArgumentMatchers.eq(DASHBOARD_ID), org.mockito.ArgumentMatchers.anyString());
+        org.mockito.Mockito.doThrow(new org.springframework.security.access.AccessDeniedException("Accés denegat destí"))
+                .when(dashboardPermisosHelper).checkCanDesignDashboard(org.mockito.ArgumentMatchers.eq(destDashboardId), org.mockito.ArgumentMatchers.anyString());
+
+        DashboardFiltreEntity entity = existingEntity(10L, DashboardFiltreTipus.PERIODE, null);
+        DashboardFiltre resource = resource(destDashboardId, DashboardFiltreTipus.PERIODE, null);
+
+        assertThatThrownBy(() -> service.beforeUpdateEntity(entity, resource, null))
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class)
+                .hasMessageContaining("Accés denegat destí");
+    }
+
+    @Test
+    @DisplayName("beforeDelete: rebutja si l'usuari no té permisos de disseny")
+    void beforeDelete_sensePermisos_llancaAccessDeniedException() {
+        org.mockito.Mockito.doThrow(new org.springframework.security.access.AccessDeniedException("Accés denegat eliminació"))
+                .when(dashboardPermisosHelper).checkCanDesignDashboard(org.mockito.ArgumentMatchers.eq(DASHBOARD_ID), org.mockito.ArgumentMatchers.anyString());
+
+        DashboardFiltreEntity entity = existingEntity(10L, DashboardFiltreTipus.PERIODE, null);
+
+        assertThatThrownBy(() -> service.beforeDelete(entity, null))
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class)
+                .hasMessageContaining("Accés denegat eliminació");
+    }
+
+    @Test
+    @DisplayName("beforeDelete: permet eliminar si l'usuari té permisos de disseny")
+    void beforeDelete_ambPermisos_noLlancaExcepcio() {
+        DashboardFiltreEntity entity = existingEntity(10L, DashboardFiltreTipus.PERIODE, null);
+
+        assertThatCode(() -> service.beforeDelete(entity, null))
                 .doesNotThrowAnyException();
     }
 }
