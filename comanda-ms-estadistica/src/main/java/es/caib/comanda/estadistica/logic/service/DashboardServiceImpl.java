@@ -120,36 +120,8 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     protected String additionalSpringFilter(
         String currentSpringFilter,
         String[] namedQueries) {
-        if (dashboardPermisosHelper.isAdminOrConsulta()) {
-            return currentSpringFilter;
-        }
-        List<String> namedQueriesList = namedQueries != null ? List.of(namedQueries) : Collections.emptyList();
-        boolean isWrite = namedQueriesList.contains("WRITE");
-
-        Set<Serializable> appPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.APP,
-            isWrite ? List.of(PermissionEnum.PERM1) : List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
-        String appFilter = SpringFilterHelper.buildOrFilter("appId", appPermissionIds);
-
-        Set<Serializable> entornAppPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.ENTORN_APP,
-            isWrite ? List.of(PermissionEnum.PERM1) : List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
-        String entornAppFilter = dashboardPermisosHelper.buildEntornAppFilter(entornAppPermissionIds, null);
-
-        Set<Serializable> dashboardPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.DASHBOARD,
-            isWrite ? List.of(PermissionEnum.WRITE) : List.of(PermissionEnum.READ, PermissionEnum.WRITE));
-        String dashboardFilter = SpringFilterHelper.buildOrFilter("id", dashboardPermissionIds);
-
-        String filter = SpringFilterHelper.or(
-            appFilter,
-            entornAppFilter,
-            dashboardFilter
-        );
-
-        return SpringFilterHelper.and(
-            currentSpringFilter,
-            (filter.isBlank())
-                ? "id:0"
-                : filter
-        );
+        boolean isWrite = namedQueries != null && Arrays.asList(namedQueries).contains("WRITE");
+        return dashboardPermisosHelper.buildDashboardFilter(currentSpringFilter, isWrite);
     }
 
     @Override

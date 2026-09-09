@@ -1,6 +1,5 @@
 package es.caib.comanda.estadistica.logic.service;
 
-import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltre;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltreTipus;
@@ -297,46 +296,14 @@ class DashboardFiltreServiceImplTest {
     // ========================================================================
 
     @Test
-    @DisplayName("additionalSpringFilter: retorna el filtre original quan l'usuari és ADMIN o CONSULTA")
-    void additionalSpringFilter_quanEsAdminOConsulta_llavorsRetornaFiltreOriginal() {
-        when(dashboardPermisosHelper.isAdminOrConsulta()).thenReturn(true);
-
-        String result = service.additionalSpringFilter("dashboard.id:1", new String[0]);
-
-        assertThat(result).isEqualTo("dashboard.id:1");
-        verify(dashboardPermisosHelper, never()).getAllowedIds(any(), any());
-    }
-
-    @Test
-    @DisplayName("additionalSpringFilter: resol correctament els permisos amb dashboardPermisosHelper")
-    void additionalSpringFilter_ambPermisos_aplicaFiltres() {
-        when(dashboardPermisosHelper.isAdminOrConsulta()).thenReturn(false);
-
-        when(dashboardPermisosHelper.getAllowedIds(eq(ResourceType.APP), anyList()))
-            .thenReturn(Set.of(10L));
-        when(dashboardPermisosHelper.getAllowedIds(eq(ResourceType.ENTORN_APP), anyList()))
-            .thenReturn(Set.of(100L));
-        when(dashboardPermisosHelper.buildEntornAppFilter(Set.of(100L), "dashboard"))
-            .thenReturn("(dashboard.appId:10 and dashboard.entornId:20)");
-        when(dashboardPermisosHelper.getAllowedIds(eq(ResourceType.DASHBOARD), anyList()))
-            .thenReturn(Set.of(1L));
+    @DisplayName("additionalSpringFilter: delega a dashboardPermisosHelper.buildDashboardChildFilter")
+    void additionalSpringFilter_delegaCorrectament() {
+        when(dashboardPermisosHelper.buildDashboardChildFilter("base", "dashboard"))
+            .thenReturn("base and (dashboard.appId:10 or dashboard.id:1)");
 
         String result = service.additionalSpringFilter("base", new String[0]);
 
-        assertThat(result).contains("dashboard.appId:10");
-        assertThat(result).contains("(dashboard.appId:10 and dashboard.entornId:20)");
-        assertThat(result).contains("dashboard.id:1");
-    }
-
-    @Test
-    @DisplayName("additionalSpringFilter: retorna fallback 'id:0' quan l'usuari normal no té cap permís")
-    void additionalSpringFilter_quanEsUsuariNormalISensePermisos_llavorsRetornaIdZero() {
-        when(dashboardPermisosHelper.isAdminOrConsulta()).thenReturn(false);
-        when(dashboardPermisosHelper.getAllowedIds(any(ResourceType.class), anyList()))
-            .thenReturn(Collections.emptySet());
-
-        String result = service.additionalSpringFilter("base", new String[0]);
-
-        assertThat(result).isEqualTo("base and id:0");
+        assertThat(result).isEqualTo("base and (dashboard.appId:10 or dashboard.id:1)");
+        verify(dashboardPermisosHelper).buildDashboardChildFilter("base", "dashboard");
     }
 }

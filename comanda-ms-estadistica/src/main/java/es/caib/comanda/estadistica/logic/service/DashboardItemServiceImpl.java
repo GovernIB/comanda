@@ -78,33 +78,7 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
     protected String additionalSpringFilter(
         String currentSpringFilter,
         String[] namedQueries) {
-        if (dashboardPermisosHelper.isAdminOrConsulta()) {
-            return currentSpringFilter;
-        }
-        Set<Serializable> appPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.APP,
-            List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
-        String appFilter = SpringFilterHelper.buildOrFilter("widget.appId", appPermissionIds);
-
-        Set<Serializable> entornAppPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.ENTORN_APP,
-            List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
-        String entornAppFilter = dashboardPermisosHelper.buildEntornAppFilter(entornAppPermissionIds, "widget.appId", "entornId");
-
-        Set<Serializable> dashboardPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.DASHBOARD,
-            List.of(PermissionEnum.READ, PermissionEnum.WRITE));
-        String dashboardFilter = SpringFilterHelper.buildOrFilter("dashboard.id", dashboardPermissionIds);
-
-        String filter = SpringFilterHelper.or(
-            appFilter,
-            entornAppFilter,
-            dashboardFilter
-        );
-
-        return SpringFilterHelper.and(
-            currentSpringFilter,
-            (filter.isBlank())
-                ? "id:0"
-                : filter
-        );
+        return dashboardPermisosHelper.buildDashboardItemFilter(currentSpringFilter);
     }
 
     @Override

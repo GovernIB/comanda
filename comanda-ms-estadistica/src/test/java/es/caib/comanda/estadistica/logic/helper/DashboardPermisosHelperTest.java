@@ -386,4 +386,125 @@ class DashboardPermisosHelperTest {
         String filter = dashboardPermisosHelper.buildEntornAppFilter(Set.of(999L), null);
         assertThat(filter).isNull();
     }
+
+    // ========================================================================
+    // 6. HELPER SEMÀNTIC DE PERMISOS I CONSTRUCCIÓ GLOBAL DE FILTRES ACL
+    // ========================================================================
+
+    @Test
+    @DisplayName("getAllowedAppIds retorna IDs permesos segons lectura o escriptura")
+    void getAllowedAppIds_retornaIdsSegonsLecturaOEscriptura() {
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), eq(List.of(PermissionEnum.PERM0, PermissionEnum.PERM1)), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(10L, 20L)));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), eq(List.of(PermissionEnum.PERM1)), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(10L)));
+
+        assertThat(dashboardPermisosHelper.getAllowedAppIds(false)).containsExactlyInAnyOrder(10L, 20L);
+        assertThat(dashboardPermisosHelper.getAllowedAppIds(true)).containsExactly(10L);
+    }
+
+    @Test
+    @DisplayName("getAllowedEntornAppIds retorna IDs permesos segons lectura o escriptura")
+    void getAllowedEntornAppIds_retornaIdsSegonsLecturaOEscriptura() {
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), eq(List.of(PermissionEnum.PERM0, PermissionEnum.PERM1)), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(100L)));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), eq(List.of(PermissionEnum.PERM1)), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(200L)));
+
+        assertThat(dashboardPermisosHelper.getAllowedEntornAppIds(false)).containsExactly(100L);
+        assertThat(dashboardPermisosHelper.getAllowedEntornAppIds(true)).containsExactly(200L);
+    }
+
+    @Test
+    @DisplayName("getAllowedDashboardIds retorna IDs permesos segons lectura o escriptura")
+    void getAllowedDashboardIds_retornaIdsSegonsLecturaOEscriptura() {
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), eq(List.of(PermissionEnum.READ, PermissionEnum.WRITE)), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(1L, 2L)));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), eq(List.of(PermissionEnum.WRITE)), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(1L)));
+
+        assertThat(dashboardPermisosHelper.getAllowedDashboardIds(false)).containsExactlyInAnyOrder(1L, 2L);
+        assertThat(dashboardPermisosHelper.getAllowedDashboardIds(true)).containsExactly(1L);
+    }
+
+    @Test
+    @DisplayName("buildDashboardFilter retorna filtre original si usuari és ADMIN o CONSULTA")
+    void buildDashboardFilter_quanAdminOConsulta_retornaFiltreOriginal() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+
+        assertThat(dashboardPermisosHelper.buildDashboardFilter("nom:'Test'", false)).isEqualTo("nom:'Test'");
+        verifyNoInteractions(aclServiceClient);
+    }
+
+    @Test
+    @DisplayName("buildDashboardFilter aplica filtres correctes per a Dashboard quan usuari no és admin")
+    void buildDashboardFilter_quanNoAdmin_aplicaFiltres() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(10L)));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(1L)));
+
+        String result = dashboardPermisosHelper.buildDashboardFilter("actiu:true", false);
+
+        assertThat(result).contains("actiu:true");
+        assertThat(result).contains("appId:10");
+        assertThat(result).contains("id:1");
+    }
+
+    @Test
+    @DisplayName("buildDashboardFilter retorna fallback id:0 si no té permisos")
+    void buildDashboardFilter_sensePermisos_retornaFallbackIdZero() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+
+        when(aclServiceClient.findIdsWithAnyPermission(any(), any(), any(), any(), any()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        String result = dashboardPermisosHelper.buildDashboardFilter("actiu:true", false);
+
+        assertThat(result).isEqualTo("actiu:true and id:0");
+    }
+
+    @Test
+    @DisplayName("buildDashboardChildFilter aplica el prefix dashboard als camps")
+    void buildDashboardChildFilter_aplicaPrefix() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(10L)));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(1L)));
+
+        String result = dashboardPermisosHelper.buildDashboardChildFilter("base", "dashboard");
+
+        assertThat(result).contains("dashboard.appId:10");
+        assertThat(result).contains("dashboard.id:1");
+    }
+
+    @Test
+    @DisplayName("buildDashboardItemFilter aplica widget.appId, entornId i dashboard.id")
+    void buildDashboardItemFilter_aplicaCampsDashboardItem() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(10L)));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(1L)));
+
+        String result = dashboardPermisosHelper.buildDashboardItemFilter("base");
+
+        assertThat(result).contains("widget.appId:10");
+        assertThat(result).contains("dashboard.id:1");
+    }
 }

@@ -560,6 +560,16 @@ public class DashboardHelper {
                 new ActionExecutionException(Dashboard.class, entity.getId(), code, "Original widget not found")
             );
 
+            if (entity.getAppId() != null && originalWidget.getAppId() != null
+                    && !entity.getAppId().equals(originalWidget.getAppId())) {
+                throw new ActionExecutionException(
+                    Dashboard.class,
+                    entity.getId(),
+                    code,
+                    "Aquest widget no pertany a la aplicació seleccionada"
+                );
+            }
+
 //            TODO Check widget accessible/visible
 //            if (dashboardPermisosHelper != null && !dashboardPermisosHelper.isAdminOrConsulta()) {
 //                if (originalWidget.getAppId() != null && !dashboardPermisosHelper.hasPermission(ResourceType.APP, originalWidget.getAppId(), List.of(PermissionEnum.PERM0, PermissionEnum.PERM1))) {

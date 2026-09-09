@@ -29,6 +29,11 @@ import java.util.*;
 @RequiredArgsConstructor
 public class DashboardPermisosHelper {
 
+    public static final List<PermissionEnum> PERMISSIONS_APP_READ = List.of(PermissionEnum.PERM0, PermissionEnum.PERM1);
+    public static final List<PermissionEnum> PERMISSIONS_APP_WRITE = List.of(PermissionEnum.PERM1);
+    public static final List<PermissionEnum> PERMISSIONS_DASHBOARD_READ = List.of(PermissionEnum.READ, PermissionEnum.WRITE);
+    public static final List<PermissionEnum> PERMISSIONS_DASHBOARD_WRITE = List.of(PermissionEnum.WRITE);
+
     private final AuthenticationHelper authenticationHelper;
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     private final AclServiceClient aclServiceClient;
@@ -112,6 +117,18 @@ public class DashboardPermisosHelper {
         }
     }
 
+    public Set<Serializable> getAllowedAppIds(boolean isWrite) {
+        return getAllowedIds(ResourceType.APP, isWrite ? PERMISSIONS_APP_WRITE : PERMISSIONS_APP_READ);
+    }
+
+    public Set<Serializable> getAllowedEntornAppIds(boolean isWrite) {
+        return getAllowedIds(ResourceType.ENTORN_APP, isWrite ? PERMISSIONS_APP_WRITE : PERMISSIONS_APP_READ);
+    }
+
+    public Set<Serializable> getAllowedDashboardIds(boolean isWrite) {
+        return getAllowedIds(ResourceType.DASHBOARD, isWrite ? PERMISSIONS_DASHBOARD_WRITE : PERMISSIONS_DASHBOARD_READ);
+    }
+
     /**
      * Comprova si l'usuari actual pot dissenyar un dashboard coneguts el seu id, appId i entornId.
      * Jerarquia de permisos:
@@ -124,15 +141,15 @@ public class DashboardPermisosHelper {
         if (isAdmin()) {
             return true;
         }
-        if (dashboardId != null && hasPermission(ResourceType.DASHBOARD, dashboardId, List.of(PermissionEnum.WRITE))) {
+        if (dashboardId != null && hasPermission(ResourceType.DASHBOARD, dashboardId, PERMISSIONS_DASHBOARD_WRITE)) {
             return true;
         }
-        if (appId != null && hasPermission(ResourceType.APP, appId, List.of(PermissionEnum.PERM1))) {
+        if (appId != null && hasPermission(ResourceType.APP, appId, PERMISSIONS_APP_WRITE)) {
             return true;
         }
         if (appId != null && entornId != null) {
             EntornApp entornApp = estadisticaClientHelper.entornAppFindByAppAndEntorn(appId, entornId);
-            if (entornApp != null && hasPermission(ResourceType.ENTORN_APP, entornApp.getId(), List.of(PermissionEnum.PERM1))) {
+            if (entornApp != null && hasPermission(ResourceType.ENTORN_APP, entornApp.getId(), PERMISSIONS_APP_WRITE)) {
                 return true;
             }
         }
@@ -219,5 +236,106 @@ public class DashboardPermisosHelper {
             }
         }
         return clauses.isEmpty() ? null : String.join(" or ", clauses);
+    }
+
+    /**
+     * Construeix el filtre Spring RSQL d'autorització per a un recurs combinant permisos d'APP, ENTORN_APP i DASHBOARD.
+     */
+    public String buildAclFilterPrefix(
+            String currentSpringFilter,
+            String appIdProperty,
+            String entornAppFilterPrefix,
+            String dashboardIdProperty,
+            boolean isWrite) {
+        if (isAdminOrConsulta()) {
+            return currentSpringFilter;
+        }
+
+        String appFilter = SpringFilterHelper.buildOrFilter(
+                appIdProperty,
+                getAllowedAppIds(isWrite));
+
+        String entornAppFilter = buildEntornAppFilter(
+                getAllowedEntornAppIds(isWrite),
+                entornAppFilterPrefix);
+
+        String dashboardFilter = SpringFilterHelper.buildOrFilter(
+                dashboardIdProperty,
+                getAllowedDashboardIds(isWrite));
+
+        String filter = SpringFilterHelper.or(
+                appFilter,
+                entornAppFilter,
+                dashboardFilter
+        );
+
+        return SpringFilterHelper.and(
+                currentSpringFilter,
+                (filter.isBlank())
+                        ? "id:0"
+                        : filter
+        );
+    }
+
+    /**
+     * Construeix el filtre Spring RSQL d'autorització per a un recurs amb propietats d'aplicació i entorn específiques (com a DashboardItem).
+     */
+    public String buildAclFilter(
+            String currentSpringFilter,
+            String appIdProperty,
+            String entornIdProperty,
+            String dashboardIdProperty,
+            boolean isWrite) {
+        if (isAdminOrConsulta()) {
+            return currentSpringFilter;
+        }
+
+        String appFilter = SpringFilterHelper.buildOrFilter(
+                appIdProperty,
+                getAllowedAppIds(isWrite));
+
+        String entornAppFilter = buildEntornAppFilter(
+                getAllowedEntornAppIds(isWrite),
+                appIdProperty,
+                entornIdProperty);
+
+        String dashboardFilter = SpringFilterHelper.buildOrFilter(
+                dashboardIdProperty,
+                getAllowedDashboardIds(isWrite));
+
+        String filter = SpringFilterHelper.or(
+                appFilter,
+                entornAppFilter,
+                dashboardFilter
+        );
+
+        return SpringFilterHelper.and(
+                currentSpringFilter,
+                (filter.isBlank())
+                        ? "id:0"
+                        : filter
+        );
+    }
+
+    /**
+     * Construeix el filtre RSQL per a dashboards o entitats filles amb prefix comú (p. ex. dashboard.appId, dashboard.entornId, dashboard.id).
+     */
+    public String buildDashboardChildFilter(String currentSpringFilter, String dashboardPrefix) {
+        String p = (dashboardPrefix != null && !dashboardPrefix.isBlank()) ? dashboardPrefix + "." : "";
+        return buildAclFilterPrefix(currentSpringFilter, p + "appId", dashboardPrefix, p + "id", false);
+    }
+
+    /**
+     * Construeix el filtre RSQL per al quadre de control (Dashboard).
+     */
+    public String buildDashboardFilter(String currentSpringFilter, boolean isWrite) {
+        return buildAclFilterPrefix(currentSpringFilter, "appId", null, "id", isWrite);
+    }
+
+    /**
+     * Construeix el filtre RSQL per als elements d'un quadre de control (DashboardItem).
+     */
+    public String buildDashboardItemFilter(String currentSpringFilter) {
+        return buildAclFilter(currentSpringFilter, "widget.appId", "entornId", "dashboard.id", false);
     }
 }

@@ -1006,6 +1006,33 @@ class DashboardHelperTest {
     }
 
     @Test
+    @DisplayName("CloneAndAddWidgetAction: llança ActionExecutionException quan el widget no pertany a la mateixa aplicació")
+    void cloneAndAddWidgetAction_quanAppIdNoCoincideix_llavorsLlancaActionExecutionException() {
+        // Arrange
+        DashboardHelper.CloneAndAddWidgetAction action = new DashboardHelper.CloneAndAddWidgetAction(
+            estadisticaClientHelper, dashboardItemRepository, estadisticaWidgetRepository, dashboardClonerMapper);
+
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setId(1L);
+        dashboard.setAppId(10L);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(99L);
+        widget.setAppId(20L);
+
+        when(estadisticaWidgetRepository.findById(99L)).thenReturn(Optional.of(widget));
+
+        es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.CloneAndAddWidgetParams params =
+            new es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.CloneAndAddWidgetParams();
+        params.setWidgetId(99L);
+
+        // Act & Assert
+        assertThatThrownBy(() -> action.exec(Dashboard.CLONE_AND_ADD_WIDGET_ACTION, dashboard, params))
+            .isInstanceOf(ActionExecutionException.class)
+            .hasMessageContaining("Aquest widget no pertany a la aplicació seleccionada");
+    }
+
+    @Test
     @DisplayName("CloneAndAddWidgetAction: quan el widget té overrides visuals, personalitzat s'estableix a true")
     void cloneAndAddWidgetAction_quanWidgetTeVisualOverrides_llavorsPersonalitzatEsCert() {
         // Arrange
