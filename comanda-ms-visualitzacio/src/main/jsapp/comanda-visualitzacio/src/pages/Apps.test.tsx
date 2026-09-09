@@ -77,7 +77,7 @@ const mocks = vi.hoisted(() => ({
                     title: 'Entorns de l aplicació',
                     resourceTitle: 'Entorn',
                     acl: {
-                        readAllowed: "Salut",
+                        perm2Allowed: "Salut",
                         perm0Allowed: "Consulta de taulers de control",
                         perm1Allowed: "Disseny de taulers de control",
                     },

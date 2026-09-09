@@ -33,10 +33,19 @@ public class PostgreSQLFetRepositoryDialectTest {
         String query = removeConsecutiveSpaces(dialect.getFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery());
         String expectedQuery = removeConsecutiveSpaces("SELECT f.* FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
             "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
-            "AND f.dimensions_json->>'dimensioCodi' = :dimensioValor");
-        // Nota: El dialecto usa "' || :dimensioCodi || '" dinámicamente, el test valida la estructura base.
+            "AND f.dimensions_json::jsonb->>:dimensioCodi = :dimensioValor");
         assertNotNull(query);
-        assertTrue(query.contains("f.dimensions_json->>"));
+        assertEquals(expectedQuery, query);
+    }
+
+    @Test
+    void testGetFindByEntornAppIdAndTempsDataBetweenAndDimensionValuesQuery() {
+        String query = removeConsecutiveSpaces(dialect.getFindByEntornAppIdAndTempsDataBetweenAndDimensionValuesQuery());
+        String expectedQuery = removeConsecutiveSpaces("SELECT f.* FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
+            "WHERE f.entorn_app_id = :entornAppId AND t.data BETWEEN :dataInici AND :dataFi " +
+            "AND f.dimensions_json::jsonb->>:dimensioCodi IN (:dimensioValor)");
+        assertNotNull(query);
+        assertEquals(expectedQuery, query);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -53,14 +62,14 @@ public class PostgreSQLFetRepositoryDialectTest {
             Arguments.of("Test Empty Dimensions", new HashMap<>(), removeConsecutiveSpaces("SELECT f.* FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id WHERE f.entorn_app_id = :entornAppId AND t.data = :data ")),
             Arguments.of("Test Single Dimension with Single Value (departament=RRHH)", Map.of("departament", List.of("RRHH")),
                 removeConsecutiveSpaces("SELECT f.* FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
-                    "WHERE f.entorn_app_id = :entornAppId AND t.data = :data AND f.dimensions_json->>'departament' = 'RRHH' ")),
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data = :data AND f.dimensions_json::jsonb->>'departament' = 'RRHH' ")),
             Arguments.of("Test Single Dimension with Multiple Values (departament=RRHH,IT)", Map.of("departament", List.of("RRHH", "IT")),
                 removeConsecutiveSpaces("SELECT f.* FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
-                    "WHERE f.entorn_app_id = :entornAppId AND t.data = :data AND f.dimensions_json->>'departament' IN ('RRHH','IT') ")),
+                    "WHERE f.entorn_app_id = :entornAppId AND t.data = :data AND f.dimensions_json::jsonb->>'departament' IN ('RRHH','IT') ")),
             Arguments.of("Test Multiple Dimensions with Mixed Values", new LinkedHashMap<>() {{ put("departament", List.of("RRHH", "IT")); put("area", List.of("Finance")); }},
                 removeConsecutiveSpaces("SELECT f.* FROM com_est_fet f JOIN com_est_temps t ON f.temps_id = t.id " +
                     "WHERE f.entorn_app_id = :entornAppId AND t.data = :data " +
-                    "AND f.dimensions_json->>'departament' IN ('RRHH','IT') AND f.dimensions_json->>'area' = 'Finance' "))
+                    "AND f.dimensions_json::jsonb->>'departament' IN ('RRHH','IT') AND f.dimensions_json::jsonb->>'area' = 'Finance' "))
         );
     }
 
@@ -76,10 +85,10 @@ public class PostgreSQLFetRepositoryDialectTest {
         return Stream.of(
             Arguments.of("Test Null Dimensions", null, ""),
             Arguments.of("Test Empty Dimensions", new HashMap<>(), ""),
-            Arguments.of("Test Single Dimension with Single Value", Map.of("departament", List.of("RRHH")), removeConsecutiveSpaces("AND f.dimensions_json->>'departament' = 'RRHH' ")),
-            Arguments.of("Test Single Dimension with Multiple Values", Map.of("departament", List.of("RRHH", "IT")), removeConsecutiveSpaces("AND f.dimensions_json->>'departament' IN ('RRHH','IT') ")),
+            Arguments.of("Test Single Dimension with Single Value", Map.of("departament", List.of("RRHH")), removeConsecutiveSpaces("AND f.dimensions_json::jsonb->>'departament' = 'RRHH' ")),
+            Arguments.of("Test Single Dimension with Multiple Values", Map.of("departament", List.of("RRHH", "IT")), removeConsecutiveSpaces("AND f.dimensions_json::jsonb->>'departament' IN ('RRHH','IT') ")),
             Arguments.of("Test Multiple Dimensions", new LinkedHashMap<>() {{ put("departament", List.of("RRHH", "IT")); put("area", List.of("Finance")); }},
-                removeConsecutiveSpaces("AND f.dimensions_json->>'departament' IN ('RRHH','IT') AND f.dimensions_json->>'area' = 'Finance' "))
+                removeConsecutiveSpaces("AND f.dimensions_json::jsonb->>'departament' IN ('RRHH','IT') AND f.dimensions_json::jsonb->>'area' = 'Finance' "))
         );
     }
 }

@@ -53,6 +53,7 @@ public class DashboardItemEntity extends BaseAuditableEntity<DashboardItem> {
             nullable = false)
     private EstadisticaWidgetEntity widget;
 
+    /** Identificador de l'entorn (com_entorn.id / EntornEntity). */
     @Column(name = "entorn_id", nullable = false)
     private Long entornId;
 

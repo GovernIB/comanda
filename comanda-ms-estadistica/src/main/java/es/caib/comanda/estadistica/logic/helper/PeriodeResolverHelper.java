@@ -18,24 +18,73 @@ import java.time.temporal.ChronoField;
 public class PeriodeResolverHelper {
 
     public static PeriodeDates resolvePeriod(Periode periode) {
+        return resolvePeriod(periode, null);
+    }
+
+    /**
+     * Resol un període igual que {@link #resolvePeriod(Periode)}, però si es proporciona {@code filterBounds}
+     * (el període del filtre de capçalera del dashboard, ja resolt) es manté la consistència amb el tipus del
+     * període propi del component: s'ancora al final del filtre en lloc de a "avui", i el resultat es limita
+     * perquè no surti dels límits del filtre (vegeu {@link #clampToFilterBounds}).
+     */
+    public static PeriodeDates resolvePeriod(Periode periode, PeriodeDates filterBounds) {
+        PeriodeDates result;
         switch (periode.getPeriodeMode()) {
             case PRESET:
-                return resolvePresetPeriod(periode.getPresetPeriode(), periode.getPresetCount());
+                result = resolvePresetPeriod(periode.getPresetPeriode(), periode.getPresetCount(), filterBounds);
+                break;
             case RELATIU:
-                return resolveRelativePeriod(
+                result = resolveRelativePeriod(
                         periode.getRelatiuPuntReferencia(),
                         periode.getRelatiuCount(),
                         periode.getRelatiueUnitat(),
-                        periode.getRelatiuAlineacio());
+                        periode.getRelatiuAlineacio(),
+                        filterBounds);
+                break;
             case ABSOLUT:
-                return resolveAbsolutePeriod(periode);
+                result = resolveAbsolutePeriod(periode);
+                break;
             default:
                 throw new IllegalArgumentException("Invalid period mode");
         }
+        return clampToFilterBounds(result, filterBounds);
     }
 
-    private static PeriodeDates resolvePresetPeriod(PresetPeriode preset, Integer count) {
-        LocalDate today = LocalDate.now();
+    /**
+     * Limita un període resolt perquè no surti dels límits del filtre de capçalera del dashboard, si n'hi ha
+     * (p. ex. "darrers 30 dies" amb un filtre de només 10 dies passa a ser els 10 dies sencers del filtre).
+     * Un {@code filterBounds.start} nul significa que el filtre no imposa cap límit inferior (equivalent a no
+     * filtrar per període pel que fa a la data d'inici), així que en aquest cas no es limita l'inici.
+     */
+    private static PeriodeDates clampToFilterBounds(PeriodeDates dates, PeriodeDates filterBounds) {
+        if (filterBounds == null || dates == null) {
+            return dates;
+        }
+        LocalDate start = dates.getStart();
+        LocalDate end = dates.getEnd();
+        if (filterBounds.getStart() != null && (start == null || start.isBefore(filterBounds.getStart()))) {
+            start = filterBounds.getStart();
+        }
+        if (filterBounds.getEnd() != null && (end == null || end.isAfter(filterBounds.getEnd()))) {
+            end = filterBounds.getEnd();
+        }
+        // Si el període propi del component ni tan sols arriba a intersectar amb el filtre (p. ex. un "darrer
+        // any complet" dins d'un filtre curt i llunyà), es limita directament al període sencer del filtre en
+        // lloc de retornar un interval invertit (start > end).
+        if (start != null && end != null && start.isAfter(end)) {
+            start = filterBounds.getStart() != null ? filterBounds.getStart() : end;
+            end = filterBounds.getEnd() != null ? filterBounds.getEnd() : end;
+        }
+        return PeriodeDates.builder().start(start).end(end).build();
+    }
+
+    private static PeriodeDates resolvePresetPeriod(PresetPeriode preset, Integer count, PeriodeDates filterBounds) {
+        LocalDate today = filterBounds != null ? filterBounds.getEnd() : LocalDate.now();
+        // Les variants "completes" (dia/setmana/mes/trimestre/any complet) exclouen per disseny la unitat en
+        // curs perquè "avui" encara no ha acabat. Quan el punt de referència ve del filtre de capçalera, el
+        // seu extrem final ja es considera tancat (és un límit explícit triat per l'usuari, no "ara mateix"),
+        // així que es tracta com si fos "demà" perquè la mateixa resta d'una unitat hi aterri exactament.
+        LocalDate completeToday = filterBounds != null ? filterBounds.getEnd().plusDays(1) : LocalDate.now();
         switch (preset) {
             // Rolling periods
             case DARRERS_7_DIES:
@@ -72,22 +121,22 @@ public class PeriodeResolverHelper {
                 return PeriodeDates.builder().start(today.minusYears(5)).end(today).build();
             // Complete periods
             case DARRER_COMPLET_DIA:
-                return PeriodeDates.builder().start(today.minusDays(1)).end(today.minusDays(1)).build();
+                return PeriodeDates.builder().start(completeToday.minusDays(1)).end(completeToday.minusDays(1)).build();
             case DARRERA_COMPLETA_SETMANA:
-                LocalDate lastWeekEnd = today.minusWeeks(1).with(ChronoField.DAY_OF_WEEK, 7);
+                LocalDate lastWeekEnd = completeToday.minusWeeks(1).with(ChronoField.DAY_OF_WEEK, 7);
                 return PeriodeDates.builder().start(lastWeekEnd.minusDays(6)).end(lastWeekEnd).build();
             case DARRER_COMPLET_MES:
-                LocalDate lastMonth = today.minusMonths(1);
+                LocalDate lastMonth = completeToday.minusMonths(1);
                 return PeriodeDates.builder().start(lastMonth.withDayOfMonth(1))
                         .end(lastMonth.withDayOfMonth(lastMonth.lengthOfMonth())).build();
             case DARRER_COMPLET_TRIMESTRE:
-                LocalDate lastQuarter = today.minusMonths(3);
+                LocalDate lastQuarter = completeToday.minusMonths(3);
                 int quarterStartMonth = ((lastQuarter.getMonthValue() - 1) / 3) * 3 + 1;
                 LocalDate quarterStart = LocalDate.of(lastQuarter.getYear(), quarterStartMonth, 1);
                 return PeriodeDates.builder().start(quarterStart)
                         .end(quarterStart.plusMonths(3).minusDays(1)).build();
             case DARRER_COMPLET_ANY:
-                int lastYear = today.getYear() - 1;
+                int lastYear = completeToday.getYear() - 1;
                 return PeriodeDates.builder().start(LocalDate.of(lastYear, 1, 1))
                         .end(LocalDate.of(lastYear, 12, 31)).build();
             // To Date periods
@@ -123,9 +172,11 @@ public class PeriodeResolverHelper {
 
     private static PeriodeDates resolveRelativePeriod(PeriodeAnchor anchor,
                                                Integer count,
-                                               PeriodeUnitat unit, 
-                                               PeriodeAlineacio alignment) {
-        LocalDate end = calculateReferenceDate(anchor);
+                                               PeriodeUnitat unit,
+                                               PeriodeAlineacio alignment,
+                                               PeriodeDates filterBounds) {
+        LocalDate referenceToday = filterBounds != null ? filterBounds.getEnd() : LocalDate.now();
+        LocalDate end = calculateReferenceDate(anchor, referenceToday);
         LocalDate start = calculateStartDate(end, count, unit);
 
         if (alignment != null) {
@@ -139,8 +190,7 @@ public class PeriodeResolverHelper {
                 .build();
     }
 
-    private static LocalDate calculateReferenceDate(PeriodeAnchor anchor) {
-        var today = LocalDate.now();
+    private static LocalDate calculateReferenceDate(PeriodeAnchor anchor, LocalDate today) {
         switch (anchor) {
             case ARA:
             case INICI_DIA:

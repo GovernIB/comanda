@@ -109,6 +109,9 @@ public class ParametreServiceImpl extends BaseMutableResourceService<Parametre, 
 
     @Override
     protected void beforeUpdateEntity(ParametreEntity entity, Parametre resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
+        if (entity.getCodi() != null && !Objects.equals(entity.getCodi(), resource.getCodi())) {
+            cacheHelper.evictCacheItem(PARAMETRE_CACHE, entity.getCodi());
+        }
         resource.setEditable(entity.isEditable());
         if (!entity.isEditable()) {
             throw new ResourceNotUpdatedException(getResourceClass(), String.valueOf(entity.getId()), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.service.ParametreServiceImpl.beforeUpdateEntity.disabled"));

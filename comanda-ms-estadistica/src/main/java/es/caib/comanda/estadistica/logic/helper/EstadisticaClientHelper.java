@@ -9,7 +9,6 @@ import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.monitor.Monitor;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
-import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +58,7 @@ public class EstadisticaClientHelper {
 		return null;
 	}
 
-	@Cacheable(value = APP_CACHE, key = "#appCodi?.toString()")
+	@Cacheable(value = APP_BY_CODI_CACHE, key = "#appCodi")
 	public App appFindByCodi(String appCodi) {
 		if (appCodi == null) {
 			return null;
@@ -110,19 +109,25 @@ public class EstadisticaClientHelper {
         if (appId == null || entornId == null) {
             return null;
         }
-        PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
-                null,
-                "app.id:" + appId + " and entorn.id:" + entornId,
-                null,
-                null,
-                "UNPAGED",
-                null,
-                httpAuthorizationHeaderHelper.getAuthorizationHeader());
-        if (entornApps == null) {
+        try {
+            PagedModel<EntityModel<EntornApp>> entornApps = entornAppServiceClient.find(
+                    null,
+                    "app.id:" + appId + " and entorn.id:" + entornId,
+                    null,
+                    null,
+                    "UNPAGED",
+                    null,
+                    httpAuthorizationHeaderHelper.getAuthorizationHeader());
+            if (entornApps == null) {
+                return null;
+            }
+            return entornApps.getContent().stream()
+                    .findFirst()
+                    .map(EntityModel::getContent)
+                    .orElse(null);
+        } catch (FeignException.NotFound e) {
             return null;
         }
-        return entornApps.getContent().stream().
-                findFirst().orElseThrow(() -> new ResourceNotFoundException(EntornApp.class, "app:" + appId + ", entorn:" + entornId)).getContent();
     }
 
     public List<EntornApp> entornAppFindByActivaTrue() {
@@ -184,7 +189,7 @@ public class EstadisticaClientHelper {
 		return null;
 	}
 
-	@Cacheable(value = ENTORN_CACHE, key = "#entornCodi?.toString()")
+	@Cacheable(value = ENTORN_BY_CODI_CACHE, key = "#entornCodi")
 	public Entorn entornByCodi(String entornCodi) {
 		if (entornCodi == null) {
 			return null;

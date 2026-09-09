@@ -16,6 +16,9 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Component;
 
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.APP_BY_CODI_CACHE;
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ENTORN_BY_CODI_CACHE;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -32,7 +35,7 @@ public class ApiClientHelper {
     private final AvisServiceClient avisServiceClient;
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
 
-    @Cacheable(value = "appByCodiCache", key = "#appCodi")
+    @Cacheable(value = APP_BY_CODI_CACHE, key = "#appCodi")
     public Optional<App> getAppByCodi(String appCodi) {
         return appServiceClient.find(
                 "",
@@ -45,7 +48,7 @@ public class ApiClientHelper {
         ).getContent().stream().map(EntityModel::getContent).findFirst();
     }
 
-    @Cacheable(value = "entornByCodiCache", key = "#entornCodi")
+    @Cacheable(value = ENTORN_BY_CODI_CACHE, key = "#entornCodi")
     public Optional<Entorn> getEntornByCodi(String entornCodi) {
         return entornServiceClient.find(
                 "",

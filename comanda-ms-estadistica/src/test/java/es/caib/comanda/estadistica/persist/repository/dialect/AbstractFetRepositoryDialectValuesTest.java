@@ -140,7 +140,7 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
         String sql = dialect().getSimpleQuery(null, indicador("visites", TableColumnsEnum.SUM, null), null);
         Map<String, Object> row = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
 
-        assertEquals(142.0, num(row, "total_sum"));
+        assertEquals(142.0, num(row, "total_sum_visites"));
     }
 
     @Test
@@ -148,7 +148,7 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
         String sql = dialect().getSimpleQuery(Map.of("departament", List.of("RRHH")), indicador("visites", TableColumnsEnum.SUM, null), null);
         Map<String, Object> row = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
 
-        assertEquals(30.0, num(row, "total_sum"));
+        assertEquals(30.0, num(row, "total_sum_visites"));
     }
 
     @Test
@@ -156,7 +156,7 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
         String sql = dialect().getSimpleQuery(Map.of("departament", List.of("O'Higgins")), indicador("visites", TableColumnsEnum.SUM, null), null);
         Map<String, Object> row = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
 
-        assertEquals(100.0, num(row, "total_sum"));
+        assertEquals(100.0, num(row, "total_sum_visites"));
     }
 
     @Test
@@ -164,7 +164,7 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
         String sql = dialect().getSimpleQuery(Map.of("departament", List.of("RRHH", "IT")), indicador("visites", TableColumnsEnum.SUM, null), null);
         Map<String, Object> row = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
 
-        assertEquals(42.0, num(row, "total_sum"));
+        assertEquals(42.0, num(row, "total_sum_visites"));
     }
 
     @Test
@@ -174,7 +174,7 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
                 indicador("visites", TableColumnsEnum.SUM, null), null);
         Map<String, Object> row = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
 
-        assertEquals(10.0, num(row, "total_sum"));
+        assertEquals(10.0, num(row, "total_sum_visites"));
     }
 
     @Test
@@ -183,7 +183,7 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
         Map<String, Object> row = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
 
         // IT té dos mesos diferents amb un valor cadascun (mes 2 = 5, mes 4 = 7) -> mitjana (5+7)/2
-        assertEquals(6.0, num(row, "average_result"));
+        assertEquals(6.0, num(row, "average_result_visites_MES"));
     }
 
     @Test
@@ -197,8 +197,8 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
                 dialect().getSimpleQuery(filtre, indicador("visites", TableColumnsEnum.LAST_SEEN, null), null),
                 baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
 
-        assertEquals(LocalDate.of(2024, 1, 10), asLocalDate(first, "first_seen"));
-        assertEquals(LocalDate.of(2024, 1, 20), asLocalDate(last, "last_seen"));
+        assertEquals(LocalDate.of(2024, 1, 10), asLocalDate(first, "first_seen_visites_DIA"));
+        assertEquals(LocalDate.of(2024, 1, 20), asLocalDate(last, "last_seen_visites_DIA"));
     }
 
     @Test
@@ -208,7 +208,7 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
         String sql = dialect().getSimpleQuery(null, indicador("visites", TableColumnsEnum.SUM, null), null);
         Map<String, Object> row = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2025)).get(0);
 
-        assertEquals(192.0, num(row, "total_sum"));
+        assertEquals(192.0, num(row, "total_sum_visites"));
     }
 
     @Test
@@ -216,7 +216,7 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
         String sql = dialect().getSimpleQuery(Map.of("departament", List.of("RRHH")), indicador("visites", TableColumnsEnum.SUM, null), null);
         Map<String, Object> row = query(sql, baseParams(1L, LocalDate.of(2024, 1, 10), LocalDate.of(2024, 1, 20))).get(0);
 
-        assertEquals(30.0, num(row, "total_sum"));
+        assertEquals(30.0, num(row, "total_sum_visites"));
     }
 
     @Test
@@ -230,7 +230,7 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
         Map<String, Object> row = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
 
         // dept=RRHH OR canal=presencial -> fet1(RRHH,web)=10, fet2(RRHH,presencial)=20, fet4(IT,presencial)=7
-        assertEquals(37.0, num(row, "total_sum"));
+        assertEquals(37.0, num(row, "total_sum_visites"));
     }
 
     @Test
@@ -242,7 +242,7 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
         String sql = dialect().getSimpleQuery(null, indicador("visites", TableColumnsEnum.SUM, null), seguretat);
         Map<String, Object> row = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
 
-        assertNull(num(row, "total_sum"));
+        assertNull(num(row, "total_sum_visites"));
     }
 
     @Test
@@ -252,7 +252,7 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
         String sql = dialect().getSimpleQuery(null, indicador("visites", TableColumnsEnum.SUM, null), seguretat);
         Map<String, Object> row = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024)).get(0);
 
-        assertEquals(142.0, num(row, "total_sum"));
+        assertEquals(142.0, num(row, "total_sum_visites"));
     }
 
     @Test
@@ -283,13 +283,15 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
         String sql = dialect().getGraficUnIndicadorQuery(null, ind, PeriodeUnitat.MES, null);
         List<Map<String, Object>> rows = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024));
 
-        assertEquals(3, rows.size());
+        assertEquals(12, rows.size());
         assertEquals("2024/01", rows.get(0).get("agrupacio"));
-        assertEquals(130.0, num(rows.get(0), "total_sum"));
+        assertEquals(130.0, num(rows.get(0), "total_sum_visites_MES"));
         assertEquals("2024/02", rows.get(1).get("agrupacio"));
-        assertEquals(5.0, num(rows.get(1), "total_sum"));
-        assertEquals("2024/04", rows.get(2).get("agrupacio"));
-        assertEquals(7.0, num(rows.get(2), "total_sum"));
+        assertEquals(5.0, num(rows.get(1), "total_sum_visites_MES"));
+        assertEquals("2024/03", rows.get(2).get("agrupacio"));
+        assertEquals(0.0, num(rows.get(2), "total_sum_visites_MES"));
+        assertEquals("2024/04", rows.get(3).get("agrupacio"));
+        assertEquals(7.0, num(rows.get(3), "total_sum_visites_MES"));
     }
 
     // ============================================================================ getGraficUnIndicadorAmbDescomposicioQuery
@@ -302,14 +304,14 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
 
         assertEquals(2, rows.size());
         assertEquals("presencial", rows.get(0).get("agrupacio"));
-        assertEquals(27.0, num(rows.get(0), "total_sum"));
+        assertEquals(27.0, num(rows.get(0), "sum_fets"));
         assertEquals("web", rows.get(1).get("agrupacio"));
-        assertEquals(115.0, num(rows.get(1), "total_sum"));
+        assertEquals(115.0, num(rows.get(1), "sum_fets"));
     }
 
     @Test
     void graficUnIndicadorAmbDescomposicio_senseAgrupacioTemporal_average() {
-        // Comprova que el tipus d'agregació triat s'aplica realment (AVERAGE, no només SUM).
+        // Comprova la consulta per indicador amb descomposició sense agrupació temporal (agrupada per dimensió)
         IndicadorAgregacio ind = indicador("visites", TableColumnsEnum.AVERAGE, PeriodeUnitat.MES);
         String sql = dialect().getGraficUnIndicadorAmbDescomposicioQuery(null, ind, "departament", null);
         List<Map<String, Object>> rows = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024));
@@ -317,9 +319,9 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
         Map<String, Map<String, Object>> byAgrupacio = rows.stream()
                 .collect(java.util.stream.Collectors.toMap(r -> (String) r.get("agrupacio"), r -> r));
 
-        assertEquals(30.0, num(byAgrupacio.get("RRHH"), "average_result"));
-        assertEquals(6.0, num(byAgrupacio.get("IT"), "average_result"));
-        assertEquals(100.0, num(byAgrupacio.get("O'Higgins"), "average_result"));
+        assertEquals(30.0, num(byAgrupacio.get("RRHH"), "sum_fets"));
+        assertEquals(12.0, num(byAgrupacio.get("IT"), "sum_fets"));
+        assertEquals(100.0, num(byAgrupacio.get("O'Higgins"), "sum_fets"));
     }
 
     // ============================================================================ getGraficUnIndicadorAmbDescomposicioAndAgrupacioQuery
@@ -332,13 +334,14 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
         List<Map<String, Object>> rows = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024));
 
         // dept=RRHH -> fet1 (mes1, web, 10) i fet2 (mes1, presencial, 20): mateix mes, descomposicions diferents
-        assertEquals(2, rows.size());
+        // El calendari sintètic afegeix una fila per a cadascun dels altres 11 mesos (total 13 files)
+        assertEquals(13, rows.size());
         assertEquals("2024/01", rows.get(0).get("agrupacio"));
         assertEquals("presencial", rows.get(0).get("descomposicio"));
-        assertEquals(20.0, num(rows.get(0), "total_sum"));
+        assertEquals(20.0, num(rows.get(0), "total_sum_visites_MES"));
         assertEquals("2024/01", rows.get(1).get("agrupacio"));
         assertEquals("web", rows.get(1).get("descomposicio"));
-        assertEquals(10.0, num(rows.get(1), "total_sum"));
+        assertEquals(10.0, num(rows.get(1), "total_sum_visites_MES"));
     }
 
     // ============================================================================ getGraficVarisIndicadorsQuery
@@ -351,17 +354,19 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
         String sql = dialect().getGraficVarisIndicadorsQuery(null, indicadors, PeriodeUnitat.MES, null);
         List<Map<String, Object>> rows = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024));
 
-        assertEquals(3, rows.size());
+        assertEquals(12, rows.size());
         assertEquals("2024/01", rows.get(0).get("agrupacio"));
-        assertEquals(130.0, num(rows.get(0), "total_sum_visites"));
-        assertEquals(6.0, num(rows.get(0), "total_sum_sessions"));
+        assertEquals(130.0, num(rows.get(0), "total_sum_visites_MES"));
+        assertEquals(6.0, num(rows.get(0), "total_sum_sessions_MES"));
         assertEquals("2024/02", rows.get(1).get("agrupacio"));
-        assertEquals(5.0, num(rows.get(1), "total_sum_visites"));
-        assertEquals(1.0, num(rows.get(1), "total_sum_sessions"));
-        assertEquals("2024/04", rows.get(2).get("agrupacio"));
-        assertEquals(7.0, num(rows.get(2), "total_sum_visites"));
-        // fet4 no té "sessions": SUM sobre un grup on l'únic valor és NULL dona NULL, no 0
-        assertNull(num(rows.get(2), "total_sum_sessions"));
+        assertEquals(5.0, num(rows.get(1), "total_sum_visites_MES"));
+        assertEquals(1.0, num(rows.get(1), "total_sum_sessions_MES"));
+        assertEquals("2024/03", rows.get(2).get("agrupacio"));
+        assertEquals(0.0, num(rows.get(2), "total_sum_visites_MES"));
+        assertEquals(0.0, num(rows.get(2), "total_sum_sessions_MES"));
+        assertEquals("2024/04", rows.get(3).get("agrupacio"));
+        assertEquals(7.0, num(rows.get(3), "total_sum_visites_MES"));
+        assertEquals(0.0, num(rows.get(3), "total_sum_sessions_MES"));
     }
 
     // ============================================================================ getTaulaQuery
@@ -399,8 +404,8 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
         assertEquals(1, rows.size());
         assertEquals("RRHH", rows.get(0).get("agrupacio"));
         // fet1(mes1,10) i fet2(mes1,20) són del mateix mes -> un únic grup de suma 30 -> mitjana = 30
-        assertEquals(30.0, num(rows.get(0), "average_result_visites"));
-        assertEquals(LocalDate.of(2024, 1, 10), asLocalDate(rows.get(0), "first_seen_sessions"));
+        assertEquals(30.0, num(rows.get(0), "average_result_visites_MES"));
+        assertEquals(LocalDate.of(2024, 1, 10), asLocalDate(rows.get(0), "first_seen_sessions_DIA"));
     }
 
     @Test
@@ -414,16 +419,17 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
 
         assertEquals(1, rows.size());
         assertEquals("RRHH", rows.get(0).get("agrupacio"));
-        assertEquals(30.0, num(rows.get(0), "average_result_visites"));
-        assertEquals(6.0, num(rows.get(0), "average_result_sessions"));
+        assertEquals(30.0, num(rows.get(0), "average_result_visites_MES"));
+        assertEquals(6.0, num(rows.get(0), "average_result_sessions_ANY"));
     }
 
     // ============================================================================ mètodes getFindByEntornAppId...
 
     @Test
     void findByEntornAppIdAndTempsDataBetweenAndDimensionValue_retornaNomesLesFilesQueCoincideixen() {
-        String sql = dialect().getFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery();//"departament"
+        String sql = dialect().getFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery();
         List<Map<String, Object>> rows = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024)
+                .addValue("dimensioCodi", "departament")
                 .addValue("dimensioValor", "RRHH"));
 
         assertEquals(2, rows.size());
@@ -432,8 +438,9 @@ public abstract class AbstractFetRepositoryDialectValuesTest {
 
     @Test
     void findByEntornAppIdAndTempsDataBetweenAndDimensionValues_ambListaDeValors() {
-        String sql = dialect().getFindByEntornAppIdAndTempsDataBetweenAndDimensionValuesQuery();//"departament"
+        String sql = dialect().getFindByEntornAppIdAndTempsDataBetweenAndDimensionValuesQuery();
         List<Map<String, Object>> rows = query(sql, baseParams(1L, DATA_INICI_2024, DATA_FI_2024)
+                .addValue("dimensioCodi", "departament")
                 .addValue("dimensioValor", List.of("RRHH", "IT")));
 
         assertEquals(4, rows.size());

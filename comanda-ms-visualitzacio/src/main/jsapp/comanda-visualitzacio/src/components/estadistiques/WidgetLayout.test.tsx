@@ -26,6 +26,7 @@ vi.mock('react-i18next', () => ({
 }));
 
 vi.mock('./WidgetEstils', () => ({
+    PERCENTAGE_TRIANGLE_MARGIN: '2px',
     default: {
         titleContainer: {},
         titleText: { fontSize: '16px' },
@@ -33,6 +34,7 @@ vi.mock('./WidgetEstils', () => ({
         iconContainer: {},
         footerContainer: {},
         descText: (color: string) => ({ color, fontSize: '14px' }),
+        footerDescText: (color: string) => ({ color, fontSize: '14px' }),
         percText: (color: string) => ({ color, fontSize: '14px' }),
         errorAccordion: {},
         errorSummary: () => ({}),

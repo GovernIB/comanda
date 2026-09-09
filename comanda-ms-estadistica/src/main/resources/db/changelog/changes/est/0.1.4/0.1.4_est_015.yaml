@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: est-dashboard-item-sync-entorn-id-0.1.4-001
+      author: limit
+      comment: >
+        Sincronitzar el camp entorn_id dels ítems de dashboard (com_est_dashboard_item)
+        amb l'entorn_id del seu dashboard pare (com_est_dashboard) per a tots aquells
+        dashboards que tenen entorn definit.
+      changes:
+        - sql:
+            sql: >
+              UPDATE ${db_prefix}est_dashboard_item
+              SET entorn_id = (
+                  SELECT d.entorn_id
+                  FROM ${db_prefix}est_dashboard d
+                  WHERE d.id = ${db_prefix}est_dashboard_item.dashboard_id
+              )
+              WHERE dashboard_id IN (
+                  SELECT d.id
+                  FROM ${db_prefix}est_dashboard d
+                  WHERE d.entorn_id IS NOT NULL
+              )
+      rollback: []

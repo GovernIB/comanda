@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import EstadisticaDashboardView from './EstadisticaDashboardView';
@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
     useParamsMock: vi.fn(),
     navigateMock: vi.fn(),
     findDashboardMock: vi.fn(),
+    artifactActionMock: vi.fn().mockResolvedValue({}),
     setItemMock: vi.fn(),
     removeItemMock: vi.fn(),
     getItemMock: vi.fn(),
@@ -17,6 +18,19 @@ const mocks = vi.hoisted(() => ({
                     title: 'Dashboards',
                     view: {
                         largeScreenModeFit: 'Escalar per ajustar-se a la pantalla',
+                        selector: {
+                            loading: 'Carregant...',
+                            seeAll: 'Veure tots els taulers de control',
+                        },
+                        favorite: {
+                            added: 'Afegit a preferits',
+                            removed: 'Eliminat de preferits',
+                        },
+                        columns: {
+                            titol: 'Títol',
+                            descripcio: 'Descripció',
+                            esPreferit: 'Preferit',
+                        },
                     },
                     action: {
                         select: {
@@ -66,13 +80,16 @@ vi.mock('reactlib', () => ({
         title,
         filter,
         onRowClick,
+        perspectives,
     }: {
         title: string;
         filter?: string;
         onRowClick?: () => void;
+        perspectives?: string[];
     }) => (
         <section>
             <h2>{title}</h2>
+            {perspectives && <span data-testid="datagrid-perspectives">{perspectives.join(',')}</span>}
             <span data-testid="dashboard-filter">{filter ?? ''}</span>
             <button type="button" onClick={onRowClick}>
                 Seleccionar fila
@@ -83,7 +100,12 @@ vi.mock('reactlib', () => ({
     useResourceApiService: () => ({
         isReady: true,
         find: mocks.findDashboardMock,
+        artifactAction: mocks.artifactActionMock,
     }),
+    useBaseAppContext: () => ({
+        temporalMessageShow: vi.fn(),
+    }),
+    useMuiDataGridApiRef: () => ({ current: { refresh: vi.fn() } }),
 }));
 
 vi.mock('../hooks/dashboardRequests.ts', () => ({
@@ -195,7 +217,7 @@ describe('EstadisticaDashboardView', () => {
             expect(screen.getByRole('heading', { name: 'Dashboards' })).toBeInTheDocument();
         });
 
-        expect(screen.getByRole('button', { name: /Dashboard 12/i })).toBeInTheDocument();
+        expect(screen.getByText('Dashboard 12')).toBeInTheDocument();
         expect(screen.getByText('Grid 12 (1)')).toBeInTheDocument();
         expect(screen.getByTestId('entorn-codi')).toHaveTextContent('ENT-5');
         expect(mocks.setItemMock).toHaveBeenCalledWith('lastViewedDashboardId', '12');
@@ -295,15 +317,18 @@ describe('EstadisticaDashboardView', () => {
         expect(screen.queryByTestId('entorn-codi')).not.toBeInTheDocument();
     });
 
-    it('EstadisticaDashboardView_quanEsPremLaToolbar_obreElDialegDeSeleccioAmbFiltre', async () => {
-        // Verifica que la selecció de dashboard obre el diàleg i exclou el dashboard actual del grid.
+    it('EstadisticaDashboardView_quanEsPremElBotoLlista_obreElDialegDeGestio', async () => {
         render(<EstadisticaDashboardView />);
 
-        fireEvent.click(screen.getByRole('button', { name: /Dashboard 12/i }));
+        const combobox = screen.getByRole('combobox');
+        fireEvent.mouseDown(combobox);
+        const seeAllOption = await screen.findByRole('option', { name: /Veure tots els taulers de control/i });
+        fireEvent.click(seeAllOption);
+        const dialog = await screen.findByTestId('dialog-select');
 
-        expect(await screen.findByTestId('dialog-select')).toBeInTheDocument();
-        expect(screen.getByRole('heading', { name: 'Seleccionar dashboard' })).toBeInTheDocument();
-        expect(screen.getByTestId('dashboard-filter')).toHaveTextContent('id ! 12');
+        expect(dialog).toBeInTheDocument();
+        expect(within(dialog).getByRole('heading', { name: 'Dashboards' })).toBeInTheDocument();
+        expect(within(dialog).getByTestId('datagrid-perspectives')).toHaveTextContent('PREFERIT_USUARI_ACTUAL');
     });
 
     it('EstadisticaDashboardView_quanElDashboardNoExisteix_mostraLAlertaIResetejaLaSeleccio', async () => {

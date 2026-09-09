@@ -1,17 +1,14 @@
 package es.caib.comanda.estadistica.logic.service;
 
-import es.caib.comanda.base.config.BaseConfig;
-import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
+import es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltre;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltreTipus;
 import es.caib.comanda.estadistica.logic.intf.service.DashboardFiltreService;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardFiltreEntity;
 import es.caib.comanda.estadistica.persist.repository.DashboardFiltreRepository;
-import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
-import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
@@ -34,9 +31,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class DashboardFiltreServiceImpl extends BaseMutableResourceService<DashboardFiltre, Long, DashboardFiltreEntity> implements DashboardFiltreService {
 
-    private final AuthenticationHelper authenticationHelper;
-    private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
-    private final AclServiceClient aclServiceClient;
+    private final DashboardPermisosHelper dashboardPermisosHelper;
     private final DashboardFiltreRepository dashboardFiltreRepository;
 
     @Override
@@ -45,7 +40,9 @@ public class DashboardFiltreServiceImpl extends BaseMutableResourceService<Dashb
         DashboardFiltre resource,
         Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotCreatedException {
 
-        Long dashboardId = resource.getDashboard() != null ? resource.getDashboard().getId() : entity.getDashboard().getId();
+        Long dashboardId = resource.getDashboard() != null ? resource.getDashboard().getId() : (entity.getDashboard() != null ? entity.getDashboard().getId() : null);
+        dashboardPermisosHelper.checkCanDesignDashboard(dashboardId, "No teniu permisos de disseny per afegir filtres a aquest quadre de control");
+
         String errorMessage = findDuplicateErrorMessage(
             dashboardId,
             resource.getTipus(),
@@ -62,11 +59,23 @@ public class DashboardFiltreServiceImpl extends BaseMutableResourceService<Dashb
         DashboardFiltre resource,
         Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
 
-        Long dashboardId = resource.getDashboard() != null ? resource.getDashboard().getId() : entity.getDashboard().getId();
-        String errorMessage = findDuplicateErrorMessage(dashboardId, resource.getTipus(), resource.getDimensioCodi(), entity.getId());
+        Long originalDashboardId = entity.getDashboard() != null ? entity.getDashboard().getId() : null;
+        dashboardPermisosHelper.checkCanDesignDashboard(originalDashboardId, "No teniu permisos de disseny per modificar filtres d'aquest quadre de control");
+        if (resource.getDashboard() != null && !Objects.equals(resource.getDashboard().getId(), originalDashboardId)) {
+            dashboardPermisosHelper.checkCanDesignDashboard(resource.getDashboard().getId(), "No teniu permisos de disseny per moure filtres a aquest quadre de control");
+        }
+
+        Long targetDashboardId = resource.getDashboard() != null ? resource.getDashboard().getId() : originalDashboardId;
+        String errorMessage = findDuplicateErrorMessage(targetDashboardId, resource.getTipus(), resource.getDimensioCodi(), entity.getId());
         if (errorMessage != null) {
             throw new ResourceNotUpdatedException(getResourceClass(), String.valueOf(entity.getId()), errorMessage);
         }
+    }
+
+    @Override
+    protected void beforeDelete(DashboardFiltreEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        Long dashboardId = entity.getDashboard() != null ? entity.getDashboard().getId() : null;
+        dashboardPermisosHelper.checkCanDesignDashboard(dashboardId, "No teniu permisos de disseny per eliminar filtres d'aquest quadre de control");
     }
 
     /**
@@ -99,19 +108,18 @@ public class DashboardFiltreServiceImpl extends BaseMutableResourceService<Dashb
     protected String additionalSpringFilter(
         String currentSpringFilter,
         String[] namedQueries) {
-        if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
-            || authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
+        if (dashboardPermisosHelper.isAdminOrConsulta()) {
             return currentSpringFilter;
         }
-        Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP,
+        Set<Serializable> appPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.APP,
             List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
         String appFilter = SpringFilterHelper.buildOrFilter("dashboard.appId", appPermissionIds);
 
-        Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP,
+        Set<Serializable> entornAppPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.ENTORN_APP,
             List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
-        String entornAppFilter = SpringFilterHelper.buildOrFilter("dashboard.entornId", entornAppPermissionIds);
+        String entornAppFilter = dashboardPermisosHelper.buildEntornAppFilter(entornAppPermissionIds, "dashboard");
 
-        Set<Serializable> dashboardPermissionIds = getAllowedIds(ResourceType.DASHBOARD,
+        Set<Serializable> dashboardPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.DASHBOARD,
             List.of(PermissionEnum.READ, PermissionEnum.WRITE));
         String dashboardFilter = SpringFilterHelper.buildOrFilter("dashboard.id", dashboardPermissionIds);
 
@@ -127,16 +135,6 @@ public class DashboardFiltreServiceImpl extends BaseMutableResourceService<Dashb
                 ? "id:0"
                 : filter
         );
-    }
-
-    public Set<Serializable> getAllowedIds(ResourceType resourceType, List<PermissionEnum> permissions) {
-        return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
-                resourceType,
-                permissions,
-                authenticationHelper.getCurrentUserName(),
-                Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
-                httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
-            .orElse(Collections.emptySet());
     }
 
 }

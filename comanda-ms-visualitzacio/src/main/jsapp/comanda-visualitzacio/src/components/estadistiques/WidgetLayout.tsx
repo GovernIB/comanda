@@ -8,7 +8,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useTheme } from '@mui/material/styles';
-import estils from './WidgetEstils';
+import estils, { PERCENTAGE_TRIANGLE_MARGIN } from './WidgetEstils';
 import { createTransparentColor } from '../../util/colorUtil';
 
 interface WidgetHeaderProps {
@@ -92,9 +92,11 @@ export const WidgetFooter: React.FC<WidgetFooterProps> = React.memo(({
     canviPercentual,
     midaFontCanviPercentual,
 }) => {
+    const theme = useTheme();
+
     const descEstils = {
-        ...estils.descText(textColor),
-        fontSize: midaFontDescripcio ? `${midaFontDescripcio}px` : estils.descText(textColor).fontSize,
+        ...estils.footerDescText(textColor),
+        fontSize: midaFontDescripcio ? `${midaFontDescripcio}px` : estils.footerDescText(textColor).fontSize,
     };
 
     const canviPercentualEstils = {
@@ -102,8 +104,14 @@ export const WidgetFooter: React.FC<WidgetFooterProps> = React.memo(({
         fontSize: midaFontCanviPercentual ? `${midaFontCanviPercentual}px` : estils.percText(textColor).fontSize,
     };
 
+    const canviPercentualNumber = Number(canviPercentual);
+    const trendColor = canviPercentualNumber > 0 ? theme.palette.success.main : theme.palette.error.main;
+
     return (
-        <Box sx={estils.footerContainer}>
+        <Box sx={{
+            ...estils.footerContainer,
+            justifyContent: descripcio ? 'space-between' : 'flex-end',
+        }}>
             {loading ? (
                 <>
                     <Skeleton width="60%" height={24} />
@@ -113,10 +121,14 @@ export const WidgetFooter: React.FC<WidgetFooterProps> = React.memo(({
                 <>
                     {descripcio && <Typography sx={descEstils}>{descripcio}</Typography>}
                     {canviPercentual && (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            {Number(canviPercentual) !== 0 && (
-                                <Icon sx={{ color: canviPercentualEstils.color, fontSize: canviPercentualEstils.fontSize }}>
-                                    {Number(canviPercentual) > 0 ? 'arrow_drop_up' : 'arrow_drop_down'}
+                        <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                            {canviPercentualNumber !== 0 && (
+                                <Icon sx={{
+                                    color: trendColor,
+                                    fontSize: canviPercentualEstils.fontSize,
+                                    marginRight: PERCENTAGE_TRIANGLE_MARGIN,
+                                }}>
+                                    {canviPercentualNumber > 0 ? 'arrow_drop_up' : 'arrow_drop_down'}
                                 </Icon>
                             )}
                             <Typography sx={canviPercentualEstils}>{canviPercentual}%</Typography>

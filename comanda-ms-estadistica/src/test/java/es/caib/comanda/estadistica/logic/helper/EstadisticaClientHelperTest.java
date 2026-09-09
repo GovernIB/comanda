@@ -12,7 +12,6 @@ import es.caib.comanda.client.model.monitor.EstatEnum;
 import es.caib.comanda.client.model.monitor.ModulEnum;
 import es.caib.comanda.client.model.monitor.Monitor;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
-import es.caib.comanda.ms.logic.intf.exception.ResourceNotFoundException;
 import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -266,8 +265,8 @@ class EstadisticaClientHelperTest {
     }
 
     @Test
-    @DisplayName("entornAppFindByAppAndEntorn: llança ResourceNotFoundException quan la llista és buida")
-    void entornAppFindByAppAndEntorn_quanLlistaBuida_llavorsLlancaResourceNotFoundException() {
+    @DisplayName("entornAppFindByAppAndEntorn: retorna null quan la llista és buida")
+    void entornAppFindByAppAndEntorn_quanLlistaBuida_llavorsRetornaNull() {
         // Arrange
         PagedModel<EntityModel<EntornApp>> pagedModel = PagedModel.of(
             Collections.emptyList(),
@@ -275,9 +274,25 @@ class EstadisticaClientHelperTest {
         when(entornAppServiceClient.find(isNull(), eq("app.id:10 and entorn.id:20"), isNull(), isNull(), eq("UNPAGED"), isNull(), eq(authHeader)))
             .thenReturn(pagedModel);
 
-        // Act & Assert
-        assertThatThrownBy(() -> estadisticaClientHelper.entornAppFindByAppAndEntorn(10L, 20L))
-            .isInstanceOf(ResourceNotFoundException.class);
+        // Act
+        EntornApp result = estadisticaClientHelper.entornAppFindByAppAndEntorn(10L, 20L);
+
+        // Assert
+        assertThat(result).isNull();
+    }
+
+    @Test
+    @DisplayName("entornAppFindByAppAndEntorn: retorna null quan es llança FeignException.NotFound")
+    void entornAppFindByAppAndEntorn_quanLlancaNotFound_llavorsRetornaNull() {
+        // Arrange
+        when(entornAppServiceClient.find(isNull(), eq("app.id:10 and entorn.id:20"), isNull(), isNull(), eq("UNPAGED"), isNull(), eq(authHeader)))
+            .thenThrow(mock(FeignException.NotFound.class));
+
+        // Act
+        EntornApp result = estadisticaClientHelper.entornAppFindByAppAndEntorn(10L, 20L);
+
+        // Assert
+        assertThat(result).isNull();
     }
 
 
