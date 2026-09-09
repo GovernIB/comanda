@@ -1,13 +1,12 @@
 package es.caib.comanda.estadistica.logic.service;
 
-import es.caib.comanda.client.AclServiceClient;
+import es.caib.comanda.client.model.acl.ResourceType;
+import es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltre;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltreTipus;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardFiltreEntity;
 import es.caib.comanda.estadistica.persist.repository.DashboardFiltreRepository;
-import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
-import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
@@ -22,11 +21,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -42,7 +47,7 @@ class DashboardFiltreServiceImplTest {
     private static final Long DASHBOARD_ID = 1L;
 
     @Mock
-    private es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper dashboardPermisosHelper;
+    private DashboardPermisosHelper dashboardPermisosHelper;
     @Mock
     private DashboardFiltreRepository dashboardFiltreRepository;
     @Mock
@@ -285,5 +290,53 @@ class DashboardFiltreServiceImplTest {
 
         assertThatCode(() -> service.beforeDelete(entity, null))
                 .doesNotThrowAnyException();
+    }
+
+    // ========================================================================
+    // TESTOS PER A additionalSpringFilter
+    // ========================================================================
+
+    @Test
+    @DisplayName("additionalSpringFilter: retorna el filtre original quan l'usuari és ADMIN o CONSULTA")
+    void additionalSpringFilter_quanEsAdminOConsulta_llavorsRetornaFiltreOriginal() {
+        when(dashboardPermisosHelper.isAdminOrConsulta()).thenReturn(true);
+
+        String result = service.additionalSpringFilter("dashboard.id:1", new String[0]);
+
+        assertThat(result).isEqualTo("dashboard.id:1");
+        verify(dashboardPermisosHelper, never()).getAllowedIds(any(), any());
+    }
+
+    @Test
+    @DisplayName("additionalSpringFilter: resol correctament els permisos amb dashboardPermisosHelper")
+    void additionalSpringFilter_ambPermisos_aplicaFiltres() {
+        when(dashboardPermisosHelper.isAdminOrConsulta()).thenReturn(false);
+
+        when(dashboardPermisosHelper.getAllowedIds(eq(ResourceType.APP), anyList()))
+            .thenReturn(Set.of(10L));
+        when(dashboardPermisosHelper.getAllowedIds(eq(ResourceType.ENTORN_APP), anyList()))
+            .thenReturn(Set.of(100L));
+        when(dashboardPermisosHelper.buildEntornAppFilter(Set.of(100L), "dashboard"))
+            .thenReturn("(dashboard.appId:10 and dashboard.entornId:20)");
+        when(dashboardPermisosHelper.getAllowedIds(eq(ResourceType.DASHBOARD), anyList()))
+            .thenReturn(Set.of(1L));
+
+        String result = service.additionalSpringFilter("base", new String[0]);
+
+        assertThat(result).contains("dashboard.appId:10");
+        assertThat(result).contains("(dashboard.appId:10 and dashboard.entornId:20)");
+        assertThat(result).contains("dashboard.id:1");
+    }
+
+    @Test
+    @DisplayName("additionalSpringFilter: retorna fallback 'id:0' quan l'usuari normal no té cap permís")
+    void additionalSpringFilter_quanEsUsuariNormalISensePermisos_llavorsRetornaIdZero() {
+        when(dashboardPermisosHelper.isAdminOrConsulta()).thenReturn(false);
+        when(dashboardPermisosHelper.getAllowedIds(any(ResourceType.class), anyList()))
+            .thenReturn(Collections.emptySet());
+
+        String result = service.additionalSpringFilter("base", new String[0]);
+
+        assertThat(result).isEqualTo("base and id:0");
     }
 }

@@ -87,8 +87,7 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
 
         Set<Serializable> entornAppPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.ENTORN_APP,
             List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
-        // TODO Pendent de revisar els usos del camp entornId i corregir el seu nom
-        String entornAppFilter = SpringFilterHelper.buildOrFilter("entornId", entornAppPermissionIds);
+        String entornAppFilter = dashboardPermisosHelper.buildEntornAppFilter(entornAppPermissionIds, "widget.appId", "entornId");
 
         Set<Serializable> dashboardPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.DASHBOARD,
             List.of(PermissionEnum.READ, PermissionEnum.WRITE));

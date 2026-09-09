@@ -194,17 +194,25 @@ public class DashboardPermisosHelper {
      * Construeix una clàusula de filtre Spring RSQL a partir dels IDs d'EntornApp permesos.
      */
     public String buildEntornAppFilter(Set<Serializable> entornAppPermissionIds, String prefix) {
+        String fieldPrefix = (prefix != null && !prefix.isBlank()) ? prefix + "." : "";
+        return buildEntornAppFilter(entornAppPermissionIds, fieldPrefix + "appId", fieldPrefix + "entornId");
+    }
+
+    /**
+     * Construeix una clàusula de filtre Spring RSQL a partir dels IDs d'EntornApp permesos,
+     * permetent especificar els noms de propietat concrets per a l'aplicació i per a l'entorn.
+     */
+    public String buildEntornAppFilter(Set<Serializable> entornAppPermissionIds, String appProperty, String entornProperty) {
         if (entornAppPermissionIds == null || entornAppPermissionIds.isEmpty()) {
             return null;
         }
-        String fieldPrefix = (prefix != null && !prefix.isBlank()) ? prefix + "." : "";
         List<String> clauses = new ArrayList<>();
         for (Serializable id : entornAppPermissionIds) {
             try {
                 Long entornAppId = Long.parseLong(String.valueOf(id));
                 EntornApp ea = estadisticaClientHelper.entornAppFindById(entornAppId);
                 if (ea != null && ea.getApp() != null && ea.getEntorn() != null) {
-                    clauses.add("(" + fieldPrefix + "appId:" + ea.getApp().getId() + " and " + fieldPrefix + "entornId:" + ea.getEntorn().getId() + ")");
+                    clauses.add("(" + appProperty + ":" + ea.getApp().getId() + " and " + entornProperty + ":" + ea.getEntorn().getId() + ")");
                 }
             } catch (Exception e) {
                 log.error("Error resolvent EntornApp per a filtre de dashboard: " + id, e);

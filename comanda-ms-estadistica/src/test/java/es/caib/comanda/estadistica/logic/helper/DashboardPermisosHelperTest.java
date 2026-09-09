@@ -367,6 +367,18 @@ class DashboardPermisosHelperTest {
     }
 
     @Test
+    @DisplayName("buildEntornAppFilter construeix clàusula amb propietats personalitzades per a app i entorn")
+    void buildEntornAppFilter_ambPropietatsPersonalitzades_construeixClausula() {
+        EntornApp ea = new EntornApp();
+        ea.setApp(AppRef.builder().id(10L).build());
+        ea.setEntorn(EntornRef.builder().id(20L).build());
+        when(estadisticaClientHelper.entornAppFindById(1L)).thenReturn(ea);
+
+        String filter = dashboardPermisosHelper.buildEntornAppFilter(Set.of(1L), "widget.appId", "entornId");
+        assertThat(filter).isEqualTo("(widget.appId:10 and entornId:20)");
+    }
+
+    @Test
     @DisplayName("buildEntornAppFilter gestiona entrades invàlides o errors sense fallar")
     void buildEntornAppFilter_quanErrorResolvent_ometEntrada() {
         when(estadisticaClientHelper.entornAppFindById(999L)).thenThrow(new RuntimeException("Not found"));

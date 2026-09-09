@@ -147,6 +147,34 @@ class DashboardItemServiceImplTest {
     }
 
     @Test
+    @DisplayName("additionalSpringFilter: resol correctament els permisos ENTORN_APP amb widget.appId i entornId")
+    void additionalSpringFilter_ambPermisosEntornApp_resolWidgetAppIdIEntornId() {
+        // Arrange
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(100L)));
+
+        es.caib.comanda.client.model.EntornApp ea = es.caib.comanda.client.model.EntornApp.builder()
+            .id(100L)
+            .app(es.caib.comanda.client.model.AppRef.builder().id(10L).build())
+            .entorn(es.caib.comanda.client.model.EntornRef.builder().id(20L).build())
+            .build();
+        when(estadisticaClientHelper.entornAppFindById(100L)).thenReturn(ea);
+
+        // Act
+        String result = dashboardItemService.additionalSpringFilter("base", new String[0]);
+
+        // Assert
+        assertThat(result).contains("(widget.appId:10 and entornId:20)");
+    }
+
+    @Test
     @DisplayName("additionalSpringFilter: retorna id:0 quan l'usuari normal no té cap permís")
     void additionalSpringFilter_quanEsUsuariNormalISensePermisos_llavorsRetornaIdZero() {
         // Arrange

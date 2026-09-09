@@ -72,6 +72,10 @@ public class DashboardItem extends BaseResource<Long> {
     private ResourceReference<Dashboard, Long> dashboard;
     @NotNull
     private ResourceReference<EstadisticaSimpleWidget, Long> widget;
+    /**
+     * Identificador de l'entorn (com_entorn.id / EntornEntity).
+     * Coincident amb l'entornId del dashboard pare en dashboards amb entorn definit.
+     */
     @NotNull
     private Long entornId;
 
