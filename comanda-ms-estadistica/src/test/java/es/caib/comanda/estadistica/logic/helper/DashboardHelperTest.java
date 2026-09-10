@@ -100,7 +100,37 @@ class DashboardHelperTest {
         // Configuració per evitar NPE en crides estàtiques a I18nUtil
         ReflectionTestUtils.setField(I18nUtil.class, "applicationContext", applicationContext);
         lenient().when(applicationContext.getBean(I18nUtil.class)).thenReturn(i18nUtil);
-        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(i -> i.getArgument(0));
+        org.mockito.stubbing.Answer<String> i18nAnswer = invocation -> {
+            String code = invocation.getArgument(0);
+            Object[] args = invocation.getArguments().length > 1 && invocation.getArgument(1) instanceof Object[]
+                    ? invocation.getArgument(1)
+                    : (invocation.getArguments().length > 1
+                    ? java.util.Arrays.copyOfRange(invocation.getArguments(), 1, invocation.getArguments().length)
+                    : new Object[0]);
+            if ("es.caib.comanda.estadistica.logic.helper.DashboardHelper.suffixCopia".equals(code)) {
+                return " (Copia)";
+            }
+            if ("es.caib.comanda.estadistica.logic.helper.DashboardHelper.suffixCopiaN".equals(code)) {
+                return " (Copia " + (args != null && args.length > 0 ? args[0] : "") + ")";
+            }
+            if ("es.caib.comanda.estadistica.logic.helper.DashboardHelper.defaultWidgetTitol".equals(code)) {
+                return "Widget";
+            }
+            if ("es.caib.comanda.estadistica.logic.helper.DashboardHelper.maximIntentsTitol".equals(code)) {
+                return "S'ha superat el nombre màxim d'intents (" + (args != null && args.length > 0 ? args[0] : "") + ") per generar un títol únic per al widget: " + (args != null && args.length > 1 ? args[1] : "");
+            }
+            if ("es.caib.comanda.estadistica.logic.helper.DashboardHelper.action.cloneAndAddWidget.error.widgetIdRequerit".equals(code)) {
+                return "widgetId is required";
+            }
+            if ("es.caib.comanda.estadistica.logic.helper.DashboardHelper.action.cloneAndAddWidget.error.widgetOriginalNoTrobat".equals(code)) {
+                return "Original widget not found";
+            }
+            return code;
+        };
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(i18nAnswer);
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(i18nAnswer);
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any(), any())).thenAnswer(i18nAnswer);
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any(Object[].class))).thenAnswer(i18nAnswer);
     }
 
     private DashboardFiltreEntity filtreEntity(Long id, DashboardFiltreTipus tipus) {

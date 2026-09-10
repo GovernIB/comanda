@@ -61,6 +61,8 @@ class DashboardFiltreServiceImplTest {
     void setUp() {
         ReflectionTestUtils.setField(I18nUtil.class, "applicationContext", applicationContext);
         lenient().when(applicationContext.getBean(I18nUtil.class)).thenReturn(i18nUtil);
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(i -> i.getArgument(0));
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(i -> i.getArgument(0));
         lenient().when(i18nUtil.getI18nMessage(
                 "es.caib.comanda.estadistica.logic.service.DashboardFiltreServiceImpl.periodeDuplicat"))
                 .thenReturn(PERIODE_DUPLICAT_MISSATGE);

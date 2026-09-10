@@ -25,6 +25,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
+import org.springframework.context.ApplicationContext;
 import org.springframework.security.access.AccessDeniedException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -73,11 +75,30 @@ class DashboardTitolServiceImplTest {
     @Mock
     private es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper dashboardPermisosHelper;
 
+    @Mock
+    private ApplicationContext applicationContext;
+
+    @Mock
+    private I18nUtil i18nUtil;
+
     @InjectMocks
     private DashboardTitolServiceImpl dashboardTitolService;
 
     @BeforeEach
     void setUp() {
+        ReflectionTestUtils.setField(I18nUtil.class, "applicationContext", applicationContext);
+        lenient().when(applicationContext.getBean(I18nUtil.class)).thenReturn(i18nUtil);
+        org.mockito.stubbing.Answer<String> i18nAnswer = invocation -> {
+            String code = invocation.getArgument(0);
+            if ("es.caib.comanda.estadistica.logic.service.DashboardTitolServiceImpl.defaultTitol".equals(code)) {
+                return "Títol";
+            }
+            return code;
+        };
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(i18nAnswer);
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(i18nAnswer);
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any(Object[].class))).thenAnswer(i18nAnswer);
+
         dashboardPermisosHelper = org.mockito.Mockito.spy(new es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper(
             authenticationHelper,
             httpAuthorizationHeaderHelper,

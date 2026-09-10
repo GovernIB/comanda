@@ -38,7 +38,7 @@ public class DashboardFiltreServiceImpl extends BaseMutableResourceService<Dashb
         Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotCreatedException {
 
         Long dashboardId = resource.getDashboard() != null ? resource.getDashboard().getId() : (entity.getDashboard() != null ? entity.getDashboard().getId() : null);
-        dashboardPermisosHelper.checkCanDesignDashboard(dashboardId, "No teniu permisos de disseny per afegir filtres a aquest quadre de control");
+        dashboardPermisosHelper.checkCanDesignDashboard(dashboardId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardFiltreServiceImpl.permisos.afegirFiltres"));
 
         String errorMessage = findDuplicateErrorMessage(
             dashboardId,
@@ -57,9 +57,9 @@ public class DashboardFiltreServiceImpl extends BaseMutableResourceService<Dashb
         Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
 
         Long originalDashboardId = entity.getDashboard() != null ? entity.getDashboard().getId() : null;
-        dashboardPermisosHelper.checkCanDesignDashboard(originalDashboardId, "No teniu permisos de disseny per modificar filtres d'aquest quadre de control");
+        dashboardPermisosHelper.checkCanDesignDashboard(originalDashboardId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardFiltreServiceImpl.permisos.modificarFiltres"));
         if (resource.getDashboard() != null && !Objects.equals(resource.getDashboard().getId(), originalDashboardId)) {
-            dashboardPermisosHelper.checkCanDesignDashboard(resource.getDashboard().getId(), "No teniu permisos de disseny per moure filtres a aquest quadre de control");
+            dashboardPermisosHelper.checkCanDesignDashboard(resource.getDashboard().getId(), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardFiltreServiceImpl.permisos.moureFiltres"));
         }
 
         Long targetDashboardId = resource.getDashboard() != null ? resource.getDashboard().getId() : originalDashboardId;
@@ -72,7 +72,7 @@ public class DashboardFiltreServiceImpl extends BaseMutableResourceService<Dashb
     @Override
     protected void beforeDelete(DashboardFiltreEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
         Long dashboardId = entity.getDashboard() != null ? entity.getDashboard().getId() : null;
-        dashboardPermisosHelper.checkCanDesignDashboard(dashboardId, "No teniu permisos de disseny per eliminar filtres d'aquest quadre de control");
+        dashboardPermisosHelper.checkCanDesignDashboard(dashboardId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardFiltreServiceImpl.permisos.eliminarFiltres"));
     }
 
     /**

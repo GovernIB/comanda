@@ -31,6 +31,7 @@ import es.caib.comanda.ms.logic.intf.exception.*;
 import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
 import es.caib.comanda.ms.logic.intf.model.FileReference;
 import es.caib.comanda.ms.logic.intf.model.ReportFileType;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import org.springframework.security.access.AccessDeniedException;
 import lombok.AllArgsConstructor;
@@ -133,23 +134,23 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     protected void beforeCreateEntity(DashboardEntity entity, Dashboard resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
         Long appId = resource.getAplicacio() != null ? resource.getAplicacio().getId() : resource.getAppId();
         Long entornId = resource.getEntorn() != null ? resource.getEntorn().getId() : resource.getEntornId();
-        dashboardPermisosHelper.checkCanCreate(appId, entornId, "No teniu permisos de disseny per crear quadres de control per a aquesta aplicació/entorn");
+        dashboardPermisosHelper.checkCanCreate(appId, entornId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.permisos.crear"));
     }
 
     @Override
     protected void beforeUpdateEntity(DashboardEntity entity, Dashboard resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
-        dashboardPermisosHelper.checkCanDesign(entity.getId(), entity.getAppId(), entity.getEntornId(), "No teniu permisos de disseny per modificar aquest quadre de control");
+        dashboardPermisosHelper.checkCanDesign(entity.getId(), entity.getAppId(), entity.getEntornId(), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.permisos.modificar"));
         Long newAppId = resource.getAplicacio() != null ? resource.getAplicacio().getId() : (resource.getAppId() != null ? resource.getAppId() : entity.getAppId());
         Long newEntornId = resource.getEntorn() != null ? resource.getEntorn().getId() : (resource.getEntornId() != null ? resource.getEntornId() : entity.getEntornId());
         if (!Objects.equals(newAppId, entity.getAppId()) || !Objects.equals(newEntornId, entity.getEntornId())) {
-            dashboardPermisosHelper.checkCanCreate(newAppId, newEntornId, "No teniu permisos de disseny per moure aquest quadre de control a l'aplicació/entorn de destí");
+            dashboardPermisosHelper.checkCanCreate(newAppId, newEntornId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.permisos.moure"));
         }
         dashboardHelper.beforeUpdateEntityLogic(entity, resource, answers);
     }
 
     @Override
     protected void beforeDelete(DashboardEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
-        dashboardPermisosHelper.checkCanDesign(entity.getId(), entity.getAppId(), entity.getEntornId(), "No teniu permisos de disseny per eliminar aquest quadre de control");
+        dashboardPermisosHelper.checkCanDesign(entity.getId(), entity.getAppId(), entity.getEntornId(), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.permisos.eliminar"));
     }
 
     @Override
@@ -504,7 +505,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                         }
                     }
                     dashboardPermisosHelper.checkCanCreate(appId, entornId,
-                            "No teniu permisos de disseny per importar quadres de control a l'aplicació o entorn indicat");
+                            I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.permisos.importar"));
                 }
 
                 List<Dashboard> importedDashboards = new ArrayList<>();

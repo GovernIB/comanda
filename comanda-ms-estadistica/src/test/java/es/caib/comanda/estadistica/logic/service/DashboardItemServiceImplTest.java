@@ -36,6 +36,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationContext;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -70,10 +72,25 @@ class DashboardItemServiceImplTest {
     @Mock private es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper estadisticaClientHelper;
 
     @Mock private es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper dashboardPermisosHelper;
+    @Mock private ApplicationContext applicationContext;
+    @Mock private I18nUtil i18nUtil;
     @InjectMocks private DashboardItemServiceImpl dashboardItemService;
 
     @BeforeEach
     void setUp() {
+        ReflectionTestUtils.setField(I18nUtil.class, "applicationContext", applicationContext);
+        lenient().when(applicationContext.getBean(I18nUtil.class)).thenReturn(i18nUtil);
+        org.mockito.stubbing.Answer<String> i18nAnswer = invocation -> {
+            String code = invocation.getArgument(0);
+            if ("es.caib.comanda.estadistica.logic.service.DashboardItemServiceImpl.error.widgetDiferentApp".equals(code)) {
+                return "El widget no pertany a la mateixa aplicació que el quadre de control";
+            }
+            return code;
+        };
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(i18nAnswer);
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(i18nAnswer);
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any(Object[].class))).thenAnswer(i18nAnswer);
+
         dashboardPermisosHelper = org.mockito.Mockito.spy(new es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper(
             authenticationHelper,
             httpAuthorizationHeaderHelper,

@@ -270,7 +270,7 @@ public class DashboardHelper {
                 }
             }
             if (dashboardPermisosHelper != null) {
-                dashboardPermisosHelper.checkCanCreate(targetAppId, targetEntornId, "No teniu permisos de disseny per clonar el quadre de control a l'aplicació/entorn indicats");
+                dashboardPermisosHelper.checkCanCreate(targetAppId, targetEntornId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.permisos.clonar"));
             }
 
             DashboardEntity newDashboard = new DashboardEntity();
@@ -416,13 +416,15 @@ public class DashboardHelper {
         int counter = 1;
         while (appId != null && estadisticaWidgetRepository.findByAppIdAndTitol(appId, candidate) != null) {
             if (counter > MAX_TITOL_TRIES) {
-                throw new IllegalStateException("S'ha superat el nombre màxim d'intents (" + MAX_TITOL_TRIES + ") per generar un títol únic per al widget: " + originalTitol);
+                throw new IllegalStateException(I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.maximIntentsTitol", MAX_TITOL_TRIES, originalTitol));
             }
             int maxLength = EstadisticaWidgetEntity.TITOL_MAX_LENGTH;
-            String suffix = counter == 1 ? " (Copia)" : " (Copia " + counter + ")";
+            String suffix = counter == 1
+                    ? I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.suffixCopia")
+                    : I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.suffixCopiaN", counter);
             String base = originalTitol != null && originalTitol.length() + suffix.length() > maxLength
                     ? originalTitol.substring(0, maxLength - suffix.length())
-                    : (originalTitol != null ? originalTitol : "Widget");
+                    : (originalTitol != null ? originalTitol : I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.defaultWidgetTitol"));
             candidate = base + suffix;
             counter++;
         }
@@ -550,14 +552,14 @@ public class DashboardHelper {
         @Override
         public es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem exec(String code, DashboardEntity entity, es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.CloneAndAddWidgetParams params) throws ActionExecutionException {
             if (dashboardPermisosHelper != null) {
-                dashboardPermisosHelper.checkCanDesignDashboard(entity.getId(), "No teniu permisos de disseny per afegir widgets a aquest quadre de control");
+                dashboardPermisosHelper.checkCanDesignDashboard(entity.getId(), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.permisos.afegirWidgets"));
             }
             if (params == null || params.getWidgetId() == null) {
-                throw new ActionExecutionException(Dashboard.class, entity.getId(), code, "widgetId is required");
+                throw new ActionExecutionException(Dashboard.class, entity.getId(), code, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.action.cloneAndAddWidget.error.widgetIdRequerit"));
             }
 
             EstadisticaWidgetEntity originalWidget = estadisticaWidgetRepository.findById(params.getWidgetId()).orElseThrow(() ->
-                new ActionExecutionException(Dashboard.class, entity.getId(), code, "Original widget not found")
+                new ActionExecutionException(Dashboard.class, entity.getId(), code, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.action.cloneAndAddWidget.error.widgetOriginalNoTrobat"))
             );
 
             if (entity.getAppId() != null && originalWidget.getAppId() != null

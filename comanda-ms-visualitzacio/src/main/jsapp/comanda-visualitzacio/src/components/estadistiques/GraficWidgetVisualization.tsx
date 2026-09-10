@@ -306,7 +306,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         const xAxisConfig = {
             scaleType: 'band' as const,
             data: xCategories,
-            label: llegendaX,
+            label: llegendaX || (preview ? t($ => $.page.plantilla.sample.xAxis) : undefined),
             tickLabelStyle: {
                 fill: chartTextColor,
                 fontSize: 9,
@@ -316,7 +316,7 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
 
         const yAxisConfig = {
             scaleType: 'linear' as const,
-            label: preview ? 'Eix Y' : undefined,
+            label: preview ? t($ => $.page.plantilla.sample.yAxis) : undefined,
             tickLabelStyle: { fill: chartTextColor },
             labelStyle: { fill: chartTextColor },
         };

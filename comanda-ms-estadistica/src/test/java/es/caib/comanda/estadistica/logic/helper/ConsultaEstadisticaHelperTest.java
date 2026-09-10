@@ -81,6 +81,8 @@ class ConsultaEstadisticaHelperTest {
     @Mock private DashboardSeguretatHelper dashboardSeguretatHelper;
     @Mock private OrganitzativaTreeHelper organitzativaTreeHelper;
     @Mock private es.caib.comanda.ms.logic.helper.AuthenticationHelper authenticationHelper;
+    @Mock private es.caib.comanda.ms.logic.intf.util.I18nUtil i18nUtil;
+    @Mock private org.springframework.context.ApplicationContext applicationContext;
 
     @InjectMocks
     private ConsultaEstadisticaHelper consultaEstadisticaHelper;
@@ -119,6 +121,12 @@ class ConsultaEstadisticaHelperTest {
         lenient().when(atributsVisualsHelper.getAtributsVisuals(any(DashboardItemEntity.class))).thenReturn(null);
         lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class))).thenReturn(null);
         lenient().when(dashboardSeguretatHelper.resoldre(any())).thenReturn(SeguretatDadesResultat.builder().exempt(true).build());
+
+        ReflectionTestUtils.setField(es.caib.comanda.ms.logic.intf.util.I18nUtil.class, "applicationContext", applicationContext);
+        lenient().when(applicationContext.getBean(es.caib.comanda.ms.logic.intf.util.I18nUtil.class)).thenReturn(i18nUtil);
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(inv -> inv.getArgument(0));
+        lenient().when(i18nUtil.getI18nMessage(eq("es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper.widgetDosIndicadorsSenseMaxim")))
+            .thenReturn("El widget DOS_INDICADORS no té indicador de màxim configurat");
     }
 
     // ========================================================================

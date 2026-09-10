@@ -366,7 +366,7 @@ public class ConsultaEstadisticaHelper {
                     : null;
 
                 if (indicadorMaxAgregacio == null) {
-                    throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, "El widget DOS_INDICADORS no té indicador de màxim configurat");
+                    throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, es.caib.comanda.ms.logic.intf.util.I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper.widgetDosIndicadorsSenseMaxim"));
                 }
 
                 labels.add(Map.of("id", "agrupacio", "label", getLabelAgrupacioTemporal(tempsAgrupacio)));

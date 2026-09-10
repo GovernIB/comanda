@@ -10,6 +10,7 @@ import es.caib.comanda.estadistica.logic.intf.service.DashboardTitolService;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,24 +58,24 @@ public class DashboardTitolServiceImpl extends BaseMutableResourceService<Dashbo
     @Override
     protected void beforeCreateEntity(DashboardTitolEntity entity, DashboardTitol resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
         Long dashboardId = resource.getDashboard() != null ? resource.getDashboard().getId() : null;
-        dashboardPermisosHelper.checkCanDesignDashboard(dashboardId, "No teniu permisos de disseny per afegir títols a aquest quadre de control");
+        dashboardPermisosHelper.checkCanDesignDashboard(dashboardId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardTitolServiceImpl.permisos.afegirTitols"));
     }
 
     @Override
     protected void beforeUpdateEntity(DashboardTitolEntity entity, DashboardTitol resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
         Long currentDashboardId = entity.getDashboard() != null ? entity.getDashboard().getId() : null;
-        dashboardPermisosHelper.checkCanDesignDashboard(currentDashboardId, "No teniu permisos de disseny per modificar títols d'aquest quadre de control");
+        dashboardPermisosHelper.checkCanDesignDashboard(currentDashboardId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardTitolServiceImpl.permisos.modificarTitols"));
 
         if (resource.getDashboard() != null && !Objects.equals(resource.getDashboard().getId(), currentDashboardId)) {
             Long targetDashboardId = resource.getDashboard().getId();
-            dashboardPermisosHelper.checkCanDesignDashboard(targetDashboardId, "No teniu permisos de disseny per moure títols a aquest quadre de control");
+            dashboardPermisosHelper.checkCanDesignDashboard(targetDashboardId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardTitolServiceImpl.permisos.moureTitols"));
         }
     }
 
     @Override
     protected void beforeDelete(DashboardTitolEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
         Long dashboardId = entity.getDashboard() != null ? entity.getDashboard().getId() : null;
-        dashboardPermisosHelper.checkCanDesignDashboard(dashboardId, "No teniu permisos de disseny per eliminar títols d'aquest quadre de control");
+        dashboardPermisosHelper.checkCanDesignDashboard(dashboardId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardTitolServiceImpl.permisos.eliminarTitols"));
     }
 
     @Override
@@ -90,10 +91,10 @@ public class DashboardTitolServiceImpl extends BaseMutableResourceService<Dashbo
         @Override
         public DashboardTitol exec(String code, DashboardTitolEntity entity, Serializable params) throws ActionExecutionException {
             if (entity == null || entity.getDashboard() == null) {
-                throw new ActionExecutionException(DashboardTitol.class, entity != null ? entity.getId() : null, code, "Dashboard title or dashboard is null");
+                throw new ActionExecutionException(DashboardTitol.class, entity != null ? entity.getId() : null, code, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardTitolServiceImpl.action.duplicate.error.titolOrDashboardNull"));
             }
 
-            dashboardPermisosHelper.checkCanDesignDashboard(entity.getDashboard().getId(), "No teniu permisos de disseny per duplicar títols d'aquest quadre de control");
+            dashboardPermisosHelper.checkCanDesignDashboard(entity.getDashboard().getId(), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardTitolServiceImpl.permisos.duplicarTitols"));
 
             // 1. Clona l'entitat DashboardTitol amb MapStruct (copia colors, vores, subtítols, destacat, personalitzat, plantilla, width, height)
             DashboardTitolEntity newTitol = dashboardClonerMapper.cloneTitol(entity);
@@ -126,7 +127,7 @@ public class DashboardTitolServiceImpl extends BaseMutableResourceService<Dashbo
 
             java.util.regex.Pattern patternWithSeq = java.util.regex.Pattern.compile("^(.*) \\((\\d+)\\)$");
             java.util.regex.Matcher m = patternWithSeq.matcher(originalTitle != null ? originalTitle : "");
-            String baseTitle = m.matches() ? m.group(1) : (originalTitle != null ? originalTitle : "Títol");
+            String baseTitle = m.matches() ? m.group(1) : (originalTitle != null ? originalTitle : I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardTitolServiceImpl.defaultTitol"));
 
             String escapedBase = java.util.regex.Pattern.quote(baseTitle);
             java.util.regex.Pattern regex = java.util.regex.Pattern.compile("^" + escapedBase + " \\((\\d+)\\)$");
