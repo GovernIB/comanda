@@ -23,6 +23,7 @@ public class MessageSourceConfig extends BaseMessageSourceConfig {
             "comanda.estadistica-messages",
             "comanda.configuracio-messages",
             "comanda.usuaris-messages",
+            "comanda.salut-messages",
         };
     }
 

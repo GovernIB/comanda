@@ -9,6 +9,9 @@ import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.helper.ObjectMappingHelper;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
+import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
+import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
+import es.caib.comanda.ms.logic.intf.model.ReportFileType;
 import es.caib.comanda.salut.logic.helper.MetricsHelper;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
 import es.caib.comanda.salut.logic.helper.SalutEstatHelper;
@@ -517,23 +520,37 @@ class SalutServiceImplTest {
     }
 
     @Test
-    @DisplayName("PerspectiveHistorics: aplica correctament els històrics")
-    void perspectiveHistorics_applySingle_quanHiHaDades_llavorsAplicaCorrectament() throws PerspectiveApplicationException {
+    @DisplayName("PerspectiveHistorics: aplica correctament els històrics i calcula dataSeguent")
+    void perspectiveHistorics_applySingle_quanHiHaDades_llavorsCalculaDataSeguent() throws PerspectiveApplicationException {
         // Arrange
         SalutServiceImpl.PerspectiveHistorics perspective = salutService.new PerspectiveHistorics();
         SalutEntity entity = new SalutEntity();
         entity.setEntornAppId(1L);
         Salut resource = new Salut();
-
-        SalutHistEntity historicEntity = new SalutHistEntity();
-        when(salutHistRepository.findByEntornAppIdOrderByDataDescIdDesc(1L)).thenReturn(List.of(historicEntity));
-        when(objectMappingHelper.newInstanceMap(any(), eq(SalutHist.class))).thenReturn(new SalutHist());
+        SalutHistEntity historicRecent = new SalutHistEntity();
+        historicRecent.setData(LocalDateTime.of(2023, 10, 25, 10, 0));
+        SalutHistEntity historicAntic = new SalutHistEntity();
+        historicAntic.setData(LocalDateTime.of(2023, 10, 24, 10, 0));
+        when(salutHistRepository.findByEntornAppIdOrderByDataDescIdDesc(1L))
+            .thenReturn(List.of(historicRecent, historicAntic));
+        when(objectMappingHelper.newInstanceMap(eq(historicRecent), eq(SalutHist.class))).thenAnswer(inv -> {
+            SalutHist h = new SalutHist();
+            h.setData(historicRecent.getData());
+            return h;
+        });
+        when(objectMappingHelper.newInstanceMap(eq(historicAntic), eq(SalutHist.class))).thenAnswer(inv -> {
+            SalutHist h = new SalutHist();
+            h.setData(historicAntic.getData());
+            return h;
+        });
 
         // Act
         perspective.applySingle("CODE", entity, resource);
 
         // Assert
-        assertThat(resource.getHistorics()).hasSize(1);
+        assertThat(resource.getHistorics()).hasSize(2);
+        assertThat(resource.getHistorics().get(0).getDataSeguent()).isNull();
+        assertThat(resource.getHistorics().get(1).getDataSeguent()).isEqualTo(historicRecent.getData());
     }
 
     // ========================================================================
@@ -622,5 +639,81 @@ class SalutServiceImplTest {
 
         // Assert
         assertThat(result).hasSize(1);
+    }
+
+    // ========================================================================
+    // 7. TESTOS PER A InformeEstatsHistorics (NOU)
+    // ========================================================================
+
+    @Test
+    @DisplayName("InformeEstatsHistorics: generateData retorna els històrics processats")
+    void informeEstatsHistorics_generateData_quanEsCrida_llavorsRetornaHistorics() throws ReportGenerationException {
+        // Arrange
+        SalutServiceImpl.InformeEstatsHistorics generator = salutService.new InformeEstatsHistorics();
+        SalutInformeHistoricsParams params = new SalutInformeHistoricsParams();
+        params.setEntornAppId(1L);
+
+        SalutHistEntity historic = new SalutHistEntity();
+        when(salutHistRepository.findByEntornAppIdOrderByDataDescIdDesc(1L)).thenReturn(List.of(historic));
+        when(objectMappingHelper.newInstanceMap(any(), eq(SalutHist.class))).thenReturn(new SalutHist());
+
+        // Act
+        List<SalutHist> result = generator.generateData("CODE", new SalutEntity(), params);
+
+        // Assert
+        assertThat(result).hasSize(1);
+        verify(salutHistRepository, times(1)).findByEntornAppIdOrderByDataDescIdDesc(1L);
+    }
+
+    @Test
+    @DisplayName("InformeEstatsHistorics: generateData retorna null si params és null o no té entornAppId")
+    void informeEstatsHistorics_generateData_quanParamsInvalids_llavorsRetornaNull() throws ReportGenerationException {
+        SalutServiceImpl.InformeEstatsHistorics generator = salutService.new InformeEstatsHistorics();
+
+        assertThat(generator.generateData("CODE", new SalutEntity(), null)).isNull();
+
+        SalutInformeHistoricsParams paramsBuit = new SalutInformeHistoricsParams();
+        assertThat(generator.generateData("CODE", new SalutEntity(), paramsBuit)).isNull();
+    }
+
+    @Test
+    @DisplayName("InformeEstatsHistorics: generateFile genera el CSV amb el format i traduccions correctes")
+    void informeEstatsHistorics_generateFile_quanEsCrida_llavorsGeneraCSVCorrecte() {
+        // Arrange
+        try (org.mockito.MockedStatic<es.caib.comanda.ms.logic.intf.util.I18nUtil> mockedI18n =
+                 org.mockito.Mockito.mockStatic(es.caib.comanda.ms.logic.intf.util.I18nUtil.class)) {
+            es.caib.comanda.ms.logic.intf.util.I18nUtil mockI18nUtil = mock(es.caib.comanda.ms.logic.intf.util.I18nUtil.class);
+            mockedI18n.when(es.caib.comanda.ms.logic.intf.util.I18nUtil::getInstance).thenReturn(mockI18nUtil);
+
+            when(mockI18nUtil.getI18nMessage("es.caib.comanda.salut.logic.service.SalutServiceImpl.InformeEstatsHistorics.headers"))
+                .thenReturn("Data d'inici;Data de fi;Estat\n");
+            when(mockI18nUtil.getI18nMessage("es.caib.comanda.model.v1.salut.EstatSalutEnum.UP"))
+                .thenReturn("UP");
+            when(mockI18nUtil.getI18nMessage("es.caib.comanda.model.v1.salut.EstatSalutEnum.DOWN"))
+                .thenReturn("DOWN");
+
+            SalutServiceImpl.InformeEstatsHistorics generator = salutService.new InformeEstatsHistorics();
+
+            SalutHist h1 = new SalutHist();
+            h1.setData(LocalDateTime.of(2023, 10, 25, 10, 0));
+            h1.setAppEstat(SalutEstat.UP);
+            SalutHist h2 = new SalutHist();
+            h2.setData(LocalDateTime.of(2023, 10, 24, 10, 0));
+            h2.setDataSeguent(LocalDateTime.of(2023, 10, 25, 10, 0)); // La data de h1
+            h2.setAppEstat(SalutEstat.DOWN);
+            List<SalutHist> data = List.of(h1, h2);
+
+            // Act
+            DownloadableFile result = generator.generateFile("CODE", data, ReportFileType.CSV, mock(java.io.OutputStream.class));
+
+            // Assert
+            assertThat(result.getName()).isEqualTo("historic_estats.csv");
+            assertThat(result.getContentType()).isEqualTo("text/csv;charset=UTF-8");
+
+            String content = new String(result.getContent(), java.nio.charset.StandardCharsets.UTF_8);
+            assertThat(content).contains("Data d'inici;Data de fi;Estat");
+            assertThat(content).contains("25/10/2023 10:00:00;-;UP");
+            assertThat(content).contains("24/10/2023 10:00:00;25/10/2023 10:00:00;DOWN");
+        }
     }
 }

@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * Configuración del MessageSource de l'aplicació.
- * 
+ *
  * @author Límit Tecnologies
  */
 @Configuration
@@ -23,6 +23,7 @@ public class MessageSourceConfig extends BaseMessageSourceConfig {
 				"comanda.tasques-messages",
 				"comanda.usuaris-messages",
 				"comanda.acl-messages",
+                "comanda.salut-messages",
 		};
 	}
 

@@ -220,6 +220,7 @@ export class SalutModel extends BaseEntity implements Partial<ISalut> {
 export interface ISalutHist extends IBaseEntity {
     entornAppId: number;
     data: string;
+    dataSeguent: string;
     appEstat: SalutEstatEnum;
     peticioError?: boolean;
 }
@@ -227,6 +228,7 @@ export interface ISalutHist extends IBaseEntity {
 export class SalutHistModel extends BaseEntity implements Partial<ISalutHist> {
     entornAppId: number;
     data: string;
+    dataSeguent: string;
     appEstat: SalutEstatEnum;
     peticioError?: boolean;
 
@@ -234,6 +236,7 @@ export class SalutHistModel extends BaseEntity implements Partial<ISalutHist> {
         super(salutHist);
         this.entornAppId = salutHist.entornAppId;
         this.data = salutHist.data;
+        this.dataSeguent = salutHist.dataSeguent;
         this.appEstat = salutHist.appEstat;
         Object.assign(this, salutHist);
     }

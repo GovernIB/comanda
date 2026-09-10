@@ -264,9 +264,13 @@ const translationEs: translationResourcesType = {
                 peticioError: "Con error",
                 column: {
                     data: "Fecha",
-                    appEstat: "Estado app",
+                    dataInici: "Fecha de inicio",
+                    dataFi: "Fecha de fin",
+                    appEstat: "Estado",
                     peticio: "Petición",
                 },
+                exportCsv: "Exportar",
+                exportSuccess: "Archivo descargado correctamente",
             },
             estatLatencia: {
                 title: "Estado y latencia",

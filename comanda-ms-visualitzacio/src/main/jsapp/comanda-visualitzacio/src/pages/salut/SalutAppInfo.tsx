@@ -20,7 +20,7 @@ import IconButton from '@mui/material/IconButton';
 import Icon from '@mui/material/Icon';
 import { useTheme } from '@mui/material/styles';
 import { MarkPlot } from '@mui/x-charts/LineChart';
-import { dateFormatLocale, timeFormatLocale } from 'reactlib';
+import { dateFormatLocale, timeFormatLocale, useBaseAppContext, useResourceApiService } from 'reactlib';
 import UpdownBarChart from '../../components/salut/UpdownBarChart';
 import { isDataInGroup, toXAxisDataGroups } from '../../util/dataGroup';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -45,7 +45,7 @@ import {
 } from '../../types/salut.model.tsx';
 import { SalutField } from '../../components/salut/SalutChipTooltip.tsx';
 import { ItemStateChip } from '../../components/salut/SalutItemStateChip.tsx';
-import { Alert, Checkbox, FormControl, InputLabel, LinearProgress, ListItemText, MenuItem, OutlinedInput, Select, SelectChangeEvent, Tooltip } from '@mui/material';
+import { Alert, Checkbox, FormControl, InputLabel, LinearProgress, ListItemText, MenuItem, OutlinedInput, Select, SelectChangeEvent, TablePagination, Tooltip } from '@mui/material';
 import { SalutData } from './Salut.tsx';
 import { AppDataState, DefaultLogsPerspective, EntornAppHistPerspective, SalutInformeLatenciaItem, truncateHashRevisio } from './dataFetching';
 import { SalutErrorBoundaryFallback } from '../../components/salut/SalutErrorBoundaryFallback';
@@ -57,6 +57,7 @@ import { PreselectLogsViewer } from './LogsViewer';
 import PageTitle from '../../components/PageTitle.tsx';
 import { FooterHeightPlaceholder } from '../../components/ComandaFooter.tsx';
 import { useIsUserAdmin } from '../../components/UserContext.ts';
+import { iniciaDescargaCSV } from '../../util/commonsActions.ts';
 
 const AppInfo: React.FC<{
     salutCurrentApp: SalutModel;
@@ -1182,44 +1183,121 @@ const TabHistoric: React.FC<SalutAppInfoTabProps & { otherProps: TabHistoricOthe
 
 const TabHistoricEstat: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) => {
     const { t } = useTranslation();
+    const { t: tLib } = useBaseAppContext();
+    const { temporalMessageShow } = useBaseAppContext();
+    const { artifactReport: apiReport } = useResourceApiService('salut');
     const historics = salutCurrentApp.historics ?? [];
+    const [page, setPage] = React.useState(0);
+    const [rowsPerPage, setRowsPerPage] = React.useState(20);
+    const [exporting, setExporting] = React.useState(false);
+    const handleChangePage = (_event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+        setPage(newPage);
+    };
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+    const displayedHistorics = historics.slice(
+        page * rowsPerPage,
+        page * rowsPerPage + rowsPerPage
+    );
+    const handleExportCSV = () => {
+        if (!salutCurrentApp?.id) {
+            temporalMessageShow(null, t($ => $.common.error), 'error');
+            return;
+        }
+        setExporting(true);
+        apiReport(null, { code: 'estats_historics', fileType: 'CSV', data: { entornAppId: salutCurrentApp.entornAppId } })
+            .then((result: any) => {
+                iniciaDescargaCSV(result);
+                temporalMessageShow(
+                    null,
+                    t($ => $.page.salut.historicEstat.exportSuccess),
+                    'success'
+                );
+            })
+            .catch((error: any) => {
+                console.error('Error exportant CSV:', error);
+                temporalMessageShow(
+                    null,
+                    error?.message || (t($ => $.common.error)),
+                    'error'
+                );
+            })
+            .finally(() => {
+                setExporting(false);
+            });
+    };
 
     return (
         <Card variant="outlined">
             <CardContent>
-                <Typography gutterBottom variant="h5" component="div">
-                    {t($ => $.page.salut.historicEstat.title)}
-                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="h5" component="div">
+                        {t($ => $.page.salut.historicEstat.title)}
+                    </Typography>
+                    <Button
+                        variant="outlined"
+                        color="primary"
+                        startIcon={exporting ? <CircularProgress size={20} color="inherit" /> : <Icon>download</Icon>}
+                        onClick={handleExportCSV}
+                        disabled={exporting || historics.length === 0}
+                    >
+                        {t($ => $.page.salut.historicEstat.exportCsv)}
+                    </Button>
+                </Box>
+
                 {historics.length === 0 ? (
                     <Typography>{t($ => $.page.salut.historicEstat.noInfo)}</Typography>
                 ) : (
-                    <Table size="small">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>{t($ => $.page.salut.historicEstat.column.data)}</TableCell>
-                                <TableCell>{t($ => $.page.salut.historicEstat.column.appEstat)}</TableCell>
-                                <TableCell>{t($ => $.page.salut.historicEstat.column.peticio)}</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {historics.map(historic => (
-                                <TableRow key={historic.id ?? `${historic.data}-${historic.appEstat}`}>
-                                    <TableCell>{dateFormatLocale(historic.data, true)}</TableCell>
+                    <>
+                        <Table size="small">
+                            <TableHead>
+                                <TableRow>
                                     <TableCell>
-                                        <ItemStateChip
-                                            salutField={SalutField.APP_ESTAT}
-                                            salutStatEnum={historic.appEstat}
-                                        />
+                                        {t($ => $.page.salut.historicEstat.column.dataInici)}
                                     </TableCell>
                                     <TableCell>
-                                        {historic.peticioError
-                                            ? t($ => $.page.salut.historicEstat.peticioError)
-                                            : t($ => $.page.salut.historicEstat.peticioOk)}
+                                        {t($ => $.page.salut.historicEstat.column.dataFi)}
+                                    </TableCell>
+                                    <TableCell>
+                                        {t($ => $.page.salut.historicEstat.column.appEstat)}
                                     </TableCell>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHead>
+                            <TableBody>
+                                {displayedHistorics.map((historic) => (
+                                    <TableRow key={historic.id ?? `${historic.data}-${historic.appEstat}`}>
+                                        <TableCell>
+                                            {dateFormatLocale(historic.data, true)}
+                                        </TableCell>
+                                        <TableCell>
+                                            {historic.dataSeguent ? dateFormatLocale(historic.dataSeguent, true) : '-'}
+                                        </TableCell>
+                                        <TableCell>
+                                            <ItemStateChip
+                                                salutField={SalutField.APP_ESTAT}
+                                                salutStatEnum={historic.appEstat}
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                        <TablePagination
+                            rowsPerPageOptions={[10, 20, 50, 100]}
+                            component="div"
+                            count={historics.length}
+                            rowsPerPage={rowsPerPage}
+                            page={page}
+                            onPageChange={handleChangePage}
+                            onRowsPerPageChange={handleChangeRowsPerPage}
+                            labelRowsPerPage={tLib('grid.footer.pageSizeTitle')}
+                            labelDisplayedRows={({ from, to, count }) =>
+                                tLib('grid.footer.pageInfo', { from, to, count })
+                            }
+                        />
+                    </>
                 )}
             </CardContent>
         </Card>

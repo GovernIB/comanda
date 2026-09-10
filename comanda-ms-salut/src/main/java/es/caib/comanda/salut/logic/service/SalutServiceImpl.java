@@ -10,6 +10,9 @@ import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
+import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
+import es.caib.comanda.ms.logic.intf.model.ReportFileType;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService;
 import es.caib.comanda.salut.logic.helper.MetricsHelper;
 import es.caib.comanda.salut.logic.helper.SalutClientHelper;
@@ -24,10 +27,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
+import java.io.OutputStream;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -84,6 +90,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		register(Salut.SALUT_REPORT_ESTATS, new InformeEstats());
 		register(Salut.SALUT_REPORT_LATENCIA, new InformeLatencia());
 		register(Salut.SALUT_REPORT_GRUPS_DATES, new InformeGrupsDates());
+        register(Salut.SALUT_REPORT_ESTATS_HISTORICS, new InformeEstatsHistorics());
 		register(Salut.PERSP_INTEGRACIONS, new PerspectiveIntegracions());
 		register(Salut.PERSP_SUBSISTEMES, new PerspectiveSubsistemes());
 		register(Salut.PERSP_CONTEXTS, new PerspectiveContexts());
@@ -269,15 +276,22 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	public class PerspectiveHistorics implements PerspectiveApplicator<SalutEntity, Salut> {
 		@Override
 		public void applySingle(String code, SalutEntity entity, Salut resource) throws PerspectiveApplicationException {
-			List<SalutHistEntity> salutHistorics = salutHistRepository.findByEntornAppIdOrderByDataDescIdDesc(entity.getEntornAppId());
-			resource.setHistorics(
-				salutHistorics.stream()
-					.map(s -> objectMappingHelper.newInstanceMap(
-						s,
-						SalutHist.class))
-					.collect(Collectors.toList()));
+            resource.setHistorics(getValuesPerspectiveHistorics(entity.getEntornAppId()));
 		}
 	}
+
+    private List<SalutHist> getValuesPerspectiveHistorics(Long entornAppId) {
+        List<SalutHistEntity> salutHistorics = salutHistRepository.findByEntornAppIdOrderByDataDescIdDesc(entornAppId);
+        List<SalutHist> historicsList = salutHistorics.stream()
+            .map(s -> objectMappingHelper.newInstanceMap(s, SalutHist.class))
+            .collect(Collectors.toList());
+        for (int i = 0; i < historicsList.size(); i++) {
+            if (i > 0) {
+                historicsList.get(i).setDataSeguent(historicsList.get(i - 1).getData());
+            }
+        }
+        return historicsList;
+    }
 
 	/**
 	 * Darrera informació de salut de cada aplicació/entorn.
@@ -408,6 +422,47 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 
         @Override
         public void onChange(Serializable id, SalutInformeGrupsParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, SalutInformeGrupsParams target) {
+        }
+    }
+
+    public class InformeEstatsHistorics implements ReportGenerator<SalutEntity, SalutInformeHistoricsParams, SalutHist> {
+
+        @Override
+        public DownloadableFile generateFile(String code, List<?> data, ReportFileType fileType, OutputStream out) {
+            if (data == null) {
+                throw new IllegalArgumentException("Dades no vàlides per a l'exportació CSV");
+            }
+            I18nUtil i18nUtil = I18nUtil.getInstance();
+            @SuppressWarnings("unchecked")
+            List<SalutHist> historics = (List<SalutHist>) data;
+            StringBuilder csvContent = new StringBuilder();
+            csvContent.append(i18nUtil.getI18nMessage("es.caib.comanda.salut.logic.service.SalutServiceImpl.InformeEstatsHistorics.headers"));
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+            for (SalutHist historic : historics) {
+                String dataIniciStr = historic.getData() != null ? historic.getData().format(formatter) : "";
+                String dataFiStr = historic.getDataSeguent() != null ? historic.getDataSeguent().format(formatter) : "-";
+                String estatStr = historic.getAppEstat() != null ? i18nUtil.getI18nMessage("es.caib.comanda.model.v1.salut.EstatSalutEnum." + historic.getAppEstat().name()) : "";
+                csvContent.append(dataIniciStr).append(";")
+                    .append(dataFiStr).append(";")
+                    .append(estatStr).append("\n");
+            }
+            return new DownloadableFile(
+                "historic_estats.csv",
+                "text/csv;charset=UTF-8",
+                csvContent.toString().getBytes(StandardCharsets.UTF_8)
+            );
+        }
+
+        @Override
+        public List<SalutHist> generateData(String code, SalutEntity entity, SalutInformeHistoricsParams params) throws ReportGenerationException {
+            if (params == null || params.getEntornAppId() == null) {
+                return null;
+            }
+            return getValuesPerspectiveHistorics(params.getEntornAppId());
+        }
+
+        @Override
+        public void onChange(Serializable id, SalutInformeHistoricsParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, SalutInformeHistoricsParams target) {
         }
     }
 }

@@ -8,6 +8,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 const translations = {
+    common: {
+        error: 'Error',
+    },
     page: {
         salut: {
             appInfoTitle: 'Informació de salut',
@@ -111,12 +114,12 @@ const translations = {
             historicEstat: {
                 title: "Històric d'estat",
                 noInfo: 'Sense canvis',
-                peticioOk: 'Correcta',
-                peticioError: 'Amb error',
+                exportCsv: 'Exportar CSV',
+                exportSuccess: 'Exportació completada',
                 column: {
-                    data: 'Data',
+                    dataInici: 'Data d\'inici',
+                    dataFi: 'Data de fi',
                     appEstat: 'Estat app',
-                    peticio: 'Petició',
                 },
             },
             memoria: {
@@ -166,6 +169,20 @@ vi.mock('react-i18next', () => ({
 vi.mock('reactlib', () => ({
     dateFormatLocale: (value: string) => `format:${value}`,
     timeFormatLocale: (value: string) => `time:${value}`,
+    useBaseAppContext: () => ({
+        t: (key: string) => key,
+        temporalMessageShow: vi.fn(),
+    }),
+    useResourceApiService: () => ({
+        artifactReport: vi.fn().mockResolvedValue({
+            name: 'historic_estats.csv',
+            content: [68, 97, 116, 97], // "Data" en bytes ASCII
+        }),
+    }),
+}));
+
+vi.mock('../../util/commonsActions.ts', () => ({
+    iniciaDescargaCSV: vi.fn(),
 }));
 
 vi.mock('react-error-boundary', () => ({
@@ -319,6 +336,8 @@ const createAppInfoData = (overrides: Record<string, unknown> = {}) => ({
     agrupacio: 'HORA',
     grupsDates: ['13/03 10:00', '13/03 11:00'],
     salutCurrentApp: {
+        id: 1,
+        entornAppId: 7,
         data: '2026-03-13T10:00:00',
         peticioError: false,
         bdEstat: 'UP',
@@ -358,6 +377,7 @@ const createAppInfoData = (overrides: Record<string, unknown> = {}) => ({
                 data: '2026-03-13T09:00:00',
                 appEstat: 'DOWN',
                 peticioError: true,
+                // dataSeguent: '2026-03-13T10:00:00',
             },
         ],
         subsistemes: [
@@ -651,7 +671,26 @@ describe('SalutAppInfo', () => {
 
         expect(screen.getByRole('tab', { name: /Històric d'estat/i })).toHaveAttribute('aria-selected', 'true');
         expect(screen.getByText('format:2026-03-13T09:00:00')).toBeInTheDocument();
-        expect(screen.getByText('Amb error')).toBeInTheDocument();
+        expect(screen.getByText('-')).toBeInTheDocument();
+        expect(screen.getByText('DOWN')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Exportar CSV/i })).toBeInTheDocument();
+        expect(screen.getByText("Data d'inici")).toBeInTheDocument();
+        expect(screen.getByText('Data de fi')).toBeInTheDocument();
+        expect(screen.getByText('Estat app')).toBeInTheDocument();
+    });
+
+    it("SalutAppInfo_quanEsPitjaExportarCSV_cridaLaApiIDescarrega", async () => {
+        render(<SalutAppInfo ready appInfoData={createAppInfoData() as any} />);
+
+        fireEvent.click(screen.getByRole('tab', { name: /Històric d'estat/i }));
+
+        const exportButton = screen.getByRole('button', { name: /Exportar CSV/i });
+        expect(exportButton).toBeInTheDocument();
+        expect(exportButton).not.toBeDisabled();
+
+        fireEvent.click(exportButton);
+
+        await new Promise(resolve => setTimeout(resolve, 50));
     });
 
     it('SalutAppInfo_quanHiHaLogsDisponibles_permetObrirElTabDeLogs', () => {

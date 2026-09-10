@@ -264,9 +264,13 @@ const translationCa = {
                 peticioError: "Amb error",
                 column: {
                     data: "Data",
-                    appEstat: "Estat app",
+                    dataInici: "Data d'inici",
+                    dataFi: "Data de fi",
+                    appEstat: "Estat",
                     peticio: "Petició",
                 },
+                exportCsv: "Exportar",
+                exportSuccess: "Arxiu descarregat correctament",
             },
             estatLatencia: {
                 title: "Estat i latència",
