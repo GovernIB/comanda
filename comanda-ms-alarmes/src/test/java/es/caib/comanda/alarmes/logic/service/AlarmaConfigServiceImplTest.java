@@ -188,6 +188,29 @@ class AlarmaConfigServiceImplTest {
         AlarmaConfigReglaAmbit ambit, String codiObjecte, AlarmaConfigReglaMetrica metrica,
         AlarmaConfigReglaComparador comparador, List<String> valorsText, String expectedSummary) {
 
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(invocation -> {
+            String code = invocation.getArgument(0);
+            Object arg = null;
+            if (invocation.getArguments().length > 1) {
+                Object rawArg = invocation.getArgument(1);
+                if (rawArg instanceof Object[]) {
+                    Object[] arr = (Object[]) rawArg;
+                    arg = arr.length > 0 ? arr[0] : null;
+                } else {
+                    arg = rawArg;
+                }
+            }
+            if (code.endsWith("ambit.APLICACIO")) return "Aplicacio";
+            if (code.endsWith("ambit.SISTEMA")) return "Sistema";
+            if (code.endsWith("ambit.SUBSISTEMA")) return "Subsistema " + arg;
+            if (code.endsWith("ambit.INTEGRACIO")) return "Integracio " + arg;
+            if (code.endsWith("metrica.ESTAT")) return "estat";
+            if (code.endsWith("comparador.IGUAL")) return "IGUAL";
+            if (code.endsWith("comparador.EN")) return "EN";
+            if (code.contains(".estat.")) return code.substring(code.lastIndexOf('.') + 1);
+            return code;
+        });
+
         AlarmaConfigRegla regla = new AlarmaConfigRegla();
         regla.setTipusNode(AlarmaConfigReglaTipusNode.CONDICIO);
         regla.setAmbit(ambit);
@@ -215,6 +238,33 @@ class AlarmaConfigServiceImplTest {
     void buildRuleSummary_quanMetricaNumerica_llavorsConstrueixResumNumeric(
         AlarmaConfigReglaAmbit ambit, String codiObjecte, AlarmaConfigReglaMetrica metrica,
         AlarmaConfigReglaComparador comparador, BigDecimal valorNumeric, String expectedSummary) {
+
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(invocation -> {
+            String code = invocation.getArgument(0);
+            Object arg = null;
+            if (invocation.getArguments().length > 1) {
+                Object rawArg = invocation.getArgument(1);
+                if (rawArg instanceof Object[]) {
+                    Object[] arr = (Object[]) rawArg;
+                    arg = arr.length > 0 ? arr[0] : null;
+                } else {
+                    arg = rawArg;
+                }
+            }
+            if (code.endsWith("ambit.APLICACIO")) return "Aplicacio";
+            if (code.endsWith("ambit.SISTEMA")) return "Sistema";
+            if (code.endsWith("ambit.SUBSISTEMA")) return "Subsistema " + arg;
+            if (code.endsWith("ambit.INTEGRACIO")) return "Integracio " + arg;
+            if (code.endsWith("metrica.LATENCIA")) return "latència";
+            if (code.endsWith("metrica.CARREGA_MITJANA_SISTEMA")) return "càrrega mitjana";
+            if (code.endsWith("metrica.MEMORIA_DISPONIBLE")) return "memòria lliure";
+            if (code.endsWith("metrica.ESPAI_DISC_LLIURE")) return "disc lliure";
+            if (code.endsWith("comparador.MAJOR")) return "MAJOR";
+            if (code.endsWith("comparador.MENOR")) return "MENOR";
+            if (code.endsWith("comparador.IGUAL")) return "IGUAL";
+            if (code.endsWith("comparador.MAJOR_IGUAL")) return "MAJOR_IGUAL";
+            return code;
+        });
 
         AlarmaConfigRegla regla = new AlarmaConfigRegla();
         regla.setTipusNode(AlarmaConfigReglaTipusNode.CONDICIO);
@@ -414,6 +464,18 @@ class AlarmaConfigServiceImplTest {
     @Test
     @DisplayName("buildRuleSummary: construeix resum recursiu per a node GRUP amb fills")
     void buildRuleSummary_quanNodeGrupAmbFills_llavorsConstrueixResumRecursiu() {
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(invocation -> {
+            String code = invocation.getArgument(0);
+            if (code.endsWith("ambit.APLICACIO")) return "Aplicacio";
+            if (code.endsWith("ambit.SISTEMA")) return "Sistema";
+            if (code.endsWith("metrica.ESTAT")) return "estat";
+            if (code.endsWith("metrica.LATENCIA")) return "latència";
+            if (code.endsWith("comparador.IGUAL")) return "IGUAL";
+            if (code.endsWith("comparador.MAJOR")) return "MAJOR";
+            if (code.contains(".estat.")) return code.substring(code.lastIndexOf('.') + 1);
+            return code;
+        });
+
         AlarmaConfigRegla fill1 = new AlarmaConfigRegla();
         fill1.setTipusNode(AlarmaConfigReglaTipusNode.CONDICIO);
         fill1.setAmbit(AlarmaConfigReglaAmbit.SISTEMA);
