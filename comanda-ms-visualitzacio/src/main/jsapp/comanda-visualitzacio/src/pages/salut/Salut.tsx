@@ -646,6 +646,7 @@ const Salut: FunctionComponent = () => {
             //   hideAppVersioning: true,
           }
         : null;
+    const currentApp = isAppInfoRouteActive ? salutData.apps?.find(app => app.id === appInfoData?.entornApp?.app?.id) : null;
     const versionsEntornGroupingToolbarProps = toolbarState.grouping === GroupingEnum.VERSIONS_ENTORNS ?
         {
             hideFilter: true,
@@ -693,6 +694,7 @@ const Salut: FunctionComponent = () => {
                     appInfoData={appInfoData}
                     ready={appInfoData.ready}
                     grupsDates={salutData.grupsDates}
+                    app={currentApp}
                 />
             )}
         </Box>

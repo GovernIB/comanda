@@ -506,6 +506,26 @@ describe('SalutAppInfo', () => {
         expect(screen.getByText('Manual')).toBeInTheDocument();
     });
 
+    it('SalutAppInfo_quanEsPassaLaPropApp_mostraLaTargetaDeCapçaleraAmbDescripcio', () => {
+        const mockApp = {
+            id: 1,
+            codi: 'APP1',
+            nom: 'Aplicació de Prova',
+            descripcio: 'Aquesta és la descripció de l\'aplicació de prova',
+            logo: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+        };
+
+        render(
+            <SalutAppInfo 
+                ready 
+                appInfoData={createAppInfoData() as any} 
+                app={mockApp} 
+            />
+        );
+
+        expect(screen.getByText('Aquesta és la descripció de l\'aplicació de prova')).toBeInTheDocument();
+    });
+
     it('SalutAppInfo_quanEsPitjaRefrescarInformacio_executaElRefrescManual', () => {
         // Comprova que el botó de refresc manual llança l'acció de consulta de la informació de l'aplicació.
         const refreshInfo = vi.fn();

@@ -49,7 +49,7 @@ import { Alert, Checkbox, FormControl, InputLabel, LinearProgress, ListItemText,
 import { SalutData } from './Salut.tsx';
 import { AppDataState, DefaultLogsPerspective, EntornAppHistPerspective, SalutInformeLatenciaItem, truncateHashRevisio } from './dataFetching';
 import { SalutErrorBoundaryFallback } from '../../components/salut/SalutErrorBoundaryFallback';
-import { EntornAppModel } from '../../types/app.model';
+import { AppModel, EntornAppModel } from '../../types/app.model';
 import SalutChip from '../../components/salut/SalutChip';
 import ResponsiveCardTable from '../../components/salut/ResponsiveCardTable';
 import { MUI_AXIS_WORKAROUND_HEIGHT } from '../../util/muiWorkarounds';
@@ -992,10 +992,35 @@ const DetallInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp
         />
     );
 };
+const AppLogo: React.FC<{ app?: AppModel | null; }> = ({ app }) => {
+    const { t } = useTranslation();
+    if (!app || (!app.nom && !app.descripcio && !app.logo)) {
+        return null;
+    }
+    return (
+        <Card variant="outlined" >
+            <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                {app.logo && (
+                    <img
+                        src={`data:image/png;base64,${app.logo}`}
+                        alt={t($ => $.page.salut.logoAlt, { nom: app.nom })}
+                        style={{ 
+                            maxHeight: '100%', 
+                            maxWidth: '100%', 
+                            objectFit: 'contain' 
+                        }}
+                    />
+                )}
+                {app.descripcio && (<Box sx={{ flex: 1 }}><Typography>{app.descripcio}</Typography></Box>)}
+            </CardContent>
+        </Card>
+    );
+};
 
 interface SalutAppInfoTabProps {
     salutCurrentApp: SalutModel;
     entornApp: EntornAppModel;
+    app?: AppModel | null;
     dataLoaded: boolean;
     refreshInfo?: () => void;
     refreshInfoLoading?: boolean;
@@ -1042,11 +1067,15 @@ const AlertUltimaDataActiva: React.FC<AlertUltimaDataActivaProps> = ({ salutCurr
 const TabEntorn: React.FC<SalutAppInfoTabProps> = ({
     salutCurrentApp,
     entornApp,
+    app,
     refreshInfo,
     refreshInfoLoading,
 }) => {
     return (
         <Grid container spacing={2}>
+            <Grid size={{ sm: 12, lg: 12 }}>
+                <AppLogo app={app} />
+            </Grid>
             <Grid size={{ sm: 12, lg: 12 }}>
                 <AppInfo
                     salutCurrentApp={salutCurrentApp}
@@ -1410,6 +1439,7 @@ const tabContentPaddingAmount = 2;
 function TabSalutCurrentApp<T>({
     salutCurrentApp,
     entornApp,
+    app,
     dataLoaded,
     refreshInfo,
     refreshInfoLoading,
@@ -1419,6 +1449,7 @@ function TabSalutCurrentApp<T>({
 }: {
     salutCurrentApp: SalutModel | null;
     entornApp: EntornAppModel | null;
+    app?: AppModel | null;
     dataLoaded: boolean;
     refreshInfo?: () => void;
     refreshInfoLoading?: boolean;
@@ -1446,6 +1477,7 @@ function TabSalutCurrentApp<T>({
             <ChildrenTabComponent
                 salutCurrentApp={salutCurrentApp}
                 entornApp={entornApp}
+                app={app}
                 dataLoaded={dataLoaded}
                 refreshInfo={refreshInfo}
                 refreshInfoLoading={refreshInfoLoading}
@@ -1469,7 +1501,8 @@ const SalutAppInfo: React.FC<{
     appInfoData: SalutAppInfoData;
     ready: boolean;
     grupsDates?: string[];
-}> = ({ appInfoData, grupsDates, ready }) => {
+    app?: AppModel | null;
+}> = ({ appInfoData, grupsDates, ready, app }) => {
     const { t } = useTranslation();
     const isUserAdmin = useIsUserAdmin();
     const getColorBySubsistema = useGetColorBySubsistema();
@@ -1597,6 +1630,7 @@ const SalutAppInfo: React.FC<{
                     <TabSalutCurrentApp
                         salutCurrentApp={salutCurrentApp}
                         entornApp={entornApp}
+                        app={app}
                         dataLoaded={dataLoaded}
                         refreshInfo={isUserAdmin ? appInfoData.refreshInfo : undefined}
                         refreshInfoLoading={refreshInfoLoading}
