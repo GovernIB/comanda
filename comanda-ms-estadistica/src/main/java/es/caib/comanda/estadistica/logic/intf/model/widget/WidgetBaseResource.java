@@ -30,6 +30,8 @@ import java.util.List;
 @FieldNameConstants
 public class WidgetBaseResource<ID extends Serializable> extends BaseResource<ID> {
 
+    public static final String FILTER_BY_ENTORN_NAMEDFILTER = "filterByEntorn:";
+
     @NotNull
     @Size(max = EstadisticaWidgetEntity.TITOL_MAX_LENGTH)
     protected String titol;

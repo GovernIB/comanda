@@ -104,23 +104,22 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
     private void validateItemWidget(DashboardItem resource, Long dashboardId) {
         if (resource != null && resource.getWidget() != null && resource.getWidget().getId() != null) {
             Long widgetId = resource.getWidget().getId();
-            EstadisticaWidgetEntity<?> widget = estadisticaWidgetRepository.findById(widgetId).orElse(null);
-//            TODO Check widget accessible/visible
-//            if (widget != null && !dashboardPermisosHelper.isAdminOrConsulta()) {
-//                if (widget.getAppId() != null) {
-//                    Set<Serializable> allowedApps = dashboardPermisosHelper.getAllowedIds(ResourceType.APP,
-//                            List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
-//                    if (!allowedApps.contains(widget.getAppId())) {
-//                        throw new AccessDeniedException("No teniu permisos per utilitzar aquest widget");
-//                    }
-//                }
-//            }
+            EstadisticaWidgetEntity<?> widget = estadisticaWidgetRepository.findById(widgetId).orElseThrow();
+            Long entornId = resource.getEntornId();
             if (dashboardId != null) {
                 DashboardEntity dashboard = dashboardRepository.findById(dashboardId).orElse(null);
-                if (dashboard != null && dashboard.getAppId() != null && widget.getAppId() != null
-                    && !dashboard.getAppId().equals(widget.getAppId())) {
-                    throw new AccessDeniedException("El widget no pertany a la mateixa aplicació que el quadre de control");
+                if (dashboard != null) {
+                    if (entornId == null) {
+                        entornId = dashboard.getEntornId();
+                    }
+                    if (dashboard.getAppId() != null && widget.getAppId() != null
+                        && !dashboard.getAppId().equals(widget.getAppId())) {
+                        throw new AccessDeniedException("El widget no pertany a la mateixa aplicació que el quadre de control");
+                    }
                 }
+            }
+            if (dashboardPermisosHelper != null) {
+                dashboardPermisosHelper.checkCanAccessWidget(widget, entornId, "No teniu permisos per utilitzar aquest widget");
             }
         }
     }
@@ -254,14 +253,9 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
                 throw new ActionExecutionException(DashboardItem.class, entity.getId(), code, "Original widget not found");
             }
 
-//            TODO Check widget accessible/visible
-//            if (originalWidget.getAppId() != null && !dashboardPermisosHelper.isAdminOrConsulta()) {
-//                Set<Serializable> allowedApps = dashboardPermisosHelper.getAllowedIds(ResourceType.APP,
-//                        List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
-//                if (!allowedApps.contains(originalWidget.getAppId())) {
-//                    throw new AccessDeniedException("No teniu permisos per accedir al widget original");
-//                }
-//            }
+            Long entornId = entity.getEntornId() != null ? entity.getEntornId()
+                    : (entity.getDashboard() != null ? entity.getDashboard().getEntornId() : null);
+            dashboardPermisosHelper.checkCanAccessWidget(originalWidget, entornId, "No teniu permisos sobre l'aplicació del widget d'origen");
 
             // 1. Clona l'entitat DashboardItem amb MapStruct (copia destacat, personalitzat, plantilla, atributsVisualsJson, width, height)
             DashboardItemEntity newItem = dashboardClonerMapper.cloneItem(entity);

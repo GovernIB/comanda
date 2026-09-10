@@ -570,12 +570,10 @@ public class DashboardHelper {
                 );
             }
 
-//            TODO Check widget accessible/visible
-//            if (dashboardPermisosHelper != null && !dashboardPermisosHelper.isAdminOrConsulta()) {
-//                if (originalWidget.getAppId() != null && !dashboardPermisosHelper.hasPermission(ResourceType.APP, originalWidget.getAppId(), List.of(PermissionEnum.PERM0, PermissionEnum.PERM1))) {
-//                    throw new AccessDeniedException("No teniu permisos per accedir al widget original");
-//                }
-//            }
+            Long entornId = params.getEntornId() != null ? params.getEntornId() : entity.getEntornId();
+            if (dashboardPermisosHelper != null) {
+                dashboardPermisosHelper.checkCanAccessWidget(originalWidget, entornId, "No teniu permisos per accedir al widget original en aquest entorn");
+            }
 
             Map<Long, EstadisticaWidgetEntity> clonedWidgetsMap = new HashMap<>();
             EstadisticaWidgetEntity newWidget = DashboardHelper.cloneWidgetLogic(originalWidget, entity.getAppId(), clonedWidgetsMap, estadisticaWidgetRepository, dashboardClonerMapper);
@@ -584,7 +582,6 @@ public class DashboardHelper {
             newItem.setDashboard(entity);
             newItem.setWidget(newWidget);
 
-            Long entornId = params.getEntornId() != null ? params.getEntornId() : entity.getEntornId();
             if (entornId != null) {
                 newItem.setEntornId(entornId);
             }

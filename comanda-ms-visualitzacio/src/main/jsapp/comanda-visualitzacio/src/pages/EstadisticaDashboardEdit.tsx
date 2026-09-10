@@ -838,6 +838,9 @@ const SideMenu = ({
     const springFilter = dashboard?.aplicacio?.id != null
         ? springFilterBuilder.eq('appId', dashboard.aplicacio.id)
         : undefined;
+    const clonableWidgetsNamedQueries = React.useMemo(() => {
+        return entornId != null ? [`filterByEntorn:${entornId}`] : undefined;
+    }, [entornId]);
     const [simpleWidgets, setSimpleWidgets] = useState<Array<{ id?: string | number; titol?: string }>>()
     const [graficWidgets, setGraficWidgets] = useState<Array<{ id?: string | number; titol?: string }>>()
     const [taulaWidgets, setTaulaWidgets] = useState<Array<{ id?: string | number; titol?: string }>>()
@@ -857,14 +860,14 @@ const SideMenu = ({
 
     useEffect(() => {
         if (apiSimpleIsReady && apiGraficIsReady && apiTaulaIsReady) {
-            apiSimpleFind({filter: springFilter, unpaged:true})
+            apiSimpleFind({filter: springFilter, namedQueries: clonableWidgetsNamedQueries, unpaged:true})
                 .then((response) => setSimpleWidgets(response.rows))
-            apiGraficFind({filter: springFilter, unpaged:true})
+            apiGraficFind({filter: springFilter, namedQueries: clonableWidgetsNamedQueries, unpaged:true})
                 .then((response) => setGraficWidgets(response.rows))
-            apiTaulaFind({filter: springFilter, unpaged:true})
+            apiTaulaFind({filter: springFilter, namedQueries: clonableWidgetsNamedQueries, unpaged:true})
                 .then((response) => setTaulaWidgets(response.rows))
         }
-    }, [springFilter, apiSimpleIsReady, apiGraficIsReady, apiTaulaIsReady]);
+    }, [springFilter, clonableWidgetsNamedQueries, apiSimpleIsReady, apiGraficIsReady, apiTaulaIsReady]);
 
     // TODO Extreure a component extern (dins el mateix fitxer)
     const WidgetTreeItem = ({widget, widgetType}:{ widget: { id?: string | number; titol?: string }; widgetType: DashboardWidgetType }) => <TreeItem key={widget?.id} itemId={String(widget?.id)} label={<Box

@@ -34,4 +34,10 @@ public interface DashboardItemRepository extends BaseRepository<DashboardItemEnt
             "OR (d.plantilla IS NULL AND d.dashboard.plantilla.id = :plantillaId)")
     List<DashboardItemEntity> findByEffectivePlantillaId(@Param("plantillaId") Long plantillaId);
 
+    @Query("SELECT DISTINCT d.widget.id FROM DashboardItemEntity d WHERE d.dashboard.id IN :dashboardIds")
+    List<Long> findWidgetIdsByDashboardIdIn(@Param("dashboardIds") java.util.Collection<Long> dashboardIds);
+
+    @Query("SELECT CASE WHEN COUNT(d) > 0 THEN TRUE ELSE FALSE END FROM DashboardItemEntity d WHERE d.widget.id = :widgetId AND d.dashboard.id IN :dashboardIds")
+    boolean existsByWidgetIdAndDashboardIdIn(@Param("widgetId") Long widgetId, @Param("dashboardIds") java.util.Collection<Long> dashboardIds);
+
 }

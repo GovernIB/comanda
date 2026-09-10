@@ -6,7 +6,10 @@ import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
+import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
+import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
+import es.caib.comanda.estadistica.persist.repository.EstadisticaWidgetRepository;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +20,9 @@ import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static es.caib.comanda.estadistica.logic.intf.model.widget.WidgetBaseResource.FILTER_BY_ENTORN_NAMEDFILTER;
 
 /**
  * Helper centralitzat per a la comprovació de permisos ACL i drets de disseny
@@ -39,6 +45,8 @@ public class DashboardPermisosHelper {
     private final AclServiceClient aclServiceClient;
     private final DashboardRepository dashboardRepository;
     private final EstadisticaClientHelper estadisticaClientHelper;
+    private final DashboardItemRepository dashboardItemRepository;
+    private final EstadisticaWidgetRepository estadisticaWidgetRepository;
 
     /**
      * Comprova si l'usuari actual té el rol ADMIN o CONSULTA (exempt de restriccions de lectura).
@@ -337,5 +345,198 @@ public class DashboardPermisosHelper {
      */
     public String buildDashboardItemFilter(String currentSpringFilter) {
         return buildAclFilter(currentSpringFilter, "widget.appId", "entornId", "dashboard.id", false);
+    }
+
+    /**
+     * Comprova si l'usuari actual pot accedir o visualitzar el widget estadístic indicat.
+     * Es pot visualitzar un widget si:
+     * - L'usuari és ADMIN o CONSULTA.
+     * - O pertany a alguna app amb permís directe (ResourceType.APP).
+     * - O pertany a algun dashboard amb permís directe (ResourceType.DASHBOARD).
+     * - O pertany a una app accessible a través d'EntornApp:
+     *     - Si s'especifica entornId (p. ex. a l'editor de dashboard o en validar per a un entorn específic),
+     *       només si l'entorn de l'EntornApp també coincideix.
+     *     - Si entornId és null ("de normal"), qualsevol EntornApp de la mateixa app és suficient.
+     *
+     * @param widget L'entitat del widget estadístic
+     * @param entornId L'identificador de l'entorn de context (opcional)
+     * @return true si l'accés és permès
+     */
+    public boolean canAccessWidget(EstadisticaWidgetEntity<?> widget, Long entornId) {
+        if (isAdminOrConsulta()) {
+            return true;
+        }
+        if (widget == null) {
+            return false;
+        }
+
+        Long appId = widget.getAppId();
+        Long widgetId = widget.getId();
+
+        // Permís directe sobre l'aplicació
+        if (appId != null && containsId(getAllowedAppIds(false), appId)) {
+            return true;
+        }
+
+        // Permís directe sobre algun dashboard que contingui aquest widget
+        Set<Serializable> allowedDashboardIds = getAllowedDashboardIds(false);
+        if (widgetId != null && !allowedDashboardIds.isEmpty() && dashboardItemRepository != null) {
+            List<Long> dashIds = allowedDashboardIds.stream()
+                    .map(id -> (id instanceof Number) ? ((Number) id).longValue() : Long.parseLong(id.toString()))
+                    .collect(Collectors.toList());
+            if (!dashIds.isEmpty() && dashboardItemRepository.existsByWidgetIdAndDashboardIdIn(widgetId, dashIds)) {
+                return true;
+            }
+        }
+
+        // Permís a través d'EntornApp
+        if (appId != null) {
+            Set<Serializable> allowedEntornAppIds = getAllowedEntornAppIds(false);
+            if (!allowedEntornAppIds.isEmpty()) {
+                if (entornId != null) {
+                    try {
+                        EntornApp ea = estadisticaClientHelper.entornAppFindByAppAndEntorn(appId, entornId);
+                        if (ea != null && ea.getId() != null && containsId(allowedEntornAppIds, ea.getId())) {
+                            return true;
+                        }
+                    } catch (Exception e) {
+                        log.warn("Error consultant EntornApp per appId=" + appId + " i entornId=" + entornId, e);
+                    }
+                } else {
+                    for (Serializable eaId : allowedEntornAppIds) {
+                        try {
+                            Long id = (eaId instanceof Number) ? ((Number) eaId).longValue() : Long.parseLong(eaId.toString());
+                            EntornApp ea = estadisticaClientHelper.entornAppFindById(id);
+                            if (ea != null && ea.getApp() != null && appId.equals(ea.getApp().getId())) {
+                                return true;
+                            }
+                        } catch (Exception e) {
+                            log.warn("Error resolvent EntornApp per id=" + eaId, e);
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public boolean canAccessWidget(Long widgetId, Long entornId) {
+        if (isAdminOrConsulta()) {
+            return true;
+        }
+        if (widgetId == null) {
+            return false;
+        }
+        if (estadisticaWidgetRepository != null) {
+            return estadisticaWidgetRepository.findById(widgetId)
+                    .map(w -> canAccessWidget(w, entornId))
+                    .orElse(false);
+        }
+        return false;
+    }
+
+    public void checkCanAccessWidget(EstadisticaWidgetEntity<?> widget, Long entornId, String errorMessage) {
+        if (!canAccessWidget(widget, entornId)) {
+            throw new AccessDeniedException(errorMessage);
+        }
+    }
+
+    public void checkCanAccessWidget(Long widgetId, Long entornId, String errorMessage) {
+        if (!canAccessWidget(widgetId, entornId)) {
+            throw new AccessDeniedException(errorMessage);
+        }
+    }
+
+    /**
+     * Construeix el filtre Spring RSQL d'autorització per als widgets estadístics (Simple, Gràfic, Taula).
+     * <p>
+     * Si l'usuari és ADMIN o CONSULTA, no s'aplica cap restricció.
+     * En cas contrari, un widget és visible si:
+     * - Pertany a una aplicació sobre la qual l'usuari té permís directe (ResourceType.APP).
+     * - O pertany a algun dashboard sobre el qual l'usuari té permís directe (ResourceType.DASHBOARD).
+     * - O pertany a una aplicació accessible a través dels seus permisos sobre EntornApp:
+     *     - Si a namedQueries s'indica un entorn ("filterByEntorn:<id>"), només es mostren els widgets
+     *       de l'aplicació si l'entornApp té EXACTAMENT aquest mateix entorn (editor de dashboards).
+     *     - Si no s'indica cap entorn ("de normal"), es mostren tots els widgets de les aplicacions de les
+     *       quals l'usuari té permís sobre algun EntornApp.
+     */
+    public String buildWidgetFilter(String currentSpringFilter, String[] namedQueries) {
+        if (isAdminOrConsulta()) {
+            return currentSpringFilter;
+        }
+
+        Long entornId = extractEntornIdFromNamedQueries(namedQueries);
+
+        Set<Serializable> allowedApps = new HashSet<>(getAllowedAppIds(false));
+
+        Set<Serializable> allowedEntornAppIds = getAllowedEntornAppIds(false);
+        for (Serializable eaId : allowedEntornAppIds) {
+            try {
+                Long id = (eaId instanceof Number) ? ((Number) eaId).longValue() : Long.parseLong(eaId.toString());
+                EntornApp ea = estadisticaClientHelper.entornAppFindById(id);
+                if (ea != null && ea.getApp() != null && ea.getApp().getId() != null) {
+                    if (entornId != null) {
+                        if (ea.getEntorn() != null && entornId.equals(ea.getEntorn().getId())) {
+                            allowedApps.add(ea.getApp().getId());
+                        }
+                    } else {
+                        allowedApps.add(ea.getApp().getId());
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Error resolvent EntornApp per id=" + eaId, e);
+            }
+        }
+
+        String appFilter = SpringFilterHelper.buildOrFilter("appId", allowedApps);
+
+        Set<Serializable> allowedDashboardIds = getAllowedDashboardIds(false);
+        String dashboardWidgetFilter = null;
+        if (!allowedDashboardIds.isEmpty() && dashboardItemRepository != null) {
+            List<Long> dashIds = allowedDashboardIds.stream()
+                    .map(id -> (id instanceof Number) ? ((Number) id).longValue() : Long.parseLong(id.toString()))
+                    .collect(Collectors.toList());
+            if (!dashIds.isEmpty()) {
+                List<Long> widgetIds = dashboardItemRepository.findWidgetIdsByDashboardIdIn(dashIds);
+                dashboardWidgetFilter = SpringFilterHelper.buildOrFilter("id", widgetIds);
+            }
+        }
+
+        String filter = SpringFilterHelper.or(appFilter, dashboardWidgetFilter);
+
+        return SpringFilterHelper.and(
+                currentSpringFilter,
+                (filter.isBlank())
+                        ? "id:0"
+                        : filter
+        );
+    }
+
+    public Long extractEntornIdFromNamedQueries(String[] namedQueries) {
+        if (namedQueries == null) return null;
+        for (String q : namedQueries) {
+            if (q == null) continue;
+            if (q.startsWith(FILTER_BY_ENTORN_NAMEDFILTER)) {
+                try {
+                    String[] parts = q.split(":");
+                    if (parts.length > 1) {
+                        return Long.parseLong(parts[1].trim());
+                    }
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean containsId(Set<Serializable> ids, Long targetId) {
+        if (ids == null || targetId == null) return false;
+        return ids.stream().anyMatch(id -> {
+            if (id instanceof Number) {
+                return ((Number) id).longValue() == targetId;
+            }
+            return Objects.equals(id.toString(), targetId.toString());
+        });
     }
 }

@@ -83,7 +83,9 @@ class DashboardTitolServiceImplTest {
             httpAuthorizationHeaderHelper,
             aclServiceClient,
             dashboardRepository,
-            estadisticaClientHelper
+            estadisticaClientHelper,
+            null,
+            null
         ));
         ReflectionTestUtils.setField(dashboardTitolService, "dashboardPermisosHelper", dashboardPermisosHelper);
         dashboardTitolService.init();

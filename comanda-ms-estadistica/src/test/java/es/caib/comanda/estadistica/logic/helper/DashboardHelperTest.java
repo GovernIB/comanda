@@ -33,6 +33,7 @@ import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
+import org.springframework.security.access.AccessDeniedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -1030,6 +1031,38 @@ class DashboardHelperTest {
         assertThatThrownBy(() -> action.exec(Dashboard.CLONE_AND_ADD_WIDGET_ACTION, dashboard, params))
             .isInstanceOf(ActionExecutionException.class)
             .hasMessageContaining("Aquest widget no pertany a la aplicació seleccionada");
+    }
+
+    @Test
+    @DisplayName("CloneAndAddWidgetAction: llança AccessDeniedException quan l'usuari no té permís sobre el widget original")
+    void cloneAndAddWidgetAction_quanSensePermisSobreWidget_llancaAccessDeniedException() {
+        // Arrange
+        DashboardPermisosHelper permisosHelper = mock(DashboardPermisosHelper.class);
+        DashboardHelper.CloneAndAddWidgetAction action = new DashboardHelper.CloneAndAddWidgetAction(
+            estadisticaClientHelper, dashboardItemRepository, estadisticaWidgetRepository, dashboardClonerMapper,
+            null, null, permisosHelper);
+
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setId(1L);
+        dashboard.setAppId(10L);
+        dashboard.setEntornId(2L);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setAppId(10L);
+
+        when(estadisticaWidgetRepository.findById(100L)).thenReturn(Optional.of(widget));
+        doThrow(new AccessDeniedException("No teniu permisos per accedir al widget original"))
+            .when(permisosHelper).checkCanAccessWidget(eq(widget), eq(2L), anyString());
+
+        es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.CloneAndAddWidgetParams params =
+            new es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.CloneAndAddWidgetParams();
+        params.setWidgetId(100L);
+
+        // Act & Assert
+        assertThatThrownBy(() -> action.exec(Dashboard.CLONE_AND_ADD_WIDGET_ACTION, dashboard, params))
+            .isInstanceOf(AccessDeniedException.class)
+            .hasMessageContaining("No teniu permisos per accedir al widget original");
     }
 
     @Test

@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.service;
 
 import es.caib.comanda.estadistica.logic.helper.AtributsVisualsHelper;
+import es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaSimpleWidgetHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaWidgetHelper;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple;
@@ -34,6 +35,14 @@ public class EstadisticaSimpleWidgetServiceImpl extends BaseMutableResourceServi
     @Autowired private EstadisticaWidgetHelper estadisticaWidgetHelper;
     @Autowired private EstadisticaSimpleWidgetHelper estadisticaSimpleWidgetHelper;
     @Autowired private AtributsVisualsHelper atributsVisualsHelper;
+    @Autowired private DashboardPermisosHelper dashboardPermisosHelper;
+
+    @Override
+    protected String additionalSpringFilter(
+        String currentSpringFilter,
+        String[] namedQueries) {
+        return dashboardPermisosHelper.buildWidgetFilter(currentSpringFilter, namedQueries);
+    }
 
 
     @Override

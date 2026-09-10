@@ -40,13 +40,14 @@ public class SpringFilterHelper {
         return FilterBuilder.or(idFilters);
     }
 
-    public static String buildOrFilter(String fieldName, Set<Serializable> values) {
+    public static String buildOrFilter(String fieldName, Collection<? extends Serializable> values) {
         if (values == null || values.isEmpty()) {
             return null;
         }
         return values.stream()
             .sorted(Comparator.comparingLong(id -> Long.parseLong(String.valueOf(id))))
             .map(String::valueOf)
+            .distinct()
             .map(id -> fieldName + ":" + id)
             .collect(Collectors.joining(" or "));
     }

@@ -104,7 +104,9 @@ class DashboardServiceImplTest {
             httpAuthorizationHeaderHelper,
             aclServiceClient,
             dashboardRepository,
-            estadisticaClientHelper
+            estadisticaClientHelper,
+            null,
+            null
         ));
         ReflectionTestUtils.setField(dashboardService, "dashboardPermisosHelper", dashboardPermisosHelper);
         ReflectionTestUtils.setField(dashboardService, "entityRepository", dashboardRepository);

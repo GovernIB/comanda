@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.service;
 
 import es.caib.comanda.estadistica.logic.helper.AtributsVisualsHelper;
+import es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaGraficWidgetHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaWidgetHelper;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
@@ -40,6 +41,14 @@ public class EstadisticaGraficWidgetServiceImpl extends BaseMutableResourceServi
     @Autowired private EstadisticaGraficWidgetHelper estadisticaGraficWidgetHelper;
     @Autowired private EstadisticaWidgetHelper estadisticaWidgetHelper;
     @Autowired private AtributsVisualsHelper atributsVisualsHelper;
+    @Autowired private DashboardPermisosHelper dashboardPermisosHelper;
+
+    @Override
+    protected String additionalSpringFilter(
+        String currentSpringFilter,
+        String[] namedQueries) {
+        return dashboardPermisosHelper.buildWidgetFilter(currentSpringFilter, namedQueries);
+    }
 
     @Override
     protected void beforeCreateSave(EstadisticaGraficWidgetEntity entity, EstadisticaGraficWidget resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotCreatedException {

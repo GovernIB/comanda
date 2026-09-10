@@ -8,7 +8,11 @@ import es.caib.comanda.client.model.EntornRef;
 import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
+import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
+import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
+import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
+import es.caib.comanda.estadistica.persist.repository.EstadisticaWidgetRepository;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,6 +51,12 @@ class DashboardPermisosHelperTest {
 
     @Mock
     private EstadisticaClientHelper estadisticaClientHelper;
+
+    @Mock
+    private DashboardItemRepository dashboardItemRepository;
+
+    @Mock
+    private EstadisticaWidgetRepository estadisticaWidgetRepository;
 
     @InjectMocks
     private DashboardPermisosHelper dashboardPermisosHelper;
@@ -506,5 +516,300 @@ class DashboardPermisosHelperTest {
 
         assertThat(result).contains("widget.appId:10");
         assertThat(result).contains("dashboard.id:1");
+    }
+
+    // ========================================================================
+    // 7. PERMISOS I FILTRATGE DE WIDGETS
+    // ========================================================================
+
+    @Test
+    @DisplayName("canAccessWidget retorna true quan usuari té rol ADMIN")
+    void canAccessWidget_quanAdmin_retornaTrue() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(10L);
+        widget.setAppId(20L);
+
+        assertThat(dashboardPermisosHelper.canAccessWidget(widget, 5L)).isTrue();
+    }
+
+    @Test
+    @DisplayName("canAccessWidget retorna true quan usuari té rol CONSULTA")
+    void canAccessWidget_quanConsulta_retornaTrue() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(true);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(10L);
+
+        assertThat(dashboardPermisosHelper.canAccessWidget(widget, 5L)).isTrue();
+    }
+
+    @Test
+    @DisplayName("canAccessWidget retorna false si widget és null")
+    void canAccessWidget_quanWidgetNull_retornaFalse() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+
+        assertThat(dashboardPermisosHelper.canAccessWidget((EstadisticaWidgetEntity<?>) null, 5L)).isFalse();
+    }
+
+    @Test
+    @DisplayName("canAccessWidget retorna true quan té permís directe sobre l'APP")
+    void canAccessWidget_quanPermisDirecteApp_retornaTrue() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(10L)));
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setAppId(10L);
+
+        assertThat(dashboardPermisosHelper.canAccessWidget(widget, 5L)).isTrue();
+    }
+
+    @Test
+    @DisplayName("canAccessWidget retorna true quan té permís directe sobre DASHBOARD que conté el widget")
+    void canAccessWidget_quanPermisDirecteDashboard_retornaTrue() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(1L, 2L)));
+        when(dashboardItemRepository.existsByWidgetIdAndDashboardIdIn(eq(100L), anyCollection()))
+            .thenReturn(true);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setAppId(20L);
+
+        assertThat(dashboardPermisosHelper.canAccessWidget(widget, 5L)).isTrue();
+    }
+
+    @Test
+    @DisplayName("canAccessWidget retorna true quan té permís ENTORN_APP i l'entorn coincideix")
+    void canAccessWidget_quanEntornAppCoincideix_retornaTrue() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(50L)));
+
+        EntornApp ea = new EntornApp();
+        ea.setId(50L);
+        ea.setApp(AppRef.builder().id(10L).build());
+        ea.setEntorn(EntornRef.builder().id(5L).build());
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(10L, 5L)).thenReturn(ea);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setAppId(10L);
+
+        assertThat(dashboardPermisosHelper.canAccessWidget(widget, 5L)).isTrue();
+    }
+
+    @Test
+    @DisplayName("canAccessWidget retorna false quan té permís ENTORN_APP però l'entorn especificat no coincideix")
+    void canAccessWidget_quanEntornAppNoCoincideix_retornaFalse() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(50L)));
+
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(10L, 99L)).thenReturn(null);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setAppId(10L);
+
+        assertThat(dashboardPermisosHelper.canAccessWidget(widget, 99L)).isFalse();
+    }
+
+    @Test
+    @DisplayName("canAccessWidget retorna true per ENTORN_APP quan entornId és null ('de normal')")
+    void canAccessWidget_quanEntornAppSenseEntornId_retornaTrue() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(50L)));
+
+        EntornApp ea = new EntornApp();
+        ea.setId(50L);
+        ea.setApp(AppRef.builder().id(10L).build());
+        when(estadisticaClientHelper.entornAppFindById(50L)).thenReturn(ea);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setAppId(10L);
+
+        assertThat(dashboardPermisosHelper.canAccessWidget(widget, null)).isTrue();
+    }
+
+    @Test
+    @DisplayName("canAccessWidget retorna false quan usuari no té cap permís")
+    void canAccessWidget_quanSensePermisos_retornaFalse() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+
+        when(aclServiceClient.findIdsWithAnyPermission(any(), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setAppId(10L);
+
+        assertThat(dashboardPermisosHelper.canAccessWidget(widget, 5L)).isFalse();
+    }
+
+    @Test
+    @DisplayName("canAccessWidget per widgetId cerca a repository i delega")
+    void canAccessWidget_perWidgetId_cercaIRetorna() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setAppId(10L);
+
+        when(estadisticaWidgetRepository.findById(100L)).thenReturn(Optional.of(widget));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(10L)));
+
+        assertThat(dashboardPermisosHelper.canAccessWidget(100L, 5L)).isTrue();
+    }
+
+    @Test
+    @DisplayName("canAccessWidget per widgetId retorna false si widgetId és null o no existeix")
+    void canAccessWidget_perWidgetId_quanNoExisteix_retornaFalse() {
+        assertThat(dashboardPermisosHelper.canAccessWidget((Long) null, 5L)).isFalse();
+
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+        when(estadisticaWidgetRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThat(dashboardPermisosHelper.canAccessWidget(999L, 5L)).isFalse();
+    }
+
+    @Test
+    @DisplayName("checkCanAccessWidget llança AccessDeniedException si no té accés")
+    void checkCanAccessWidget_quanDenegat_llancaExcepcio() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+        when(aclServiceClient.findIdsWithAnyPermission(any(), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setAppId(10L);
+
+        assertThatThrownBy(() -> dashboardPermisosHelper.checkCanAccessWidget(widget, 5L, "Error accés"))
+            .isInstanceOf(AccessDeniedException.class)
+            .hasMessage("Error accés");
+
+        when(estadisticaWidgetRepository.findById(100L)).thenReturn(Optional.of(widget));
+        assertThatThrownBy(() -> dashboardPermisosHelper.checkCanAccessWidget(100L, 5L, "Error accés id"))
+            .isInstanceOf(AccessDeniedException.class)
+            .hasMessage("Error accés id");
+    }
+
+    @Test
+    @DisplayName("buildWidgetFilter retorna filtre original per ADMIN")
+    void buildWidgetFilter_quanAdmin_retornaFiltreOriginal() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        String result = dashboardPermisosHelper.buildWidgetFilter("base", null);
+        assertThat(result).isEqualTo("base");
+    }
+
+    @Test
+    @DisplayName("buildWidgetFilter combina aplicacions i widgets de dashboards permesos")
+    void buildWidgetFilter_combinaAppsIDashboards() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(10L)));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(1L)));
+        when(dashboardItemRepository.findWidgetIdsByDashboardIdIn(List.of(1L)))
+            .thenReturn(List.of(100L, 101L));
+
+        String result = dashboardPermisosHelper.buildWidgetFilter("actiu:true", null);
+        assertThat(result).contains("actiu:true");
+        assertThat(result).contains("appId:10");
+        assertThat(result).contains("id:100 or id:101");
+    }
+
+    @Test
+    @DisplayName("buildWidgetFilter amb filterByEntorn filtra entornApps per entornId")
+    void buildWidgetFilter_ambFiltreEntorn_filtraPerEntorn() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(50L, 51L)));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        EntornApp ea1 = new EntornApp();
+        ea1.setId(50L);
+        ea1.setApp(AppRef.builder().id(10L).build());
+        ea1.setEntorn(EntornRef.builder().id(2L).build()); // Matches entorn 2
+
+        EntornApp ea2 = new EntornApp();
+        ea2.setId(51L);
+        ea2.setApp(AppRef.builder().id(20L).build());
+        ea2.setEntorn(EntornRef.builder().id(3L).build()); // Does not match entorn 2
+
+        when(estadisticaClientHelper.entornAppFindById(50L)).thenReturn(ea1);
+        when(estadisticaClientHelper.entornAppFindById(51L)).thenReturn(ea2);
+
+        String result = dashboardPermisosHelper.buildWidgetFilter(null, new String[]{"filterByEntorn:2"});
+        assertThat(result).isEqualTo("appId:10");
+    }
+
+    @Test
+    @DisplayName("buildWidgetFilter retorna fallback id:0 si no té cap permís")
+    void buildWidgetFilter_sensePermisos_retornaFallback() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+
+        when(aclServiceClient.findIdsWithAnyPermission(any(), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        String result = dashboardPermisosHelper.buildWidgetFilter("base", null);
+        assertThat(result).isEqualTo("base and id:0");
+    }
+
+    @Test
+    @DisplayName("extractEntornIdFromNamedQueries extreu correctament l'ID o retorna null")
+    void extractEntornIdFromNamedQueries_casosDiversos() {
+        assertThat(dashboardPermisosHelper.extractEntornIdFromNamedQueries(null)).isNull();
+        assertThat(dashboardPermisosHelper.extractEntornIdFromNamedQueries(new String[]{})).isNull();
+        assertThat(dashboardPermisosHelper.extractEntornIdFromNamedQueries(new String[]{"altre:123"})).isNull();
+        assertThat(dashboardPermisosHelper.extractEntornIdFromNamedQueries(new String[]{"filterByEntorn:5"})).isEqualTo(5L);
+        assertThat(dashboardPermisosHelper.extractEntornIdFromNamedQueries(new String[]{"filterByEntorn:abc"})).isNull();
     }
 }

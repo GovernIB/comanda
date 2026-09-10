@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.service;
 
 import es.caib.comanda.estadistica.logic.helper.AtributsVisualsHelper;
+import es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaSimpleWidgetHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaWidgetHelper;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple;
@@ -43,6 +44,9 @@ class EstadisticaSimpleWidgetServiceImplTest {
 
     @Mock
     private AtributsVisualsHelper atributsVisualsHelper;
+
+    @Mock
+    private DashboardPermisosHelper dashboardPermisosHelper;
 
     @InjectMocks
     private EstadisticaSimpleWidgetServiceImpl estadisticaSimpleWidgetService;
@@ -260,5 +264,21 @@ class EstadisticaSimpleWidgetServiceImplTest {
 
         // Assert
         assertThat(changes).isEmpty();
+    }
+
+    // ========================================================================
+    // 6. TESTOS PER A additionalSpringFilter
+    // ========================================================================
+
+    @Test
+    @DisplayName("additionalSpringFilter: delega en DashboardPermisosHelper.buildWidgetFilter")
+    void additionalSpringFilter_delegaEnDashboardPermisosHelper() {
+        String[] namedQueries = new String[]{"filterByEntorn:1"};
+        when(dashboardPermisosHelper.buildWidgetFilter("original", namedQueries)).thenReturn("filtrat");
+
+        String result = estadisticaSimpleWidgetService.additionalSpringFilter("original", namedQueries);
+
+        assertThat(result).isEqualTo("filtrat");
+        verify(dashboardPermisosHelper).buildWidgetFilter("original", namedQueries);
     }
 }

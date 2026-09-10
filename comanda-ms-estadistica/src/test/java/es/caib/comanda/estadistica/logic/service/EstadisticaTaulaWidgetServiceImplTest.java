@@ -47,6 +47,9 @@ class EstadisticaTaulaWidgetServiceImplTest {
     @Mock
     private AtributsVisualsHelper atributsVisualsHelper;
 
+    @Mock
+    private es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper dashboardPermisosHelper;
+
     @InjectMocks
     private EstadisticaTaulaWidgetServiceImpl estadisticaTaulaWidgetService;
 
@@ -296,5 +299,21 @@ class EstadisticaTaulaWidgetServiceImplTest {
 
         // Assert
         assertThat(changes).isEmpty();
+    }
+
+    // ========================================================================
+    // 6. TESTOS PER A additionalSpringFilter
+    // ========================================================================
+
+    @Test
+    @DisplayName("additionalSpringFilter: delega en DashboardPermisosHelper.buildWidgetFilter")
+    void additionalSpringFilter_delegaEnDashboardPermisosHelper() {
+        String[] namedQueries = new String[]{"filterByEntorn:1"};
+        when(dashboardPermisosHelper.buildWidgetFilter("original", namedQueries)).thenReturn("filtrat");
+
+        String result = estadisticaTaulaWidgetService.additionalSpringFilter("original", namedQueries);
+
+        assertThat(result).isEqualTo("filtrat");
+        verify(dashboardPermisosHelper).buildWidgetFilter("original", namedQueries);
     }
 }
