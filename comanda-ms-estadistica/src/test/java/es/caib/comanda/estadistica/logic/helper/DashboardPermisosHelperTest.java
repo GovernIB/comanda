@@ -342,7 +342,7 @@ class DashboardPermisosHelperTest {
     }
 
     // ========================================================================
-    // 5. CONSTRUCCIÓ DE FILTRES SPRING RSQL
+    // 5. CONSTRUCCIÓ DE FILTRES SPRING FILTER
     // ========================================================================
 
     @Test
@@ -461,9 +461,25 @@ class DashboardPermisosHelperTest {
 
         String result = dashboardPermisosHelper.buildDashboardFilter("actiu:true", false);
 
-        assertThat(result).contains("actiu:true");
-        assertThat(result).contains("appId:10");
-        assertThat(result).contains("id:1");
+        assertThat(result).isEqualTo("actiu:true and (appId:10 or id:1)");
+    }
+
+    @Test
+    @DisplayName("buildDashboardFilter agrupa amb parèntesis tant el filtre d'usuari com els permisos quan tenen OR")
+    void buildDashboardFilter_agrupaAmbParentesisQuanHiHaOr() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(10L, 20L)));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        String result = dashboardPermisosHelper.buildDashboardFilter("tipus:1 or tipus:2", false);
+
+        assertThat(result).isEqualTo("(tipus:1 or tipus:2) and (appId:10 or appId:20)");
     }
 
     @Test
@@ -755,9 +771,7 @@ class DashboardPermisosHelperTest {
             .thenReturn(List.of(100L, 101L));
 
         String result = dashboardPermisosHelper.buildWidgetFilter("actiu:true", null);
-        assertThat(result).contains("actiu:true");
-        assertThat(result).contains("appId:10");
-        assertThat(result).contains("id:100 or id:101");
+        assertThat(result).isEqualTo("actiu:true and (appId:10 or id:100 or id:101)");
     }
 
     @Test

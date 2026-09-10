@@ -216,7 +216,7 @@ public class DashboardPermisosHelper {
     }
 
     /**
-     * Construeix una clàusula de filtre Spring RSQL a partir dels IDs d'EntornApp permesos.
+     * Construeix una clàusula de filtre Spring Filter a partir dels IDs d'EntornApp permesos.
      */
     public String buildEntornAppFilter(Set<Serializable> entornAppPermissionIds, String prefix) {
         String fieldPrefix = (prefix != null && !prefix.isBlank()) ? prefix + "." : "";
@@ -224,7 +224,7 @@ public class DashboardPermisosHelper {
     }
 
     /**
-     * Construeix una clàusula de filtre Spring RSQL a partir dels IDs d'EntornApp permesos,
+     * Construeix una clàusula de filtre Spring Filter a partir dels IDs d'EntornApp permesos,
      * permetent especificar els noms de propietat concrets per a l'aplicació i per a l'entorn.
      */
     public String buildEntornAppFilter(Set<Serializable> entornAppPermissionIds, String appProperty, String entornProperty) {
@@ -247,7 +247,7 @@ public class DashboardPermisosHelper {
     }
 
     /**
-     * Construeix el filtre Spring RSQL d'autorització per a un recurs combinant permisos d'APP, ENTORN_APP i DASHBOARD.
+     * Construeix el filtre Spring Filter d'autorització per a un recurs combinant permisos d'APP, ENTORN_APP i DASHBOARD.
      */
     public String buildAclFilterPrefix(
             String currentSpringFilter,
@@ -286,7 +286,7 @@ public class DashboardPermisosHelper {
     }
 
     /**
-     * Construeix el filtre Spring RSQL d'autorització per a un recurs amb propietats d'aplicació i entorn específiques (com a DashboardItem).
+     * Construeix el filtre Spring Filter d'autorització per a un recurs amb propietats d'aplicació i entorn específiques (com a DashboardItem).
      */
     public String buildAclFilter(
             String currentSpringFilter,
@@ -326,7 +326,7 @@ public class DashboardPermisosHelper {
     }
 
     /**
-     * Construeix el filtre RSQL per a dashboards o entitats filles amb prefix comú (p. ex. dashboard.appId, dashboard.entornId, dashboard.id).
+     * Construeix el filtre Spring Filter per a dashboards o entitats filles amb prefix comú (p. ex. dashboard.appId, dashboard.entornId, dashboard.id).
      */
     public String buildDashboardChildFilter(String currentSpringFilter, String dashboardPrefix) {
         String p = (dashboardPrefix != null && !dashboardPrefix.isBlank()) ? dashboardPrefix + "." : "";
@@ -334,14 +334,14 @@ public class DashboardPermisosHelper {
     }
 
     /**
-     * Construeix el filtre RSQL per al quadre de control (Dashboard).
+     * Construeix el filtre Spring Filter per al quadre de control (Dashboard).
      */
     public String buildDashboardFilter(String currentSpringFilter, boolean isWrite) {
         return buildAclFilterPrefix(currentSpringFilter, "appId", null, "id", isWrite);
     }
 
     /**
-     * Construeix el filtre RSQL per als elements d'un quadre de control (DashboardItem).
+     * Construeix el filtre Spring Filter per als elements d'un quadre de control (DashboardItem).
      */
     public String buildDashboardItemFilter(String currentSpringFilter) {
         return buildAclFilter(currentSpringFilter, "widget.appId", "entornId", "dashboard.id", false);
@@ -449,7 +449,7 @@ public class DashboardPermisosHelper {
     }
 
     /**
-     * Construeix el filtre Spring RSQL d'autorització per als widgets estadístics (Simple, Gràfic, Taula).
+     * Construeix el filtre Spring Filter d'autorització per als widgets estadístics (Simple, Gràfic, Taula).
      * <p>
      * Si l'usuari és ADMIN o CONSULTA, no s'aplica cap restricció.
      * En cas contrari, un widget és visible si:
