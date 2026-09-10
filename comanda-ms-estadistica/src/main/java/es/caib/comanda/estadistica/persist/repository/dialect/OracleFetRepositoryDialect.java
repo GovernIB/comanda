@@ -30,12 +30,12 @@ public class OracleFetRepositoryDialect implements FetRepositoryDialect {
 
     @Override
     public String getFindByEntornAppIdAndTempsDataBetweenAndDimensionValueQuery() {
-        return "SELECT f.*" + BASE_JOIN + BASE_WHERE + " AND " + getDimensionValueQuery("' || :dimensioCodi || '") + "= :dimensioValor";
+        return "SELECT f.*" + BASE_JOIN + BASE_WHERE + " AND REGEXP_SUBSTR(f.dimensions_json, '\"' || :dimensioCodi || '\"[[:space:]]*:[[:space:]]*\"([^\"]*)\"', 1, 1, NULL, 1) = :dimensioValor";
     }
 
     @Override
     public String getFindByEntornAppIdAndTempsDataBetweenAndDimensionValuesQuery() {
-        return "SELECT f.* " + BASE_JOIN + BASE_WHERE + " AND " + getDimensionValueQuery("' || :dimensioCodi || '") + " IN (:dimensioValor)";
+        return "SELECT f.* " + BASE_JOIN + BASE_WHERE + " AND REGEXP_SUBSTR(f.dimensions_json, '\"' || :dimensioCodi || '\"[[:space:]]*:[[:space:]]*\"([^\"]*)\"', 1, 1, NULL, 1) IN (:dimensioValor)";
     }
 
     @Override

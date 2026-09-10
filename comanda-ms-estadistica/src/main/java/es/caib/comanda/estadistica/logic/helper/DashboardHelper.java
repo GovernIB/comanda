@@ -3,6 +3,9 @@ package es.caib.comanda.estadistica.logic.helper;
 import es.caib.comanda.client.model.App;
 import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.client.model.acl.PermissionEnum;
+import es.caib.comanda.client.model.acl.ResourceType;
+import org.springframework.security.access.AccessDeniedException;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltre;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
@@ -193,6 +196,7 @@ public class DashboardHelper {
         private final EstadisticaWidgetRepository estadisticaWidgetRepository;
         private final es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper dashboardClonerMapper;
         private final AtributsVisualsHelper atributsVisualsHelper;
+        private final DashboardPermisosHelper dashboardPermisosHelper;
 
         public CloneDashboardAction(EstadisticaClientHelper estadisticaClientHelper,
                                     DashboardRepository dashboardRepository,
@@ -202,7 +206,7 @@ public class DashboardHelper {
                                     PlantillaRepository plantillaRepository,
                                     EstadisticaWidgetRepository estadisticaWidgetRepository,
                                     es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper dashboardClonerMapper) {
-            this(estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, dashboardFiltreRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper, null);
+            this(estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, dashboardFiltreRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper, null, null);
         }
 
         public CloneDashboardAction(EstadisticaClientHelper estadisticaClientHelper,
@@ -214,15 +218,7 @@ public class DashboardHelper {
                                     EstadisticaWidgetRepository estadisticaWidgetRepository,
                                     es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper dashboardClonerMapper,
                                     AtributsVisualsHelper atributsVisualsHelper) {
-            this.estadisticaClientHelper = estadisticaClientHelper;
-            this.dashboardRepository = dashboardRepository;
-            this.dashboardTitolRepository = dashboardTitolRepository;
-            this.dashboardItemRepository = dashboardItemRepository;
-            this.dashboardFiltreRepository = dashboardFiltreRepository;
-            this.plantillaRepository = plantillaRepository;
-            this.estadisticaWidgetRepository = estadisticaWidgetRepository;
-            this.dashboardClonerMapper = dashboardClonerMapper;
-            this.atributsVisualsHelper = atributsVisualsHelper;
+            this(estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, dashboardFiltreRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper, atributsVisualsHelper, null);
         }
 
         public CloneDashboardAction(EstadisticaClientHelper estadisticaClientHelper,
@@ -232,17 +228,57 @@ public class DashboardHelper {
                                     PlantillaRepository plantillaRepository,
                                     EstadisticaWidgetRepository estadisticaWidgetRepository,
                                     es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper dashboardClonerMapper) {
-            this(estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, null, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper, null);
+            this(estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, null, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper, null, null);
+        }
+
+        public CloneDashboardAction(EstadisticaClientHelper estadisticaClientHelper,
+                                    DashboardRepository dashboardRepository,
+                                    DashboardTitolRepository dashboardTitolRepository,
+                                    DashboardItemRepository dashboardItemRepository,
+                                    DashboardFiltreRepository dashboardFiltreRepository,
+                                    PlantillaRepository plantillaRepository,
+                                    EstadisticaWidgetRepository estadisticaWidgetRepository,
+                                    es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper dashboardClonerMapper,
+                                    AtributsVisualsHelper atributsVisualsHelper,
+                                    DashboardPermisosHelper dashboardPermisosHelper) {
+            this.estadisticaClientHelper = estadisticaClientHelper;
+            this.dashboardRepository = dashboardRepository;
+            this.dashboardTitolRepository = dashboardTitolRepository;
+            this.dashboardItemRepository = dashboardItemRepository;
+            this.dashboardFiltreRepository = dashboardFiltreRepository;
+            this.plantillaRepository = plantillaRepository;
+            this.estadisticaWidgetRepository = estadisticaWidgetRepository;
+            this.dashboardClonerMapper = dashboardClonerMapper;
+            this.atributsVisualsHelper = atributsVisualsHelper;
+            this.dashboardPermisosHelper = dashboardPermisosHelper;
         }
 
         @Override
         public Dashboard exec(String code, DashboardEntity entity, Dashboard params) throws ActionExecutionException {
+            Long targetAppId = entity.getAppId();
+            Long targetEntornId = entity.getEntornId();
+            if (Objects.nonNull(params)) {
+                if (params.getAplicacio() != null && params.getAplicacio().getId() != null) {
+                    targetAppId = params.getAplicacio().getId();
+                } else if (params.getAppId() != null) {
+                    targetAppId = params.getAppId();
+                }
+                if (params.getEntorn() != null && params.getEntorn().getId() != null) {
+                    targetEntornId = params.getEntorn().getId();
+                } else if (params.getEntornId() != null) {
+                    targetEntornId = params.getEntornId();
+                }
+            }
+            if (dashboardPermisosHelper != null) {
+                dashboardPermisosHelper.checkCanCreate(targetAppId, targetEntornId, "No teniu permisos de disseny per clonar el quadre de control a l'aplicació/entorn indicats");
+            }
+
             DashboardEntity newDashboard = new DashboardEntity();
             if (Objects.nonNull(params)) {
                 newDashboard.setTitol(params.getTitol());
                 newDashboard.setDescripcio(params.getDescripcio());
-                newDashboard.setAppId(Objects.nonNull(params.getAplicacio()) ? params.getAplicacio().getId() : params.getAppId());
-                newDashboard.setEntornId(Objects.nonNull(params.getEntorn()) ? params.getEntorn().getId() : params.getEntornId());
+                newDashboard.setAppId(targetAppId);
+                newDashboard.setEntornId(targetEntornId);
                 if (Objects.nonNull(params.getPlantilla()) && Objects.nonNull(params.getPlantilla().getId())) {
                     newDashboard.setPlantilla(plantillaRepository.findById(params.getPlantilla().getId()).orElse(null));
                 }
@@ -469,12 +505,13 @@ public class DashboardHelper {
         private final es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper dashboardClonerMapper;
         private final DashboardItemTitolHelper dashboardItemTitolHelper;
         private final AtributsVisualsHelper atributsVisualsHelper;
+        private final DashboardPermisosHelper dashboardPermisosHelper;
 
         public CloneAndAddWidgetAction(EstadisticaClientHelper estadisticaClientHelper,
                                        DashboardItemRepository dashboardItemRepository,
                                        EstadisticaWidgetRepository estadisticaWidgetRepository,
                                        es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper dashboardClonerMapper) {
-            this(estadisticaClientHelper, dashboardItemRepository, estadisticaWidgetRepository, dashboardClonerMapper, null, null);
+            this(estadisticaClientHelper, dashboardItemRepository, estadisticaWidgetRepository, dashboardClonerMapper, null, null, null);
         }
 
         public CloneAndAddWidgetAction(EstadisticaClientHelper estadisticaClientHelper,
@@ -482,7 +519,7 @@ public class DashboardHelper {
                                        EstadisticaWidgetRepository estadisticaWidgetRepository,
                                        es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper dashboardClonerMapper,
                                        DashboardItemTitolHelper dashboardItemTitolHelper) {
-            this(estadisticaClientHelper, dashboardItemRepository, estadisticaWidgetRepository, dashboardClonerMapper, dashboardItemTitolHelper, null);
+            this(estadisticaClientHelper, dashboardItemRepository, estadisticaWidgetRepository, dashboardClonerMapper, dashboardItemTitolHelper, null, null);
         }
 
         public CloneAndAddWidgetAction(EstadisticaClientHelper estadisticaClientHelper,
@@ -491,16 +528,30 @@ public class DashboardHelper {
                                        es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper dashboardClonerMapper,
                                        DashboardItemTitolHelper dashboardItemTitolHelper,
                                        AtributsVisualsHelper atributsVisualsHelper) {
+            this(estadisticaClientHelper, dashboardItemRepository, estadisticaWidgetRepository, dashboardClonerMapper, dashboardItemTitolHelper, atributsVisualsHelper, null);
+        }
+
+        public CloneAndAddWidgetAction(EstadisticaClientHelper estadisticaClientHelper,
+                                       DashboardItemRepository dashboardItemRepository,
+                                       EstadisticaWidgetRepository estadisticaWidgetRepository,
+                                       es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper dashboardClonerMapper,
+                                       DashboardItemTitolHelper dashboardItemTitolHelper,
+                                       AtributsVisualsHelper atributsVisualsHelper,
+                                       DashboardPermisosHelper dashboardPermisosHelper) {
             this.estadisticaClientHelper = estadisticaClientHelper;
             this.dashboardItemRepository = dashboardItemRepository;
             this.estadisticaWidgetRepository = estadisticaWidgetRepository;
             this.dashboardClonerMapper = dashboardClonerMapper;
             this.dashboardItemTitolHelper = dashboardItemTitolHelper;
             this.atributsVisualsHelper = atributsVisualsHelper;
+            this.dashboardPermisosHelper = dashboardPermisosHelper;
         }
 
         @Override
         public es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem exec(String code, DashboardEntity entity, es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.CloneAndAddWidgetParams params) throws ActionExecutionException {
+            if (dashboardPermisosHelper != null) {
+                dashboardPermisosHelper.checkCanDesignDashboard(entity.getId(), "No teniu permisos de disseny per afegir widgets a aquest quadre de control");
+            }
             if (params == null || params.getWidgetId() == null) {
                 throw new ActionExecutionException(Dashboard.class, entity.getId(), code, "widgetId is required");
             }
@@ -508,6 +559,13 @@ public class DashboardHelper {
             EstadisticaWidgetEntity originalWidget = estadisticaWidgetRepository.findById(params.getWidgetId()).orElseThrow(() ->
                 new ActionExecutionException(Dashboard.class, entity.getId(), code, "Original widget not found")
             );
+
+//            TODO Check widget accessible/visible
+//            if (dashboardPermisosHelper != null && !dashboardPermisosHelper.isAdminOrConsulta()) {
+//                if (originalWidget.getAppId() != null && !dashboardPermisosHelper.hasPermission(ResourceType.APP, originalWidget.getAppId(), List.of(PermissionEnum.PERM0, PermissionEnum.PERM1))) {
+//                    throw new AccessDeniedException("No teniu permisos per accedir al widget original");
+//                }
+//            }
 
             Map<Long, EstadisticaWidgetEntity> clonedWidgetsMap = new HashMap<>();
             EstadisticaWidgetEntity newWidget = DashboardHelper.cloneWidgetLogic(originalWidget, entity.getAppId(), clonedWidgetsMap, estadisticaWidgetRepository, dashboardClonerMapper);

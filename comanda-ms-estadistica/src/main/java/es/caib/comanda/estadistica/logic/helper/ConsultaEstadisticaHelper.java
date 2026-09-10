@@ -18,7 +18,6 @@ import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Temps;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
-import es.caib.comanda.estadistica.logic.intf.model.periode.Periode;
 import es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeUnitat;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
@@ -72,6 +71,7 @@ public class ConsultaEstadisticaHelper {
     private final DashboardStyleResolverHelper dashboardStyleResolverHelper;
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final DashboardSeguretatHelper dashboardSeguretatHelper;
+    private final OrganitzativaTreeHelper organitzativaTreeHelper;
     private final es.caib.comanda.ms.logic.helper.AuthenticationHelper authenticationHelper;
 
     private static DateTimeFormatter DMYYYY_FORMATTER = DateTimeFormatter.ofPattern("d/M/yyyy");
@@ -863,11 +863,13 @@ public class ConsultaEstadisticaHelper {
         EstadisticaWidgetEntity widget = dashboardItem.getWidget();
         var entornApp = estadisticaClientHelper.entornAppFindByAppAndEntorn(widget.getAppId(), dashboardItem.getEntornId());
         var entorn = estadisticaClientHelper.entornById(entornApp.getEntorn().getId());
-        // El període seleccionat pel filtre de capçalera del dashboard, si n'hi ha, sobreescriu el període propi del widget.
-        Periode periodeEfectiu = filtreSeleccio != null && filtreSeleccio.hasPeriodeOverride()
-            ? filtreSeleccio.getPeriode()
-            : widget.getPeriode();
-        PeriodeDates periodeDates = PeriodeResolverHelper.resolvePeriod(periodeEfectiu);
+        // El període seleccionat pel filtre de capçalera del dashboard, si n'hi ha, no sobreescriu el període
+        // propi del widget: en manté el tipus (p. ex. "darrer dia complet" o "darrers 30 dies"), però ancorat i
+        // limitat al període configurat al filtre (vegeu PeriodeResolverHelper#resolvePeriod amb filterBounds).
+        PeriodeDates filtreDates = filtreSeleccio != null && filtreSeleccio.hasPeriodeOverride()
+            ? PeriodeResolverHelper.resolvePeriod(filtreSeleccio.getPeriode())
+            : null;
+        PeriodeDates periodeDates = PeriodeResolverHelper.resolvePeriod(widget.getPeriode(), filtreDates);
         AtributsVisuals atributsVisuals = resolveAtributsVisuals(dashboardItem, temaFosc);
 
         return DadesComunsWidgetConsulta.builder()
@@ -883,6 +885,11 @@ public class ConsultaEstadisticaHelper {
      * Un filtre de dashboard només s'aplica si el widget pertany a un entorn d'aplicació que realment té una
      * dimensió amb aquest codi - si no, el widget pertany a una altra app i el filtre se n'ignora (no es buida
      * el widget mostrant zero resultats per un filtre que no li és aplicable).
+     * <p>
+     * Quan la dimensió seleccionada és d'unitat organitzativa (ORGAN_GESTOR o CONSELLERIA), la selecció no es
+     * filtra pel codi exacte: s'estén a tots els òrgans descendents (mateixa semàntica que el filtre de
+     * seguretat per permisos d'òrgan, vegeu {@link DashboardSeguretatHelper}), perquè seleccionar una conselleria
+     * ha de mostrar els fets de la pròpia conselleria i de tots els òrgans que en depenen.
      */
     private Map<String, List<String>> resolveDimensionsFiltre(EstadisticaWidgetEntity widget,
                                                               Long entornAppId,
@@ -897,11 +904,38 @@ public class ConsultaEstadisticaHelper {
             if (codi == null || valors == null || valors.isEmpty()) {
                 return;
             }
-            if (dimensioRepository.findByCodiAndEntornAppId(codi, entornAppId).isPresent()) {
+            DimensioEntity dimensio = dimensioRepository.findByCodiAndEntornAppId(codi, entornAppId).orElse(null);
+            if (dimensio == null) {
+                return;
+            }
+            if (TipusDimensioEnum.TIPUS_AMB_UNITAT_ORG.contains(dimensio.getTipus())) {
+                aplicarFiltreOrganAmbDescendents(result, entornAppId, valors);
+            } else {
                 result.put(codi, valors);
             }
         });
         return result;
+    }
+
+    /**
+     * Aplica un filtre d'unitat organitzativa (seleccionat des d'una dimensió ORGAN_GESTOR o CONSELLERIA del
+     * filtre de capçalera del dashboard) contra la dimensió ORGAN_GESTOR real de l'entorn d'aplicació - on els
+     * fets guarden efectivament el seu òrgan gestor -, ampliant els codis seleccionats amb tots els seus
+     * descendents perquè, en seleccionar una conselleria, es mostrin també els fets dels òrgans que en depenen.
+     * Si l'app no té cap dimensió ORGAN_GESTOR configurada, el filtre no li és aplicable i s'ignora.
+     */
+    private void aplicarFiltreOrganAmbDescendents(Map<String, List<String>> result,
+                                                  Long entornAppId,
+                                                  List<String> valorsSeleccionats) {
+        Optional<DimensioEntity> dimensioOrgan = dimensioRepository.findByEntornAppIdAndTipus(entornAppId, TipusDimensioEnum.ORGAN_GESTOR);
+        if (dimensioOrgan.isEmpty()) {
+            return;
+        }
+        List<UnitatOrganitzativaEntity> unitats = unitatOrganitzativaRepository.findByCodiIn(valorsSeleccionats);
+        List<String> codisAmbDescendents = new ArrayList<>(organitzativaTreeHelper.getDescendentsIElMateix(unitats));
+        if (!codisAmbDescendents.isEmpty()) {
+            result.put(dimensioOrgan.get().getCodi(), codisAmbDescendents);
+        }
     }
 
     public AtributsVisuals resolveAtributsVisuals(DashboardItemEntity dashboardItem, boolean temaFosc) {

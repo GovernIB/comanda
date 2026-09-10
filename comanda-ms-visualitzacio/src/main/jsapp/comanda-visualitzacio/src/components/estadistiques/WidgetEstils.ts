@@ -1,5 +1,7 @@
 import { Theme } from "@mui/material/styles";
 
+export const PERCENTAGE_TRIANGLE_MARGIN = '2px';
+
 export const estils = {
     /*styles.paperContainer(bgColor, bg, colors.textColor, mostrarVora, voraAmple, colors.voraColor, onClick, theme)*/
     paperContainer: (bgColor: string, bg: string, textColor: string,
@@ -98,6 +100,20 @@ export const estils = {
         color: textColor,
         zIndex: 2,
     }),
+    footerDescText: (textColor: string) => ({
+        flexGrow: 1,
+        flexShrink: 1,
+        minWidth: 0,
+        fontWeight: '500',
+        fontSize: '1.0em',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        display: '-webkit-box',
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: 'vertical',
+        color: textColor,
+        zIndex: 2,
+    }),
     percText: (textColor: string) => ({
         flexShrink: 0,
         fontWeight: '600',
@@ -105,7 +121,7 @@ export const estils = {
         overflow: 'visible',
         textAlign: 'right',
         whiteSpace: 'nowrap',
-        ml: 2,
+        ml: 0,
         color: textColor,
         zIndex: 2,
     }),

@@ -43,6 +43,7 @@ import java.util.List;
 @NoArgsConstructor
 @ResourceConfig(
         descriptionField = "titol",
+        quickFilterFields = { "titol", "descripcio" },
         accessConstraints = {
                 @ResourceAccessConstraint(
                         type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,
@@ -61,8 +62,14 @@ import java.util.List;
         },
         artifacts = {
                 @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Dashboard.PERSP_PERMIS_NUM),
+                @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = Dashboard.PERSP_PREFERIT_USUARI_ACTUAL),
                 @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Dashboard.DASHBOARD_IMPORT, formClass = DashboardServiceImpl.DashboardImportParams.class),
                 @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Dashboard.CLONE_ACTION, requiresId = true, formClass = Dashboard.class),
+                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Dashboard.MARCAR_PREFERIT_ACTION, requiresId = true, formClass = DashboardServiceImpl.MarcarPreferitParams.class,
+                    accessConstraints = {
+                        @ResourceAccessConstraint(
+                            type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED
+                        )}),
                 @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Dashboard.CLONE_AND_ADD_WIDGET_ACTION, requiresId = true, formClass = DashboardServiceImpl.CloneAndAddWidgetParams.class),
                 @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Dashboard.WIDGETS_REPORT, requiresId = true, formClass= InformeWidgetParams.class,
                     accessConstraints = {
@@ -83,12 +90,15 @@ import java.util.List;
 )
 public class Dashboard extends BaseResource<Long> {
 
-    public static final String PERSP_PERMIS_NUM = "PERMIS_NUM";
+    public final static String PERSP_PERMIS_NUM = "PERMIS_NUM";
+    public final static String PERSP_PREFERIT_USUARI_ACTUAL = "PREFERIT_USUARI_ACTUAL";
     public final static String CLONE_ACTION = "clone_dashboard";
     public final static String CLONE_AND_ADD_WIDGET_ACTION = "clone_and_add_widget";
+    public final static String MARCAR_PREFERIT_ACTION = "marcar_preferit";
     public final static String WIDGETS_REPORT = "widgets_data";
     public final static String DASHBOARD_EXPORT = "dashboard_export";
     public final static String DASHBOARD_IMPORT = "dashboard_import";
+    public final static String NAMED_FILTER_PREFERIT_USUARI_ACTUAL = "preferit";
 
     @NotNull
     @Size(max = es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity.TITOL_MAX_LENGTH)
@@ -110,4 +120,6 @@ public class Dashboard extends BaseResource<Long> {
 
     @Transient
     private int numPermisos;
+    @Transient
+    private boolean esPreferit;
 }

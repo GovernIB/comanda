@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: acl-salut-perm-migration-1
+      author: Limit
+      comment: Migrar permisos de Salut de READ (mask 1) a PERM2 (mask 128) per a App i EntornApp
+      changes:
+        - sql:
+            sql: >
+              UPDATE ${db_prefix}acl_entry
+              SET mask = 128
+              WHERE mask = 1
+                AND acl_object_identity IN (
+                    SELECT oi.id
+                    FROM ${db_prefix}acl_object_identity oi
+                    JOIN ${db_prefix}acl_class c ON oi.object_id_class = c.id
+                    WHERE c.class IN (
+                        'es.caib.comanda.client.model.App',
+                        'es.caib.comanda.client.model.EntornApp'
+                    )
+                )
+      rollback:
+        - sql:
+            sql: >
+              UPDATE ${db_prefix}acl_entry
+              SET mask = 1
+              WHERE mask = 128
+                AND acl_object_identity IN (
+                    SELECT oi.id
+                    FROM ${db_prefix}acl_object_identity oi
+                    JOIN ${db_prefix}acl_class c ON oi.object_id_class = c.id
+                    WHERE c.class IN (
+                        'es.caib.comanda.client.model.App',
+                        'es.caib.comanda.client.model.EntornApp'
+                    )
+                )

@@ -39,7 +39,7 @@ public class OracleFetRepositoryDialectTest {
             "JOIN com_est_temps t ON f.temps_id = t.id " +
             "WHERE f.entorn_app_id = :entornAppId " +
             "AND t.data BETWEEN :dataInici AND :dataFi " +
-            "AND JSON_VALUE(f.dimensions_json, '$.\"' || :dimensioCodi || '\"') = :dimensioValor");
+            "AND REGEXP_SUBSTR(f.dimensions_json, '\"' || :dimensioCodi || '\"[[:space:]]*:[[:space:]]*\"([^\"]*)\"', 1, 1, NULL, 1) = :dimensioValor");
         assertNotNull(query);
         assertTrue(query.equals(expectedQuery), "Query should be: " + expectedQuery + "\nActual query: " + query);
     }
@@ -55,7 +55,7 @@ public class OracleFetRepositoryDialectTest {
             "JOIN com_est_temps t ON f.temps_id = t.id " +
             "WHERE f.entorn_app_id = :entornAppId " +
             "AND t.data BETWEEN :dataInici AND :dataFi " +
-            "AND JSON_VALUE(f.dimensions_json, '$.\"' || :dimensioCodi || '\"') IN (:dimensioValor)");
+            "AND REGEXP_SUBSTR(f.dimensions_json, '\"' || :dimensioCodi || '\"[[:space:]]*:[[:space:]]*\"([^\"]*)\"', 1, 1, NULL, 1) IN (:dimensioValor)");
         assertNotNull(query);
         assertTrue(query.equals(expectedQuery));
     }

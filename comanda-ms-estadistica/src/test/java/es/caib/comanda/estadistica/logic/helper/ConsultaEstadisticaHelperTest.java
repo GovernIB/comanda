@@ -79,6 +79,7 @@ class ConsultaEstadisticaHelperTest {
     @Mock private EstadisticaClientHelper estadisticaClientHelper;
     @Mock private DashboardStyleResolverHelper dashboardStyleResolverHelper;
     @Mock private DashboardSeguretatHelper dashboardSeguretatHelper;
+    @Mock private OrganitzativaTreeHelper organitzativaTreeHelper;
     @Mock private es.caib.comanda.ms.logic.helper.AuthenticationHelper authenticationHelper;
 
     @InjectMocks
@@ -790,6 +791,94 @@ class ConsultaEstadisticaHelperTest {
     }
 
     @Test
+    @DisplayName("resolveDimensionsFiltre: seleccionar una CONSELLERIA al filtre del dashboard filtra per ORGAN_GESTOR incloent-hi els òrgans descendents")
+    void resolveDimensionsFiltre_quanFiltreSeleccioEsConselleria_llavorsFiltraPerOrganGestorAmbDescendents() {
+        // Arrange
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+
+        DimensioEntity dimensioConselleria = new DimensioEntity();
+        dimensioConselleria.setCodi("CONS");
+        dimensioConselleria.setTipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum.CONSELLERIA);
+        when(dimensioRepository.findByCodiAndEntornAppId("CONS", 1L)).thenReturn(Optional.of(dimensioConselleria));
+
+        DimensioEntity dimensioOrgan = new DimensioEntity();
+        dimensioOrgan.setCodi("ORG");
+        dimensioOrgan.setTipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum.ORGAN_GESTOR);
+        when(dimensioRepository.findByEntornAppIdAndTipus(1L, es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum.ORGAN_GESTOR))
+            .thenReturn(Optional.of(dimensioOrgan));
+
+        UnitatOrganitzativaEntity conselleria = mock(UnitatOrganitzativaEntity.class);
+        when(unitatOrganitzativaRepository.findByCodiIn(List.of("CONS_A"))).thenReturn(List.of(conselleria));
+        when(organitzativaTreeHelper.getDescendentsIElMateix(List.of(conselleria)))
+            .thenReturn(new LinkedHashSet<>(List.of("CONS_A", "ORG_FILL_1", "ORG_FILL_2")));
+
+        DashboardFiltreSeleccio filtreSeleccio = DashboardFiltreSeleccio.builder()
+            .dimensions(Map.of("CONS", List.of("CONS_A")))
+            .build();
+
+        // Act
+        @SuppressWarnings("unchecked")
+        Map<String, List<String>> result = (Map<String, List<String>>) ReflectionTestUtils.invokeMethod(
+            consultaEstadisticaHelper, "resolveDimensionsFiltre", widget, 1L, filtreSeleccio);
+
+        // Assert
+        assertThat(result).containsOnlyKeys("ORG");
+        assertThat(result.get("ORG")).containsExactlyInAnyOrder("CONS_A", "ORG_FILL_1", "ORG_FILL_2");
+    }
+
+    @Test
+    @DisplayName("resolveDimensionsFiltre: ignora la selecció de CONSELLERIA si l'app no té cap dimensió ORGAN_GESTOR configurada")
+    void resolveDimensionsFiltre_quanAppNoTeDimensioOrganGestor_llavorsIgnoraSeleccio() {
+        // Arrange
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+
+        DimensioEntity dimensioConselleria = new DimensioEntity();
+        dimensioConselleria.setCodi("CONS");
+        dimensioConselleria.setTipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum.CONSELLERIA);
+        when(dimensioRepository.findByCodiAndEntornAppId("CONS", 1L)).thenReturn(Optional.of(dimensioConselleria));
+        when(dimensioRepository.findByEntornAppIdAndTipus(1L, es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum.ORGAN_GESTOR))
+            .thenReturn(Optional.empty());
+
+        DashboardFiltreSeleccio filtreSeleccio = DashboardFiltreSeleccio.builder()
+            .dimensions(Map.of("CONS", List.of("CONS_A")))
+            .build();
+
+        // Act
+        @SuppressWarnings("unchecked")
+        Map<String, List<String>> result = (Map<String, List<String>>) ReflectionTestUtils.invokeMethod(
+            consultaEstadisticaHelper, "resolveDimensionsFiltre", widget, 1L, filtreSeleccio);
+
+        // Assert
+        assertThat(result).isEmpty();
+        verify(unitatOrganitzativaRepository, never()).findByCodiIn(any());
+    }
+
+    @Test
+    @DisplayName("resolveDimensionsFiltre: una dimensió que no és d'unitat organitzativa es filtra pel codi exacte, sense expandir descendents")
+    void resolveDimensionsFiltre_quanDimensioNoEsUnitatOrganitzativa_llavorsFiltraPerCodiExacte() {
+        // Arrange
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+
+        DimensioEntity dimensioEntitat = new DimensioEntity();
+        dimensioEntitat.setCodi("ENT");
+        dimensioEntitat.setTipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum.ENTITAT);
+        when(dimensioRepository.findByCodiAndEntornAppId("ENT", 1L)).thenReturn(Optional.of(dimensioEntitat));
+
+        DashboardFiltreSeleccio filtreSeleccio = DashboardFiltreSeleccio.builder()
+            .dimensions(Map.of("ENT", List.of("ENTITAT_A")))
+            .build();
+
+        // Act
+        @SuppressWarnings("unchecked")
+        Map<String, List<String>> result = (Map<String, List<String>>) ReflectionTestUtils.invokeMethod(
+            consultaEstadisticaHelper, "resolveDimensionsFiltre", widget, 1L, filtreSeleccio);
+
+        // Assert
+        assertThat(result).containsEntry("ENT", List.of("ENTITAT_A"));
+        verify(organitzativaTreeHelper, never()).getDescendentsIElMateix(anyList());
+    }
+
+    @Test
     @DisplayName("ensureAtributsVisualsType: retorna null quan el widget és d'un tipus desconegut")
     void ensureAtributsVisualsType_quanWidgetDesconegut_llavorsRetornaNull() {
         // Arrange
@@ -880,6 +969,53 @@ class ConsultaEstadisticaHelperTest {
 
         // Assert
         assertThat(result).isInstanceOf(InformeWidgetGraficItem.class);
+    }
+
+    @Test
+    @DisplayName("getDadesWidget: el filtre de capçalera del dashboard manté el tipus de període del widget, "
+        + "però limitat al període configurat al filtre, en lloc de sobreescriure'l completament")
+    void getDadesWidget_quanFiltreCapcaleraAmbPeriodeMesCurtQueElWidget_llavorsLimitaAlPeriodeDelFiltre() {
+        // Arrange
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setId(1L);
+        item.setEntornId(1L);
+
+        EstadisticaGraficWidgetEntity widget = new EstadisticaGraficWidgetEntity();
+        widget.setTipusDades(TipusGraficDataEnum.UN_INDICADOR);
+        widget.setTempsAgrupacio(PeriodeUnitat.DIA);
+        widget.setPeriodeMode(PeriodeMode.PRESET);
+        widget.setPresetPeriode(PresetPeriode.DARRERS_30_DIES);
+        IndicadorTaulaEntity ind = new IndicadorTaulaEntity();
+        ReflectionTestUtils.setField(ind, "titol", "Titol");
+        ReflectionTestUtils.setField(ind, "indicador", new IndicadorEntity() {{ setCodi("c"); }});
+        widget.setIndicadorsInfo(Collections.singletonList(ind));
+        item.setWidget(widget);
+
+        LocalDate filtreInici = LocalDate.of(2026, 6, 1);
+        LocalDate filtreFi = LocalDate.of(2026, 6, 5); // 5 dies, menys que els 30 configurats al widget
+        es.caib.comanda.estadistica.logic.intf.model.periode.Periode filtrePeriode =
+            es.caib.comanda.estadistica.logic.intf.model.periode.Periode.builder()
+                .periodeMode(PeriodeMode.ABSOLUT)
+                .absolutTipus(es.caib.comanda.estadistica.logic.intf.model.periode.PeriodeAbsolutTipus.DATE_RANGE)
+                .absolutDataInici(filtreInici)
+                .absolutDataFi(filtreFi)
+                .build();
+        DashboardFiltreSeleccio filtreSeleccio = DashboardFiltreSeleccio.builder().periode(filtrePeriode).build();
+
+        when(dashboardItemRepository.findById(1L)).thenReturn(Optional.of(item));
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(any(), any())).thenReturn(EntornApp.builder().id(1L).entorn(EntornRef.builder().id(1L).build()).build());
+        when(estadisticaClientHelper.entornById(any())).thenReturn(Entorn.builder().codi("DEV").build());
+        when(fetRepository.getValorsGraficUnIndicador(any(), any(), any(), any(), any(), any(), any())).thenReturn(Collections.emptyList());
+
+        // Act
+        consultaEstadisticaHelper.getDadesWidget(item, false, filtreSeleccio);
+
+        // Assert: com que "darrers 30 dies" no hi càpiguen, s'agafa el període sencer del filtre (5 dies)
+        ArgumentCaptor<LocalDate> iniciCaptor = ArgumentCaptor.forClass(LocalDate.class);
+        ArgumentCaptor<LocalDate> fiCaptor = ArgumentCaptor.forClass(LocalDate.class);
+        verify(fetRepository).getValorsGraficUnIndicador(any(), iniciCaptor.capture(), fiCaptor.capture(), any(), any(), any(), any());
+        assertThat(iniciCaptor.getValue()).isEqualTo(filtreInici);
+        assertThat(fiCaptor.getValue()).isEqualTo(filtreFi);
     }
 
     @Test

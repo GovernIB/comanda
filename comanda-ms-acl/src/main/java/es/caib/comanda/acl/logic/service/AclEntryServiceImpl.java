@@ -59,7 +59,7 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
     }
 
     @Override
-    @Cacheable(value = HazelCastCacheConfig.ACL_HAS_PERMISSION_CACHE, key = "#resourceType?.name() + '_' + #resourceId?.toString() + '_' + (#permissions) + '_' + #user")
+    @Cacheable(value = HazelCastCacheConfig.ACL_HAS_PERMISSION_CACHE, key = "#resourceType?.name() + '_' + #resourceId?.toString() + '_' + (#permissions) + '_' + #user + '_' + (#roles)")
 	public boolean anyPermissionGranted(
 			ResourceType resourceType,
 			Serializable resourceId,
@@ -78,7 +78,7 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 	}
 
 	@Override
-    @Cacheable(value = HazelCastCacheConfig.ACL_IDS_WITH_PERMISSION_CACHE, key = "#resourceType?.name() + '_' + (#permissions) + '_' + #user")
+    @Cacheable(value = HazelCastCacheConfig.ACL_IDS_WITH_PERMISSION_CACHE, key = "#resourceType?.name() + '_' + (#permissions) + '_' + #user + '_' + (#roles)")
 	public Set<Serializable> findIdsWithAnyPermission(
 			ResourceType resourceType,
 			List<PermissionEnum> permissions,

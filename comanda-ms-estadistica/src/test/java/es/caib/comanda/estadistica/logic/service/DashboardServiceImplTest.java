@@ -3,6 +3,7 @@ package es.caib.comanda.estadistica.logic.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.AclServiceClient;
+import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.logic.helper.AtributsVisualsHelper;
 import es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper;
 import es.caib.comanda.estadistica.logic.helper.DashboardHelper;
@@ -26,10 +27,12 @@ import es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper;
 import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
+import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardPreferitEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
+import es.caib.comanda.estadistica.persist.repository.DashboardPreferitRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardTitolRepository;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
@@ -51,8 +54,11 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import es.caib.comanda.client.model.App;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -72,6 +78,7 @@ class DashboardServiceImplTest {
     @Mock private DashboardRepository dashboardRepository;
     @Mock private DashboardItemRepository dashboardItemRepository;
     @Mock private DashboardTitolRepository dashboardTitolRepository;
+    @Mock private DashboardPreferitRepository dashboardPreferitRepository;
     @Mock private EstadisticaClientHelper estadisticaClientHelper;
     @Mock private AtributsVisualsHelper atributsVisualsHelper;
     @Mock private DashboardExportMapper dashboardExportMapper;
@@ -85,14 +92,26 @@ class DashboardServiceImplTest {
     @Mock private AuthenticationHelper authenticationHelper;
     @Mock private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     @Mock private AclServiceClient aclServiceClient;
+    @Mock private es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper dashboardPermisosHelper;
 
     @InjectMocks
     private DashboardServiceImpl dashboardService;
 
     @BeforeEach
     void setUp() {
+        dashboardPermisosHelper = org.mockito.Mockito.spy(new es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper(
+            authenticationHelper,
+            httpAuthorizationHeaderHelper,
+            aclServiceClient,
+            dashboardRepository,
+            estadisticaClientHelper
+        ));
+        ReflectionTestUtils.setField(dashboardService, "dashboardPermisosHelper", dashboardPermisosHelper);
         ReflectionTestUtils.setField(dashboardService, "entityRepository", dashboardRepository);
         dashboardService.init();
+        lenient().when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
+        lenient().when(authenticationHelper.getCurrentUserName()).thenReturn("testUser");
+        lenient().when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"ROLE_USER"});
     }
 
     /**
@@ -124,6 +143,22 @@ class DashboardServiceImplTest {
         java.lang.reflect.Constructor<?> constructor = executorClass.getDeclaredConstructor(DashboardServiceImpl.class);
         constructor.setAccessible(true);
         return (DashboardServiceImpl.DashboardImportActionExecutor) constructor.newInstance(dashboardService);
+    }
+
+    @SuppressWarnings("unchecked")
+    private DashboardServiceImpl.PreferitUsuariActualPerspective createPreferitUsuariActualPerspective() throws Exception {
+        Class<?> perspectiveClass = Class.forName("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl$PreferitUsuariActualPerspective");
+        java.lang.reflect.Constructor<?> constructor = perspectiveClass.getDeclaredConstructor(DashboardServiceImpl.class);
+        constructor.setAccessible(true);
+        return (DashboardServiceImpl.PreferitUsuariActualPerspective) constructor.newInstance(dashboardService);
+    }
+
+    @SuppressWarnings("unchecked")
+    private DashboardServiceImpl.MarcarPreferitActionExecutor createMarcarPreferitActionExecutor() throws Exception {
+        Class<?> executorClass = Class.forName("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl$MarcarPreferitActionExecutor");
+        java.lang.reflect.Constructor<?> constructor = executorClass.getDeclaredConstructor(DashboardServiceImpl.class);
+        constructor.setAccessible(true);
+        return (DashboardServiceImpl.MarcarPreferitActionExecutor) constructor.newInstance(dashboardService);
     }
 
     // ==========================================
@@ -723,7 +758,7 @@ class DashboardServiceImplTest {
 
         List<DashboardExport> exports = Arrays.asList(new DashboardExport(), new DashboardExport());
 
-        when(dashboardRepository.findAll()).thenReturn(entities);
+        when(dashboardRepository.findAll(nullable(Specification.class))).thenReturn(entities);
         when(dashboardExportMapper.toDashboardExport(entities, estadisticaClientHelper, atributsVisualsHelper))
                 .thenReturn(exports);
 
@@ -731,7 +766,7 @@ class DashboardServiceImplTest {
         List<DashboardExport> result = reportGenerator.generateData(Dashboard.DASHBOARD_EXPORT, null, null);
 
         assertThat(result).hasSize(2);
-        verify(dashboardRepository).findAll();
+        verify(dashboardRepository).findAll(nullable(Specification.class));
         verify(dashboardExportMapper).toDashboardExport(entities, estadisticaClientHelper, atributsVisualsHelper);
     }
 
@@ -740,13 +775,83 @@ class DashboardServiceImplTest {
     // ==========================================
 
     @Test
-    @DisplayName("beforeUpdateEntity delega a dashboardHelper")
+    @DisplayName("beforeUpdateEntity delega a dashboardHelper quan és admin")
     void beforeUpdateEntity_delegaAHelper() throws Exception {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
         DashboardEntity entity = new DashboardEntity();
         Dashboard resource = new Dashboard();
         Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
         ReflectionTestUtils.invokeMethod(dashboardService, "beforeUpdateEntity", entity, resource, answers);
         verify(dashboardHelper).beforeUpdateEntityLogic(entity, resource, answers);
+    }
+
+    @Test
+    @DisplayName("beforeCreateEntity: permet crear quan és ADMIN")
+    void beforeCreateEntity_quanAdmin_permetCrear() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        DashboardEntity entity = new DashboardEntity();
+        Dashboard resource = new Dashboard();
+        resource.setAppId(1L);
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+
+        ReflectionTestUtils.invokeMethod(dashboardService, "beforeCreateEntity", entity, resource, answers);
+    }
+
+    @Test
+    @DisplayName("beforeCreateEntity: llança AccessDeniedException quan no té permisos de disseny")
+    void beforeCreateEntity_quanSensePermisos_llancaAccessDeniedException() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("user");
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"ROLE_USER"});
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("auth");
+        when(aclServiceClient.anyPermissionGranted(any(), any(), any(), any(), any(), any()))
+            .thenReturn(ResponseEntity.ok(false));
+
+        DashboardEntity entity = new DashboardEntity();
+        Dashboard resource = new Dashboard();
+        resource.setAppId(1L);
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(dashboardService, "beforeCreateEntity", entity, resource, answers))
+            .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
+    }
+
+    @Test
+    @DisplayName("beforeUpdateEntity: llança AccessDeniedException quan no té permisos de disseny")
+    void beforeUpdateEntity_quanSensePermisos_llancaAccessDeniedException() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("user");
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"ROLE_USER"});
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("auth");
+        when(aclServiceClient.anyPermissionGranted(any(), any(), any(), any(), any(), any()))
+            .thenReturn(ResponseEntity.ok(false));
+
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(10L);
+        entity.setAppId(1L);
+        Dashboard resource = new Dashboard();
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(dashboardService, "beforeUpdateEntity", entity, resource, answers))
+            .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
+    }
+
+    @Test
+    @DisplayName("beforeDelete: llança AccessDeniedException quan no té permisos de disseny")
+    void beforeDelete_quanSensePermisos_llancaAccessDeniedException() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("user");
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"ROLE_USER"});
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("auth");
+        when(aclServiceClient.anyPermissionGranted(any(), any(), any(), any(), any(), any()))
+            .thenReturn(ResponseEntity.ok(false));
+
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(10L);
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(dashboardService, "beforeDelete", entity, answers))
+            .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
     }
 
     @Test
@@ -786,7 +891,7 @@ class DashboardServiceImplTest {
 
         try (MockedStatic<SpringFilterHelper> mockedStatic = mockStatic(SpringFilterHelper.class)) {
             mockedStatic.when(() -> SpringFilterHelper.buildOrFilter(anyString(), any())).thenReturn("");
-            mockedStatic.when(() -> SpringFilterHelper.or(anyString(), anyString(), anyString())).thenReturn("");
+            mockedStatic.when(() -> SpringFilterHelper.or(any(), any(), any())).thenReturn("");
             mockedStatic.when(() -> SpringFilterHelper.and(eq("current"), eq("id:0"))).thenReturn("current AND id:0");
 
             String result = ReflectionTestUtils.invokeMethod(dashboardService, "additionalSpringFilter", "current", new String[]{});
@@ -858,6 +963,7 @@ class DashboardServiceImplTest {
     @Test
     @DisplayName("DashboardImport: exec importa dashboards correctament")
     void dashboardImport_exec_importaCorrectament() throws Exception {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
         DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
 
         String json = "[{\"titol\":\"Titol\"}]";
@@ -939,6 +1045,7 @@ class DashboardServiceImplTest {
     @Test
     @DisplayName("DashboardImport: exec amb objecte JSON únic importa correctament")
     void dashboardImport_exec_ambObjecteUnic_importaCorrectament() throws Exception {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
         DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
         ObjectMapper realMapper = new ObjectMapper();
         ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
@@ -1008,4 +1115,186 @@ class DashboardServiceImplTest {
 
         ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
     }
+
+    @Test
+    @DisplayName("PreferitUsuariActualPerspective: applySingle marca esPreferit=true quan existeix")
+    void preferitPerspective_applySingle_esPreferitTrue() throws Exception {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        Dashboard resource = new Dashboard();
+
+        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari_test");
+        when(dashboardPreferitRepository.existsByUsuariCodiAndDashboardId("usuari_test", 1L)).thenReturn(true);
+
+        DashboardServiceImpl.PreferitUsuariActualPerspective perspective = createPreferitUsuariActualPerspective();
+        perspective.applySingle("test_code", entity, resource);
+
+        assertThat(resource.isEsPreferit()).isTrue();
+    }
+
+    @Test
+    @DisplayName("PreferitUsuariActualPerspective: applySingle marca esPreferit=false quan no existeix")
+    void preferitPerspective_applySingle_esPreferitFalse() throws Exception {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        Dashboard resource = new Dashboard();
+
+        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari_test");
+        when(dashboardPreferitRepository.existsByUsuariCodiAndDashboardId("usuari_test", 1L)).thenReturn(false);
+
+        DashboardServiceImpl.PreferitUsuariActualPerspective perspective = createPreferitUsuariActualPerspective();
+        perspective.applySingle("test_code", entity, resource);
+
+        assertThat(resource.isEsPreferit()).isFalse();
+    }
+
+    @Test
+    @DisplayName("PreferitUsuariActualPerspective: applyMultiple aplica la lògica a tots els elements")
+    void preferitPerspective_applyMultiple_aplicaCorrectament() throws Exception {
+        DashboardEntity entity1 = new DashboardEntity(); entity1.setId(1L);
+        DashboardEntity entity2 = new DashboardEntity(); entity2.setId(2L);
+        Dashboard resource1 = new Dashboard();
+        Dashboard resource2 = new Dashboard();
+
+        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari_test");
+        when(dashboardPreferitRepository.existsByUsuariCodiAndDashboardId("usuari_test", 1L)).thenReturn(true);
+        when(dashboardPreferitRepository.existsByUsuariCodiAndDashboardId("usuari_test", 2L)).thenReturn(false);
+
+        DashboardServiceImpl.PreferitUsuariActualPerspective perspective = createPreferitUsuariActualPerspective();
+        boolean result = perspective.applyMultiple("test_code", List.of(entity1, entity2), List.of(resource1, resource2));
+
+        assertThat(result).isTrue();
+        assertThat(resource1.isEsPreferit()).isTrue();
+        assertThat(resource2.isEsPreferit()).isFalse();
+    }
+
+    @Test
+    @DisplayName("MarcarPreferitActionExecutor: exec afegeix un preferit quan no existia")
+    void marcarPreferit_exec_afegeixQuanNoExisteix() throws Exception {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        DashboardServiceImpl.MarcarPreferitParams params = new DashboardServiceImpl.MarcarPreferitParams();
+        params.setMarcar(true);
+
+        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari_test");
+        when(dashboardPreferitRepository.existsByUsuariCodiAndDashboardId("usuari_test", 1L)).thenReturn(false);
+
+        DashboardServiceImpl.MarcarPreferitActionExecutor executor = createMarcarPreferitActionExecutor();
+        Boolean result = executor.exec("marcar_preferit", entity, params);
+
+        assertThat(result).isTrue();
+        verify(dashboardPreferitRepository).save(argThat(preferit ->
+            preferit.getUsuariCodi().equals("usuari_test") && preferit.getDashboard().equals(entity)
+        ));
+        verify(dashboardPreferitRepository, never()).deleteByUsuariCodiAndDashboardId(anyString(), anyLong());
+    }
+
+    @Test
+    @DisplayName("MarcarPreferitActionExecutor: exec esborra un preferit quan existia")
+    void marcarPreferit_exec_esborraQuanExisteix() throws Exception {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        DashboardServiceImpl.MarcarPreferitParams params = new DashboardServiceImpl.MarcarPreferitParams();
+        params.setMarcar(false);
+
+        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari_test");
+        when(dashboardPreferitRepository.existsByUsuariCodiAndDashboardId("usuari_test", 1L)).thenReturn(true);
+
+        DashboardServiceImpl.MarcarPreferitActionExecutor executor = createMarcarPreferitActionExecutor();
+        Boolean result = executor.exec("marcar_preferit", entity, params);
+
+        assertThat(result).isFalse();
+        verify(dashboardPreferitRepository).deleteByUsuariCodiAndDashboardId("usuari_test", 1L);
+        verify(dashboardPreferitRepository, never()).save(any(DashboardPreferitEntity.class));
+    }
+
+    @Test
+    @DisplayName("MarcarPreferitActionExecutor: exec és idempotent (no fa res si ja està en l'estat desitjat: marcar)")
+    void marcarPreferit_exec_idempotentJaMarcats() throws Exception {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        DashboardServiceImpl.MarcarPreferitParams params = new DashboardServiceImpl.MarcarPreferitParams();
+        params.setMarcar(true);
+
+        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari_test");
+        when(dashboardPreferitRepository.existsByUsuariCodiAndDashboardId("usuari_test", 1L)).thenReturn(true);
+
+        DashboardServiceImpl.MarcarPreferitActionExecutor executor = createMarcarPreferitActionExecutor();
+        Boolean result = executor.exec("marcar_preferit", entity, params);
+
+        assertThat(result).isTrue();
+        verify(dashboardPreferitRepository, never()).save(any(DashboardPreferitEntity.class));
+        verify(dashboardPreferitRepository, never()).deleteByUsuariCodiAndDashboardId(anyString(), anyLong());
+    }
+
+    @Test
+    @DisplayName("MarcarPreferitActionExecutor: exec és idempotent (no fa res si ja està en l'estat desitjat: desmarcar)")
+    void marcarPreferit_exec_idempotentJaDesmarcats() throws Exception {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        DashboardServiceImpl.MarcarPreferitParams params = new DashboardServiceImpl.MarcarPreferitParams();
+        params.setMarcar(false);
+
+        when(authenticationHelper.getCurrentUserName()).thenReturn("usuari_test");
+        when(dashboardPreferitRepository.existsByUsuariCodiAndDashboardId("usuari_test", 1L)).thenReturn(false);
+
+        DashboardServiceImpl.MarcarPreferitActionExecutor executor = createMarcarPreferitActionExecutor();
+        Boolean result = executor.exec("marcar_preferit", entity, params);
+
+        assertThat(result).isFalse();
+        verify(dashboardPreferitRepository, never()).save(any(DashboardPreferitEntity.class));
+        verify(dashboardPreferitRepository, never()).deleteByUsuariCodiAndDashboardId(anyString(), anyLong());
+    }
+
+    @Test
+    @DisplayName("DashboardImport: exec llança AccessDeniedException si l'usuari no té permisos a l'app destí")
+    void dashboardImport_exec_quanSensePermisos_llancaAccessDeniedException() throws Exception {
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+
+        String json = "[{\"titol\":\"Titol\",\"appCodi\":\"APP_PROTECTED\"}]";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.DashboardImportParams params = new DashboardServiceImpl.DashboardImportParams();
+        params.setFile(fileRef);
+
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        App protectedApp = new App();
+        ReflectionTestUtils.setField(protectedApp, "id", 99L);
+        when(estadisticaClientHelper.appFindByCodi("APP_PROTECTED")).thenReturn(protectedApp);
+        when(aclServiceClient.anyPermissionGranted(any(), eq(99L), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(false));
+
+        assertThatThrownBy(() -> executor.exec(Dashboard.DASHBOARD_IMPORT, new DashboardEntity(), params))
+                .isInstanceOf(AccessDeniedException.class);
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
+    @DisplayName("beforeUpdateEntity llança AccessDeniedException si es canvia d'aplicació sense permisos a la destí")
+    void beforeUpdateEntity_quanCanviarAppSensePermis_llancaAccessDeniedException() throws Exception {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        entity.setAppId(10L);
+
+        Dashboard resource = new Dashboard();
+        resource.setAppId(20L);
+
+        // Permís de disseny sobre el dashboard actual 1
+        when(aclServiceClient.anyPermissionGranted(eq(ResourceType.DASHBOARD), eq(1L), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(true));
+        // Sense permís sobre la nova app 20
+        when(aclServiceClient.anyPermissionGranted(eq(ResourceType.APP), eq(20L), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(false));
+
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(dashboardService, "beforeUpdateEntity", entity, resource, Collections.emptyMap()))
+                .isInstanceOf(AccessDeniedException.class);
+    }
+
 }

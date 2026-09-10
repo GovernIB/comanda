@@ -411,6 +411,19 @@ const translationEs: translationResourcesType = {
             title: "Cuadros de control",
             view: {
                 largeScreenModeFit: "Escalar para ajustarse a la pantalla",
+                selector: {
+                    loading: "Cargando...",
+                    seeAll: "Ver todos los paneles de control",
+                },
+                favorite: {
+                    added: "Añadido a favoritos",
+                    removed: "Eliminado de favoritos",
+                },
+                columns: {
+                    titol: "Título",
+                    descripcio: "Descripción",
+                    esPreferit: "Favorito",
+                },
             },
             editor: {
                 errorAlert: {
@@ -511,7 +524,7 @@ const translationEs: translationResourcesType = {
                 notExists: "El panel de control no existe.",
                 notDefined: "No hay ningún panel de control definido.",
                 carregar: "Error al cargar el panel de control.",
-            }
+            },
         },
         tasques: {
             filter: {
@@ -764,7 +777,7 @@ const translationEs: translationResourcesType = {
             title: "Entornos",
             resourceTitle: "entorno",
             acl: {
-                readAllowed: "Salud",
+                perm2Allowed: "Salud",
                 perm0Allowed: "Consulta de paneles de control",
                 perm1Allowed: "Diseño de paneles de control",
             },

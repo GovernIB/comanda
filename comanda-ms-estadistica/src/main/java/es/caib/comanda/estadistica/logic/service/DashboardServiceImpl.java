@@ -1,8 +1,6 @@
 package es.caib.comanda.estadistica.logic.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import es.caib.comanda.base.config.BaseConfig;
-import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.logic.helper.*;
@@ -11,6 +9,7 @@ import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetItem;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetTitolItem;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
+import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardPreferit;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardTitolTipus;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.OverwriteEnum;
 import es.caib.comanda.estadistica.logic.intf.model.export.DashboardExport;
@@ -22,17 +21,18 @@ import es.caib.comanda.estadistica.logic.intf.validation.ValidConflict;
 import es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper;
 import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
+import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardPreferitEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.estadistica.persist.repository.*;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
-import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
 import es.caib.comanda.ms.logic.intf.exception.*;
 import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
 import es.caib.comanda.ms.logic.intf.model.FileReference;
 import es.caib.comanda.ms.logic.intf.model.ReportFileType;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
+import org.springframework.security.access.AccessDeniedException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -83,11 +83,11 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     private final DashboardFiltreRepository dashboardFiltreRepository;
     private final PlantillaRepository plantillaRepository;
     private final EstadisticaWidgetRepository estadisticaWidgetRepository;
+    private final DashboardPreferitRepository dashboardPreferitRepository;
     private final DashboardStyleResolverHelper dashboardStyleResolverHelper;
     private final DashboardImportHelper dashboardImportHelper;
     private final AuthenticationHelper authenticationHelper;
-    private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
-    private final AclServiceClient aclServiceClient;
+    private final DashboardPermisosHelper dashboardPermisosHelper;
     private final DashboardItemTitolHelper dashboardItemTitolHelper;
 
     @Getter
@@ -107,32 +107,35 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     @PostConstruct
     public void init() {
         register(Dashboard.PERSP_PERMIS_NUM, new PermisPerspective());
+        register(Dashboard.PERSP_PREFERIT_USUARI_ACTUAL, new PreferitUsuariActualPerspective());
         register(Dashboard.WIDGETS_REPORT, new InformeWidgets());
         register(Dashboard.DASHBOARD_EXPORT, new DashboardExportReportGenerator());
         register(Dashboard.DASHBOARD_IMPORT, new DashboardImportActionExecutor());
-        register(Dashboard.CLONE_ACTION, (ActionExecutor<DashboardEntity, ?, ?>) new DashboardHelper.CloneDashboardAction(estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, dashboardFiltreRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper, atributsVisualsHelper));
-        register(Dashboard.CLONE_AND_ADD_WIDGET_ACTION, new DashboardHelper.CloneAndAddWidgetAction(estadisticaClientHelper, dashboardItemRepository, estadisticaWidgetRepository, dashboardClonerMapper, dashboardItemTitolHelper, atributsVisualsHelper));
+        register(Dashboard.CLONE_ACTION, (ActionExecutor<DashboardEntity, ?, ?>) new DashboardHelper.CloneDashboardAction(estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, dashboardFiltreRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper, atributsVisualsHelper, dashboardPermisosHelper));
+        register(Dashboard.CLONE_AND_ADD_WIDGET_ACTION, new DashboardHelper.CloneAndAddWidgetAction(estadisticaClientHelper, dashboardItemRepository, estadisticaWidgetRepository, dashboardClonerMapper, dashboardItemTitolHelper, atributsVisualsHelper, dashboardPermisosHelper));
+        register(Dashboard.MARCAR_PREFERIT_ACTION, new MarcarPreferitActionExecutor());
     }
 
     @Override
     protected String additionalSpringFilter(
         String currentSpringFilter,
         String[] namedQueries) {
-        if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
-            || authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
+        if (dashboardPermisosHelper.isAdminOrConsulta()) {
             return currentSpringFilter;
         }
-        List<String> namedQueriesList = namedQueries!= null ? List.of(namedQueries) :Collections.emptyList();
-        Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP,
-            namedQueriesList.contains("WRITE") ?List.of(PermissionEnum.PERM1) :List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
+        List<String> namedQueriesList = namedQueries != null ? List.of(namedQueries) : Collections.emptyList();
+        boolean isWrite = namedQueriesList.contains("WRITE");
+
+        Set<Serializable> appPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.APP,
+            isWrite ? List.of(PermissionEnum.PERM1) : List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
         String appFilter = SpringFilterHelper.buildOrFilter("appId", appPermissionIds);
 
-        Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP,
-            namedQueriesList.contains("WRITE") ?List.of(PermissionEnum.PERM1) :List.of(PermissionEnum.PERM0, PermissionEnum.PERM1) );
-        String entornAppFilter = SpringFilterHelper.buildOrFilter("entornId", entornAppPermissionIds);
+        Set<Serializable> entornAppPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.ENTORN_APP,
+            isWrite ? List.of(PermissionEnum.PERM1) : List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
+        String entornAppFilter = dashboardPermisosHelper.buildEntornAppFilter(entornAppPermissionIds, null);
 
-        Set<Serializable> dashboardPermissionIds = getAllowedIds(ResourceType.DASHBOARD,
-            namedQueriesList.contains("WRITE") ?List.of(PermissionEnum.WRITE) :List.of(PermissionEnum.READ, PermissionEnum.WRITE));
+        Set<Serializable> dashboardPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.DASHBOARD,
+            isWrite ? List.of(PermissionEnum.WRITE) : List.of(PermissionEnum.READ, PermissionEnum.WRITE));
         String dashboardFilter = SpringFilterHelper.buildOrFilter("id", dashboardPermissionIds);
 
         String filter = SpringFilterHelper.or(
@@ -149,29 +152,45 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
         );
     }
 
-    public Set<Serializable> getAllowedIds(ResourceType resourceType, List<PermissionEnum> permissions) {
-        return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
-                resourceType,
-                permissions,
-                authenticationHelper.getCurrentUserName(),
-                Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
-                httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
-            .orElse(Collections.emptySet());
-    }
-
     @Override
     protected void completeResource(Dashboard resource) {
         dashboardHelper.completeResourceLogic(resource);
     }
 
     @Override
+    protected void beforeCreateEntity(DashboardEntity entity, Dashboard resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        Long appId = resource.getAplicacio() != null ? resource.getAplicacio().getId() : resource.getAppId();
+        Long entornId = resource.getEntorn() != null ? resource.getEntorn().getId() : resource.getEntornId();
+        dashboardPermisosHelper.checkCanCreate(appId, entornId, "No teniu permisos de disseny per crear quadres de control per a aquesta aplicació/entorn");
+    }
+
+    @Override
     protected void beforeUpdateEntity(DashboardEntity entity, Dashboard resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
+        dashboardPermisosHelper.checkCanDesign(entity.getId(), entity.getAppId(), entity.getEntornId(), "No teniu permisos de disseny per modificar aquest quadre de control");
+        Long newAppId = resource.getAplicacio() != null ? resource.getAplicacio().getId() : (resource.getAppId() != null ? resource.getAppId() : entity.getAppId());
+        Long newEntornId = resource.getEntorn() != null ? resource.getEntorn().getId() : (resource.getEntornId() != null ? resource.getEntornId() : entity.getEntornId());
+        if (!Objects.equals(newAppId, entity.getAppId()) || !Objects.equals(newEntornId, entity.getEntornId())) {
+            dashboardPermisosHelper.checkCanCreate(newAppId, newEntornId, "No teniu permisos de disseny per moure aquest quadre de control a l'aplicació/entorn de destí");
+        }
         dashboardHelper.beforeUpdateEntityLogic(entity, resource, answers);
+    }
+
+    @Override
+    protected void beforeDelete(DashboardEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        dashboardPermisosHelper.checkCanDesign(entity.getId(), entity.getAppId(), entity.getEntornId(), "No teniu permisos de disseny per eliminar aquest quadre de control");
     }
 
     @Override
     protected void afterConversion(DashboardEntity entity, Dashboard resource) {
         dashboardHelper.afterConversionLogic(entity, resource);
+    }
+
+    @Override
+    protected String namedFilterToSpringFilter(String name) {
+        if (Dashboard.NAMED_FILTER_PREFERIT_USUARI_ACTUAL.equals(name)) {
+            return "exists(" + DashboardEntity.Fields.preferits + "." + DashboardPreferit.Fields.usuariCodi + ":'" + authenticationHelper.getCurrentUserName() + "')";
+        }
+        return null;
     }
 
     private DashboardEntity getDashboard(String code, DashboardEntity entity) {
@@ -301,11 +320,28 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     public class PermisPerspective implements PerspectiveApplicator<DashboardEntity, Dashboard> {
         @Override
         public void applySingle(String code, DashboardEntity entity, Dashboard resource) throws PerspectiveApplicationException {
-            resource.setNumPermisos(
-                Optional.ofNullable(aclServiceClient
-                        .countSidsWithPermission(ResourceType.DASHBOARD, entity.getId(),
-                            httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
-                    .orElse(0));
+            resource.setNumPermisos(dashboardPermisosHelper.countSidsWithPermission(ResourceType.DASHBOARD, entity.getId()));
+        }
+    }
+
+    /** Perspectiva per indicar si el dashboard actual és preferit per l'usuari en sessió. */
+    public class PreferitUsuariActualPerspective implements PerspectiveApplicator<DashboardEntity, Dashboard> {
+        @Override
+        public void applySingle(String code, DashboardEntity entity, Dashboard resource) throws PerspectiveApplicationException {
+            logicaEsPreferit(entity, resource, authenticationHelper.getCurrentUserName());
+        }
+
+        @Override
+        public boolean applyMultiple(String code, List<DashboardEntity> entities, List<Dashboard> resources) throws PerspectiveApplicationException {
+            String usuariCodi = authenticationHelper.getCurrentUserName();
+            for (int i= 0; i < entities.size(); i++) {
+                logicaEsPreferit(entities.get(i), resources.get(i), usuariCodi);
+            }
+            return true;
+        }
+
+        private void logicaEsPreferit(DashboardEntity entity, Dashboard resource, String usuariCodi) {
+            resource.setEsPreferit(dashboardPreferitRepository.existsByUsuariCodiAndDashboardId(usuariCodi, entity.getId()));
         }
     }
 
@@ -323,13 +359,15 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                 dashboard.setIndicadors(indicadorExportHelper.collectIndicadorExports(entity));
                 result.add(dashboard);
             } else {
-                // Si no s'ha especificat una entitat, exportem tots els dashboards
-                List<DashboardEntity> entities = entityRepository.findAll();
+                // Si no s'ha especificat una entitat, exportem tots els dashboards accessibles segons permisos
+                List<DashboardEntity> entities = entityRepository.findAll(toFindProcessedSpecification(null, null, null));
                 List<DashboardExport> dashboards = dashboardExportMapper.toDashboardExport(entities, estadisticaClientHelper, atributsVisualsHelper);
-                for (int i = 0; i < entities.size(); i++) {
-                    dashboards.get(i).setIndicadors(indicadorExportHelper.collectIndicadorExports(entities.get(i)));
+                if (dashboards != null) {
+                    for (int i = 0; i < entities.size(); i++) {
+                        dashboards.get(i).setIndicadors(indicadorExportHelper.collectIndicadorExports(entities.get(i)));
+                    }
+                    result.addAll(dashboards);
                 }
-                result.addAll(dashboards);
             }
 
             return result;
@@ -478,10 +516,31 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
 
                 dashboardImportHelper.validateDashboardExport(dashboards);
 
+                for (DashboardExport exp : dashboards) {
+                    Long appId = null;
+                    if (exp.getAppCodi() != null) {
+                        var app = estadisticaClientHelper.appFindByCodi(exp.getAppCodi());
+                        if (app != null) {
+                            appId = app.getId();
+                        }
+                    }
+                    Long entornId = null;
+                    if (exp.getEntornCodi() != null) {
+                        var entorn = estadisticaClientHelper.entornByCodi(exp.getEntornCodi());
+                        if (entorn != null) {
+                            entornId = entorn.getId();
+                        }
+                    }
+                    dashboardPermisosHelper.checkCanCreate(appId, entornId,
+                            "No teniu permisos de disseny per importar quadres de control a l'aplicació o entorn indicat");
+                }
+
                 List<Dashboard> importedDashboards = new ArrayList<>();
                 List<Conflict> conflicts = params.getConflicts() != null ? params.getConflicts() : Collections.emptyList();
                 dashboardImportHelper.importDashboardFromExport(dashboards, conflicts);
                 return new DashboardImportResult(importedDashboards);
+            } catch (AccessDeniedException e) {
+                throw e;
             } catch (IllegalArgumentException e) {
                 log.warn("Validation error importing dashboards from JSON: {}", e.getMessage());
                 throw new ActionExecutionException(
@@ -528,5 +587,38 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                 }
             }
         }
+    }
+
+    public class MarcarPreferitActionExecutor implements ActionExecutor<DashboardEntity, MarcarPreferitParams, Boolean> {
+        @Override
+        public Boolean exec(String code, DashboardEntity entity, MarcarPreferitParams params) throws ActionExecutionException {
+            String usuariCodi = authenticationHelper.getCurrentUserName();
+            Long dashboardId = entity.getId();
+            boolean actualmentEsPreferit = dashboardPreferitRepository.existsByUsuariCodiAndDashboardId(usuariCodi, dashboardId);
+            if (params.isMarcar() && !actualmentEsPreferit) {
+                DashboardPreferitEntity nouPreferit = new DashboardPreferitEntity();
+                nouPreferit.setUsuariCodi(usuariCodi);
+                nouPreferit.setDashboard(entity);
+                dashboardPreferitRepository.save(nouPreferit);
+                return true;
+            } else if (!params.isMarcar() && actualmentEsPreferit) {
+                dashboardPreferitRepository.deleteByUsuariCodiAndDashboardId(usuariCodi, dashboardId);
+                return false;
+            }
+            return params.isMarcar();
+        }
+
+        @Override
+        public void onChange(Serializable id, MarcarPreferitParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, MarcarPreferitParams target) {
+        }
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @FieldNameConstants
+    public static class MarcarPreferitParams implements Serializable {
+        private boolean marcar = true;
     }
 }

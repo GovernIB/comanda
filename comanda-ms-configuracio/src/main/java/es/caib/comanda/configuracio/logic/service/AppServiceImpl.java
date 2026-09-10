@@ -21,6 +21,7 @@ import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
+import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
 import es.caib.comanda.ms.logic.intf.model.FieldOption;
 import es.caib.comanda.ms.logic.intf.model.ReportFileType;
@@ -41,6 +42,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.APP_BY_CODI_CACHE;
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.APP_CACHE;
 
 /**
@@ -217,7 +219,7 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
                         }
                     }
                     // Invalidar caché
-                    cacheHelper.evictCacheItem(APP_CACHE, appEntity.getId().toString());
+                    cacheHelper.evictAppCacheItem(appEntity.getId(), appEntity.getCodi());
                     // Afegir a resultat com a recurs
                     resultResources.add(entityToResource(appEntity));
                 }
@@ -365,9 +367,17 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
     }
 
     @Override
+    protected void beforeUpdateEntity(AppEntity entity, App resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
+        super.beforeUpdateEntity(entity, resource, answers);
+        if (entity.getCodi() != null && !Objects.equals(entity.getCodi(), resource.getCodi())) {
+            cacheHelper.evictCacheItem(APP_BY_CODI_CACHE, entity.getCodi());
+        }
+    }
+
+    @Override
     protected void afterUpdateSave(AppEntity entity, App resource, Map<String, AnswerRequiredException.AnswerValue> answers, boolean anyOrderChanged) {
         super.afterUpdateSave(entity, resource, answers, anyOrderChanged);
-        cacheHelper.evictCacheItem(APP_CACHE, entity.getId().toString());
+        cacheHelper.evictAppCacheItem(entity.getId(), entity.getCodi());
         // Una app activada/desactivada afecta la visibilitat dels seus entorns-app al dashboard
         // de Salut (filtre app.activa:true), cal notificar-ho perquè es refresqui via SSE.
         eventPublisher.publishEvent(new ComandaSsePublishRequest(
@@ -377,7 +387,7 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
     @Override
     protected void afterDelete(AppEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
         super.afterDelete(entity, answers);
-        cacheHelper.evictCacheItem(APP_CACHE, entity.getId().toString());
+        cacheHelper.evictAppCacheItem(entity.getId(), entity.getCodi());
         for (EntornAppEntity entornApp : entity.getEntornApps()) {
             entornAppHelper.logicAfterDelete(entornApp.getId());
         }
