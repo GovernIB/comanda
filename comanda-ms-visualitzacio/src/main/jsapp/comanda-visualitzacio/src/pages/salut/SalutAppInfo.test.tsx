@@ -945,15 +945,46 @@ describe('SalutAppInfo', () => {
         expect(screen.getByText('Sense canvis de versions')).toBeInTheDocument();
     });
 
-    it('SalutAppInfo_quanLaVersioHaCanviat_mostraElChipEnVerd', () => {
-        render(<SalutAppInfo ready appInfoData={createAppInfoData() as any} />);
+    it('SalutAppInfo_quanLaVersioHaCanviat_mostraEls3TipusDeColorsCorrectament', () => {
+        const appData = createAppInfoData({
+            entornApp: {
+                ...createAppInfoData().entornApp,
+                entornAppHistorics: [
+                    {
+                        id: 1,
+                        data: '2026-03-13T09:00:00',
+                        versio: '1.0.0',
+                        revisio: 'abc123def456789',
+                        canviVersio: true,
+                    },
+                    {
+                        id: 2,
+                        data: '2026-03-12T08:00:00',
+                        versio: '0.9.0',
+                        revisio: 'xyz987uvw654321',
+                        canviVersio: true,
+                    },
+                    {
+                        id: 3,
+                        data: '2026-03-11T08:00:00',
+                        versio: '0.9.0',
+                        revisio: 'qwe123rty456789',
+                        canviVersio: false,
+                    },
+                ],
+            },
+        });
 
+        render(<SalutAppInfo ready appInfoData={appData as any} />);
         fireEvent.click(screen.getByRole('tab', { name: /Històric de versions/i }));
 
-        const successChip = screen.getByText('1.0.0').closest('.MuiChip-colorSuccess');
-        expect(successChip).toBeInTheDocument();
-
-        const secondaryChip = screen.getByText('0.9.0').closest('.MuiChip-colorSecondary');
-        expect(secondaryChip).toBeInTheDocument();
+        const currentVersionChip = screen.getByText('1.0.0').closest('.MuiChip-colorSuccess');
+        expect(currentVersionChip).toBeInTheDocument();
+        const versionChips = screen.getAllByText('0.9.0');
+        expect(versionChips.length).toBe(2);
+        const versionChangeChip = versionChips[0].closest('.MuiChip-colorPrimary');
+        expect(versionChangeChip).toBeInTheDocument();
+        const revisionOnlyChip = versionChips[1].closest('.MuiChip-colorDefault');
+        expect(revisionOnlyChip).toBeInTheDocument();
     });
 });

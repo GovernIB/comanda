@@ -382,6 +382,8 @@ const translationEn: translationResourcesType = {
                     versio: "Version",
                     revisio: "Revision",
                 },
+                versioActualTooltip: "Current version on the server",
+                canviVersioTooltip: "Version change",
             },
             logs: {
                 preview: "Preview",

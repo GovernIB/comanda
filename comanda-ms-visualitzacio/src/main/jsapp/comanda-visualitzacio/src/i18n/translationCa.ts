@@ -382,6 +382,8 @@ const translationCa = {
                     versio: "Versió",
                     revisio: "Revisió",
                 },
+                versioActualTooltip: "Versió actual al servidor",
+                canviVersioTooltip: "Canvi de versió",
             },
             logs: {
                 preview: "Previsualitzar",

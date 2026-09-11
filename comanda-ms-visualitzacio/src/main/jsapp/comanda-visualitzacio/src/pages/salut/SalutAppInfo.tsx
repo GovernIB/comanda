@@ -1375,30 +1375,55 @@ const TabHistoricVersions: React.FC<{
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {historicsVersions.map(historic => (
-                                <TableRow key={historic.id ?? `${historic.data}-${historic.versio}-${historic.revisio}`}>
-                                    <TableCell>{dateFormatLocale(historic.data, true)}</TableCell>
-                                    <TableCell>
-                                        {historic.versio != null && (
-                                            <Chip
-                                                label={historic.versio}
-                                                color={historic.canviVersio ? 'success' : 'secondary'}
-                                            />
-                                        )}
-                                    </TableCell>
-                                    <TableCell>
-                                        {historic.revisio != null && (
-                                            <Tooltip title={historic.revisio} arrow placement="top">
-                                                <Chip
-                                                    label={truncateHashRevisio(historic.revisio)}
-                                                    size="small"
-                                                    sx={{ bgcolor: 'info.light', color: 'info.contrastText', }}
-                                                />
-                                            </Tooltip>
-                                        )}
-                                    </TableCell>
-                                </TableRow>
-                            ))}
+                            {historicsVersions.map((historic, index) => {
+                                const isFirst = index === 0;
+                                const isVersionChange = historic.canviVersio === true;
+                                const chipColor = isFirst ? 'success' : (isVersionChange ? 'primary' : 'default');
+                                const showTooltip = isFirst || isVersionChange;
+                                const tooltipText = isFirst
+                                    ? (t($ => $.page.salut.historicVersions.versioActualTooltip))
+                                    : (t($ => $.page.salut.historicVersions.canviVersioTooltip));
+
+                                return (
+                                    <TableRow
+                                        key={historic.id ?? `${historic.data}-${historic.versio}-${historic.revisio}`}
+                                        sx={isFirst ? { backgroundColor: 'action.hover' } : {}}
+                                    >
+                                        <TableCell>{dateFormatLocale(historic.data, true)}</TableCell>
+                                        <TableCell>
+                                            {historic.versio != null && (
+                                                <Tooltip 
+                                                    title={showTooltip ? tooltipText : ""} 
+                                                    arrow 
+                                                    placement="top"
+                                                >
+                                                    <span>
+                                                        <Chip
+                                                            label={historic.versio}
+                                                            color={chipColor}
+                                                            sx={{
+                                                                fontWeight: isFirst ? 'bold' : 'normal',
+                                                                border: isFirst ? '1px solid currentColor' : 'none',
+                                                            }}
+                                                        />
+                                                    </span>
+                                                </Tooltip>
+                                            )}
+                                        </TableCell>
+                                        <TableCell>
+                                            {historic.revisio != null && (
+                                                <Tooltip title={historic.revisio} arrow placement="top">
+                                                    <Chip
+                                                        label={truncateHashRevisio(historic.revisio)}
+                                                        size="small"
+                                                        sx={{ bgcolor: 'info.light', color: 'info.contrastText', }}
+                                                    />
+                                                </Tooltip>
+                                            )}
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
                         </TableBody>
                     </Table>
                 )}
