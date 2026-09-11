@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 
 import java.io.Serializable;
 
@@ -13,9 +14,10 @@ import java.io.Serializable;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldNameConstants
 @ResourceConfig(
-        quickFilterFields = { "nom" },
-        descriptionField = "nom"
+        quickFilterFields = { AppResource.Fields.nom },
+        descriptionField = AppResource.Fields.nom
 )
 public class AppResource extends BaseResource<Long> implements Serializable {
 

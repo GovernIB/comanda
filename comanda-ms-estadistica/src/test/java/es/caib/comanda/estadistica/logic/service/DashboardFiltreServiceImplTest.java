@@ -300,12 +300,12 @@ class DashboardFiltreServiceImplTest {
     @Test
     @DisplayName("additionalSpringFilter: delega a dashboardPermisosHelper.buildDashboardChildFilter")
     void additionalSpringFilter_delegaCorrectament() {
-        when(dashboardPermisosHelper.buildDashboardChildFilter("base", "dashboard"))
+        when(dashboardPermisosHelper.buildDashboardChildFilter("base", DashboardFiltre.Fields.dashboard))
             .thenReturn("base and (dashboard.appId:10 or dashboard.id:1)");
 
         String result = service.additionalSpringFilter("base", new String[0]);
 
         assertThat(result).isEqualTo("base and (dashboard.appId:10 or dashboard.id:1)");
-        verify(dashboardPermisosHelper).buildDashboardChildFilter("base", "dashboard");
+        verify(dashboardPermisosHelper).buildDashboardChildFilter("base", DashboardFiltre.Fields.dashboard);
     }
 }

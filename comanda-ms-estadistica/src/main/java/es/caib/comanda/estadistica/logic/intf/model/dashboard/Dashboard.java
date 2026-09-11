@@ -16,6 +16,7 @@ import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import org.springframework.data.annotation.Transient;
 
 import javax.validation.constraints.NotNull;
@@ -41,9 +42,10 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@FieldNameConstants
 @ResourceConfig(
-        descriptionField = "titol",
-        quickFilterFields = { "titol", "descripcio" },
+        descriptionField = Dashboard.Fields.titol,
+        quickFilterFields = { Dashboard.Fields.titol, Dashboard.Fields.descripcio },
         accessConstraints = {
                 @ResourceAccessConstraint(
                         type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,
