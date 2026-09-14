@@ -261,6 +261,11 @@ vi.mock('../../components/PageTitle.tsx', () => ({
 
 vi.mock('../../components/UserContext.ts', () => ({
     useIsUserAdmin: () => mocks.useIsUserAdminMock(),
+    useUserContext: () => ({
+        user: {
+            numElementsPagina: '_20',
+        },
+    }),
 }));
 
 vi.mock('../../types/salut.model.tsx', () => ({
