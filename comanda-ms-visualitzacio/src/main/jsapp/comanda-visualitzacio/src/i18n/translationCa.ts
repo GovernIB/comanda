@@ -204,6 +204,8 @@ const translationCa = {
                 BY_ENVIRONMENT: "Agrupar per entorn",
                 NONE: "Sense agrupació",
                 titleNoGrouping: "Totes les aplicacions i entorns",
+                VERSIONS_ENTORNS: "Versions per entorn",
+                RECURSOS: "Recursos de l'entorn",
             },
             refreshperiod: {
                 title: "Periodicitat del refresc",
@@ -220,6 +222,21 @@ const translationCa = {
                 P1D: "Darrer dia",
                 P7D: "Darrera setmana",
                 P1M: "Darrer mes",
+            },
+            recursos: {
+                title: "Recursos del sistema",
+                subtitle: "Vista de consum de recursos",
+                empty: "No hi ha dades de recursos disponibles",
+                columns: {
+                    aplicacio: "Aplicació",
+                    entorn: "Entorn",
+                    memoriaPercent: "Memòria (Ús %)",
+                    memoriaValors: "Memòria (Disp / Total)",
+                    discPercent: "Disc (Ús %)",
+                    discValors: "Disc (Disp / Total)",
+                    detalls: "Detalls",
+                    detallsTitle: "Viatjar als detalls",
+                },
             },
             tabs: {
                 entorn: "Detalls",

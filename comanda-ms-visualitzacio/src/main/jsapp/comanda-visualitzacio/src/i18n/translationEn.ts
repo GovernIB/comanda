@@ -204,6 +204,8 @@ const translationEn: translationResourcesType = {
                 BY_ENVIRONMENT: "Group by environment",
                 NONE: "Do not group",
                 titleNoGrouping: "All applications and environments",
+                VERSIONS_ENTORNS: "Versions by environment",
+                RECURSOS: "Environmental resources",
             },
             refreshperiod: {
                 title: "Refresh period",
@@ -220,6 +222,21 @@ const translationEn: translationResourcesType = {
                 P1D: "Last day",
                 P7D: "Last week",
                 P1M: "Last month",
+            },
+            recursos: {
+                title: "System Resources",
+                subtitle: "Resource Usage Overview",
+                empty: "No resource data available",
+                columns: {
+                    aplicacio: "Application",
+                    entorn: "Environment",
+                    memoriaPercent: "Memory (Usage %)",
+                    memoriaValors: "Memory (Available / Total)",
+                    discPercent: "Disk (Usage %)",
+                    discValors: "Disk (Available / Total)",
+                    detalls: "Details",
+                    detallsTitle: "Go to details",
+                },
             },
             tabs: {
                 entorn: "Details",

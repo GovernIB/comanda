@@ -58,6 +58,7 @@ import PageTitle from '../../components/PageTitle.tsx';
 import { FooterHeightPlaceholder } from '../../components/ComandaFooter.tsx';
 import { useIsUserAdmin } from '../../components/UserContext.ts';
 import { iniciaDescargaCSV } from '../../util/commonsActions.ts';
+import { calcularPercentatgeUs, getColorForPercentage } from '../../util/recursosUtils.ts';
 
 const AppInfo: React.FC<{
     salutCurrentApp: SalutModel;
@@ -850,61 +851,16 @@ const Missatges: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp 
 //     );
 // };
 
-function parseStorageSizeToMB(value?: string): number {
-    if (!value) {
-        return 0;
-    }
-
-    const text = value.replace(",", ".").trim().toUpperCase();
-    const amount = parseFloat(text);
-
-    if (!Number.isFinite(amount)) {
-        return 0;
-    }
-
-    const unit = text.replace(/^[\d.\s]+/, "");
-
-    switch (unit) {
-        case "TB":
-        case "TIB":
-            return amount * 1024 * 1024
-        case "GB":
-        case "GIB":
-            return amount * 1024;
-        case "MB":
-        case "MIB":
-        case "":
-            return amount;
-        case "KB":
-        case "KIB":
-            return amount / 1024;
-        case "B":
-            return amount / (1024 * 1024);
-        default:
-            return 0;
-    }
-}
-
-const getColorForPercentage = (percentage: number): "success" | "warning" | "error" => {
-    if (percentage <= 69) {
-        return "success";
-    } else if (percentage < 90) {
-        return "warning";
-    } else {
-        return "error";
-    }
-};
-
-const MeoriaInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
+const MemoriaInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
     const { t } = useTranslation();
 
-    const memoriaTotal = salutCurrentApp.detalls?.find((detall) => detall.codi === 'MET')?.valor
-    const memoriaDisponible = salutCurrentApp.detalls?.find((detall) => detall.codi === 'MED')?.valor
-    const memoriaEmprada = 100 - parseStorageSizeToMB(memoriaDisponible) * 100 / parseStorageSizeToMB(memoriaTotal);
+    const memoriaTotal = salutCurrentApp.detalls?.find((detall) => detall.codi === 'MET')?.valor;
+    const memoriaDisponible = salutCurrentApp.detalls?.find((detall) => detall.codi === 'MED')?.valor;
+    const memoriaEmprada = calcularPercentatgeUs(memoriaTotal, memoriaDisponible);
 
-    const discTotal = salutCurrentApp.detalls?.find((detall) => detall.codi === 'EDT')?.valor
-    const discDisponible = salutCurrentApp.detalls?.find((detall) => detall.codi === 'EDL')?.valor
-    const discEmprada = 100 - parseStorageSizeToMB(discDisponible) * 100 / parseStorageSizeToMB(discTotal);
+    const discTotal = salutCurrentApp.detalls?.find((detall) => detall.codi === 'EDT')?.valor;
+    const discDisponible = salutCurrentApp.detalls?.find((detall) => detall.codi === 'EDL')?.valor;
+    const discEmprada = calcularPercentatgeUs(discTotal, discDisponible);
 
     return <Card variant="outlined">
         <CardHeader title={t($ => $.page.salut.memoria.title)} />
@@ -1004,10 +960,10 @@ const AppLogo: React.FC<{ app?: AppModel | null; }> = ({ app }) => {
                     <img
                         src={`data:image/png;base64,${app.logo}`}
                         alt={t($ => $.page.salut.logoAlt, { nom: app.nom })}
-                        style={{ 
-                            maxHeight: '100%', 
-                            maxWidth: '100%', 
-                            objectFit: 'contain' 
+                        style={{
+                            maxHeight: '100%',
+                            maxWidth: '100%',
+                            objectFit: 'contain'
                         }}
                     />
                 )}
@@ -1127,7 +1083,7 @@ const TabEstatActual: React.FC<SalutAppInfoTabProps & { otherProps: TabEstatActu
             </Grid>
             {/* Sense el breakpoint xs: 12 el contenidor no pareix ocupar el tamany que toca quan es fa la pantalla petita */}
             <Grid size={{ xs: 12, sm: 12, lg: 6 }}>
-                <MeoriaInfo salutCurrentApp={salutCurrentApp} />
+                <MemoriaInfo salutCurrentApp={salutCurrentApp} />
             </Grid>
             <Grid size={{ sm: 12, lg: 12 }}>
                 <Subsistemes
@@ -1392,9 +1348,9 @@ const TabHistoricVersions: React.FC<{
                                         <TableCell>{dateFormatLocale(historic.data, true)}</TableCell>
                                         <TableCell>
                                             {historic.versio != null && (
-                                                <Tooltip 
-                                                    title={showTooltip ? tooltipText : ""} 
-                                                    arrow 
+                                                <Tooltip
+                                                    title={showTooltip ? tooltipText : ""}
+                                                    arrow
                                                     placement="top"
                                                 >
                                                     <span>

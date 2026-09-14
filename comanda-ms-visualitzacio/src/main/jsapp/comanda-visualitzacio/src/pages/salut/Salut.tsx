@@ -33,6 +33,7 @@ import { useAppInfoData } from './dataFetching';
 import { Box } from '@mui/material';
 import PageTitle from '../../components/PageTitle';
 import VersionsEntorns from '../VersionsEntorns.tsx';
+import RecursosEntorns from './RecursosEntorns.tsx';
 
 // es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem
 export type SalutInformeEstatItem = {
@@ -188,7 +189,7 @@ const splitSalutDataIntoGroups = ({
                 })
             );
         });
-    } else if (groupBy === GroupingEnum.NONE) {
+    } else if (groupBy === GroupingEnum.NONE || groupBy === GroupingEnum.RECURSOS) {
         groups.push({
             entornApps,
             estats,
@@ -676,17 +677,25 @@ const Salut: FunctionComponent = () => {
             <Activity mode={!isAppInfoRouteActive ? 'visible' : 'hidden'}>
                 <Box sx={{ p: 2, flex: 1, overflowY: 'auto', scrollbarGutter: 'stable' }}>
                     <PageTitle title={t($ => $.page.salut.title)} />
-                    {toolbarState.grouping == 'VERSIONS_ENTORNS' ? <VersionsEntorns /> :
-                    <SalutLlistat
-                        apps={salutData.apps}
-                        entorns={salutData.entorns}
-                        salutGroups={salutData.groups}
-                        agrupacio={salutData.agrupacio}
-                        springFilter={additionalFilter}
-                        grupsDates={salutData.grupsDates}
-                        loading={salutInitialLoading}
-                        {...salutLlistatState}
-                    />}
+                    {toolbarState.grouping === GroupingEnum.VERSIONS_ENTORNS ? (
+                       <VersionsEntorns />
+                   ) : toolbarState.grouping === GroupingEnum.RECURSOS ? (
+                       <RecursosEntorns
+                           salutGroups={salutData.groups} 
+                           loading={salutInitialLoading} 
+                       />
+                   ) : (
+                       <SalutLlistat
+                           apps={salutData.apps}
+                           entorns={salutData.entorns}
+                           salutGroups={salutData.groups}
+                           agrupacio={salutData.agrupacio}
+                           springFilter={additionalFilter}
+                           grupsDates={salutData.grupsDates}
+                           loading={salutInitialLoading}
+                           {...salutLlistatState}
+                       />
+                   )}
                 </Box>
             </Activity>
             {isAppInfoRouteActive && (

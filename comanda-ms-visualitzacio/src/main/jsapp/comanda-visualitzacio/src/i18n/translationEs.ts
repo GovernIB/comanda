@@ -204,6 +204,8 @@ const translationEs: translationResourcesType = {
                 BY_ENVIRONMENT: "Agrupar por entorno",
                 NONE: "Sin agrupación",
                 titleNoGrouping: "Todas las aplicaciones y entornos",
+                VERSIONS_ENTORNS: "Versiones por entorno",
+                RECURSOS: "Recursos del entorno",
             },
             refreshperiod: {
                 title: "Periodicidad del refresco",
@@ -220,6 +222,21 @@ const translationEs: translationResourcesType = {
                 P1D: "Último día",
                 P7D: "Última semana",
                 P1M: "Último mes",
+            },
+            recursos: {
+                title: "Recursos del sistema",
+                subtitle: "Vista del consumo de recursos",
+                empty: "No hay datos de recursos disponibles",
+                columns: {
+                    aplicacio: "Aplicación",
+                    entorn: "Entorno",
+                    memoriaPercent: "Memoria (Uso %)",
+                    memoriaValors: "Memoria (Disponible / Total)",
+                    discPercent: "Disco (Uso %)",
+                    discValors: "Disco (Disponible / Total)",
+                    detalls: "Detalles",
+                    detallsTitle: "Ir a los detalles",
+                },
             },
             tabs: {
                 entorn: "Detalles",

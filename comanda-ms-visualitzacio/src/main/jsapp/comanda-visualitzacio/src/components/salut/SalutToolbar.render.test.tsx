@@ -46,6 +46,8 @@ vi.mock('react-i18next', () => ({
                                   BY_APPLICATION: 'Per aplicació',
                                   BY_ENVIRONMENT: 'Per entorn',
                                   NONE: 'Cap',
+                                  VERSIONS_ENTORNS: 'Versions per entorn',
+                                  RECURSOS: 'Recursos',
                               },
                           },
                       },
@@ -98,7 +100,7 @@ vi.mock('reactlib', () => ({
     },
     useBaseAppContext: () => ({ goBack: mocks.goBackMock }),
     useCloseDialogButtons: () => [{ value: 'close', text: 'Tancar' }],
-    useFilterApiRef: () => ({ current: { filter: vi.fn(), clear: vi.fn() } }),
+    useFilterApiRef: () => ({ current: { filter: vi.fn(), clear: vi.fn(), reset: vi.fn() } }),
     useFormContext: () => ({ data: {} }),
     useResourceApiContext: () => ({ indexState: { links: { has: vi.fn(() => true) } } }),
 }));
@@ -242,6 +244,7 @@ describe('SalutToolbar render', () => {
         expect(screen.getByTitle('Per entorn')).toBeInTheDocument();
         expect(screen.getByTitle('Cap')).toBeInTheDocument();
         expect(screen.getByTitle('Versions per entorn')).toBeInTheDocument();
+        expect(screen.getByTitle('Recursos')).toBeInTheDocument();
     });
 
     it('SalutToolbar_quanNoEstaReady_deshabilitaLesAccionsTemporals', () => {
@@ -267,6 +270,7 @@ describe('SalutToolbar render', () => {
         expect(screen.getByTitle('Per entorn')).toBeDisabled();
         expect(screen.getByTitle('Cap')).toBeDisabled();
         expect(screen.getByTitle('Versions per entorn')).toBeDisabled();
+        expect(screen.getByTitle('Recursos')).toBeDisabled();
     });
 
     it('SalutToolbar_quanHiHaDataDeRefresh_mostraElResumTemporal', () => {
@@ -309,5 +313,27 @@ describe('SalutToolbar render', () => {
         fireEvent.click(screen.getByTitle('Versions per entorn'));
 
         expect(setGroupingMock).toHaveBeenCalledWith(GroupingEnum.VERSIONS_ENTORNS);
+    });
+
+    it('SalutToolbar_quanEsClicaElBotoDeRecursos_notificaElCanviDAgrupacio', () => {
+        const setGroupingMock = vi.fn();
+        render(
+            <SalutToolbar
+                title="Salut"
+                ready={true}
+                groupingActive={true}
+                onRefreshClick={() => undefined}
+                dataRangeDuration="PT15M"
+                setDataRangeDuration={() => undefined}
+                filterData={{}}
+                setFilterData={() => undefined}
+                grouping={GroupingEnum.APPLICATION}
+                setGrouping={setGroupingMock}
+            />
+        );
+
+        fireEvent.click(screen.getByTitle('Recursos'));
+
+        expect(setGroupingMock).toHaveBeenCalledWith(GroupingEnum.RECURSOS);
     });
 });

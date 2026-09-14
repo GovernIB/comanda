@@ -72,6 +72,7 @@ export enum GroupingEnum {
     ENVIRONMENT = "ENVIRONMENT",
     NONE = "NONE",
     VERSIONS_ENTORNS = "VERSIONS_ENTORNS",
+    RECURSOS = "RECURSOS",
 }
 
 const isValidGrouping = (grouping: string): grouping is GroupingEnum => {
@@ -135,9 +136,16 @@ const GroupForViewSelect = (props: {
                     <Icon>block</Icon>
                 </Button>
                 <Button
+                    variant={value === GroupingEnum.RECURSOS ? 'contained' : 'outlined'}
+                    onClick={() => onChange(GroupingEnum.RECURSOS)}
+                    title={t($ => $.page.salut.groupingSelect.RECURSOS)}
+                >
+                    <Icon>memory</Icon>
+                </Button>
+                <Button
                     variant={value === GroupingEnum.VERSIONS_ENTORNS ? 'contained' : 'outlined'}
                     onClick={() => onChange(GroupingEnum.VERSIONS_ENTORNS)}
-                    title={t($ => $.menu.versionsEntorn)}
+                    title={t($ => $.page.salut.groupingSelect.VERSIONS_ENTORNS)}
                 >
                     <Icon>format_list_numbered_rtl</Icon>
                 </Button>
