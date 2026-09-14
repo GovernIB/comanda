@@ -56,7 +56,7 @@ import { MUI_AXIS_WORKAROUND_HEIGHT } from '../../util/muiWorkarounds';
 import { PreselectLogsViewer } from './LogsViewer';
 import PageTitle from '../../components/PageTitle.tsx';
 import { FooterHeightPlaceholder } from '../../components/ComandaFooter.tsx';
-import { useIsUserAdmin } from '../../components/UserContext.ts';
+import { useIsUserAdmin, useUserContext } from '../../components/UserContext.ts';
 import { iniciaDescargaCSV } from '../../util/commonsActions.ts';
 import { calcularPercentatgeUs, getColorForPercentage } from '../../util/recursosUtils.ts';
 
@@ -1170,10 +1170,17 @@ const TabHistoricEstat: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) =
     const { t } = useTranslation();
     const { t: tLib } = useBaseAppContext();
     const { temporalMessageShow } = useBaseAppContext();
+    const { user } = useUserContext();
     const { artifactReport: apiReport } = useResourceApiService('salut');
     const historics = salutCurrentApp.historics ?? [];
+    const initialRowsPerPage = React.useMemo(() => {
+        if (user?.numElementsPagina && user.numElementsPagina !== 'AUTOMATIC') {
+            return parseInt(user.numElementsPagina.replace('_', ''), 10);
+        }
+        return 20;
+    }, [user?.numElementsPagina]);
     const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(20);
+    const [rowsPerPage, setRowsPerPage] = React.useState(initialRowsPerPage);
     const [exporting, setExporting] = React.useState(false);
     const handleChangePage = (_event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
         setPage(newPage);
