@@ -4,8 +4,9 @@ import es.caib.comanda.client.model.App;
 import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus;
-import es.caib.comanda.estadistica.logic.intf.model.export.IndicadorExport;
+import es.caib.comanda.estadistica.logic.intf.model.export.*;
 import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
+import es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.Conflict;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
@@ -21,9 +22,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -106,20 +109,117 @@ public class IndicadorExportHelper {
                 .forEach(this::importIndicadorFormula);
     }
 
+    public void importIndicadorsFormula(DashboardExport dashboard, List<Conflict> conflicts) {
+        this.importIndicadorsFormula(dashboard, conflicts, null);
+    }
+
+    public void importIndicadorsFormula(
+            DashboardExport dashboard,
+            List<Conflict> conflicts,
+            Map<String, String> remappedCodis) {
+        if (dashboard == null || dashboard.getIndicadors() == null) return;
+        dashboard.getIndicadors().stream()
+                .filter(indicadorExport -> IndicadorTipus.FORMULA.equals(indicadorExport.getTipus()))
+                .forEach(indicadorExport -> importIndicadorFormula(dashboard, indicadorExport, conflicts, remappedCodis));
+    }
+
     private void importIndicadorFormula(IndicadorExport indicadorExport) {
+        importIndicadorFormula(null, indicadorExport, Collections.emptyList(), null);
+    }
+
+    private void importIndicadorFormula(
+            DashboardExport dashboard,
+            IndicadorExport indicadorExport,
+            List<Conflict> conflicts,
+            Map<String, String> remappedCodis) {
+        String originalCodi = indicadorExport.getCodi();
+        if (remappedCodis != null && remappedCodis.containsKey(originalCodi)) {
+            String targetCodi = remappedCodis.get(originalCodi);
+            if (!Objects.equals(originalCodi, targetCodi)) {
+                updateDashboardWidgetsIndicadorCodi(dashboard, originalCodi, targetCodi);
+                indicadorExport.setCodi(targetCodi);
+            }
+            return;
+        }
+
         Long entornAppId = resolveEntornAppId(indicadorExport.getEntornCodi(), indicadorExport.getAppCodi());
         if (entornAppId == null) {
             // Ja validat prèviament a DashboardImportHelper#checkDashboardConflicts; no hauria de passar.
             log.warn("No s'ha pogut resoldre l'entornApp {} - {} per importar l'indicador {}",
-                    indicadorExport.getEntornCodi(), indicadorExport.getAppCodi(), indicadorExport.getCodi());
+                    indicadorExport.getEntornCodi(), indicadorExport.getAppCodi(), originalCodi);
             return;
         }
-        if (indicadorRepository.findByCodiAndEntornAppId(indicadorExport.getCodi(), entornAppId).isPresent()) {
-            return; // Ja existeix: es reutilitza (identificat pel seu codi dins l'entornApp).
+
+        App app = estadisticaClientHelper.appFindByCodi(indicadorExport.getAppCodi());
+        Long appId = app != null ? app.getId() : null;
+
+        Conflict conflict = findConflict(indicadorExport.getNom(), originalCodi, entornAppId, appId, conflicts);
+
+        if (conflict != null) {
+            switch (conflict.getOverwrite()) {
+                case EMPRAR_EXISTENT:
+                    IndicadorEntity existing = indicadorRepository
+                            .findByCodiAndEntornAppId(originalCodi, entornAppId)
+                            .orElse(null);
+                    if (existing != null) {
+                        if (remappedCodis != null) {
+                            remappedCodis.put(originalCodi, originalCodi);
+                        }
+                    }
+                    return;
+                case SOBRESCRIURE:
+                    IndicadorEntity existent = indicadorRepository
+                            .findByCodiAndEntornAppId(originalCodi, entornAppId)
+                            .orElse(null);
+                    if (existent != null) {
+                        if (remappedCodis != null) {
+                            remappedCodis.put(originalCodi, originalCodi);
+                        }
+                        updateIndicadorEntityFromExport(existent, indicadorExport, entornAppId);
+                        indicadorRepository.save(existent);
+
+                        List<IndicadorFormulaTermeEntity> oldTermes = indicadorFormulaTermeRepository
+                                .findByIndicadorFormulaIdOrderByOrdreAsc(existent.getId());
+                        if (oldTermes != null && !oldTermes.isEmpty()) {
+                            indicadorFormulaTermeRepository.deleteAll(oldTermes);
+                        }
+                        if (existent.getFormula() != null) {
+                            existent.getFormula().clear();
+                        }
+                        saveFormulaTermes(existent, indicadorExport.getFormula(), entornAppId);
+                        return;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            // Si no hi ha conflicte registrat però ja existeix per codi a la BDD, es reutilitza
+            IndicadorEntity existing = indicadorRepository
+                    .findByCodiAndEntornAppId(originalCodi, entornAppId)
+                    .orElse(null);
+            if (existing != null) {
+                if (remappedCodis != null) {
+                    remappedCodis.put(originalCodi, originalCodi);
+                }
+                return;
+            }
+            if (remappedCodis != null) {
+                remappedCodis.put(originalCodi, originalCodi);
+            }
         }
 
         IndicadorEntity indicador = new IndicadorEntity();
         indicador.setCodi(indicadorExport.getCodi());
+        updateIndicadorEntityFromExport(indicador, indicadorExport, entornAppId);
+        indicadorRepository.save(indicador);
+        saveFormulaTermes(indicador, indicadorExport.getFormula(), entornAppId);
+    }
+
+    private void updateIndicadorEntityFromExport(
+            IndicadorEntity indicador,
+            IndicadorExport indicadorExport,
+            Long entornAppId) {
         indicador.setNom(indicadorExport.getNom());
         indicador.setDescripcio(indicadorExport.getDescripcio());
         indicador.setEntornAppId(entornAppId);
@@ -127,17 +227,27 @@ public class IndicadorExportHelper {
         indicador.setTipus(IndicadorTipus.FORMULA);
         indicador.setCompactable(Boolean.TRUE.equals(indicadorExport.getCompactable()));
         indicador.setTipusCompactacio(indicadorExport.getTipusCompactacio());
-        indicadorRepository.save(indicador);
+        if (indicadorExport.getIndicadorComptadorPerMitjanaCodi() != null) {
+            indicadorRepository.findByCodiAndEntornAppId(indicadorExport.getIndicadorComptadorPerMitjanaCodi(), entornAppId)
+                    .ifPresent(indicador::setIndicadorComptadorPerMitjana);
+        } else {
+            indicador.setIndicadorComptadorPerMitjana(null);
+        }
+    }
 
-        if (indicadorExport.getFormula() != null) {
-            indicadorExport.getFormula().forEach(termeExport -> {
+    private void saveFormulaTermes(
+            IndicadorEntity indicador,
+            List<IndicadorFormulaTermeExport> formula,
+            Long entornAppId) {
+        if (formula != null) {
+            formula.forEach(termeExport -> {
                 IndicadorEntity component = indicadorRepository
                         .findByCodiAndEntornAppId(termeExport.getIndicadorComponentCodi(), entornAppId)
                         .orElse(null);
                 if (component == null) {
                     // Ja validat prèviament a DashboardImportHelper#checkDashboardConflicts; no hauria de passar.
                     log.warn("No s'ha trobat l'indicador component {} a l'entornApp {} per a la fórmula {}",
-                            termeExport.getIndicadorComponentCodi(), entornAppId, indicadorExport.getCodi());
+                            termeExport.getIndicadorComponentCodi(), entornAppId, indicador.getCodi());
                     return;
                 }
                 IndicadorFormulaTermeEntity terme = new IndicadorFormulaTermeEntity();
@@ -148,6 +258,54 @@ public class IndicadorExportHelper {
                 indicadorFormulaTermeRepository.save(terme);
             });
         }
+    }
+
+    public void updateDashboardWidgetsIndicadorCodi(DashboardExport dashboard, String oldCodi, String newCodi) {
+        if (dashboard == null || dashboard.getItems() == null || oldCodi == null || newCodi == null) return;
+        for (DashboardItemExport item : dashboard.getItems()) {
+            if (item == null || item.getWidget() == null) continue;
+            EstadisticaWidgetExport widget = item.getWidget();
+            if (widget instanceof EstadisticaSimpleWidgetExport) {
+                EstadisticaSimpleWidgetExport w = (EstadisticaSimpleWidgetExport) widget;
+                if (w.getIndicadorInfo() != null && Objects.equals(oldCodi, w.getIndicadorInfo().getIndicadorCodi())) {
+                    w.getIndicadorInfo().setIndicadorCodi(newCodi);
+                }
+            } else if (widget instanceof EstadisticaGraficWidgetExport) {
+                EstadisticaGraficWidgetExport w = (EstadisticaGraficWidgetExport) widget;
+                if (w.getIndicadorInfo() != null && Objects.equals(oldCodi, w.getIndicadorInfo().getIndicadorCodi())) {
+                    w.getIndicadorInfo().setIndicadorCodi(newCodi);
+                }
+                if (w.getIndicadorsInfo() != null) {
+                    for (IndicadorTaulaExport info : w.getIndicadorsInfo()) {
+                        if (info != null && Objects.equals(oldCodi, info.getIndicadorCodi())) {
+                            info.setIndicadorCodi(newCodi);
+                        }
+                    }
+                }
+            } else if (widget instanceof EstadisticaTaulaWidgetExport) {
+                EstadisticaTaulaWidgetExport w = (EstadisticaTaulaWidgetExport) widget;
+                if (w.getColumnes() != null) {
+                    for (IndicadorTaulaExport columna : w.getColumnes()) {
+                        if (columna != null && Objects.equals(oldCodi, columna.getIndicadorCodi())) {
+                            columna.setIndicadorCodi(newCodi);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    private Conflict findConflict(String nom, String codi, Long entornAppId, Long appId, List<Conflict> conflicts) {
+        if (conflicts == null) return null;
+        return conflicts.stream()
+                .filter(c -> IndicadorExport.class.getSimpleName().equals(c.getTipo())
+                        && !c.isBloquejant()
+                        && (c.getCodi() != null ? Objects.equals(codi, c.getCodi()) : Objects.equals(nom, c.getTitol()))
+                        && (entornAppId == null || c.getEntornAppId() == null || Objects.equals(entornAppId, c.getEntornAppId()))
+                        && (appId == null || c.getAppId() == null || Objects.equals(appId, c.getAppId())))
+                .findFirst()
+                .orElse(null);
     }
 
     private Long resolveEntornAppId(String entornCodi, String appCodi) {

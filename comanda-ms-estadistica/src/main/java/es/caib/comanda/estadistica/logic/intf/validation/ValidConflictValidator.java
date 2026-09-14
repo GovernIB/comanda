@@ -3,6 +3,7 @@ package es.caib.comanda.estadistica.logic.intf.validation;
 import es.caib.comanda.estadistica.logic.helper.DashboardImportHelper;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.OverwriteEnum;
 import es.caib.comanda.estadistica.logic.intf.model.export.DashboardExport;
+import es.caib.comanda.estadistica.logic.intf.model.export.IndicadorExport;
 import es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.Conflict;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +27,39 @@ public class ValidConflictValidator implements ConstraintValidator<ValidConflict
 
 	@Override
 	public boolean isValid(final Conflict conflict, final ConstraintValidatorContext context) {
+        if (conflict == null) {
+            return true;
+        }
+
+        if (conflict.isBloquejant()) {
+            context.disableDefaultConstraintViolation();
+            String errorMsg = conflict.getMissatgeError() != null && !conflict.getMissatgeError().isBlank()
+                    ? conflict.getMissatgeError()
+                    : I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.intf.validation.ValidConflict.bloquejant");
+            context.buildConstraintViolationWithTemplate(errorMsg)
+                    .addConstraintViolation();
+            return false;
+        }
+
         boolean valid = true;
+
+        if (IndicadorExport.class.getSimpleName().equals(conflict.getTipo())) {
+            if (OverwriteEnum.CREAR_AMB_ALTRE_NOM.equals(conflict.getOverwrite())) {
+                valid = false;
+                context.buildConstraintViolationWithTemplate(
+                                I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.intf.validation.ValidConflict.overwrite.invalid"))
+                        .addNode(Conflict.Fields.overwrite)
+                        .addConstraintViolation();
+            }
+        } else {
+            if (OverwriteEnum.SOBRESCRIURE.equals(conflict.getOverwrite())) {
+                valid = false;
+                context.buildConstraintViolationWithTemplate(
+                                I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.intf.validation.ValidConflict.overwrite.invalid"))
+                        .addNode(Conflict.Fields.overwrite)
+                        .addConstraintViolation();
+            }
+        }
 
         if (DashboardExport.class.getSimpleName().equals(conflict.getTipo())){
             if (OverwriteEnum.EMPRAR_EXISTENT.equals(conflict.getOverwrite())) {

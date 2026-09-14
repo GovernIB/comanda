@@ -3,11 +3,12 @@ package es.caib.comanda.estadistica.logic.helper;
 import es.caib.comanda.client.model.App;
 import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.OverwriteEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.OperadorFormulaEnum;
-import es.caib.comanda.estadistica.logic.intf.model.export.IndicadorExport;
-import es.caib.comanda.estadistica.logic.intf.model.export.IndicadorFormulaTermeExport;
+import es.caib.comanda.estadistica.logic.intf.model.export.*;
 import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
+import es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.Conflict;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
@@ -25,8 +26,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -203,6 +207,236 @@ class IndicadorExportHelperTest {
         verify(indicadorFormulaTermeRepository).save(termeCaptor.capture());
         assertThat(termeCaptor.getValue().getIndicadorComponent()).isSameAs(component);
         assertThat(termeCaptor.getValue().getOperador()).isEqualTo(OperadorFormulaEnum.SUMA);
+    }
+
+    @Test
+    @DisplayName("importIndicadorsFormula: quan conflicte és EMPRAR_EXISTENT, reutilitza indicador existent i remapeja widgets")
+    void importIndicadorsFormula_quanConflicteEmprarExistent_reutilitzaExistentIRemapejaWidgets() {
+        IndicadorExport formula = IndicadorExport.builder()
+                .codi("FORM_OLD").nom("Formula 1").entornCodi("ENT").appCodi("APP")
+                .tipus(IndicadorTipus.FORMULA).build();
+
+        DashboardExport dashboard = new DashboardExport();
+        dashboard.setIndicadors(List.of(formula));
+
+        // Widgets que referencien FORM_OLD
+        EstadisticaSimpleWidgetExport simpleWidget = new EstadisticaSimpleWidgetExport();
+        IndicadorTaulaExport simpleInd = new IndicadorTaulaExport();
+        simpleInd.setIndicadorCodi("FORM_OLD");
+        simpleWidget.setIndicadorInfo(simpleInd);
+
+        EstadisticaGraficWidgetExport graficWidget = new EstadisticaGraficWidgetExport();
+        IndicadorTaulaExport graficInd = new IndicadorTaulaExport();
+        graficInd.setIndicadorCodi("FORM_OLD");
+        graficWidget.setIndicadorInfo(graficInd);
+        IndicadorTaulaExport graficIndList = new IndicadorTaulaExport();
+        graficIndList.setIndicadorCodi("FORM_OLD");
+        graficWidget.setIndicadorsInfo(List.of(graficIndList));
+
+        EstadisticaTaulaWidgetExport taulaWidget = new EstadisticaTaulaWidgetExport();
+        IndicadorTaulaExport colInd = new IndicadorTaulaExport();
+        colInd.setIndicadorCodi("FORM_OLD");
+        taulaWidget.setColumnes(List.of(colInd));
+
+        DashboardItemExport item1 = new DashboardItemExport();
+        item1.setWidget(simpleWidget);
+        DashboardItemExport item2 = new DashboardItemExport();
+        item2.setWidget(graficWidget);
+        DashboardItemExport item3 = new DashboardItemExport();
+        item3.setWidget(taulaWidget);
+        dashboard.setItems(List.of(item1, item2, item3));
+
+        mockEntornApp("ENT", "APP", 10L);
+
+        IndicadorEntity existent = new IndicadorEntity();
+        existent.setId(99L);
+        existent.setCodi("FORM_OLD");
+        existent.setNom("Formula 1");
+        when(indicadorRepository.findByCodiAndEntornAppId("FORM_OLD", 10L)).thenReturn(Optional.of(existent));
+
+        Conflict conflict = new Conflict("Formula 1", IndicadorExport.class.getSimpleName());
+        conflict.setCodi("FORM_OLD");
+        conflict.setOverwrite(OverwriteEnum.EMPRAR_EXISTENT);
+
+        Map<String, String> remappedCodis = new HashMap<>();
+        indicadorExportHelper.importIndicadorsFormula(dashboard, List.of(conflict), remappedCodis);
+
+        assertThat(remappedCodis).containsEntry("FORM_OLD", "FORM_OLD");
+        assertThat(simpleWidget.getIndicadorInfo().getIndicadorCodi()).isEqualTo("FORM_OLD");
+        assertThat(graficWidget.getIndicadorInfo().getIndicadorCodi()).isEqualTo("FORM_OLD");
+        assertThat(graficWidget.getIndicadorsInfo().get(0).getIndicadorCodi()).isEqualTo("FORM_OLD");
+        assertThat(taulaWidget.getColumnes().get(0).getIndicadorCodi()).isEqualTo("FORM_OLD");
+        verify(indicadorRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("importIndicadorsFormula: quan conflicte és SOBRESCRIURE, actualitza indicador existent per codi i substitueix termes de la fórmula")
+    void importIndicadorsFormula_quanConflicteSobrescriure_actualitzaIndicadorPerCodiISubstitueixTermes() {
+        IndicadorFormulaTermeExport terme = IndicadorFormulaTermeExport.builder()
+                .indicadorComponentCodi("COMP").operador(OperadorFormulaEnum.SUMA).ordre(0).build();
+        IndicadorExport formula = IndicadorExport.builder()
+                .codi("FORM_OLD").nom("Formula 1").descripcio("Nova descripcio").entornCodi("ENT").appCodi("APP")
+                .tipus(IndicadorTipus.FORMULA).formula(List.of(terme)).build();
+
+        DashboardExport dashboard = new DashboardExport();
+        dashboard.setIndicadors(List.of(formula));
+
+        EstadisticaSimpleWidgetExport simpleWidget = new EstadisticaSimpleWidgetExport();
+        IndicadorTaulaExport simpleInd = new IndicadorTaulaExport();
+        simpleInd.setIndicadorCodi("FORM_OLD");
+        simpleWidget.setIndicadorInfo(simpleInd);
+
+        DashboardItemExport item = new DashboardItemExport();
+        item.setWidget(simpleWidget);
+        dashboard.setItems(List.of(item));
+
+        mockEntornApp("ENT", "APP", 10L);
+
+        IndicadorEntity existent = new IndicadorEntity();
+        existent.setId(99L);
+        existent.setCodi("FORM_OLD");
+        existent.setNom("Formula 1");
+        existent.setDescripcio("Vella descripcio");
+        when(indicadorRepository.findByCodiAndEntornAppId("FORM_OLD", 10L)).thenReturn(Optional.of(existent));
+
+        IndicadorFormulaTermeEntity oldTerme = new IndicadorFormulaTermeEntity();
+        oldTerme.setId(101L);
+        when(indicadorFormulaTermeRepository.findByIndicadorFormulaIdOrderByOrdreAsc(99L)).thenReturn(List.of(oldTerme));
+
+        IndicadorEntity component = new IndicadorEntity();
+        component.setCodi("COMP");
+        when(indicadorRepository.findByCodiAndEntornAppId("COMP", 10L)).thenReturn(Optional.of(component));
+
+        Conflict conflict = new Conflict("Formula 1", IndicadorExport.class.getSimpleName());
+        conflict.setCodi("FORM_OLD");
+        conflict.setOverwrite(OverwriteEnum.SOBRESCRIURE);
+
+        Map<String, String> remappedCodis = new HashMap<>();
+        indicadorExportHelper.importIndicadorsFormula(dashboard, List.of(conflict), remappedCodis);
+
+        assertThat(remappedCodis).containsEntry("FORM_OLD", "FORM_OLD");
+        assertThat(simpleWidget.getIndicadorInfo().getIndicadorCodi()).isEqualTo("FORM_OLD");
+
+        verify(indicadorFormulaTermeRepository).deleteAll(List.of(oldTerme));
+        verify(indicadorFormulaTermeRepository).save(any(IndicadorFormulaTermeEntity.class));
+
+        verify(indicadorRepository).save(existent);
+        assertThat(existent.getDescripcio()).isEqualTo("Nova descripcio");
+        assertThat(existent.getCodi()).isEqualTo("FORM_OLD");
+    }
+
+    @Test
+    @DisplayName("importIndicadorsFormula: quan el nom ha canviat (correcció errata) però el codi és el mateix, SOBRESCRIURE actualitza el nom a la BDD")
+    void importIndicadorsFormula_quanNomHaCanviatPeroCodiEsElMateix_sobrescriureActualitzaElNom() {
+        IndicadorExport formula = IndicadorExport.builder()
+                .codi("IND_COM").nom("Total Comandes").descripcio("Nova descripcio").entornCodi("ENT").appCodi("APP")
+                .tipus(IndicadorTipus.FORMULA).build();
+
+        DashboardExport dashboard = new DashboardExport();
+        dashboard.setIndicadors(List.of(formula));
+
+        mockEntornApp("ENT", "APP", 10L);
+
+        IndicadorEntity existent = new IndicadorEntity();
+        existent.setId(99L);
+        existent.setCodi("IND_COM");
+        existent.setNom("Total Comades"); // errata prèvia a la BDD
+        when(indicadorRepository.findByCodiAndEntornAppId("IND_COM", 10L)).thenReturn(Optional.of(existent));
+
+        Conflict conflict = new Conflict("Total Comandes", IndicadorExport.class.getSimpleName());
+        conflict.setCodi("IND_COM");
+        conflict.setOverwrite(OverwriteEnum.SOBRESCRIURE);
+
+        indicadorExportHelper.importIndicadorsFormula(dashboard, List.of(conflict), new HashMap<>());
+
+        verify(indicadorRepository).save(existent);
+        assertThat(existent.getNom()).isEqualTo("Total Comandes");
+    }
+
+    @Test
+    @DisplayName("importIndicadorsFormula: quan el nom ha canviat però el codi és el mateix, EMPRAR_EXISTENT manté el nom existent")
+    void importIndicadorsFormula_quanNomHaCanviatPeroCodiEsElMateix_emprarExistentManteElNomExistent() {
+        IndicadorExport formula = IndicadorExport.builder()
+                .codi("IND_COM").nom("Total Comandes").descripcio("Nova descripcio").entornCodi("ENT").appCodi("APP")
+                .tipus(IndicadorTipus.FORMULA).build();
+
+        DashboardExport dashboard = new DashboardExport();
+        dashboard.setIndicadors(List.of(formula));
+
+        mockEntornApp("ENT", "APP", 10L);
+
+        IndicadorEntity existent = new IndicadorEntity();
+        existent.setId(99L);
+        existent.setCodi("IND_COM");
+        existent.setNom("Total Comades"); // nom amb errata a la BDD
+        when(indicadorRepository.findByCodiAndEntornAppId("IND_COM", 10L)).thenReturn(Optional.of(existent));
+
+        Conflict conflict = new Conflict("Total Comandes", IndicadorExport.class.getSimpleName());
+        conflict.setCodi("IND_COM");
+        conflict.setOverwrite(OverwriteEnum.EMPRAR_EXISTENT);
+
+        indicadorExportHelper.importIndicadorsFormula(dashboard, List.of(conflict), new HashMap<>());
+
+        verify(indicadorRepository, never()).save(any());
+        assertThat(existent.getNom()).isEqualTo("Total Comades");
+    }
+
+    @Test
+    @DisplayName("importIndicadorsFormula: associa l'indicador comptador per mitjana si està definit a l'exportació")
+    void importIndicadorsFormula_quanTeIndicadorComptadorPerMitjana_mapejaComptador() {
+        IndicadorExport formula = IndicadorExport.builder()
+                .codi("FORM").nom("Formula").entornCodi("ENT").appCodi("APP")
+                .tipus(IndicadorTipus.FORMULA).indicadorComptadorPerMitjanaCodi("COMPTADOR").build();
+
+        mockEntornApp("ENT", "APP", 10L);
+        when(indicadorRepository.findByCodiAndEntornAppId("FORM", 10L)).thenReturn(Optional.empty());
+
+        IndicadorEntity comptador = new IndicadorEntity();
+        comptador.setCodi("COMPTADOR");
+        when(indicadorRepository.findByCodiAndEntornAppId("COMPTADOR", 10L)).thenReturn(Optional.of(comptador));
+
+        indicadorExportHelper.importIndicadorsFormula(List.of(formula));
+
+        org.mockito.ArgumentCaptor<IndicadorEntity> captor = org.mockito.ArgumentCaptor.forClass(IndicadorEntity.class);
+        verify(indicadorRepository).save(captor.capture());
+        assertThat(captor.getValue().getIndicadorComptadorPerMitjana()).isSameAs(comptador);
+    }
+
+    @Test
+    @DisplayName("importIndicadorsFormula: quan hi ha conflictes amb el mateix codi en diferents entorns, resol segons entornAppId")
+    void importIndicadorsFormula_quanMateixCodiDiferentsEntorns_resolConflicteSegonsEntornAppId() {
+        IndicadorExport formula = IndicadorExport.builder()
+                .codi("IND_COM").nom("Total Comandes").descripcio("Nova descripcio").entornCodi("ENT").appCodi("APP")
+                .tipus(IndicadorTipus.FORMULA).build();
+
+        DashboardExport dashboard = new DashboardExport();
+        dashboard.setIndicadors(List.of(formula));
+
+        mockEntornApp("ENT", "APP", 10L);
+
+        IndicadorEntity existent = new IndicadorEntity();
+        existent.setId(99L);
+        existent.setCodi("IND_COM");
+        existent.setNom("Total Comades");
+        when(indicadorRepository.findByCodiAndEntornAppId("IND_COM", 10L)).thenReturn(Optional.of(existent));
+
+        // Conflicte per a un altre entorn (entornAppId = 20) amb SOBRESCRIURE
+        Conflict conflictAltreEntorn = new Conflict("Total Comandes", IndicadorExport.class.getSimpleName());
+        conflictAltreEntorn.setCodi("IND_COM");
+        conflictAltreEntorn.setEntornAppId(20L);
+        conflictAltreEntorn.setOverwrite(OverwriteEnum.SOBRESCRIURE);
+
+        // Conflicte per al nostre entorn (entornAppId = 10) amb EMPRAR_EXISTENT
+        Conflict conflictNostreEntorn = new Conflict("Total Comandes", IndicadorExport.class.getSimpleName());
+        conflictNostreEntorn.setCodi("IND_COM");
+        conflictNostreEntorn.setEntornAppId(10L);
+        conflictNostreEntorn.setOverwrite(OverwriteEnum.EMPRAR_EXISTENT);
+
+        indicadorExportHelper.importIndicadorsFormula(dashboard, List.of(conflictAltreEntorn, conflictNostreEntorn), new HashMap<>());
+
+        // Hauria d'haver aplicat EMPRAR_EXISTENT (no save) i no SOBRESCRIURE de l'altre entorn
+        verify(indicadorRepository, never()).save(any());
+        assertThat(existent.getNom()).isEqualTo("Total Comades");
     }
 
     private void mockEntornApp(String entornCodi, String appCodi, Long entornAppId) {

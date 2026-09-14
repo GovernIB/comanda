@@ -23,6 +23,7 @@ import {
     useMuiDataGridApiRef,
     DialogButton,
 } from 'reactlib';
+import { FormFieldDataActionType } from '../../lib/components/form/FormContext.tsx';
 import {iniciaDescargaJSON} from "../util/commonsActions.ts";
 import FormActionDialog from '../components/FormActionDialog.tsx';
 import { findOptions } from '../util/requestUtils.ts';
@@ -105,7 +106,18 @@ const useCloneDashboardAction = (refresh?: () => void) => {
     }
 }
 
-type Conflicte = { titol: string; tipo: string; overwrite?: string; nouNom?: string; appId?: number; suggerenciaNouNom?: string };
+type Conflicte = {
+    titol: string;
+    tipo: string;
+    overwrite?: string;
+    nouNom?: string;
+    appId?: number;
+    entornAppId?: number;
+    suggerenciaNouNom?: string;
+    bloquejant?: boolean;
+    missatgeError?: string;
+    codi?: string;
+};
 
 interface ConflictGroupMeta {
     tipo: string;
@@ -118,6 +130,8 @@ const groupConflicts = (conflicts: Conflicte[], t: TFunction): ConflictGroupMeta
     const knownTypes = [
         { tipo: 'DashboardExport', getLabel: () => t($ => $.page.dashboards.action.import.groups.dashboard), icon: 'dashboard' },
         { tipo: 'EstadisticaWidgetExport', getLabel: () => t($ => $.page.dashboards.action.import.groups.widget), icon: 'widgets' },
+        { tipo: 'IndicadorExport', getLabel: () => t($ => $.page.dashboards.action.import.groups.indicador), icon: 'calculate' },
+        { tipo: 'DimensioExport', getLabel: () => t($ => $.page.dashboards.action.import.groups.dimensio), icon: 'view_column' },
         { tipo: 'PlantillaExport', getLabel: () => t($ => $.page.dashboards.action.import.groups.plantilla), icon: 'palette' },
         { tipo: 'PaletaExport', getLabel: () => t($ => $.page.dashboards.action.import.groups.paleta), icon: 'format_color_fill' },
     ];
@@ -173,9 +187,12 @@ const ConflictsTreeViewItemChild = React.memo(
         fieldNouNom: string;
         group: ConflictGroupMeta;
     }) => {
+        const { t } = useTranslation();
         return (
             <TreeItem
                 itemId={`conflict-${index}`}
+                data-testid={`conflict-item-${index}`}
+                disableSelection={Boolean(conflict.bloquejant)}
                 sx={{
                     // Afegit perquè el label del FormField no es talli
                     "& .MuiTreeItem-label": {
@@ -183,6 +200,9 @@ const ConflictsTreeViewItemChild = React.memo(
                     },
                     "& .MuiTreeItem-content": {
                         alignItems: 'start',
+                        ...(conflict.bloquejant && {
+                            color: 'error.main',
+                        }),
                     },
                 }}
                 label={
@@ -200,57 +220,101 @@ const ConflictsTreeViewItemChild = React.memo(
                         <Box
                             sx={{
                                 display: 'flex',
-                                alignItems: 'center',
-                                height: 24, // Aquesta altura ha de ser la mateixa de l'element MuiSimpleTreeView-itemCheckbox
-                                gap: 1,
+                                flexDirection: 'column',
+                                gap: 0.5,
                                 flex: 1,
                                 minWidth: 150,
                             }}
                         >
-                            <Icon fontSize="small" sx={{ color: 'text.secondary', flexShrink: 0 }}>
-                                {group.icon}
-                            </Icon>
-                            <Typography
-                                variant="body2"
-                                noWrap
-                                sx={{ fontWeight: 500 }}
-                                title={conflict.titol}
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    height: 24, // Aquesta altura ha de ser la mateixa de l'element MuiSimpleTreeView-itemCheckbox
+                                    gap: 1,
+                                }}
                             >
-                                {conflict.titol}
-                            </Typography>
-                        </Box>
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'start',
-                                gap: 1,
-                                flexShrink: 0,
-                            }}
-                            onClick={e => e.stopPropagation()}
-                            onKeyDown={e => e.stopPropagation()}
-                        >
-                            <Box sx={{ minWidth: 160 }}>
-                                <FormField
-                                    name={`conflicts[${index}].overwrite`}
-                                    value={conflict.overwrite}
-                                    field={fieldOverwrite}
-                                    onChange={value => updateConflict(index, { overwrite: value })}
-                                    componentProps={{ size: 'small', variant: 'standard', label: "" }}
-                                    required
-                                />
-                            </Box>
-                            {conflict.overwrite === 'CREAR_AMB_ALTRE_NOM' && (
-                                <Box sx={{ minWidth: 160 }}>
-                                    <FormField
-                                        name={`conflicts[${index}].nouNom`}
-                                        field={fieldNouNom}
-                                        value={conflict.nouNom}
-                                        onChange={value => updateConflict(index, { nouNom: value })}
-                                        componentProps={{ size: 'small', variant: 'standard', label: "", placeholder: conflict.suggerenciaNouNom || conflict.titol }}
+                                <Icon
+                                    fontSize="small"
+                                    sx={{ color: conflict.bloquejant ? 'error.main' : 'text.secondary', flexShrink: 0 }}
+                                >
+                                    {conflict.bloquejant ? 'error_outline' : group.icon}
+                                </Icon>
+                                <Typography
+                                    variant="body2"
+                                    noWrap
+                                    sx={{ fontWeight: 500, color: conflict.bloquejant ? 'error.main' : 'inherit' }}
+                                    title={
+                                        conflict.tipo === 'IndicadorExport' && conflict.codi && conflict.codi !== conflict.titol
+                                            ? `${conflict.titol} (${conflict.codi})`
+                                            : conflict.titol
+                                    }
+                                >
+                                    {conflict.tipo === 'IndicadorExport' && conflict.codi && conflict.codi !== conflict.titol
+                                        ? `${conflict.titol} (${conflict.codi})`
+                                        : conflict.titol}
+                                </Typography>
+                                {conflict.bloquejant && (
+                                    <Chip
+                                        label={t($ => $.page.dashboards.action.import.blockingChip)}
+                                        size="small"
+                                        color="error"
+                                        variant="outlined"
+                                        sx={{ height: 20, fontSize: '0.75rem', fontWeight: 600 }}
                                     />
-                                </Box>
+                                )}
+                            </Box>
+                            {conflict.bloquejant && conflict.missatgeError && (
+                                <Typography
+                                    variant="caption"
+                                    color="error"
+                                    sx={{ pl: 3.5, display: 'block', wordBreak: 'break-word', whiteSpace: 'normal' }}
+                                >
+                                    {conflict.missatgeError}
+                                </Typography>
                             )}
                         </Box>
+                        {!conflict.bloquejant && (
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'start',
+                                    gap: 1,
+                                    flexShrink: 0,
+                                }}
+                                onClick={e => e.stopPropagation()}
+                                onKeyDown={e => e.stopPropagation()}
+                            >
+                                <Box sx={{ minWidth: 160 }}>
+                                    <FormField
+                                        name={`conflicts[${index}].overwrite`}
+                                        value={conflict.overwrite}
+                                        field={fieldOverwrite}
+                                        onChange={value => updateConflict(index, { overwrite: value })}
+                                        componentProps={{ size: 'small', variant: 'standard', label: "" }}
+                                        hiddenEnumValues={
+                                            conflict.tipo === 'IndicadorExport'
+                                                ? ['CREAR_AMB_ALTRE_NOM']
+                                                : conflict.tipo === 'DashboardExport'
+                                                    ? ['EMPRAR_EXISTENT', 'SOBRESCRIURE']
+                                                    : ['SOBRESCRIURE']
+                                        }
+                                        required
+                                    />
+                                </Box>
+                                {conflict.overwrite === 'CREAR_AMB_ALTRE_NOM' && conflict.tipo !== 'IndicadorExport' && (
+                                    <Box sx={{ minWidth: 160 }}>
+                                        <FormField
+                                            name={`conflicts[${index}].nouNom`}
+                                            field={fieldNouNom}
+                                            value={conflict.nouNom}
+                                            onChange={value => updateConflict(index, { nouNom: value })}
+                                            componentProps={{ size: 'small', variant: 'standard', label: "", placeholder: conflict.suggerenciaNouNom || conflict.titol }}
+                                        />
+                                    </Box>
+                                )}
+                            </Box>
+                        )}
                     </Box>
                 }
             />
@@ -270,20 +334,25 @@ const ConflictsTreeViewItemGroup = React.memo(
         fieldNouNom: string;
         updateConflict: (index: number, changes: Partial<Conflicte>) => void;
     }) => {
+        const hasBlockingItems = React.useMemo(() => {
+            return group.items.some(item => item.conflict.bloquejant);
+        }, [group.items]);
+
         return (
             <TreeItem
                 itemId={`group-${group.tipo}`}
                 label={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.5 }}>
-                        <Icon fontSize="small" color="primary">
+                        <Icon fontSize="small" color={hasBlockingItems ? 'error' : 'primary'}>
                             {group.icon}
                         </Icon>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: hasBlockingItems ? 'error.main' : 'inherit' }}>
                             {group.label}
                         </Typography>
                         <Chip
                             label={group.items.length}
                             size="small"
+                            color={hasBlockingItems ? 'error' : 'default'}
                             variant="outlined"
                             sx={{ height: 20, fontSize: '0.75rem' }}
                         />
@@ -314,6 +383,7 @@ const ConflictsTreeView = React.memo(
         fieldOverwrite,
         fieldNouNom,
         updateConflict,
+        conflicts,
     }: {
         groups: ConflictGroupMeta[];
         selectedItems: string[];
@@ -321,6 +391,7 @@ const ConflictsTreeView = React.memo(
         fieldOverwrite: string;
         fieldNouNom: string;
         updateConflict: (index: number, changes: Partial<Conflicte>) => void;
+        conflicts?: Conflicte[];
     }) => {
         const defaultExpandedItems = React.useMemo(() => {
             return groups.map(g => `group-${g.tipo}`);
@@ -333,7 +404,15 @@ const ConflictsTreeView = React.memo(
                 selectionPropagation={{ parents: true, descendants: true }}
                 selectedItems={selectedItems}
                 onSelectedItemsChange={(_event, itemIds) => {
-                    setSelectedItems(Array.isArray(itemIds) ? itemIds : itemIds ? [itemIds] : []);
+                    const rawIds = Array.isArray(itemIds) ? itemIds : itemIds ? [itemIds] : [];
+                    const filteredIds = rawIds.filter(id => {
+                        if (id.startsWith('conflict-')) {
+                            const idx = parseInt(id.replace('conflict-', ''), 10);
+                            return !conflicts?.[idx]?.bloquejant;
+                        }
+                        return true;
+                    });
+                    setSelectedItems(filteredIds);
                 }}
                 defaultExpandedItems={defaultExpandedItems}
                 sx={{
@@ -362,7 +441,7 @@ const ConflictsTreeView = React.memo(
     }
 );
 
-const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean }> = ({ isAnalyzing }) => {
+const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean; onReanalyze?: () => void }> = ({ isAnalyzing, onReanalyze }) => {
     const { t } = useTranslation();
     const { data, apiRef, fields } = useFormContext();
     const conflicts: Conflicte[] | undefined = data?.conflicts;
@@ -376,11 +455,20 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean }> = ({ isAn
         return groupConflicts(conflicts, t);
     }, [conflicts, t]);
 
+    const hasBlockingConflicts = React.useMemo(() => {
+        return conflicts?.some(c => c.bloquejant) ?? false;
+    }, [conflicts]);
+
+    const nonBlockingConflicts = React.useMemo(() => {
+        return (conflicts ?? []).filter(c => !c.bloquejant);
+    }, [conflicts]);
+
     const selectedIndices = React.useMemo(() => {
         if (!conflicts) return [];
         return conflicts
-            .map((_, i) => i)
-            .filter((i) => selectedItems.includes(`conflict-${i}`));
+            .map((c, i) => ({ c, i }))
+            .filter(({ c, i }) => !c.bloquejant && selectedItems.includes(`conflict-${i}`))
+            .map(({ i }) => i);
     }, [conflicts, selectedItems]);
 
     React.useEffect(() => {
@@ -399,8 +487,15 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean }> = ({ isAn
         if (!conflicts) return;
         const allIds: string[] = [];
         groups.forEach((g) => {
-            allIds.push(`group-${g.tipo}`);
-            g.items.forEach((item) => allIds.push(`conflict-${item.index}`));
+            const hasNonBlocking = g.items.some(item => !item.conflict.bloquejant);
+            if (hasNonBlocking) {
+                allIds.push(`group-${g.tipo}`);
+            }
+            g.items.forEach((item) => {
+                if (!item.conflict.bloquejant) {
+                    allIds.push(`conflict-${item.index}`);
+                }
+            });
         });
         setSelectedItems(allIds);
     };
@@ -412,7 +507,7 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean }> = ({ isAn
     const handleBulkUseExisting = () => {
         if (selectedIndices.length === 0 || !conflicts) return;
         const updated = conflicts.map((c, i) => {
-            if (!selectedIndices.includes(i)) return c;
+            if (!selectedIndices.includes(i) || c.bloquejant || c.tipo === 'DashboardExport') return c;
             return {
                 ...c,
                 overwrite: 'EMPRAR_EXISTENT',
@@ -424,7 +519,7 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean }> = ({ isAn
     const handleBulkCreateWithAnotherName = () => {
         if (selectedIndices.length === 0 || !conflicts) return;
         const updated = conflicts.map((c, i) => {
-            if (!selectedIndices.includes(i)) return c;
+            if (!selectedIndices.includes(i) || c.bloquejant || c.tipo === 'IndicadorExport') return c;
             return {
                 ...c,
                 overwrite: 'CREAR_AMB_ALTRE_NOM',
@@ -433,12 +528,75 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean }> = ({ isAn
         apiRef.current?.setFieldValue('conflicts', updated);
     };
 
+    const handleBulkOverwrite = () => {
+        if (selectedIndices.length === 0 || !conflicts) return;
+        const updated = conflicts.map((c, i) => {
+            if (!selectedIndices.includes(i) || c.bloquejant || c.tipo !== 'IndicadorExport') return c;
+            return {
+                ...c,
+                overwrite: 'SOBRESCRIURE',
+            };
+        });
+        apiRef.current?.setFieldValue('conflicts', updated);
+    };
+
     const fieldOverwrite = fields?.filter((i: any) => i.name === 'overwrite')[0];
     const fieldNouNom = fields?.filter((i: any) => i.name === 'nouNom')[0];
 
+    const selectedConflicts = React.useMemo(() => {
+        if (!conflicts) return [];
+        return selectedIndices.map(i => conflicts[i]).filter(Boolean);
+    }, [conflicts, selectedIndices]);
+
+    const hasEligibleUseExisting = React.useMemo(() => {
+        return selectedConflicts.some(c => c.tipo !== 'DashboardExport');
+    }, [selectedConflicts]);
+
+    const hasIneligibleUseExisting = React.useMemo(() => {
+        return selectedConflicts.some(c => c.tipo === 'DashboardExport');
+    }, [selectedConflicts]);
+
+    const isMixedUseExisting = React.useMemo(() => {
+        return selectedConflicts.length > 0 && hasEligibleUseExisting && hasIneligibleUseExisting;
+    }, [selectedConflicts.length, hasEligibleUseExisting, hasIneligibleUseExisting]);
+
+    const hasEligibleCreateWithAnotherName = React.useMemo(() => {
+        return selectedConflicts.some(c => c.tipo !== 'IndicadorExport');
+    }, [selectedConflicts]);
+
+    const hasIneligibleCreateWithAnotherName = React.useMemo(() => {
+        return selectedConflicts.some(c => c.tipo === 'IndicadorExport');
+    }, [selectedConflicts]);
+
+    const isMixedCreateWithAnotherName = React.useMemo(() => {
+        return selectedConflicts.length > 0 && hasEligibleCreateWithAnotherName && hasIneligibleCreateWithAnotherName;
+    }, [selectedConflicts.length, hasEligibleCreateWithAnotherName, hasIneligibleCreateWithAnotherName]);
+
+    const hasEligibleOverwrite = React.useMemo(() => {
+        return selectedConflicts.some(c => c.tipo === 'IndicadorExport');
+    }, [selectedConflicts]);
+
+    const hasIneligibleOverwrite = React.useMemo(() => {
+        return selectedConflicts.some(c => c.tipo !== 'IndicadorExport');
+    }, [selectedConflicts]);
+
+    const isMixedOverwrite = React.useMemo(() => {
+        return selectedConflicts.length > 0 && hasEligibleOverwrite && hasIneligibleOverwrite;
+    }, [selectedConflicts.length, hasEligibleOverwrite, hasIneligibleOverwrite]);
+
+    const hasMixedSelection = isMixedUseExisting || isMixedCreateWithAnotherName || isMixedOverwrite;
+
     const hasExistingItems = React.useMemo(() => {
-        return conflicts?.some((c) => c.overwrite === 'EMPRAR_EXISTENT' || !c.overwrite) ?? false;
+        return conflicts?.some((c) => !c.bloquejant && (c.overwrite === 'EMPRAR_EXISTENT' || !c.overwrite)) ?? false;
     }, [conflicts]);
+
+    const hasNonIndicadorConflicts = React.useMemo(() => {
+        return nonBlockingConflicts.some(c => c.tipo !== 'IndicadorExport');
+    }, [nonBlockingConflicts]);
+
+    const hasIndicadorConflicts = React.useMemo(() => {
+        return nonBlockingConflicts.some(c => c.tipo === 'IndicadorExport');
+    }, [nonBlockingConflicts]);
 
     if (!hasFile && !isAnalyzing) {
         return null;
@@ -465,6 +623,34 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean }> = ({ isAn
 
     return (
         <Box sx={{ mt: 1 }}>
+            {hasBlockingConflicts && (
+                <Alert
+                    severity="error"
+                    sx={{ mb: 1.5 }}
+                    action={
+                        onReanalyze && (
+                            <Button
+                                color="error"
+                                size="small"
+                                variant="outlined"
+                                onClick={onReanalyze}
+                                startIcon={<Icon>refresh</Icon>}
+                                disabled={isAnalyzing}
+                            >
+                                {t($ => $.page.dashboards.action.import.reanalyze)}
+                            </Button>
+                        )
+                    }
+                >
+                    <AlertTitle sx={{ fontWeight: 600 }}>
+                        {t($ => $.page.dashboards.action.import.blockingErrorTitle)}
+                    </AlertTitle>
+                    <Typography variant="body2">
+                        {t($ => $.page.dashboards.action.import.blockingErrorDescription)}
+                    </Typography>
+                </Alert>
+            )}
+
             {hasExistingItems && (
                 <Alert
                     severity="warning"
@@ -495,73 +681,101 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean }> = ({ isAn
                 </Alert>
             )}
 
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 1,
-                    mb: 1.5,
-                    p: 1,
-                    borderRadius: 1,
-                    backgroundColor: 'action.hover',
-                }}
-            >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, width: '100%', mb: 1.5 }}>
+            {nonBlockingConflicts.length > 0 ? (
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 1,
+                        mb: 1.5,
+                        p: 1,
+                        borderRadius: 1,
+                        backgroundColor: 'action.hover',
+                    }}
+                >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, width: '100%', mb: 1.5 }}>
+                        <Typography variant="h6">
+                            {t($ => $.page.dashboards.action.import.conflictsTitle)}
+                        </Typography>
+                        <Tooltip title={t($ => $.page.dashboards.action.import.dashboardConflicts)} arrow>
+                            <IconButton size="small" aria-label="info">
+                                <Icon fontSize="small">info_outline</Icon>
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="body2" color="text.secondary">
+                            {t($ => $.page.dashboards.action.import.bulkActions.selectedCount, {
+                                count: selectedIndices.length,
+                            })}
+                        </Typography>
+                        <Button
+                            size="small"
+                            variant="text"
+                            onClick={handleSelectAll}
+                            disabled={selectedIndices.length === nonBlockingConflicts.length || nonBlockingConflicts.length === 0}
+                        >
+                            {t($ => $.page.dashboards.action.import.bulkActions.selectAll)}
+                        </Button>
+                        <Button
+                            size="small"
+                            variant="text"
+                            onClick={handleDeselectAll}
+                            disabled={selectedIndices.length === 0}
+                        >
+                            {t($ => $.page.dashboards.action.import.bulkActions.deselectAll)}
+                        </Button>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={handleBulkUseExisting}
+                            disabled={selectedIndices.length === 0 || isMixedUseExisting || !hasEligibleUseExisting}
+                            startIcon={<Icon>check</Icon>}
+                        >
+                            {t($ => $.page.dashboards.action.import.bulkActions.useExisting)}
+                        </Button>
+                        {hasNonIndicadorConflicts && (
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={handleBulkCreateWithAnotherName}
+                                disabled={selectedIndices.length === 0 || isMixedCreateWithAnotherName || !hasEligibleCreateWithAnotherName}
+                                startIcon={<Icon>edit</Icon>}
+                            >
+                                {t($ => $.page.dashboards.action.import.bulkActions.createWithAnotherName)}
+                            </Button>
+                        )}
+                        {hasIndicadorConflicts && (
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={handleBulkOverwrite}
+                                disabled={selectedIndices.length === 0 || isMixedOverwrite || !hasEligibleOverwrite}
+                                startIcon={<Icon>save</Icon>}
+                            >
+                                {t($ => $.page.dashboards.action.import.bulkActions.overwrite)}
+                            </Button>
+                        )}
+                        {hasMixedSelection && (
+                            <Tooltip title={t($ => $.page.dashboards.action.import.bulkActions.mixedSelectionInfo)} arrow>
+                                <IconButton size="small" aria-label="info" color="info" data-testid="mixed-selection-info">
+                                    <Icon fontSize="small">info_outline</Icon>
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                    </Box>
+                </Box>
+            ) : (
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, p: 1 }}>
                     <Typography variant="h6">
                         {t($ => $.page.dashboards.action.import.conflictsTitle)}
                     </Typography>
-                    <Tooltip title={t($ => $.page.dashboards.action.import.dashboardConflicts)} arrow>
-                        <IconButton size="small" aria-label="info">
-                            <Icon fontSize="small">info_outline</Icon>
-                        </IconButton>
-                    </Tooltip>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="body2" color="text.secondary">
-                        {t($ => $.page.dashboards.action.import.bulkActions.selectedCount, {
-                            count: selectedIndices.length,
-                        })}
-                    </Typography>
-                    <Button
-                        size="small"
-                        variant="text"
-                        onClick={handleSelectAll}
-                        disabled={selectedIndices.length === conflicts.length}
-                    >
-                        {t($ => $.page.dashboards.action.import.bulkActions.selectAll)}
-                    </Button>
-                    <Button
-                        size="small"
-                        variant="text"
-                        onClick={handleDeselectAll}
-                        disabled={selectedIndices.length === 0}
-                    >
-                        {t($ => $.page.dashboards.action.import.bulkActions.deselectAll)}
-                    </Button>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={handleBulkUseExisting}
-                        disabled={selectedIndices.length === 0}
-                        startIcon={<Icon>check</Icon>}
-                    >
-                        {t($ => $.page.dashboards.action.import.bulkActions.useExisting)}
-                    </Button>
-                    <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={handleBulkCreateWithAnotherName}
-                        disabled={selectedIndices.length === 0}
-                        startIcon={<Icon>edit</Icon>}
-                    >
-                        {t($ => $.page.dashboards.action.import.bulkActions.createWithAnotherName)}
-                    </Button>
-                </Box>
-            </Box>
+            )}
 
             <ConflictsTreeView
                 groups={groups}
@@ -570,6 +784,7 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean }> = ({ isAn
                 fieldOverwrite={fieldOverwrite}
                 fieldNouNom={fieldNouNom}
                 updateConflict={updateConflict}
+                conflicts={conflicts}
             />
         </Box>
     );
@@ -577,7 +792,7 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean }> = ({ isAn
 
 const DashboardImportFormContent: React.FC = () => {
     const [isAnalyzing, setIsAnalyzing] = React.useState(false);
-    const { apiRef, data } = useFormContext();
+    const { apiRef, data, fields, dataDispatchAction } = useFormContext();
 
     const handleFileChange = (fileValue: any) => {
         if (!fileValue) {
@@ -589,11 +804,21 @@ const DashboardImportFormContent: React.FC = () => {
         }
     };
 
+    const handleReanalyze = React.useCallback(() => {
+        if (!data?.file) return;
+        setIsAnalyzing(true);
+        const fileField = fields?.find((f: any) => f.name === 'file');
+        dataDispatchAction?.({
+            type: FormFieldDataActionType.FIELD_CHANGE,
+            payload: { fieldName: 'file', field: fileField, value: data.file },
+        });
+    }, [data?.file, fields, dataDispatchAction]);
+
     React.useEffect(() => {
         if (data?.conflicts !== undefined) {
             setIsAnalyzing(false);
         }
-    }, [data?.conflicts]);
+    }, [data]);
 
     return (
         <Grid container spacing={2}>
@@ -601,7 +826,7 @@ const DashboardImportFormContent: React.FC = () => {
                 <FormField name="file" type={"file"} onChange={handleFileChange} />
             </Grid>
             <Grid size={12}>
-                <DashboardImportConflictsForm isAnalyzing={isAnalyzing} />
+                <DashboardImportConflictsForm isAnalyzing={isAnalyzing} onReanalyze={handleReanalyze} />
             </Grid>
         </Grid>
     );

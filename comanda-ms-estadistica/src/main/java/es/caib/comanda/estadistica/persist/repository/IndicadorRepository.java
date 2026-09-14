@@ -22,6 +22,8 @@ public interface IndicadorRepository extends BaseRepository<IndicadorEntity, Lon
 
     Optional<IndicadorEntity> findByCodiAndEntornAppId(String codi, Long entornAppId);
 
+    Optional<IndicadorEntity> findByNomAndEntornAppId(String nom, Long entornAppId);
+
     List<IndicadorEntity> findByEntornAppId(Long entornAppId);
 
     @Modifying

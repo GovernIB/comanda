@@ -436,6 +436,11 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
         @NotNull private String tipo;
 
         private Long appId;
+        private Long entornAppId;
+        private String codi;
+
+        private boolean bloquejant = false;
+        private String missatgeError;
 
         public Conflict(String titol, String tipo) {
             this.titol = titol;
@@ -510,9 +515,16 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
 
                 List<Dashboard> importedDashboards = new ArrayList<>();
                 List<Conflict> conflicts = params.getConflicts() != null ? params.getConflicts() : Collections.emptyList();
+                if (conflicts.stream().anyMatch(Conflict::isBloquejant)) {
+                    throw new ActionExecutionException(
+                            Dashboard.class,
+                            null,
+                            code,
+                            I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.error.conflictesBloquejants"));
+                }
                 dashboardImportHelper.importDashboardFromExport(dashboards, conflicts);
                 return new DashboardImportResult(importedDashboards);
-            } catch (AccessDeniedException e) {
+            } catch (AccessDeniedException | ActionExecutionException e) {
                 throw e;
             } catch (IllegalArgumentException e) {
                 log.warn("Validation error importing dashboards from JSON: {}", e.getMessage());
@@ -547,13 +559,33 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                     if (dashboards != null && !dashboards.isEmpty()) {
                         dashboardImportHelper.checkDashboardConflicts(dashboards, dashboardConflicts);
                     }
-                    target.setConflicts(dashboardConflicts);
-                } catch (AnswerRequiredException a) {
-                    log.warn("Answer required during onChange: {}", a.getMessage());
-                    if (!answers.containsKey(a.getAnswerCode())) {
-                        throw a;
+
+                    // Preservar les eleccions prèvies de l'usuari (overwrite, nouNom) si n'hi havia
+                    if (previous != null && previous.getConflicts() != null && !previous.getConflicts().isEmpty()) {
+                        for (Conflict newC : dashboardConflicts) {
+                            if (!newC.isBloquejant()) {
+                                previous.getConflicts().stream()
+                                        .filter(prevC -> !prevC.isBloquejant()
+                                                && Objects.equals(newC.getTipo(), prevC.getTipo())
+                                                && (newC.getCodi() != null && prevC.getCodi() != null
+                                                        ? Objects.equals(newC.getCodi(), prevC.getCodi())
+                                                        : Objects.equals(newC.getTitol(), prevC.getTitol()))
+                                                && Objects.equals(newC.getEntornAppId(), prevC.getEntornAppId())
+                                                && Objects.equals(newC.getAppId(), prevC.getAppId()))
+                                        .findFirst()
+                                        .ifPresent(prevC -> {
+                                            if (prevC.getOverwrite() != null) {
+                                                newC.setOverwrite(prevC.getOverwrite());
+                                            }
+                                            if (prevC.getNouNom() != null) {
+                                                newC.setNouNom(prevC.getNouNom());
+                                            }
+                                        });
+                            }
+                        }
                     }
-                    target.setConflicts(new ArrayList<>());
+
+                    target.setConflicts(dashboardConflicts);
                 } catch (Exception e) {
                     log.warn("Error parsing JSON content in onChange", e);
                     target.setConflicts(new ArrayList<>());

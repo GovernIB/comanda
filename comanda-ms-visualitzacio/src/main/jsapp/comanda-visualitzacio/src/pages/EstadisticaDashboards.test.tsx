@@ -10,11 +10,21 @@ const mocks = vi.hoisted(() => ({
     entornFindMock: vi.fn(),
     downloadJsonMock: vi.fn(),
     setFieldValueMock: vi.fn(),
+    dataDispatchActionMock: vi.fn(),
     permissionShowMock: vi.fn(),
     formContextData: {
         entorn: { id: 7 },
         aplicacio: { id: 3 },
-        conflicts: [] as Array<{ tipo: string; titol: string; overwrite?: string; nouNom?: string; suggerenciaNouNom?: string }>,
+        conflicts: [] as Array<{
+            tipo: string;
+            titol: string;
+            overwrite?: string;
+            nouNom?: string;
+            suggerenciaNouNom?: string;
+            bloquejant?: boolean;
+            missatgeError?: string;
+            codi?: string;
+        }>,
         file: undefined as any,
     },
     tMock: vi.fn((selector: any, options?: any) => {
@@ -54,9 +64,15 @@ const mocks = vi.hoisted(() => ({
                             analyzing: 'Analitzant fitxer...',
                             noConflicts: 'Sense conflictes',
                             importing: 'Important dashboard...',
+                            blockingChip: 'Bloquejant',
+                            blockingErrorTitle: "S'han detectat dependències no resoltes",
+                            blockingErrorDescription: 'No es pot importar el tauler de control perquè conté dependències que no existeixen a la destinació.',
+                            reanalyze: 'Tornar a analitzar',
                             groups: {
                                 dashboard: 'Taulers de control',
                                 widget: 'Widgets',
+                                indicador: 'Indicadors',
+                                dimensio: 'Dimensions',
                                 plantilla: 'Plantilles',
                                 paleta: 'Paletes',
                                 other: 'Altres elements',
@@ -65,6 +81,7 @@ const mocks = vi.hoisted(() => ({
                                 selectedCount: '{{count}} seleccionats',
                                 useExisting: 'Emprar existent',
                                 createWithAnotherName: 'Crear amb un altre nom',
+                                overwrite: 'Sobrescriure',
                                 selectAll: 'Seleccionar-ho tot',
                                 deselectAll: 'Deseleccionar',
                             },
@@ -96,11 +113,12 @@ vi.mock('react-i18next', () => ({
 }));
 
 vi.mock('reactlib', () => ({
-    FormField: ({ name, value, onChange, componentProps }: { name: string; value?: any; onChange?: (value: any) => void; componentProps?: any }) => (
+    FormField: ({ name, value, onChange, componentProps, hiddenEnumValues }: { name: string; value?: any; onChange?: (value: any) => void; componentProps?: any; hiddenEnumValues?: string[] }) => (
         <input
             data-testid={`field-${name}`}
             name={name}
             defaultValue={value}
+            data-hidden-enum-values={hiddenEnumValues ? hiddenEnumValues.join(',') : undefined}
             onChange={(e) => onChange?.(e.target.value)}
             {...componentProps}
         />
@@ -110,8 +128,10 @@ vi.mock('reactlib', () => ({
         fields: [
             { name: 'overwrite' },
             { name: 'nouNom' },
+            { name: 'file', onChangeActive: true },
         ],
         apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
+        dataDispatchAction: mocks.dataDispatchActionMock,
     }),
     springFilterBuilder: {
         and: (...values: string[]) => values.join(' AND '),
@@ -402,6 +422,7 @@ describe('EstadisticaDashboards', () => {
         mocks.formContextData.conflicts = [
             { tipo: 'DashboardExport', titol: 'Dashboard 1' },
             { tipo: 'EstadisticaWidgetExport', titol: 'Widget 1' },
+            { tipo: 'IndicadorExport', titol: 'Indicador 1' },
             { tipo: 'PlantillaExport', titol: 'Plantilla 1' },
             { tipo: 'PaletaExport', titol: 'Paleta 1' },
         ];
@@ -410,18 +431,20 @@ describe('EstadisticaDashboards', () => {
 
         expect(screen.getByText('Taulers de control')).toBeInTheDocument();
         expect(screen.getByText('Widgets')).toBeInTheDocument();
+        expect(screen.getByText('Indicadors')).toBeInTheDocument();
         expect(screen.getByText('Plantilles')).toBeInTheDocument();
         expect(screen.getByText('Paletes')).toBeInTheDocument();
 
         expect(screen.getByText('Dashboard 1')).toBeInTheDocument();
         expect(screen.getByText('Widget 1')).toBeInTheDocument();
+        expect(screen.getByText('Indicador 1')).toBeInTheDocument();
         expect(screen.getByText('Plantilla 1')).toBeInTheDocument();
         expect(screen.getByText('Paleta 1')).toBeInTheDocument();
     });
 
     it('EstadisticaDashboards_quanSutilitzenAccionsMassives_aplicaEmprarExistentATotsElsSeleccionats', () => {
         mocks.formContextData.conflicts = [
-            { tipo: 'DashboardExport', titol: 'Dashboard 1', overwrite: undefined },
+            { tipo: 'IndicadorExport', titol: 'Indicador 1', overwrite: undefined },
             { tipo: 'EstadisticaWidgetExport', titol: 'Widget 1', overwrite: undefined },
             { tipo: 'PlantillaExport', titol: 'Plantilla 1', overwrite: undefined },
         ];
@@ -438,7 +461,7 @@ describe('EstadisticaDashboards', () => {
         fireEvent.click(bulkUseExistingBtn);
 
         expect(mocks.setFieldValueMock).toHaveBeenCalledWith('conflicts', [
-            { tipo: 'DashboardExport', titol: 'Dashboard 1', overwrite: 'EMPRAR_EXISTENT' },
+            { tipo: 'IndicadorExport', titol: 'Indicador 1', overwrite: 'EMPRAR_EXISTENT' },
             { tipo: 'EstadisticaWidgetExport', titol: 'Widget 1', overwrite: 'EMPRAR_EXISTENT' },
             { tipo: 'PlantillaExport', titol: 'Plantilla 1', overwrite: 'EMPRAR_EXISTENT' },
         ]);
@@ -469,7 +492,7 @@ describe('EstadisticaDashboards', () => {
 
     it('EstadisticaDashboards_quanEsPremDeseleccionar_deshabilitaElsBotonsDAccioMassiva', () => {
         mocks.formContextData.conflicts = [
-            { tipo: 'DashboardExport', titol: 'Dashboard 1', overwrite: undefined },
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget 1', overwrite: undefined },
         ];
 
         render(<EstadisticaDashboards />);
@@ -581,5 +604,247 @@ describe('EstadisticaDashboards', () => {
         rerender(<EstadisticaDashboards />);
 
         expect(screen.queryByText('Elements compartits entre taulers de control')).not.toBeInTheDocument();
+    });
+
+    it('EstadisticaDashboards_quanHiHaConflicteBloquejant_mostraAlertaErrorIIndicadorBloquejantSenseAccions', () => {
+        mocks.formContextData.conflicts = [
+            {
+                tipo: 'IndicadorExport',
+                titol: 'TAS_CREADES_TOTAL',
+                bloquejant: true,
+                missatgeError: "Indicador amb codi TAS_CREADES_TOTAL no trobat per a l'aplicació Gestor de tasques a Preproducció",
+            },
+        ];
+
+        render(<EstadisticaDashboards />);
+
+        // Alerta de dependències no resoltes
+        expect(screen.getByText("S'han detectat dependències no resoltes")).toBeInTheDocument();
+        expect(screen.getByText('No es pot importar el tauler de control perquè conté dependències que no existeixen a la destinació.')).toBeInTheDocument();
+
+        // Chip de bloquejant i missatge d'error
+        expect(screen.getByText('Bloquejant')).toBeInTheDocument();
+        expect(screen.getByText("Indicador amb codi TAS_CREADES_TOTAL no trobat per a l'aplicació Gestor de tasques a Preproducció")).toBeInTheDocument();
+
+        // No s'ha de mostrar el selector d'overwrite per a l'element bloquejant
+        expect(screen.queryByTestId('field-conflicts[0].overwrite')).not.toBeInTheDocument();
+
+        // L'element del TreeView NO ha d'estar desactivat (sense efecte difuminat)
+        const treeItem = screen.getByTestId('conflict-item-0');
+        expect(treeItem).not.toHaveAttribute('aria-disabled', 'true');
+
+        // L'element bloquejant NO ha de tenir checkbox
+        expect(treeItem.querySelector('input.PrivateSwitchBase-input')).toBeNull();
+    });
+
+    it('EstadisticaDashboards_quanEsPremTornarAAnalitzar_disparaAccioFieldChangePerAlFitxer', () => {
+        mocks.formContextData.file = new File(['{}'], 'dashboard.json', { type: 'application/json' });
+        mocks.formContextData.conflicts = [
+            {
+                tipo: 'IndicadorExport',
+                titol: 'TAS_CREADES_TOTAL',
+                bloquejant: true,
+                missatgeError: 'Error de dependència',
+            },
+        ];
+
+        render(<EstadisticaDashboards />);
+
+        const reanalyzeButton = screen.getByRole('button', { name: /Tornar a analitzar/i });
+        expect(reanalyzeButton).toBeInTheDocument();
+
+        fireEvent.click(reanalyzeButton);
+
+        expect(mocks.dataDispatchActionMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                type: 'FIELD_CHANGE',
+                payload: expect.objectContaining({
+                    fieldName: 'file',
+                    value: mocks.formContextData.file,
+                }),
+            })
+        );
+    });
+
+    it('EstadisticaDashboards_quanNoHiHaConflictesBloquejants_noMostraBotoTornarAAnalitzar', () => {
+        mocks.formContextData.file = new File(['{}'], 'dashboard.json', { type: 'application/json' });
+        mocks.formContextData.conflicts = [
+            {
+                tipo: 'EstadisticaWidgetExport',
+                titol: 'Widget 1',
+                bloquejant: false,
+            },
+        ];
+
+        render(<EstadisticaDashboards />);
+
+        expect(screen.queryByRole('button', { name: /Tornar a analitzar/i })).toBeNull();
+    });
+
+    it('EstadisticaDashboards_quanHiHaConflictesBloquejantsINoBloquejants_seleccionarTotIgnoraElsBloquejants', () => {
+        mocks.formContextData.conflicts = [
+            { tipo: 'DashboardExport', titol: 'Dashboard A', overwrite: undefined },
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget A', overwrite: undefined },
+            {
+                tipo: 'IndicadorExport',
+                titol: 'IND_BLOQ',
+                bloquejant: true,
+                missatgeError: 'Indicador bloquejant',
+            },
+        ];
+
+        render(<EstadisticaDashboards />);
+
+        // Prémer seleccionar-ho tot
+        const selectAllButton = screen.getByRole('button', { name: /Seleccionar-ho tot/i });
+        fireEvent.click(selectAllButton);
+
+        // Només 2 elements (els no bloquejants) han de quedar seleccionats
+        expect(screen.getByText('2 seleccionats')).toBeInTheDocument();
+
+        // L'element bloquejant no té checkbox seleccionable i no està desactivat
+        const blockingTreeItem = screen.getByTestId('conflict-item-2');
+        expect(blockingTreeItem.querySelector('input.PrivateSwitchBase-input')).toBeNull();
+        expect(blockingTreeItem).not.toHaveAttribute('aria-disabled', 'true');
+    });
+
+    it('EstadisticaDashboards_quanHiHaConflicteDeDimensio_mostraElGrupDeDimensions', () => {
+        mocks.formContextData.conflicts = [
+            {
+                tipo: 'DimensioExport',
+                titol: 'DIM_ESTAT',
+                bloquejant: true,
+                missatgeError: 'Dimensió no trobada',
+            },
+        ];
+
+        render(<EstadisticaDashboards />);
+
+        expect(screen.getByText('Dimensions')).toBeInTheDocument();
+        expect(screen.getByText('DIM_ESTAT')).toBeInTheDocument();
+        expect(screen.getByText('Dimensió no trobada')).toBeInTheDocument();
+    });
+
+    it('EstadisticaDashboards_quanConflicteEsIndicador_ocultaCrearAmbAltreNomIConfiguraHiddenEnumValues', () => {
+        mocks.formContextData.conflicts = [
+            {
+                tipo: 'IndicadorExport',
+                titol: 'IND_FORMULA',
+                overwrite: 'EMPRAR_EXISTENT',
+            },
+        ];
+
+        render(<EstadisticaDashboards />);
+
+        const overwriteField = screen.getByTestId('field-conflicts[0].overwrite');
+        expect(overwriteField).toHaveAttribute('data-hidden-enum-values', 'CREAR_AMB_ALTRE_NOM');
+        expect(screen.queryByTestId('field-conflicts[0].nouNom')).not.toBeInTheDocument();
+    });
+
+    it('EstadisticaDashboards_quanConflicteEsDashboard_ocultaEmprarExistentISobrescriure', () => {
+        mocks.formContextData.conflicts = [
+            {
+                tipo: 'DashboardExport',
+                titol: 'Tauler 1',
+                overwrite: 'CREAR_AMB_ALTRE_NOM',
+            },
+        ];
+
+        render(<EstadisticaDashboards />);
+
+        const overwriteField = screen.getByTestId('field-conflicts[0].overwrite');
+        expect(overwriteField).toHaveAttribute('data-hidden-enum-values', 'EMPRAR_EXISTENT,SOBRESCRIURE');
+    });
+
+    it('EstadisticaDashboards_quanConflicteEsWidget_ocultaSobrescriure', () => {
+        mocks.formContextData.conflicts = [
+            {
+                tipo: 'EstadisticaWidgetExport',
+                titol: 'Widget 1',
+                overwrite: 'EMPRAR_EXISTENT',
+            },
+        ];
+
+        render(<EstadisticaDashboards />);
+
+        const overwriteField = screen.getByTestId('field-conflicts[0].overwrite');
+        expect(overwriteField).toHaveAttribute('data-hidden-enum-values', 'SOBRESCRIURE');
+    });
+
+    it('EstadisticaDashboards_quanHiHaIndicadors_mostraBotoSobrescriureIActualitzaConflictesMassivament', () => {
+        mocks.formContextData.conflicts = [
+            { tipo: 'IndicadorExport', titol: 'Indicador 1', overwrite: undefined },
+            { tipo: 'IndicadorExport', titol: 'Indicador 2', overwrite: undefined },
+        ];
+
+        render(<EstadisticaDashboards />);
+
+        const selectAllButton = screen.getByRole('button', { name: 'Seleccionar-ho tot' });
+        fireEvent.click(selectAllButton);
+
+        const bulkOverwriteBtn = screen.getByRole('button', { name: /Sobrescriure/i });
+        expect(bulkOverwriteBtn).not.toBeDisabled();
+        fireEvent.click(bulkOverwriteBtn);
+
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('conflicts', [
+            { tipo: 'IndicadorExport', titol: 'Indicador 1', overwrite: 'SOBRESCRIURE' },
+            { tipo: 'IndicadorExport', titol: 'Indicador 2', overwrite: 'SOBRESCRIURE' },
+        ]);
+    });
+
+    it('EstadisticaDashboards_quanSeleccioEsMixta_deshabilitaBotonsIMostraIconaInfoAmbMissatge', () => {
+        mocks.formContextData.conflicts = [
+            { tipo: 'DashboardExport', titol: 'Dashboard 1', overwrite: undefined },
+            { tipo: 'EstadisticaWidgetExport', titol: 'Widget 1', overwrite: undefined },
+            { tipo: 'IndicadorExport', titol: 'Indicador 1', overwrite: undefined },
+        ];
+
+        render(<EstadisticaDashboards />);
+
+        const selectAllButton = screen.getByRole('button', { name: 'Seleccionar-ho tot' });
+        const deselectAllButton = screen.getByRole('button', { name: 'Deseleccionar' });
+        const bulkUseExistingBtn = screen.getByRole('button', { name: /Emprar existent/i });
+        const bulkCreateBtn = screen.getByRole('button', { name: /Crear amb un altre nom/i });
+        const bulkOverwriteBtn = screen.getByRole('button', { name: /Sobrescriure/i });
+
+        // Inicialment sense selecció: la icona info no es mostra
+        expect(screen.queryByTestId('mixed-selection-info')).toBeNull();
+
+        // Seleccionar-ho tot: selecció mixta per a tots els botons (Emprar existent, Crear amb un altre nom, Sobrescriure)
+        fireEvent.click(selectAllButton);
+        expect(bulkUseExistingBtn).toBeDisabled();
+        expect(bulkCreateBtn).toBeDisabled();
+        expect(bulkOverwriteBtn).toBeDisabled();
+
+        // La icona d'informació s'ha de mostrar
+        const infoIcon = screen.getByTestId('mixed-selection-info');
+        expect(infoIcon).toBeInTheDocument();
+
+        // Deseleccionar tot: la icona s'amaga
+        fireEvent.click(deselectAllButton);
+        expect(screen.queryByTestId('mixed-selection-info')).toBeNull();
+
+        // Seleccionar només l'indicador: tant Emprar existent com Sobrescriure han d'estar habilitats; Crear amb un altre nom no és aplicable a indicadors
+        const groupIndicadors = screen.getByRole('treeitem', { name: /Indicadors/i });
+        const indicadorItem = within(groupIndicadors).getByRole('treeitem', { name: /Indicador 1/i });
+        const indicadorInput = indicadorItem.querySelector('input.PrivateSwitchBase-input') as HTMLInputElement;
+        fireEvent.click(indicadorInput);
+
+        expect(bulkUseExistingBtn).not.toBeDisabled();
+        expect(bulkCreateBtn).toBeDisabled();
+        expect(bulkOverwriteBtn).not.toBeDisabled();
+        expect(screen.queryByTestId('mixed-selection-info')).toBeNull();
+
+        // Seleccionar a més el widget:
+        // - Sobrescriure esdevé mixt (indicador sí, widget no) -> deshabilitat
+        // - Crear amb un altre nom esdevé mixt (widget sí, indicador no) -> deshabilitat
+        // - Emprar existent és permès a ambdós -> habilitat
+        const widgetInput = screen.getByTestId('field-conflicts[1].overwrite').closest('li')!.querySelector('input.PrivateSwitchBase-input') as HTMLInputElement;
+        fireEvent.click(widgetInput);
+
+        expect(bulkUseExistingBtn).not.toBeDisabled();
+        expect(bulkCreateBtn).toBeDisabled();
+        expect(bulkOverwriteBtn).toBeDisabled();
+        expect(screen.getByTestId('mixed-selection-info')).toBeInTheDocument();
     });
 });

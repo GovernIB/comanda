@@ -16,6 +16,7 @@ import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisu
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetItem;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetTitolItem;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.OverwriteEnum;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardTitolTipus;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.PosicioSubtitol;
@@ -1124,6 +1125,127 @@ class DashboardServiceImplTest {
         assertThatThrownBy(() -> executor.exec(Dashboard.DASHBOARD_IMPORT, new DashboardEntity(), params))
                 .isInstanceOf(ActionExecutionException.class)
                 .hasMessageContaining("Dades del tauler invàlides (titol: no pot ser buit)");
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
+    @DisplayName("DashboardImport: onChange preserva les eleccions d'usuari (overwrite i nouNom)")
+    void dashboardImport_onChange_preservaEleccionsUsuari() throws Exception {
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        String json = "[{\"titol\":\"Dashboard 1\"}]";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.Conflict prevConflict = new DashboardServiceImpl.Conflict("Dashboard 1", "DashboardExport");
+        prevConflict.setOverwrite(OverwriteEnum.CREAR_AMB_ALTRE_NOM);
+        prevConflict.setNouNom("Dashboard Nou");
+
+        DashboardServiceImpl.DashboardImportParams previous = new DashboardServiceImpl.DashboardImportParams();
+        previous.setConflicts(List.of(prevConflict));
+
+        doAnswer(invocation -> {
+            List<DashboardServiceImpl.Conflict> conflicts = invocation.getArgument(1);
+            conflicts.add(new DashboardServiceImpl.Conflict("Dashboard 1", "DashboardExport"));
+            return null;
+        }).when(dashboardImportHelper).checkDashboardConflicts(anyList(), anyList());
+
+        DashboardServiceImpl.DashboardImportParams target = new DashboardServiceImpl.DashboardImportParams();
+        executor.onChange(null, previous, DashboardServiceImpl.DashboardImportParams.Fields.file, fileRef, new HashMap<>(), new String[]{}, target);
+
+        assertThat(target.getConflicts()).hasSize(1);
+        DashboardServiceImpl.Conflict resultConflict = target.getConflicts().get(0);
+        assertThat(resultConflict.getOverwrite()).isEqualTo(OverwriteEnum.CREAR_AMB_ALTRE_NOM);
+        assertThat(resultConflict.getNouNom()).isEqualTo("Dashboard Nou");
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
+    @DisplayName("DashboardImport: onChange preserva les eleccions d'indicador per codi i entornAppId fins i tot si el títol ha canviat")
+    void dashboardImport_onChange_preservaEleccionsIndicadorPerCodiIEntornAppId() throws Exception {
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        String json = "[{\"titol\":\"Dashboard 1\"}]";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
+
+        // Conflicte previ per a entornAppId = 10L amb errata al nom ("Total Comades"), però codi = "IND_COM"
+        DashboardServiceImpl.Conflict prevConflict1 = new DashboardServiceImpl.Conflict("Total Comades", "IndicadorExport");
+        prevConflict1.setCodi("IND_COM");
+        prevConflict1.setEntornAppId(10L);
+        prevConflict1.setAppId(2L);
+        prevConflict1.setOverwrite(OverwriteEnum.SOBRESCRIURE);
+
+        // Conflicte previ per a entornAppId = 20L
+        DashboardServiceImpl.Conflict prevConflict2 = new DashboardServiceImpl.Conflict("Total Comades", "IndicadorExport");
+        prevConflict2.setCodi("IND_COM");
+        prevConflict2.setEntornAppId(20L);
+        prevConflict2.setAppId(2L);
+        prevConflict2.setOverwrite(OverwriteEnum.EMPRAR_EXISTENT);
+
+        DashboardServiceImpl.DashboardImportParams previous = new DashboardServiceImpl.DashboardImportParams();
+        previous.setConflicts(List.of(prevConflict1, prevConflict2));
+
+        // Nous conflictes generats per checkDashboardConflicts (ara el títol és "Total Comandes" corregit)
+        doAnswer(invocation -> {
+            List<DashboardServiceImpl.Conflict> conflicts = invocation.getArgument(1);
+            DashboardServiceImpl.Conflict newC1 = new DashboardServiceImpl.Conflict("Total Comandes", "IndicadorExport");
+            newC1.setCodi("IND_COM");
+            newC1.setEntornAppId(10L);
+            newC1.setAppId(2L);
+            conflicts.add(newC1);
+
+            DashboardServiceImpl.Conflict newC2 = new DashboardServiceImpl.Conflict("Total Comandes", "IndicadorExport");
+            newC2.setCodi("IND_COM");
+            newC2.setEntornAppId(20L);
+            newC2.setAppId(2L);
+            conflicts.add(newC2);
+            return null;
+        }).when(dashboardImportHelper).checkDashboardConflicts(anyList(), anyList());
+
+        DashboardServiceImpl.DashboardImportParams target = new DashboardServiceImpl.DashboardImportParams();
+        executor.onChange(null, previous, DashboardServiceImpl.DashboardImportParams.Fields.file, fileRef, new HashMap<>(), new String[]{}, target);
+
+        assertThat(target.getConflicts()).hasSize(2);
+        DashboardServiceImpl.Conflict res1 = target.getConflicts().stream()
+                .filter(c -> Objects.equals(10L, c.getEntornAppId())).findFirst().orElseThrow();
+        assertThat(res1.getOverwrite()).isEqualTo(OverwriteEnum.SOBRESCRIURE);
+
+        DashboardServiceImpl.Conflict res2 = target.getConflicts().stream()
+                .filter(c -> Objects.equals(20L, c.getEntornAppId())).findFirst().orElseThrow();
+        assertThat(res2.getOverwrite()).isEqualTo(OverwriteEnum.EMPRAR_EXISTENT);
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
+    @DisplayName("DashboardImport: exec llança ActionExecutionException quan hi ha conflictes bloquejants")
+    void dashboardImport_exec_llancaExcepcioQuanHiHaConflictesBloquejants() throws Exception {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        String json = "[{\"titol\":\"Dashboard 1\"}]";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.Conflict blockingConflict = new DashboardServiceImpl.Conflict("IND_ERR", "IndicadorExport");
+        blockingConflict.setBloquejant(true);
+        blockingConflict.setMissatgeError("Indicador no trobat");
+
+        DashboardServiceImpl.DashboardImportParams params = new DashboardServiceImpl.DashboardImportParams();
+        params.setFile(fileRef);
+        params.setConflicts(List.of(blockingConflict));
+
+        assertThatThrownBy(() -> executor.exec(Dashboard.DASHBOARD_IMPORT, new DashboardEntity(), params))
+                .isInstanceOf(ActionExecutionException.class);
 
         ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
     }
