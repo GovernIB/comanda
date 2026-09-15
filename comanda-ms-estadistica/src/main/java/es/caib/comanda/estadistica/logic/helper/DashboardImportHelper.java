@@ -479,7 +479,11 @@ public class DashboardImportHelper {
         if (widget != null && widget.getDimensionsValor() != null) {
             for (DimensioValorExport dmv : widget.getDimensionsValor()) {
                 if (dmv != null && dmv.getDimensioCodi() != null) {
-                    this.checkDimensio(dmv.getDimensioCodi(), item.getEntornCodi(), item.getAppCodi(), conflicts);
+                    if (dmv.getValor() != null && !dmv.getValor().isBlank()) {
+                        this.checkDimensioValor(dmv.getDimensioCodi(), dmv.getValor(), item.getEntornCodi(), item.getAppCodi(), conflicts);
+                    } else {
+                        this.checkDimensio(dmv.getDimensioCodi(), item.getEntornCodi(), item.getAppCodi(), conflicts);
+                    }
                 }
             }
         }
@@ -730,5 +734,37 @@ public class DashboardImportHelper {
             return null;
         }
         return dimensio;
+    }
+
+    private DimensioValorEntity checkDimensioValor(String dimensioCodi, String valor, String entornCodi, String appCodi, List<Conflict> conflicts) {
+        DimensioEntity dimensio = this.checkDimensio(dimensioCodi, entornCodi, appCodi, conflicts);
+        if (dimensio == null) {
+            return null;
+        }
+        if (valor == null) {
+            return null;
+        }
+        DimensioValorEntity dimensioValor = dimensioValorRepository.findByDimensioAndValor(dimensio, valor).orElse(null);
+        if (dimensioValor == null) {
+            Entorn entorn = estadisticaClientHelper.entornByCodi(entornCodi);
+            App app = estadisticaClientHelper.appFindByCodi(appCodi);
+            String appNom = (app != null && app.getNom() != null) ? app.getNom() : appCodi;
+            String entornNom = (entorn != null && entorn.getNom() != null) ? entorn.getNom() : entornCodi;
+            this.addBlockingConflict(
+                    dimensioCodi + " (" + valor + ")",
+                    dimensioCodi + " (" + valor + ")",
+                    app != null ? app.getId() : null,
+                    dimensio.getEntornAppId(),
+                    "DimensioValorExport",
+                    I18nUtil.getInstance().getI18nMessage(
+                            "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.dimensioValor",
+                            valor,
+                            dimensioCodi,
+                            appNom,
+                            entornNom),
+                    conflicts);
+            return null;
+        }
+        return dimensioValor;
     }
 }

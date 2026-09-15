@@ -11,6 +11,7 @@ import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.PaletaColorEntity;
@@ -20,6 +21,7 @@ import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaGrupPaletesEnt
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
+import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.*;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
@@ -418,6 +420,98 @@ class DashboardImportHelperTest {
                 "DIM1",
                 "App Test",
                 "Entorn Test");
+    }
+
+    @Test
+    @DisplayName("checkDashboardItemConflicts: afegeix conflicte bloquejant quan el DimensioValor no existeix")
+    void checkDashboardItemConflicts_quanDimensioValorNoExisteix_afegeixConflicteBloquejant() {
+        // Arrange
+        DashboardItemExport item = new DashboardItemExport();
+        item.setEntornCodi("ENT");
+        item.setAppCodi("APP");
+
+        EstadisticaSimpleWidgetExport widget = new EstadisticaSimpleWidgetExport();
+        widget.setTitol("Widget Simple");
+        DimensioValorExport dmv = new DimensioValorExport("DIM1", "VAL1");
+        widget.setDimensionsValor(List.of(dmv));
+        item.setWidget(widget);
+
+        Entorn entorn = new Entorn();
+        ReflectionTestUtils.setField(entorn, "id", 1L);
+        ReflectionTestUtils.setField(entorn, "nom", "Entorn Test");
+        App app = new App();
+        ReflectionTestUtils.setField(app, "id", 2L);
+        ReflectionTestUtils.setField(app, "nom", "App Test");
+        EntornApp entornApp = new EntornApp();
+        entornApp.setId(20L);
+        when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(entorn);
+        when(estadisticaClientHelper.appFindByCodi("APP")).thenReturn(app);
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(anyLong(), anyLong())).thenReturn(entornApp);
+
+        DimensioEntity dimensio = new DimensioEntity();
+        dimensio.setCodi("DIM1");
+        dimensio.setEntornAppId(20L);
+        when(dimensioRepository.findByCodiAndEntornAppId("DIM1", 20L)).thenReturn(Optional.of(dimensio));
+        when(dimensioValorRepository.findByDimensioAndValor(dimensio, "VAL1")).thenReturn(Optional.empty());
+
+        // Act
+        List<Conflict> conflicts = new ArrayList<>();
+        ReflectionTestUtils.invokeMethod(dashboardImportHelper, "checkDashboardItemConflicts", item, conflicts);
+
+        // Assert
+        assertThat(conflicts).hasSize(1);
+        Conflict conflict = conflicts.get(0);
+        assertThat(conflict.isBloquejant()).isTrue();
+        assertThat(conflict.getTipo()).isEqualTo("DimensioValorExport");
+        assertThat(conflict.getCodi()).isEqualTo("DIM1 (VAL1)");
+        assertThat(conflict.getTitol()).isEqualTo("DIM1 (VAL1)");
+
+        verify(i18nUtil).getI18nMessage(
+                "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.dimensioValor",
+                "VAL1",
+                "DIM1",
+                "App Test",
+                "Entorn Test");
+    }
+
+    @Test
+    @DisplayName("checkDashboardItemConflicts: no afegeix conflicte quan el DimensioValor existeix")
+    void checkDashboardItemConflicts_quanDimensioValorExisteix_noAfegeixConflicte() {
+        // Arrange
+        DashboardItemExport item = new DashboardItemExport();
+        item.setEntornCodi("ENT");
+        item.setAppCodi("APP");
+
+        EstadisticaSimpleWidgetExport widget = new EstadisticaSimpleWidgetExport();
+        widget.setTitol("Widget Simple");
+        DimensioValorExport dmv = new DimensioValorExport("DIM1", "VAL1");
+        widget.setDimensionsValor(List.of(dmv));
+        item.setWidget(widget);
+
+        Entorn entorn = new Entorn();
+        ReflectionTestUtils.setField(entorn, "id", 1L);
+        ReflectionTestUtils.setField(entorn, "nom", "Entorn Test");
+        App app = new App();
+        ReflectionTestUtils.setField(app, "id", 2L);
+        ReflectionTestUtils.setField(app, "nom", "App Test");
+        EntornApp entornApp = new EntornApp();
+        entornApp.setId(20L);
+        when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(entorn);
+        when(estadisticaClientHelper.appFindByCodi("APP")).thenReturn(app);
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(anyLong(), anyLong())).thenReturn(entornApp);
+
+        DimensioEntity dimensio = new DimensioEntity();
+        dimensio.setCodi("DIM1");
+        dimensio.setEntornAppId(20L);
+        when(dimensioRepository.findByCodiAndEntornAppId("DIM1", 20L)).thenReturn(Optional.of(dimensio));
+        when(dimensioValorRepository.findByDimensioAndValor(dimensio, "VAL1")).thenReturn(Optional.of(new DimensioValorEntity()));
+
+        // Act
+        List<Conflict> conflicts = new ArrayList<>();
+        ReflectionTestUtils.invokeMethod(dashboardImportHelper, "checkDashboardItemConflicts", item, conflicts);
+
+        // Assert
+        assertThat(conflicts).noneMatch(Conflict::isBloquejant);
     }
 
     // ========================================================================

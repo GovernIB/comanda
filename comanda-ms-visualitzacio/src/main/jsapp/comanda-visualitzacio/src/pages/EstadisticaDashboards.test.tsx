@@ -725,6 +725,23 @@ describe('EstadisticaDashboards', () => {
         expect(screen.getByText('Dimensió no trobada')).toBeInTheDocument();
     });
 
+    it('EstadisticaDashboards_quanHiHaConflicteDeDimensioValor_mostraElGrupDeDimensions', () => {
+        mocks.formContextData.conflicts = [
+            {
+                tipo: 'DimensioValorExport',
+                titol: 'DIM_ESTAT (ACTIU)',
+                bloquejant: true,
+                missatgeError: 'Valor «ACTIU» per a la dimensió DIM_ESTAT no trobat',
+            },
+        ];
+
+        render(<EstadisticaDashboards />);
+
+        expect(screen.getByText('Dimensions')).toBeInTheDocument();
+        expect(screen.getByText('DIM_ESTAT (ACTIU)')).toBeInTheDocument();
+        expect(screen.getByText('Valor «ACTIU» per a la dimensió DIM_ESTAT no trobat')).toBeInTheDocument();
+    });
+
     it('EstadisticaDashboards_quanConflicteEsIndicador_ocultaCrearAmbAltreNomIConfiguraHiddenEnumValues', () => {
         mocks.formContextData.conflicts = [
             {

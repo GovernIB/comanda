@@ -138,7 +138,10 @@ const groupConflicts = (conflicts: Conflicte[], t: TFunction): ConflictGroupMeta
 
     const map = new Map<string, { index: number; conflict: Conflicte }[]>();
     conflicts.forEach((conflict, index) => {
-        const key = conflict.tipo || 'Other';
+        let key = conflict.tipo || 'Other';
+        if (key === 'DimensioValorExport') {
+            key = 'DimensioExport';
+        }
         if (!map.has(key)) {
             map.set(key, []);
         }
