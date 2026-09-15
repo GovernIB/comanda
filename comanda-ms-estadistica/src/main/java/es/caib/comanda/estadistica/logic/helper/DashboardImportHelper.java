@@ -5,12 +5,14 @@ import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.OverwriteEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus;
+import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltreTipus;
 import es.caib.comanda.estadistica.logic.intf.model.export.*;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
 import es.caib.comanda.estadistica.logic.service.DashboardServiceImpl;
 import es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.Conflict;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
+import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardFiltreEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
@@ -58,6 +60,7 @@ public class DashboardImportHelper {
     private final DimensioValorRepository dimensioValorRepository;
     private final PaletaRepository paletaRepository;
     private final IndicadorExportHelper indicadorExportHelper;
+    private final DashboardFiltreRepository dashboardFiltreRepository;
     private final Validator validator;
 
     public void validateDashboardExport(List<DashboardExport> dashboards) {
@@ -152,6 +155,9 @@ public class DashboardImportHelper {
         if (dashboardEntity.getItems() != null) {
             this.importDashboardItem(dashboardEntity.getItems(), dashboardEntity, conflicts);
         }
+        if (dashboardEntity.getFiltres() != null) {
+            this.importDashboardFiltre(dashboardEntity.getFiltres(), dashboardEntity);
+        }
         return dashboardEntity;
     }
 
@@ -188,6 +194,17 @@ public class DashboardImportHelper {
             dashboardItemEntity.setPlantilla(this.importPlantilla(dashboardItemEntity.getPlantilla(), conflicts));
         dashboardItemRepository.save(dashboardItemEntity);
         return dashboardItemEntity;
+    }
+
+    private List<DashboardFiltreEntity> importDashboardFiltre(List<DashboardFiltreEntity> filtreEntityList, DashboardEntity dashboardEntity) {
+        if (filtreEntityList == null) return Collections.emptyList();
+        return filtreEntityList.stream()
+                .filter(Objects::nonNull)
+                .peek(filtre -> {
+                    filtre.setDashboard(dashboardEntity);
+                    dashboardFiltreRepository.save(filtre);
+                })
+                .collect(Collectors.toList());
     }
 
     private EstadisticaWidgetEntity importWidget(EstadisticaWidgetEntity widgetEntity, List<Conflict> conflicts) {
@@ -422,6 +439,20 @@ public class DashboardImportHelper {
             }
         }
         this.checkPlantillaConflicts(dashboard.getPlantilla(), conflicts);
+
+        if (dashboard.getFiltres() != null) {
+            for (DashboardFiltreExport filtre : dashboard.getFiltres()) {
+                if (filtre != null
+                        && DashboardFiltreTipus.DIMENSIO.equals(filtre.getTipus())
+                        && filtre.getDimensioCodi() != null) {
+                    this.checkDimensio(
+                            filtre.getDimensioCodi(),
+                            dashboard.getEntornCodi(),
+                            dashboard.getAppCodi(),
+                            conflicts);
+                }
+            }
+        }
 
         // Els indicadors de tipus FORMULA inclosos a l'exportació es crearan automàticament (vegeu
         // importDashboardFromExport), però els seus components (sempre SIMPLE) han d'existir ja a l'entornApp

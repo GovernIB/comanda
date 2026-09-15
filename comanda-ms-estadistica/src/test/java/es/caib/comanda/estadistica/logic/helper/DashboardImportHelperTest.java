@@ -8,8 +8,10 @@ import es.caib.comanda.estadistica.logic.intf.model.export.*;
 import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
 import es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.Conflict;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
+import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardFiltreEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
+import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltreTipus;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
@@ -63,6 +65,7 @@ class DashboardImportHelperTest {
     @Mock private DimensioValorRepository dimensioValorRepository;
     @Mock private PaletaRepository paletaRepository;
     @Mock private IndicadorExportHelper indicadorExportHelper;
+    @Mock private DashboardFiltreRepository dashboardFiltreRepository;
     @Mock private javax.validation.Validator validator;
     @Mock private I18nUtil i18nUtil;
     @Mock private ApplicationContext applicationContext;
@@ -1187,5 +1190,145 @@ class DashboardImportHelperTest {
         EstadisticaWidgetEntity resultWidget = (EstadisticaWidgetEntity) ReflectionTestUtils.invokeMethod(
                 dashboardImportHelper, "importWidget", (EstadisticaWidgetEntity) null, Collections.emptyList());
         assertThat(resultWidget).isNull();
+    }
+
+    // ========================================================================
+    // TESTOS PER A FILTRES DE CAPÇALERA (DashboardFiltreEntity)
+    // ========================================================================
+
+    @Test
+    @DisplayName("checkDashboardConflicts: filtre DIMENSIO amb dimensioCodi inexistent genera conflicte bloquejant")
+    void checkDashboardConflicts_quanFiltreDimensioNoExisteix_llavorsAfegeixConflicteBloquejant() {
+        DashboardExport dashboard = new DashboardExport();
+        dashboard.setTitol("Dash amb filtre");
+        dashboard.setEntornCodi("ENT");
+        dashboard.setAppCodi("APP");
+
+        DashboardFiltreExport filtre = new DashboardFiltreExport();
+        filtre.setTipus(DashboardFiltreTipus.DIMENSIO);
+        filtre.setDimensioCodi("DIM_INEXISTENT");
+        filtre.setOrdre(1);
+        dashboard.setFiltres(List.of(filtre));
+
+        Entorn entorn = new Entorn();
+        ReflectionTestUtils.setField(entorn, "id", 1L);
+        App app = new App();
+        ReflectionTestUtils.setField(app, "id", 2L);
+        EntornApp entornApp = new EntornApp();
+        entornApp.setId(10L);
+
+        when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(entorn);
+        when(estadisticaClientHelper.appFindByCodi("APP")).thenReturn(app);
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(2L, 1L)).thenReturn(entornApp);
+        when(dimensioRepository.findByCodiAndEntornAppId("DIM_INEXISTENT", 10L)).thenReturn(Optional.empty());
+
+        List<Conflict> conflicts = new ArrayList<>();
+        dashboardImportHelper.checkDashboardConflicts(dashboard, conflicts);
+
+        // Ha d'haver-hi almenys un conflicte bloquejant per la dimensió
+        assertThat(conflicts.stream().anyMatch(c -> c.isBloquejant() && "DimensioExport".equals(c.getTipo()))).isTrue();
+    }
+
+    @Test
+    @DisplayName("checkDashboardConflicts: filtre PERIODE no valida dimensioCodi")
+    void checkDashboardConflicts_quanFiltrePeriode_noValidaDimensio() {
+        DashboardExport dashboard = new DashboardExport();
+        dashboard.setTitol("Dash amb filtre període");
+        dashboard.setEntornCodi("ENT");
+        dashboard.setAppCodi("APP");
+
+        DashboardFiltreExport filtre = new DashboardFiltreExport();
+        filtre.setTipus(DashboardFiltreTipus.PERIODE);
+        filtre.setDimensioCodi(null);
+        filtre.setOrdre(1);
+        dashboard.setFiltres(List.of(filtre));
+
+        Entorn entorn = new Entorn();
+        ReflectionTestUtils.setField(entorn, "id", 1L);
+        App app = new App();
+        ReflectionTestUtils.setField(app, "id", 2L);
+
+        when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(entorn);
+        when(estadisticaClientHelper.appFindByCodi("APP")).thenReturn(app);
+
+        List<Conflict> conflicts = new ArrayList<>();
+        dashboardImportHelper.checkDashboardConflicts(dashboard, conflicts);
+
+        // Només el conflicte del dashboard (addConflict), cap bloquejant per dimensió
+        assertThat(conflicts.stream().noneMatch(c -> c.isBloquejant() && "DimensioExport".equals(c.getTipo()))).isTrue();
+    }
+
+    @Test
+    @DisplayName("checkDashboardConflicts: filtre DIMENSIO amb dimensioCodi existent no genera conflicte bloquejant")
+    void checkDashboardConflicts_quanFiltreDimensioExisteix_noAfegeixConflicteBloquejant() {
+        DashboardExport dashboard = new DashboardExport();
+        dashboard.setTitol("Dash amb filtre vàlid");
+        dashboard.setEntornCodi("ENT");
+        dashboard.setAppCodi("APP");
+
+        DashboardFiltreExport filtre = new DashboardFiltreExport();
+        filtre.setTipus(DashboardFiltreTipus.DIMENSIO);
+        filtre.setDimensioCodi("DIM_OK");
+        filtre.setOrdre(1);
+        dashboard.setFiltres(List.of(filtre));
+
+        Entorn entorn = new Entorn();
+        ReflectionTestUtils.setField(entorn, "id", 1L);
+        App app = new App();
+        ReflectionTestUtils.setField(app, "id", 2L);
+        EntornApp entornApp = new EntornApp();
+        entornApp.setId(10L);
+
+        when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(entorn);
+        when(estadisticaClientHelper.appFindByCodi("APP")).thenReturn(app);
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(2L, 1L)).thenReturn(entornApp);
+
+        DimensioEntity dimensio = new DimensioEntity();
+        dimensio.setCodi("DIM_OK");
+        when(dimensioRepository.findByCodiAndEntornAppId("DIM_OK", 10L)).thenReturn(Optional.of(dimensio));
+
+        List<Conflict> conflicts = new ArrayList<>();
+        dashboardImportHelper.checkDashboardConflicts(dashboard, conflicts);
+
+        assertThat(conflicts.stream().noneMatch(c -> c.isBloquejant() && "DimensioExport".equals(c.getTipo()))).isTrue();
+    }
+
+    @Test
+    @DisplayName("importDashboardFromEntity: quan dashboard té filtres, guarda cada filtre amb la referència al dashboard")
+    void importDashboardFromEntity_quanDashboardTeFiltres_llavorsGuardaFiltres() {
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setTitol("Dash Import");
+
+        DashboardFiltreEntity filtre1 = new DashboardFiltreEntity();
+        filtre1.setTipus(DashboardFiltreTipus.DIMENSIO);
+        filtre1.setDimensioCodi("DIM1");
+        filtre1.setOrdre(1);
+
+        DashboardFiltreEntity filtre2 = new DashboardFiltreEntity();
+        filtre2.setTipus(DashboardFiltreTipus.PERIODE);
+        filtre2.setOrdre(2);
+
+        dashboard.setFiltres(new ArrayList<>(List.of(filtre1, filtre2)));
+
+        dashboardImportHelper.importDashboardFromEntity(dashboard, Collections.emptyList());
+
+        verify(dashboardRepository).save(dashboard);
+        verify(dashboardFiltreRepository).save(filtre1);
+        verify(dashboardFiltreRepository).save(filtre2);
+        assertThat(filtre1.getDashboard()).isSameAs(dashboard);
+        assertThat(filtre2.getDashboard()).isSameAs(dashboard);
+    }
+
+    @Test
+    @DisplayName("importDashboardFromEntity: quan filtres és null, no falla")
+    void importDashboardFromEntity_quanFiltresNull_noFalla() {
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setTitol("Dash Sense Filtres");
+        dashboard.setFiltres(null);
+
+        dashboardImportHelper.importDashboardFromEntity(dashboard, Collections.emptyList());
+
+        verify(dashboardRepository).save(dashboard);
+        verify(dashboardFiltreRepository, never()).save(any());
     }
 }
