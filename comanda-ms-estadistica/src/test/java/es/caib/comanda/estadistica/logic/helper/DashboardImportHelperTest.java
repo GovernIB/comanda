@@ -1074,4 +1074,118 @@ class DashboardImportHelperTest {
         ReflectionTestUtils.invokeMethod(dashboardImportHelper, "addBlockingConflict", "IND", "IND", 1L, 10L, "IndicadorExport", "Error Entorn 1 duplicat", conflicts);
         assertThat(conflicts).hasSize(2);
     }
+
+    // ========================================================================
+    // TESTOS PER A DUPLICATS EN EL MATEIX FITXER D'IMPORTACIÓ (POINT 3)
+    // ========================================================================
+
+    @Test
+    @DisplayName("importPlantilla: quan conflicte és null però la plantilla ja ha estat guardada a la BBDD, retorna l'existent sense duplicar save")
+    void importPlantilla_quanConflicteNullIExisteixEnBBDD_llavorsRetornaExistentISenseGuardar() {
+        PlantillaEntity plantilla = new PlantillaEntity();
+        plantilla.setNom("Plantilla Compartida");
+
+        PlantillaEntity existent = new PlantillaEntity();
+        existent.setNom("Plantilla Compartida");
+        when(plantillaRepository.findByNom("Plantilla Compartida")).thenReturn(Optional.of(existent));
+
+        PlantillaEntity result = (PlantillaEntity) ReflectionTestUtils.invokeMethod(
+                dashboardImportHelper, "importPlantilla", plantilla, Collections.emptyList());
+
+        assertThat(result).isSameAs(existent);
+        verify(plantillaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("importPaleta: quan conflicte és null però la paleta ja ha estat guardada a la BBDD, retorna l'existent sense duplicar save")
+    void importPaleta_quanConflicteNullIExisteixEnBBDD_llavorsRetornaExistentISenseGuardar() {
+        PaletaEntity paleta = new PaletaEntity();
+        paleta.setNom("Paleta Compartida");
+
+        PaletaEntity existent = new PaletaEntity();
+        existent.setNom("Paleta Compartida");
+        when(paletaRepository.findByNom("Paleta Compartida")).thenReturn(Optional.of(existent));
+
+        PaletaEntity result = (PaletaEntity) ReflectionTestUtils.invokeMethod(
+                dashboardImportHelper, "importPaleta", paleta, Collections.emptyList());
+
+        assertThat(result).isSameAs(existent);
+        verify(paletaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("importWidget: quan conflicte és null però el widget ja ha estat guardat a la BBDD, retorna l'existent sense duplicar save")
+    void importWidget_quanConflicteNullIExisteixEnBBDD_llavorsRetornaExistentISenseGuardar() {
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setTitol("Widget Compartit");
+        widget.setAppId(10L);
+
+        EstadisticaWidgetEntity existent = new EstadisticaSimpleWidgetEntity();
+        existent.setTitol("Widget Compartit");
+        existent.setAppId(10L);
+        when(estadisticaWidgetRepository.findByAppIdAndTitol(10L, "Widget Compartit")).thenReturn(existent);
+
+        EstadisticaWidgetEntity result = (EstadisticaWidgetEntity) ReflectionTestUtils.invokeMethod(
+                dashboardImportHelper, "importWidget", widget, Collections.emptyList());
+
+        assertThat(result).isSameAs(existent);
+        verify(estadisticaWidgetRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("importPlantilla: reutilitza la paleta ja guardada quan s'utilitza a múltiples llocs dins la mateixa importació")
+    void importPlantilla_quanMateixaPaletaEnDosGrups_llavorsGuardaPaletaUnSolCop() {
+        PlantillaEntity plantilla = new PlantillaEntity();
+        plantilla.setNom("Plantilla Nova");
+
+        PaletaEntity paletaCompartida = new PaletaEntity();
+        paletaCompartida.setNom("Paleta Compartida");
+        paletaCompartida.setColors(new ArrayList<>());
+
+        PlantillaGrupPaletesEntity grup1 = new PlantillaGrupPaletesEntity();
+        grup1.setPlantilla(plantilla);
+        grup1.setWidgetPalette(paletaCompartida);
+
+        PlantillaGrupPaletesEntity grup2 = new PlantillaGrupPaletesEntity();
+        grup2.setPlantilla(plantilla);
+        grup2.setWidgetPalette(paletaCompartida);
+
+        plantilla.setPaletteGroups(List.of(grup1, grup2));
+        plantilla.setStyleProperties(new ArrayList<>());
+
+        when(plantillaRepository.findByNom("Plantilla Nova")).thenReturn(Optional.empty());
+
+        PaletaEntity paletaJaGuardada = new PaletaEntity();
+        paletaJaGuardada.setNom("Paleta Compartida");
+
+        // La primera crida no troba la paleta (es guardarà), la segona ja la troba
+        when(paletaRepository.findByNom("Paleta Compartida"))
+                .thenReturn(Optional.empty())
+                .thenReturn(Optional.of(paletaJaGuardada));
+
+        PlantillaEntity result = (PlantillaEntity) ReflectionTestUtils.invokeMethod(
+                dashboardImportHelper, "importPlantilla", plantilla, Collections.emptyList());
+
+        assertThat(result).isNotNull();
+        verify(plantillaRepository, times(1)).save(plantilla);
+        // La paleta només s'ha de guardar una sola vegada!
+        verify(paletaRepository, times(1)).save(paletaCompartida);
+        assertThat(grup2.getWidgetPalette()).isSameAs(paletaJaGuardada);
+    }
+
+    @Test
+    @DisplayName("importPlantilla, importPaleta, importWidget: retornen null quan l'entitat d'entrada és null")
+    void importMethods_quanEntitatsNull_llavorsRetornaNull() {
+        PlantillaEntity resultPlantilla = (PlantillaEntity) ReflectionTestUtils.invokeMethod(
+                dashboardImportHelper, "importPlantilla", (PlantillaEntity) null, Collections.emptyList());
+        assertThat(resultPlantilla).isNull();
+
+        PaletaEntity resultPaleta = (PaletaEntity) ReflectionTestUtils.invokeMethod(
+                dashboardImportHelper, "importPaleta", (PaletaEntity) null, Collections.emptyList());
+        assertThat(resultPaleta).isNull();
+
+        EstadisticaWidgetEntity resultWidget = (EstadisticaWidgetEntity) ReflectionTestUtils.invokeMethod(
+                dashboardImportHelper, "importWidget", (EstadisticaWidgetEntity) null, Collections.emptyList());
+        assertThat(resultWidget).isNull();
+    }
 }

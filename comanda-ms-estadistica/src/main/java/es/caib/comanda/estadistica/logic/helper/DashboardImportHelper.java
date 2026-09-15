@@ -191,6 +191,7 @@ public class DashboardImportHelper {
     }
 
     private EstadisticaWidgetEntity importWidget(EstadisticaWidgetEntity widgetEntity, List<Conflict> conflicts) {
+        if (widgetEntity == null) return null;
         Conflict conflicte = this.findConflictByNom(
                 widgetEntity.getTitol(),
                 widgetEntity.getAppId(),
@@ -220,20 +221,29 @@ public class DashboardImportHelper {
                     widgetEntity.setTitol(nom);
                     break;
             }
+        } else {
+            EstadisticaWidgetEntity existent = estadisticaWidgetRepository.findByAppIdAndTitol(widgetEntity.getAppId(), widgetEntity.getTitol());
+            if (existent != null) return existent;
         }
 
         if (widgetEntity instanceof EstadisticaSimpleWidgetEntity) {
-            ((EstadisticaSimpleWidgetEntity) widgetEntity).getIndicadorInfo().setWidget(widgetEntity);
+            if (((EstadisticaSimpleWidgetEntity) widgetEntity).getIndicadorInfo() != null) {
+                ((EstadisticaSimpleWidgetEntity) widgetEntity).getIndicadorInfo().setWidget(widgetEntity);
+            }
         }
         if (widgetEntity instanceof EstadisticaGraficWidgetEntity) {
-            ((EstadisticaGraficWidgetEntity) widgetEntity).getIndicadorsInfo().forEach(c -> {
-                c.setWidget(widgetEntity);
-            });
+            if (((EstadisticaGraficWidgetEntity) widgetEntity).getIndicadorsInfo() != null) {
+                ((EstadisticaGraficWidgetEntity) widgetEntity).getIndicadorsInfo().forEach(c -> {
+                    c.setWidget(widgetEntity);
+                });
+            }
         }
         if (widgetEntity instanceof EstadisticaTaulaWidgetEntity) {
-            ((EstadisticaTaulaWidgetEntity) widgetEntity).getColumnes().forEach(c -> {
-                c.setWidget(widgetEntity);
-            });
+            if (((EstadisticaTaulaWidgetEntity) widgetEntity).getColumnes() != null) {
+                ((EstadisticaTaulaWidgetEntity) widgetEntity).getColumnes().forEach(c -> {
+                    c.setWidget(widgetEntity);
+                });
+            }
         }
 
         estadisticaWidgetRepository.save(widgetEntity);
@@ -241,6 +251,7 @@ public class DashboardImportHelper {
     }
 
     private PlantillaEntity importPlantilla(PlantillaEntity plantillaEntity, List<Conflict> conflicts) {
+        if (plantillaEntity == null) return null;
         Conflict conflicte = this.findConflictByNom(
                 plantillaEntity.getNom(),
                 null,
@@ -270,6 +281,9 @@ public class DashboardImportHelper {
                     plantillaEntity.setNom(nom);
                     break;
             }
+        } else {
+            PlantillaEntity existent = plantillaRepository.findByNom(plantillaEntity.getNom()).orElse(null);
+            if (existent != null) return existent;
         }
 
         this.importPlantillaGrupPaletes(plantillaEntity.getPaletteGroups(), plantillaEntity, conflicts);
@@ -281,24 +295,28 @@ public class DashboardImportHelper {
     }
 
     private List<WidgetStylePropertyEntity> importWidgetStyleProperty(List<WidgetStylePropertyEntity> widgetStylePropertyEntityList, PlantillaEntity plantillaEntity, List<Conflict> conflicts) {
+        if (widgetStylePropertyEntityList == null) return Collections.emptyList();
         return widgetStylePropertyEntityList.stream()
                 .map(d -> this.importWidgetStyleProperty(d, plantillaEntity, conflicts))
                 .collect(Collectors.toList());
     }
 
     private WidgetStylePropertyEntity importWidgetStyleProperty(WidgetStylePropertyEntity widgetStylePropertyEntity, PlantillaEntity plantillaEntity, List<Conflict> conflicts) {
+        if (widgetStylePropertyEntity == null) return null;
         widgetStylePropertyEntity.setPlantilla(plantillaEntity);
 //        widgetStylePropertyRepository.save(widgetStylePropertyEntity);
         return widgetStylePropertyEntity;
     }
 
     private List<PlantillaGrupPaletesEntity> importPlantillaGrupPaletes(List<PlantillaGrupPaletesEntity> plantillaGrupPaletesEntityList, PlantillaEntity plantillaEntity, List<Conflict> conflicts) {
+        if (plantillaGrupPaletesEntityList == null) return Collections.emptyList();
         return plantillaGrupPaletesEntityList.stream()
                 .map(d -> this.importPlantillaGrupPaletes(d, plantillaEntity, conflicts))
                 .collect(Collectors.toList());
     }
 
     private PlantillaGrupPaletesEntity importPlantillaGrupPaletes(PlantillaGrupPaletesEntity plantillaGrupPaletesEntity, PlantillaEntity plantillaEntity, List<Conflict> conflicts) {
+        if (plantillaGrupPaletesEntity == null) return null;
         plantillaGrupPaletesEntity.setPlantilla(plantillaEntity);
         plantillaGrupPaletesEntity.setWidgetPalette(this.importPaleta(plantillaGrupPaletesEntity.getWidgetPalette(), conflicts));
         plantillaGrupPaletesEntity.setChartPalette(this.importPaleta(plantillaGrupPaletesEntity.getChartPalette(), conflicts));
@@ -307,6 +325,7 @@ public class DashboardImportHelper {
     }
 
     private PaletaEntity importPaleta(PaletaEntity paletaEntity, List<Conflict> conflicts) {
+        if (paletaEntity == null) return null;
         Conflict conflicte = this.findConflictByNom(
                 paletaEntity.getNom(),
                 null,
@@ -336,6 +355,9 @@ public class DashboardImportHelper {
                     paletaEntity.setNom(nom);
                     break;
             }
+        } else {
+            PaletaEntity existent = paletaRepository.findByNom(paletaEntity.getNom()).orElse(null);
+            if (existent != null) return existent;
         }
 //        PaletaColorEntity
         this.importPaletaColor(paletaEntity.getColors(), paletaEntity);
@@ -346,12 +368,14 @@ public class DashboardImportHelper {
     }
 
     private List<PaletaColorEntity> importPaletaColor(List<PaletaColorEntity> paletaColorEntityList, PaletaEntity paletaEntity) {
+        if (paletaColorEntityList == null) return Collections.emptyList();
         return paletaColorEntityList.stream()
                 .map(d -> this.importPaletaColor(d, paletaEntity))
                 .collect(Collectors.toList());
     }
 
     private PaletaColorEntity importPaletaColor(PaletaColorEntity paletaColorEntity, PaletaEntity paletaEntity) {
+        if (paletaColorEntity == null) return null;
         paletaColorEntity.setPaleta(paletaEntity);
 //        paletaColorRepository.save(paletaColorEntity);
         return paletaColorEntity;
