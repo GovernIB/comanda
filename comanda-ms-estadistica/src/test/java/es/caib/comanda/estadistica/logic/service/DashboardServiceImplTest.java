@@ -98,6 +98,7 @@ class DashboardServiceImplTest {
     @Mock private es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper dashboardPermisosHelper;
     @Mock private ApplicationContext applicationContext;
     @Mock private I18nUtil i18nUtil;
+    @Mock private es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper resourceEntityMappingHelper;
 
     @InjectMocks
     private DashboardServiceImpl dashboardService;
@@ -121,6 +122,7 @@ class DashboardServiceImplTest {
         ));
         ReflectionTestUtils.setField(dashboardService, "dashboardPermisosHelper", dashboardPermisosHelper);
         ReflectionTestUtils.setField(dashboardService, "entityRepository", dashboardRepository);
+        ReflectionTestUtils.setField(dashboardService, "resourceEntityMappingHelper", resourceEntityMappingHelper);
         dashboardService.init();
         lenient().when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
         lenient().when(authenticationHelper.getCurrentUserName()).thenReturn("testUser");
@@ -1074,6 +1076,40 @@ class DashboardServiceImplTest {
 
         assertThat(result).isNotNull();
         verify(dashboardImportHelper, atLeastOnce()).importDashboardFromExport(anyList(), any());
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
+    @DisplayName("DashboardImport: exec retorna els dashboards importats en el DashboardImportResult")
+    void dashboardImport_exec_retornaDashboardsImportatsEnElResultat() throws Exception {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        String json = "[{\"titol\":\"Tauler 1\"}]";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.DashboardImportParams params = new DashboardServiceImpl.DashboardImportParams();
+        params.setFile(fileRef);
+
+        DashboardEntity importedEntity = new DashboardEntity();
+        importedEntity.setId(10L);
+        importedEntity.setTitol("Tauler 1");
+        when(dashboardImportHelper.importDashboardFromExport(anyList(), any())).thenReturn(List.of(importedEntity));
+
+        Dashboard expectedDashboard = new Dashboard();
+        expectedDashboard.setId(10L);
+        expectedDashboard.setTitol("Tauler 1");
+        when(resourceEntityMappingHelper.entityToResource(importedEntity, Dashboard.class)).thenReturn(expectedDashboard);
+
+        DashboardServiceImpl.DashboardImportResult result = executor.exec(Dashboard.DASHBOARD_IMPORT, new DashboardEntity(), params);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getDashboards()).hasSize(1);
+        assertThat(result.getDashboards().get(0)).isSameAs(expectedDashboard);
 
         ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
     }

@@ -513,7 +513,6 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                             I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.permisos.importar"));
                 }
 
-                List<Dashboard> importedDashboards = new ArrayList<>();
                 List<Conflict> conflicts = params.getConflicts() != null ? params.getConflicts() : Collections.emptyList();
                 if (conflicts.stream().anyMatch(Conflict::isBloquejant)) {
                     throw new ActionExecutionException(
@@ -522,7 +521,10 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                             code,
                             I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.error.conflictesBloquejants"));
                 }
-                dashboardImportHelper.importDashboardFromExport(dashboards, conflicts);
+                List<DashboardEntity> importedEntities = dashboardImportHelper.importDashboardFromExport(dashboards, conflicts);
+                List<Dashboard> importedDashboards = (importedEntities != null && resourceEntityMappingHelper != null)
+                        ? importedEntities.stream().filter(Objects::nonNull).map(DashboardServiceImpl.this::entityToResource).collect(Collectors.toList())
+                        : Collections.emptyList();
                 return new DashboardImportResult(importedDashboards);
             } catch (AccessDeniedException | ActionExecutionException e) {
                 throw e;
