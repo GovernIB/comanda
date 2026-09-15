@@ -14,6 +14,7 @@ import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.*;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
@@ -206,7 +207,7 @@ public class DashboardImportHelper {
                     if (conflicte.getNouNom() != null && !conflicte.getNouNom().isBlank()) {
                         nom = conflicte.getNouNom();
 
-                        EstadisticaWidgetEntity widget = estadisticaWidgetRepository.findByAppIdAndTitol(widgetEntity.getAppId(), widgetEntity.getTitol());
+                        EstadisticaWidgetEntity widget = estadisticaWidgetRepository.findByAppIdAndTitol(widgetEntity.getAppId(), nom);
                         if (widget != null) return widget;
                     } else {
                         nom = this.getElementNewNom(

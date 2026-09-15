@@ -200,8 +200,39 @@ class DashboardImportHelperTest {
         // Assert
         assertThat(result.getTitol()).isSameAs(conflict.getNouNom());
         assertThat(result.getIndicadorInfo().getWidget()).isSameAs(result);
-        verify(estadisticaWidgetRepository).findByAppIdAndTitol(any(), any());
+        verify(estadisticaWidgetRepository).findByAppIdAndTitol(1L, "Nou Widget Simple");
         verify(estadisticaWidgetRepository).save(result);
+    }
+
+    @Test
+    @DisplayName("importWidget: retorna widget existent si ja existeix amb el nou nom proporcionat")
+    void importWidget_quanCrearAmbAltreNomIExisteixWidgetAmbNouNom_llavorsRetornaWidgetExistent() {
+        // Arrange
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setTitol("Widget Simple");
+        widget.setAppId(1L);
+
+        Conflict conflict = new Conflict();
+        conflict.setTitol(widget.getTitol());
+        conflict.setAppId(widget.getAppId());
+        conflict.setNouNom("Nou Widget Simple");
+        conflict.setOverwrite(OverwriteEnum.CREAR_AMB_ALTRE_NOM);
+        conflict.setTipo(EstadisticaWidgetExport.class.getSimpleName());
+
+        EstadisticaWidgetEntity existingWidget = new EstadisticaSimpleWidgetEntity();
+        existingWidget.setTitol("Nou Widget Simple");
+        existingWidget.setAppId(1L);
+
+        when(estadisticaWidgetRepository.findByAppIdAndTitol(1L, "Nou Widget Simple")).thenReturn(existingWidget);
+
+        // Act
+        EstadisticaWidgetEntity result = (EstadisticaWidgetEntity) ReflectionTestUtils.invokeMethod(
+            dashboardImportHelper, "importWidget", widget, List.of(conflict));
+
+        // Assert
+        assertThat(result).isSameAs(existingWidget);
+        verify(estadisticaWidgetRepository).findByAppIdAndTitol(1L, "Nou Widget Simple");
+        verify(estadisticaWidgetRepository, never()).save(widget);
     }
 
     @Test
