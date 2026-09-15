@@ -16,6 +16,7 @@ import es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
+import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
 import es.caib.comanda.estadistica.persist.repository.EstadisticaWidgetRepository;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
@@ -56,6 +57,7 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
     private final AtributsVisualsHelper atributsVisualsHelper;
     private final EstadisticaWidgetHelper estadisticaWidgetHelper;
     private final DashboardItemTitolHelper dashboardItemTitolHelper;
+    private final DashboardItemRepository dashboardItemRepository;
     private final EstadisticaWidgetRepository estadisticaWidgetRepository;
     private final DashboardClonerMapper dashboardClonerMapper;
     private final DashboardPermisosHelper dashboardPermisosHelper;
@@ -129,6 +131,28 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
     protected void beforeDelete(DashboardItemEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
         Long dashboardId = entity.getDashboard() != null ? entity.getDashboard().getId() : null;
         dashboardPermisosHelper.checkCanDesignDashboard(dashboardId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardItemServiceImpl.permisos.eliminarElements"));
+    }
+
+    @Override
+    protected void afterDelete(DashboardItemEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        super.afterDelete(entity, answers);
+        estadisticaWidgetHelper.clearDashboardWidgetCache(entity.getId());
+        if (entity.getWidget() != null && entity.getWidget().getId() != null) {
+            Long widgetId = entity.getWidget().getId();
+            List<DashboardItemEntity> remainingItems = dashboardItemRepository.findByWidgetId(widgetId);
+            boolean usedElsewhere = remainingItems.stream()
+                    .anyMatch(item -> !Objects.equals(item.getId(), entity.getId()));
+            if (!usedElsewhere) {
+                log.debug("El widget {} només s'utilitzava a l'element de dashboard {}. Eliminant el widget definitivament.", widgetId, entity.getId());
+                estadisticaWidgetHelper.clearDashboardWidgetCacheByWidget(widgetId);
+                estadisticaWidgetRepository.findById(widgetId).ifPresent(widget -> {
+                    estadisticaWidgetRepository.delete(widget);
+                    estadisticaWidgetRepository.flush();
+                });
+            } else {
+                log.debug("El widget {} encara s'utilitza a altres elements de dashboard. No s'elimina.", widgetId);
+            }
+        }
     }
 
     @Override

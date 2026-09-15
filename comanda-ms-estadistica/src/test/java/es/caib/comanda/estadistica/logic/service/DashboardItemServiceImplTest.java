@@ -750,4 +750,109 @@ class DashboardItemServiceImplTest {
             .isInstanceOf(org.springframework.security.access.AccessDeniedException.class)
             .hasMessageContaining("mateixa aplicació");
     }
+
+    // ========================================================================
+    // 6. TESTOS PER A ELIMINACIÓ D'ITEMS I NETEJA DE WIDGETS (afterDelete)
+    // ========================================================================
+
+    @Test
+    @DisplayName("afterDelete: quan el widget només s'usa a aquest item, esborra el dashboardItem i el widget")
+    void afterDelete_quanWidgetNomesSUtilitzaAAquestItem_llavorsEsborraElWidget() {
+        // Arrange
+        Long itemId = 1L;
+        Long widgetId = 100L;
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(widgetId);
+
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setId(itemId);
+        item.setWidget(widget);
+
+        when(dashboardItemRepository.findByWidgetId(widgetId)).thenReturn(Collections.emptyList());
+        when(estadisticaWidgetRepository.findById(widgetId)).thenReturn(Optional.of(widget));
+
+        // Act
+        ReflectionTestUtils.invokeMethod(dashboardItemService, "afterDelete", item, Collections.emptyMap());
+
+        // Assert
+        verify(estadisticaWidgetHelper, times(1)).clearDashboardWidgetCache(itemId);
+        verify(estadisticaWidgetHelper, times(1)).clearDashboardWidgetCacheByWidget(widgetId);
+        verify(estadisticaWidgetRepository, times(1)).delete(widget);
+        verify(estadisticaWidgetRepository, times(1)).flush();
+    }
+
+    @Test
+    @DisplayName("afterDelete: quan el widget s'usa a algun altre dashboardItem, només s'esborra el dashboardItem i no el widget")
+    void afterDelete_quanWidgetSUtilitzaAAltresItems_llavorsNoEsborraElWidget() {
+        // Arrange
+        Long item1Id = 1L;
+        Long item2Id = 2L;
+        Long widgetId = 100L;
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(widgetId);
+
+        DashboardItemEntity item1 = new DashboardItemEntity();
+        item1.setId(item1Id);
+        item1.setWidget(widget);
+
+        DashboardItemEntity item2 = new DashboardItemEntity();
+        item2.setId(item2Id);
+        item2.setWidget(widget);
+
+        when(dashboardItemRepository.findByWidgetId(widgetId)).thenReturn(List.of(item1, item2));
+
+        // Act
+        ReflectionTestUtils.invokeMethod(dashboardItemService, "afterDelete", item1, Collections.emptyMap());
+
+        // Assert
+        verify(estadisticaWidgetHelper, times(1)).clearDashboardWidgetCache(item1Id);
+        verify(estadisticaWidgetHelper, never()).clearDashboardWidgetCacheByWidget(anyLong());
+        verify(estadisticaWidgetRepository, never()).delete(any());
+        verify(estadisticaWidgetRepository, never()).flush();
+    }
+
+    @Test
+    @DisplayName("afterDelete: quan s'esborra el darrer item que utilitza el widget, s'esborra definitivament")
+    void afterDelete_quanSEsborraElDarrerItem_llavorsEsborraElWidgetDefinitivament() {
+        // Arrange
+        Long item2Id = 2L;
+        Long widgetId = 100L;
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(widgetId);
+
+        DashboardItemEntity item2 = new DashboardItemEntity();
+        item2.setId(item2Id);
+        item2.setWidget(widget);
+
+        // Només queda l'item actual (o la llista ja buida si el flush ja l'ha tret)
+        when(dashboardItemRepository.findByWidgetId(widgetId)).thenReturn(List.of(item2));
+        when(estadisticaWidgetRepository.findById(widgetId)).thenReturn(Optional.of(widget));
+
+        // Act
+        ReflectionTestUtils.invokeMethod(dashboardItemService, "afterDelete", item2, Collections.emptyMap());
+
+        // Assert
+        verify(estadisticaWidgetHelper, times(1)).clearDashboardWidgetCache(item2Id);
+        verify(estadisticaWidgetHelper, times(1)).clearDashboardWidgetCacheByWidget(widgetId);
+        verify(estadisticaWidgetRepository, times(1)).delete(widget);
+        verify(estadisticaWidgetRepository, times(1)).flush();
+    }
+
+    @Test
+    @DisplayName("afterDelete: quan el dashboardItem no té widget associat, no fa res i no falla")
+    void afterDelete_quanWidgetEsNull_noFaRes() {
+        // Arrange
+        Long itemId = 1L;
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setId(itemId);
+        item.setWidget(null);
+
+        // Act
+        ReflectionTestUtils.invokeMethod(dashboardItemService, "afterDelete", item, Collections.emptyMap());
+
+        // Assert
+        verify(estadisticaWidgetHelper, times(1)).clearDashboardWidgetCache(itemId);
+        verify(dashboardItemRepository, never()).findByWidgetId(anyLong());
+        verify(estadisticaWidgetRepository, never()).delete(any());
+    }
 }
