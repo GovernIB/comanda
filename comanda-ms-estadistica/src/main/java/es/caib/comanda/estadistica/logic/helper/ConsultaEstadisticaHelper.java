@@ -30,6 +30,7 @@ import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetE
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.*;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -220,10 +221,10 @@ public class ConsultaEstadisticaHelper {
             throw e;
         } catch (Exception e) {
             log.error("Error obtnint dades de dashboard widget: " + e.getMessage(), e);
-            throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId().toString(), e.getMessage(), e.getCause());
+            throw new ReportGenerationException(DashboardItem.class, dashboardItem != null ? dashboardItem.getId() : null, null, e.getMessage(), e);
         }
 
-        throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, "Tipus de widget incorrecte");
+        throw new ReportGenerationException(DashboardItem.class, dashboardItem != null ? dashboardItem.getId() : null, null, "Tipus de widget incorrecte");
     }
 
     /**
@@ -862,7 +863,21 @@ public class ConsultaEstadisticaHelper {
                                                              DashboardFiltreSeleccio filtreSeleccio) {
         EstadisticaWidgetEntity widget = dashboardItem.getWidget();
         var entornApp = estadisticaClientHelper.entornAppFindByAppAndEntorn(widget.getAppId(), dashboardItem.getEntornId());
+        if (entornApp == null || entornApp.getEntorn() == null) {
+            throw new ReportGenerationException(
+                DashboardItem.class,
+                dashboardItem.getId(),
+                null,
+                I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper.aplicacioDesvinculadaEntorn"));
+        }
         var entorn = estadisticaClientHelper.entornById(entornApp.getEntorn().getId());
+        if (entorn == null) {
+            throw new ReportGenerationException(
+                DashboardItem.class,
+                dashboardItem.getId(),
+                null,
+                I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper.entornNoTrobat", entornApp.getEntorn().getId()));
+        }
         // El període seleccionat pel filtre de capçalera del dashboard, si n'hi ha, no sobreescriu el període
         // propi del widget: en manté el tipus (p. ex. "darrer dia complet" o "darrers 30 dies"), però ancorat i
         // limitat al període configurat al filtre (vegeu PeriodeResolverHelper#resolvePeriod amb filterBounds).

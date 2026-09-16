@@ -125,8 +125,11 @@ class ConsultaEstadisticaHelperTest {
         ReflectionTestUtils.setField(es.caib.comanda.ms.logic.intf.util.I18nUtil.class, "applicationContext", applicationContext);
         lenient().when(applicationContext.getBean(es.caib.comanda.ms.logic.intf.util.I18nUtil.class)).thenReturn(i18nUtil);
         lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(inv -> inv.getArgument(0));
+        lenient().when(i18nUtil.getI18nMessage(any(), any())).thenAnswer(inv -> inv.getArgument(0));
         lenient().when(i18nUtil.getI18nMessage(eq("es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper.widgetDosIndicadorsSenseMaxim")))
             .thenReturn("El widget DOS_INDICADORS no té indicador de màxim configurat");
+        lenient().when(i18nUtil.getI18nMessage(eq("es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper.entornNoTrobat"), any()))
+            .thenAnswer(inv -> "No s'ha trobat l'entorn amb identificador " + (inv.getArguments().length > 1 ? inv.getArgument(1) : ""));
     }
 
     // ========================================================================
@@ -1545,5 +1548,63 @@ class ConsultaEstadisticaHelperTest {
         List<Map<String, String>> result = ConsultaEstadisticaHelper.applyFilesFilterSortLimit(files, widget);
 
         assertThat(result).extracting(row -> row.get("agrupacio")).containsExactly("C");
+    }
+
+    @Test
+    @DisplayName("getDadesWidget: llança ReportGenerationException quan entornApp és null")
+    void getDadesWidget_quanEntornAppEsNull_llavorsLlancaReportGenerationException() {
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setId(1L);
+        item.setEntornId(10L);
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setAppId(5L);
+        item.setWidget(widget);
+
+        when(dashboardItemRepository.findById(1L)).thenReturn(Optional.of(item));
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(5L, 10L)).thenReturn(null);
+
+        assertThatThrownBy(() -> consultaEstadisticaHelper.getDadesWidget(item, false, null))
+            .isInstanceOf(ReportGenerationException.class)
+            .hasMessageContaining("es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper.aplicacioDesvinculadaEntorn");
+    }
+
+    @Test
+    @DisplayName("getDadesWidget: llança ReportGenerationException quan entornById és null")
+    void getDadesWidget_quanEntornEsNull_llavorsLlancaReportGenerationException() {
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setId(1L);
+        item.setEntornId(10L);
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setAppId(5L);
+        item.setWidget(widget);
+
+        es.caib.comanda.client.model.EntornApp entornApp = new es.caib.comanda.client.model.EntornApp();
+        entornApp.setId(100L);
+        es.caib.comanda.client.model.EntornRef entornRef = es.caib.comanda.client.model.EntornRef.builder().id(10L).nom("DEV").build();
+        entornApp.setEntorn(entornRef);
+
+        when(dashboardItemRepository.findById(1L)).thenReturn(Optional.of(item));
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(5L, 10L)).thenReturn(entornApp);
+        when(estadisticaClientHelper.entornById(10L)).thenReturn(null);
+
+        assertThatThrownBy(() -> consultaEstadisticaHelper.getDadesWidget(item, false, null))
+            .isInstanceOf(ReportGenerationException.class)
+            .hasMessageContaining("No s'ha trobat l'entorn");
+    }
+
+    @Test
+    @DisplayName("getDadesWidget: preserva la causa i el missatge quan es llança una excepció interna")
+    void getDadesWidget_quanExceptionInterna_llavorsPreservaCausaIMissatge() {
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setId(1L);
+        IllegalStateException internalException = new IllegalStateException("Internal error details");
+        when(dashboardItemRepository.findById(1L)).thenThrow(internalException);
+
+        assertThatThrownBy(() -> consultaEstadisticaHelper.getDadesWidget(item, false, null))
+            .isInstanceOf(ReportGenerationException.class)
+            .hasCause(internalException)
+            .hasMessageContaining("Internal error details");
     }
 }

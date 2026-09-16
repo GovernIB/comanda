@@ -524,6 +524,183 @@ class DashboardHelperTest {
             .hasFieldOrPropertyWithValue("answerCode", DashboardHelper.ANSWER_CODE_ENTORN_ID);
     }
 
+    @Test
+    @DisplayName("beforeUpdateChangeEntornApp: no modifica l'entornId dels items quan l'entorn no canvia")
+    void beforeUpdateChangeEntornApp_quanNomesCanviAppId_llavorsNoModificaEntornIdDelsItems() throws ResourceNotUpdatedException {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        entity.setAppId(10L);
+        entity.setEntornId(20L);
+
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setEntornId(20L);
+        EstadisticaWidgetEntity<?> widget = mock(EstadisticaWidgetEntity.class);
+        when(widget.getAppId()).thenReturn(30L);
+        item.setWidget(widget);
+        entity.setItems(Collections.singletonList(item));
+
+        Dashboard resource = new Dashboard();
+        resource.setAppId(30L);
+        resource.setEntornId(20L); // Entorn no canvia
+
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+
+        dashboardHelper.beforeUpdateEntityLogic(entity, resource, answers);
+
+        assertThat(item.getEntornId()).isEqualTo(20L);
+    }
+
+    @Test
+    @DisplayName("beforeUpdateChangeEntornApp: actualitza l'entorn de tots els items quan es canvia l'entorn")
+    void beforeUpdateChangeEntornApp_quanCanviEntornId_llavorsActualitzaTotsElsItemsAlNouEntorn() throws ResourceNotUpdatedException {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        entity.setAppId(10L);
+        entity.setEntornId(20L);
+
+        // Item inicial 1
+        DashboardItemEntity item1 = new DashboardItemEntity();
+        item1.setEntornId(20L);
+
+        // Item inicial 2
+        DashboardItemEntity item2 = new DashboardItemEntity();
+        item2.setEntornId(55L);
+
+        entity.setItems(List.of(item1, item2));
+
+        Dashboard resource = new Dashboard();
+        resource.setAppId(10L);
+        resource.setEntornId(30L); // Canvi d'entorn
+
+        EntornApp newEntornApp = new EntornApp();
+        newEntornApp.setId(30L);
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(10L, 30L)).thenReturn(newEntornApp);
+
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+
+        dashboardHelper.beforeUpdateEntityLogic(entity, resource, answers);
+
+        assertThat(item1.getEntornId()).isEqualTo(30L);
+        assertThat(item2.getEntornId()).isEqualTo(30L);
+    }
+
+    @Test
+    @DisplayName("beforeUpdateChangeEntornApp: quan entornApp no existeix però l'usuari confirma, actualitza sense bucle infinit")
+    void beforeUpdateChangeEntornApp_quanEntornAppNullIRespostaConfirmada_llavorsActualitzaSenseBucleInfinit() throws ResourceNotUpdatedException {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        entity.setAppId(10L);
+        entity.setEntornId(20L);
+
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setEntornId(20L);
+        entity.setItems(Collections.singletonList(item));
+
+        Dashboard resource = new Dashboard();
+        resource.setAppId(10L);
+        resource.setEntornId(99L);
+
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(10L, 99L)).thenReturn(null);
+
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+        answers.put(DashboardHelper.ANSWER_CODE_ENTORN_ID, new AnswerRequiredException.AnswerValue(true));
+
+        dashboardHelper.beforeUpdateEntityLogic(entity, resource, answers);
+
+        // L'element que no es pot reassignar es manté com està (20L), no es passa a un entorn invàlid (99L)
+        assertThat(item.getEntornId()).isEqualTo(20L);
+    }
+
+    @Test
+    @DisplayName("beforeUpdateChangeEntornApp: no llança NullPointerException quan answers és null")
+    void beforeUpdateChangeEntornApp_quanAnswersNull_llavorsNoLlancaNullPointerException() throws ResourceNotUpdatedException {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        entity.setAppId(10L);
+        entity.setEntornId(20L);
+
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setEntornId(20L);
+        entity.setItems(Collections.singletonList(item));
+
+        Dashboard resource = new Dashboard();
+        resource.setAppId(10L);
+        resource.setEntornId(20L); // Mateix entorn
+
+        dashboardHelper.beforeUpdateEntityLogic(entity, resource, null);
+
+        assertThat(item.getEntornId()).isEqualTo(20L);
+    }
+
+    @Test
+    @DisplayName("beforeUpdateChangeEntornApp: suporta valors booleans plans a answers")
+    void beforeUpdateChangeEntornApp_quanRespostaBooleanaPlana_llavorsProcessaCorrectament() throws ResourceNotUpdatedException {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        entity.setAppId(10L);
+        entity.setEntornId(20L);
+
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setEntornId(20L);
+        entity.setItems(Collections.singletonList(item));
+
+        Dashboard resource = new Dashboard();
+        resource.setAppId(10L);
+        resource.setEntornId(99L);
+
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(10L, 99L)).thenReturn(null);
+
+        Map answers = new HashMap<>();
+        answers.put(DashboardHelper.ANSWER_CODE_ENTORN_ID, Boolean.TRUE);
+
+        dashboardHelper.beforeUpdateEntityLogic(entity, resource, answers);
+
+        assertThat(item.getEntornId()).isEqualTo(20L);
+    }
+
+    @Test
+    @DisplayName("beforeUpdateChangeEntornApp: quan arriba resposta a ANSWER_CODE_APP_ID (fins i tot confirmada) llança ResourceNotUpdatedException")
+    void beforeUpdateChangeEntornApp_quanRespostaAppIdConfirmada_llavorsLlancaResourceNotUpdatedException() {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        entity.setAppId(10L);
+        entity.setEntornId(20L);
+
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setEntornId(20L);
+        entity.setItems(Collections.singletonList(item));
+
+        Dashboard resource = new Dashboard();
+        resource.setAppId(20L); // Canvi d'AppId
+        resource.setEntornId(20L);
+
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+        answers.put(DashboardHelper.ANSWER_CODE_APP_ID, new AnswerRequiredException.AnswerValue(true));
+
+        // Act & Assert
+        assertThatThrownBy(() -> dashboardHelper.beforeUpdateEntityLogic(entity, resource, answers))
+            .isInstanceOf(ResourceNotUpdatedException.class);
+    }
+
+    @Test
+    @DisplayName("beforeUpdateChangeEntornApp: quan l'usuari refusa ANSWER_CODE_APP_ID llança ResourceNotUpdatedException")
+    void beforeUpdateChangeEntornApp_quanRespostaAppIdRefusada_llavorsLlancaResourceNotUpdatedException() {
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        entity.setAppId(10L);
+        entity.setEntornId(20L);
+        entity.setItems(Collections.singletonList(new DashboardItemEntity()));
+
+        Dashboard resource = new Dashboard();
+        resource.setAppId(20L);
+
+        Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
+        answers.put(DashboardHelper.ANSWER_CODE_APP_ID, new AnswerRequiredException.AnswerValue(false));
+
+        assertThatThrownBy(() -> dashboardHelper.beforeUpdateEntityLogic(entity, resource, answers))
+            .isInstanceOf(ResourceNotUpdatedException.class);
+    }
+
     // ========================================================================
     // 4. TESTOS PER A CloneDashboardAction
     // ========================================================================
@@ -1205,5 +1382,69 @@ class DashboardHelperTest {
         verify(dashboardItemRepository).saveAll(argThat((List<DashboardItemEntity> items) ->
             items != null && items.size() == 1 && Boolean.TRUE.equals(items.get(0).getPersonalitzat())
         ));
+    }
+
+    @Test
+    @DisplayName("CloneDashboardAction.getClonedItem: preserva entorns personalitzats quan es canvia l'entorn")
+    void cloneDashboardAction_getClonedItem_quanCanviEntornId_llavorsPreservaEntornsPersonalitzats() {
+        DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
+            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper);
+
+        DashboardEntity original = new DashboardEntity();
+        original.setId(1L);
+        original.setAppId(10L);
+        original.setEntornId(20L);
+
+        DashboardEntity newDashboard = new DashboardEntity();
+        newDashboard.setAppId(10L);
+        newDashboard.setEntornId(30L);
+
+        DashboardItemEntity itemEstandard = new DashboardItemEntity();
+        itemEstandard.setEntornId(20L);
+        DashboardItemEntity itemPersonalitzat = new DashboardItemEntity();
+        itemPersonalitzat.setEntornId(55L);
+
+        original.setItems(List.of(itemEstandard, itemPersonalitzat));
+
+        EntornApp newEntornApp = new EntornApp();
+        newEntornApp.setId(30L);
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(10L, 30L)).thenReturn(newEntornApp);
+
+        List<DashboardItemEntity> result = (List<DashboardItemEntity>) ReflectionTestUtils.invokeMethod(
+            action, "getClonedItem", original, newDashboard);
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getEntornId()).isEqualTo(30L);
+        assertThat(result.get(1).getEntornId()).isEqualTo(55L);
+    }
+
+    @Test
+    @DisplayName("CloneDashboardAction.getClonedItem: no modifica l'entorn dels items quan l'entorn del dashboard no canvia")
+    void cloneDashboardAction_getClonedItem_quanNomesCanviAppId_llavorsPreservaTotsElsEntorns() {
+        DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
+            estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository, plantillaRepository, estadisticaWidgetRepository, dashboardClonerMapper);
+
+        DashboardEntity original = new DashboardEntity();
+        original.setId(1L);
+        original.setAppId(10L);
+        original.setEntornId(20L);
+
+        DashboardEntity newDashboard = new DashboardEntity();
+        newDashboard.setAppId(20L);
+        newDashboard.setEntornId(20L); // Mateix entorn
+
+        DashboardItemEntity itemEstandard = new DashboardItemEntity();
+        itemEstandard.setEntornId(20L);
+        DashboardItemEntity itemPersonalitzat = new DashboardItemEntity();
+        itemPersonalitzat.setEntornId(55L);
+
+        original.setItems(List.of(itemEstandard, itemPersonalitzat));
+
+        List<DashboardItemEntity> result = (List<DashboardItemEntity>) ReflectionTestUtils.invokeMethod(
+            action, "getClonedItem", original, newDashboard);
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getEntornId()).isEqualTo(20L);
+        assertThat(result.get(1).getEntornId()).isEqualTo(55L);
     }
 }

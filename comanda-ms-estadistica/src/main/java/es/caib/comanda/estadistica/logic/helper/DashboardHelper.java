@@ -133,14 +133,26 @@ public class DashboardHelper {
         beforeUpdateChangeEntornApp(entity, resource, answers);
     }
 
+    private boolean isAnswerRefused(Map<?, ?> answers, String answerCode) {
+        if (answers == null || !answers.containsKey(answerCode)) {
+            return false;
+        }
+        Object value = answers.get(answerCode);
+        if (value instanceof AnswerRequiredException.AnswerValue) {
+            return !((AnswerRequiredException.AnswerValue) value).valueAsBoolean();
+        } else if (value instanceof Boolean) {
+            return !((Boolean) value);
+        }
+        return true;
+    }
+
     private void beforeUpdateChangeEntornApp(DashboardEntity entity,
                                              Dashboard resource,
                                              Map<String, AnswerRequiredException.AnswerValue> answers) {
         if (entity.getItems().isEmpty()) {
             return;
         }
-        if ((answers.containsKey(ANSWER_CODE_ENTORN_ID) && !answers.get(ANSWER_CODE_ENTORN_ID).getBooleanValue()) ||
-            (answers.containsKey(ANSWER_CODE_APP_ID))) {
+        if (isAnswerRefused(answers, ANSWER_CODE_ENTORN_ID) || (answers != null && answers.containsKey(ANSWER_CODE_APP_ID))) {
             throw new ResourceNotUpdatedException(
                 Dashboard.class,
                 entity.getId().toString(),
@@ -160,7 +172,7 @@ public class DashboardHelper {
 
         for (DashboardItemEntity item : entity.getItems()) {
             // Validamos si el widget tiene app compatible
-            if (canviAppId && !answers.containsKey(ANSWER_CODE_APP_ID)) {
+            if (canviAppId && (answers == null || !answers.containsKey(ANSWER_CODE_APP_ID))) {
                 EstadisticaWidgetEntity<?> widget = item.getWidget();
                 if (widget != null && !Objects.equals(widget.getAppId(), newAppId)) {
                     throw new AnswerRequiredException(
@@ -171,16 +183,19 @@ public class DashboardHelper {
                 }
             }
 
-            // Comprovam que existeixi entornApp de destí
-            if (Objects.nonNull(newEntornApp)) {
-                item.setEntornId(newEntornId);
-            } else {
-                throw new AnswerRequiredException(
-                    Dashboard.class,
-                    ANSWER_CODE_ENTORN_ID,
-                    I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.error.entornId"),
-                    null
-                );
+            // Comprovam canvi d'entorn
+            if (canviEntornId) {
+                // Comprovam que existeixi entornApp de destí
+                if (Objects.nonNull(newEntornApp)) {
+                    item.setEntornId(newEntornId);
+                } else if (answers == null || !answers.containsKey(ANSWER_CODE_ENTORN_ID)) {
+                    throw new AnswerRequiredException(
+                        Dashboard.class,
+                        ANSWER_CODE_ENTORN_ID,
+                        I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.error.entornId"),
+                        null
+                    );
+                }
             }
         }
     }
@@ -365,8 +380,13 @@ public class DashboardHelper {
                         }
                     }
                     Long resolvedEntornId;
-                    if (!canviAppId && !canviEntornId) {
-                        resolvedEntornId = original.getEntornId();
+                    boolean esEntornPersonalitzat = original.getEntornId() != null
+                            && !Objects.equals(original.getEntornId(), originalDashboard.getEntornId());
+
+                    if (!canviEntornId || esEntornPersonalitzat) {
+                        resolvedEntornId = original.getEntornId() != null
+                                ? original.getEntornId()
+                                : (originalDashboard.getEntornId() != null ? originalDashboard.getEntornId() : newEntornId);
                     } else if (newEntornApp != null) {
                         resolvedEntornId = newEntornId != null ? newEntornId : original.getEntornId();
                     } else {
