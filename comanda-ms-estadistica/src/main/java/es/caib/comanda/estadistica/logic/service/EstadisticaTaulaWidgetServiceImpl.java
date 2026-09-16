@@ -17,6 +17,7 @@ import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -48,6 +49,11 @@ public class EstadisticaTaulaWidgetServiceImpl extends BaseMutableResourceServic
         String currentSpringFilter,
         String[] namedQueries) {
         return dashboardPermisosHelper.buildWidgetFilter(currentSpringFilter, namedQueries);
+    }
+
+    @Override
+    protected Specification<EstadisticaTaulaWidgetEntity> namedFilterToSpecification(String name) {
+        return estadisticaWidgetHelper.namedFilterToSpecification(name);
     }
 
     @Override

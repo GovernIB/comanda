@@ -3,6 +3,8 @@ package es.caib.comanda.estadistica.logic.helper;
 import es.caib.comanda.client.model.App;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.DimensioValor;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaSimpleWidget;
+import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetBaseResource;
+import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
@@ -18,7 +20,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -367,5 +378,73 @@ class EstadisticaWidgetHelperTest {
 
         // Assert
         verify(cacheHelper, times(1)).evictCacheItemByPrefix(eq(DASHBOARD_WIDGET_CACHE), eq("42_"));
+    }
+
+    // ========================================================================
+    // 7. TESTOS PER A namedFilterToSpecification i notInDashboard
+    // ========================================================================
+
+    @Test
+    @DisplayName("namedFilterToSpecification: retorna null quan el filtre és null o no coincideix")
+    void namedFilterToSpecification_quanFiltreEsNullONoCoincideix_llavorsRetornaNull() {
+        assertThat(estadisticaWidgetHelper.namedFilterToSpecification(null)).isNull();
+        assertThat(estadisticaWidgetHelper.namedFilterToSpecification("altreFiltre:1")).isNull();
+        assertThat(estadisticaWidgetHelper.namedFilterToSpecification(WidgetBaseResource.FILTER_NOT_IN_DASHBOARD_NAMEDFILTER + "invalid")).isNull();
+    }
+
+    @Test
+    @DisplayName("namedFilterToSpecification: retorna Specification quan és filterNotInDashboard")
+    void namedFilterToSpecification_quanEsFiltreDashboard_llavorsRetornaSpecification() {
+        Specification<EstadisticaSimpleWidgetEntity> spec1 = estadisticaWidgetHelper.namedFilterToSpecification(WidgetBaseResource.FILTER_NOT_IN_DASHBOARD_NAMEDFILTER + "10");
+        assertThat(spec1).isNotNull();
+    }
+
+    @Test
+    @DisplayName("notInDashboard: retorna null si dashboardId és null")
+    void notInDashboard_quanDashboardIdEsNull_llavorsRetornaNull() {
+        assertThat(estadisticaWidgetHelper.notInDashboard(null)).isNull();
+    }
+
+    @Test
+    @DisplayName("notInDashboard: construeix predicat amb subquery correctament")
+    @SuppressWarnings("unchecked")
+    void notInDashboard_quanDashboardIdEsValid_llavorsConstrueixSubquery() {
+        // Arrange
+        Long dashboardId = 15L;
+        Specification<EstadisticaSimpleWidgetEntity> spec = estadisticaWidgetHelper.notInDashboard(dashboardId);
+        assertThat(spec).isNotNull();
+
+        Root<EstadisticaSimpleWidgetEntity> root = org.mockito.Mockito.mock(Root.class);
+        CriteriaQuery<?> query = org.mockito.Mockito.mock(CriteriaQuery.class);
+        CriteriaBuilder cb = org.mockito.Mockito.mock(CriteriaBuilder.class);
+        Subquery<Long> subquery = org.mockito.Mockito.mock(Subquery.class);
+        Root<DashboardItemEntity> itemRoot = org.mockito.Mockito.mock(Root.class);
+        Path<Object> widgetPath = org.mockito.Mockito.mock(Path.class);
+        Path<Object> widgetIdPath = org.mockito.Mockito.mock(Path.class);
+        Path<Object> dashboardPath = org.mockito.Mockito.mock(Path.class);
+        Path<Object> dashboardIdPath = org.mockito.Mockito.mock(Path.class);
+        Path<Object> rootIdPath = org.mockito.Mockito.mock(Path.class);
+        Predicate equalPredicate = org.mockito.Mockito.mock(Predicate.class);
+        Predicate inPredicate = org.mockito.Mockito.mock(Predicate.class);
+        Predicate notPredicate = org.mockito.Mockito.mock(Predicate.class);
+
+        when(query.subquery(Long.class)).thenReturn(subquery);
+        when(subquery.from(DashboardItemEntity.class)).thenReturn(itemRoot);
+        when(itemRoot.get(DashboardItemEntity.Fields.widget)).thenReturn((Path) widgetPath);
+        when(widgetPath.get("id")).thenReturn((Path) widgetIdPath);
+        when(itemRoot.get(DashboardItemEntity.Fields.dashboard)).thenReturn((Path) dashboardPath);
+        when(dashboardPath.get("id")).thenReturn((Path) dashboardIdPath);
+        when(cb.equal(dashboardIdPath, dashboardId)).thenReturn(equalPredicate);
+        when(root.get("id")).thenReturn((Path) rootIdPath);
+        when(rootIdPath.in(subquery)).thenReturn(inPredicate);
+        when(cb.not(inPredicate)).thenReturn(notPredicate);
+
+        // Act
+        Predicate result = spec.toPredicate(root, query, cb);
+
+        // Assert
+        assertThat(result).isEqualTo(notPredicate);
+        verify(subquery).select((Expression) widgetIdPath);
+        verify(subquery).where(equalPredicate);
     }
 }

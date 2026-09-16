@@ -31,6 +31,7 @@ import java.util.List;
 public class WidgetBaseResource<ID extends Serializable> extends BaseResource<ID> {
 
     public static final String FILTER_BY_ENTORN_NAMEDFILTER = "filterByEntorn:";
+    public static final String FILTER_NOT_IN_DASHBOARD_NAMEDFILTER = "filterNotInDashboard:";
 
     @NotNull
     @Size(max = EstadisticaWidgetEntity.TITOL_MAX_LENGTH)

@@ -308,12 +308,30 @@ class EstadisticaGraficWidgetServiceImplTest {
     @Test
     @DisplayName("additionalSpringFilter: delega en DashboardPermisosHelper.buildWidgetFilter")
     void additionalSpringFilter_delegaEnDashboardPermisosHelper() {
-        String[] namedQueries = new String[]{"filterByEntorn:1"};
+        String[] namedQueries = new String[]{WidgetBaseResource.FILTER_BY_ENTORN_NAMEDFILTER + "1"};
         when(dashboardPermisosHelper.buildWidgetFilter("original", namedQueries)).thenReturn("filtrat");
 
         String result = estadisticaGraficWidgetService.additionalSpringFilter("original", namedQueries);
 
         assertThat(result).isEqualTo("filtrat");
         verify(dashboardPermisosHelper).buildWidgetFilter("original", namedQueries);
+    }
+
+    // ========================================================================
+    // 7. TESTOS PER A namedFilterToSpecification
+    // ========================================================================
+
+    @Test
+    @DisplayName("namedFilterToSpecification: delega en EstadisticaWidgetHelper.namedFilterToSpecification")
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void namedFilterToSpecification_delegaEnEstadisticaWidgetHelper() {
+        String namedFilter = WidgetBaseResource.FILTER_NOT_IN_DASHBOARD_NAMEDFILTER + "10";
+        org.springframework.data.jpa.domain.Specification mockSpec = org.mockito.Mockito.mock(org.springframework.data.jpa.domain.Specification.class);
+        org.mockito.Mockito.doReturn(mockSpec).when(estadisticaWidgetHelper).namedFilterToSpecification(namedFilter);
+
+        org.springframework.data.jpa.domain.Specification<EstadisticaGraficWidgetEntity> result = estadisticaGraficWidgetService.namedFilterToSpecification(namedFilter);
+
+        assertThat(result).isSameAs(mockSpec);
+        verify(estadisticaWidgetHelper).namedFilterToSpecification(namedFilter);
     }
 }

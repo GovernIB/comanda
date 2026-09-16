@@ -835,12 +835,20 @@ const SideMenu = ({
     // L'aplicació i l'entorn del dashboard es configuren al panell de propietats (quan no hi ha cap
     // element seleccionat), no aquí: aquest menú només els usa per filtrar els widgets disponibles.
     const entornId = dashboard?.entorn?.id as string | undefined;
+    const dashboardId = dashboard?.id as string | number | undefined;
     const springFilter = dashboard?.aplicacio?.id != null
         ? springFilterBuilder.eq('appId', dashboard.aplicacio.id)
         : undefined;
     const clonableWidgetsNamedQueries = React.useMemo(() => {
-        return entornId != null ? [`filterByEntorn:${entornId}`] : undefined;
-    }, [entornId]);
+        const queries: string[] = [];
+        if (entornId != null) {
+            queries.push(`filterByEntorn:${entornId}`);
+        }
+        if (dashboardId != null) {
+            queries.push(`filterNotInDashboard:${dashboardId}`);
+        }
+        return queries.length > 0 ? queries : undefined;
+    }, [entornId, dashboardId]);
     const [simpleWidgets, setSimpleWidgets] = useState<Array<{ id?: string | number; titol?: string }>>()
     const [graficWidgets, setGraficWidgets] = useState<Array<{ id?: string | number; titol?: string }>>()
     const [taulaWidgets, setTaulaWidgets] = useState<Array<{ id?: string | number; titol?: string }>>()

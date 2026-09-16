@@ -3,6 +3,7 @@ package es.caib.comanda.estadistica.logic.helper;
 import es.caib.comanda.client.model.App;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.DimensioValor;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaWidget;
+import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetBaseResource;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
@@ -11,9 +12,14 @@ import es.caib.comanda.estadistica.persist.repository.DimensioValorRepository;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
+import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
+
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -128,6 +134,37 @@ public class EstadisticaWidgetHelper {
         } catch (Exception e) {
             log.error("Error en la crida a clearDashboardWidgetCacheByPlantilla: " + e.getMessage(), e);
         }
+    }
+
+    @SuppressWarnings("rawtypes")
+    public <E extends EstadisticaWidgetEntity> Specification<E> namedFilterToSpecification(String name) {
+        if (name == null) return null;
+        if (name.startsWith(WidgetBaseResource.FILTER_NOT_IN_DASHBOARD_NAMEDFILTER)) {
+            try {
+                String idStr = name.substring(name.indexOf(':') + 1).trim();
+                if (!idStr.isEmpty()) {
+                    Long dashboardId = Long.parseLong(idStr);
+                    return notInDashboard(dashboardId);
+                }
+            } catch (NumberFormatException e) {
+                log.warn("Identificador de dashboard invàlid al namedFilter: " + name, e);
+            }
+        }
+        return null;
+    }
+
+    @SuppressWarnings("rawtypes")
+    public <E extends EstadisticaWidgetEntity> Specification<E> notInDashboard(Long dashboardId) {
+        if (dashboardId == null) {
+            return null;
+        }
+        return (root, query, cb) -> {
+            Subquery<Long> subquery = query.subquery(Long.class);
+            Root<DashboardItemEntity> itemRoot = subquery.from(DashboardItemEntity.class);
+            subquery.select(itemRoot.get(DashboardItemEntity.Fields.widget).get("id"));
+            subquery.where(cb.equal(itemRoot.get(DashboardItemEntity.Fields.dashboard).get("id"), dashboardId));
+            return cb.not(root.get("id").in(subquery));
+        };
     }
 
 }
