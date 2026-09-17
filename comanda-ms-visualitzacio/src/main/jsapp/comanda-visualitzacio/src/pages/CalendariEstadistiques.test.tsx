@@ -374,9 +374,7 @@ describe('CalendariEstadistiques', () => {
 
         render(<CalendariEstadistiques />);
 
-        await waitFor(() => {
-            expect(mocks.entornAppFindMock).toHaveBeenCalled();
-        });
+        await screen.findByRole('option', { name: 'App Demo - PRO' });
 
         fireEvent.change(screen.getByLabelText('Seleccionar entorn app'), {
             target: { value: '7' },
@@ -443,9 +441,7 @@ it('CalendariEstadistiques_quanNoHiHaEntornSeleccionat_mostraMissatgeAjudaIAmaga
 
         render(<CalendariEstadistiques />);
 
-        await waitFor(() => {
-            expect(mocks.entornAppFindMock).toHaveBeenCalled();
-        });
+        await screen.findByRole('option', { name: 'App Demo - PRO' });
 
         fireEvent.change(screen.getByLabelText('Seleccionar entorn app'), {
             target: { value: '7' },
@@ -495,9 +491,7 @@ it('CalendariEstadistiques_quanNoHiHaEntornSeleccionat_mostraMissatgeAjudaIAmaga
 
         render(<CalendariEstadistiques />);
 
-        await waitFor(() => {
-            expect(mocks.entornAppFindMock).toHaveBeenCalled();
-        });
+        await screen.findByRole('option', { name: 'App Demo - PRO' });
 
         fireEvent.change(screen.getByLabelText('Seleccionar entorn app'), {
             target: { value: '7' },
@@ -536,9 +530,7 @@ it('CalendariEstadistiques_quanNoHiHaEntornSeleccionat_mostraMissatgeAjudaIAmaga
 
         render(<CalendariEstadistiques />);
 
-        await waitFor(() => {
-            expect(mocks.entornAppFindMock).toHaveBeenCalled();
-        });
+        await screen.findByRole('option', { name: 'App Demo - PRO' });
 
         fireEvent.change(screen.getByLabelText('Seleccionar entorn app'), {
             target: { value: '7' },
@@ -571,7 +563,7 @@ it('CalendariEstadistiques_quanNoHiHaEntornSeleccionat_mostraMissatgeAjudaIAmaga
 
         render(<CalendariEstadistiques />);
 
-        await waitFor(() => expect(mocks.entornAppFindMock).toHaveBeenCalled());
+        await screen.findByRole('option', { name: 'App Demo - PRO' });
         fireEvent.change(screen.getByLabelText('Seleccionar entorn app'), {
             target: { value: '7' },
         });
@@ -595,7 +587,7 @@ it('CalendariEstadistiques_quanNoHiHaEntornSeleccionat_mostraMissatgeAjudaIAmaga
 
         render(<CalendariEstadistiques />);
 
-        await waitFor(() => expect(mocks.entornAppFindMock).toHaveBeenCalled());
+        await screen.findByRole('option', { name: 'App Demo - PRO' });
         fireEvent.change(screen.getByLabelText('Seleccionar entorn app'), {
             target: { value: '7' },
         });
@@ -620,7 +612,7 @@ it('CalendariEstadistiques_quanNoHiHaEntornSeleccionat_mostraMissatgeAjudaIAmaga
 
         render(<CalendariEstadistiques />);
 
-        await waitFor(() => expect(mocks.entornAppFindMock).toHaveBeenCalled());
+        await screen.findByRole('option', { name: 'App Demo - PRO' });
         fireEvent.change(screen.getByLabelText('Seleccionar entorn app'), {
             target: { value: '7' },
         });
@@ -647,7 +639,7 @@ it('CalendariEstadistiques_quanNoHiHaEntornSeleccionat_mostraMissatgeAjudaIAmaga
 
         render(<CalendariEstadistiques />);
 
-        await waitFor(() => expect(mocks.entornAppFindMock).toHaveBeenCalled());
+        await screen.findByRole('option', { name: 'App Demo - PRO' });
         fireEvent.change(screen.getByLabelText('Seleccionar entorn app'), {
             target: { value: '7' },
         });
