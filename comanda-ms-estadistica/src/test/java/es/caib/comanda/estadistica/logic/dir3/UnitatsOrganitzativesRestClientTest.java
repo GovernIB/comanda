@@ -1,6 +1,8 @@
 package es.caib.comanda.estadistica.logic.dir3;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,7 +19,9 @@ import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests per a la guarda de configuració de {@link UnitatsOrganitzativesRestClient}: si el plugin Dir3 no està
@@ -26,6 +30,9 @@ import static org.mockito.Mockito.verifyNoInteractions;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests per a UnitatsOrganitzativesRestClient")
 class UnitatsOrganitzativesRestClientTest {
+
+    @Mock
+    private ParametresHelper parametresHelper;
 
     @Mock
     private EstadisticaClientHelper estadisticaClientHelper;
@@ -104,10 +111,33 @@ class UnitatsOrganitzativesRestClientTest {
     // ========================================================================
 
     @Test
-    @DisplayName("getCodiArrel: retorna el fallback per defecte quan no hi ha configuració")
+    @DisplayName("getCodiArrel: retorna el valor de BBDD obtingut via parametresHelper si està configurat")
+    void getCodiArrel_quanParametreBbddConfigurat_llavorsRetornaValorBbdd() {
+        // Arrange
+        when(parametresHelper.getParametreText(BaseConfig.PROP_DIR3_GOVERN_CODI_ARREL))
+            .thenReturn("A04999999");
+
+        // Act & Assert
+        assertThat(restClient.getCodiArrel()).isEqualTo("A04999999");
+    }
+
+    @Test
+    @DisplayName("getCodiArrel: retorna el fallback per defecte quan parametresHelper retorna buit")
+    void getCodiArrel_quanParametreBbddBuit_llavorsRetornaFallback() {
+        // Arrange
+        when(parametresHelper.getParametreText(BaseConfig.PROP_DIR3_GOVERN_CODI_ARREL))
+            .thenReturn("");
+
+        // Act & Assert
+        assertThat(restClient.getCodiArrel()).isEqualTo(UnitatsOrganitzativesRestClient.CODI_ARREL_PER_DEFECTE);
+    }
+
+    @Test
+    @DisplayName("getCodiArrel: retorna el fallback per defecte quan parametresHelper retorna null")
     void getCodiArrel_quanNoConfigurat_llavorsRetornaFallback() {
         // Arrange
-        ReflectionTestUtils.setField(restClient, "codiArrel", "");
+        when(parametresHelper.getParametreText(BaseConfig.PROP_DIR3_GOVERN_CODI_ARREL))
+            .thenReturn(null);
 
         // Act & Assert
         assertThat(restClient.getCodiArrel()).isEqualTo(UnitatsOrganitzativesRestClient.CODI_ARREL_PER_DEFECTE);

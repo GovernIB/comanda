@@ -21,7 +21,7 @@ import java.util.Optional;
  * Resol l'entitat (EntitatEntity) associada a un fet i, a partir d'aquesta, la conselleria d'un òrgan gestor.
  * Centralitza la lògica descrita per l'usuari: si el fet té una dimensió de tipus ENTITAT amb valor, es fa servir
  * el codiDir3 d'aquesta entitat com a arrel de l'arbre d'unitats organitzatives; si no, es fa servir l'arrel per
- * defecte (paràmetre {@code es.caib.comanda.estadistica.dir3.govern.codi.arrel}, o el fallback intern si no està
+ * defecte (paràmetre {@code es.caib.comanda.plugin.unitats.organitzatives.dir3.govern.codi.arrel}, o el fallback intern si no està
  * configurat - vegeu {@link UnitatsOrganitzativesRestClient#CODI_ARREL_PER_DEFECTE}).
  *
  * @author Límit Tecnologies

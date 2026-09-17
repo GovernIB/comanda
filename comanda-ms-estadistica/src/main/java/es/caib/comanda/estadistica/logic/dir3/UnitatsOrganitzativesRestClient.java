@@ -1,7 +1,9 @@
 package es.caib.comanda.estadistica.logic.dir3;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.MonitorDir3;
+import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -25,22 +27,26 @@ public class UnitatsOrganitzativesRestClient {
      */
     public static final String CODI_ARREL_PER_DEFECTE = "A04003003";
 
-    @Value("${es.caib.comanda.estadistica.dir3.govern.codi.arrel:" + CODI_ARREL_PER_DEFECTE + "}")
-    private String codiArrel;
-
-    public String getCodiArrel() {
-        return codiArrel != null && !codiArrel.isBlank() ? codiArrel : CODI_ARREL_PER_DEFECTE;
-    }
-
-    @Value("${es.caib.comanda.plugin.unitats.organitzatives.dir3.service.url:}")
-    private String baseUrl;
-    @Value("${es.caib.comanda.plugin.unitats.organitzatives.dir3.service.username:}")
-    private String username;
-    @Value("${es.caib.comanda.plugin.unitats.organitzatives.dir3.service.password:}")
-    private String password;
-
+    private final ParametresHelper parametresHelper;
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final RestTemplate restTemplate;
+
+    public String getCodiArrel() {
+        if (parametresHelper != null) {
+            String valor = parametresHelper.getParametreText(BaseConfig.PROP_DIR3_GOVERN_CODI_ARREL);
+            if (valor != null && !valor.isBlank()) {
+                return valor;
+            }
+        }
+        return CODI_ARREL_PER_DEFECTE;
+    }
+
+    @Value("${" + BaseConfig.PROP_DIR3_SERVICE_URL + ":}")
+    private String baseUrl;
+    @Value("${" + BaseConfig.PROP_DIR3_SERVICE_USERNAME + ":}")
+    private String username;
+    @Value("${" + BaseConfig.PROP_DIR3_SERVICE_PASSWORD + ":}")
+    private String password;
 
     private String URL_GET_ONE;
     private String URL_FIND;
@@ -127,7 +133,7 @@ public class UnitatsOrganitzativesRestClient {
     public List<UnidadRest> findUnidadArrel(String fechaActualizacion,
                                             String fechaSincronizacion,
                                             Boolean denominacioCooficial) throws SistemaExternException {
-        return this.findUnidad(codiArrel, fechaActualizacion, fechaSincronizacion, denominacioCooficial);
+        return this.findUnidad(getCodiArrel(), fechaActualizacion, fechaSincronizacion, denominacioCooficial);
     }
 
     public List<UnidadRest> findUnidad(String codigo,

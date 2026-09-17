@@ -1,5 +1,6 @@
 package es.caib.comanda.estadistica.logic.service;
 
+import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesRestClient;
 import es.caib.comanda.estadistica.logic.helper.EntitatResolverHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
@@ -38,6 +39,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -54,6 +56,7 @@ class DimensioServiceImplTest {
     @Mock private DimensioRepository dimensioRepository;
     @Mock private DimensioValorRepository dimensioValorRepository;
     @Mock private ResourceEntityMappingHelper resourceEntityMappingHelper;
+    @Mock private UnitatsOrganitzativesRestClient unitatsOrganitzativesRestClient;
 
     @InjectMocks
     private DimensioServiceImpl dimensioService;
@@ -61,8 +64,7 @@ class DimensioServiceImplTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(dimensioService, "resourceEntityMappingHelper", resourceEntityMappingHelper);
-        // Inicialitzem el valor injectat per @Value per a les proves
-        ReflectionTestUtils.setField(dimensioService, "codiArrel", "ARREL_TEST");
+        lenient().when(unitatsOrganitzativesRestClient.getCodiArrel()).thenReturn("ARREL_TEST");
     }
 
     // ========================================================================

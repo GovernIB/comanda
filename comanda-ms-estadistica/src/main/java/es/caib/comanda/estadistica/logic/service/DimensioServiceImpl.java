@@ -61,9 +61,7 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
     private final DimensioRepository dimensioRepository;
     private final DimensioValorRepository dimensioValorRepository;
     private final EntitatResolverHelper entitatResolverHelper;
-
-    @Value("${es.caib.comanda.estadistica.dir3.govern.codi.arrel:" + UnitatsOrganitzativesRestClient.CODI_ARREL_PER_DEFECTE + "}")
-    private String codiArrel;
+    private final UnitatsOrganitzativesRestClient unitatsOrganitzativesRestClient;
 
     @PostConstruct
     public void init() {
@@ -195,6 +193,7 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
 //                        fetRepository.saveAll(fetEntityList);
 
                     // Actualitzar tots els valors "CONS", tenint en compte l'entitat de cada fet (si en té)
+                    String codiArrel = unitatsOrganitzativesRestClient.getCodiArrel();
                     List<FetEntity> fetEntityList = fetRepository.findByEntornAppIdAddCons(entity.getEntornAppId(), entity.getCodi(), codiArrel);
                     fetEntityList = fetEntityList.stream()
                         .peek(f -> {
