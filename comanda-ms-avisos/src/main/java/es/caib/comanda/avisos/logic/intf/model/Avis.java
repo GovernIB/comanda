@@ -111,6 +111,7 @@ public class Avis extends BaseResource<Long> {
         private String nom;
         private String descripcio;
         private AvisTipus tipus;
+        private String responsable;
         private LocalDateTime dataInici1;
         private LocalDateTime dataInici2;
         private LocalDateTime dataFi1;
