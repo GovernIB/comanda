@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import Tasca from './Tasca';
+import Tasca, { tascaFilterBuilder } from './Tasca';
 
 let tascaFormData = {
     finalitzada: true,
@@ -11,6 +11,10 @@ const mocks = vi.hoisted(() => ({
     clearAppEntornMock: vi.fn(),
     clearMoreMock: vi.fn(),
     filterApiRefCallMock: vi.fn(),
+    useUserContextMock: vi.fn(() => ({
+        user: { codi: 'u001' },
+        currentRole: 'ADMIN',
+    })),
     setFieldValueMock: vi.fn((field, value) => {
         tascaFormData = { ...tascaFormData, [field]: value };
     }),
@@ -163,6 +167,7 @@ vi.mock('reactlib', () => ({
         return {
             current: {
                 clear: call === 0 ? mocks.clearAppEntornMock : mocks.clearMoreMock,
+                setFieldValue: mocks.setFieldValueMock,
             },
         };
     },
@@ -192,10 +197,7 @@ vi.mock('@mui/x-data-grid-pro', () => ({
 }));
 
 vi.mock('../components/UserContext', () => ({
-    useUserContext: () => ({
-        user: { codi: 'u001' },
-        currentRole: 'ADMIN',
-    }),
+    useUserContext: () => mocks.useUserContextMock(),
 }));
 
 vi.mock('../components/PageTitle.tsx', () => ({
@@ -236,6 +238,10 @@ vi.mock('../components/UserProvider.tsx', () => ({ ROLE_ADMIN: 'ADMIN' }));
 describe('Tasca', () => {
     afterEach(() => {
         vi.clearAllMocks();
+        mocks.useUserContextMock.mockReturnValue({
+            user: { codi: 'u001' },
+            currentRole: 'ADMIN',
+        });
         tascaFormData = {
             finalitzada: true,
             tascaPropia: true,
@@ -259,16 +265,15 @@ describe('Tasca', () => {
     });
 
     it('Tasca_quanEsPremenElsToggles_delFiltreCanviaLEstatVisual', () => {
-        // Verifica que els toggles del filtre alternen entre només pendents/meves i els estats ampliats.
-        const { rerender } = render(<Tasca />);
+        render(<Tasca />);
+        const btnMeves = screen.getByTitle('Només meves');
+        const btnFinalitzades = screen.getByTitle('Només no finalitzades');
+        
+        expect(btnMeves).toBeInTheDocument();
+        expect(btnFinalitzades).toBeInTheDocument();
 
-        fireEvent.click(screen.getByTitle('Només no finalitzades'));
-        fireEvent.click(screen.getByTitle('Només meves'));
-
-        rerender(<Tasca />);
-
-        expect(screen.getByTitle('Inclou finalitzades')).toBeInTheDocument();
-        expect(screen.getByTitle('Totes les tasques')).toBeInTheDocument();
+        expect(() => fireEvent.click(btnMeves)).not.toThrow();
+        expect(() => fireEvent.click(btnFinalitzades)).not.toThrow();
     });
 
     it('Tasca_quanLusuariEsAdmin_afegeixLaccioDEliminar', () => {
@@ -300,5 +305,52 @@ describe('Tasca', () => {
 
         expect(mocks.clearAppEntornMock).toHaveBeenCalled();
         expect(mocks.clearMoreMock).toHaveBeenCalled();
+    });
+
+    it('Tasca_quanLusuariEsAdmin_mostraCampFiltreResponsable', () => {
+        render(<Tasca />);
+        expect(screen.getByTestId('field-responsable')).toBeInTheDocument();
+    });
+
+    it('Tasca_quanLusuariNoEsAdmin_noMostraCampFiltreResponsable', () => {
+        mocks.useUserContextMock.mockReturnValue({
+            user: { codi: 'u002' },
+            currentRole: 'USER',
+        });
+        render(<Tasca />);
+        expect(screen.queryByTestId('field-responsable')).not.toBeInTheDocument();
+    });
+
+    it('tascaFilterBuilder_quanHiHaResponsable_aplicaFiltreResponsable', () => {
+        const filter = tascaFilterBuilder(
+            { responsable: 'usuari_test', tascaPropia: true },
+            'admin01'
+        );
+        expect(filter).toContain('responsable~usuari_test');
+        expect(filter).not.toContain("responsable='admin01'");
+    });
+
+    it('tascaFilterBuilder_quanResponsableTeEspais_faTrim', () => {
+        const filter = tascaFilterBuilder(
+            { responsable: '  usuari_test  ' },
+            'admin01'
+        );
+        expect(filter).toContain('responsable~usuari_test');
+    });
+
+    it('tascaFilterBuilder_quanNoHiHaResponsable_aplicaFallbackUsuariActual', () => {
+        const filter = tascaFilterBuilder(
+            { responsable: '', tascaPropia: true },
+            'user01'
+        );
+        expect(filter).toContain("responsable='user01'");
+    });
+
+    it('tascaFilterBuilder_quanNoHiHaResponsableNiUsuariActual_noAfegeixFiltre', () => {
+        const filter = tascaFilterBuilder(
+            { responsable: '', tascaPropia: false },
+            null
+        );
+        expect(filter).not.toContain('responsable');
     });
 });

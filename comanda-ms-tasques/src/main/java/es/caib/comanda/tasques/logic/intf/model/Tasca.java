@@ -106,6 +106,7 @@ public class Tasca extends BaseResource<Long> {
         private String tipus;
         private String numeroExpedient;
         private Prioritat prioritat;
+        private String responsable;
         private LocalDateTime dataInici1;
         private LocalDateTime dataInici2;
         private LocalDateTime dataFi1;
