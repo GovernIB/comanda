@@ -13,6 +13,7 @@ import {
     DashboardReactGridLayout,
     GridLayoutItem,
     useMapDashboardItems,
+    useStoredLargeScreenMode,
 } from '../components/estadistiques/DashboardReactGridLayout.tsx';
 import DashboardEditorSidePanel, {
     DashboardEditorSelection,
@@ -38,7 +39,6 @@ import { useTranslation } from 'react-i18next';
 import { useContentDialog } from '../../lib/components/mui/Dialog.tsx';
 import TableBody from '@mui/material/TableBody';
 import { useDashboard, useDashboardFiltres, useDashboardWidgets } from '../hooks/dashboardRequests.ts';
-import { useStoredLargeScreenMode } from '../components/estadistiques/DashboardReactGridLayout.tsx';
 import { DASHBOARDS_PATH } from '../AppRoutes.tsx';
 import AddIcon from '@mui/icons-material/Add';
 import Icon from '@mui/material/Icon';
@@ -298,139 +298,72 @@ const EstadisticaDashboardEdit: React.FC = () => {
         try {
             const createdItem = await executeDashboardAction(dashboardId, {
                 code: 'clone_and_add_widget',
-                data: {
-                    widgetId,
-                    entornId,
-                    ...defaultSizeAndPosition,
-                },
+                data: { widgetId, entornId, ...defaultSizeAndPosition, },
             });
-
             temporalMessageShow(null, t($ => $.page.dashboards.action.addWidget.success), 'success');
             forceRefreshDashboardWidgets();
-
             if (createdItem?.id) {
                 setEditorSelection({
-                    kind: 'widget',
-                    mode: 'edit',
-                    widgetType,
-                    dashboardItemId: createdItem.id,
-                    widgetId: createdItem.widget?.id ?? widgetId,
+                    kind: 'widget', mode: 'edit', widgetType,
+                    dashboardItemId: createdItem.id, widgetId: createdItem.widget?.id ?? widgetId,
                 });
             }
         } catch (error: any) {
             temporalMessageShow(null, error?.message ?? t($ => $.page.dashboards.action.addWidget.error), 'error');
-            console.error('Widget clone add error', error);
         }
     };
 
     const mappedDashboardItems = useMapDashboardItems(dashboardWidgets);
 
     const selectedGridItemId = React.useMemo(() => {
-        if (editorSelection.kind === 'widget' && editorSelection.mode === 'edit') {
-            return String(editorSelection.dashboardItemId);
-        }
-        if (editorSelection.kind === 'title' && editorSelection.mode === 'edit') {
-            return String(editorSelection.dashboardTitolId);
-        }
+        if (editorSelection.kind === 'widget' && editorSelection.mode === 'edit') return String(editorSelection.dashboardItemId);
+        if (editorSelection.kind === 'title' && editorSelection.mode === 'edit') return String(editorSelection.dashboardTitolId);
         return null;
     }, [editorSelection]);
 
-    const multiSelectedGridItemIds = React.useMemo(() => {
-        return editorSelection.kind === 'multi' ? editorSelection.ids : [];
-    }, [editorSelection]);
-
-    const selectedFiltreId = React.useMemo(() => {
-        if (editorSelection.kind === 'filtre' && editorSelection.mode === 'edit') {
-            return String(editorSelection.dashboardFiltreId);
-        }
-        return null;
-    }, [editorSelection]);
+    const multiSelectedGridItemIds = React.useMemo(() => editorSelection.kind === 'multi' ? editorSelection.ids : [], [editorSelection]);
+    const selectedFiltreId = React.useMemo(() => editorSelection.kind === 'filtre' && editorSelection.mode === 'edit' ? String(editorSelection.dashboardFiltreId) : null, [editorSelection]);
 
     const selectDashboardFiltre = (filtre: { id?: string | number } | null | undefined) => {
-        if (!filtre) {
-            setEditorSelection({ kind: 'none' });
-            return;
-        }
-        setEditorSelection({ kind: 'filtre', mode: 'edit', dashboardFiltreId: filtre.id });
+        setEditorSelection(filtre ? { kind: 'filtre', mode: 'edit', dashboardFiltreId: filtre.id } : { kind: 'none' });
     };
 
     const addDashboardFiltre = () => {
-        const nextOrdre = (dashboardFiltres ?? []).reduce(
-            (max, filtre) => Math.max(max, filtre.ordre ?? 0),
-            -1
-        ) + 1;
+        const nextOrdre = (dashboardFiltres ?? []).reduce((max, filtre) => Math.max(max, filtre.ordre ?? 0), -1) + 1;
         setEditorSelection({ kind: 'filtre', mode: 'create', nextOrdre });
     };
 
-    const selectDashboardElement = (entity: { tipus?: string; id?: string | number; dashboardTitolId?: string | number; dashboardItemId?: string | number; widgetId?: string | number } | null | undefined) => {
-        if (!entity) {
-            setEditorSelection({ kind: 'none' });
-            return;
-        }
+    const selectDashboardElement = (entity: any) => {
+        if (!entity) { setEditorSelection({ kind: 'none' }); return; }
         if (entity.tipus === 'TITOL') {
-            setEditorSelection({
-                kind: 'title',
-                mode: 'edit',
-                dashboardTitolId: entity.dashboardTitolId ?? entity.id,
-            });
-            return;
-        }
-        if (entity.tipus === 'SIMPLE' || entity.tipus === 'GRAFIC' || entity.tipus === 'TAULA') {
-            setEditorSelection({
-                kind: 'widget',
-                mode: 'edit',
-                widgetType: entity.tipus as DashboardWidgetType,
-                dashboardItemId: entity.dashboardItemId ?? entity.id,
-                widgetId: entity.widgetId,
-            });
+            setEditorSelection({ kind: 'title', mode: 'edit', dashboardTitolId: entity.dashboardTitolId ?? entity.id });
+        } else if (['SIMPLE', 'GRAFIC', 'TAULA'].includes(entity.tipus)) {
+            setEditorSelection({ kind: 'widget', mode: 'edit', widgetType: entity.tipus, dashboardItemId: entity.dashboardItemId ?? entity.id, widgetId: entity.widgetId });
         }
     };
 
-    /**
-     * Selecció múltiple (marc de selecció amb el ratolí, vegeu DashboardReactGridLayout). Amb 0 elements es
-     * comporta com netejar la selecció i amb exactament 1 com una selecció normal (mostra les seves
-     * propietats); només amb 2 o més es mostra com a selecció múltiple (sense panell de propietats).
-     */
-    const selectDashboardElements = (entities: Array<{ tipus?: string; id?: string | number; dashboardTitolId?: string | number; dashboardItemId?: string | number; widgetId?: string | number }>) => {
-        if (!entities || entities.length === 0) {
-            setEditorSelection({ kind: 'none' });
-            return;
-        }
-        if (entities.length === 1) {
-            selectDashboardElement(entities[0]);
-            return;
-        }
-        const ids = entities.map((entity) => String(entity.dashboardItemId ?? entity.dashboardTitolId ?? entity.id));
-        setEditorSelection({ kind: 'multi', ids });
+    const selectDashboardElements = (entities: any[]) => {
+        if (!entities || entities.length === 0) { setEditorSelection({ kind: 'none' }); return; }
+        if (entities.length === 1) { selectDashboardElement(entities[0]); return; }
+        setEditorSelection({ kind: 'multi', ids: entities.map((e) => String(e.dashboardItemId ?? e.dashboardTitolId ?? e.id)) });
     };
 
     const handleDeleteItem = (entity: any) => {
         if (!entity) return;
         const isTitol = entity.tipus === 'TITOL';
         const entityId = isTitol ? (entity.dashboardTitolId ?? entity.id) : (entity.dashboardItemId ?? entity.id);
-        messageDialogShow(
-            t($ => $.page.dashboards.editor.deleteItem.title),
-            t($ => $.page.dashboards.editor.deleteItem.confirm),
-            confirmDialogButtons,
-            { maxWidth: 'sm', fullWidth: true }
-        ).then((value: any) => {
+        messageDialogShow(t($ => $.page.dashboards.editor.deleteItem.title), t($ => $.page.dashboards.editor.deleteItem.confirm), confirmDialogButtons, { maxWidth: 'sm', fullWidth: true })
+        .then((value: any) => {
             if (!value) return;
             const deletePromise = isTitol ? deleteDashboardTitol(entityId) : deleteDashboardItem(entityId);
-            deletePromise
-                .then(() => {
+            deletePromise.then(() => {
                     temporalMessageShow(null, t($ => $.page.dashboards.editor.deleteItem.success), 'success');
-                    if (
-                        (isTitol && editorSelection.kind === 'title' && editorSelection.mode === 'edit' && editorSelection.dashboardTitolId === entityId) ||
-                        (!isTitol && editorSelection.kind === 'widget' && editorSelection.mode === 'edit' && editorSelection.dashboardItemId === entityId)
-                    ) {
+                    if ((isTitol && editorSelection.kind === 'title' && editorSelection.mode === 'edit' && editorSelection.dashboardTitolId === entityId) ||
+                        (!isTitol && editorSelection.kind === 'widget' && editorSelection.mode === 'edit' && editorSelection.dashboardItemId === entityId)) {
                         setEditorSelection({ kind: 'none' });
                     }
                     forceRefreshDashboardWidgets();
-                })
-                .catch((reason: any) => {
-                    temporalMessageShow(null, reason?.message ?? t($ => $.page.dashboards.editor.deleteItem.error), 'error');
-                    console.error('Widget delete error', reason);
-                });
+                }).catch((reason: any) => temporalMessageShow(null, reason?.message ?? t($ => $.page.dashboards.editor.deleteItem.error), 'error'));
         });
     };
 
@@ -438,68 +371,31 @@ const EstadisticaDashboardEdit: React.FC = () => {
         if (!entity) return;
         try {
             if (entity.tipus === 'TITOL') {
-                const titolId = entity.dashboardTitolId ?? entity.id;
-                await executeDashboardTitolAction(titolId, {
-                    code: 'duplicate',
-                });
-            } else if (entity.tipus === 'SIMPLE' || entity.tipus === 'GRAFIC' || entity.tipus === 'TAULA') {
-                const dashboardItemId = entity.dashboardItemId ?? entity.id;
-                await executeDashboardItemAction(dashboardItemId, {
-                    code: 'duplicate',
-                });
-            } else {
-                return;
+                await executeDashboardTitolAction(entity.dashboardTitolId ?? entity.id, { code: 'duplicate' });
+            } else if (['SIMPLE', 'GRAFIC', 'TAULA'].includes(entity.tipus)) {
+                await executeDashboardItemAction(entity.dashboardItemId ?? entity.id, { code: 'duplicate' });
             }
             temporalMessageShow(null, t($ => $.page.dashboards.editor.duplicateItem.success), 'success');
             forceRefreshDashboardWidgets();
         } catch (error: any) {
             temporalMessageShow(null, error?.message ?? t($ => $.page.dashboards.editor.duplicateItem.error), 'error');
-            console.error('Widget duplicate error', error);
         }
     };
 
     const onGridLayoutItemsChange = (newLayoutItems: GridLayoutItem[]) => {
         const promises: Promise<unknown>[] = [];
         mappedDashboardItems.forEach((oldDashboardItem: GridLayoutItem) => {
-            const newDashboardItem = newLayoutItems.find(
-                (newLayoutItem: GridLayoutItem) => newLayoutItem.id === oldDashboardItem.id
-            );
-
-            if (newDashboardItem === undefined) {
-                console.error(t($ => $.page.dashboards.action.patchItem.warning, oldDashboardItem));
-            } else if (!isEqual(oldDashboardItem, newDashboardItem)) {
-                const patchArgs = {
-                    data: {
-                        posX: newDashboardItem.x,
-                        posY: newDashboardItem.y,
-                        width: newDashboardItem.w,
-                        height: newDashboardItem.h,
-                    },
-                };
+            const newDashboardItem = newLayoutItems.find((item: GridLayoutItem) => item.id === oldDashboardItem.id);
+            if (newDashboardItem && !isEqual(oldDashboardItem, newDashboardItem)) {
+                const patchArgs = { data: { posX: newDashboardItem.x, posY: newDashboardItem.y, width: newDashboardItem.w, height: newDashboardItem.h } };
                 const isTitol = newDashboardItem.type === 'TITOL';
-                const patchPromise = !isTitol
-                    ? patchDashboardItem(oldDashboardItem.id, patchArgs)
-                    : patchDashboardTitol(oldDashboardItem.id, patchArgs);
-                promises.push(patchPromise);
+                promises.push(isTitol ? patchDashboardTitol(oldDashboardItem.id, patchArgs) : patchDashboardItem(oldDashboardItem.id, patchArgs));
             }
         });
-
-        Promise.all(promises)
-            .then(() => {
-                temporalMessageShow(null, t($ => $.page.dashboards.action.patchItem.success), 'success');
-                // Quan es mou un grup (selecció múltiple), react-grid-layout només reflecteix internament
-                // la posició de l'element realment arrossegat: la resta s'han mogut igualment (i s'acaben de
-                // desar aquí a sobre), però el canvas no ho mostra fins que `gridLayoutItems` es refresca amb
-                // dades noves. En un moviment/redimensionament normal (com a màxim 1 item afectat) no cal, ja
-                // que react-grid-layout ja mostra l'element arrossegat/redimensionat a la posició correcta.
-                if (promises.length > 1) {
-                    forceRefreshDashboardWidgets();
-                }
-            })
-            .catch((reason) => {
-                temporalMessageShow(null, t($ => $.page.dashboards.action.patchItem.error), 'error');
-                console.error(t($ => $.page.dashboards.action.patchItem.saveError), reason);
-            });
+        Promise.all(promises).then(() => {
+            temporalMessageShow(null, t($ => $.page.dashboards.action.patchItem.success), 'success');
+            if (promises.length > 1) forceRefreshDashboardWidgets();
+        }).catch((_reason) => temporalMessageShow(null, t($ => $.page.dashboards.action.patchItem.error), 'error'));
     };
 
     const loading = loadingDashboard || loadingWidgetPositions || loadingEntornCodi;
@@ -507,23 +403,15 @@ const EstadisticaDashboardEdit: React.FC = () => {
     if (dashboardException) {
         if (dashboardException.status === 404) {
             return (
-                <Alert
-                    severity="warning"
-                    action={
-                        <Button onClick={() => navigate(`/${DASHBOARDS_PATH}`)}>
-                            {t($ => $.page.dashboards.alert.tornarLlistat)}
-                        </Button>
-                    }
-                >
+                <Alert severity="warning" action={<Button onClick={() => navigate(`/${DASHBOARDS_PATH}`)}>{t($ => $.page.dashboards.alert.tornarLlistat)}</Button>}>
                     {t($ => $.page.dashboards.alert.notExists)}
                 </Alert>
             );
-        } else return <Alert severity="error">{t($ => $.page.dashboards.alert.carregar)}</Alert>;
+        }
+        return <Alert severity="error">{t($ => $.page.dashboards.alert.carregar)}</Alert>;
     }
 
     return (
-        // Tota la pantalla de disseny (no només els colors dels widgets) s'ha de mostrar amb el tema
-        // (clar/fosc) seleccionat a l'switch de la capçalera, independentment del tema real del perfil.
         <ThemeProvider theme={designDarkMode ? darkTheme : lightTheme}>
         <Box sx={{
             flex: 1,
@@ -531,6 +419,8 @@ const EstadisticaDashboardEdit: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
+            bgcolor: (theme) => theme.palette.background.default,
+            color: (theme) => theme.palette.text.primary,
         }}>
             <PageTitle title={t($ => $.page.dashboards.title)} />
             {loading ? <CenteredCircularProgress /> : null}
@@ -543,20 +433,16 @@ const EstadisticaDashboardEdit: React.FC = () => {
                         display: 'flex',
                         justifyContent: 'space-between',
                         px: 2,
-                        ml: 0,
-                        mr: 0,
-                        mt: 0,
-                        backgroundColor: (theme) => theme.palette.mode === 'light' ? theme.palette.grey[200] : theme.palette.grey[900],
+                        ml: 0, mr: 0, mt: 0,
+                        bgcolor: (theme) => theme.palette.background.paper,
+                        borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                     }}
                 >
-                    <Box>
-                        <IconButton
-                            title={tLib('form.goBack.title')}
-                            onClick={() => goBack(`/${DASHBOARDS_PATH}`)}
-                        >
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <IconButton title={tLib('form.goBack.title')} onClick={() => goBack(`/${DASHBOARDS_PATH}`)}>
                             <Icon>arrow_back</Icon>
                         </IconButton>
-                        <Typography sx={{ display: 'inline', mx: 2, }} >
+                        <Typography sx={{ display: 'inline', mx: 2, fontWeight: 600 }}>
                             {dashboard.titol}
                         </Typography>
                     </Box>
@@ -566,39 +452,35 @@ const EstadisticaDashboardEdit: React.FC = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Tooltip title={t($ => $.page.dashboards.view.largeScreenModeFit)}>
                             <ToggleButton
-                                value="fit"
-                                size="small"
-                                selected={largeScreenMode === 'fit'}
-                                color="primary"
+                                value="fit" size="small" selected={largeScreenMode === 'fit'} color="primary"
                                 onChange={() => setLargeScreenMode(largeScreenMode === 'fit' ? 'centered' : 'fit')}
-                                aria-label={t($ => $.page.dashboards.view.largeScreenModeFit)}
                                 sx={{ height: '32px' }}
                             >
                                 <Icon fontSize="small">aspect_ratio</Icon>
                             </ToggleButton>
                         </Tooltip>
-                        <Icon fontSize="small">light_mode</Icon>
+                        <Icon fontSize="small" sx={{ color: designDarkMode ? 'text.disabled' : 'warning.main', transition: 'color 0.2s' }}>
+                            light_mode
+                        </Icon>
                         <IOSSwitch
                             checked={designDarkMode}
                             onChange={(_event, checked) => setDesignDarkMode(checked)}
                             slotProps={{ input: { 'aria-label': t($ => $.page.dashboards.editor.darkModeToggle) } }}
                         />
-                        <Icon fontSize="small">dark_mode</Icon>
+                        <Icon fontSize="small" sx={{ color: designDarkMode ? 'primary.main' : 'text.disabled', transition: 'color 0.2s' }}>
+                            dark_mode
+                        </Icon>
                         <Button
-                            variant="contained"
-                            startIcon={<AddIcon />}
+                            variant="contained" startIcon={<AddIcon />}
                             disabled={!apiDashboardItemIsReady || !dashboard}
                             onClick={() => openWizard(undefined, dashboard?.entorn?.id, dashboard?.aplicacio)}
                         >
                             {t($ => $.page.dashboards.action.createComponent.label)}
                         </Button>
-                        {/*<DashboardSideMenu dashboard={dashboard} addAction={addWidget}/>*/}
                     </Box>
                 </MuiToolbar>
                 <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', minHeight: 0 }}>
-                    {/* Canvas + overlay panels wrapper */}
                     <Box sx={{ flex: 1, position: 'relative', display: 'flex', minHeight: 0, overflow: 'hidden' }}>
-                        {/* Scrollable canvas area (ocupa tot l'ample, per sota dels panells flotants) */}
                         <Box sx={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
                             {apiDashboardItemIsReady && apiDashboardTitolIsReady && dashboardWidgets && (
                                 <DashboardReactGridLayout
@@ -621,7 +503,6 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                 />
                             )}
                         </Box>
-                        {/* Overlay left panel (non-scrolling, always in view) */}
                         <Box
                             sx={{
                                 position: 'absolute',
@@ -651,7 +532,6 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                     />
                                 </Box>
                             )}
-                            {/* Resize handle amb el botó de contreure/expandir centrat */}
                             <Box
                                 data-testid="left-panel-resize-handle"
                                 onMouseDown={!leftPanelCollapsed ? handleLeftResizeMouseDown : undefined}
@@ -671,82 +551,31 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                     }),
                                 }}
                             >
-                                <IconButton
-                                    size="small"
-                                    onClick={() => setLeftPanelCollapsed(c => !c)}
+                                <IconButton size="small" onClick={() => setLeftPanelCollapsed(c => !c)}
                                     title={leftPanelCollapsed ? t($ => $.page.dashboards.editor.expandPanel) : t($ => $.page.dashboards.editor.collapsePanel)}
-                                    sx={leftPanelCollapsed ? {
-                                        backgroundColor: 'primary.main',
-                                        color: 'primary.contrastText',
-                                        boxShadow: 2,
-                                        '&:hover': { backgroundColor: 'primary.dark' },
-                                    } : {
-                                        backgroundColor: 'background.paper',
-                                        border: '1px solid',
-                                        borderColor: 'divider',
-                                    }}
+                                    sx={leftPanelCollapsed ? { backgroundColor: 'primary.main', color: 'primary.contrastText', boxShadow: 2 } : { backgroundColor: 'background.paper', border: '1px solid', borderColor: 'divider' }}
                                 >
-                                    <Icon sx={{ fontSize: '1rem' }}>
-                                        {leftPanelCollapsed ? 'chevron_right' : 'chevron_left'}
-                                    </Icon>
+                                    <Icon sx={{ fontSize: '1rem' }}>{leftPanelCollapsed ? 'chevron_right' : 'chevron_left'}</Icon>
                                 </IconButton>
                             </Box>
                         </Box>
-                        {/* Overlay right side panel (non-scrolling, always in view) */}
-                        <Box
-                            sx={{
-                                position: 'absolute',
-                                top: 0,
-                                right: 0,
-                                height: '100%',
-                                width: panelCollapsed ? '40px' : `${panelWidth}px`,
-                                display: 'flex',
-                                flexDirection: 'row',
-                                zIndex: 20,
-                                pointerEvents: 'none',
-                            }}
-                        >
-                            {/* Resize handle amb el botó de contreure/expandir centrat */}
+                        <Box sx={{ position: 'absolute', top: 0, right: 0, height: '100%', width: panelCollapsed ? '40px' : `${panelWidth}px`, display: 'flex', flexDirection: 'row', zIndex: 20, pointerEvents: 'none' }}>
                             <Box
                                 data-testid="right-panel-resize-handle"
                                 onMouseDown={!panelCollapsed ? handleResizeMouseDown : undefined}
                                 sx={{
-                                    width: panelCollapsed ? '40px' : '10px',
-                                    flexShrink: 0,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    cursor: panelCollapsed ? 'pointer' : 'ew-resize',
-                                    backgroundColor: 'divider',
-                                    borderLeft: '1px solid',
-                                    borderColor: 'divider',
-                                    pointerEvents: 'all',
-                                    ...(!panelCollapsed && {
-                                        '&:hover': { backgroundColor: 'primary.main', opacity: 0.6 },
-                                    }),
+                                    width: panelCollapsed ? '40px' : '10px', flexShrink: 0, display: 'flex',
+                                    alignItems: 'center', justifyContent: 'center', cursor: panelCollapsed ? 'pointer' : 'ew-resize',
+                                    backgroundColor: 'divider', borderLeft: '1px solid', borderColor: 'divider', pointerEvents: 'all',
+                                    ...(!panelCollapsed && { '&:hover': { backgroundColor: 'primary.main', opacity: 0.6 } }),
                                 }}
                             >
-                                <IconButton
-                                    size="small"
-                                    onClick={() => setPanelCollapsed(c => !c)}
-                                    title={panelCollapsed ? t($ => $.page.dashboards.editor.expandPanel) : t($ => $.page.dashboards.editor.collapsePanel)}
-                                    sx={panelCollapsed ? {
-                                        backgroundColor: 'primary.main',
-                                        color: 'primary.contrastText',
-                                        boxShadow: 2,
-                                        '&:hover': { backgroundColor: 'primary.dark' },
-                                    } : {
-                                        backgroundColor: 'background.paper',
-                                        border: '1px solid',
-                                        borderColor: 'divider',
-                                    }}
+                                <IconButton size="small" onClick={() => setPanelCollapsed(c => !c)}
+                                    sx={panelCollapsed ? { backgroundColor: 'primary.main', color: 'primary.contrastText', boxShadow: 2 } : { backgroundColor: 'background.paper', border: '1px solid', borderColor: 'divider' }}
                                 >
-                                    <Icon sx={{ fontSize: '1rem' }}>
-                                        {panelCollapsed ? 'chevron_left' : 'chevron_right'}
-                                    </Icon>
+                                    <Icon sx={{ fontSize: '1rem' }}>{panelCollapsed ? 'chevron_left' : 'chevron_right'}</Icon>
                                 </IconButton>
                             </Box>
-                            {/* Panel content */}
                             {!panelCollapsed && (
                                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', pointerEvents: 'all', overflow: 'hidden' }}>
                                     <DashboardEditorSidePanel
@@ -757,25 +586,14 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                         dashboardFiltres={dashboardFiltres}
                                         onLiveTitleDataChange={handleLiveTitleDataChange}
                                         onSaved={(dashboardItemId?: any) => {
-                                            if (editorSelection.kind === 'filtre') {
-                                                forceRefreshDashboardFiltres();
-                                            } else if (editorSelection.kind === 'none') {
-                                                // Configuració del propi dashboard (aplicació/entorn/colors de
-                                                // fons): cal refrescar-lo perquè els canvis (p.ex. el color de
-                                                // fons del canvas) s'apliquin sense haver de recarregar la pàgina.
-                                                forceRefreshDashboard();
-                                            } else {
-                                                handleWidgetSaved(dashboardItemId);
-                                            }
+                                            if (editorSelection.kind === 'filtre') forceRefreshDashboardFiltres();
+                                            else if (editorSelection.kind === 'none') forceRefreshDashboard();
+                                            else handleWidgetSaved(dashboardItemId);
                                         }}
                                         onDeleted={() => {
                                             const wasFiltre = editorSelection.kind === 'filtre';
                                             setEditorSelection({ kind: 'none' });
-                                            if (wasFiltre) {
-                                                forceRefreshDashboardFiltres();
-                                            } else {
-                                                forceRefreshDashboardWidgets();
-                                            }
+                                            wasFiltre ? forceRefreshDashboardFiltres() : forceRefreshDashboardWidgets();
                                         }}
                                     />
                                 </Box>

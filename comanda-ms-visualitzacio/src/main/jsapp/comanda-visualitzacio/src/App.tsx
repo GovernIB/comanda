@@ -191,13 +191,6 @@ export const useAppEntries = () => {
                 resourceName: 'indicador',
             } : null,
             statsEnabled && isUserAdmin ? {
-                id: 'estadisticaWidget',
-                title: t($ => $.menu.widget),
-                to: '/estadisticaWidget',
-                icon: 'widgets',
-                resourceName: 'dashboard',
-            } : null,
-            statsEnabled && isUserAdmin ? {
                 id: 'plantilla',
                 title: t($ => $.menu.plantilla),
                 to: '/plantilla',

@@ -197,7 +197,6 @@ describe('App', () => {
             page: 0,
             pageSize: 20,
         });
-        expect(props.menuEntries[5].children.some((entry: { id: string }) => entry.id === 'estadisticaWidget')).toBe(true);
         expect(props.menuEntries[5].children.some((entry: { id: string }) => entry.id === 'plantilla')).toBe(true);
         expect(props.menuEntries[5].children.some((entry: { id: string }) => entry.id === 'parametre')).toBe(true);
         expect(props.menuEntries[4].description).toBe('Descripció monitorització');
@@ -287,7 +286,6 @@ describe('App', () => {
         const configuracioChildren = props.menuEntries[5].children;
 
         expect(props.menuEntries).toHaveLength(6);
-        expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'estadisticaWidget')).toBe(false);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'plantilla')).toBe(false);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'parametre')).toBe(false);
     });
@@ -323,7 +321,6 @@ describe('App', () => {
         ]);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'dimensio')).toBe(false);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'indicador')).toBe(false);
-        expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'estadisticaWidget')).toBe(false);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'plantilla')).toBe(false);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'dashboard')).toBe(false);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'calendari')).toBe(false);
@@ -346,7 +343,6 @@ describe('App', () => {
         expect(props.menuEntries.map((entry: { id: string }) => entry.id)).toContain('estadistiques');
         expect(configuracioChildrenEnabled.some((entry: { id: string }) => entry.id === 'dimensio')).toBe(true);
         expect(configuracioChildrenEnabled.some((entry: { id: string }) => entry.id === 'indicador')).toBe(true);
-        expect(configuracioChildrenEnabled.some((entry: { id: string }) => entry.id === 'estadisticaWidget')).toBe(true);
         expect(configuracioChildrenEnabled.some((entry: { id: string }) => entry.id === 'plantilla')).toBe(true);
         expect(configuracioChildrenEnabled.some((entry: { id: string }) => entry.id === 'dashboard')).toBe(true);
         expect(configuracioChildrenEnabled.some((entry: { id: string }) => entry.id === 'calendari')).toBe(true);
@@ -360,7 +356,6 @@ describe('App', () => {
         expect(props.menuEntries.map((entry: { id: string }) => entry.id)).not.toContain('estadistiques');
         expect(configuracioChildrenDisabled.some((entry: { id: string }) => entry.id === 'dimensio')).toBe(false);
         expect(configuracioChildrenDisabled.some((entry: { id: string }) => entry.id === 'indicador')).toBe(false);
-        expect(configuracioChildrenDisabled.some((entry: { id: string }) => entry.id === 'estadisticaWidget')).toBe(false);
         expect(configuracioChildrenDisabled.some((entry: { id: string }) => entry.id === 'plantilla')).toBe(false);
         expect(configuracioChildrenDisabled.some((entry: { id: string }) => entry.id === 'dashboard')).toBe(false);
         expect(configuracioChildrenDisabled.some((entry: { id: string }) => entry.id === 'calendari')).toBe(false);
