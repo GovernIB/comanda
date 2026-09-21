@@ -245,6 +245,47 @@ describe('Salut', () => {
         expect(screen.getByRole('heading', { name: 'Salut' })).toBeInTheDocument();
         expect(screen.getByTestId('salut-toolbar')).toHaveTextContent('Salut');
         expect(mocks.sseMock.subscribe).toHaveBeenCalled();
+        expect(mocks.findEntornAppMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                namedQueries: ['permis_salut'],
+            })
+        );
+        expect(mocks.findAppMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                namedQueries: ['permis_salut'],
+            })
+        );
+        // Els entorns es consideren sempre visibles, per això no s'hi aplica cap filtre de permisos
+        expect(mocks.findEntornMock).toHaveBeenCalledWith(
+            expect.not.objectContaining({
+                namedQueries: expect.anything(),
+            })
+        );
+    });
+
+    it('Salut_quanNoHiHaEntornAppsPerUnaApp_noGeneraGrupsBuits', async () => {
+        // Verifica que si una aplicació no té cap entorn-app assignat (per permisos), no es genera un grup buit
+        mocks.findEntornAppMock.mockResolvedValue({
+            rows: [
+                {
+                    id: 7,
+                    app: { id: 1, description: 'App Permesa' },
+                    entorn: { id: 2, description: 'PRO' },
+                },
+            ],
+        });
+        mocks.findAppMock.mockResolvedValue({
+            rows: [
+                { id: 1, description: 'App Permesa' },
+                { id: 2, description: 'App No Permesa' },
+            ],
+        });
+
+        render(<Salut />);
+
+        await waitFor(() => {
+            expect(screen.getByText('SalutLlistat 1')).toBeInTheDocument();
+        });
     });
 
     it('Salut_quanCarregaInicialment_activaElSkeletonDelLlistat', async () => {

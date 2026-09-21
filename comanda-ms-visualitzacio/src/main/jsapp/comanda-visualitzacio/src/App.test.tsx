@@ -215,6 +215,12 @@ describe('App', () => {
             const props = mocks.baseAppPropsMock.mock.calls[mocks.baseAppPropsMock.mock.calls.length - 1]?.[0];
             expect(props.menuEntries.map((entry: { id: string }) => entry.id)).toEqual(['salut', 'tasca', 'avis', 'alarma', 'estadistiques', 'dashboard']);
         });
+
+        expect(mocks.entornAppFindMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                namedQueries: ['permis_salut'],
+            })
+        );
     });
 
     it('App_quanLusuariEsConsulta_noMostraElMenuSuperior', () => {
@@ -302,6 +308,12 @@ describe('App', () => {
             const props = mocks.baseAppPropsMock.mock.calls[mocks.baseAppPropsMock.mock.calls.length - 1]?.[0];
             expect(props.menuEntries.map((entry: { id: string }) => entry.id)).toEqual(['tasca', 'avis']);
         });
+
+        expect(mocks.entornAppFindMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                namedQueries: ['permis_salut'],
+            })
+        );
     });
 
     it('App_quanLesEstadistiquesNoEstanActives_amagaElsMenusRelacionats', () => {

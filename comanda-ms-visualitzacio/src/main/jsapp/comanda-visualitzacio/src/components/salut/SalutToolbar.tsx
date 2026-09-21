@@ -215,6 +215,7 @@ const SalutEntornAppFilterForm: React.FC = () => {
     return <Grid container spacing={1} sx={{ mt: 1 }}>
         <Grid size={12}>
             <FormField name="app" componentProps={{ size: 'small', }} multiple optionsUnpaged
+                        namedQueries={['permis_salut']}
                         advancedSearchColumns={[{
                             field: 'codi',
                             flex: 0.5,

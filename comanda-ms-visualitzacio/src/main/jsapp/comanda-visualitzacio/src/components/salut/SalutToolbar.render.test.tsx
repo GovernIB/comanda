@@ -89,7 +89,11 @@ vi.mock('reactlib', () => ({
             </div>
         ) : null,
     MuiFilter: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
-    FormField: ({ name }: { name: string }) => <div>{name}</div>,
+    FormField: ({ name, namedQueries }: { name: string; namedQueries?: string[] }) => (
+        <div data-testid={`form-field-${name}`} data-named-queries={(namedQueries ?? []).join(',')}>
+            {name}
+        </div>
+    ),
     springFilterBuilder: {
         and: (...parts: string[]) => parts.filter(Boolean).join(' and '),
         eq: (field: string, value: unknown) => `${field}:${String(value)}`,
@@ -309,5 +313,31 @@ describe('SalutToolbar render', () => {
         fireEvent.click(screen.getByTitle('Versions per entorn'));
 
         expect(setGroupingMock).toHaveBeenCalledWith(GroupingEnum.VERSIONS_ENTORNS);
+    });
+
+    it('SalutToolbar_quanSObreElFiltre_lesAppsEsDemanenAmbElPermisDeSalut', () => {
+        // El desplegable d'aplicacions només ha d'oferir les que l'usuari pot veure al dashboard de Salut;
+        // els entorns no es filtren perquè es consideren sempre visibles.
+        render(
+            <SalutToolbar
+                title="Salut"
+                ready={true}
+                onRefreshClick={() => undefined}
+                dataRangeDuration="PT15M"
+                setDataRangeDuration={() => undefined}
+                filterData={{}}
+                setFilterData={() => undefined}
+                grouping={GroupingEnum.APPLICATION}
+                setGrouping={() => undefined}
+            />
+        );
+
+        fireEvent.click(screen.getByTitle('Filtrar'));
+
+        expect(screen.getByTestId('form-field-app')).toHaveAttribute(
+            'data-named-queries',
+            'permis_salut'
+        );
+        expect(screen.getByTestId('form-field-entorn')).toHaveAttribute('data-named-queries', '');
     });
 });
