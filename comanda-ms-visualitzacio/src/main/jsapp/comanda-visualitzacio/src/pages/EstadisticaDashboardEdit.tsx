@@ -35,6 +35,8 @@ import {
     Typography,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import { ErrorBoundary } from 'react-error-boundary';
+import { SalutErrorBoundaryFallback } from '../components/salut/SalutErrorBoundaryFallback';
 import { useContentDialog } from '../../lib/components/mui/Dialog.tsx';
 import TableBody from '@mui/material/TableBody';
 import { useDashboard, useDashboardFiltres, useDashboardWidgets } from '../hooks/dashboardRequests.ts';
@@ -749,35 +751,43 @@ const EstadisticaDashboardEdit: React.FC = () => {
                             {/* Panel content */}
                             {!panelCollapsed && (
                                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', pointerEvents: 'all', overflow: 'hidden' }}>
-                                    <DashboardEditorSidePanel
-                                        dashboard={dashboard}
-                                        dashboardId={dashboardId}
-                                        selection={editorSelection}
-                                        onSelectionChange={setEditorSelection}
-                                        dashboardFiltres={dashboardFiltres}
-                                        onLiveTitleDataChange={handleLiveTitleDataChange}
-                                        onSaved={(dashboardItemId?: any) => {
-                                            if (editorSelection.kind === 'filtre') {
-                                                forceRefreshDashboardFiltres();
-                                            } else if (editorSelection.kind === 'none') {
-                                                // Configuració del propi dashboard (aplicació/entorn/colors de
-                                                // fons): cal refrescar-lo perquè els canvis (p.ex. el color de
-                                                // fons del canvas) s'apliquin sense haver de recarregar la pàgina.
-                                                forceRefreshDashboard();
-                                            } else {
-                                                handleWidgetSaved(dashboardItemId);
-                                            }
-                                        }}
-                                        onDeleted={() => {
-                                            const wasFiltre = editorSelection.kind === 'filtre';
-                                            setEditorSelection({ kind: 'none' });
-                                            if (wasFiltre) {
-                                                forceRefreshDashboardFiltres();
-                                            } else {
-                                                forceRefreshDashboardWidgets();
-                                            }
-                                        }}
-                                    />
+                                    {/* Un error en el panell no ha de deixar la pantalla en blanc; es reintenta en canviar la selecció. */}
+                                    <ErrorBoundary
+                                        fallbackRender={({ error }) => (
+                                            <SalutErrorBoundaryFallback error={error} message={t($ => $.common.error)} />
+                                        )}
+                                        resetKeys={[editorSelection]}
+                                    >
+                                        <DashboardEditorSidePanel
+                                            dashboard={dashboard}
+                                            dashboardId={dashboardId}
+                                            selection={editorSelection}
+                                            onSelectionChange={setEditorSelection}
+                                            dashboardFiltres={dashboardFiltres}
+                                            onLiveTitleDataChange={handleLiveTitleDataChange}
+                                            onSaved={(dashboardItemId?: any) => {
+                                                if (editorSelection.kind === 'filtre') {
+                                                    forceRefreshDashboardFiltres();
+                                                } else if (editorSelection.kind === 'none') {
+                                                    // Configuració del propi dashboard (aplicació/entorn/colors de
+                                                    // fons): cal refrescar-lo perquè els canvis (p.ex. el color de
+                                                    // fons del canvas) s'apliquin sense haver de recarregar la pàgina.
+                                                    forceRefreshDashboard();
+                                                } else {
+                                                    handleWidgetSaved(dashboardItemId);
+                                                }
+                                            }}
+                                            onDeleted={() => {
+                                                const wasFiltre = editorSelection.kind === 'filtre';
+                                                setEditorSelection({ kind: 'none' });
+                                                if (wasFiltre) {
+                                                    forceRefreshDashboardFiltres();
+                                                } else {
+                                                    forceRefreshDashboardWidgets();
+                                                }
+                                            }}
+                                        />
+                                    </ErrorBoundary>
                                 </Box>
                             )}
                         </Box>

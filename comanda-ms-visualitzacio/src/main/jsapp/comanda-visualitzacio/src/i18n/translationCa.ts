@@ -256,6 +256,9 @@ const translationCa = {
             latencia: {
                 title: "Latència",
                 error: "Hi ha hagut un error al mostrar el gràfic",
+                errorDetailsButton: "Veure detall de l'error",
+                errorDetailsTitle: "Detall de l'error",
+                errorDetailsClose: "Tancar",
             },
             historicEstat: {
                 title: "Històric d'estat",

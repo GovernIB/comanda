@@ -192,7 +192,10 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         '& .MuiChartsAxis-tick': {stroke: chartTextColor},
         '& .MuiChartsAxis-root line': {stroke: chartTextColor},
         '& .MuiChartsAxis-root path': {stroke: chartTextColor},
-        '& .MuiChartsAxis-tickLabel': {fill: chartTextColor, fontSize: labelSize ? `${labelSize}px !important` : '1em !important',},
+        '& .MuiChartsAxis-tickLabel': {
+            fill: chartTextColor,
+            fontSize: labelSize ? `${labelSize}px !important` : '1em !important',
+        },
         '& .MuiChartsAxis-label': {fill: chartTextColor},
         '& .MuiChartsLegend-label': {fill: chartTextColor},
     };
@@ -237,7 +240,10 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             stack: barStacked ? 'stack' : undefined,
         }));
 
-        const xAxisConfig = {
+        // Eix de categories (band) i eix de valors (lineal). MUI X-Charts exigeix que l'eix de categories
+        // sigui el de la base de les barres: X en layout vertical, Y en layout horitzontal. Si s'assignen
+        // al revés, llança "should be of type band" i, sense error boundary, deixa la pantalla en blanc.
+        const categoryAxisConfig = {
             scaleType: 'band' as const,
             data: xCategories,
             label: llegendaX || (preview ? t($ => $.page.plantilla.sample.xAxis) : undefined),
@@ -248,11 +254,11 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
             tickLabelInterval: getTickLabelInterval(xCategories.length),
         };
 
-        const yAxisConfig = {
+        const valueAxisConfig = {
             scaleType: 'linear' as const,
             label: preview ? t($ => $.page.plantilla.sample.yAxis) : undefined,
-            tickLabelStyle: { fill: chartTextColor },
-            labelStyle: { fill: chartTextColor },
+            tickLabelStyle: {fill: chartTextColor},
+            labelStyle: {fill: chartTextColor},
         };
 
         const grid = barHorizontal
@@ -264,8 +270,8 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
                 <BarChart
                     sx={chartCommonSx}
                     series={series}
-                    xAxis={[xAxisConfig]}
-                    yAxis={[yAxisConfig]}
+                    xAxis={[barHorizontal ? valueAxisConfig : categoryAxisConfig]}
+                    yAxis={[barHorizontal ? categoryAxisConfig : valueAxisConfig]}
                     layout={barHorizontal ? 'horizontal' : 'vertical'}
                     grid={grid}
                     height={chartHeight}
@@ -317,8 +323,8 @@ const GraficWidgetVisualization: React.FC<GraficWidgetVisualizationProps> = (pro
         const yAxisConfig = {
             scaleType: 'linear' as const,
             label: preview ? t($ => $.page.plantilla.sample.yAxis) : undefined,
-            tickLabelStyle: { fill: chartTextColor },
-            labelStyle: { fill: chartTextColor },
+            tickLabelStyle: {fill: chartTextColor},
+            labelStyle: {fill: chartTextColor},
         };
 
         const grid = mostrarReticula ? {horizontal: true} : {horizontal: false};
@@ -700,7 +706,7 @@ const generateSampleData = (chartType?: string): Record<string, unknown>[] => {
             // 35 (no 75) perquè no coincideixi amb cap llindar per defecte de gaugeRangs
             // ('50,75,100'): amb 75 el getColor() de renderGaugeChart saltava sempre al
             // tercer color de la paleta i el primer mai es mostrava a la previsualització.
-            return [{ value: 35, max: 100 }];
+            return [{value: 35, max: 100}];
         case 'HEATMAP_CHART':
             return [
                 {x: 'A', y: 'X', value: 10},

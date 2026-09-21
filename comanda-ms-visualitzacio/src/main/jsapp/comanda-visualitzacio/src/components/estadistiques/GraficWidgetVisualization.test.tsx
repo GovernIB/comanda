@@ -6,11 +6,14 @@ import GraficWidgetVisualization from './GraficWidgetVisualization';
 type MockAxis = { scaleType?: string; tickLabelInterval?: (value: unknown, index: number) => boolean };
 
 vi.mock('@mui/x-charts', () => ({
-    BarChart: ({margin, xAxis}: { margin?: { bottom?: number }; xAxis?: MockAxis[] }) => {
+    BarChart: ({margin, xAxis, yAxis, layout}: { margin?: { bottom?: number }; xAxis?: MockAxis[]; yAxis?: MockAxis[]; layout?: string }) => {
         const bandAxis = xAxis?.find((axis) => axis.scaleType === 'band');
         return (
             <div
                 data-testid="bar-chart"
+                data-layout={layout}
+                data-x-scale-type={xAxis?.[0]?.scaleType}
+                data-y-scale-type={yAxis?.[0]?.scaleType}
                 data-margin-bottom={margin?.bottom}
                 data-band-tick-label-interval={bandAxis ? String(bandAxis.tickLabelInterval?.('x', 0)) : undefined}
             >
@@ -114,6 +117,26 @@ describe('GraficWidgetVisualization', () => {
         );
 
         expect(screen.getByTestId('bar-chart').getAttribute('data-band-tick-label-interval')).toBe('true');
+    });
+
+    it.each([
+        [false, 'vertical', 'band', 'linear'],
+        [true, 'horizontal', 'linear', 'band'],
+    ])('GraficWidgetVisualization_enModeBarAmbBarHorizontal%s_assignaLEixBandALEixDeLaBase', (barHorizontal, layout, xScaleType, yScaleType) => {
+        // Regressió: MUI X-Charts llança "should be of type band" si l'eix de categories no és el de la base
+        // de les barres (X en vertical, Y en horitzontal), i això tombava la pantalla de disseny en blanc.
+        renderComponent(
+            <GraficWidgetVisualization
+                titol="Gràfic principal"
+                tipusGrafic="BAR_CHART"
+                barHorizontal={barHorizontal}
+            />
+        );
+
+        const chart = screen.getByTestId('bar-chart');
+        expect(chart.getAttribute('data-layout')).toBe(layout);
+        expect(chart.getAttribute('data-x-scale-type')).toBe(xScaleType);
+        expect(chart.getAttribute('data-y-scale-type')).toBe(yScaleType);
     });
 
     it('GraficWidgetVisualization_enModeLine_forcaMostrarTotesLesEtiquetesDeCategoria', () => {

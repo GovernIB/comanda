@@ -667,7 +667,7 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                                     entity={dashboardWidget ?? dashboardTitol}
                                     onItemContextMenu={handleItemContextMenu}
                                 >
-                                    <ErrorBoundary fallback={<SalutErrorBoundaryFallback/>}>
+                                    <ErrorBoundary FallbackComponent={SalutErrorBoundaryFallback}>
                                         {(() => {
                                             switch (item.type) {
                                                 case 'SIMPLE':

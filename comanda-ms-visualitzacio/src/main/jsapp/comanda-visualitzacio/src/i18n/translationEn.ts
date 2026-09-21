@@ -256,6 +256,9 @@ const translationEn: translationResourcesType = {
             latencia: {
                 title: "Latency",
                 error: "There was an error displaying the chart",
+                errorDetailsButton: "View error details",
+                errorDetailsTitle: "Error details",
+                errorDetailsClose: "Close",
             },
             historicEstat: {
                 title: "State history",

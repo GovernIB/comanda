@@ -7,6 +7,8 @@ import TaulaWidgetVisualization, { TaulaWidgetVisualizationProps } from './Taula
 import TitolWidgetVisualization, { TitolWidgetVisualizationProps } from './TitolWidgetVisualization';
 import { CircularProgress, Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { ErrorBoundary } from 'react-error-boundary';
+import { SalutErrorBoundaryFallback } from '../salut/SalutErrorBoundaryFallback';
 
 type WidgetPreviewType = 'SIMPLE' | 'GRAFIC' | 'TAULA' | 'TITOL';
 
@@ -38,7 +40,13 @@ export const WidgetPreview: React.FC<WidgetPreviewProps> = ({
         ...resolvedStyles,
         preview: true
     };
-    return renderWidget(widgetType, finalData);
+    // Un error de renderitzat (p.ex. configuració de gràfic invàlida) no ha de tombar tota la pantalla de disseny:
+    // es mostra l'error dins la previsualització i es reintenta quan canvia la configuració del widget.
+    return (
+        <ErrorBoundary FallbackComponent={SalutErrorBoundaryFallback} resetKeys={[widgetType, widgetData]}>
+            {renderWidget(widgetType, finalData)}
+        </ErrorBoundary>
+    );
 };
 
 const renderWidget = (widgetType: WidgetPreviewType, props: any) => {

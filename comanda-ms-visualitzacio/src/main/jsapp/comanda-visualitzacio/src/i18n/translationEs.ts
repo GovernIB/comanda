@@ -256,6 +256,9 @@ const translationEs: translationResourcesType = {
             latencia: {
                 title: "Latencia",
                 error: "Ha habido un error al mostrar el gráfico",
+                errorDetailsButton: "Ver detalle del error",
+                errorDetailsTitle: "Detalle del error",
+                errorDetailsClose: "Cerrar",
             },
             historicEstat: {
                 title: "Histórico de estado",
