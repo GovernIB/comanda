@@ -37,6 +37,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -192,6 +193,13 @@ public class ConsultaEstadisticaHelper {
 
     // La clau de cache HA d'incloure l'usuari: el resultat depèn dels seus permisos d'entitat/òrgan (vegeu
     // DashboardSeguretatHelper), així que usuaris diferents no es poden compartir la mateixa entrada de cache.
+    // REQUIRES_NEW: cada widget necessita la seva pròpia transacció, aïllada de la transacció compartida que
+    // envolta la generació de tot el dashboard. Si no, quan una crida JPA d'aquí (p.ex. findById amb un id
+    // null) marca la transacció ambient com a rollback-only, el catch de sota l'atrapa i sembla que tot va bé,
+    // però en fer commit la transacció exterior Spring llença UnexpectedRollbackException sense cap
+    // referència a l'excepció original — l'usuari només veu "Transaction silently rolled back...", mai la
+    // traça real, i un sol widget erroni tomba tota la petició del dashboard en lloc de degradar-se sol.
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     @Cacheable(value = DASHBOARD_WIDGET_CACHE, key = "#dashboardItem.id + '_' + #temaFosc + '_' + (#filtreSeleccio != null ? #filtreSeleccio.cacheKey() : '') + '_' + @authenticationHelper.getCurrentUserName() + '_' + T(java.time.LocalDate).now()")
     public InformeWidgetItem getDadesWidget(DashboardItemEntity dashboardItem,
                                             boolean temaFosc,
@@ -695,6 +703,7 @@ public class ConsultaEstadisticaHelper {
             .tipus(WidgetTipus.TAULA)
             .entornCodi(dadesComunsConsulta.getEntornCodi())
             .titol(widget.getTitol())
+            .descripcio(widget.getDescripcio())
             .titolAgrupament(titolAgrupacioEfectiu)
             .columnes(columnes)
             .files(files)

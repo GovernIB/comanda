@@ -51,10 +51,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Stream;
@@ -300,6 +304,20 @@ class ConsultaEstadisticaHelperTest {
     }
 
     @Test
+    @DisplayName("getDadesWidget: s'executa en transacció pròpia (REQUIRES_NEW) perquè el fallo d'un widget no enverini la transacció de tot el dashboard")
+    void getDadesWidget_sExecutaEnTransaccioPropiaAmbRequiresNew() throws NoSuchMethodException {
+        Method method = ConsultaEstadisticaHelper.class.getMethod(
+            "getDadesWidget", DashboardItemEntity.class, boolean.class, DashboardFiltreSeleccio.class);
+
+        Transactional transactional = method.getAnnotation(Transactional.class);
+
+        assertThat(transactional).isNotNull();
+        assertThat(transactional.propagation()).isEqualTo(Propagation.REQUIRES_NEW);
+        assertThat(transactional.readOnly()).isTrue();
+        assertThat(method.getAnnotation(Cacheable.class)).isNotNull();
+    }
+
+    @Test
     @DisplayName("getEstadistiquesPeriodeAmbDimensions: delega a getEstadistiquesPeriode quan dimensions és null o buit")
     void getEstadistiquesPeriodeAmbDimensions_quanDimensionsBuit_delegaAMetodeBase() {
         Long entornAppId = 1L;
@@ -411,6 +429,7 @@ class ConsultaEstadisticaHelperTest {
         ReflectionTestUtils.setField(indicadorTaula, "indicador", new IndicadorEntity());
         widget.setColumnes(Collections.singletonList(indicadorTaula));
         widget.setTitolAgrupament("titol_agrupament");
+        widget.setDescripcio("Descripció de la taula");
         dashboardItem.setWidget(widget);
 
         DadesComunsWidgetConsulta dadesComuns = DadesComunsWidgetConsulta.builder()
@@ -438,6 +457,7 @@ class ConsultaEstadisticaHelperTest {
         assertThat(result).isNotNull();
         InformeWidgetTaulaItem taulaItem = (InformeWidgetTaulaItem) result;
         assertThat(taulaItem.getFiles().get(0).get("agrupacio")).isEqualTo("Nom Real");
+        assertThat(taulaItem.getDescripcio()).isEqualTo("Descripció de la taula");
         verify(unitatOrganitzativaRepository).findByCodiIn(anyList());
     }
 

@@ -50,6 +50,12 @@ vi.mock('@mui/x-charts', () => ({
     gaugeClasses: {valueArc: 'valueArc', referenceArc: 'referenceArc'},
 }));
 
+vi.mock('../salut/SalutErrorBoundaryFallback', () => ({
+    SalutErrorBoundaryFallback: (props: { error?: { message?: string; stack?: string } }) => (
+        <div data-testid="salut-error-boundary-fallback" data-error={JSON.stringify(props.error ?? null)} />
+    ),
+}));
+
 const renderComponent = (ui: React.ReactElement) =>
     render(<ThemeProvider theme={createTheme()}>{ui}</ThemeProvider>);
 
@@ -178,8 +184,11 @@ describe('GraficWidgetVisualization', () => {
             />
         );
 
-        expect(screen.getByText('Error del gràfic')).toBeInTheDocument();
-        expect(screen.getByText('Traça del gràfic')).toBeInTheDocument();
+        const fallback = screen.getByTestId('salut-error-boundary-fallback');
+        expect(JSON.parse(fallback.getAttribute('data-error') || 'null')).toEqual({
+            message: 'Error del gràfic',
+            stack: 'Traça del gràfic',
+        });
     });
 
     it('GraficWidgetVisualization_quanRepOnClick_invocaElCallbackEnClicar', () => {

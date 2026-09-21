@@ -255,7 +255,7 @@ const translationEn: translationResourcesType = {
             },
             latencia: {
                 title: "Latency",
-                error: "There was an error displaying the chart",
+                error: "There was an error displaying the component",
                 errorDetailsButton: "View error details",
                 errorDetailsTitle: "Error details",
                 errorDetailsClose: "Close",

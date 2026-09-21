@@ -32,6 +32,7 @@ const mocks = vi.hoisted(() => ({
     showFormDialogMock: vi.fn(),
     useDashboardMock: vi.fn(),
     useDashboardWidgetsMock: vi.fn(),
+    updateWidgetsLayoutMock: vi.fn(),
     useDashboardFiltresMock: vi.fn(),
     useMapDashboardItemsMock: vi.fn(),
     createDashboardItemMock: vi.fn(),
@@ -251,7 +252,7 @@ vi.mock('../../lib/components/mui/form/FormDialog.tsx', () => ({
 
 vi.mock('../hooks/dashboardRequests.ts', () => ({
     useDashboard: (id: string) => mocks.useDashboardMock(id),
-    useDashboardWidgets: (id: string) => mocks.useDashboardWidgetsMock(id),
+    useDashboardWidgets: (id: string) => ({ updateWidgetsLayout: mocks.updateWidgetsLayoutMock, ...mocks.useDashboardWidgetsMock(id) }),
     useDashboardFiltres: (id: string) => mocks.useDashboardFiltresMock(id),
 }));
 
@@ -732,6 +733,24 @@ describe('EstadisticaDashboardEdit', () => {
         });
 
         expect(forceRefreshMock).not.toHaveBeenCalled();
+    });
+
+    it('EstadisticaDashboardEdit_quanEsMouUnElement_actualitzaLEstatLocalPerPoderDesarElRetornAlOrigen', async () => {
+        // Regressió: l'estat local no s'actualitzava en moure un sol element, així que en tornar-lo a la posició
+        // original el canvi es comparava contra la posició antiga, es donava per "sense canvis" i no es desava.
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Moure layout' }));
+
+        await waitFor(() => {
+            expect(mocks.updateWidgetsLayoutMock).toHaveBeenCalledWith([
+                expect.objectContaining({ id: 1, x: 1, y: 1, w: 4, h: 4 }),
+            ]);
+        });
     });
 
     it('EstadisticaDashboardEdit_quanEsMouUnGrupDeMultiplesElements_refrescaElsWidgetsPerActualitzarLaRestaAlCanvas', async () => {

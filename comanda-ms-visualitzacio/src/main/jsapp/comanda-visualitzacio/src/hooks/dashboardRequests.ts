@@ -1,5 +1,6 @@
 import { springFilterBuilder, useResourceApiService } from 'reactlib';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { pick } from 'lodash';
 import { horizontalSubdivisions } from '../components/estadistiques/DashboardReactGridLayout';
 import { DashboardFiltre, DashboardFiltreSeleccio } from '../types/dashboardFiltre.model.ts';
 
@@ -59,10 +60,20 @@ export const useDashboard = (dashboardId: any) => {
     return { ...requestState, forceRefresh };
 };
 
+/**
+ * Camps d'identitat i posició d'un widget que es conserven en refrescar-ne les dades: el backend no envia els camps
+ * `null` (spring.jackson.default-property-inclusion=non_null), de manera que fer merge de la resposta sobre l'ítem
+ * antic deixaria el valor anterior d'un camp que l'usuari acaba de buidar (p. ex. la descripció). Tota la resta de
+ * camps s'agafa només de la resposta.
+ */
+const WIDGET_IDENTITY_KEYS = ['tipus', 'dashboardItemId', 'dashboardTitolId', 'widgetId', 'posX', 'posY', 'width', 'height', 'destacat'];
+
 export const useDashboardWidgets = (
     dashboardId: any,
     temaFosc = false,
-    filtreSeleccio?: DashboardFiltreSeleccio
+    filtreSeleccio?: DashboardFiltreSeleccio,
+    /** Només la pantalla de disseny ha de demanar (i mostrar) la traça real de l'error de backend. */
+    traceEnabled = false
 ) => {
     type RequestStateType = {
         loadingWidgetPositions: boolean;
@@ -114,14 +125,24 @@ export const useDashboardWidgets = (
                         try {
                             const dashboardItemData = (await artifactReportDashboardItem(
                                 widget.dashboardItemId,
-                                { code: 'widget_data', data: { temaFosc, filtreSeleccio } }
+                                {
+                                    code: 'widget_data',
+                                    data: { temaFosc, filtreSeleccio },
+                                    ...(traceEnabled ? { urlData: { trace: 'true' } } : {}),
+                                }
                             )) as any[];
                             widgetResult = dashboardItemData[0];
+                            // El backend pot retornar error:true en una resposta 200 (p.ex. error SQL capturat
+                            // internament en generar les dades) amb errorTrace ja ple amb la traça real: la
+                            // visualització no l'ha de mostrar mai, només la pantalla de disseny (traceEnabled).
+                            if (widgetResult?.error && !traceEnabled) {
+                                widgetResult = { ...widgetResult, errorTrace: undefined };
+                            }
                         } catch (exception: any) {
                             widgetResult = {
                                 error: true,
                                 errorMsg: exception?.message,
-                                errorTrace: exception?.description,
+                                errorTrace: exception?.stackTrace ?? exception?.description,
                             };
                         }
                         if (!widgetResult) return;
@@ -151,7 +172,7 @@ export const useDashboardWidgets = (
         return () => {
             cancelRequests = true;
         };
-    }, [dashboardId, temaFosc, filtreSeleccio, apiDashboardIsReady, apiDashboardItemIsReady]);
+    }, [dashboardId, temaFosc, filtreSeleccio, traceEnabled, apiDashboardIsReady, apiDashboardItemIsReady]);
 
     useEffect(effectFunction, [effectFunction]);
 
@@ -162,15 +183,22 @@ export const useDashboardWidgets = (
     /** Refresca només un widget (no cal recarregar tot el dashboard quan només s'ha modificat un component existent) */
     const refreshWidget = useCallback((dashboardItemId: any) => {
         if (!apiDashboardItemIsReady || dashboardItemId == null) return;
-        artifactReportDashboardItem(dashboardItemId, { code: 'widget_data', data: { temaFosc, filtreSeleccio } })
+        artifactReportDashboardItem(dashboardItemId, {
+            code: 'widget_data',
+            data: { temaFosc, filtreSeleccio },
+            ...(traceEnabled ? { urlData: { trace: 'true' } } : {}),
+        })
             .then((dashboardItemData: any) => {
-                const firstDashboardItemData = (dashboardItemData as any[])?.[0];
+                let firstDashboardItemData = (dashboardItemData as any[])?.[0];
                 if (!firstDashboardItemData) return;
+                if (firstDashboardItemData.error && !traceEnabled) {
+                    firstDashboardItemData = { ...firstDashboardItemData, errorTrace: undefined };
+                }
                 setRequestState((prevState) => ({
                     ...prevState,
                     widgets: prevState.widgets?.map((item: any) =>
                         String(item.dashboardItemId) === String(dashboardItemId)
-                            ? { ...item, ...firstDashboardItemData, loading: false }
+                            ? { ...pick(item, WIDGET_IDENTITY_KEYS), ...firstDashboardItemData, loading: false }
                             : item
                     ),
                 }));
@@ -182,12 +210,34 @@ export const useDashboardWidgets = (
                     ...prevState,
                     widgets: prevState.widgets?.map((item: any) =>
                         String(item.dashboardItemId) === String(dashboardItemId)
-                            ? { ...item, error: true, errorMsg: exception?.message, errorTrace: exception?.description, loading: false }
+                            ? { ...item, error: true, errorMsg: exception?.message, errorTrace: exception?.stackTrace ?? exception?.description, loading: false }
                             : item
                     ),
                 }));
             });
-    }, [apiDashboardItemIsReady, artifactReportDashboardItem, temaFosc, filtreSeleccio]);
+    }, [apiDashboardItemIsReady, artifactReportDashboardItem, temaFosc, filtreSeleccio, traceEnabled]);
+
+    /**
+     * Actualitza localment (sense demanar res al backend) la posició i mida dels elements indicats. S'usa quan el
+     * canvas els ha mogut/redimensionat: si l'estat no s'actualitza, el següent moviment es compara contra la
+     * posició antiga i, en tornar un element a la seva posició original, es considera "sense canvis" i no es desa.
+     */
+    const updateWidgetsLayout = useCallback(
+        (layoutItems: { id: string; x: number; y: number; w: number; h: number }[]) => {
+            setRequestState((prevState) => ({
+                ...prevState,
+                widgets: prevState.widgets?.map((item: any) => {
+                    const layoutItem = layoutItems.find(
+                        (li) => li.id === String(item.dashboardItemId ?? item.dashboardTitolId)
+                    );
+                    return layoutItem
+                        ? { ...item, posX: layoutItem.x, posY: layoutItem.y, width: layoutItem.w, height: layoutItem.h }
+                        : item;
+                }),
+            }));
+        },
+        []
+    );
 
     const errorDashboardWidgets = useMemo(
         () => requestState.widgets?.filter((widget: any) => widget.error),
@@ -200,6 +250,7 @@ export const useDashboardWidgets = (
         loadingWidgetData: requestState.loadingWidgetData,
         forceRefresh,
         refreshWidget,
+        updateWidgetsLayout,
     };
 };
 

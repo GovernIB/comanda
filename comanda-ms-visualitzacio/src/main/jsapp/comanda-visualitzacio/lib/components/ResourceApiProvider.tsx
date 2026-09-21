@@ -207,6 +207,8 @@ export type ResourceApiError = Error & {
     response?: Response;
     /** Descripció detallada de l'error */
     description?: string;
+    /** Traça de l'error real del backend (només present si la petició s'ha fet amb `?trace=true`) */
+    stackTrace?: string;
     /** Llista d'errors globals */
     errors?: any[];
     /** Llista d'errors de validació */
@@ -396,6 +398,7 @@ const toResourceApiError = (problem: Problem): ResourceApiError => {
         status: problem.status,
         response: problem.response,
         description: problem.body?.title,
+        stackTrace: problem.body?.stackTrace,
         errors: problem.body?.errors,
         validationErrors: problem.body?.validationErrors,
         answerRequiredError: problem.body?.answerRequiredError,

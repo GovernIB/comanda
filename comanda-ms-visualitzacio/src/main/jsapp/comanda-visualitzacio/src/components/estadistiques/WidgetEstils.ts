@@ -190,37 +190,6 @@ export const estils = {
     entornCodi: {
         fontWeight: 600,
     },
-    errorIcon: (theme: Theme) => ({
-        color: theme.palette.error.main,
-        fontSize: '3rem',
-        marginRight: 1,
-    }),
-    errorAccordion: {
-        margin: 0,
-        boxShadow: 'none',
-        width: '100%',
-        maxWidth: '100%',
-        overflow: 'hidden',
-        '&:before': {
-            display: 'none',
-        },
-        position: 'relative',
-        zIndex: 10,
-    },
-    errorSummary: (theme: Theme) => ({
-        color: theme.palette.error.main,
-        fontWeight: 'bold',
-        padding: '0 16px',
-    }),
-    errorDetails: (theme: Theme) => ({
-        whiteSpace: 'pre-wrap',
-        fontFamily: 'monospace',
-        fontSize: '0.5rem',
-        backgroundColor: theme.palette.grey[100],
-        padding: 2,
-        maxHeight: '200px',
-        overflow: 'auto',
-    }),
 };
 
 export default estils;

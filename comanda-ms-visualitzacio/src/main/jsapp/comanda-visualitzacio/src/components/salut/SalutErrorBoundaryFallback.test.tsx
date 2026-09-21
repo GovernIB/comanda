@@ -9,7 +9,7 @@ const translations = {
     page: {
         salut: {
             latencia: {
-                error: 'Hi ha hagut un error al mostrar el gràfic',
+                error: 'Hi ha hagut un error al mostrar el component',
                 errorDetailsButton: "Veure detall de l'error",
                 errorDetailsTitle: "Detall de l'error",
                 errorDetailsClose: 'Tancar',
@@ -58,7 +58,7 @@ describe('SalutErrorBoundaryFallback', () => {
         // Comprova que el fallback d'error mostra el text traduït de l'error de latència.
         render(<SalutErrorBoundaryFallback />);
 
-        expect(screen.getByText('Hi ha hagut un error al mostrar el gràfic')).toBeInTheDocument();
+        expect(screen.getByText('Hi ha hagut un error al mostrar el component')).toBeInTheDocument();
     });
 
     it('SalutErrorBoundaryFallback_quanEsRenderitza_mostraLaIconaDeDetallDeLerror', () => {

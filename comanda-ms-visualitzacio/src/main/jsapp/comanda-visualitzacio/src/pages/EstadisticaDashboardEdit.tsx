@@ -194,7 +194,8 @@ const EstadisticaDashboardEdit: React.FC = () => {
         loadingWidgetPositions,
         forceRefresh: forceRefreshDashboardWidgets,
         refreshWidget,
-    } = useDashboardWidgets(dashboardId, temaFosc);
+        updateWidgetsLayout,
+    } = useDashboardWidgets(dashboardId, temaFosc, undefined, true);
     const {
         dashboardFiltres,
         forceRefresh: forceRefreshDashboardFiltres,
@@ -386,18 +387,27 @@ const EstadisticaDashboardEdit: React.FC = () => {
 
     const onGridLayoutItemsChange = (newLayoutItems: GridLayoutItem[]) => {
         const promises: Promise<unknown>[] = [];
+        const changedLayoutItems: GridLayoutItem[] = [];
         mappedDashboardItems.forEach((oldDashboardItem: GridLayoutItem) => {
             const newDashboardItem = newLayoutItems.find((item: GridLayoutItem) => item.id === oldDashboardItem.id);
             if (newDashboardItem && !isEqual(oldDashboardItem, newDashboardItem)) {
+                changedLayoutItems.push(newDashboardItem);
                 const patchArgs = { data: { posX: newDashboardItem.x, posY: newDashboardItem.y, width: newDashboardItem.w, height: newDashboardItem.h } };
                 const isTitol = newDashboardItem.type === 'TITOL';
                 promises.push(isTitol ? patchDashboardTitol(oldDashboardItem.id, patchArgs) : patchDashboardItem(oldDashboardItem.id, patchArgs));
             }
         });
+        // Es reflecteix de seguida a l'estat local (i no en acabar el desat): així el següent moviment es compara
+        // sempre contra la posició actual i, si l'usuari torna l'element a l'origen, es torna a desar.
+        if (changedLayoutItems.length > 0) updateWidgetsLayout(changedLayoutItems);
         Promise.all(promises).then(() => {
             temporalMessageShow(null, t($ => $.page.dashboards.action.patchItem.success), 'success');
             if (promises.length > 1) forceRefreshDashboardWidgets();
-        }).catch((_reason) => temporalMessageShow(null, t($ => $.page.dashboards.action.patchItem.error), 'error'));
+        }).catch((_reason) => {
+            temporalMessageShow(null, t($ => $.page.dashboards.action.patchItem.error), 'error');
+            // Si el desat falla l'estat local ja no coincideix amb el backend: es resincronitza.
+            forceRefreshDashboardWidgets();
+        });
     };
 
     const loading = loadingDashboard || loadingWidgetPositions || loadingEntornCodi;

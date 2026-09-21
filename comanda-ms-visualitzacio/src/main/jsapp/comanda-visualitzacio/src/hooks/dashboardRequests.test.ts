@@ -146,6 +146,118 @@ describe('useDashboardWidgets', () => {
         });
     });
 
+    it('useDashboardWidgets_quanTraceEnabledEsCert_demanaLaTracaAlBackend', async () => {
+        // La pantalla de disseny ha de poder demanar la traça real de l'error de backend.
+        mocks.dashboardService.artifactReport.mockResolvedValue([
+            { dashboardItemId: 1, tipus: 'GRAFIC', posX: 0, posY: 0 },
+        ]);
+        mocks.dashboardItemService.artifactReport.mockResolvedValue([{ dashboardItemId: 1, titol: 'Widget 1' }]);
+
+        const { result } = renderHook(() => useDashboardWidgets(40, false, undefined, true));
+
+        await waitFor(() => {
+            expect(result.current.loadingWidgetData).toBe(false);
+        });
+        expect(mocks.dashboardItemService.artifactReport).toHaveBeenCalledWith(1, {
+            code: 'widget_data',
+            data: { temaFosc: false, filtreSeleccio: undefined },
+            urlData: { trace: 'true' },
+        });
+    });
+
+    it('useDashboardWidgets_quanTraceEnabledEsFals_noDemanaLaTracaAlBackend', async () => {
+        // La visualització del dashboard mai no ha de demanar ni mostrar la traça real.
+        mocks.dashboardService.artifactReport.mockResolvedValue([
+            { dashboardItemId: 1, tipus: 'GRAFIC', posX: 0, posY: 0 },
+        ]);
+        mocks.dashboardItemService.artifactReport.mockResolvedValue([{ dashboardItemId: 1, titol: 'Widget 1' }]);
+
+        const { result } = renderHook(() => useDashboardWidgets(41));
+
+        await waitFor(() => {
+            expect(result.current.loadingWidgetData).toBe(false);
+        });
+        expect(mocks.dashboardItemService.artifactReport).toHaveBeenCalledWith(1, {
+            code: 'widget_data',
+            data: { temaFosc: false, filtreSeleccio: undefined },
+        });
+    });
+
+    it('useDashboardWidgets_quanLaPeticioFallaAmbTracaReal_lUsaComAErrorTraceEnLlocDeLaDescripcio', async () => {
+        // Si el backend retorna una traça real (stackTrace), s'ha de mostrar en lloc del missatge curt.
+        mocks.dashboardService.artifactReport.mockResolvedValue([
+            { dashboardItemId: 1, tipus: 'GRAFIC', posX: 0, posY: 0 },
+        ]);
+        const exception = Object.assign(new Error('ORA-00904'), {
+            description: 'identificador no vàlid',
+            stackTrace: 'oracle.jdbc.OracleDatabaseException: ORA-00904\n\tat ...',
+        });
+        mocks.dashboardItemService.artifactReport.mockRejectedValueOnce(exception);
+
+        const { result } = renderHook(() => useDashboardWidgets(42, false, undefined, true));
+
+        await waitFor(() => {
+            expect(result.current.errorDashboardWidgets?.[0]).toMatchObject({
+                errorMsg: 'ORA-00904',
+                errorTrace: 'oracle.jdbc.OracleDatabaseException: ORA-00904\n\tat ...',
+            });
+        });
+    });
+
+    it('useDashboardWidgets_quanElBackendRetornaErrorTraceEnUna200IioTraceEnabledEsFals_lElimina', async () => {
+        // Cas real: un error de dades/SQL dins la generació del widget NO llença excepció, torna una
+        // resposta 200 amb error:true i errorTrace ja ple (traça Java sencera). La visualització no l'ha
+        // de mostrar mai, encara que el backend l'hagi enviat.
+        mocks.dashboardService.artifactReport.mockResolvedValue([
+            { dashboardItemId: 1, tipus: 'GRAFIC', posX: 0, posY: 0 },
+        ]);
+        mocks.dashboardItemService.artifactReport.mockResolvedValue([
+            {
+                dashboardItemId: 1,
+                error: true,
+                errorMsg: 'Error processing item 1: ORA-00904',
+                errorTrace: 'oracle.jdbc.OracleDatabaseException: ORA-00904\n\tat ...',
+            },
+        ]);
+
+        const { result } = renderHook(() => useDashboardWidgets(50));
+
+        await waitFor(() => {
+            expect(result.current.errorDashboardWidgets).toHaveLength(1);
+        });
+        expect(result.current.errorDashboardWidgets?.[0]).toMatchObject({
+            error: true,
+            errorMsg: 'Error processing item 1: ORA-00904',
+        });
+        expect(result.current.errorDashboardWidgets?.[0].errorTrace).toBeUndefined();
+    });
+
+    it('useDashboardWidgets_quanElBackendRetornaErrorTraceEnUna200IioTraceEnabledEsCert_laMante', async () => {
+        // La pantalla de disseny sí que ha de veure la traça real quan el backend ja la retorna en un 200.
+        mocks.dashboardService.artifactReport.mockResolvedValue([
+            { dashboardItemId: 1, tipus: 'GRAFIC', posX: 0, posY: 0 },
+        ]);
+        mocks.dashboardItemService.artifactReport.mockResolvedValue([
+            {
+                dashboardItemId: 1,
+                error: true,
+                errorMsg: 'Error processing item 1: ORA-00904',
+                errorTrace: 'oracle.jdbc.OracleDatabaseException: ORA-00904\n\tat ...',
+            },
+        ]);
+
+        const { result } = renderHook(() => useDashboardWidgets(51, false, undefined, true));
+
+        await waitFor(() => {
+            expect(result.current.errorDashboardWidgets).toHaveLength(1);
+        });
+        expect(result.current.errorDashboardWidgets?.[0]).toMatchObject({
+            error: true,
+            errorMsg: 'Error processing item 1: ORA-00904',
+            errorTrace: 'oracle.jdbc.OracleDatabaseException: ORA-00904\n\tat ...',
+        });
+    });
+
     it('useDashboardWidgets_quanEsForcaRefresh_tornaALlançarLaCarrega', async () => {
         // Verifica que el callback de refresc reutilitza la mateixa lògica i repeteix les peticions.
         mocks.dashboardService.artifactReport.mockResolvedValue([]);
@@ -202,6 +314,67 @@ describe('useDashboardWidgets', () => {
         expect(mocks.dashboardService.artifactReport).not.toHaveBeenCalled();
     });
 
+    it('useDashboardWidgets_quanEsRefrescaUnWidgetAmbCampBuidat_elCampNoConservaElValorAnterior', async () => {
+        // Regressió: el backend omet els camps null, així que si el widget es refresca després de buidar la
+        // descripció, la resposta ja no en porta i s'havia de conservar l'antiga per error.
+        mocks.dashboardService.artifactReport.mockResolvedValue([
+            { dashboardItemId: 1, tipus: 'TAULA', posX: 3, posY: 4, width: 5, height: 6 },
+        ]);
+        mocks.dashboardItemService.artifactReport.mockResolvedValueOnce([
+            { dashboardItemId: 1, titol: 'Widget 1', descripcio: 'Descripció vella' },
+        ]);
+
+        const { result } = renderHook(() => useDashboardWidgets(21));
+
+        await waitFor(() => {
+            expect(result.current.dashboardWidgets?.[0]?.descripcio).toBe('Descripció vella');
+        });
+
+        mocks.dashboardItemService.artifactReport.mockResolvedValueOnce([
+            { dashboardItemId: 1, titol: 'Widget 1' },
+        ]);
+
+        act(() => {
+            result.current.refreshWidget(1);
+        });
+
+        await waitFor(() => {
+            expect(result.current.dashboardWidgets?.[0]?.descripcio).toBeUndefined();
+        });
+        // Les dades d'identitat i posició no s'han de perdre.
+        expect(result.current.dashboardWidgets?.[0]).toMatchObject({
+            dashboardItemId: 1, tipus: 'TAULA', posX: 3, posY: 4, width: 5, height: 6, titol: 'Widget 1',
+        });
+    });
+
+    it('useDashboardWidgets_quanEsActualitzaElLayout_canviaNomesLaPosicioIMidaDelsElementsIndicats', async () => {
+        mocks.dashboardService.artifactReport.mockResolvedValue([
+            { dashboardItemId: 1, tipus: 'SIMPLE', posX: 0, posY: 0, width: 3, height: 3 },
+            { dashboardTitolId: 7, tipus: 'TITOL', posX: 0, posY: 5, width: 10, height: 2 },
+            { dashboardItemId: 2, tipus: 'GRAFIC', posX: 4, posY: 0, width: 3, height: 3 },
+        ]);
+        mocks.dashboardItemService.artifactReport.mockResolvedValue([{ titol: 'Widget' }]);
+
+        const { result } = renderHook(() => useDashboardWidgets(22));
+
+        await waitFor(() => {
+            expect(result.current.dashboardWidgets).toHaveLength(3);
+        });
+
+        act(() => {
+            result.current.updateWidgetsLayout([
+                { id: '1', x: 8, y: 9, w: 5, h: 6 },
+                { id: '7', x: 1, y: 5, w: 10, h: 2 },
+            ]);
+        });
+
+        const byId = (id: number, key: 'dashboardItemId' | 'dashboardTitolId' = 'dashboardItemId') =>
+            result.current.dashboardWidgets?.find((widget: any) => widget[key] === id);
+        expect(byId(1)).toMatchObject({ posX: 8, posY: 9, width: 5, height: 6 });
+        expect(byId(7, 'dashboardTitolId')).toMatchObject({ posX: 1, posY: 5 });
+        expect(byId(2)).toMatchObject({ posX: 4, posY: 0, width: 3, height: 3 });
+    });
+
     it('useDashboardWidgets_quanRefreshWidgetFalla_elMarcaComAErroniSenseAfectarElsAltres', async () => {
         mocks.dashboardService.artifactReport.mockResolvedValue([
             { dashboardItemId: 1, tipus: 'SIMPLE', posX: 0, posY: 0 },
@@ -232,6 +405,100 @@ describe('useDashboardWidgets', () => {
             expect(widget2).toMatchObject({ error: true, errorMsg: 'ORA-00904', errorTrace: 'identificador no vàlid' });
             const widget1 = result.current.dashboardWidgets?.find((w: any) => w.dashboardItemId === 1);
             expect(widget1).toMatchObject({ titol: 'Widget 1' });
+        });
+    });
+
+    it('useDashboardWidgets_quanRefreshWidgetAmbTraceEnabled_demanaLaTracaAlBackend', async () => {
+        mocks.dashboardService.artifactReport.mockResolvedValue([
+            { dashboardItemId: 1, tipus: 'SIMPLE', posX: 0, posY: 0 },
+        ]);
+        mocks.dashboardItemService.artifactReport.mockResolvedValue([{ dashboardItemId: 1, titol: 'Widget 1' }]);
+
+        const { result } = renderHook(() => useDashboardWidgets(43, false, undefined, true));
+
+        await waitFor(() => {
+            expect(result.current.dashboardWidgets?.[0]).toMatchObject({ titol: 'Widget 1' });
+        });
+
+        mocks.dashboardItemService.artifactReport.mockClear();
+        mocks.dashboardItemService.artifactReport.mockResolvedValueOnce([
+            { dashboardItemId: 1, titol: 'Widget 1 actualitzat' },
+        ]);
+
+        act(() => {
+            result.current.refreshWidget(1);
+        });
+
+        await waitFor(() => {
+            expect(result.current.dashboardWidgets?.[0]).toMatchObject({ titol: 'Widget 1 actualitzat' });
+        });
+        expect(mocks.dashboardItemService.artifactReport).toHaveBeenCalledWith(1, {
+            code: 'widget_data',
+            data: { temaFosc: false, filtreSeleccio: undefined },
+            urlData: { trace: 'true' },
+        });
+    });
+
+    it('useDashboardWidgets_quanRefreshWidgetRetornaErrorTraceEnUna200IioTraceEnabledEsFals_lElimina', async () => {
+        mocks.dashboardService.artifactReport.mockResolvedValue([
+            { dashboardItemId: 1, tipus: 'SIMPLE', posX: 0, posY: 0 },
+        ]);
+        mocks.dashboardItemService.artifactReport.mockResolvedValue([{ dashboardItemId: 1, titol: 'Widget 1' }]);
+
+        const { result } = renderHook(() => useDashboardWidgets(45));
+
+        await waitFor(() => {
+            expect(result.current.dashboardWidgets?.[0]).toMatchObject({ titol: 'Widget 1' });
+        });
+
+        mocks.dashboardItemService.artifactReport.mockResolvedValueOnce([
+            {
+                dashboardItemId: 1,
+                error: true,
+                errorMsg: 'Error processing item 1: ORA-00904',
+                errorTrace: 'oracle.jdbc.OracleDatabaseException: ORA-00904\n\tat ...',
+            },
+        ]);
+
+        act(() => {
+            result.current.refreshWidget(1);
+        });
+
+        await waitFor(() => {
+            const widget1 = result.current.dashboardWidgets?.find((w: any) => w.dashboardItemId === 1);
+            expect(widget1).toMatchObject({ error: true, errorMsg: 'Error processing item 1: ORA-00904' });
+            expect(widget1?.errorTrace).toBeUndefined();
+        });
+    });
+
+    it('useDashboardWidgets_quanRefreshWidgetFallaAmbTracaReal_lUsaComAErrorTrace', async () => {
+        mocks.dashboardService.artifactReport.mockResolvedValue([
+            { dashboardItemId: 1, tipus: 'SIMPLE', posX: 0, posY: 0 },
+        ]);
+        mocks.dashboardItemService.artifactReport.mockResolvedValue([{ dashboardItemId: 1, titol: 'Widget 1' }]);
+
+        const { result } = renderHook(() => useDashboardWidgets(44, false, undefined, true));
+
+        await waitFor(() => {
+            expect(result.current.dashboardWidgets?.[0]).toMatchObject({ titol: 'Widget 1' });
+        });
+
+        const exception = Object.assign(new Error('ORA-00904'), {
+            description: 'identificador no vàlid',
+            stackTrace: 'oracle.jdbc.OracleDatabaseException: ORA-00904\n\tat ...',
+        });
+        mocks.dashboardItemService.artifactReport.mockRejectedValueOnce(exception);
+
+        act(() => {
+            result.current.refreshWidget(1);
+        });
+
+        await waitFor(() => {
+            expect(result.current.dashboardWidgets?.[0]).toMatchObject({
+                error: true,
+                errorMsg: 'ORA-00904',
+                errorTrace: 'oracle.jdbc.OracleDatabaseException: ORA-00904\n\tat ...',
+            });
         });
     });
 });
