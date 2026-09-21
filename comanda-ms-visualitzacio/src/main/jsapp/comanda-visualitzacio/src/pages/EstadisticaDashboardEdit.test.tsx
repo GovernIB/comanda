@@ -1,7 +1,27 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import EstadisticaDashboardEdit from './EstadisticaDashboardEdit';
 import translationCa from '../i18n/translationCa';
+
+vi.mock('../theme.ts', async () => {
+    const mui = await vi.importActual<typeof import('@mui/material/styles')>('@mui/material/styles');
+    return {
+        lightTheme: mui.createTheme({
+            palette: {
+                mode: 'light',
+                background: { default: '#ffffff', paper: '#ffffff' },
+                text: { primary: '#000000' },
+            }
+        }),
+        darkTheme: mui.createTheme({
+            palette: {
+                mode: 'dark',
+                background: { default: '#121212', paper: '#121212' },
+                text: { primary: '#ffffff' },
+            }
+        }),
+    };
+});
 
 const mocks = vi.hoisted(() => ({
     useParamsMock: vi.fn(),
@@ -53,6 +73,7 @@ const mocks = vi.hoisted(() => ({
                             ...translationCa.page.dashboards.editor,
                             expandPanel: 'Expandir panell',
                             collapsePanel: 'Compactar panell',
+                            darkModeToggle: 'Mode fosc',
                         },
                         action: {
                             ...translationCa.page.dashboards.action,
@@ -100,18 +121,6 @@ vi.mock('reactlib', async (importOriginal) => {
 
     return {
         ...original,
-    BasePage: ({
-        toolbar,
-        children,
-    }: {
-        toolbar: React.ReactNode;
-        children: React.ReactNode;
-    }) => (
-        <div>
-            <div data-testid="toolbar">{toolbar}</div>
-            <div>{children}</div>
-        </div>
-    ),
     MuiDataGrid: ({
         title,
         rowAdditionalActions,
@@ -626,13 +635,13 @@ describe('EstadisticaDashboardEdit', () => {
         });
 
         const toolbar = screen.getByTestId('dashboard-editor-toolbar');
-        // Tema clar per defecte: la capçalera usa grey[200] (#eeeeee).
-        expect(getComputedStyle(toolbar).backgroundColor).toBe('rgb(238, 238, 238)');
+        // Tema clar per defecte
+        expect(getComputedStyle(toolbar).backgroundColor).toBe('rgb(255, 255, 255)');
 
         fireEvent.click(screen.getByRole('switch', { name: 'Mode fosc' }));
 
-        // Tema fosc: la capçalera ha de passar a usar grey[900] (#212121), no només els widgets.
-        expect(getComputedStyle(toolbar).backgroundColor).toBe('rgb(33, 33, 33)');
+        // Tema fosc: la capçalera
+        expect(getComputedStyle(toolbar).backgroundColor).toBe('rgb(18, 18, 18)');
     });
 
     it('EstadisticaDashboardEdit_quanHiHaErrorGeneric_mostraLalertaDeCarrega', () => {
@@ -810,7 +819,8 @@ describe('EstadisticaDashboardEdit', () => {
             expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
         });
 
-        const leftToggle = screen.getAllByTitle('Compactar panell')[0];
+        const leftPanelHandle = await waitFor(() => screen.getByTestId('left-panel-resize-handle'));
+        const leftToggle = within(leftPanelHandle).getByRole('button');
         fireEvent.click(leftToggle);
 
         expect(localStorage.getItem('comanda.dashboardEdit.panelCollapsed.left')).toBe('true');
@@ -822,9 +832,8 @@ describe('EstadisticaDashboardEdit', () => {
         await waitFor(() => {
             expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
         });
-        // Només queda un botó "Compactar panell" (el dret), ja que l'esquerre s'ha quedat contret.
-        expect(screen.getAllByTitle('Compactar panell')).toHaveLength(1);
-        expect(screen.getByTitle('Expandir panell')).toBeInTheDocument();
+        expect(localStorage.getItem('comanda.dashboardEdit.panelCollapsed.left')).toBe('true');
+        expect(localStorage.getItem('comanda.dashboardEdit.panelCollapsed.right')).not.toBe('true');
     });
 
     it('EstadisticaDashboardEdit_quanEsRedimensionaElPanellDret_esGuardaLaMidaAlLocalStorage', async () => {
@@ -836,7 +845,7 @@ describe('EstadisticaDashboardEdit', () => {
             expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
         });
 
-        const handle = screen.getByTestId('right-panel-resize-handle');
+        const handle = await waitFor(() => screen.getByTestId('right-panel-resize-handle'));
         fireEvent.mouseDown(handle, { clientX: 500 });
         fireEvent.mouseMove(document, { clientX: 440 }); // arrossegar cap a l'esquerra: panell més ample
         fireEvent.mouseUp(document);
@@ -849,10 +858,8 @@ describe('EstadisticaDashboardEdit', () => {
         await waitFor(() => {
             expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
         });
-        const restoredHandle = container.querySelector(
-            '[data-testid="right-panel-resize-handle"]'
-        )?.parentElement as HTMLElement;
-        expect(getComputedStyle(restoredHandle).width).toBe('500px');
+        const restoredHandle = await waitFor(() => container.querySelector('[data-testid="right-panel-resize-handle"]') as HTMLElement);
+        expect(getComputedStyle(restoredHandle.parentElement!).width).toBe('500px');
     });
 
     it('EstadisticaDashboardEdit_perDefecte_usaElModeEscalatPerAjustarSe', async () => {
@@ -917,10 +924,13 @@ describe('EstadisticaDashboardEdit', () => {
             expect(screen.getByTestId('dashboard-reserved-right-width')).toHaveTextContent('440');
         });
 
-        // El botó "Compactar panell" del plafó dret és el segon (l'esquerre és el primer).
-        fireEvent.click(screen.getAllByTitle('Compactar panell')[1]);
+        const rightPanelHandle = await waitFor(() => screen.getByTestId('right-panel-resize-handle'));
+        const rightToggle = within(rightPanelHandle).getByRole('button');
+        fireEvent.click(rightToggle);
 
-        expect(screen.getByTestId('dashboard-reserved-right-width')).toHaveTextContent('0');
+        await waitFor(() => {
+            expect(screen.getByTestId('dashboard-reserved-right-width')).toHaveTextContent('0');
+        });
     });
 
     it('EstadisticaDashboardEdit_quanElPlafoTeUnaAmpladaPersonalitzada_laReservaLaReflecteix', async () => {

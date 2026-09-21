@@ -140,15 +140,15 @@ export const PaletteFormContent: React.FC<PaletteFormContentProps> = ({
               onChange={(e) => updateColor(index, e.target.value)} sx={{ width: 64 }} disabled={disabled} />
             <TextField size="small" value={color.valor || ''}
               onChange={(e) => updateColor(index, e.target.value)} sx={{ flex: 1 }} disabled={disabled} />
-            <Tooltip title={t($ => $.page.palette.upElement)}>
-              <span><IconButton size="small" onClick={() => moveColor(index, -1)} disabled={disabled || index === 0}><ArrowUpwardIcon fontSize="small" /></IconButton></span>
-            </Tooltip>
-            <Tooltip title={t($ => $.page.palette.downElement)}>
-              <span><IconButton size="small" onClick={() => moveColor(index, 1)} disabled={disabled || index === colors.length - 1}><ArrowDownwardIcon fontSize="small" /></IconButton></span>
-            </Tooltip>
-            <Tooltip title={t($ => $.common.delete)}>
-              <span><IconButton size="small" onClick={() => deleteColor(index)} disabled={disabled || colors.length <= 1}><DeleteIcon fontSize="small" /></IconButton></span>
-            </Tooltip>
+            <IconButton title={t($ => $.page.palette.upElement)} size="small" onClick={() => moveColor(index, -1)} disabled={disabled || index === 0}>
+              <ArrowUpwardIcon fontSize="small" />
+            </IconButton>
+            <IconButton title={t($ => $.page.palette.downElement)} size="small" onClick={() => moveColor(index, 1)} disabled={disabled || index === colors.length - 1}>
+              <ArrowDownwardIcon fontSize="small" />
+            </IconButton>
+            <IconButton title={t($ => $.common.delete)} size="small" onClick={() => deleteColor(index)} disabled={disabled || colors.length <= 1}>
+              <DeleteIcon fontSize="small" />
+            </IconButton>
           </Stack>
         ))}
         <Button variant="outlined" startIcon={<AddCircleOutlineIcon />} onClick={addColor} disabled={disabled}>{t($ => $.page.palette.addColor)}</Button>

@@ -475,7 +475,7 @@ const CalendariEstadistiques: React.FC = () => {
                 elementsWithPositions={[
                     {
                         position: 2,
-                        element: <FormControl sx={{ minWidth: 250 }}>
+                        element: <FormControl sx={{ minWidth: 300 }}>
                             <InputLabel size={"small"} id="entorn-app-select-label">{t($ => $.calendari.seleccionar_entorn_app)}</InputLabel>
                             <Select
                                 labelId="entorn-app-select-label"
@@ -498,8 +498,8 @@ const CalendariEstadistiques: React.FC = () => {
             {/* Sempre mostrem el calendari, però amb un missatge d'ajuda si no hi ha entorn seleccionat */}
             <Box
                 sx={{
-                    margin: '16px 24px',
-                    height: '100%',
+                    padding: '16px 24px',
+                    height: 'calc(100vh - 160px)',
                     '& .fc-header-toolbar': {
                         display: 'flex !important',
                         justifyContent: 'space-between !important',
