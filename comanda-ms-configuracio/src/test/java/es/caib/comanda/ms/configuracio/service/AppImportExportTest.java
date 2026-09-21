@@ -52,6 +52,7 @@ public class AppImportExportTest {
                                       EntornRepository entornRepository,
                                       EntornAppRepository entornAppRepository,
                                       EntornAppHelper entornAppHelper,
+                                      AuthenticationHelper authenticationHelper,
                                       HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
                                       AclServiceClient aclServiceClient,
                                       ApplicationEventPublisher eventPublisher) {
@@ -62,6 +63,7 @@ public class AppImportExportTest {
                     entornRepository,
                     entornAppRepository,
                     entornAppHelper,
+                    authenticationHelper,
                     httpAuthorizationHeaderHelper,
                     aclServiceClient,
                     eventPublisher);
@@ -103,6 +105,7 @@ public class AppImportExportTest {
                 entornRepository,
                 entornAppRepository,
                 entornAppHelper,
+                authenticationHelper,
                 httpAuthorizationHeaderHelper,
                 aclServiceClient,
                 eventPublisher);

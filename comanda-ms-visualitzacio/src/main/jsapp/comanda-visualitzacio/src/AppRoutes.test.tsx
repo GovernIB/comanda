@@ -188,6 +188,11 @@ describe('AppRoutes', () => {
         );
 
         expect(await screen.findByText('Salut page')).toBeInTheDocument();
+        expect(mocks.entornAppFindMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                namedQueries: ['permis_salut'],
+            })
+        );
     });
 
     it('AppRoutes_quanEsCarregaLaRutaArrelISenseRolNiPermisos_redirigeixATasca', async () => {
@@ -205,6 +210,11 @@ describe('AppRoutes', () => {
         );
 
         expect(await screen.findByText('Tasca page')).toBeInTheDocument();
+        expect(mocks.entornAppFindMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                namedQueries: ['permis_salut'],
+            })
+        );
     });
 
     it('AppRoutes_quanConsultorIntentaAccedirAUnaRutaForaDelSeuMenu_redirigeixALaPaginaPerDefecte', async () => {

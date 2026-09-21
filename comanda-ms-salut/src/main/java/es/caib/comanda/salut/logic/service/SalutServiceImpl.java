@@ -97,13 +97,25 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	protected String additionalSpringFilter(
 			String currentSpringFilter,
 			String[] namedQueries) {
+		Set<Long> allowedEntornAppIds = getAllowedEntornAppIds();
+		if (allowedEntornAppIds == null) {
+			return null;
+		}
+		if (allowedEntornAppIds.isEmpty()) {
+			return "entornAppId:0";
+		}
+		return allowedEntornAppIds.stream()
+				.map(id -> "entornAppId:" + id)
+				.collect(Collectors.joining(" or "));
+	}
+
+	private Set<Long> getAllowedEntornAppIds() {
 		if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
 				|| authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
 			return null;
 		}
 		Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP);
 		Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP);
-		Set<Long> allowedEntornAppIds = Collections.emptySet();
 		LinkedHashSet<Long> mergedIds = new LinkedHashSet<>();
 		if (!appPermissionIds.isEmpty()) {
 			String appFilter = appPermissionIds.stream()
@@ -123,13 +135,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 			salutClientHelper.entornAppFindByActivaTrue(entornAppFilter)
 					.forEach(entornApp -> mergedIds.add(entornApp.getId()));
 		}
-		allowedEntornAppIds = mergedIds;
-		if (allowedEntornAppIds.isEmpty()) {
-			return "entornAppId:0";
-		}
-		return allowedEntornAppIds.stream()
-				.map(id -> "entornAppId:" + id)
-				.collect(Collectors.joining(" or "));
+		return mergedIds;
 	}
 
 	private Set<Serializable> getAllowedIds(ResourceType resourceType) {
@@ -287,6 +293,12 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 		public List<Salut> generateData(String code, SalutEntity entity, String params) throws ReportGenerationException {
 			Instant t0 = Instant.now();
 			List<EntornApp> entornApps = salutClientHelper.entornAppFindByActivaTrue(params);
+			Set<Long> allowedIds = getAllowedEntornAppIds();
+			if (allowedIds != null) {
+				entornApps = entornApps.stream()
+						.filter(ea -> ea != null && allowedIds.contains(ea.getId()))
+						.collect(Collectors.toList());
+			}
 			List<Long> entornAppIds = entornApps.stream()
 					.filter(Objects::nonNull)
 					.map(EntornApp::getId)
@@ -328,6 +340,10 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 				String code,
 				SalutEntity entity,
 				SalutInformeParams params) throws ReportGenerationException {
+            Set<Long> allowedIds = getAllowedEntornAppIds();
+            if (allowedIds != null && !allowedIds.contains(params.getEntornAppId())) {
+                return List.of();
+            }
             TipusRegistreSalut tipus = salutEstatHelper.mapTipusAgrupacio(params.getAgrupacio());
             LocalDateTime dataInici = salutEstatHelper.getDataIniciAjustada(params.getAgrupacio(), params.getDataReferencia());
 			return salutEstatHelper.generateEstatList(dataInici, tipus, params.getEntornAppId());
@@ -346,9 +362,12 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
             HashMap<String, Object> map = new HashMap<>();
             TipusRegistreSalut tipus = salutEstatHelper.mapTipusAgrupacio(params.getAgrupacio());
             LocalDateTime dataInici = salutEstatHelper.getDataIniciAjustada(params.getAgrupacio(), params.getDataReferencia());
+            Set<Long> allowedIds = getAllowedEntornAppIds();
             params.getEntornAppIdList().forEach(id -> {
-                List<SalutInformeEstatItem> list = salutEstatHelper.generateEstatList(dataInici, tipus, id);
-                map.put(String.valueOf(id), list);
+                if (allowedIds == null || allowedIds.contains(id)) {
+                    List<SalutInformeEstatItem> list = salutEstatHelper.generateEstatList(dataInici, tipus, id);
+                    map.put(String.valueOf(id), list);
+                }
             });
             result.add(map);
 			return result;
@@ -373,6 +392,10 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 				String code,
 				SalutEntity entity,
 				SalutInformeParams params) throws ReportGenerationException {
+            Set<Long> allowedIds = getAllowedEntornAppIds();
+            if (allowedIds != null && !allowedIds.contains(params.getEntornAppId())) {
+                return List.of();
+            }
 			final List<SalutInformeLatenciaItem> data = new ArrayList<>();
 
             TipusRegistreSalut tipus = salutEstatHelper.mapTipusAgrupacio(params.getAgrupacio());

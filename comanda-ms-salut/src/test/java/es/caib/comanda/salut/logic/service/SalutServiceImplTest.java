@@ -284,6 +284,8 @@ class SalutServiceImplTest {
     @DisplayName("InformeEstat: delega correctament a SalutEstatHelper")
     void informeEstat_generateData_quanEsCrida_llavorsDelegaASalutEstatHelper() {
         // Arrange
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+
         SalutServiceImpl.InformeEstat generator = salutService.new InformeEstat();
         SalutInformeParams params = new SalutInformeParams();
         params.setEntornAppId(1L);
@@ -328,6 +330,8 @@ class SalutServiceImplTest {
     @DisplayName("InformeEstats: genera un mapa amb les llistes per a cada entornAppId")
     void informeEstats_generateData_quanEsCrida_llavorsGeneraMapaPerEntornApp() {
         // Arrange
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+
         SalutServiceImpl.InformeEstats generator = salutService.new InformeEstats();
         SalutInformeLlistatParams params = new SalutInformeLlistatParams();
         params.setAgrupacio(SalutInformeAgrupacio.HORA);
@@ -541,9 +545,11 @@ class SalutServiceImplTest {
     // ========================================================================
 
     @Test
-    @DisplayName("InformeSalutLast: genera correctament l'informe de l'últim estat")
+    @DisplayName("InformeSalutLast: genera correctament l'informe de l'últim estat quan és admin")
     void informeSalutLast_generateData_quanEsCrida_llavorsGeneraInforme() {
         // Arrange
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+
         SalutServiceImpl.InformeSalutLast generator = salutService.new InformeSalutLast();
         SalutEntity entity = new SalutEntity();
 
@@ -577,9 +583,90 @@ class SalutServiceImplTest {
     }
 
     @Test
+    @DisplayName("InformeSalutLast: filtra per permisos quan l'usuari no és admin")
+    void informeSalutLast_generateData_quanUsuariNoAdmin_llavorsFiltraPerPermisos() {
+        // Arrange
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("user1");
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"COM_USER"});
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
+
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), any(), eq("user1"), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), any(), eq("user1"), any(), any()))
+                .thenReturn(ResponseEntity.ok(Set.of(1L)));
+
+        EntornApp allowedEntornApp = new EntornApp();
+        allowedEntornApp.setId(1L);
+        when(salutClientHelper.entornAppFindByActivaTrue("id:1")).thenReturn(List.of(allowedEntornApp));
+
+        EntornApp unallowedEntornApp = new EntornApp();
+        unallowedEntornApp.setId(2L);
+        when(salutClientHelper.entornAppFindByActivaTrue("filter")).thenReturn(List.of(allowedEntornApp, unallowedEntornApp));
+
+        SalutEntity salutEntity = new SalutEntity();
+        salutEntity.setId(1L);
+        salutEntity.setEntornAppId(1L);
+        when(salutRepository.informeSalutLast(eq(List.of(1L)), any())).thenReturn(List.of(salutEntity));
+
+        when(metricsHelper.getSalutLastEntornAppsTimer()).thenReturn(mock(io.micrometer.core.instrument.Timer.class));
+        when(metricsHelper.getSalutLastDadesTimer()).thenReturn(mock(io.micrometer.core.instrument.Timer.class));
+        when(metricsHelper.getSalutLastGlobalTimer()).thenReturn(mock(io.micrometer.core.instrument.Timer.class));
+
+        Salut salut = new Salut();
+        salut.setId(1L);
+        when(resourceEntityMappingHelper.entityToResource(any(), any())).thenReturn(salut);
+
+        SalutServiceImpl.InformeSalutLast generator = salutService.new InformeSalutLast();
+
+        // Act
+        List<Salut> result = generator.generateData("CODE", new SalutEntity(), "filter");
+
+        // Assert
+        assertThat(result).hasSize(1);
+        verify(salutRepository).informeSalutLast(eq(List.of(1L)), any());
+    }
+
+    @Test
+    @DisplayName("InformeSalutLast: retorna buit quan l'usuari no té cap permís")
+    void informeSalutLast_generateData_quanUsuariSensePermisos_llavorsRetornaBuit() {
+        // Arrange
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("user1");
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"COM_USER"});
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
+
+        when(aclServiceClient.findIdsWithAnyPermission(any(), any(), eq("user1"), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        EntornApp entornApp = new EntornApp();
+        entornApp.setId(1L);
+        when(salutClientHelper.entornAppFindByActivaTrue("filter")).thenReturn(List.of(entornApp));
+
+        when(salutRepository.informeSalutLast(eq(Collections.emptyList()), any())).thenReturn(Collections.emptyList());
+
+        when(metricsHelper.getSalutLastEntornAppsTimer()).thenReturn(mock(io.micrometer.core.instrument.Timer.class));
+        when(metricsHelper.getSalutLastDadesTimer()).thenReturn(mock(io.micrometer.core.instrument.Timer.class));
+        when(metricsHelper.getSalutLastGlobalTimer()).thenReturn(mock(io.micrometer.core.instrument.Timer.class));
+
+        SalutServiceImpl.InformeSalutLast generator = salutService.new InformeSalutLast();
+
+        // Act
+        List<Salut> result = generator.generateData("CODE", new SalutEntity(), "filter");
+
+        // Assert
+        assertThat(result).isEmpty();
+        verify(salutRepository).informeSalutLast(eq(Collections.emptyList()), any());
+    }
+
+    @Test
     @DisplayName("InformeSalutLast: retorna llista buida quan no hi ha saluts")
     void informeSalutLast_generateData_quanNoHiHaSaluts_llavorsRetornaBuit() {
         // Arrange
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+
         SalutServiceImpl.InformeSalutLast generator = salutService.new InformeSalutLast();
         SalutEntity entity = new SalutEntity();
 
@@ -601,6 +688,8 @@ class SalutServiceImplTest {
     @DisplayName("InformeLatencia: genera correctament l'informe de latència")
     void informeLatencia_generateData_quanEsCrida_llavorsGeneraInforme() {
         // Arrange
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+
         SalutServiceImpl.InformeLatencia generator = salutService.new InformeLatencia();
         SalutEntity entity = new SalutEntity();
 
@@ -622,5 +711,96 @@ class SalutServiceImplTest {
 
         // Assert
         assertThat(result).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("InformeLatencia: retorna buit quan usuari no té permís sobre l'entornApp")
+    void informeLatencia_generateData_quanSensePermis_llavorsRetornaBuit() {
+        // Arrange
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("user1");
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"COM_USER"});
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
+
+        when(aclServiceClient.findIdsWithAnyPermission(any(), any(), eq("user1"), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        SalutServiceImpl.InformeLatencia generator = salutService.new InformeLatencia();
+        SalutInformeParams params = new SalutInformeParams();
+        params.setEntornAppId(1L);
+
+        // Act
+        List<SalutInformeLatenciaItem> result = generator.generateData("CODE", new SalutEntity(), params);
+
+        // Assert
+        assertThat(result).isEmpty();
+        verifyNoInteractions(salutEstatHelper);
+    }
+
+    @Test
+    @DisplayName("InformeEstat: retorna buit quan usuari no té permís sobre l'entornApp")
+    void informeEstat_generateData_quanSensePermis_llavorsRetornaBuit() {
+        // Arrange
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("user1");
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"COM_USER"});
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
+
+        when(aclServiceClient.findIdsWithAnyPermission(any(), any(), eq("user1"), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        SalutServiceImpl.InformeEstat generator = salutService.new InformeEstat();
+        SalutInformeParams params = new SalutInformeParams();
+        params.setEntornAppId(1L);
+
+        // Act
+        List<SalutInformeEstatItem> result = generator.generateData("CODE", new SalutEntity(), params);
+
+        // Assert
+        assertThat(result).isEmpty();
+        verifyNoInteractions(salutEstatHelper);
+    }
+
+    @Test
+    @DisplayName("InformeEstats: filtra només els entorns-app permesos per a l'usuari")
+    void informeEstats_generateData_quanUsuariAmbPermisosParcials_llavorsProcessaNomesPermesos() {
+        // Arrange
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("user1");
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"COM_USER"});
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
+
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), any(), eq("user1"), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), any(), eq("user1"), any(), any()))
+                .thenReturn(ResponseEntity.ok(Set.of(1L)));
+
+        EntornApp allowedEntornApp = new EntornApp();
+        allowedEntornApp.setId(1L);
+        when(salutClientHelper.entornAppFindByActivaTrue("id:1")).thenReturn(List.of(allowedEntornApp));
+
+        when(salutEstatHelper.mapTipusAgrupacio(any())).thenReturn(TipusRegistreSalut.HORA);
+        when(salutEstatHelper.getDataIniciAjustada(any(), any())).thenReturn(LocalDateTime.now().minusHours(1));
+        when(salutEstatHelper.generateEstatList(any(), any(), eq(1L))).thenReturn(List.of(new SalutInformeEstatItem()));
+
+        SalutServiceImpl.InformeEstats generator = salutService.new InformeEstats();
+        SalutInformeLlistatParams params = new SalutInformeLlistatParams();
+        params.setAgrupacio(SalutInformeAgrupacio.HORA);
+        params.setDataReferencia(LocalDateTime.now());
+        params.setEntornAppIdList(List.of(1L, 2L));
+
+        // Act
+        List<HashMap<String, Object>> result = generator.generateData("CODE", new SalutEntity(), params);
+
+        // Assert
+        assertThat(result).hasSize(1);
+        HashMap<String, Object> map = result.get(0);
+        assertThat(map).containsKey("1");
+        assertThat(map).doesNotContainKey("2");
+        verify(salutEstatHelper, times(1)).generateEstatList(any(), any(), eq(1L));
+        verify(salutEstatHelper, never()).generateEstatList(any(), any(), eq(2L));
     }
 }

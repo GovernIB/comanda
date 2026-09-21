@@ -317,6 +317,7 @@ const useSalutData = ({
             ] = await Promise.all([
                 entornAppFind({
                     unpaged: true,
+                    namedQueries: ['permis_salut'],
                     filter: springFilterBuilder.and(
                         springFilterBuilder.eq('activa', true),
                         springFilterBuilder.eq('app.activa', true),
@@ -327,6 +328,7 @@ const useSalutData = ({
                 }),
                 appFind({
                     unpaged: true,
+                    namedQueries: ['permis_salut'],
                     filter: springFilterBuilder.and(
                         springFilterBuilder.eq('activa', true),
                         springFilterBuilder.inn('id', appsIds),

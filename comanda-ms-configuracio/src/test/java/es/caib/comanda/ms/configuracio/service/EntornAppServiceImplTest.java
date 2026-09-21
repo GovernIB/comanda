@@ -101,6 +101,10 @@ public class EntornAppServiceImplTest {
         public String exposedAdditionalSpringFilter() {
             return super.additionalSpringFilter(null, null);
         }
+
+        public String exposedNamedFilterToSpringFilter(String name) {
+            return super.namedFilterToSpringFilter(name);
+        }
     }
 
     @Mock
@@ -584,6 +588,113 @@ public class EntornAppServiceImplTest {
     @Test
     void additionalSpringFilter_retornaNull() {
         String result = entornAppService.exposedAdditionalSpringFilter();
+        assertNull(result);
+    }
+
+    @Test
+    @DisplayName("namedFilterToSpringFilter: retorna null quan l'usuari és ADMIN")
+    void namedFilterToSpringFilter_quanEsAdmin_llavorsRetornaNull() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+
+        String result = entornAppService.exposedNamedFilterToSpringFilter(EntornApp.NAMED_FILTER_PERMIS_SALUT);
+
+        assertNull(result);
+        verifyNoInteractions(aclServiceClient);
+    }
+
+    @Test
+    @DisplayName("namedFilterToSpringFilter: retorna null quan l'usuari és CONSULTA")
+    void namedFilterToSpringFilter_quanEsConsulta_llavorsRetornaNull() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(true);
+
+        String result = entornAppService.exposedNamedFilterToSpringFilter(EntornApp.NAMED_FILTER_PERMIS_SALUT);
+
+        assertNull(result);
+        verifyNoInteractions(aclServiceClient);
+    }
+
+    @Test
+    @DisplayName("namedFilterToSpringFilter: retorna filtre app.id quan té permisos d'App")
+    void namedFilterToSpringFilter_quanTePermisosApp_llavorsRetornaFiltreApp() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("user1");
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"COM_USER"});
+        when(keycloakHelper.getAuthorizationHeader()).thenReturn("Bearer token");
+
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), eq(Collections.singletonList(PermissionEnum.PERM2)), eq("user1"), any(), any()))
+                .thenReturn(ResponseEntity.ok(Set.of(1L, 2L)));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), eq(Collections.singletonList(PermissionEnum.PERM2)), eq("user1"), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        String result = entornAppService.exposedNamedFilterToSpringFilter(EntornApp.NAMED_FILTER_PERMIS_SALUT);
+
+        assertEquals("app.id:1 or app.id:2", result);
+    }
+
+    @Test
+    @DisplayName("namedFilterToSpringFilter: retorna filtre id quan té permisos d'EntornApp")
+    void namedFilterToSpringFilter_quanTePermisosEntornApp_llavorsRetornaFiltreEntornApp() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("user1");
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"COM_USER"});
+        when(keycloakHelper.getAuthorizationHeader()).thenReturn("Bearer token");
+
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), eq(Collections.singletonList(PermissionEnum.PERM2)), eq("user1"), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), eq(Collections.singletonList(PermissionEnum.PERM2)), eq("user1"), any(), any()))
+                .thenReturn(ResponseEntity.ok(Set.of(5L)));
+
+        String result = entornAppService.exposedNamedFilterToSpringFilter(EntornApp.NAMED_FILTER_PERMIS_SALUT);
+
+        assertEquals("id:5", result);
+    }
+
+    @Test
+    @DisplayName("namedFilterToSpringFilter: retorna filtre combinat quan té permisos d'App i d'EntornApp")
+    void namedFilterToSpringFilter_quanTeAmbdosPermisos_llavorsRetornaFiltreCombinat() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("user1");
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"COM_USER"});
+        when(keycloakHelper.getAuthorizationHeader()).thenReturn("Bearer token");
+
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), eq(Collections.singletonList(PermissionEnum.PERM2)), eq("user1"), any(), any()))
+                .thenReturn(ResponseEntity.ok(Set.of(1L)));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), eq(Collections.singletonList(PermissionEnum.PERM2)), eq("user1"), any(), any()))
+                .thenReturn(ResponseEntity.ok(Set.of(5L)));
+
+        String result = entornAppService.exposedNamedFilterToSpringFilter(EntornApp.NAMED_FILTER_PERMIS_SALUT);
+
+        assertEquals("app.id:1 or id:5", result);
+    }
+
+    @Test
+    @DisplayName("namedFilterToSpringFilter: retorna id:0 quan no té cap permís")
+    void namedFilterToSpringFilter_quanNoTePermisos_llavorsRetornaIdZero() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("user1");
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"COM_USER"});
+        when(keycloakHelper.getAuthorizationHeader()).thenReturn("Bearer token");
+
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), eq(Collections.singletonList(PermissionEnum.PERM2)), eq("user1"), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), eq(Collections.singletonList(PermissionEnum.PERM2)), eq("user1"), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        String result = entornAppService.exposedNamedFilterToSpringFilter(EntornApp.NAMED_FILTER_PERMIS_SALUT);
+
+        assertEquals("id:0", result);
+    }
+
+    @Test
+    @DisplayName("namedFilterToSpringFilter: retorna null per a filtres desconeguts")
+    void namedFilterToSpringFilter_quanFiltreDesconegut_llavorsRetornaNull() {
+        String result = entornAppService.exposedNamedFilterToSpringFilter("FILTRE_DESCONEGUT");
+
         assertNull(result);
     }
 

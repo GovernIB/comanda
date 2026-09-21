@@ -262,6 +262,7 @@ export const useAppEntries = () => {
         void entornAppFind({
             page: 0,
             size: 1,
+            namedQueries: ['permis_salut'],
             filter: 'activa:true and app.activa:true',
         }).then(response => {
             setHasSalutAccess((response.rows?.length ?? 0) > 0);

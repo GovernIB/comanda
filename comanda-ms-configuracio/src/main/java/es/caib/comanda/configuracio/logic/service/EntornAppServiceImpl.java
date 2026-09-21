@@ -199,10 +199,39 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         return null;
     }
 
+    @Override
+    protected String namedFilterToSpringFilter(String name) {
+        if (EntornApp.NAMED_FILTER_PERMIS_SALUT.equals(name)) {
+            if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
+                    || authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
+                return null;
+            }
+            Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP, Collections.singletonList(PermissionEnum.PERM2));
+            Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP, Collections.singletonList(PermissionEnum.PERM2));
+            String appFilter = buildOrFilter("app.id", appPermissionIds);
+            String entornAppFilter = buildOrFilter("id", entornAppPermissionIds);
+            if (appFilter == null && entornAppFilter == null) {
+                return "id:0";
+            }
+            if (appFilter == null) {
+                return entornAppFilter;
+            }
+            if (entornAppFilter == null) {
+                return appFilter;
+            }
+            return appFilter + " or " + entornAppFilter;
+        }
+        return super.namedFilterToSpringFilter(name);
+    }
+
     private Set<Serializable> getAllowedIds(ResourceType resourceType) {
+        return getAllowedIds(resourceType, Collections.singletonList(PermissionEnum.READ));
+    }
+
+    private Set<Serializable> getAllowedIds(ResourceType resourceType, List<PermissionEnum> permissions) {
         return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
                 resourceType,
-                Collections.singletonList(PermissionEnum.READ),
+                permissions,
                 authenticationHelper.getCurrentUserName(),
                 Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
                 httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())

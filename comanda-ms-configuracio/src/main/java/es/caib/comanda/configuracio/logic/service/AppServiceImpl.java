@@ -1,7 +1,9 @@
 package es.caib.comanda.configuracio.logic.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.AclServiceClient;
+import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.configuracio.logic.helper.EntornAppHelper;
 import es.caib.comanda.configuracio.logic.intf.model.App;
@@ -16,6 +18,7 @@ import es.caib.comanda.configuracio.persist.entity.EntornEntity;
 import es.caib.comanda.configuracio.persist.repository.AppRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornRepository;
+import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
@@ -62,6 +65,7 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
     private final EntornRepository entornRepository;
     private final EntornAppRepository entornAppRepository;
     private final EntornAppHelper entornAppHelper;
+    private final AuthenticationHelper authenticationHelper;
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     private final AclServiceClient aclServiceClient;
     private final ApplicationEventPublisher eventPublisher;
@@ -76,6 +80,55 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
     @Override
     protected List<AppEntity> reorderFindLinesWithParent(Serializable parentId) {
         return appRepository.findAllByOrderByOrdreAsc();
+    }
+
+    @Override
+    protected String namedFilterToSpringFilter(String name) {
+        /*
+         * App.NAMED_FILTER_PERMIS_SALUT
+         * Restringeix les aplicacions a les visibles al dashboard de Salut: les que tenen permís de salut
+         * concedit directament, més les que en tenen algun dels seus entorns-app. És l'equivalent per a App
+         * del filtre amb el mateix nom d'{@link es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl}.
+         */
+        if (App.NAMED_FILTER_PERMIS_SALUT.equals(name)) {
+            if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
+                    || authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
+                return null;
+            }
+            Set<Long> allowedAppIds = toLongIds(getSalutPermissionIds(ResourceType.APP));
+            Set<Long> allowedEntornAppIds = toLongIds(getSalutPermissionIds(ResourceType.ENTORN_APP));
+            if (!allowedEntornAppIds.isEmpty()) {
+                allowedAppIds.addAll(entornAppRepository.findAppIdsByEntornAppIds(allowedEntornAppIds));
+            }
+            if (allowedAppIds.isEmpty()) {
+                return "id:0";
+            }
+            return allowedAppIds.stream()
+                .sorted()
+                .map(id -> "id:" + id)
+                .collect(Collectors.joining(" or "));
+        }
+        return super.namedFilterToSpringFilter(name);
+    }
+
+    private Set<Serializable> getSalutPermissionIds(ResourceType resourceType) {
+        return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
+                resourceType,
+                Collections.singletonList(PermissionEnum.PERM2),
+                authenticationHelper.getCurrentUserName(),
+                Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
+                httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
+            .orElse(Collections.emptySet());
+    }
+
+    private Set<Long> toLongIds(Set<Serializable> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return new HashSet<>();
+        }
+        return ids.stream()
+            .filter(Objects::nonNull)
+            .map(id -> Long.parseLong(String.valueOf(id)))
+            .collect(Collectors.toCollection(HashSet::new));
     }
 
     /**
