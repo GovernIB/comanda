@@ -144,6 +144,8 @@ public class EntornApp extends BaseResource<Long> {
 	// Camps calculats de logs
     @Transient
 	private String[] defaultLogs;
+    @Transient
+    private boolean logsDisponibles;
     // Camps calculats de entornAppHist
     @Transient
     private List<EntornAppHist> entornAppHistorics;

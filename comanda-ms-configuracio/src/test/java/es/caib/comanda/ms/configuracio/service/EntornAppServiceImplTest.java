@@ -33,6 +33,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
@@ -238,6 +239,8 @@ public class EntornAppServiceImplTest {
         this.statsAuthPassword = "test_pass";
         ReflectionTestUtils.setField(I18nUtil.class, "applicationContext", applicationContext);
         lenient().when(applicationContext.getBean(I18nUtil.class)).thenReturn(i18nUtil);
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(inv -> inv.getArgument(0));
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(inv -> inv.getArgument(0));
     }
 
     private void stubAclContext(String... roles) {
@@ -508,6 +511,7 @@ public class EntornAppServiceImplTest {
         assertEquals("rev123", resource.getRevisio());
         assertEquals("11", resource.getJdkVersion());
         assertTrue(resource.isActiva());
+        assertTrue(resource.isLogsDisponibles());
         assertEquals("Description 1", resource.getEntornAppDescription());
         assertNotNull(resource.getApp());
         assertNotNull(resource.getEntorn());
@@ -1145,5 +1149,202 @@ public class EntornAppServiceImplTest {
                 Arguments.of("nonexistent.key", null, false),       // Propietat no existeix → false
                 Arguments.of("empty.key", "   ", false)             // Propietat blank → false
         );
+    }
+
+    @Test
+    @DisplayName("afterConversion: quan no hi ha logsUrl logsDisponibles és false")
+    void afterConversion_quanNoHiHaLogsUrl_logsDisponiblesEsFalse() {
+        stubAclContext("COM_USER");
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.ENTORN_APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.APP),
+                eq(Collections.singletonList(PermissionEnum.READ)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        EntornApp resource = createFullyPopulatedResource(1L, 1L, 1L);
+        resource.setLogsUrl(null);
+        entornAppEntity.setLogsUrl(null);
+
+        entornAppService.afterConversion(entornAppEntity, resource);
+
+        assertNull(resource.getLogsUrl());
+        assertFalse(resource.isLogsDisponibles());
+    }
+
+    @Test
+    @DisplayName("hasLogsPermission: retorna true quan l'usuari té ROLE_ADMIN")
+    void hasLogsPermission_quanUsuariEsAdmin_retornaTrue() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+
+        assertTrue(entornAppService.hasLogsPermission(entornAppEntity));
+        assertDoesNotThrow(() -> entornAppService.checkLogsPermission(entornAppEntity));
+    }
+
+    @Test
+    @DisplayName("hasLogsPermission: retorna true quan l'usuari té ROLE_CONSULTA")
+    void hasLogsPermission_quanUsuariEsConsulta_retornaTrue() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(true);
+
+        assertTrue(entornAppService.hasLogsPermission(entornAppEntity));
+        assertDoesNotThrow(() -> entornAppService.checkLogsPermission(entornAppEntity));
+    }
+
+    @Test
+    @DisplayName("hasLogsPermission: retorna true quan l'usuari té permís PERM2 (SALUT) sobre l'EntornApp")
+    void hasLogsPermission_quanUsuariTePerm2PerEntornApp_retornaTrue() {
+        stubAclContext("COM_USER");
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.ENTORN_APP),
+                eq(List.of(PermissionEnum.READ, PermissionEnum.PERM2)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Set.of(1L)));
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.APP),
+                eq(List.of(PermissionEnum.READ, PermissionEnum.PERM2)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        assertTrue(entornAppService.hasLogsPermission(entornAppEntity));
+        assertDoesNotThrow(() -> entornAppService.checkLogsPermission(entornAppEntity));
+    }
+
+    @Test
+    @DisplayName("hasLogsPermission: retorna true quan l'usuari té permís PERM2 (SALUT) sobre l'App")
+    void hasLogsPermission_quanUsuariTePerm2PerApp_retornaTrue() {
+        stubAclContext("COM_USER");
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.ENTORN_APP),
+                eq(List.of(PermissionEnum.READ, PermissionEnum.PERM2)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.APP),
+                eq(List.of(PermissionEnum.READ, PermissionEnum.PERM2)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Set.of(1L)));
+
+        assertTrue(entornAppService.hasLogsPermission(entornAppEntity));
+        assertDoesNotThrow(() -> entornAppService.checkLogsPermission(entornAppEntity));
+    }
+
+    @Test
+    @DisplayName("hasLogsPermission: retorna true quan l'usuari té permís READ sobre l'EntornApp")
+    void hasLogsPermission_quanUsuariTeReadPerEntornApp_retornaTrue() {
+        stubAclContext("COM_USER");
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.ENTORN_APP),
+                eq(List.of(PermissionEnum.READ, PermissionEnum.PERM2)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Set.of(1L)));
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.APP),
+                eq(List.of(PermissionEnum.READ, PermissionEnum.PERM2)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        assertTrue(entornAppService.hasLogsPermission(entornAppEntity));
+        assertDoesNotThrow(() -> entornAppService.checkLogsPermission(entornAppEntity));
+    }
+
+    @Test
+    @DisplayName("hasLogsPermission: retorna false i llança AccessDeniedException quan no té cap permís")
+    void hasLogsPermission_quanUsuariNoTePermisos_retornaFalseILlancaExcepcio() {
+        stubAclContext("COM_USER");
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.ENTORN_APP),
+                eq(List.of(PermissionEnum.READ, PermissionEnum.PERM2)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(
+                eq(ResourceType.APP),
+                eq(List.of(PermissionEnum.READ, PermissionEnum.PERM2)),
+                eq("anna"),
+                eq(List.of("COM_USER")),
+                eq("Bearer test"))).thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        assertFalse(entornAppService.hasLogsPermission(entornAppEntity));
+        AccessDeniedException exception = assertThrows(AccessDeniedException.class, () -> entornAppService.checkLogsPermission(entornAppEntity));
+        assertEquals("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.permisos.consultarLogs", exception.getMessage());
+        verify(i18nUtil).getI18nMessage("es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.permisos.consultarLogs");
+    }
+
+    @Test
+    @DisplayName("hasLogsPermission: retorna false quan l'entitat és null")
+    void hasLogsPermission_quanEntityEsNull_retornaFalse() {
+        assertFalse(entornAppService.hasLogsPermission(null));
+        assertThrows(AccessDeniedException.class, () -> entornAppService.checkLogsPermission(null));
+    }
+
+    @Test
+    @DisplayName("InformeLlistarLogs: llança AccessDeniedException si l'usuari no té permís")
+    void informeLlistarLogs_quanSensePermis_llancaAccessDeniedException() {
+        stubAclContext("COM_USER");
+        when(aclServiceClient.findIdsWithAnyPermission(
+                any(), any(), any(), any(), any())).thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        EntornAppServiceImpl.InformeLlistarLogs report = entornAppService.new InformeLlistarLogs(
+                restTemplate, statsAuthUser, statsAuthPassword, environment);
+
+        assertThrows(AccessDeniedException.class, () -> report.generateData(EntornApp.REPORT_LLISTAR_LOGS, entornAppEntity, null));
+    }
+
+    @Test
+    @DisplayName("InformeLlistarLogs: retorna llista buida si logsUrl és null")
+    void informeLlistarLogs_quanLogsUrlEsNull_retornaLlistaBuida() throws Exception {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        entornAppEntity.setLogsUrl(null);
+
+        EntornAppServiceImpl.InformeLlistarLogs report = entornAppService.new InformeLlistarLogs(
+                restTemplate, statsAuthUser, statsAuthPassword, environment);
+
+        List<FitxerInfo> result = report.generateData(EntornApp.REPORT_LLISTAR_LOGS, entornAppEntity, null);
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verifyNoInteractions(restTemplate);
+    }
+
+    @Test
+    @DisplayName("InformePrevisualitzarLog: llança AccessDeniedException si no té permís")
+    void informePrevisualitzarLog_quanSensePermis_llancaAccessDeniedException() {
+        stubAclContext("COM_USER");
+        when(aclServiceClient.findIdsWithAnyPermission(
+                any(), any(), any(), any(), any())).thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        EntornAppServiceImpl.InformePrevisualitzarLog report = entornAppService.new InformePrevisualitzarLog(
+                restTemplate, statsAuthUser, statsAuthPassword, environment);
+
+        EntornApp.PrevisualitzarLogParams params = new EntornApp.PrevisualitzarLogParams();
+        params.setFileName("server.log");
+        params.setLineCount(50);
+
+        assertThrows(AccessDeniedException.class, () -> report.generateData(EntornApp.REPORT_PREVISUALITZAR_LOG, entornAppEntity, params));
+    }
+
+    @Test
+    @DisplayName("InformeDescarregarLog: llança AccessDeniedException si no té permís")
+    void informeDescarregarLog_quanSensePermis_llancaAccessDeniedException() {
+        stubAclContext("COM_USER");
+        when(aclServiceClient.findIdsWithAnyPermission(
+                any(), any(), any(), any(), any())).thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        EntornAppServiceImpl.InformeDescarregarLog report = entornAppService.new InformeDescarregarLog(
+                restTemplate, entornAppRepository, statsAuthUser, statsAuthPassword, environment);
+
+        assertThrows(AccessDeniedException.class, () -> report.generateData(EntornApp.REPORT_DESCARREGAR_LOG, entornAppEntity, "server.log"));
     }
 }
