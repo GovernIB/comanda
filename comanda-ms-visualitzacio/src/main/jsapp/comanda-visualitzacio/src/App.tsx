@@ -9,9 +9,9 @@ import { useIsUserAdmin, useIsUserUsuari, useUserContext } from './components/Us
 import KeepAlive from './components/KeepAlive';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
-import { useResourceApiService } from 'reactlib';
 import useStatsEnabled from './hooks/useStatsEnabled';
 import useMonitorDbEnabled from './hooks/useMonitorDbEnabled';
+import useHasSalutAccess from './hooks/useHasSalutAccess';
 import notNull from './util/arrayUtils';
 import { MenuEstil } from './types/usuari.model.tsx';
 import {useResourceApiContext} from "reactlib";
@@ -61,8 +61,7 @@ export const useAppEntries = () => {
     const isUserReady = user != null;
     const statsEnabled = useStatsEnabled() === true;
     const monitorDbEnabled = useMonitorDbEnabled() === true;
-    const { isReady: entornAppApiIsReady, find: entornAppFind } = useResourceApiService('entornApp');
-    const [hasSalutAccess, setHasSalutAccess] = React.useState(false);
+    const hasSalutAccess = useHasSalutAccess() === true;
     const isLimitedUser = isUserReady && isUserUsuari;
     const menuSalut = {
         id: 'salut',
@@ -250,26 +249,6 @@ export const useAppEntries = () => {
         : isLimitedUser
             ? limitedMenuEntries
             : caibMenuEntries;
-
-    React.useEffect(() => {
-        if (!isLimitedUser) {
-            setHasSalutAccess(false);
-            return;
-        }
-        if (!entornAppApiIsReady) {
-            return;
-        }
-        void entornAppFind({
-            page: 0,
-            size: 1,
-            namedQueries: ['permis_salut'],
-            filter: 'activa:true and app.activa:true',
-        }).then(response => {
-            setHasSalutAccess((response.rows?.length ?? 0) > 0);
-        }).catch(() => {
-            setHasSalutAccess(false);
-        });
-    }, [entornAppApiIsReady, entornAppFind, isLimitedUser]);
 
     return {
         caibMenuEntries: useBaseAppMenuEntries(visibleMenuEntries),
