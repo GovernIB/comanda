@@ -263,8 +263,8 @@ describe('Salut', () => {
         );
     });
 
-    it('Salut_quanNoHiHaEntornAppsPerUnaApp_noGeneraGrupsBuits', async () => {
-        // Verifica que si una aplicació no té cap entorn-app assignat (per permisos), no es genera un grup buit
+    it('Salut_quanNoHiHaEntornAppsPerUnaApp_mostraElGrupPerIndicarQueNoEstaDesplegat', async () => {
+        // Verifica que si una aplicació no té cap entorn-app assignat, es genera el grup igualment
         mocks.findEntornAppMock.mockResolvedValue({
             rows: [
                 {
@@ -284,7 +284,7 @@ describe('Salut', () => {
         render(<Salut />);
 
         await waitFor(() => {
-            expect(screen.getByText('SalutLlistat 1')).toBeInTheDocument();
+            expect(screen.getByText('SalutLlistat 2')).toBeInTheDocument();
         });
     });
 

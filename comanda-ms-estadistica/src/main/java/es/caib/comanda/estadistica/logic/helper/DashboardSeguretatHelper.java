@@ -143,7 +143,7 @@ public class DashboardSeguretatHelper {
     private Set<Serializable> getAllowedIds(ResourceType resourceType) {
         return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
                 resourceType,
-                List.of(PermissionEnum.READ),
+                List.of(PermissionEnum.PERM0),
                 authenticationHelper.getCurrentUserName(),
                 Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
                 httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())

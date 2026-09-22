@@ -200,7 +200,13 @@ public class ConsultaEstadisticaHelper {
     // referència a l'excepció original — l'usuari només veu "Transaction silently rolled back...", mai la
     // traça real, i un sol widget erroni tomba tota la petició del dashboard en lloc de degradar-se sol.
     @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
-    @Cacheable(value = DASHBOARD_WIDGET_CACHE, key = "#dashboardItem.id + '_' + #temaFosc + '_' + (#filtreSeleccio != null ? #filtreSeleccio.cacheKey() : '') + '_' + @authenticationHelper.getCurrentUserName() + '_' + T(java.time.LocalDate).now()")
+    @Cacheable(
+        value = DASHBOARD_WIDGET_CACHE,
+        key = "#dashboardItem.id + '_' + "
+            + "#temaFosc + '_' + "
+            + "(#filtreSeleccio != null ? #filtreSeleccio.cacheKey() : '') + '_' + "
+            + "(@dashboardSeguretatHelper.isExempt() ? '' : @authenticationHelper.getCurrentUserName() + '_') + "
+            + "T(java.time.LocalDate).now()")
     public InformeWidgetItem getDadesWidget(DashboardItemEntity dashboardItem,
                                             boolean temaFosc,
                                             DashboardFiltreSeleccio filtreSeleccio) {
