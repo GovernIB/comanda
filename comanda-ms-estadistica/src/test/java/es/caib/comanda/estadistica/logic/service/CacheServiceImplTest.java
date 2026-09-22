@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -79,6 +80,51 @@ class CacheServiceImplTest {
             assertThat(result).isNotNull();
             assertThat(result.getId()).isEqualTo(cacheId);
             assertThat(result.getEntrades()).isEqualTo(2);
+            assertThat(result.getMida()).isGreaterThan(0);
+
+            verify(cacheHelper).getCache(cacheId);
+        }
+    }
+
+    @Test
+    @DisplayName("getOne: calcula correctament la mida quan hi ha valors null o NullDataSerializable")
+    void getOne_quanHiHaValorsNullONullDataSerializable_llavorsCalculaMidaSenseErrors() throws Exception {
+        // Arrange
+        String cacheId = "testCacheWithNulls";
+        I18nUtil mockI18nUtil = mock(I18nUtil.class);
+        when(mockI18nUtil.getI18nMessage(anyString(), any())).thenReturn("Descripció mocada");
+
+        try (MockedStatic<I18nUtil> mockedStatic = Mockito.mockStatic(I18nUtil.class)) {
+            mockedStatic.when(I18nUtil::getInstance).thenReturn(mockI18nUtil);
+
+            HazelcastCache mockCache = mock(HazelcastCache.class);
+            IMap<Object, Object> nativeCache = mock(IMap.class);
+
+            Class<?> nullDataSerializableClass = Arrays.stream(HazelcastCache.class.getDeclaredClasses())
+                    .filter(c -> c.getSimpleName().equals("NullDataSerializable"))
+                    .findFirst()
+                    .orElseThrow();
+            var constructor = nullDataSerializableClass.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            Object nullSentinel = constructor.newInstance();
+
+            List<Object> values = new java.util.ArrayList<>();
+            values.add(nullSentinel);
+            values.add(null);
+            values.add("validValue");
+
+            when(cacheHelper.getCache(cacheId)).thenReturn(mockCache);
+            when(mockCache.getNativeCache()).thenReturn(nativeCache);
+            when(nativeCache.size()).thenReturn(3);
+            when(nativeCache.values()).thenReturn(values);
+
+            // Act
+            ComandaCache result = cacheService.getOne(cacheId, new String[0]);
+
+            // Assert
+            assertThat(result).isNotNull();
+            assertThat(result.getId()).isEqualTo(cacheId);
+            assertThat(result.getEntrades()).isEqualTo(3);
             assertThat(result.getMida()).isGreaterThan(0);
 
             verify(cacheHelper).getCache(cacheId);
