@@ -227,6 +227,49 @@ class DashboardSeguretatHelperTest {
     }
 
     @Test
+    @DisplayName("resoldre: propaga permís d'Entitat a totes les seves UOs quan l'app té dimensió ORGAN_GESTOR")
+    void resoldre_quanSolamentTePermisosEntitat_iAppTeOrganGestor_retornaFiltreSqlAmbUOsDeLEntitat() {
+        mockNonExemptUser();
+        Set<Serializable> entitatIds = new HashSet<>(Arrays.asList(10L));
+        mockAclResponse(ResourceType.ENTITAT, entitatIds);
+        mockAclResponse(ResourceType.UNITAT, Collections.emptySet()); // Sense ACL directa sobre UOs
+
+        when(dimensioRepository.findByEntornAppIdAndTipus(1L, TipusDimensioEnum.ENTITAT)).thenReturn(Optional.empty());
+        DimensioEntity dimensioOrgan = new DimensioEntity();
+        dimensioOrgan.setCodi("DIM_ORG");
+        when(dimensioRepository.findByEntornAppIdAndTipus(1L, TipusDimensioEnum.ORGAN_GESTOR)).thenReturn(Optional.of(dimensioOrgan));
+
+        EntitatEntity entitat = new EntitatEntity();
+        entitat.setId(10L);
+        entitat.setCodiDir3("DIR3_ENT");
+        when(entitatRepository.findAllById(List.of(10L))).thenReturn(List.of(entitat));
+
+        UnitatOrganitzativaEntity uo1 = new UnitatOrganitzativaEntity();
+        uo1.setId(200L);
+        uo1.setCodi("ORG_200");
+        uo1.setCodiUnitatArrel("DIR3_ENT");
+        UnitatOrganitzativaEntity uo2 = new UnitatOrganitzativaEntity();
+        uo2.setId(201L);
+        uo2.setCodi("ORG_201");
+        uo2.setCodiUnitatArrel("DIR3_ENT");
+        when(unitatOrganitzativaRepository.findByCodiUnitatArrelIn(List.of("DIR3_ENT"))).thenReturn(List.of(uo1, uo2));
+
+        SeguretatDadesResultat result = dashboardSeguretatHelper.resoldre(1L);
+
+        assertThat(result.getFiltreSql()).isNotNull();
+        assertThat(result.getFiltreSql().getDimensioOrganCodi()).isEqualTo("DIM_ORG");
+        assertThat(result.getFiltreSql().getValorsOrganPermesos())
+            .containsExactlyInAnyOrder("ORG_200", "ORG_201");
+        // No ha d'haver-hi filtre d'entitat (l'app no té la dimensió ENTITAT)
+        assertThat(result.getFiltreSql().getDimensioEntitatCodi()).isNull();
+        // No s'ha cridat findAllById per UOs directes (unitatIds era buit)
+        verify(unitatOrganitzativaRepository, never()).findAllById(anyList());
+        verify(unitatOrganitzativaRepository).findByCodiUnitatArrelIn(List.of("DIR3_ENT"));
+        // Com que les UOs provenen de l'entitat (arrel Dir3), no cal recórrer l'arbre
+        verify(organitzativaTreeHelper, never()).getDescendentsIElMateix(anyList());
+    }
+
+    @Test
     @DisplayName("resoldre: combina filtre d'entitats i òrgans si l'usuari té permisos d'ambdós")
     void resoldre_quanTePermisosAmbdos_retornaFiltreSqlCombinat() {
         mockNonExemptUser();
@@ -247,6 +290,7 @@ class DashboardSeguretatHelperTest {
         EntitatEntity entitat = new EntitatEntity();
         entitat.setId(10L);
         entitat.setCodi("CODI_001");
+        entitat.setCodiDir3(null);
         when(entitatRepository.findAllById(List.of(10L))).thenReturn(List.of(entitat));
 
         UnitatOrganitzativaEntity uo = new UnitatOrganitzativaEntity();
@@ -257,6 +301,7 @@ class DashboardSeguretatHelperTest {
         SeguretatDadesResultat result = dashboardSeguretatHelper.resoldre(1L);
 
         assertThat(result.getFiltreSql()).isNotNull();
+
         assertThat(result.getFiltreSql().getDimensioEntitatCodi()).isEqualTo("DIM_ENT");
         assertThat(result.getFiltreSql().getValorsEntitatPermesos()).containsExactly("CODI_001");
         assertThat(result.getFiltreSql().getDimensioOrganCodi()).isEqualTo("DIM_ORG");
