@@ -356,7 +356,7 @@ describe('App', () => {
 
         await waitFor(() => {
             const props = mocks.baseAppPropsMock.mock.calls[mocks.baseAppPropsMock.mock.calls.length - 1]?.[0];
-            expect(props.menuEntries.map((entry: { id: string }) => entry.id)).toEqual(['tasca', 'avis']);
+            expect(props.menuEntries.map((entry: { id: string }) => entry.id)).toEqual(['tasca', 'avis', 'estadistiques', 'dashboard']);
         });
 
         expect(mocks.entornAppFindMock).toHaveBeenCalledWith(
