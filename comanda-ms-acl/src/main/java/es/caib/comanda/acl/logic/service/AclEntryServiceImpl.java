@@ -44,6 +44,11 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
     protected void afterCreate(AclEntryEntity entity, AclEntry resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
         cacheHelper.evictCacheItemByPrefix(HazelCastCacheConfig.ACL_IDS_WITH_PERMISSION_CACHE, entity.getResource().getResourceType().name());
         cacheHelper.evictCacheItemByPrefix(HazelCastCacheConfig.ACL_COUNT_CACHE, entity.getResource().getResourceType().name());
+        evictDashboardCacheBySubjectTransition(null, entity.getResource());
+    }
+    @Override
+    protected void beforeUpdateEntity(AclEntryEntity entity, AclEntry resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        evictDashboardCacheBySubjectTransition(entity.getResource(), resource);
     }
     @Override
     protected void afterUpdate(AclEntryEntity entity, AclEntry resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
@@ -56,6 +61,7 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
         cacheHelper.evictCacheItemByPrefix(HazelCastCacheConfig.ACL_HAS_PERMISSION_CACHE, entity.getResource().getResourceType().name() + "_" + entity.getResource().getResourceId());
         cacheHelper.evictCacheItemByPrefix(HazelCastCacheConfig.ACL_IDS_WITH_PERMISSION_CACHE, entity.getResource().getResourceType().name());
         cacheHelper.evictCacheItemByPrefix(HazelCastCacheConfig.ACL_COUNT_CACHE, entity.getResource().getResourceType().name());
+        evictDashboardCacheBySubjectTransition(null, entity.getResource());
     }
 
     @Override
@@ -439,5 +445,23 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 			return direction == Sort.Direction.ASC ? result : -result;
 		};
 	}
+
+    public void evictDashboardCacheBySubjectTransition(AclEntry oldResource, AclEntry newResource) {
+        if (!ResourceType.ENTITAT.equals(newResource.getResourceType()) &&
+            !ResourceType.UNITAT.equals(newResource.getResourceType())) {
+            return;
+        }
+        if (newResource.getSubjectType() == SubjectType.ROLE ||
+            (oldResource != null && !newResource.getSubjectType().equals(oldResource.getSubjectType()))) {
+            cacheHelper.evictCache(HazelCastCacheConfig.DASHBOARD_WIDGET_CACHE);
+            return;
+        }
+        if (newResource.getSubjectType() == SubjectType.USER) {
+            cacheHelper.evictDashboardWidgetCacheByUser(newResource.getSubjectValue());
+            if (oldResource != null && !Objects.equals(newResource.getSubjectValue(), oldResource.getSubjectValue())) {
+                cacheHelper.evictDashboardWidgetCacheByUser(oldResource.getSubjectValue());
+            }
+        }
+    }
 
 }

@@ -202,6 +202,7 @@ public class ConsultaEstadisticaHelper {
     @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     @Cacheable(
         value = DASHBOARD_WIDGET_CACHE,
+        // Alerta al editar la cache key, s'han d'actualitzar els evicts relacionats
         key = "#dashboardItem.id + '_' + "
             + "#temaFosc + '_' + "
             + "(#filtreSeleccio != null ? #filtreSeleccio.cacheKey() : '') + '_' + "

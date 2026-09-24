@@ -1,7 +1,10 @@
 package es.caib.comanda.ms.logic.helper;
 
 import com.hazelcast.config.Config;
+import com.hazelcast.map.IMap;
+import com.hazelcast.query.impl.predicates.SqlPredicate;
 import com.hazelcast.spring.cache.HazelcastCache;
+import es.caib.comanda.ms.logic.config.HazelCastCacheConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
@@ -99,6 +102,23 @@ public class CacheHelper {
         }
     }
 
+    /** Elimina les entrades de la caché <b>cacheName</b> que contenguin un valor literal <b>keyLike</b>. */
+    public void evictOneCacheByUser(String keyLike, String cacheName) {
+        if (keyLike == null || keyLike.trim().isEmpty()) {
+            return;
+        }
+        var cache = (HazelcastCache) cacheManager.getCache(cacheName);
+        if (cache != null) {
+            IMap<Object, Object> map = cache.getNativeCache();
+            String searchPattern = "%" + keyLike.replace("'", "''") + "%";
+            SqlPredicate predicate = new SqlPredicate("__key like '" + searchPattern + "'");
+            Set<Object> keysToRemove = map.keySet(predicate);
+            if (!keysToRemove.isEmpty()) {
+                keysToRemove.forEach(map::remove);
+            }
+        }
+    }
+
     /**
      * Obté una cache específica pel seu nom.
      *
@@ -158,6 +178,14 @@ public class CacheHelper {
         if (newCodi != null && !newCodi.equals(oldCodi)) {
             evictCacheItem(ENTORN_BY_CODI_CACHE, newCodi);
         }
+    }
+
+    /** Elimina les entrades de la caché DASHBOARD_WIDGET_CACHE associades a un usuari concret. */
+    public void evictDashboardWidgetCacheByUser(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return;
+        }
+        evictOneCacheByUser(("_" + username + "_"), HazelCastCacheConfig.DASHBOARD_WIDGET_CACHE);
     }
 
 }
