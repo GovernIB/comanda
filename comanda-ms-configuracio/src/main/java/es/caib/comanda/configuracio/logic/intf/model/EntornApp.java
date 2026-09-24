@@ -106,6 +106,7 @@ public class EntornApp extends BaseResource<Long> {
     public static final String PERSPECTIVE_HISTORICS_VERSIONS = "historics_versions";
     public static final String PERSP_PERMIS_NUM = "PERMIS_NUM";
     public static final String NAMED_FILTER_PERMIS_SALUT = "permis_salut";
+    public static final String NAMED_FILTER_PERMIS_DISSENY = "permis_disseny";
 
 	@NotNull
 	@Transient

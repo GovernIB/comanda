@@ -12,6 +12,7 @@ import Box from '@mui/material/Box';
 import useStatsEnabled from './hooks/useStatsEnabled';
 import useMonitorDbEnabled from './hooks/useMonitorDbEnabled';
 import useHasSalutAccess from './hooks/useHasSalutAccess';
+import useHasDashboardAccess from './hooks/useHasDashboardAccess';
 import notNull from './util/arrayUtils';
 import { MenuEstil } from './types/usuari.model.tsx';
 import {useResourceApiContext} from "reactlib";
@@ -62,6 +63,7 @@ export const useAppEntries = () => {
     const statsEnabled = useStatsEnabled() === true;
     const monitorDbEnabled = useMonitorDbEnabled() === true;
     const hasSalutAccess = useHasSalutAccess() === true;
+    const hasDashboardAccess = useHasDashboardAccess() === true;
     const isLimitedUser = isUserReady && isUserUsuari;
     const menuSalut = {
         id: 'salut',
@@ -203,7 +205,7 @@ export const useAppEntries = () => {
                 icon: 'format_color_fill',
                 resourceName: 'paleta',
             } : null,
-            statsEnabled ? menuDashboard : null,
+            statsEnabled && hasDashboardAccess ? menuDashboard : null,
             statsEnabled ? {
                 id: 'calendari',
                 title: t($ => $.menu.calendari),
@@ -241,8 +243,8 @@ export const useAppEntries = () => {
         { ...menuTasca, resourceName: undefined },
         { ...menuAvis, resourceName: undefined },
         hasSalutAccess ? { ...menuAlarmaConfig, resourceName: undefined } : null,
-        (statsEnabled && hasSalutAccess) ? { ...menuEstadistiques, resourceName: undefined } : null,
-        (statsEnabled && hasSalutAccess) ? { ...menuDashboard, resourceName: undefined } : null,
+        statsEnabled ? { ...menuEstadistiques, resourceName: undefined } : null,
+        (statsEnabled && hasDashboardAccess) ? { ...menuDashboard, resourceName: undefined } : null,
     ].filter(notNull);
     const visibleMenuEntries = !isUserReady
         ? undefined

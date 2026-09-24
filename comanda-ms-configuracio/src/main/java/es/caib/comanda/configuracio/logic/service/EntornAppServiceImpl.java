@@ -237,22 +237,32 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                     || authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
                 return null;
             }
-            Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP, Collections.singletonList(PermissionEnum.PERM2));
-            Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP, Collections.singletonList(PermissionEnum.PERM2));
-            String appFilter = buildOrFilter("app.id", appPermissionIds);
-            String entornAppFilter = buildOrFilter("id", entornAppPermissionIds);
-            if (appFilter == null && entornAppFilter == null) {
-                return "id:0";
+            return buildAclPermissionsFilter(Collections.singletonList(PermissionEnum.PERM2));
+        }
+        if (EntornApp.NAMED_FILTER_PERMIS_DISSENY.equals(name)) {
+            if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)) {
+                return null;
             }
-            if (appFilter == null) {
-                return entornAppFilter;
-            }
-            if (entornAppFilter == null) {
-                return appFilter;
-            }
-            return appFilter + " or " + entornAppFilter;
+            return buildAclPermissionsFilter(Collections.singletonList(PermissionEnum.PERM1));
         }
         return super.namedFilterToSpringFilter(name);
+    }
+
+    private String buildAclPermissionsFilter(List<PermissionEnum> permissions) {
+        Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP, permissions);
+        Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP, permissions);
+        String appFilter = buildOrFilter("app.id", appPermissionIds);
+        String entornAppFilter = buildOrFilter("id", entornAppPermissionIds);
+        if (appFilter == null && entornAppFilter == null) {
+            return "id:0";
+        }
+        if (appFilter == null) {
+            return entornAppFilter;
+        }
+        if (entornAppFilter == null) {
+            return appFilter;
+        }
+        return appFilter + " or " + entornAppFilter;
     }
 
     private Set<Serializable> getAllowedIds(ResourceType resourceType) {

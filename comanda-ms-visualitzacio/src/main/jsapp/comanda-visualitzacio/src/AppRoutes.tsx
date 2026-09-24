@@ -33,6 +33,7 @@ import Accessibilitat from './pages/accessibilitat/Accessibilitat';
 import { useIsUserAdmin, useIsUserConsulta } from './components/UserContext';
 import useStatsEnabled from './hooks/useStatsEnabled';
 import useHasSalutAccess from './hooks/useHasSalutAccess';
+import useHasDashboardAccess from './hooks/useHasDashboardAccess';
 import {Plantilla} from "./pages/Plantilla.tsx";
 import EntornAppHist from './pages/EntornsAppHistorics.tsx';
 import MonitorDb from './pages/MonitorDb.tsx';
@@ -67,11 +68,13 @@ const UserRoleRouteGuard: React.FC<{ children: React.ReactNode }> = ({ children 
     const isUserConsulta = useIsUserConsulta();
     // const isUserUsuari = useIsUserUsuari();
     const hasSalutAccess = useHasSalutAccess();
+    const hasDashboardAccess = useHasDashboardAccess();
     const statsEnabled = useStatsEnabled();
     const location = useLocation();
     const isStatsRoute = statsRoutePrefixes.some(path =>
         location.pathname === path || location.pathname.startsWith(path + '/')
     );
+    const isDashboardRoute = location.pathname === '/dashboard' || location.pathname.startsWith('/dashboard/');
 
     if (statsEnabled === undefined && isStatsRoute) {
         return <LoadingRoute />;
@@ -85,7 +88,7 @@ const UserRoleRouteGuard: React.FC<{ children: React.ReactNode }> = ({ children 
         return <>{children}</>;
     }
 
-    if (hasSalutAccess === undefined) {
+    if (hasSalutAccess === undefined || (isDashboardRoute && hasDashboardAccess === undefined)) {
         return <LoadingRoute />;
     }
 
@@ -104,7 +107,7 @@ const UserRoleRouteGuard: React.FC<{ children: React.ReactNode }> = ({ children 
             '/alarmes',
             '/sitemap',
             '/accessibilitat',
-            ...(statsEnabled ? ['/estadistiques', '/dashboard', '/dimensio', '/indicador', '/calendari'] : []),
+            ...(statsEnabled ? ['/estadistiques', ...(hasDashboardAccess ? ['/dashboard'] : []), '/dimensio', '/indicador', '/calendari'] : []),
         ]
         : [
             ...(hasSalutAccess ? ['/', '/appinfo', '/alarma',] : []),
@@ -113,7 +116,7 @@ const UserRoleRouteGuard: React.FC<{ children: React.ReactNode }> = ({ children 
             '/alarmes',
             '/sitemap',
             '/accessibilitat',
-            ...(statsEnabled ? ['/estadistiques', '/dashboard'] : []),
+            ...(statsEnabled ? ['/estadistiques', ...(hasDashboardAccess ? ['/dashboard'] : [])] : []),
         ];
     const isAllowedPath = allowedPrefixes.some(path =>
         location.pathname === path || (path !== '/' && location.pathname.startsWith(path + '/'))

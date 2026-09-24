@@ -447,6 +447,27 @@ class DashboardPermisosHelperTest {
     }
 
     @Test
+    @DisplayName("buildDashboardFilter per a CONSULTA: lliure en lectura però filtra per ACLs en escriptura")
+    void buildDashboardFilter_quanConsulta_lliureEnLecturaIFiltraEnEscriptura() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(true);
+
+        // En lectura (isWrite = false): exempt de filtre
+        assertThat(dashboardPermisosHelper.buildDashboardFilter("nom:'Test'", false)).isEqualTo("nom:'Test'");
+
+        // En escriptura (isWrite = true): aplica les seves ACLs d'escriptura
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(5L)));
+
+        String writeResult = dashboardPermisosHelper.buildDashboardFilter("actiu:true", true);
+        assertThat(writeResult).isEqualTo("actiu:true and id:5");
+    }
+
+    @Test
     @DisplayName("buildDashboardFilter aplica filtres correctes per a Dashboard quan usuari no és admin")
     void buildDashboardFilter_quanNoAdmin_aplicaFiltres() {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);

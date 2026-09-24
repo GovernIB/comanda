@@ -63,6 +63,7 @@ public class App extends BaseResource<Long> {
 	public final static String APP_EXPORT = "app_export";
 	public final static String APP_IMPORT = "app_import";
     public static final String NAMED_FILTER_PERMIS_SALUT = "permis_salut";
+    public static final String NAMED_FILTER_PERMIS_DISSENY = "permis_disseny";
 
 	@NotNull
 	@Size(max = 16)

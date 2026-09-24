@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
     useIsUserUsuariMock: vi.fn(),
     useThemeMock: vi.fn(),
     entornAppFindMock: vi.fn(),
+    dashboardFindMock: vi.fn(),
     useStatsEnabledMock: vi.fn(),
     resourceApiContextMock: {
         baseUrl: 'http://localhost:8080',
@@ -118,6 +119,12 @@ vi.mock('reactlib', () => ({
                 find: mocks.entornAppFindMock,
             };
         }
+        if (resourceName === 'dashboard') {
+            return {
+                isReady: true,
+                find: mocks.dashboardFindMock,
+            };
+        }
         return {
             isReady: true,
             find: vi.fn().mockResolvedValue({ rows: [] }),
@@ -171,6 +178,7 @@ describe('App', () => {
             },
         });
         mocks.entornAppFindMock.mockResolvedValue({ rows: [{ id: 1 }] });
+        mocks.dashboardFindMock.mockResolvedValue({ rows: [{ id: 1 }] });
         mocks.useStatsEnabledMock.mockReturnValue(true);
     });
 
@@ -294,6 +302,48 @@ describe('App', () => {
         expect(props.menuEntries).toHaveLength(6);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'plantilla')).toBe(false);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'parametre')).toBe(false);
+    });
+
+    it('App_quanLusuariEsConsultaSensePermisDisseny_amagaDashboardDeConfiguracio', async () => {
+        mocks.useIsUserAdminMock.mockReturnValue(false);
+        mocks.useIsUserConsultaMock.mockReturnValue(true);
+        mocks.useIsUserUsuariMock.mockReturnValue(false);
+        mocks.entornAppFindMock.mockResolvedValue({ rows: [] });
+        mocks.dashboardFindMock.mockResolvedValue({ rows: [] });
+
+        render(<App />);
+
+        await waitFor(() => {
+            const props = mocks.baseAppPropsMock.mock.calls[mocks.baseAppPropsMock.mock.calls.length - 1]?.[0];
+            const configuracioChildren = props.menuEntries[5].children;
+            expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'dashboard')).toBe(false);
+        });
+    });
+
+    it('App_quanLusuariTeAccesASalutPeroNoADashboard_amagaDashboardDelMenuLimitat', async () => {
+        mocks.useIsUserAdminMock.mockReturnValue(false);
+        mocks.useIsUserConsultaMock.mockReturnValue(false);
+        mocks.useIsUserUsuariMock.mockReturnValue(true);
+        mocks.entornAppFindMock.mockImplementation(({ namedQueries }: { namedQueries?: string[] }) => {
+            if (namedQueries?.includes('permis_salut')) {
+                return Promise.resolve({ rows: [{ id: 1 }] });
+            }
+            return Promise.resolve({ rows: [] });
+        });
+        mocks.dashboardFindMock.mockResolvedValue({ rows: [] });
+
+        render(<App />);
+
+        await waitFor(() => {
+            const props = mocks.baseAppPropsMock.mock.calls[mocks.baseAppPropsMock.mock.calls.length - 1]?.[0];
+            expect(props.menuEntries.map((entry: { id: string }) => entry.id)).toEqual([
+                'salut',
+                'tasca',
+                'avis',
+                'alarma',
+                'estadistiques',
+            ]);
+        });
     });
 
     it('App_quanLusuariNoTeAccesASalut_amagaLentradaSalutDelMenuLimitat', async () => {

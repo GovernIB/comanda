@@ -95,26 +95,36 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
                     || authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
                 return null;
             }
-            Set<Long> allowedAppIds = toLongIds(getSalutPermissionIds(ResourceType.APP));
-            Set<Long> allowedEntornAppIds = toLongIds(getSalutPermissionIds(ResourceType.ENTORN_APP));
-            if (!allowedEntornAppIds.isEmpty()) {
-                allowedAppIds.addAll(entornAppRepository.findAppIdsByEntornAppIds(allowedEntornAppIds));
+            return buildAclPermissionsFilter(Collections.singletonList(PermissionEnum.PERM2));
+        }
+        if (App.NAMED_FILTER_PERMIS_DISSENY.equals(name)) {
+            if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)) {
+                return null;
             }
-            if (allowedAppIds.isEmpty()) {
-                return "id:0";
-            }
-            return allowedAppIds.stream()
-                .sorted()
-                .map(id -> "id:" + id)
-                .collect(Collectors.joining(" or "));
+            return buildAclPermissionsFilter(Collections.singletonList(PermissionEnum.PERM1));
         }
         return super.namedFilterToSpringFilter(name);
     }
 
-    private Set<Serializable> getSalutPermissionIds(ResourceType resourceType) {
+    private String buildAclPermissionsFilter(List<PermissionEnum> permissions) {
+        Set<Long> allowedAppIds = toLongIds(getPermissionIds(ResourceType.APP, permissions));
+        Set<Long> allowedEntornAppIds = toLongIds(getPermissionIds(ResourceType.ENTORN_APP, permissions));
+        if (!allowedEntornAppIds.isEmpty()) {
+            allowedAppIds.addAll(entornAppRepository.findAppIdsByEntornAppIds(allowedEntornAppIds));
+        }
+        if (allowedAppIds.isEmpty()) {
+            return "id:0";
+        }
+        return allowedAppIds.stream()
+            .sorted()
+            .map(id -> "id:" + id)
+            .collect(Collectors.joining(" or "));
+    }
+
+    private Set<Serializable> getPermissionIds(ResourceType resourceType, List<PermissionEnum> permissions) {
         return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
                 resourceType,
-                Collections.singletonList(PermissionEnum.PERM2),
+                permissions,
                 authenticationHelper.getCurrentUserName(),
                 Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
                 httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())

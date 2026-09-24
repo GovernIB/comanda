@@ -324,7 +324,7 @@ public class DashboardPermisosHelper {
             String entornAppFilterPrefix,
             String dashboardIdProperty,
             boolean isWrite) {
-        if (isAdminOrConsulta()) {
+        if (isWrite ? isAdmin() : isAdminOrConsulta()) {
             return currentSpringFilter;
         }
 
@@ -363,7 +363,7 @@ public class DashboardPermisosHelper {
             String entornIdProperty,
             String dashboardIdProperty,
             boolean isWrite) {
-        if (isAdminOrConsulta()) {
+        if (isWrite ? isAdmin() : isAdminOrConsulta()) {
             return currentSpringFilter;
         }
 
