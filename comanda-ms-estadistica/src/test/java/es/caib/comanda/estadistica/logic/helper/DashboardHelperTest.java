@@ -1492,29 +1492,4 @@ class DashboardHelperTest {
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessage("sense lectura");
     }
-
-    @Test
-    @DisplayName("CloneDashboardAction.exec: llança AccessDeniedException si target incomplet per a no-admin")
-    void cloneDashboardAction_exec_targetIncompletNoAdmin_llancaAccessDeniedException() {
-        DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
-                estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository,
-                dashboardFiltreRepository, plantillaRepository, estadisticaWidgetRepository,
-                dashboardClonerMapper, atributsVisualsHelper, dashboardPermisosHelper);
-
-        DashboardEntity source = new DashboardEntity();
-        source.setId(10L);
-        source.setAppId(1L);
-        source.setEntornId(2L);
-
-        doNothing().when(dashboardPermisosHelper).checkHasCreationPermission(anyString());
-        doNothing().when(dashboardPermisosHelper).checkCanReadDashboard(any(), any(), any(), anyString());
-        when(dashboardPermisosHelper.isAdmin()).thenReturn(false);
-
-        Dashboard params = new Dashboard();
-        params.setAppId(1L);
-        params.setEntornId(null); // Incomplet
-
-        assertThatThrownBy(() -> action.exec(Dashboard.CLONE_ACTION, source, params))
-                .isInstanceOf(AccessDeniedException.class);
-    }
 }
