@@ -270,19 +270,30 @@ public class DashboardHelper {
 
         @Override
         public Dashboard exec(String code, DashboardEntity entity, Dashboard params) throws ActionExecutionException {
-            Long targetAppId = entity.getAppId();
-            Long targetEntornId = entity.getEntornId();
+            if (dashboardPermisosHelper != null) {
+                dashboardPermisosHelper.checkHasCreationPermission(
+                        I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.permisos.clonarSenseCreacio"));
+                if (entity != null) {
+                    dashboardPermisosHelper.checkCanReadDashboard(
+                            entity.getId(),
+                            entity.getAppId(),
+                            entity.getEntornId(),
+                            I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.permisos.clonarLecturaOrigen"));
+                }
+            }
+
+            Long targetAppId;
+            Long targetEntornId;
             if (Objects.nonNull(params)) {
-                if (params.getAplicacio() != null && params.getAplicacio().getId() != null) {
-                    targetAppId = params.getAplicacio().getId();
-                } else if (params.getAppId() != null) {
-                    targetAppId = params.getAppId();
-                }
-                if (params.getEntorn() != null && params.getEntorn().getId() != null) {
-                    targetEntornId = params.getEntorn().getId();
-                } else if (params.getEntornId() != null) {
-                    targetEntornId = params.getEntornId();
-                }
+                targetAppId = (params.getAplicacio() != null && params.getAplicacio().getId() != null)
+                        ? params.getAplicacio().getId()
+                        : params.getAppId();
+                targetEntornId = (params.getEntorn() != null && params.getEntorn().getId() != null)
+                        ? params.getEntorn().getId()
+                        : params.getEntornId();
+            } else {
+                targetAppId = entity != null ? entity.getAppId() : null;
+                targetEntornId = entity != null ? entity.getEntornId() : null;
             }
             if (dashboardPermisosHelper != null) {
                 dashboardPermisosHelper.checkCanCreate(targetAppId, targetEntornId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.permisos.clonar"));

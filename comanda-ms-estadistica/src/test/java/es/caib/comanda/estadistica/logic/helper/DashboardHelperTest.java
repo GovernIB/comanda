@@ -92,6 +92,12 @@ class DashboardHelperTest {
     @Mock
     private ResourceEntityMappingHelper resourceEntityMappingHelper;
 
+    @Mock
+    private DashboardPermisosHelper dashboardPermisosHelper;
+
+    @Mock
+    private AtributsVisualsHelper atributsVisualsHelper;
+
     @InjectMocks
     private DashboardHelper dashboardHelper;
 
@@ -1446,5 +1452,69 @@ class DashboardHelperTest {
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getEntornId()).isEqualTo(20L);
         assertThat(result.get(1).getEntornId()).isEqualTo(55L);
+    }
+
+    @Test
+    @DisplayName("CloneDashboardAction.exec: llança AccessDeniedException si usuari no té permís de creació")
+    void cloneDashboardAction_exec_sensePermisCreacio_llancaAccessDeniedException() {
+        DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
+                estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository,
+                dashboardFiltreRepository, plantillaRepository, estadisticaWidgetRepository,
+                dashboardClonerMapper, atributsVisualsHelper, dashboardPermisosHelper);
+
+        DashboardEntity source = new DashboardEntity();
+        source.setId(10L);
+
+        doThrow(new AccessDeniedException("sense creació")).when(dashboardPermisosHelper).checkHasCreationPermission(anyString());
+
+        assertThatThrownBy(() -> action.exec(Dashboard.CLONE_ACTION, source, null))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("sense creació");
+    }
+
+    @Test
+    @DisplayName("CloneDashboardAction.exec: llança AccessDeniedException si usuari no té permís de lectura sobre l'origen")
+    void cloneDashboardAction_exec_sensePermisLecturaOrigen_llancaAccessDeniedException() {
+        DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
+                estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository,
+                dashboardFiltreRepository, plantillaRepository, estadisticaWidgetRepository,
+                dashboardClonerMapper, atributsVisualsHelper, dashboardPermisosHelper);
+
+        DashboardEntity source = new DashboardEntity();
+        source.setId(10L);
+        source.setAppId(1L);
+        source.setEntornId(2L);
+
+        doNothing().when(dashboardPermisosHelper).checkHasCreationPermission(anyString());
+        doThrow(new AccessDeniedException("sense lectura")).when(dashboardPermisosHelper).checkCanReadDashboard(eq(10L), eq(1L), eq(2L), anyString());
+
+        assertThatThrownBy(() -> action.exec(Dashboard.CLONE_ACTION, source, null))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("sense lectura");
+    }
+
+    @Test
+    @DisplayName("CloneDashboardAction.exec: llança AccessDeniedException si target incomplet per a no-admin")
+    void cloneDashboardAction_exec_targetIncompletNoAdmin_llancaAccessDeniedException() {
+        DashboardHelper.CloneDashboardAction action = new DashboardHelper.CloneDashboardAction(
+                estadisticaClientHelper, dashboardRepository, dashboardTitolRepository, dashboardItemRepository,
+                dashboardFiltreRepository, plantillaRepository, estadisticaWidgetRepository,
+                dashboardClonerMapper, atributsVisualsHelper, dashboardPermisosHelper);
+
+        DashboardEntity source = new DashboardEntity();
+        source.setId(10L);
+        source.setAppId(1L);
+        source.setEntornId(2L);
+
+        doNothing().when(dashboardPermisosHelper).checkHasCreationPermission(anyString());
+        doNothing().when(dashboardPermisosHelper).checkCanReadDashboard(any(), any(), any(), anyString());
+        when(dashboardPermisosHelper.isAdmin()).thenReturn(false);
+
+        Dashboard params = new Dashboard();
+        params.setAppId(1L);
+        params.setEntornId(null); // Incomplet
+
+        assertThatThrownBy(() -> action.exec(Dashboard.CLONE_ACTION, source, params))
+                .isInstanceOf(AccessDeniedException.class);
     }
 }

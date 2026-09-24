@@ -172,6 +172,75 @@ public class DashboardPermisosHelper {
     }
 
     /**
+     * Comprova si l'usuari actual té permís de creació de dashboards en general
+     * (té accés d'escriptura a almenys una App o EntornApp, o és ADMIN).
+     * No és suficient tenir accés a un dashboard concret.
+     */
+    public boolean hasCreationPermission() {
+        if (isAdmin()) {
+            return true;
+        }
+        return !getAllowedAppIds(true).isEmpty() || !getAllowedEntornAppIds(true).isEmpty();
+    }
+
+    /**
+     * Verifica que l'usuari té permís de creació de dashboards en general, o llança {@link AccessDeniedException}.
+     */
+    public void checkHasCreationPermission(String errorMessage) {
+        if (!hasCreationPermission()) {
+            throw new AccessDeniedException(errorMessage);
+        }
+    }
+
+    /**
+     * Comprova si l'usuari actual pot esborrar un dashboard d'aquell tipus.
+     * Només permès per a usuaris que puguin crear dashboards d'aquell tipus, és a dir, amb accés a app/entornApp.
+     */
+    public boolean canDeleteDashboard(Long appId, Long entornId) {
+        return canCreate(appId, entornId);
+    }
+
+    /**
+     * Verifica que l'usuari pot esborrar el dashboard especificat pels seus appId i entornId, o llança {@link AccessDeniedException}.
+     */
+    public void checkCanDeleteDashboard(Long appId, Long entornId, String errorMessage) {
+        if (!canDeleteDashboard(appId, entornId)) {
+            throw new AccessDeniedException(errorMessage);
+        }
+    }
+
+    /**
+     * Comprova si l'usuari actual té permís de lectura sobre el dashboard indicat.
+     */
+    public boolean canReadDashboard(Long dashboardId, Long appId, Long entornId) {
+        if (isAdminOrConsulta()) {
+            return true;
+        }
+        if (dashboardId != null && hasPermission(ResourceType.DASHBOARD, dashboardId, PERMISSIONS_DASHBOARD_READ)) {
+            return true;
+        }
+        if (appId != null && hasPermission(ResourceType.APP, appId, PERMISSIONS_APP_READ)) {
+            return true;
+        }
+        if (appId != null && entornId != null) {
+            EntornApp entornApp = estadisticaClientHelper.entornAppFindByAppAndEntorn(appId, entornId);
+            if (entornApp != null && hasPermission(ResourceType.ENTORN_APP, entornApp.getId(), PERMISSIONS_APP_READ)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Verifica que l'usuari té permís de lectura sobre el dashboard indicat, o llança {@link AccessDeniedException}.
+     */
+    public void checkCanReadDashboard(Long dashboardId, Long appId, Long entornId, String errorMessage) {
+        if (!canReadDashboard(dashboardId, appId, entornId)) {
+            throw new AccessDeniedException(errorMessage);
+        }
+    }
+
+    /**
      * Comprova si l'usuari actual pot dissenyar el dashboard especificat pel seu identificador.
      */
     public boolean canDesignDashboard(Long dashboardId) {

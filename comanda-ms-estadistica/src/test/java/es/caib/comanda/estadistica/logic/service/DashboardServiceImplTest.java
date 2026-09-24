@@ -3,6 +3,8 @@ package es.caib.comanda.estadistica.logic.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.AclServiceClient;
+import es.caib.comanda.client.model.App;
+import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.logic.helper.AtributsVisualsHelper;
 import es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper;
@@ -127,6 +129,7 @@ class DashboardServiceImplTest {
         lenient().when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
         lenient().when(authenticationHelper.getCurrentUserName()).thenReturn("testUser");
         lenient().when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"ROLE_USER"});
+        lenient().when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
     }
 
     /**
@@ -863,6 +866,7 @@ class DashboardServiceImplTest {
 
         DashboardEntity entity = new DashboardEntity();
         entity.setId(10L);
+        entity.setAppId(1L);
         Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
 
         assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(dashboardService, "beforeDelete", entity, answers))
@@ -1421,7 +1425,7 @@ class DashboardServiceImplTest {
     void dashboardImport_exec_quanSensePermisos_llancaAccessDeniedException() throws Exception {
         DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
 
-        String json = "[{\"titol\":\"Titol\",\"appCodi\":\"APP_PROTECTED\"}]";
+        String json = "[{\"titol\":\"Titol\",\"appCodi\":\"APP_PROTECTED\",\"entornCodi\":\"PROD\"}]";
         FileReference fileRef = new FileReference();
         ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
 
@@ -1432,9 +1436,14 @@ class DashboardServiceImplTest {
         ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
 
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Set.of(1L)));
         App protectedApp = new App();
         ReflectionTestUtils.setField(protectedApp, "id", 99L);
         when(estadisticaClientHelper.appFindByCodi("APP_PROTECTED")).thenReturn(protectedApp);
+        Entorn prodEntorn = new Entorn();
+        ReflectionTestUtils.setField(prodEntorn, "id", 10L);
+        when(estadisticaClientHelper.entornByCodi("PROD")).thenReturn(prodEntorn);
         when(aclServiceClient.anyPermissionGranted(any(), eq(99L), any(), any(), any(), any()))
                 .thenReturn(ResponseEntity.ok(false));
 
@@ -1464,6 +1473,88 @@ class DashboardServiceImplTest {
                 .thenReturn(ResponseEntity.ok(false));
 
         assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(dashboardService, "beforeUpdateEntity", entity, resource, Collections.emptyMap()))
+                .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    @DisplayName("beforeDelete permet esborrar si l'usuari té permís d'escriptura a l'APP")
+    void beforeDelete_quanPermisApp_permetEsborrar() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.anyPermissionGranted(eq(ResourceType.APP), eq(10L), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(true));
+
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        entity.setAppId(10L);
+
+        // No ha de llançar excepció
+        ReflectionTestUtils.invokeMethod(dashboardService, "beforeDelete", entity, Collections.emptyMap());
+    }
+
+    @Test
+    @DisplayName("beforeDelete llança AccessDeniedException si l'usuari només té permís sobre el DASHBOARD però no sobre l'APP")
+    void beforeDelete_quanNomesPermisDashboard_llancaAccessDeniedException() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.anyPermissionGranted(eq(ResourceType.APP), eq(10L), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(false));
+        lenient().when(estadisticaClientHelper.entornAppFindByAppAndEntorn(any(), any())).thenReturn(null);
+
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        entity.setAppId(10L);
+
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(dashboardService, "beforeDelete", entity, Collections.emptyMap()))
+                .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    @DisplayName("DashboardImport exec llança AccessDeniedException si és no-admin i el dashboard és multientorn/multiapp")
+    void dashboardImport_exec_quanMultientornNoAdmin_llancaAccessDeniedException() throws Exception {
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+
+        // Falta entornCodi -> multientorn
+        String json = "[{\"titol\":\"Multientorn Dashboard\",\"appCodi\":\"APP_1\"}]";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.DashboardImportParams params = new DashboardServiceImpl.DashboardImportParams();
+        params.setFile(fileRef);
+
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Set.of(1L)));
+        App app1 = new App();
+        ReflectionTestUtils.setField(app1, "id", 1L);
+        when(estadisticaClientHelper.appFindByCodi("APP_1")).thenReturn(app1);
+
+        assertThatThrownBy(() -> executor.exec(Dashboard.DASHBOARD_IMPORT, new DashboardEntity(), params))
+                .isInstanceOf(AccessDeniedException.class);
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
+    @DisplayName("DashboardImport exec llança AccessDeniedException si usuari no té permisos de creació en general")
+    void dashboardImport_exec_sensePermisCreacio_llancaAccessDeniedException() throws Exception {
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+
+        String json = "[{\"titol\":\"Dashboard\",\"appCodi\":\"APP_1\",\"entornCodi\":\"DEV\"}]";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.DashboardImportParams params = new DashboardServiceImpl.DashboardImportParams();
+        params.setFile(fileRef);
+
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        assertThatThrownBy(() -> executor.exec(Dashboard.DASHBOARD_IMPORT, new DashboardEntity(), params))
                 .isInstanceOf(AccessDeniedException.class);
     }
 
