@@ -446,7 +446,7 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 		};
 	}
 
-    public void evictDashboardCacheBySubjectTransition(AclEntry oldResource, AclEntry newResource) {
+    private void evictDashboardCacheBySubjectTransition(AclEntry oldResource, AclEntry newResource) {
         if (!ResourceType.ENTITAT.equals(newResource.getResourceType()) &&
             !ResourceType.UNITAT.equals(newResource.getResourceType())) {
             return;

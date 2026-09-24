@@ -380,45 +380,63 @@ class AclEntryServiceImplTest {
     @Test
     void afterCreate_evictsCaches() {
         AclEntryEntity entity = new AclEntryEntity();
-        AclEntry res = resource(SubjectType.ROLE, "ROLE_ADMIN");
-        res.setResourceType(ResourceType.ENTORN_APP);
+        AclEntry res = resource(SubjectType.USER, "username");
+        res.setResourceType(ResourceType.ENTITAT);
         res.setResourceId(10L);
         entity.setResource(res);
 
         service.afterCreate(entity, null, Map.of());
 
-        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_IDS_WITH_PERMISSION_CACHE, "ENTORN_APP");
-        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_COUNT_CACHE, "ENTORN_APP");
+        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_IDS_WITH_PERMISSION_CACHE, "ENTITAT");
+        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_COUNT_CACHE, "ENTITAT");
+        verify(cacheHelper).evictDashboardWidgetCacheByUser("username");
     }
 
     @Test
     void afterUpdate_evictsCaches() {
         AclEntryEntity entity = new AclEntryEntity();
-        AclEntry res = resource(SubjectType.ROLE, "ROLE_ADMIN");
-        res.setResourceType(ResourceType.ENTORN_APP);
+        AclEntry res = resource(SubjectType.USER, "username");
+        res.setResourceType(ResourceType.ENTITAT);
         res.setResourceId(10L);
         entity.setResource(res);
 
         service.afterUpdate(entity, null, Map.of());
 
-        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_HAS_PERMISSION_CACHE, "ENTORN_APP_10");
-        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_IDS_WITH_PERMISSION_CACHE, "ENTORN_APP");
-        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_COUNT_CACHE, "ENTORN_APP");
+        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_HAS_PERMISSION_CACHE, "ENTITAT_10");
+        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_IDS_WITH_PERMISSION_CACHE, "ENTITAT");
+        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_COUNT_CACHE, "ENTITAT");
     }
 
     @Test
     void afterDelete_evictsCaches() {
         AclEntryEntity entity = new AclEntryEntity();
-        AclEntry res = resource(SubjectType.ROLE, "ROLE_ADMIN");
-        res.setResourceType(ResourceType.ENTORN_APP);
+        AclEntry res = resource(SubjectType.USER, "username");
+        res.setResourceType(ResourceType.ENTITAT);
         res.setResourceId(10L);
         entity.setResource(res);
 
         service.afterDelete(entity, Map.of());
 
-        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_HAS_PERMISSION_CACHE, "ENTORN_APP_10");
-        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_IDS_WITH_PERMISSION_CACHE, "ENTORN_APP");
-        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_COUNT_CACHE, "ENTORN_APP");
+        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_HAS_PERMISSION_CACHE, "ENTITAT_10");
+        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_IDS_WITH_PERMISSION_CACHE, "ENTITAT");
+        verify(cacheHelper).evictCacheItemByPrefix(HazelCastCacheConfig.ACL_COUNT_CACHE, "ENTITAT");
+        verify(cacheHelper).evictDashboardWidgetCacheByUser("username");
+    }
+
+    @Test
+    void beforeUpdateEntity_evictsDashboardCacheForBothUsersWhenUsernameChanges() {
+        AclEntry oldRes = resource(SubjectType.USER, "old_username");
+        oldRes.setResourceType(ResourceType.ENTITAT);
+        AclEntry newRes = resource(SubjectType.USER, "new_username");
+        newRes.setResourceType(ResourceType.ENTITAT);
+
+        AclEntryEntity entity = new AclEntryEntity();
+        entity.setResource(oldRes);
+
+        service.beforeUpdateEntity(entity, newRes, Map.of());
+
+        verify(cacheHelper).evictDashboardWidgetCacheByUser("old_username");
+        verify(cacheHelper).evictDashboardWidgetCacheByUser("new_username");
     }
 
     private static AclEntry resource(SubjectType subjectType, String subjectValue) {
