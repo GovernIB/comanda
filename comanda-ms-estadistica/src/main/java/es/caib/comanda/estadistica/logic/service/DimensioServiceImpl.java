@@ -3,6 +3,7 @@ package es.caib.comanda.estadistica.logic.service;
 import com.turkraft.springfilter.FilterBuilder;
 import com.turkraft.springfilter.parser.Filter;
 import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesRestClient;
+import es.caib.comanda.estadistica.logic.helper.DimensioFetConsProgressHelper;
 import es.caib.comanda.estadistica.logic.helper.EntitatResolverHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
@@ -62,6 +63,7 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
     private final DimensioValorRepository dimensioValorRepository;
     private final EntitatResolverHelper entitatResolverHelper;
     private final UnitatsOrganitzativesRestClient unitatsOrganitzativesRestClient;
+    private final DimensioFetConsProgressHelper dimensioFetConsProgressHelper;
 
     @PostConstruct
     public void init() {
@@ -192,20 +194,30 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
 //                    if (!fetEntityList.isEmpty())
 //                        fetRepository.saveAll(fetEntityList);
 
-                    // Actualitzar tots els valors "CONS", tenint en compte l'entitat de cada fet (si en té)
+                    // Actualitzar tots els valors "CONS", tenint en compte l'entitat de cada fet (si en té),
+                    // notificant el progrés per SSE perquè el frontend pugui mostrar-lo en una barra de progrés.
                     String codiArrel = unitatsOrganitzativesRestClient.getCodiArrel();
                     List<FetEntity> fetEntityList = fetRepository.findByEntornAppIdAddCons(entity.getEntornAppId(), entity.getCodi(), codiArrel);
-                    fetEntityList = fetEntityList.stream()
-                        .peek(f -> {
-                            String organValor = f.getDimensionsJson().get(entity.getCodi());
-                            String c = entitatResolverHelper.resolveConselleria(entity.getEntornAppId(), organValor, f.getDimensionsJson());
-                            if (c != null) {
-                                f.getDimensionsJson().put("CONS", c);
-                            } else {
-                                f.getDimensionsJson().remove("CONS");
-                            }
-                        })
-                        .collect(Collectors.toList());
+                    int total = fetEntityList.size();
+                    // Com a màxim ~20 notificacions de progrés, independentment de la mida de fetEntityList
+                    int progressStep = Math.max(1, total / 20);
+                    if (total > 0) {
+                        dimensioFetConsProgressHelper.publishProgress(entity.getId(), 0, total);
+                    }
+                    int processats = 0;
+                    for (FetEntity f : fetEntityList) {
+                        String organValor = f.getDimensionsJson().get(entity.getCodi());
+                        String c = entitatResolverHelper.resolveConselleria(entity.getEntornAppId(), organValor, f.getDimensionsJson());
+                        if (c != null) {
+                            f.getDimensionsJson().put("CONS", c);
+                        } else {
+                            f.getDimensionsJson().remove("CONS");
+                        }
+                        processats++;
+                        if (processats % progressStep == 0 || processats == total) {
+                            dimensioFetConsProgressHelper.publishProgress(entity.getId(), processats, total);
+                        }
+                    }
                     if (!fetEntityList.isEmpty())
                         fetRepository.saveAll(fetEntityList);
                 }

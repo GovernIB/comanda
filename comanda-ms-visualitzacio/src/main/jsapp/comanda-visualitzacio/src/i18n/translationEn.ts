@@ -867,6 +867,11 @@ const translationEn: translationResourcesType = {
                     label: "Refresh ministry data",
                     title: "Do you want to refresh the ministry data?",
                     ok: "Ministry data refreshed successfully",
+                    progress: {
+                        title: "Refreshing ministry data",
+                        waiting: "Preparing the update...",
+                        processed: "{{processats}} of {{total}} processed",
+                    },
                 },
                 sincronitzar: {
                     label: "Fetch/Refresh managing body names",

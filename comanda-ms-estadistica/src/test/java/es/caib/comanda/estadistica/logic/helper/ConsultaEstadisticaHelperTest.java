@@ -304,15 +304,20 @@ class ConsultaEstadisticaHelperTest {
     }
 
     @Test
-    @DisplayName("getDadesWidget: s'executa en transacció pròpia (REQUIRES_NEW) perquè el fallo d'un widget no enverini la transacció de tot el dashboard")
-    void getDadesWidget_sExecutaEnTransaccioPropiaAmbRequiresNew() throws NoSuchMethodException {
+    @DisplayName("getDadesWidget: participa en la transacció del cridador i mai n'obre una de nova (REQUIRES_NEW esgotaria el pool de connexions)")
+    void getDadesWidget_participaEnLaTransaccioDelCridador() throws NoSuchMethodException {
         Method method = ConsultaEstadisticaHelper.class.getMethod(
             "getDadesWidget", DashboardItemEntity.class, boolean.class, DashboardFiltreSeleccio.class);
 
         Transactional transactional = method.getAnnotation(Transactional.class);
 
         assertThat(transactional).isNotNull();
-        assertThat(transactional.propagation()).isEqualTo(Propagation.REQUIRES_NEW);
+        // REQUIRES_NEW aquí suspèn la transacció de BaseReadonlyResourceService.artifactReportGenerateData
+        // sense alliberar-ne la connexió JDBC, de manera que cada petició de widget en retindria dues alhora.
+        // Com que el frontend demana tots els widgets en paral·lel, amb prou widgets concurrents totes les
+        // connexions del pool queden retingudes per transaccions exteriors que esperen una segona connexió
+        // que ja no pot alliberar ningú: interbloqueig del pool i timeouts en obrir el dashboard.
+        assertThat(transactional.propagation()).isEqualTo(Propagation.REQUIRED);
         assertThat(transactional.readOnly()).isTrue();
         assertThat(method.getAnnotation(Cacheable.class)).isNotNull();
     }

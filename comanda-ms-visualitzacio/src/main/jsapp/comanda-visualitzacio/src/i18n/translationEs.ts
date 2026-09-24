@@ -867,6 +867,11 @@ const translationEs: translationResourcesType = {
                     label: "Actualizar datos de la consejería",
                     title: "¿Desea actualizar los datos de la consejería?",
                     ok: "Los datos de la consejería se han actualizado correctamente",
+                    progress: {
+                        title: "Actualizando datos de la consejería",
+                        waiting: "Preparando la actualización...",
+                        processed: "{{processats}} de {{total}} procesados",
+                    },
                 },
                 sincronitzar: {
                     label: "Obtener/Actualizar nombres de órganos gestores",

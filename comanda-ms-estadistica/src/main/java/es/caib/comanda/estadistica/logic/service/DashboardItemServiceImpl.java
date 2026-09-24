@@ -28,7 +28,6 @@ import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -223,27 +222,15 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
                 InformeWidgetParams params) throws ReportGenerationException {
 
             DashboardItemEntity dashboardItem = getDashboardItem(code, entity);
-            InformeWidgetItem item;
-            try {
-                boolean temaFosc = params != null && Boolean.TRUE.equals(params.getTemaFosc());
-                item = consultaEstadisticaHelper.getDadesWidget(dashboardItem, temaFosc, params != null ? params.getFiltreSeleccio() : null);
-            } catch (Exception e) {
-                log.error("Error generant informe widget. Item {}: {}", dashboardItem.getId(), e.getMessage(), e);
-                item = InformeWidgetItem.builder()
-                        .dashboardItemId(dashboardItem.getId())
-                        .widgetId(dashboardItem.getWidget().getId())
-                        .titol(dashboardItem.getWidget() != null ? dashboardItem.getWidget().getTitol() : null)
-                        .tipus(consultaEstadisticaHelper.determineWidgetType(dashboardItem))
-                        .posX(dashboardItem.getPosX())
-                        .posY(dashboardItem.getPosY())
-                        .width(dashboardItem.getWidth())
-                        .height(dashboardItem.getHeight())
-                        .destacat(Boolean.TRUE.equals(dashboardItem.getDestacat()))
-                        .error(true)
-                        .errorMsg("Error processing item " + dashboardItem.getId() + ": " + e.getMessage())
-                        .errorTrace(ExceptionUtils.getStackTrace(e))
-                        .build();
-            }
+            boolean temaFosc = params != null && Boolean.TRUE.equals(params.getTemaFosc());
+            // L'excepció s'ha de propagar: capturar-la aquí deixaria commitar una transacció que la crida JPA
+            // fallida ja ha marcat com a rollback-only, i Spring llançaria UnexpectedRollbackException
+            // amagant la traça real. Propagant-la, la transacció fa rollback net i el GlobalExceptionHandler
+            // retorna l'error amb stackTrace (quan trace=true); el frontend ja tracta l'error widget a widget.
+            InformeWidgetItem item = consultaEstadisticaHelper.getDadesWidget(
+                    dashboardItem,
+                    temaFosc,
+                    params != null ? params.getFiltreSeleccio() : null);
 
             return List.of(item);
         }

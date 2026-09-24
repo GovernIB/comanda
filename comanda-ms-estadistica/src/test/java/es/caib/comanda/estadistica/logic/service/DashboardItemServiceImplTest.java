@@ -465,8 +465,8 @@ class DashboardItemServiceImplTest {
     }
 
     @Test
-    @DisplayName("InformeWidget.generateData: captura excepció i retorna item amb estat d'error")
-    void informeWidgetGenerateData_quanFallaGeneracio_llavorsRetornaItemError() {
+    @DisplayName("InformeWidget.generateData: propaga l'excepció en lloc d'empassar-se-la, perquè la transacció faci rollback net")
+    void informeWidgetGenerateData_quanFallaGeneracio_llavorsPropagaExcepcio() {
         // Arrange
         Long itemId = 99L;
         DashboardItemEntity entity = new DashboardItemEntity();
@@ -477,21 +477,18 @@ class DashboardItemServiceImplTest {
 
         when(dashboardItemRepository.findById(itemId)).thenReturn(Optional.of(entity));
         when(consultaEstadisticaHelper.getDadesWidget(any(), anyBoolean(), any())).thenThrow(new RuntimeException("Fallada de xarxa"));
-        when(consultaEstadisticaHelper.determineWidgetType(entity)).thenReturn(WidgetTipus.SIMPLE);
 
         ReportGenerator<DashboardItemEntity, InformeWidgetParams, InformeWidgetItem> generator =
             dashboardItemService.new InformeWidget();
 
-        // Act
-        List<InformeWidgetItem> result = generator.generateData(DashboardItem.WIDGET_REPORT, entity, null);
-
-        // Assert
-        assertThat(result).hasSize(1);
-        InformeWidgetItem errorItem = result.get(0);
-        assertThat(errorItem.isError()).isTrue();
-        assertThat(errorItem.getErrorMsg()).contains("Error processing item 99");
-        assertThat(errorItem.getErrorTrace()).contains("java.lang.RuntimeException");
-        assertThat(errorItem.getTitol()).isEqualTo("Widget Test");
+        // Act & Assert
+        // Capturar l'excepció aquí faria que la transacció de artifactReportGenerateData, ja marcada com a
+        // rollback-only per la crida JPA fallida, llancés UnexpectedRollbackException en fer commit i
+        // s'emportés la traça real. Deixant-la propagar, la transacció fa rollback net i el GlobalExceptionHandler
+        // retorna l'error amb stackTrace (quan trace=true), que és el que el frontend ja tracta per widget.
+        assertThatThrownBy(() -> generator.generateData(DashboardItem.WIDGET_REPORT, entity, null))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("Fallada de xarxa");
     }
 
     @Test

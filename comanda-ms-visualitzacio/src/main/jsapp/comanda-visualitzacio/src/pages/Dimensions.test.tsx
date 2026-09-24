@@ -65,12 +65,18 @@ vi.mock('reactlib', () => ({
                       toolbarAdditionalRow,
                       rowAdditionalActions,
                       columns,
+                      persistentStateActive,
+                      persistentStateKey,
+                      persistentStateClearPageSortPropsOnTopLevelRouteChange,
                   }: {
         title: string;
         filter?: string;
         toolbarAdditionalRow?: React.ReactNode;
         rowAdditionalActions?: Array<{ label: string; linkTo?: string; onClick?: (id: string, row: any) => void; showInMenu?: boolean; hidden?: boolean | ((row: any) => boolean) }>;
         columns: Array<{ field: string }>;
+        persistentStateActive?: boolean;
+        persistentStateKey?: string;
+        persistentStateClearPageSortPropsOnTopLevelRouteChange?: boolean;
     }) => {
         // Simulem una fila per passar-la als onClick i poder provar lògica que depèn de 'row'
         const mockRow = { id: '15', entornAppId: 99, tipus: mocks.mockRowTipus };
@@ -80,6 +86,12 @@ vi.mock('reactlib', () => ({
                 <div data-testid="filter-value">{filter}</div>
                 <div data-testid="columns">{columns.map((column) => column.field).join(',')}</div>
                 <div data-testid="row-link">{rowAdditionalActions?.find(a => a.linkTo)?.linkTo}</div>
+                <div
+                    data-testid="datagrid-persistent-state"
+                    data-active={String(!!persistentStateActive)}
+                    data-key={persistentStateKey ?? ''}
+                    data-clear-on-top-level={String(!!persistentStateClearPageSortPropsOnTopLevelRouteChange)}
+                />
                 <div>{toolbarAdditionalRow}</div>
                 {rowAdditionalActions?.filter(a => a.onClick).map((action) => (
                     <button
@@ -95,7 +107,24 @@ vi.mock('reactlib', () => ({
             </section>
         )
     },
-    MuiFilter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    MuiFilter: ({
+                    children,
+                    persistentStateActive,
+                    persistentStateKey,
+                }: {
+        children: React.ReactNode;
+        persistentStateActive?: boolean;
+        persistentStateKey?: string;
+    }) => (
+        <div>
+            <div
+                data-testid="filter-persistent-state"
+                data-active={String(!!persistentStateActive)}
+                data-key={persistentStateKey ?? ''}
+            />
+            {children}
+        </div>
+    ),
     FormField: ({ name, label, optionsRequest }: { name: string; label?: string; optionsRequest?: (q: string) => Promise<{ options: Array<{ description?: string }> }> }) => (
         <div>
             <span data-testid={`field-${name}`}>{label ?? name}</span>
@@ -168,6 +197,12 @@ vi.mock('../components/PageTitle.tsx', () => ({
     default: ({ title }: { title: string }) => <div data-testid="page-title">{title}</div>,
 }));
 
+vi.mock('../components/DimensioFetConsProgressDialog.tsx', () => ({
+    default: ({ open, dimensioId }: { open: boolean; dimensioId?: any }) => (
+        <div data-testid="fet-cons-progress-dialog" data-open={String(!!open)} data-dimensio-id={String(dimensioId ?? '')} />
+    ),
+}));
+
 describe('Dimensions', () => {
     beforeEach(() => {
         vi.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -196,6 +231,23 @@ describe('Dimensions', () => {
         // Corregit: s'ha afegit 'tipus' a les columnes esperades
         expect(screen.getByTestId('columns')).toHaveTextContent('codi,nom,descripcio,tipus');
         expect(screen.getByTestId('row-link')).toHaveTextContent('valor/{{id}}');
+    });
+
+    it('Dimensions_quanEsRenderitza_activaLaPersistenciaDEstatDelFiltreIDeLaGraella', async () => {
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(mocks.findMock).toHaveBeenCalled();
+        });
+
+        const filterPersistentState = screen.getByTestId('filter-persistent-state');
+        expect(filterPersistentState).toHaveAttribute('data-active', 'true');
+        expect(filterPersistentState).toHaveAttribute('data-key', 'dimensioFilter');
+
+        const gridPersistentState = screen.getByTestId('datagrid-persistent-state');
+        expect(gridPersistentState).toHaveAttribute('data-active', 'true');
+        expect(gridPersistentState).toHaveAttribute('data-key', 'dimensio');
+        expect(gridPersistentState).toHaveAttribute('data-clear-on-top-level', 'true');
     });
 
     it('Dimensions_quanEsCarreguenLesOpcionsDelFiltre_utilitzaElsEntornsRecuperats', async () => {
@@ -240,6 +292,33 @@ describe('Dimensions', () => {
                 code: 'FET_CONS',
             });
             expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Consergeria actualitzada', 'success');
+        });
+    });
+
+    it('Dimensions_quanEsPremAccioFET_CONS_obreLaModalDeProgresIElLaTancaEnAcabar', async () => {
+        let resolveAction: (value: any) => void = () => undefined;
+        mocks.artifactActionMock.mockImplementation(() => new Promise((resolve) => { resolveAction = resolve; }));
+
+        render(<Dimensions />);
+
+        expect(screen.getByTestId('fet-cons-progress-dialog')).toHaveAttribute('data-open', 'false');
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'FET_CONS' })).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'FET_CONS' }));
+
+        await waitFor(() => {
+            const dialog = screen.getByTestId('fet-cons-progress-dialog');
+            expect(dialog).toHaveAttribute('data-open', 'true');
+            expect(dialog).toHaveAttribute('data-dimensio-id', '15');
+        });
+
+        resolveAction({});
+
+        await waitFor(() => {
+            expect(screen.getByTestId('fet-cons-progress-dialog')).toHaveAttribute('data-open', 'false');
         });
     });
 

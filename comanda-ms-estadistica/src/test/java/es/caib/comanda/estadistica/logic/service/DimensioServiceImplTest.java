@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.service;
 
 import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesRestClient;
+import es.caib.comanda.estadistica.logic.helper.DimensioFetConsProgressHelper;
 import es.caib.comanda.estadistica.logic.helper.EntitatResolverHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
@@ -34,6 +35,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -57,6 +59,7 @@ class DimensioServiceImplTest {
     @Mock private DimensioValorRepository dimensioValorRepository;
     @Mock private ResourceEntityMappingHelper resourceEntityMappingHelper;
     @Mock private UnitatsOrganitzativesRestClient unitatsOrganitzativesRestClient;
+    @Mock private DimensioFetConsProgressHelper dimensioFetConsProgressHelper;
 
     @InjectMocks
     private DimensioServiceImpl dimensioService;
@@ -529,6 +532,59 @@ class DimensioServiceImplTest {
         org.junit.jupiter.api.Assertions.assertDoesNotThrow(() ->
             executor.onChange(1L, null, "field", "value", new HashMap<>(), new String[0], null)
         );
+    }
+
+    @Test
+    @DisplayName("FetConsActionExecutor: publica el progrés per SSE mentre processa els fets")
+    void fetConsActionExecutor_quanProcessaFets_llavorsPublicaElProgres() {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+        entity.setId(7L);
+        entity.setTipus(TipusDimensioEnum.ORGAN_GESTOR);
+        entity.setEntornAppId(1L);
+        entity.setCodi("TEST_ORGAN");
+
+        DimensioEntity existingCons = new DimensioEntity();
+        existingCons.setTipus(TipusDimensioEnum.CONSELLERIA);
+        when(dimensioRepository.findByEntornAppId(1L)).thenReturn(Arrays.asList(existingCons));
+
+        FetEntity fet1 = new FetEntity();
+        fet1.setDimensionsJson(new HashMap<>(Map.of("TEST_ORGAN", "ORG1")));
+        FetEntity fet2 = new FetEntity();
+        fet2.setDimensionsJson(new HashMap<>(Map.of("TEST_ORGAN", "ORG2")));
+
+        when(fetRepository.findByEntornAppIdAddCons(1L, "TEST_ORGAN", "ARREL_TEST")).thenReturn(Arrays.asList(fet1, fet2));
+        when(entitatResolverHelper.resolveConselleria(eq(1L), anyString(), any())).thenReturn("CONS1");
+
+        // Act
+        dimensioService.new FetConsActionExecutor().exec("FET_CONS", entity, null);
+
+        // Assert
+        verify(dimensioFetConsProgressHelper).publishProgress(7L, 0, 2);
+        verify(dimensioFetConsProgressHelper).publishProgress(7L, 1, 2);
+        verify(dimensioFetConsProgressHelper).publishProgress(7L, 2, 2);
+    }
+
+    @Test
+    @DisplayName("FetConsActionExecutor: no publica cap progrés quan no hi ha fets per processar")
+    void fetConsActionExecutor_quanNoHiHaFets_llavorsNoPublicaProgres() {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+        entity.setId(7L);
+        entity.setTipus(TipusDimensioEnum.ORGAN_GESTOR);
+        entity.setEntornAppId(1L);
+        entity.setCodi("TEST_ORGAN");
+
+        DimensioEntity existingCons = new DimensioEntity();
+        existingCons.setTipus(TipusDimensioEnum.CONSELLERIA);
+        when(dimensioRepository.findByEntornAppId(1L)).thenReturn(Arrays.asList(existingCons));
+        when(fetRepository.findByEntornAppIdAddCons(1L, "TEST_ORGAN", "ARREL_TEST")).thenReturn(Collections.emptyList());
+
+        // Act
+        dimensioService.new FetConsActionExecutor().exec("FET_CONS", entity, null);
+
+        // Assert
+        verify(dimensioFetConsProgressHelper, never()).publishProgress(any(), anyInt(), anyInt());
     }
 
     // ========================================================================

@@ -18,6 +18,7 @@ import {
 } from 'reactlib';
 import PageTitle from '../components/PageTitle.tsx';
 import FormActionDialog from "../components/FormActionDialog.tsx";
+import DimensioFetConsProgressDialog from "../components/DimensioFetConsProgressDialog.tsx";
 
 const EntitatValorTipusField: React.FC = () => {
     const { t } = useTranslation();
@@ -125,6 +126,8 @@ const DimensionsFilter = (props: DimensionsFilterProps) => {
             // de manera que no s'hagi de fer la petició manualment del llistat de entornApp
             resourceName="dimensio"
             code="dimensioFilter"
+            persistentStateActive
+            persistentStateKey="dimensioFilter"
             commonFieldComponentProps={{ size: 'small' }}
             onSpringFilterChange={onSpringFilterChange}
             springFilterBuilder={data => {
@@ -181,6 +184,7 @@ const Dimensions: React.FC = () => {
 
     const { artifactAction: apiAction } = useResourceApiService('dimensio');
     const { temporalMessageShow } = useBaseAppContext();
+    const [fetConsProgressId, setFetConsProgressId] = useState<string | number | null>(null);
 
     const columns: MuiDataGridColDef[] = [
         { field: 'codi', flex: 1 },
@@ -197,12 +201,14 @@ const Dimensions: React.FC = () => {
     }
 
     const addConstToFet = (id:any) => {
+        setFetConsProgressId(id);
         apiAction(id, {code: 'FET_CONS'})
             .then(() => {
                 refresh()
                 temporalMessageShow(null, t($ => $.page.dimensions.action.refreshCons.ok), 'success')
             })
             .catch(error => temporalMessageShow(null, error.message, 'error'))
+            .finally(() => setFetConsProgressId(null))
     }
     const clearTipus = (id:any) => {
         apiAction(id, {code: 'CHANGE_TIPUS', data: {tipus: null}})
@@ -236,6 +242,9 @@ const Dimensions: React.FC = () => {
                 toolbarHideQuickFilter
                 toolbarAdditionalRow={filterElement}
                 filter={filter}
+                persistentStateActive
+                persistentStateKey="dimensio"
+                persistentStateClearPageSortPropsOnTopLevelRouteChange
                 rowAdditionalActions={[
                     {
                         label: t($ => $.page.dimensions.action.refreshCons.label),
@@ -280,6 +289,7 @@ const Dimensions: React.FC = () => {
                 readOnly
             />
             {content}
+            <DimensioFetConsProgressDialog open={fetConsProgressId != null} dimensioId={fetConsProgressId} />
         </>
     );
 };

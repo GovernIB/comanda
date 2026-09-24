@@ -867,6 +867,11 @@ const translationCa = {
                     label: "Refrescar dades de la conselleria",
                     title: "Vols refrescar les dades de la conselleria?",
                     ok: "Les dades de la conselleria s'han refrescat correctament",
+                    progress: {
+                        title: "Actualitzant dades de la conselleria",
+                        waiting: "Preparant l'actualització...",
+                        processed: "{{processats}} de {{total}} processats",
+                    },
                 },
                 sincronitzar: {
                     label: "Obtenir/refrescar noms d'òrgans gestors",
