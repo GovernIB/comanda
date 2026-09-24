@@ -97,6 +97,33 @@ describe('FormFieldCustomAdvancedSearch', () => {
         );
     });
 
+    it('FormFieldCustomAdvancedSearch_quanNoEsIndicaAlcada_usaLAlcadaResponsiveIMesGranQueLAntiga', () => {
+        // Regressió: amb 370px fixos la modal només mostrava 4-5 files per pàgina. Per defecte ha d'ocupar
+        // l'alçada disponible de la finestra (amb un mínim de 370px).
+        mocks.useBaseAppContextMock.mockReturnValue({ t: vi.fn((key: string) => `tr:${key}`) });
+        mocks.useFormContextMock.mockReturnValue({
+            resourceName: 'widget',
+            resourceType: 'resource',
+            resourceTypeCode: 'WID',
+            dataDispatchAction: vi.fn(),
+            fields: [{ name: 'indicador', dataSource: { valueField: 'id', labelField: 'nom' } }],
+            data: {},
+        });
+
+        render(
+            <FormFieldCustomAdvancedSearch
+                name="indicador"
+                advancedSearchColumns={[{ field: 'nom' }]}
+            />
+        );
+
+        fireEvent.click(screen.getByRole('button'));
+
+        expect(mocks.muiDataGridMock).toHaveBeenCalledWith(
+            expect.objectContaining({ height: 'max(370px, calc(100vh - 220px))' })
+        );
+    });
+
     it('FormFieldCustomAdvancedSearch_quanEsSeleccionaUnaFila_actualitzaElCampSimpleITancaElDialeg', () => {
         // Verifica que la selecció d'una fila transforma el valor i l'envia al dispatcher del formulari.
         const dataDispatchActionMock = vi.fn();

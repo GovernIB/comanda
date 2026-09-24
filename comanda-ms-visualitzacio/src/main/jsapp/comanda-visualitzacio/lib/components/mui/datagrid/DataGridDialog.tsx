@@ -4,13 +4,20 @@ import { ResourceType } from '../../ResourceApiContext';
 import Dialog, { DialogProps } from '../Dialog';
 import MuiDataGrid from './MuiDataGrid';
 
+/**
+ * Alçada per defecte de la graella dins una modal de cerca: ocupa l'alçada disponible de la finestra (descomptant
+ * marges, títol i espai del contingut de la modal) amb un mínim de 370px, perquè es vegin prou files per pàgina
+ * (la mida de pàgina s'ajusta a l'alçada de la graella).
+ */
+export const DATA_GRID_DIALOG_DEFAULT_HEIGHT = 'max(370px, calc(100vh - 220px))';
+
 type DataGridDialogProps = DialogProps & {
     resourceName: string;
     columns: GridColDef[];
     resourceType?: ResourceType;
     resourceTypeCode?: string;
     resourceFieldName?: string;
-    dataGridHeight?: number;
+    dataGridHeight?: number | string;
     dataGridOnRowClick?: (params: GridRowParams) => void;
     height?: number | null;
     dialogComponentProps?: any;
@@ -125,6 +132,7 @@ export const DataGridDialog: React.FC<DataGridDialogProps> = (props) => {
         resourceTypeCode,
         resourceFieldName,
         dataGridHeight,
+        height,
         dataGridOnRowClick,
         dialogComponentProps,
         dataGridComponentProps,
@@ -140,7 +148,7 @@ export const DataGridDialog: React.FC<DataGridDialogProps> = (props) => {
                 resourceTypeCode={resourceTypeCode}
                 resourceFieldName={resourceFieldName}
                 onRowClick={dataGridOnRowClick}
-                height={dataGridHeight ?? 370}
+                height={dataGridHeight ?? height ?? DATA_GRID_DIALOG_DEFAULT_HEIGHT}
                 {...dataGridComponentProps}
             />
         </Dialog>
