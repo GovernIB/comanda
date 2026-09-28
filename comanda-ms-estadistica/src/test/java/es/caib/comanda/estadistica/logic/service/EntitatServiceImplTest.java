@@ -4,6 +4,7 @@ import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.logic.dir3.SistemaExternException;
 import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesPlugin;
+import es.caib.comanda.estadistica.logic.helper.EntitatRefreshUOProgressHelper;
 import es.caib.comanda.estadistica.logic.helper.UnitatOrganitzativaHelper;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Entitat;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.UnitatOrganitzativa;
@@ -22,13 +23,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.function.IntConsumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
@@ -45,6 +50,9 @@ class EntitatServiceImplTest {
 
     @Mock
     private UnitatOrganitzativaHelper unitatOrganitzativaHelper;
+
+    @Mock
+    private EntitatRefreshUOProgressHelper entitatRefreshUOProgressHelper;
 
     @Mock
     private AclServiceClient aclServiceClient;
@@ -67,6 +75,7 @@ class EntitatServiceImplTest {
 
         // Configuració lenient per a crides comunes
         lenient().when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn(AUTH_HEADER);
+        lenient().when(entitatRefreshUOProgressHelper.tryStart(any())).thenReturn(true);
     }
 
     // ========================================================================
@@ -123,6 +132,7 @@ class EntitatServiceImplTest {
     void refreshUoActionExecutor_quanEsValid_llavorsActualitzaIretornaRecurs() throws ActionExecutionException, SistemaExternException {
         // Arrange
         EntitatEntity entity = new EntitatEntity();
+        entity.setId(10L);
         entity.setCodiDir3("DIR3_123");
 
         UnitatOrganitzativaEntity uo = new UnitatOrganitzativaEntity();
@@ -140,7 +150,7 @@ class EntitatServiceImplTest {
 
         // Assert
         verify(unitatsOrganitzativesPlugin, times(1)).findAll("DIR3_123");
-        verify(unitatOrganitzativaHelper, times(1)).updateAll(Collections.singletonList(uo));
+        verify(unitatOrganitzativaHelper, times(1)).updateAll(eq(Collections.singletonList(uo)), any());
         verify(unitatOrganitzativaHelper, times(1)).evictOrganigramaCache("DIR3_123");
         verify(resourceEntityMappingHelper, times(1)).entityToResource(entity, Entitat.class);
         assertThat(result).isSameAs(expectedResource);
@@ -151,6 +161,7 @@ class EntitatServiceImplTest {
     void refreshUoActionExecutor_quanPluginFalla_llancaActionExecutionException() throws SistemaExternException {
         // Arrange
         EntitatEntity entity = new EntitatEntity();
+        entity.setId(10L);
         entity.setCodiDir3("DIR3_123");
 
         when(unitatsOrganitzativesPlugin.findAll("DIR3_123")).thenThrow(new RuntimeException("Error de connexió a DIR3"));
@@ -162,7 +173,117 @@ class EntitatServiceImplTest {
             .isInstanceOf(ActionExecutionException.class)
             .hasMessageContaining("Error de connexió a DIR3");
 
-        verify(unitatOrganitzativaHelper, times(0)).updateAll(any());
+        verify(unitatOrganitzativaHelper, never()).updateAll(any(), any());
+    }
+
+    @Test
+    @DisplayName("RefreshUOActionExecutor: publica el progrés per SSE mentre processa les unitats, inclòs l'estat inicial")
+    void refreshUoActionExecutor_quanProcessaUnitats_llavorsPublicaElProgres() throws SistemaExternException {
+        // Arrange
+        EntitatEntity entity = new EntitatEntity();
+        entity.setId(7L);
+        entity.setCodiDir3("DIR3_123");
+
+        UnitatOrganitzativaEntity uo1 = new UnitatOrganitzativaEntity();
+        uo1.setCodi("UO1");
+        UnitatOrganitzativaEntity uo2 = new UnitatOrganitzativaEntity();
+        uo2.setCodi("UO2");
+        List<UnitatOrganitzativaEntity> uoList = Arrays.asList(uo1, uo2);
+
+        when(unitatsOrganitzativesPlugin.findAll("DIR3_123")).thenReturn(uoList);
+        when(unitatOrganitzativaHelper.updateAll(eq(uoList), any())).thenAnswer(invocation -> {
+            IntConsumer onProgress = invocation.getArgument(1);
+            onProgress.accept(1);
+            onProgress.accept(2);
+            return Collections.emptyList();
+        });
+
+        // Act
+        entitatService.new RefreshUOActionExecutor().exec(Entitat.ACTION_REFRESH_UO, entity, null);
+
+        // Assert
+        verify(entitatRefreshUOProgressHelper).publishProgress(7L, 0, 2);
+        verify(entitatRefreshUOProgressHelper).publishProgress(7L, 1, 2);
+        verify(entitatRefreshUOProgressHelper).publishProgress(7L, 2, 2);
+    }
+
+    @Test
+    @DisplayName("RefreshUOActionExecutor: publica l'estat inicial (0 de 0) encara que l'entitat no tingui cap unitat a Dir3, " +
+        "perquè la modal de progrés sàpiga que el procés ja ha acabat")
+    void refreshUoActionExecutor_quanNoHiHaUnitats_llavorsPublicaEstatInicialAmbTotalZero() throws SistemaExternException {
+        // Arrange
+        EntitatEntity entity = new EntitatEntity();
+        entity.setId(7L);
+        entity.setCodiDir3("DIR3_123");
+
+        when(unitatsOrganitzativesPlugin.findAll("DIR3_123")).thenReturn(Collections.emptyList());
+        when(unitatOrganitzativaHelper.updateAll(eq(Collections.emptyList()), any())).thenReturn(Collections.emptyList());
+
+        // Act
+        entitatService.new RefreshUOActionExecutor().exec(Entitat.ACTION_REFRESH_UO, entity, null);
+
+        // Assert
+        verify(entitatRefreshUOProgressHelper).publishProgress(7L, 0, 0);
+    }
+
+    @Test
+    @DisplayName("RefreshUOActionExecutor: quan ja hi ha una execució en curs per a l'entitat, no fa cap feina " +
+        "(tryStart ja s'ha encarregat de republicar l'últim progrés per SSE)")
+    void refreshUoActionExecutor_quanJaHiHaExecucioEnCurs_llavorsNoFaCapFeina() throws SistemaExternException {
+        // Arrange
+        EntitatEntity entity = new EntitatEntity();
+        entity.setId(7L);
+        entity.setCodiDir3("DIR3_123");
+
+        when(entitatRefreshUOProgressHelper.tryStart(7L)).thenReturn(false);
+
+        // Act
+        entitatService.new RefreshUOActionExecutor().exec(Entitat.ACTION_REFRESH_UO, entity, null);
+
+        // Assert
+        verify(unitatsOrganitzativesPlugin, never()).findAll(any());
+        verify(unitatOrganitzativaHelper, never()).updateAll(any(), any());
+        verify(entitatRefreshUOProgressHelper, never()).publishProgress(any(), anyInt(), anyInt());
+        verify(entitatRefreshUOProgressHelper, never()).finish(any());
+    }
+
+    @Test
+    @DisplayName("RefreshUOActionExecutor: quan és propietària de l'execució i acaba correctament, allibera el registre amb finish")
+    void refreshUoActionExecutor_quanAcabaCorrectament_llavorsAlliberaElRegistre() throws SistemaExternException {
+        // Arrange
+        EntitatEntity entity = new EntitatEntity();
+        entity.setId(7L);
+        entity.setCodiDir3("DIR3_123");
+
+        when(unitatsOrganitzativesPlugin.findAll("DIR3_123")).thenReturn(Collections.emptyList());
+        when(unitatOrganitzativaHelper.updateAll(eq(Collections.emptyList()), any())).thenReturn(Collections.emptyList());
+
+        // Act
+        entitatService.new RefreshUOActionExecutor().exec(Entitat.ACTION_REFRESH_UO, entity, null);
+
+        // Assert
+        verify(entitatRefreshUOProgressHelper).finish(7L);
+        verify(entitatRefreshUOProgressHelper, never()).publishError(any());
+    }
+
+    @Test
+    @DisplayName("RefreshUOActionExecutor: quan és propietària de l'execució i falla, publica l'error per SSE " +
+        "i allibera igualment el registre (finally) perquè una propera crida no es quedi bloquejada per sempre")
+    void refreshUoActionExecutor_quanFalla_llavorsPublicaErrorIAlliberaElRegistre() throws SistemaExternException {
+        // Arrange
+        EntitatEntity entity = new EntitatEntity();
+        entity.setId(7L);
+        entity.setCodiDir3("DIR3_123");
+
+        when(unitatsOrganitzativesPlugin.findAll("DIR3_123")).thenThrow(new RuntimeException("Error de connexió a DIR3"));
+
+        EntitatServiceImpl.RefreshUOActionExecutor executor = entitatService.new RefreshUOActionExecutor();
+
+        // Act & Assert
+        assertThatThrownBy(() -> executor.exec(Entitat.ACTION_REFRESH_UO, entity, null))
+            .isInstanceOf(ActionExecutionException.class);
+        verify(entitatRefreshUOProgressHelper).publishError(7L);
+        verify(entitatRefreshUOProgressHelper).finish(7L);
     }
 
     @Test

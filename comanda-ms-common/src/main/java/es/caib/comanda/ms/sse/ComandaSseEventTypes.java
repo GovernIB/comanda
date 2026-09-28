@@ -9,6 +9,7 @@ public final class ComandaSseEventTypes {
     public static final String APP_CHANGED = "app.changed";
     public static final String ENTORN_CHANGED = "entorn.changed";
     public static final String DIMENSIO_FET_CONS_PROGRESS = "dimensio.fetCons.progress";
+    public static final String ENTITAT_REFRESH_UO_PROGRESS = "entitat.refreshUO.progress";
 
     private ComandaSseEventTypes() {
     }

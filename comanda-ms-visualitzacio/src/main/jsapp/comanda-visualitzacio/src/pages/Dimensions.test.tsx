@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
                         refreshCons: {
                             label: 'FET_CONS',
                             ok: 'Consergeria actualitzada',
+                            error: 'Error actualitzant la consergeria',
                             title: 'Voleu actualitzar la consergeria?',
                         },
                         changeTipus: {
@@ -198,8 +199,11 @@ vi.mock('../components/PageTitle.tsx', () => ({
 }));
 
 vi.mock('../components/DimensioFetConsProgressDialog.tsx', () => ({
-    default: ({ open, dimensioId }: { open: boolean; dimensioId?: any }) => (
-        <div data-testid="fet-cons-progress-dialog" data-open={String(!!open)} data-dimensio-id={String(dimensioId ?? '')} />
+    default: ({ open, dimensioId, onComplete }: { open: boolean; dimensioId?: any; onComplete?: (error: boolean) => void }) => (
+        <div data-testid="fet-cons-progress-dialog" data-open={String(!!open)} data-dimensio-id={String(dimensioId ?? '')}>
+            <button onClick={() => onComplete?.(false)}>Simula onComplete èxit</button>
+            <button onClick={() => onComplete?.(true)}>Simula onComplete error</button>
+        </div>
     ),
 }));
 
@@ -276,7 +280,7 @@ describe('Dimensions', () => {
         expect(mocks.clearMock).toHaveBeenCalled();
     });
 
-    it('Dimensions_quanEsPremAccioFET_CONS_cridaApiActionIMostraMissatgeExit', async () => {
+    it('Dimensions_quanEsPremAccioFET_CONS_cridaApiAction', async () => {
         mocks.artifactActionMock.mockResolvedValue({});
 
         render(<Dimensions />);
@@ -291,11 +295,13 @@ describe('Dimensions', () => {
             expect(mocks.artifactActionMock).toHaveBeenCalledWith('15', {
                 code: 'FET_CONS',
             });
-            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Consergeria actualitzada', 'success');
         });
     });
 
-    it('Dimensions_quanEsPremAccioFET_CONS_obreLaModalDeProgresIElLaTancaEnAcabar', async () => {
+    it('Dimensions_quanEsPremAccioFET_CONS_obreLaModalDeProgresIEsMantéObertaEncaraQueLaCridaHttpResolgui', async () => {
+        // La resolució de la crida HTTP, per si sola, no ha de tancar la modal: qui pot no fer cap feina real
+        // (perquè ja hi ha una execució en curs) rebria una resposta ràpida sense que el procés real hagi acabat.
+        // Només onComplete (senyal SSE real) ha de tancar-la.
         let resolveAction: (value: any) => void = () => undefined;
         mocks.artifactActionMock.mockImplementation(() => new Promise((resolve) => { resolveAction = resolve; }));
 
@@ -318,8 +324,95 @@ describe('Dimensions', () => {
         resolveAction({});
 
         await waitFor(() => {
+            expect(mocks.artifactActionMock).toHaveBeenCalled();
+        });
+        expect(screen.getByTestId('fet-cons-progress-dialog')).toHaveAttribute('data-open', 'true');
+    });
+
+    it('Dimensions_quanLaModalCridaOnCompleteSenseError_tancaLaModalIMostraMissatgeExit', async () => {
+        mocks.artifactActionMock.mockResolvedValue({});
+
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'FET_CONS' })).toBeInTheDocument();
+        });
+        fireEvent.click(screen.getByRole('button', { name: 'FET_CONS' }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId('fet-cons-progress-dialog')).toHaveAttribute('data-open', 'true');
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Simula onComplete èxit' }));
+
+        expect(screen.getByTestId('fet-cons-progress-dialog')).toHaveAttribute('data-open', 'false');
+        expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Consergeria actualitzada', 'success');
+    });
+
+    it('Dimensions_quanLaModalCridaOnCompleteAmbError_tancaLaModalIMostraMissatgeError', async () => {
+        mocks.artifactActionMock.mockResolvedValue({});
+
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'FET_CONS' })).toBeInTheDocument();
+        });
+        fireEvent.click(screen.getByRole('button', { name: 'FET_CONS' }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId('fet-cons-progress-dialog')).toHaveAttribute('data-open', 'true');
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Simula onComplete error' }));
+
+        expect(screen.getByTestId('fet-cons-progress-dialog')).toHaveAttribute('data-open', 'false');
+        expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Error actualitzant la consergeria', 'error');
+    });
+
+    it('Dimensions_quanLaCridaHttpFallaAbansQueArribiCapOnComplete_tancaLaModalIMostraLErrorHttp', async () => {
+        // Cobreix el cas d'una fallada abans que arrenqui cap procés real (p.ex. error de xarxa o de
+        // permisos): mai arribarà cap event SSE, així que la crida HTTP és l'únic senyal disponible.
+        mocks.artifactActionMock.mockRejectedValue({ message: 'Error de xarxa' });
+
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'FET_CONS' })).toBeInTheDocument();
+        });
+        fireEvent.click(screen.getByRole('button', { name: 'FET_CONS' }));
+
+        await waitFor(() => {
             expect(screen.getByTestId('fet-cons-progress-dialog')).toHaveAttribute('data-open', 'false');
         });
+        expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Error de xarxa', 'error');
+    });
+
+    it('Dimensions_quanLaCridaHttpFallaDespresQueOnCompleteJaHaTancatLaModal_noDuplicaElMissatge', async () => {
+        // Cas de l'execució propietària: onComplete (SSE) i el rebuig de la seva pròpia crida HTTP arriben
+        // gairebé alhora pel mateix error real; només s'ha de mostrar un missatge, no dos.
+        let rejectAction: (reason: any) => void = () => undefined;
+        mocks.artifactActionMock.mockImplementation(() => new Promise((_resolve, reject) => { rejectAction = reject; }));
+
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'FET_CONS' })).toBeInTheDocument();
+        });
+        fireEvent.click(screen.getByRole('button', { name: 'FET_CONS' }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId('fet-cons-progress-dialog')).toHaveAttribute('data-open', 'true');
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Simula onComplete error' }));
+        expect(mocks.temporalMessageShowMock).toHaveBeenCalledTimes(1);
+
+        rejectAction({ message: 'Error de xarxa' });
+
+        await waitFor(() => {
+            expect(mocks.artifactActionMock).toHaveBeenCalled();
+        });
+        expect(mocks.temporalMessageShowMock).toHaveBeenCalledTimes(1);
     });
 
     it('Dimensions_quanEsPremAccioCanviarTipus_obreElDialogAmbLesDadesActualsPrecarregades', async () => {

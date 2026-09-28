@@ -825,6 +825,12 @@ const translationCa = {
                 refreshUO: {
                     label: "Refrescar unitats organitzatives",
                     ok: "Unitats organitzatives recarregades correctament",
+                    error: "S'ha produït un error en actualitzar les unitats organitzatives",
+                    progress: {
+                        title: "Actualitzant unitats organitzatives",
+                        waiting: "Preparant l'actualització...",
+                        processed: "{{processats}} de {{total}} processades",
+                    },
                 },
                 organigrama: {
                     label: "Organigrama",
@@ -867,6 +873,7 @@ const translationCa = {
                     label: "Refrescar dades de la conselleria",
                     title: "Vols refrescar les dades de la conselleria?",
                     ok: "Les dades de la conselleria s'han refrescat correctament",
+                    error: "S'ha produït un error en actualitzar les dades de la conselleria",
                     progress: {
                         title: "Actualitzant dades de la conselleria",
                         waiting: "Preparant l'actualització...",

@@ -68,6 +68,11 @@ class DimensioServiceImplTest {
     void setUp() {
         ReflectionTestUtils.setField(dimensioService, "resourceEntityMappingHelper", resourceEntityMappingHelper);
         lenient().when(unitatsOrganitzativesRestClient.getCodiArrel()).thenReturn("ARREL_TEST");
+        // Per defecte cada test és "propietari" de la seva execució FET_CONS (com si no n'hi hagués cap altra
+        // en curs); els tests que verifiquen el camí piggyback sobreescriuen aquest stub a false.
+        // any() (no anyLong()) perquè alguns tests existents no assignen id a l'entitat i anyLong() no
+        // fa match amb null des de Mockito 2.1.0.
+        lenient().when(dimensioFetConsProgressHelper.tryStart(any())).thenReturn(true);
     }
 
     // ========================================================================
@@ -585,6 +590,71 @@ class DimensioServiceImplTest {
 
         // Assert
         verify(dimensioFetConsProgressHelper, never()).publishProgress(any(), anyInt(), anyInt());
+    }
+
+    @Test
+    @DisplayName("FetConsActionExecutor: quan ja hi ha una execució en curs per a la dimensió, no fa cap feina " +
+        "(tryStart ja s'ha encarregat de republicar l'últim progrés per SSE)")
+    void fetConsActionExecutor_quanJaHiHaExecucioEnCurs_llavorsNoFaCapFeina() {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+        entity.setId(7L);
+        entity.setTipus(TipusDimensioEnum.ORGAN_GESTOR);
+        entity.setEntornAppId(1L);
+        entity.setCodi("TEST_ORGAN");
+
+        when(dimensioFetConsProgressHelper.tryStart(7L)).thenReturn(false);
+
+        // Act
+        dimensioService.new FetConsActionExecutor().exec("FET_CONS", entity, null);
+
+        // Assert
+        verifyNoInteractions(dimensioRepository, fetRepository, entitatResolverHelper);
+        verify(dimensioFetConsProgressHelper, never()).publishProgress(any(), anyInt(), anyInt());
+        verify(dimensioFetConsProgressHelper, never()).finish(any());
+    }
+
+    @Test
+    @DisplayName("FetConsActionExecutor: quan és propietària de l'execució i acaba correctament, allibera el registre amb finish")
+    void fetConsActionExecutor_quanAcabaCorrectament_llavorsAlliberaElRegistre() {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+        entity.setId(7L);
+        entity.setTipus(TipusDimensioEnum.ORGAN_GESTOR);
+        entity.setEntornAppId(1L);
+        entity.setCodi("TEST_ORGAN");
+
+        when(dimensioRepository.findByEntornAppId(1L)).thenReturn(Collections.emptyList());
+        when(fetRepository.findByEntornAppIdAddCons(1L, "TEST_ORGAN", "ARREL_TEST")).thenReturn(Collections.emptyList());
+
+        // Act
+        dimensioService.new FetConsActionExecutor().exec("FET_CONS", entity, null);
+
+        // Assert
+        verify(dimensioFetConsProgressHelper).finish(7L);
+        verify(dimensioFetConsProgressHelper, never()).publishError(any());
+    }
+
+    @Test
+    @DisplayName("FetConsActionExecutor: quan és propietària de l'execució i falla, publica l'error per SSE " +
+        "i allibera igualment el registre (finally) perquè una propera crida no es quedi bloquejada per sempre")
+    void fetConsActionExecutor_quanFalla_llavorsPublicaErrorIAlliberaElRegistre() {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+        entity.setId(7L);
+        entity.setTipus(TipusDimensioEnum.ORGAN_GESTOR);
+        entity.setEntornAppId(1L);
+        entity.setCodi("TEST_ORGAN");
+
+        when(dimensioRepository.findByEntornAppId(1L)).thenThrow(new RuntimeException("Error de BD"));
+
+        DimensioServiceImpl.FetConsActionExecutor executor = dimensioService.new FetConsActionExecutor();
+
+        // Act & Assert
+        assertThatThrownBy(() -> executor.exec("FET_CONS", entity, null))
+            .isInstanceOf(ActionExecutionException.class);
+        verify(dimensioFetConsProgressHelper).publishError(7L);
+        verify(dimensioFetConsProgressHelper).finish(7L);
     }
 
     // ========================================================================

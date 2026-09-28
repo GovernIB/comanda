@@ -98,4 +98,48 @@ describe('DimensioFetConsProgressDialog', () => {
 
         expect(screen.getByText("Preparant l'actualització...")).toBeInTheDocument();
     });
+
+    it('DimensioFetConsProgressDialog_quanElProgresArribaAl100Per100_cridaOnCompleteSenseError', () => {
+        const onComplete = vi.fn();
+        render(<DimensioFetConsProgressDialog open dimensioId={5} onComplete={onComplete} />);
+
+        act(() => {
+            lastListener?.({ type: 'dimensio.fetCons.progress', payload: { dimensioId: 5, processats: 10, total: 10 } });
+        });
+
+        expect(onComplete).toHaveBeenCalledWith(false);
+    });
+
+    it('DimensioFetConsProgressDialog_quanElProgresEsParcial_noCridaOnComplete', () => {
+        const onComplete = vi.fn();
+        render(<DimensioFetConsProgressDialog open dimensioId={5} onComplete={onComplete} />);
+
+        act(() => {
+            lastListener?.({ type: 'dimensio.fetCons.progress', payload: { dimensioId: 5, processats: 3, total: 10 } });
+        });
+
+        expect(onComplete).not.toHaveBeenCalled();
+    });
+
+    it('DimensioFetConsProgressDialog_quanArribaUnEventDErrorPelMateixId_cridaOnCompleteAmbError', () => {
+        const onComplete = vi.fn();
+        render(<DimensioFetConsProgressDialog open dimensioId={5} onComplete={onComplete} />);
+
+        act(() => {
+            lastListener?.({ type: 'dimensio.fetCons.progress', payload: { dimensioId: 5, processats: 4, total: 10, error: true } });
+        });
+
+        expect(onComplete).toHaveBeenCalledWith(true);
+    });
+
+    it('DimensioFetConsProgressDialog_quanArribaUnEventDErrorPerUnAltreId_noCridaOnComplete', () => {
+        const onComplete = vi.fn();
+        render(<DimensioFetConsProgressDialog open dimensioId={5} onComplete={onComplete} />);
+
+        act(() => {
+            lastListener?.({ type: 'dimensio.fetCons.progress', payload: { dimensioId: 99, processats: 4, total: 10, error: true } });
+        });
+
+        expect(onComplete).not.toHaveBeenCalled();
+    });
 });

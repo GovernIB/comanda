@@ -825,6 +825,12 @@ const translationEn: translationResourcesType = {
                 refreshUO: {
                     label: "Refresh organizational units",
                     ok: "Organizational units refreshed successfully",
+                    error: "An error occurred while refreshing the organizational units",
+                    progress: {
+                        title: "Refreshing organizational units",
+                        waiting: "Preparing the update...",
+                        processed: "{{processats}} of {{total}} processed",
+                    },
                 },
                 organigrama: {
                     label: "Organization chart",
@@ -867,6 +873,7 @@ const translationEn: translationResourcesType = {
                     label: "Refresh ministry data",
                     title: "Do you want to refresh the ministry data?",
                     ok: "Ministry data refreshed successfully",
+                    error: "An error occurred while refreshing the ministry data",
                     progress: {
                         title: "Refreshing ministry data",
                         waiting: "Preparing the update...",

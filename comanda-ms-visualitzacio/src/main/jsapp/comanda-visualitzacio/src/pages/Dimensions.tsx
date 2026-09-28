@@ -185,6 +185,9 @@ const Dimensions: React.FC = () => {
     const { artifactAction: apiAction } = useResourceApiService('dimensio');
     const { temporalMessageShow } = useBaseAppContext();
     const [fetConsProgressId, setFetConsProgressId] = useState<string | number | null>(null);
+    // Evita mostrar dos missatges quan el rebuig de la pròpia crida HTTP i l'event SSE onComplete arriben
+    // gairebé alhora pel mateix error real (cas de l'execució propietària).
+    const fetConsCompletedRef = React.useRef(false);
 
     const columns: MuiDataGridColDef[] = [
         { field: 'codi', flex: 1 },
@@ -201,14 +204,32 @@ const Dimensions: React.FC = () => {
     }
 
     const addConstToFet = (id:any) => {
+        fetConsCompletedRef.current = false;
         setFetConsProgressId(id);
+        // No tanquem la modal ni mostrem cap missatge en resoldre's aquesta promesa: si ja hi havia una
+        // execució en curs, aquesta crida no ha fet cap feina real i torna gairebé a l'instant, molt abans
+        // que el procés real acabi. El tancament i els missatges es disparen des de onFetConsComplete (SSE),
+        // que reflecteix quan acaba el procés real, sigui quina sigui la crida que l'hagi engegat.
+        // Només capturam aquí una fallada de la pròpia crida HTTP (p.ex. xarxa o permisos) que mai arribarà
+        // a generar cap event SSE, com a xarxa de seguretat.
         apiAction(id, {code: 'FET_CONS'})
-            .then(() => {
-                refresh()
-                temporalMessageShow(null, t($ => $.page.dimensions.action.refreshCons.ok), 'success')
+            .catch(error => {
+                if (!fetConsCompletedRef.current) {
+                    fetConsCompletedRef.current = true;
+                    setFetConsProgressId(null);
+                    temporalMessageShow(null, error.message, 'error');
+                }
             })
-            .catch(error => temporalMessageShow(null, error.message, 'error'))
-            .finally(() => setFetConsProgressId(null))
+    }
+    const onFetConsComplete = (error?: boolean) => {
+        fetConsCompletedRef.current = true;
+        setFetConsProgressId(null);
+        if (error) {
+            temporalMessageShow(null, t($ => $.page.dimensions.action.refreshCons.error), 'error');
+        } else {
+            refresh();
+            temporalMessageShow(null, t($ => $.page.dimensions.action.refreshCons.ok), 'success');
+        }
     }
     const clearTipus = (id:any) => {
         apiAction(id, {code: 'CHANGE_TIPUS', data: {tipus: null}})
@@ -289,7 +310,11 @@ const Dimensions: React.FC = () => {
                 readOnly
             />
             {content}
-            <DimensioFetConsProgressDialog open={fetConsProgressId != null} dimensioId={fetConsProgressId} />
+            <DimensioFetConsProgressDialog
+                open={fetConsProgressId != null}
+                dimensioId={fetConsProgressId}
+                onComplete={onFetConsComplete}
+            />
         </>
     );
 };

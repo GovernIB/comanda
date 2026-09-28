@@ -171,55 +171,58 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
         public Dimensio exec(String code, DimensioEntity entity, Serializable params) throws ActionExecutionException {
             try {
                 if (TipusDimensioEnum.ORGAN_GESTOR.equals(entity.getTipus())) {
-                    // Crear dimensió conselleria (si no existeix)
-                    List<DimensioEntity> dimensioEntityList = dimensioRepository.findByEntornAppId(entity.getEntornAppId());
-                    if (dimensioEntityList.stream().noneMatch(c -> c.getTipus() == TipusDimensioEnum.CONSELLERIA)) {
-                        DimensioEntity dEntity = new DimensioEntity();
-                        dEntity.setCodi("CONS");
-                        dEntity.setNom("Conselleria");
-                        dEntity.setEntornAppId(entity.getEntornAppId());
-                        dEntity.setTipus(TipusDimensioEnum.CONSELLERIA);
-                        dimensioRepository.save(dEntity);
+                    if (!dimensioFetConsProgressHelper.tryStart(entity.getId())) {
+                        // Ja hi ha una execució en curs per a aquesta dimensió (doble clic, dues pestanyes o dos
+                        // usuaris): no en duplicam la feina. tryStart ja ha republicat per SSE l'últim progrés
+                        // conegut, perquè una modal que s'acabi d'obrir el mostri de seguida.
+                        return resourceEntityMappingHelper.entityToResource(entity, Dimensio.class);
                     }
-
-                    // Cambiar només els que no tenen "CONS"
-//                    List<FetEntity> fetEntityList = fetRepository.findByEntornAppIdAddCons(entity.getEntornAppId(), entity.getCodi(), "CONS", codiArrel);
-//                    fetEntityList = fetEntityList.stream()
-//                        .peek(f -> {
-//                            String c = unitatsOrganitzativesPlugin.getConsergeria(f.getDimensionsJson().get(entity.getCodi()));
-//                            if (c != null) f.getDimensionsJson().put("CONS", c);
-//                        })
-//                        .filter(f -> f.getDimensionsJson().containsKey("CONS"))
-//                        .collect(Collectors.toList());
-//                    if (!fetEntityList.isEmpty())
-//                        fetRepository.saveAll(fetEntityList);
-
-                    // Actualitzar tots els valors "CONS", tenint en compte l'entitat de cada fet (si en té),
-                    // notificant el progrés per SSE perquè el frontend pugui mostrar-lo en una barra de progrés.
-                    String codiArrel = unitatsOrganitzativesRestClient.getCodiArrel();
-                    List<FetEntity> fetEntityList = fetRepository.findByEntornAppIdAddCons(entity.getEntornAppId(), entity.getCodi(), codiArrel);
-                    int total = fetEntityList.size();
-                    // Com a màxim ~20 notificacions de progrés, independentment de la mida de fetEntityList
-                    int progressStep = Math.max(1, total / 20);
-                    if (total > 0) {
-                        dimensioFetConsProgressHelper.publishProgress(entity.getId(), 0, total);
-                    }
-                    int processats = 0;
-                    for (FetEntity f : fetEntityList) {
-                        String organValor = f.getDimensionsJson().get(entity.getCodi());
-                        String c = entitatResolverHelper.resolveConselleria(entity.getEntornAppId(), organValor, f.getDimensionsJson());
-                        if (c != null) {
-                            f.getDimensionsJson().put("CONS", c);
-                        } else {
-                            f.getDimensionsJson().remove("CONS");
+                    try {
+                        // Crear dimensió conselleria (si no existeix)
+                        List<DimensioEntity> dimensioEntityList = dimensioRepository.findByEntornAppId(entity.getEntornAppId());
+                        if (dimensioEntityList.stream().noneMatch(c -> c.getTipus() == TipusDimensioEnum.CONSELLERIA)) {
+                            DimensioEntity dEntity = new DimensioEntity();
+                            dEntity.setCodi("CONS");
+                            dEntity.setNom("Conselleria");
+                            dEntity.setEntornAppId(entity.getEntornAppId());
+                            dEntity.setTipus(TipusDimensioEnum.CONSELLERIA);
+                            dimensioRepository.save(dEntity);
                         }
-                        processats++;
-                        if (processats % progressStep == 0 || processats == total) {
-                            dimensioFetConsProgressHelper.publishProgress(entity.getId(), processats, total);
+
+                        // Actualitzar tots els valors "CONS", tenint en compte l'entitat de cada fet (si en té),
+                        // notificant el progrés per SSE perquè el frontend pugui mostrar-lo en una barra de progrés.
+                        String codiArrel = unitatsOrganitzativesRestClient.getCodiArrel();
+                        List<FetEntity> fetEntityList = fetRepository.findByEntornAppIdAddCons(entity.getEntornAppId(), entity.getCodi(), codiArrel);
+                        int total = fetEntityList.size();
+                        // Com a màxim ~20 notificacions de progrés, independentment de la mida de fetEntityList
+                        int progressStep = Math.max(1, total / 20);
+                        if (total > 0) {
+                            dimensioFetConsProgressHelper.publishProgress(entity.getId(), 0, total);
                         }
+                        int processats = 0;
+                        for (FetEntity f : fetEntityList) {
+                            String organValor = f.getDimensionsJson().get(entity.getCodi());
+                            String c = entitatResolverHelper.resolveConselleria(entity.getEntornAppId(), organValor, f.getDimensionsJson());
+                            if (c != null) {
+                                f.getDimensionsJson().put("CONS", c);
+                            } else {
+                                f.getDimensionsJson().remove("CONS");
+                            }
+                            processats++;
+                            if (processats % progressStep == 0 || processats == total) {
+                                dimensioFetConsProgressHelper.publishProgress(entity.getId(), processats, total);
+                            }
+                        }
+                        if (!fetEntityList.isEmpty())
+                            fetRepository.saveAll(fetEntityList);
+                    } catch (RuntimeException e) {
+                        // Perquè qualsevol modal oberta (propietària o enganxada via tryStart) sàpiga que el
+                        // procés real ha fallat i no es quedi esperant indefinidament un 100% que no arribarà mai.
+                        dimensioFetConsProgressHelper.publishError(entity.getId());
+                        throw e;
+                    } finally {
+                        dimensioFetConsProgressHelper.finish(entity.getId());
                     }
-                    if (!fetEntityList.isEmpty())
-                        fetRepository.saveAll(fetEntityList);
                 }
                 return resourceEntityMappingHelper.entityToResource(entity, Dimensio.class);
             } catch (ActionExecutionException a) {

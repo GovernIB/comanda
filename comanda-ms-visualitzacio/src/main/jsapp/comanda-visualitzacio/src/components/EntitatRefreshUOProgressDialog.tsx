@@ -8,20 +8,20 @@ import LinearProgress from '@mui/material/LinearProgress';
 import Typography from '@mui/material/Typography';
 import { useSseContext } from './SseProvider.tsx';
 
-const FET_CONS_PROGRESS_EVENT_TYPE = 'dimensio.fetCons.progress';
+const ENTITAT_REFRESH_UO_PROGRESS_EVENT_TYPE = 'entitat.refreshUO.progress';
 
-type FetConsProgressPayload = {
-    dimensioId?: string | number;
+type RefreshUOProgressPayload = {
+    entitatId?: string | number;
     processats?: number;
     total?: number;
     error?: boolean;
 };
 
-type DimensioFetConsProgressDialogProps = {
+type EntitatRefreshUOProgressDialogProps = {
     /** Indica si la modal de progrés s'ha de mostrar */
     open: boolean;
-    /** Identificador de la dimensió que s'està actualitzant, per a filtrar els events SSE rebuts */
-    dimensioId?: string | number | null;
+    /** Identificador de l'entitat que s'està actualitzant, per a filtrar els events SSE rebuts */
+    entitatId?: string | number | null;
     /**
      * Event que es llença quan el procés real ha acabat (progrés al 100% o error), sigui quina sigui la
      * crida que hagi obert aquesta modal: si ja hi havia una execució en curs, la crida d'aquest client no
@@ -30,7 +30,8 @@ type DimensioFetConsProgressDialogProps = {
     onComplete?: (error: boolean) => void;
 };
 
-const DimensioFetConsProgressDialog: React.FC<DimensioFetConsProgressDialogProps> = ({ open, dimensioId, onComplete }) => {
+/** Mateix patró que DimensioFetConsProgressDialog (acció FET_CONS de Dimensio), per a l'acció REFRESH_UO d'Entitat. */
+const EntitatRefreshUOProgressDialog: React.FC<EntitatRefreshUOProgressDialogProps> = ({ open, entitatId, onComplete }) => {
     const { t } = useTranslation();
     const { subscribe } = useSseContext();
     const [progress, setProgress] = React.useState<{ processats: number; total: number } | null>(null);
@@ -40,9 +41,9 @@ const DimensioFetConsProgressDialog: React.FC<DimensioFetConsProgressDialogProps
             setProgress(null);
             return;
         }
-        return subscribe(FET_CONS_PROGRESS_EVENT_TYPE, event => {
-            const payload = event.payload as FetConsProgressPayload | undefined;
-            if (payload == null || String(payload.dimensioId) !== String(dimensioId)) {
+        return subscribe(ENTITAT_REFRESH_UO_PROGRESS_EVENT_TYPE, event => {
+            const payload = event.payload as RefreshUOProgressPayload | undefined;
+            if (payload == null || String(payload.entitatId) !== String(entitatId)) {
                 return;
             }
             const processats = payload.processats ?? 0;
@@ -50,11 +51,14 @@ const DimensioFetConsProgressDialog: React.FC<DimensioFetConsProgressDialogProps
             setProgress({ processats, total });
             if (payload.error) {
                 onComplete?.(true);
-            } else if (total > 0 && processats >= total) {
+            } else if (processats >= total) {
+                // >= total (no només > 0 && >=) perquè, si l'entitat no té cap unitat organitzativa a Dir3
+                // (total == 0), l'únic event que arribarà és aquest mateix (0 de 0): sense això la modal es
+                // quedaria esperant indefinidament un progrés que mai no arribaria.
                 onComplete?.(false);
             }
         });
-    }, [open, dimensioId, subscribe, onComplete]);
+    }, [open, entitatId, subscribe, onComplete]);
 
     if (!open) {
         return null;
@@ -65,17 +69,17 @@ const DimensioFetConsProgressDialog: React.FC<DimensioFetConsProgressDialogProps
 
     return (
         <Dialog open={open} maxWidth="sm" fullWidth disableEscapeKeyDown>
-            <DialogTitle>{t($ => $.page.dimensions.action.refreshCons.progress.title)}</DialogTitle>
+            <DialogTitle>{t($ => $.page.entitats.action.refreshUO.progress.title)}</DialogTitle>
             <DialogContent>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, py: 2 }}>
                     <LinearProgress variant={determinate ? 'determinate' : 'indeterminate'} value={value} />
                     <Typography variant="body2" color="text.secondary">
                         {determinate
-                            ? t($ => $.page.dimensions.action.refreshCons.progress.processed, {
+                            ? t($ => $.page.entitats.action.refreshUO.progress.processed, {
                                 processats: progress!.processats,
                                 total: progress!.total,
                             })
-                            : t($ => $.page.dimensions.action.refreshCons.progress.waiting)}
+                            : t($ => $.page.entitats.action.refreshUO.progress.waiting)}
                     </Typography>
                 </Box>
             </DialogContent>
@@ -83,4 +87,4 @@ const DimensioFetConsProgressDialog: React.FC<DimensioFetConsProgressDialogProps
     );
 };
 
-export default DimensioFetConsProgressDialog;
+export default EntitatRefreshUOProgressDialog;

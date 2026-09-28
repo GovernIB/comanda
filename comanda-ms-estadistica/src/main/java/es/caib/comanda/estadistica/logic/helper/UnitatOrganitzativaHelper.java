@@ -21,6 +21,7 @@ import javax.transaction.Transactional;
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 
 import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.ORGANIGRAMA_CACHE;
@@ -121,6 +122,17 @@ public class UnitatOrganitzativaHelper {
 
     @Transactional
     public List<UnitatOrganitzativaEntity> updateAll(List<UnitatOrganitzativaEntity> unitats) {
+        return updateAll(unitats, null);
+    }
+
+    /**
+     * Igual que {@link #updateAll(List)}, però notificant el progrés (nombre d'unitats processades) a
+     * {@code onProgress} - vegeu {@code Entitat.ACTION_REFRESH_UO}, que ho fa servir per publicar-ho per SSE i
+     * mostrar una barra de progrés real al frontend. {@code onProgress} és responsable de decidir amb quina
+     * freqüència vol notificar-se (aquest mètode el crida després de cada unitat processada).
+     */
+    @Transactional
+    public List<UnitatOrganitzativaEntity> updateAll(List<UnitatOrganitzativaEntity> unitats, IntConsumer onProgress) {
         if (unitats == null || unitats.isEmpty()) {
             return new ArrayList<>();
         }
@@ -137,6 +149,7 @@ public class UnitatOrganitzativaHelper {
 
         List<UnitatOrganitzativaEntity> result = new ArrayList<>(unitats.size());
 
+        int processats = 0;
         for (UnitatOrganitzativaEntity input : unitats) {
             UnitatOrganitzativaEntity target = existingMap.get(input.getCodi());
 
@@ -157,6 +170,11 @@ public class UnitatOrganitzativaHelper {
             if (input.getDenominacioEs() == null) {
                 log.warn("DenominacioEs is null for unitat organitzativa {}", input.getCodi());
                 input.setDenominacioEs(input.getDenominacioCa() != null ? input.getDenominacioCa() : "--");
+            }
+
+            processats++;
+            if (onProgress != null) {
+                onProgress.accept(processats);
             }
         }
 

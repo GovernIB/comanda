@@ -3,6 +3,7 @@ package es.caib.comanda.estadistica.logic.service;
 import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesPlugin;
+import es.caib.comanda.estadistica.logic.helper.EntitatRefreshUOProgressHelper;
 import es.caib.comanda.estadistica.logic.helper.UnitatOrganitzativaHelper;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Entitat;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.UnitatOrganitzativa;
@@ -49,6 +50,7 @@ public class EntitatServiceImpl extends BaseMutableResourceService<Entitat, Long
 
     private final UnitatsOrganitzativesPlugin unitatsOrganitzativesPlugin;
     private final UnitatOrganitzativaHelper unitatOrganitzativaHelper;
+    private final EntitatRefreshUOProgressHelper entitatRefreshUOProgressHelper;
     private final AclServiceClient aclServiceClient;
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
 
@@ -97,17 +99,42 @@ public class EntitatServiceImpl extends BaseMutableResourceService<Entitat, Long
     public class RefreshUOActionExecutor implements ActionExecutor<EntitatEntity, Serializable, Entitat> {
         @Override
         public Entitat exec(String code, EntitatEntity entity, Serializable params) throws ActionExecutionException {
+            // Publicam el progrés per SSE perquè el frontend pugui mostrar una barra de progrés real mentre dura
+            // la crida (mateix patró que Dimensio.ACTION_FET_CONS - vegeu DimensioFetConsProgressHelper i
+            // FetConsActionExecutor per als detalls del tryStart/finish i de per què cal NOT_SUPPORTED en publicar).
+            if (!entitatRefreshUOProgressHelper.tryStart(entity.getId())) {
+                // Ja hi ha una execució en curs per a aquesta entitat (doble clic, dues pestanyes o dos usuaris):
+                // no en duplicam la feina. tryStart ja ha republicat per SSE l'últim progrés conegut, perquè una
+                // modal que s'acabi d'obrir el mostri de seguida.
+                return resourceEntityMappingHelper.entityToResource(entity, Entitat.class);
+            }
             try {
                 List<UnitatOrganitzativaEntity> uoList = unitatsOrganitzativesPlugin.findAll(entity.getCodiDir3());
-                unitatOrganitzativaHelper.updateAll(uoList);
+                int total = uoList.size();
+                // Com a màxim ~20 notificacions de progrés, independentment de la mida de uoList
+                int progressStep = Math.max(1, total / 20);
+                // Publicam sempre l'estat inicial, encara que total sigui 0 (entitat sense unitats a Dir3): és
+                // l'únic event que la modal del frontend rebrà en aquest cas, i li cal per saber que el procés
+                // ja ha acabat (vegeu EntitatRefreshUOProgressDialog, que hi completa amb total==0).
+                entitatRefreshUOProgressHelper.publishProgress(entity.getId(), 0, total);
+                unitatOrganitzativaHelper.updateAll(uoList, processats -> {
+                    if (processats % progressStep == 0 || processats == total) {
+                        entitatRefreshUOProgressHelper.publishProgress(entity.getId(), processats, total);
+                    }
+                });
                 unitatOrganitzativaHelper.evictOrganigramaCache(entity.getCodiDir3());
                 return resourceEntityMappingHelper.entityToResource(entity, Entitat.class);
             } catch (Exception e) {
+                // Perquè qualsevol modal oberta (propietària o enganxada via tryStart) sàpiga que el procés real
+                // ha fallat i no es quedi esperant indefinidament un 100% que no arribarà mai.
+                entitatRefreshUOProgressHelper.publishError(entity.getId());
                 throw new ActionExecutionException(
                     Entitat.class,
                     null,
                     code,
                     e.getMessage());
+            } finally {
+                entitatRefreshUOProgressHelper.finish(entity.getId());
             }
         }
 

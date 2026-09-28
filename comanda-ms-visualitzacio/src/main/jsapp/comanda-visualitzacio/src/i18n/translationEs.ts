@@ -825,6 +825,12 @@ const translationEs: translationResourcesType = {
                 refreshUO: {
                     label: "Actualizar unidades organizativas",
                     ok: "Unidades organizativas recargadas correctamente",
+                    error: "Se ha producido un error al actualizar las unidades organizativas",
+                    progress: {
+                        title: "Actualizando unidades organizativas",
+                        waiting: "Preparando la actualización...",
+                        processed: "{{processats}} de {{total}} procesadas",
+                    },
                 },
                 organigrama: {
                     label: "Organigrama",
@@ -867,6 +873,7 @@ const translationEs: translationResourcesType = {
                     label: "Actualizar datos de la consejería",
                     title: "¿Desea actualizar los datos de la consejería?",
                     ok: "Los datos de la consejería se han actualizado correctamente",
+                    error: "Se ha producido un error al actualizar los datos de la consejería",
                     progress: {
                         title: "Actualizando datos de la consejería",
                         waiting: "Preparando la actualización...",

@@ -27,6 +27,7 @@ const mocks = vi.hoisted(() => ({
                         refreshUO: {
                             label: 'Refrescar UO',
                             ok: 'UO refrescada',
+                            error: 'Error actualitzant les UO',
                         },
                         organigrama: {
                             label: 'Organigrama',
@@ -174,6 +175,15 @@ vi.mock('../components/PageTitle.tsx', () => ({
     default: ({ title }: { title: string }) => <div data-testid="page-title">{title}</div>,
 }));
 
+vi.mock('../components/EntitatRefreshUOProgressDialog.tsx', () => ({
+    default: ({ open, entitatId, onComplete }: { open: boolean; entitatId?: any; onComplete?: (error: boolean) => void }) => (
+        <div data-testid="refresh-uo-progress-dialog" data-open={String(!!open)} data-entitat-id={String(entitatId ?? '')}>
+            <button onClick={() => onComplete?.(false)}>Simula onComplete èxit</button>
+            <button onClick={() => onComplete?.(true)}>Simula onComplete error</button>
+        </div>
+    ),
+}));
+
 vi.mock('../components/AclPermissionManager.tsx', () => ({
     useAclCustomPermissionManager: (config: { resourceType: string, onEntryChanged?: (resourceId: any) => void }) => {
         if (config.resourceType === 'UNITAT') {
@@ -227,7 +237,45 @@ describe('Entitats', () => {
         expect(mocks.entitatPermissionShowMock).toHaveBeenCalledWith(15, 'E1');
     });
 
-    it('Entitats_quanEsPremRefrescarUO_cridaApiActionIMostraMissatgeExit', async () => {
+    it('Entitats_quanEsPremRefrescarUO_cridaApiActionIObreLaModalDeProgres', async () => {
+        mocks.artifactActionMock.mockResolvedValue({});
+
+        render(<Entitats />);
+
+        expect(screen.getByTestId('refresh-uo-progress-dialog')).toHaveAttribute('data-open', 'false');
+
+        fireEvent.click(screen.getByRole('button', { name: 'Refrescar UO' }));
+
+        await waitFor(() => {
+            expect(mocks.artifactActionMock).toHaveBeenCalledWith(15, { code: 'REFRESH_UO' });
+            const dialog = screen.getByTestId('refresh-uo-progress-dialog');
+            expect(dialog).toHaveAttribute('data-open', 'true');
+            expect(dialog).toHaveAttribute('data-entitat-id', '15');
+        });
+    });
+
+    it('Entitats_quanEsPremRefrescarUO_laResolucioDeLaCridaHttpNoTancaLaModal', async () => {
+        // Només onComplete (senyal SSE real) ha de tancar la modal - vegeu Dimensions.tsx/FET_CONS, mateix patró.
+        let resolveAction: (value: any) => void = () => undefined;
+        mocks.artifactActionMock.mockImplementation(() => new Promise((resolve) => { resolveAction = resolve; }));
+
+        render(<Entitats />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Refrescar UO' }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId('refresh-uo-progress-dialog')).toHaveAttribute('data-open', 'true');
+        });
+
+        resolveAction({});
+
+        await waitFor(() => {
+            expect(mocks.artifactActionMock).toHaveBeenCalled();
+        });
+        expect(screen.getByTestId('refresh-uo-progress-dialog')).toHaveAttribute('data-open', 'true');
+    });
+
+    it('Entitats_quanLaModalCridaOnCompleteSenseError_tancaLaModalIMostraMissatgeExit', async () => {
         mocks.artifactActionMock.mockResolvedValue({});
 
         render(<Entitats />);
@@ -235,13 +283,34 @@ describe('Entitats', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Refrescar UO' }));
 
         await waitFor(() => {
-            expect(mocks.artifactActionMock).toHaveBeenCalledWith(15, { code: 'REFRESH_UO' });
-            expect(mocks.refreshMock).toHaveBeenCalled();
-            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'UO refrescada', 'success');
+            expect(screen.getByTestId('refresh-uo-progress-dialog')).toHaveAttribute('data-open', 'true');
         });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Simula onComplete èxit' }));
+
+        expect(screen.getByTestId('refresh-uo-progress-dialog')).toHaveAttribute('data-open', 'false');
+        expect(mocks.refreshMock).toHaveBeenCalled();
+        expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'UO refrescada', 'success');
     });
 
-    it('Entitats_quanFallaRefrescarUO_mostraLErrorDeLApi', async () => {
+    it('Entitats_quanLaModalCridaOnCompleteAmbError_tancaLaModalIMostraMissatgeError', async () => {
+        mocks.artifactActionMock.mockResolvedValue({});
+
+        render(<Entitats />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Refrescar UO' }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId('refresh-uo-progress-dialog')).toHaveAttribute('data-open', 'true');
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Simula onComplete error' }));
+
+        expect(screen.getByTestId('refresh-uo-progress-dialog')).toHaveAttribute('data-open', 'false');
+        expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Error actualitzant les UO', 'error');
+    });
+
+    it('Entitats_quanFallaRefrescarUO_mostraLErrorDeLApiITancaLaModal', async () => {
         mocks.artifactActionMock.mockRejectedValueOnce({ message: 'Error refrescant' });
 
         render(<Entitats />);
@@ -250,7 +319,33 @@ describe('Entitats', () => {
 
         await waitFor(() => {
             expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Error refrescant', 'error');
+            expect(screen.getByTestId('refresh-uo-progress-dialog')).toHaveAttribute('data-open', 'false');
         });
+    });
+
+    it('Entitats_quanLaCridaHttpFallaDespresQueOnCompleteJaHaTancatLaModal_noDuplicaElMissatge', async () => {
+        // Cas de l'execució propietària: onComplete (SSE) i el rebuig de la seva pròpia crida HTTP arriben
+        // gairebé alhora pel mateix error real; només s'ha de mostrar un missatge, no dos.
+        let rejectAction: (reason: any) => void = () => undefined;
+        mocks.artifactActionMock.mockImplementation(() => new Promise((_resolve, reject) => { rejectAction = reject; }));
+
+        render(<Entitats />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'Refrescar UO' }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId('refresh-uo-progress-dialog')).toHaveAttribute('data-open', 'true');
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Simula onComplete error' }));
+        expect(mocks.temporalMessageShowMock).toHaveBeenCalledTimes(1);
+
+        rejectAction({ message: 'Error de xarxa' });
+
+        await waitFor(() => {
+            expect(mocks.artifactActionMock).toHaveBeenCalled();
+        });
+        expect(mocks.temporalMessageShowMock).toHaveBeenCalledTimes(1);
     });
 
     it('Entitats_quanEsPremOrganigrama_obreElDialegAmbElCodiDir3', async () => {
