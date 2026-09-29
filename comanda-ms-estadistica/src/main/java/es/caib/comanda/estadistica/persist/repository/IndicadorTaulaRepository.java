@@ -22,4 +22,8 @@ public interface IndicadorTaulaRepository extends BaseRepository<IndicadorTaulaE
     @Query("DELETE FROM IndicadorTaulaEntity it WHERE it.indicador IN (SELECT i FROM IndicadorEntity i WHERE i.entornAppId = :entornAppId)")
     void deleteByIndicadorEntornAppId(@Param("entornAppId") Long entornAppId);
 
+    @Modifying
+    @Query("DELETE FROM IndicadorTaulaEntity it WHERE it.widget.id IN (SELECT w.id FROM EstadisticaWidgetEntity w WHERE w.appId = :appId)")
+    void deleteByWidgetAppId(@Param("appId") Long appId);
+
 }

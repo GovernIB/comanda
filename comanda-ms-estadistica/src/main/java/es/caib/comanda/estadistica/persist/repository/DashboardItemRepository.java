@@ -2,6 +2,7 @@ package es.caib.comanda.estadistica.persist.repository;
 
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -39,5 +40,9 @@ public interface DashboardItemRepository extends BaseRepository<DashboardItemEnt
 
     @Query("SELECT CASE WHEN COUNT(d) > 0 THEN TRUE ELSE FALSE END FROM DashboardItemEntity d WHERE d.widget.id = :widgetId AND d.dashboard.id IN :dashboardIds")
     boolean existsByWidgetIdAndDashboardIdIn(@Param("widgetId") Long widgetId, @Param("dashboardIds") java.util.Collection<Long> dashboardIds);
+
+    @Modifying
+    @Query("DELETE FROM DashboardItemEntity di WHERE di.widget.id IN (SELECT w.id FROM EstadisticaWidgetEntity w WHERE w.appId = :appId)")
+    void deleteByWidgetAppId(@Param("appId") Long appId);
 
 }

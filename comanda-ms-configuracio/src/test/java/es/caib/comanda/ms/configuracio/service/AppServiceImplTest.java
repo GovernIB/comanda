@@ -25,6 +25,7 @@ import es.caib.comanda.ms.sse.ComandaSsePublishRequest;
 import es.caib.comanda.configuracio.persist.repository.AppRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
+import es.caib.comanda.ms.logic.intf.jms.NetejaAppMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,9 +33,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import static org.mockito.Mockito.lenient;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jms.core.JmsTemplate;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.test.util.ReflectionTestUtils;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -67,9 +72,10 @@ public class AppServiceImplTest {
                                       AuthenticationHelper authenticationHelper,
                                       HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
                                       AclServiceClient aclServiceClient,
-                                      ApplicationEventPublisher eventPublisher) {
+                                      ApplicationEventPublisher eventPublisher,
+                                      JmsTemplate jmsTemplate) {
             super(cacheHelper, objectMapper, appExportMapper, appRepository, entornRepository, entornAppRepository,
-                entornAppHelper, authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient, eventPublisher);
+                entornAppHelper, authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient, eventPublisher, jmsTemplate);
         }
 
         public String exposedNamedFilterToSpringFilter(String name) {
@@ -135,6 +141,15 @@ public class AppServiceImplTest {
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
+    @Mock
+    private JmsTemplate jmsTemplate;
+
+    @Mock
+    private I18nUtil i18nUtil;
+
+    @Mock
+    private ApplicationContext applicationContext;
+
     private TestableAppServiceImpl appService;
 
     private AppEntity appEntity;
@@ -144,6 +159,11 @@ public class AppServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        ReflectionTestUtils.setField(I18nUtil.class, "applicationContext", applicationContext);
+        lenient().when(applicationContext.getBean(I18nUtil.class)).thenReturn(i18nUtil);
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(inv -> inv.getArgument(0));
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(inv -> inv.getArgument(0));
+
         // Initialize the service with mocked dependencies
         appService = new TestableAppServiceImpl(
                 cacheHelper,
@@ -156,7 +176,8 @@ public class AppServiceImplTest {
                 authenticationHelper,
                 httpAuthorizationHeaderHelper,
                 aclServiceClient,
-                eventPublisher);
+                eventPublisher,
+                jmsTemplate);
 
         // Setup test data
         appEntity = new AppEntity();
@@ -411,5 +432,117 @@ public class AppServiceImplTest {
                 any(),
                 any()))
             .thenReturn(ResponseEntity.ok(new HashSet<>(ids)));
+    }
+
+    @Test
+    @DisplayName("NetejaEstadisticaAppAction: llança AccessDeniedException si no és admin")
+    void netejaEstadisticaAppAction_quanNoAdmin_llancaAccessDeniedException() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+
+        AppServiceImpl.NetejaEstadisticaAppActionExecutor executor =
+                appService.new NetejaEstadisticaAppActionExecutor(jmsTemplate, authenticationHelper, entornAppRepository);
+
+        App.NetejaEstadisticaActionForm form = App.NetejaEstadisticaActionForm.builder()
+                .confirmoPerdua(true)
+                .build();
+
+        assertThrows(AccessDeniedException.class, () ->
+                executor.exec(App.ACTION_NETEJA_ESTADISTICA, appEntity, form));
+    }
+
+    @Test
+    @DisplayName("NetejaEstadisticaAppAction: llança ActionExecutionException si no es confirma la pèrdua")
+    void netejaEstadisticaAppAction_quanSenseConfirmacio_llancaActionExecutionException() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+
+        AppServiceImpl.NetejaEstadisticaAppActionExecutor executor =
+                appService.new NetejaEstadisticaAppActionExecutor(jmsTemplate, authenticationHelper, entornAppRepository);
+
+        App.NetejaEstadisticaActionForm form = App.NetejaEstadisticaActionForm.builder()
+                .confirmoPerdua(false)
+                .build();
+
+        assertThrows(es.caib.comanda.ms.logic.intf.exception.ActionExecutionException.class, () ->
+                executor.exec(App.ACTION_NETEJA_ESTADISTICA, appEntity, form));
+    }
+
+    @Test
+    @DisplayName("NetejaEstadisticaAppAction: neteja d'app envia JMS amb appId, entorns, cataleg i widgets")
+    void netejaEstadisticaAppAction_quanConfirmat_enviaJmsCorrecte() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+
+        EntornAppEntity ea1 = new EntornAppEntity();
+        ea1.setId(101L);
+        EntornAppEntity ea2 = new EntornAppEntity();
+        ea2.setId(102L);
+        when(entornAppRepository.findByAppId(appEntity.getId())).thenReturn(List.of(ea1, ea2));
+
+        AppServiceImpl.NetejaEstadisticaAppActionExecutor executor =
+                appService.new NetejaEstadisticaAppActionExecutor(jmsTemplate, authenticationHelper, entornAppRepository);
+
+        App.NetejaEstadisticaActionForm form = App.NetejaEstadisticaActionForm.builder()
+                .abast(es.caib.comanda.configuracio.logic.intf.model.AbastNetejaEstadisticaEnum.DADES_I_CATALEG)
+                .esborrarWidgets(true)
+                .confirmoPerdua(true)
+                .build();
+
+        App.NetejaEstadisticaResponse response =
+                executor.exec(App.ACTION_NETEJA_ESTADISTICA, appEntity, form);
+
+        assertNotNull(response);
+        assertTrue(response.getSuccess());
+
+        ArgumentCaptor<NetejaAppMessage> captor = ArgumentCaptor.forClass(NetejaAppMessage.class);
+        verify(jmsTemplate).convertAndSend(eq(es.caib.comanda.base.config.Cues.CUA_NETEJA_ESTADISTICA), captor.capture());
+        NetejaAppMessage sent = captor.getValue();
+        assertEquals(appEntity.getId(), sent.getAppId());
+        assertEquals(List.of(101L, 102L), sent.getEntornAppIds());
+        assertTrue(sent.isEsborrarCataleg());
+        assertTrue(sent.isEsborrarWidgets());
+    }
+
+    @Test
+    @DisplayName("NetejaEstadisticaAppAction: quan només dades, envia JMS amb esborrarCataleg false i esborrarWidgets false")
+    void netejaEstadisticaAppAction_quanNomesDades_enviaJmsAmbCatalegFals() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+
+        when(entornAppRepository.findByAppId(appEntity.getId())).thenReturn(List.of());
+
+        AppServiceImpl.NetejaEstadisticaAppActionExecutor executor =
+                appService.new NetejaEstadisticaAppActionExecutor(jmsTemplate, authenticationHelper, entornAppRepository);
+
+        App.NetejaEstadisticaActionForm form = App.NetejaEstadisticaActionForm.builder()
+                .abast(es.caib.comanda.configuracio.logic.intf.model.AbastNetejaEstadisticaEnum.NOMES_DADES)
+                .esborrarWidgets(true) // no hauria d'aplicar-se si abast és només dades
+                .confirmoPerdua(true)
+                .build();
+
+        App.NetejaEstadisticaResponse response =
+                executor.exec(App.ACTION_NETEJA_ESTADISTICA, appEntity, form);
+
+        assertNotNull(response);
+        assertTrue(response.getSuccess());
+
+        ArgumentCaptor<NetejaAppMessage> captor = ArgumentCaptor.forClass(NetejaAppMessage.class);
+        verify(jmsTemplate).convertAndSend(eq(es.caib.comanda.base.config.Cues.CUA_NETEJA_ESTADISTICA), captor.capture());
+        NetejaAppMessage sent = captor.getValue();
+        assertFalse(sent.isEsborrarCataleg());
+        assertFalse(sent.isEsborrarWidgets());
+    }
+
+    @Test
+    @DisplayName("NetejaEstadisticaAppAction: onChange desmarca esborrarWidgets si l'abast canvia a NOMES_DADES")
+    void netejaEstadisticaAppAction_onChange_desmarcaWidgetsSiNomesDades() {
+        AppServiceImpl.NetejaEstadisticaAppActionExecutor executor =
+                appService.new NetejaEstadisticaAppActionExecutor(jmsTemplate, authenticationHelper, entornAppRepository);
+
+        App.NetejaEstadisticaActionForm target = App.NetejaEstadisticaActionForm.builder()
+                .abast(es.caib.comanda.configuracio.logic.intf.model.AbastNetejaEstadisticaEnum.NOMES_DADES)
+                .esborrarWidgets(true)
+                .build();
+
+        executor.onChange(1L, null, "abast", es.caib.comanda.configuracio.logic.intf.model.AbastNetejaEstadisticaEnum.NOMES_DADES, Map.of(), new String[0], target);
+
+        assertFalse(target.isEsborrarWidgets());
     }
 }

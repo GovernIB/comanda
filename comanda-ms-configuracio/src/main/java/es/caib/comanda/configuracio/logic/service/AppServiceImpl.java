@@ -6,6 +6,7 @@ import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.configuracio.logic.helper.EntornAppHelper;
+import es.caib.comanda.configuracio.logic.intf.model.AbastNetejaEstadisticaEnum;
 import es.caib.comanda.configuracio.logic.intf.model.App;
 import es.caib.comanda.configuracio.logic.intf.model.App.AppImportForm;
 import es.caib.comanda.configuracio.logic.intf.model.export.AppExport;
@@ -21,13 +22,17 @@ import es.caib.comanda.configuracio.persist.repository.EntornRepository;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import es.caib.comanda.base.config.Cues;
+import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.PerspectiveApplicationException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
+import es.caib.comanda.ms.logic.intf.jms.NetejaAppMessage;
 import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
 import es.caib.comanda.ms.logic.intf.model.FieldOption;
 import es.caib.comanda.ms.logic.intf.model.ReportFileType;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import es.caib.comanda.ms.sse.ComandaSseEvent;
 import es.caib.comanda.ms.sse.ComandaSseEventTypes;
@@ -35,6 +40,8 @@ import es.caib.comanda.ms.sse.ComandaSsePublishRequest;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.jms.core.JmsTemplate;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -69,12 +76,14 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     private final AclServiceClient aclServiceClient;
     private final ApplicationEventPublisher eventPublisher;
+    private final JmsTemplate jmsTemplate;
 
     @PostConstruct
     public void init() {
         register(App.PERSP_PERMIS_NUM, new PermisPerspective());
         register(App.APP_EXPORT, new AppExportReportGenerator());
         register(App.APP_IMPORT, new AppImportActionExecutor());
+        register(App.ACTION_NETEJA_ESTADISTICA, new NetejaEstadisticaAppActionExecutor(jmsTemplate, authenticationHelper, entornAppRepository));
     }
 
     @Override
@@ -466,6 +475,58 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
                         .countSidsWithPermission(ResourceType.APP, entity.getId(),
                             httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
                     .orElse(0));
+        }
+    }
+
+    @RequiredArgsConstructor
+    public class NetejaEstadisticaAppActionExecutor implements ActionExecutor<AppEntity, App.NetejaEstadisticaActionForm, App.NetejaEstadisticaResponse> {
+        private final JmsTemplate jmsTemplate;
+        private final AuthenticationHelper authenticationHelper;
+        private final EntornAppRepository entornAppRepository;
+
+        @Override
+        public void onChange(Serializable id, App.NetejaEstadisticaActionForm previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, App.NetejaEstadisticaActionForm target) {
+            if ("abast".equals(fieldName) && !AbastNetejaEstadisticaEnum.DADES_I_CATALEG.equals(fieldValue)) {
+                target.setEsborrarWidgets(false);
+            }
+        }
+
+        @Override
+        public App.NetejaEstadisticaResponse exec(String code, AppEntity entity, App.NetejaEstadisticaActionForm params) throws ActionExecutionException {
+            if (!authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)) {
+                throw new AccessDeniedException("Sense permisos per a executar la neteja de dades estadístiques");
+            }
+            if (entity == null) {
+                throw new ActionExecutionException(App.class, null, code, "App no trobada");
+            }
+            if (params == null || !params.isConfirmoPerdua()) {
+                throw new ActionExecutionException(App.class, entity.getId(), code,
+                        I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.intf.model.App.NetejaEstadisticaActionForm.confirmoPerdua.required"));
+            }
+
+            List<Long> entornAppIds = entornAppRepository.findByAppId(entity.getId())
+                    .stream()
+                    .map(EntornAppEntity::getId)
+                    .collect(Collectors.toList());
+
+            boolean esborrarCataleg = params.isCataleg();
+            boolean esborrarWidgets = esborrarCataleg && params.isEsborrarWidgets();
+
+            NetejaAppMessage message = new NetejaAppMessage(
+                    entity.getId(),
+                    entornAppIds,
+                    esborrarCataleg,
+                    esborrarWidgets
+            );
+
+            log.info("Sol·licitant neteja d'estadístiques per appId {} (entorns: {}, cataleg: {}, widgets: {})",
+                    entity.getId(), entornAppIds, esborrarCataleg, esborrarWidgets);
+            jmsTemplate.convertAndSend(Cues.CUA_NETEJA_ESTADISTICA, message);
+
+            String msg = I18nUtil.getInstance().getI18nMessage(
+                    "es.caib.comanda.configuracio.logic.service.AppServiceImpl.NetejaEstadisticaAction.sollicitada");
+
+            return new App.NetejaEstadisticaResponse(true, msg);
         }
     }
 }

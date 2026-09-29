@@ -760,6 +760,31 @@ const translationEs: translationResourcesType = {
             action: {
                 export: "Exportar aplicación",
                 import: "Importar aplicación",
+                netejaEstadistica: "Limpieza de estadísticas",
+            },
+            netejaEstadistica: {
+                label: "Limpieza de estadísticas",
+                dialogTitle: "Limpieza de estadísticas de la aplicación",
+                alertTitle: "Atención: Operación irreversible a nivel global",
+                alertDades: "Esta acción borrará de forma permanente todos los datos estadísticos registrados (hechos) de todos los entornos de esta aplicación.",
+                alertCataleg: "Atención: También se borrará el catálogo de estadística (indicadores, dimensiones y términos de fórmulas) compartido por todos los entornos.",
+                alertWidgets: "Se desvincularán o borrarán los widgets y elementos de cuadros de mando afectados.",
+                alertBackupTip: "Recomendación: Si tiene cuadros de mando configurados para esta aplicación, es imprescindible exportarlos como copia de seguridad antes de continuar.",
+                abastOptions: {
+                    nomesDades: "Sólo datos registrados (hechos)",
+                    dadesICataleg: "Datos registrados y catálogo (indicadores, dimensiones y opcionalmente widgets)",
+                },
+                fields: {
+                    abast: "Alcance de la limpieza",
+                    esborrarWidgets: "Borrar también los widgets de cuadros de mando de la aplicación",
+                    confirmoPerdua: "Confirmo que he exportado los cuadros de mando si era necesario y acepto la pérdida irreversible de los datos seleccionados",
+                },
+                validation: {
+                    confirmoRequired: "Debe confirmar expresamente que acepta la pérdida irreversible de los datos",
+                },
+                confirmButton: "Ejecutar limpieza",
+                cancelButton: "Cancelar",
+                success: "Se ha solicitado la limpieza de los datos estadísticos correctamente",
             },
             import: {
                 title: "Importar aplicación",
@@ -794,6 +819,23 @@ const translationEs: translationResourcesType = {
                     desactivar: "Desactivar",
                     permisos: "Permisos",
                     ok: "La acción se ha ejecutado correctamente",
+                },
+                netejaEstadistica: {
+                    label: "Borrar datos estadísticos",
+                    dialogTitle: "Borrar datos estadísticos del entorno",
+                    alertTitle: "Atención: Operación irreversible en el entorno",
+                    alertDades: "Esta acción borrará de forma permanente todos los datos estadísticos registrados (hechos) para este entorno.",
+                    alertScopeInfo: "Para borrar el catálogo (indicadores, dimensiones) o widgets, debe utilizar la acción de limpieza a nivel de Aplicación.",
+                    fields: {
+                        esborrarCatalegDisabled: "Borrar catálogo y widgets (Sólo disponible a nivel de Aplicación)",
+                        confirmoPerdua: "Confirmo que acepto la pérdida irreversible de todos los datos estadísticos registrados (hechos) para este entorno",
+                    },
+                    validation: {
+                        confirmoRequired: "Debe confirmar expresamente que acepta la pérdida irreversible de los datos",
+                    },
+                    confirmButton: "Borrar datos",
+                    cancelButton: "Cancelar",
+                    success: "Se ha solicitado el borrado de los datos estadísticos correctamente",
                 }
             }
         },

@@ -23,6 +23,7 @@ import org.hibernate.validator.constraints.URL;
 import org.springframework.hateoas.InputType;
 
 import javax.persistence.Transient;
+import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
@@ -75,6 +76,18 @@ import java.util.List;
                 @ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_ACTION_EXISTS_PARAMETER, formClass = EntornApp.EntornAppExistsParameterAction.class),
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_TOOGLE_ACTIVA, requiresId = true),
 				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = EntornApp.ENTORN_APP_REFRESH_INFO, requiresId = true),
+				@ResourceArtifact(
+						type = ResourceArtifactType.ACTION,
+						code = EntornApp.ACTION_NETEJA_ESTADISTICA,
+						requiresId = true,
+						formClass = EntornApp.NetejaEstadisticaActionForm.class,
+						accessConstraints = {
+								@ResourceAccessConstraint(
+										type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+										roles = { BaseConfig.ROLE_ADMIN }
+								)
+						}
+				),
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = EntornApp.REPORT_LLISTAR_LOGS, requiresId = true),
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = EntornApp.REPORT_DESCARREGAR_LOG, requiresId = true, formClass = String.class),
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = EntornApp.REPORT_PREVISUALITZAR_LOG, requiresId = true, formClass = EntornApp.PrevisualitzarLogParams.class),
@@ -91,6 +104,7 @@ import java.util.List;
 @FieldNameConstants
 public class EntornApp extends BaseResource<Long> {
 
+	public final static String ACTION_NETEJA_ESTADISTICA = "neteja_estadistica";
 	public final static String ENTORN_APP_ACTION_PING_URL = "pingUrl";
     public final static String ENTORN_APP_ACTION_EXISTS_PARAMETER = "existsParameter";
 	public final static String ENTORN_APP_FILTER = "entornApp_filter";
@@ -316,6 +330,29 @@ public class EntornApp extends BaseResource<Long> {
 	@AllArgsConstructor
 	public static class PrevisualitzarLogResponse implements Serializable {
 		private String linia;
+	}
+
+	@Getter
+	@Setter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	public static class NetejaEstadisticaActionForm implements Serializable {
+
+		@InputType("checkbox")
+		@AssertTrue(message = "{es.caib.comanda.configuracio.logic.intf.model.EntornApp.NetejaEstadisticaActionForm.confirmoPerdua.required}")
+		private boolean confirmoPerdua;
+
+	}
+
+	@Getter
+	@Setter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@FieldNameConstants
+	public static class NetejaEstadisticaResponse implements Serializable {
+		private Boolean success;
+		private String message;
 	}
 
     @Target(ElementType.FIELD)

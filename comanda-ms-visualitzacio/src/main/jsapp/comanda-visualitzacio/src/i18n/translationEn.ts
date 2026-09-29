@@ -760,6 +760,31 @@ const translationEn: translationResourcesType = {
             action: {
                 export: "Export application",
                 import: "Import application",
+                netejaEstadistica: "Statistics cleanup",
+            },
+            netejaEstadistica: {
+                label: "Statistics cleanup",
+                dialogTitle: "Application statistics cleanup",
+                alertTitle: "Warning: Global irreversible operation",
+                alertDades: "This action will permanently delete all recorded statistical data (facts) across all environments of this application.",
+                alertCataleg: "Warning: The statistical catalog (indicators, dimensions, and formula terms) shared across all environments will also be deleted.",
+                alertWidgets: "Affected widgets and dashboard items will be unlinked or deleted.",
+                alertBackupTip: "Recommendation: If you have dashboards configured for this application, it is essential to export them as a backup before continuing.",
+                abastOptions: {
+                    nomesDades: "Recorded data only (facts)",
+                    dadesICataleg: "Recorded data and catalog (indicators, dimensions, and optionally widgets)",
+                },
+                fields: {
+                    abast: "Cleanup scope",
+                    esborrarWidgets: "Also delete dashboard widgets of the application",
+                    confirmoPerdua: "I confirm that I have exported dashboards if needed and accept the irreversible loss of selected data",
+                },
+                validation: {
+                    confirmoRequired: "You must expressly confirm that you accept the irreversible loss of data",
+                },
+                confirmButton: "Execute cleanup",
+                cancelButton: "Cancel",
+                success: "Statistical data cleanup requested successfully",
             },
             import: {
                 title: "Import application",
@@ -794,6 +819,23 @@ const translationEn: translationResourcesType = {
                     desactivar: "Deactivate",
                     permisos: "Permissions",
                     ok: "The action has been executed successfully",
+                },
+                netejaEstadistica: {
+                    label: "Delete statistical data",
+                    dialogTitle: "Delete statistical data for environment",
+                    alertTitle: "Warning: Irreversible operation on environment",
+                    alertDades: "This action will permanently delete all recorded statistical data (facts) for this environment.",
+                    alertScopeInfo: "To delete the catalog (indicators, dimensions) or widgets, use the cleanup action at Application level.",
+                    fields: {
+                        esborrarCatalegDisabled: "Delete catalog and widgets (Only available at Application level)",
+                        confirmoPerdua: "I confirm that I accept the irreversible loss of all recorded statistical data (facts) for this environment",
+                    },
+                    validation: {
+                        confirmoRequired: "You must expressly confirm that you accept the irreversible loss of data",
+                    },
+                    confirmButton: "Delete data",
+                    cancelButton: "Cancel",
+                    success: "Statistical data cleanup requested successfully",
                 }
             }
         },

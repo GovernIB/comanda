@@ -760,6 +760,31 @@ const translationCa = {
             action: {
                 export: "Exportar aplicació",
                 import: "Importar aplicació",
+                netejaEstadistica: "Neteja d'estadístiques",
+            },
+            netejaEstadistica: {
+                label: "Neteja d'estadístiques",
+                dialogTitle: "Neteja d'estadístiques de l'aplicació",
+                alertTitle: "Atenció: Operació irreversible a nivell global",
+                alertDades: "Aquesta acció esborrarà de forma permanent totes les dades estadístiques registrades (fets) de tots els entorns d'aquesta aplicació.",
+                alertCataleg: "Atenció: També s'esborrarà el catàleg d'estadística (indicadors, dimensions i termes de fórmules) compartit per tots els entorns.",
+                alertWidgets: "Es desvincularan o esborraran els widgets i elements de quadres de comandament afectats.",
+                alertBackupTip: "Recomanació: Si teniu quadres de comandament configurats per a aquesta aplicació, és imprescindible exportar-los com a còpia de seguretat abans de continuar.",
+                abastOptions: {
+                    nomesDades: "Només dades registrades (fets)",
+                    dadesICataleg: "Dades registrades i catàleg (indicadors, dimensions i opcionalment widgets)",
+                },
+                fields: {
+                    abast: "Abast de la neteja",
+                    esborrarWidgets: "Esborrar també els widgets de quadres de comandament de l'aplicació",
+                    confirmoPerdua: "Confirm que he exportat els quadres de comandament si calia i accept la pèrdua irreversible de les dades seleccionades",
+                },
+                validation: {
+                    confirmoRequired: "Cal confirmar expressament que s'accepta la pèrdua irreversible de les dades",
+                },
+                confirmButton: "Executar neteja",
+                cancelButton: "Cancel·lar",
+                success: "S'ha sol·licitat la neteja de les dades estadístiques correctament",
             },
             import: {
                 title: "Importar aplicació",
@@ -794,6 +819,23 @@ const translationCa = {
                     desactivar: "Desactivar",
                     permisos: "Permisos",
                     ok: "L'acció s'ha executat correctament",
+                },
+                netejaEstadistica: {
+                    label: "Esborrar dades estadístiques",
+                    dialogTitle: "Esborrar dades estadístiques de l'entorn",
+                    alertTitle: "Atenció: Operació irreversible a l'entorn",
+                    alertDades: "Aquesta acció esborrarà de forma permanent totes les dades estadístiques registrades (fets) per a aquest entorn.",
+                    alertScopeInfo: "Per esborrar el catàleg (indicadors, dimensions) o widgets, cal utilitzar l'acció de neteja a nivell d'Aplicació.",
+                    fields: {
+                        esborrarCatalegDisabled: "Esborrar catàleg i widgets (Només disponible a nivell d'Aplicació)",
+                        confirmoPerdua: "Confirm que accept la pèrdua irreversible de totes les dades estadístiques registrades (fets) per a aquest entorn",
+                    },
+                    validation: {
+                        confirmoRequired: "Cal confirmar expressament que s'accepta la pèrdua irreversible de les dades",
+                    },
+                    confirmButton: "Esborrar dades",
+                    cancelButton: "Cancel·lar",
+                    success: "S'ha sol·licitat la neteja de les dades estadístiques correctament",
                 }
             }
         },

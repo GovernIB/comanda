@@ -10,6 +10,7 @@ import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,6 +18,7 @@ import lombok.experimental.FieldNameConstants;
 import org.springframework.data.annotation.Transient;
 import org.springframework.hateoas.InputType;
 
+import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
@@ -55,13 +57,26 @@ import java.util.List;
 		artifacts = {
                 @ResourceArtifact(type = ResourceArtifactType.PERSPECTIVE, code = App.PERSP_PERMIS_NUM),
 				@ResourceArtifact(type = ResourceArtifactType.REPORT, code = App.APP_EXPORT, requiresId = true),
-				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = App.APP_IMPORT, formClass = App.AppImportForm.class)
+				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = App.APP_IMPORT, formClass = App.AppImportForm.class),
+				@ResourceArtifact(
+						type = ResourceArtifactType.ACTION,
+						code = App.ACTION_NETEJA_ESTADISTICA,
+						requiresId = true,
+						formClass = App.NetejaEstadisticaActionForm.class,
+						accessConstraints = {
+								@ResourceAccessConstraint(
+										type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+										roles = { BaseConfig.ROLE_ADMIN }
+								)
+						}
+				)
 		})
 public class App extends BaseResource<Long> {
 
     public static final String PERSP_PERMIS_NUM = "PERMIS_NUM";
 	public final static String APP_EXPORT = "app_export";
 	public final static String APP_IMPORT = "app_import";
+	public final static String ACTION_NETEJA_ESTADISTICA = "neteja_estadistica";
     public static final String NAMED_FILTER_PERMIS_SALUT = "permis_salut";
     public static final String NAMED_FILTER_PERMIS_DISSENY = "permis_disseny";
 
@@ -94,5 +109,37 @@ public class App extends BaseResource<Long> {
 		private String decision; // OVERWRITE | COMBINE | SKIP (opcional)
 		private Boolean importedAppExists; // Informa si el contingut del JSON coincideix amb una aplicació ja creada
 		private String[] importedAppCodes; // Informa dels codis detectats al JSON
+	}
+
+	@Getter
+	@Setter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	public static class NetejaEstadisticaActionForm implements Serializable {
+		@NotNull
+		@InputType("radio")
+		@ResourceField(onChangeActive = true)
+		@Builder.Default
+		private AbastNetejaEstadisticaEnum abast = AbastNetejaEstadisticaEnum.NOMES_DADES;
+		@InputType("checkbox")
+		private boolean esborrarWidgets;
+		@InputType("checkbox")
+		@AssertTrue(message = "{es.caib.comanda.configuracio.logic.intf.model.App.NetejaEstadisticaActionForm.confirmoPerdua.required}")
+		private boolean confirmoPerdua;
+
+		public boolean isCataleg() {
+			return AbastNetejaEstadisticaEnum.DADES_I_CATALEG.equals(abast);
+		}
+	}
+
+	@Getter
+	@Setter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@FieldNameConstants
+	public static class NetejaEstadisticaResponse implements Serializable {
+		private Boolean success;
+		private String message;
 	}
 }
