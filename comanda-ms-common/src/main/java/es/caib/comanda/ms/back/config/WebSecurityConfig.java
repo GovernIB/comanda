@@ -46,6 +46,14 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 	@Value("${" + BaseConfig.PROP_SECURITY_NAME_ATTRIBUTE_KEY + ":preferred_username}")
 	private String nameAttributeKey;
 
+	// Han de coincidir amb l'auth-server-url i el realm del secure-deployment "comanda-back.war" del subsistema
+	// keycloak de JBoss. Només són el fallback del logout quan no hi ha KeycloakSecurityContext
+	// (vegeu JbossKeycloakLogoutSuccessHandler).
+	@Value("${" + BaseConfig.PROP_AUTH_URL + ":#{null}}")
+	private String authUrl;
+	@Value("${" + BaseConfig.PROP_AUTH_REALM + ":#{null}}")
+	private String authRealm;
+
 	@Override
 	protected void customHttpSecurityConfiguration(HttpSecurity http) throws Exception {
 		super.customHttpSecurityConfiguration(http);
@@ -65,6 +73,15 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 				requestMatchers(
 						new AntPathRequestMatcher(BaseConfig.API_PATH + "/**/*")
 				).authenticated();
+		if (isJboss()) {
+			// A JBoss l'autenticació la fa l'adaptador Keycloak: cal redirigir el navegador a l'"end_session_endpoint"
+			// de l'IdP per tancar la sessió SSO. Sense fer request.logout() ni esborrar cookies (vegeu el handler).
+			http.logout(lo -> lo.
+					logoutRequestMatcher(new AntPathRequestMatcher("/logout")).
+					logoutSuccessHandler(new JbossKeycloakLogoutSuccessHandler(authUrl, authRealm)).
+					permitAll(true));
+			return;
+		}
 		LogoutHandler logoutHandler = (request, response, authentication) -> {
 			try {
 				log.info("Logout called");

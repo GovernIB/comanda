@@ -48,6 +48,10 @@ public class BaseConfig {
 	public static final String PROP_SCHEDULER_POOL_SIZE = PROPERTY_PREFIX + "scheduler.pool.size";
 	public static final String PROP_WORKER_POOL_SIZE = PROPERTY_PREFIX + "worker.pool.size";
 	public static final String PROP_WORKER_QUEUE_SIZE = PROPERTY_PREFIX + "worker.queue.size";
+	// Servidor d'autenticació (Keycloak) i realm amb què l'adaptador de JBoss autentica comanda-back: fallback del
+	// logout SSO quan no hi ha id_token (vegeu JbossKeycloakLogoutSuccessHandler)
+	public static final String PROP_AUTH_URL = PROPERTY_PREFIX + "auth.url";
+	public static final String PROP_AUTH_REALM = PROPERTY_PREFIX + "auth.realm";
 	public static final String PROP_HTTPAUTH_PROVIDER_BASE_URL = PROPERTY_PREFIX + "httpauth.provider.base.url";
 	public static final String PROP_HTTPAUTH_PROVIDER_REALM = PROPERTY_PREFIX + "httpauth.provider.realm";
 	public static final String PROP_HTTPAUTH_PROVIDER_CLIENT_ID = PROPERTY_PREFIX + "httpauth.provider.client.id";
