@@ -163,11 +163,7 @@ const splitSalutDataIntoGroups = ({
         const appIds = apps.map(({ id }) => id as number);
         appIds.forEach(appId => {
             const filteredEntornApps = entornApps.filter(({ app }) => app.id === appId);
-            // Una app sense cap entorn-app visible (p.ex. per permisos ACL) no ha de generar un grup buit.
-            if (filteredEntornApps.length === 0) {
-                return;
-            }
-
+            // Una app sense cap entorn-app també genera el seu grup, per indicar que no està desplegada.
             groups.push(
                 generateGroup({
                     groupedApp: apps.find(({ id }) => id === appId),
