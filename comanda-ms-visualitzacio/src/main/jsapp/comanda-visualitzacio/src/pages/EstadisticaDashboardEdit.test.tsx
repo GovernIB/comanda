@@ -277,7 +277,7 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', async () => 
         dashboardId: number;
         editable: boolean;
         dashboardWidgets?: Array<Record<string, unknown>>;
-        onGridLayoutItemsChange?: (items: Array<{ id: number; x: number; y: number; w: number; h: number; type?: string }>) => void;
+        onGridLayoutItemsChange?: (items: Array<{ id: string; rawId: string | number; x: number; y: number; w: number; h: number; type?: string }>) => void;
         onDeleteItem?: (entity: any) => void;
         onDuplicateItem?: (entity: any) => void;
         onSelectItems?: (entities: any[]) => void;
@@ -296,7 +296,7 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', async () => 
             <button
                 type="button"
                 onClick={() =>
-                    onGridLayoutItemsChange?.([{ id: 1, x: 1, y: 1, w: 4, h: 4 }])
+                    onGridLayoutItemsChange?.([{ id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 1, y: 1, w: 4, h: 4 }])
                 }
             >
                 Moure layout
@@ -305,8 +305,8 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', async () => 
                 type="button"
                 onClick={() =>
                     onGridLayoutItemsChange?.([
-                        { id: 1, x: 1, y: 1, w: 4, h: 4 },
-                        { id: 2, x: 6, y: 6, w: 3, h: 3 },
+                        { id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 1, y: 1, w: 4, h: 4 },
+                        { id: '2-SIMPLE', rawId: 2, type: 'SIMPLE', x: 6, y: 6, w: 3, h: 3 },
                     ])
                 }
             >
@@ -428,7 +428,7 @@ describe('EstadisticaDashboardEdit', () => {
             loading: false,
             forceRefresh: vi.fn(),
         });
-        mocks.useMapDashboardItemsMock.mockReturnValue([{ id: 1, x: 0, y: 0, w: 3, h: 3 }]);
+        mocks.useMapDashboardItemsMock.mockReturnValue([{ id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 0, y: 0, w: 3, h: 3 }]);
         mocks.createDashboardItemMock.mockResolvedValue(undefined);
         mocks.patchDashboardItemMock.mockResolvedValue(undefined);
         mocks.patchDashboardTitolMock.mockResolvedValue(undefined);
@@ -526,10 +526,10 @@ describe('EstadisticaDashboardEdit', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Simular selecció múltiple' }));
 
         expect(screen.getByTestId('editor-selection')).toHaveTextContent(
-            JSON.stringify({ kind: 'multi', ids: ['1', '2'] })
+            JSON.stringify({ kind: 'multi', ids: ['1-SIMPLE', '2-SIMPLE'] })
         );
         expect(screen.getByTestId('dashboard-multi-selected-ids')).toHaveTextContent(
-            JSON.stringify(['1', '2'])
+            JSON.stringify(['1-SIMPLE', '2-SIMPLE'])
         );
     });
 
@@ -748,7 +748,7 @@ describe('EstadisticaDashboardEdit', () => {
 
         await waitFor(() => {
             expect(mocks.updateWidgetsLayoutMock).toHaveBeenCalledWith([
-                expect.objectContaining({ id: 1, x: 1, y: 1, w: 4, h: 4 }),
+                expect.objectContaining({ id: '1-SIMPLE', x: 1, y: 1, w: 4, h: 4 }),
             ]);
         });
     });
@@ -765,8 +765,8 @@ describe('EstadisticaDashboardEdit', () => {
             forceRefresh: forceRefreshMock,
         });
         mocks.useMapDashboardItemsMock.mockReturnValue([
-            { id: 1, x: 0, y: 0, w: 3, h: 3 },
-            { id: 2, x: 5, y: 5, w: 3, h: 3 },
+            { id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 0, y: 0, w: 3, h: 3 },
+            { id: '2-SIMPLE', rawId: 2, type: 'SIMPLE', x: 5, y: 5, w: 3, h: 3 },
         ]);
 
         render(<EstadisticaDashboardEdit />);

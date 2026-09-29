@@ -363,8 +363,8 @@ describe('useDashboardWidgets', () => {
 
         act(() => {
             result.current.updateWidgetsLayout([
-                { id: '1', x: 8, y: 9, w: 5, h: 6 },
-                { id: '7', x: 1, y: 5, w: 10, h: 2 },
+                { id: '1-SIMPLE', x: 8, y: 9, w: 5, h: 6 },
+                { id: '7-TITOL', x: 1, y: 5, w: 10, h: 2 },
             ]);
         });
 

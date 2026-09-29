@@ -319,12 +319,18 @@ const EstadisticaDashboardEdit: React.FC = () => {
     const mappedDashboardItems = useMapDashboardItems(dashboardWidgets);
 
     const selectedGridItemId = React.useMemo(() => {
-        if (editorSelection.kind === 'widget' && editorSelection.mode === 'edit') return String(editorSelection.dashboardItemId);
-        if (editorSelection.kind === 'title' && editorSelection.mode === 'edit') return String(editorSelection.dashboardTitolId);
+        if (editorSelection.kind === 'widget' && editorSelection.mode === 'edit') {
+            return `${editorSelection.dashboardItemId}-${editorSelection.widgetType}`;
+        }
+        if (editorSelection.kind === 'title' && editorSelection.mode === 'edit') {
+            return `${editorSelection.dashboardTitolId}-TITOL`;
+        }
         return null;
     }, [editorSelection]);
 
-    const multiSelectedGridItemIds = React.useMemo(() => editorSelection.kind === 'multi' ? editorSelection.ids : [], [editorSelection]);
+    const multiSelectedGridItemIds = React.useMemo(() => {
+        return editorSelection.kind === 'multi' ? editorSelection.ids : [];
+    }, [editorSelection]);
     const selectedFiltreId = React.useMemo(() => editorSelection.kind === 'filtre' && editorSelection.mode === 'edit' ? String(editorSelection.dashboardFiltreId) : null, [editorSelection]);
 
     const selectDashboardFiltre = (filtre: { id?: string | number } | null | undefined) => {
@@ -348,7 +354,13 @@ const EstadisticaDashboardEdit: React.FC = () => {
     const selectDashboardElements = (entities: any[]) => {
         if (!entities || entities.length === 0) { setEditorSelection({ kind: 'none' }); return; }
         if (entities.length === 1) { selectDashboardElement(entities[0]); return; }
-        setEditorSelection({ kind: 'multi', ids: entities.map((e) => String(e.dashboardItemId ?? e.dashboardTitolId ?? e.id)) });
+        setEditorSelection({
+            kind: 'multi',
+            ids: entities.map((e) => {
+                const rawId = e.tipus === 'TITOL' ? (e.dashboardTitolId ?? e.id) : (e.dashboardItemId ?? e.id);
+                return `${rawId}-${e.tipus}`;
+            }),
+        });
     };
 
     const handleDeleteItem = (entity: any) => {
@@ -387,19 +399,35 @@ const EstadisticaDashboardEdit: React.FC = () => {
 
     const onGridLayoutItemsChange = (newLayoutItems: GridLayoutItem[]) => {
         const promises: Promise<unknown>[] = [];
-        const changedLayoutItems: GridLayoutItem[] = [];
-        mappedDashboardItems.forEach((oldDashboardItem: GridLayoutItem) => {
-            const newDashboardItem = newLayoutItems.find((item: GridLayoutItem) => item.id === oldDashboardItem.id);
-            if (newDashboardItem && !isEqual(oldDashboardItem, newDashboardItem)) {
-                changedLayoutItems.push(newDashboardItem);
-                const patchArgs = { data: { posX: newDashboardItem.x, posY: newDashboardItem.y, width: newDashboardItem.w, height: newDashboardItem.h } };
-                const isTitol = newDashboardItem.type === 'TITOL';
-                promises.push(isTitol ? patchDashboardTitol(oldDashboardItem.id, patchArgs) : patchDashboardItem(oldDashboardItem.id, patchArgs));
+        const changedLayoutItemsForApi: GridLayoutItem[] = [];
+        const changedLayoutItemsForLocalUpdate: { id: string; x: number; y: number; w: number; h: number }[] = [];
+        mappedDashboardItems.forEach((oldItem: GridLayoutItem) => {
+            const newItem = newLayoutItems.find((item) => item.id === oldItem.id);
+            if (newItem && !isEqual(oldItem, newItem)) {
+                changedLayoutItemsForApi.push(newItem);
+                const patchArgs = {
+                    data: { posX: newItem.x, posY: newItem.y, width: newItem.w, height: newItem.h }
+                };
+                const isTitol = newItem.type === 'TITOL';
+                promises.push(
+                    isTitol
+                        ? patchDashboardTitol(newItem.rawId, patchArgs)
+                        : patchDashboardItem(newItem.rawId, patchArgs)
+                );
+                changedLayoutItemsForLocalUpdate.push({
+                    id: oldItem.id,
+                    x: newItem.x,
+                    y: newItem.y,
+                    w: newItem.w,
+                    h: newItem.h,
+                });
             }
         });
         // Es reflecteix de seguida a l'estat local (i no en acabar el desat): així el següent moviment es compara
         // sempre contra la posició actual i, si l'usuari torna l'element a l'origen, es torna a desar.
-        if (changedLayoutItems.length > 0) updateWidgetsLayout(changedLayoutItems);
+        if (changedLayoutItemsForLocalUpdate.length > 0) {
+            updateWidgetsLayout(changedLayoutItemsForLocalUpdate);
+        }
         Promise.all(promises).then(() => {
             temporalMessageShow(null, t($ => $.page.dashboards.action.patchItem.success), 'success');
             if (promises.length > 1) forceRefreshDashboardWidgets();
@@ -831,11 +859,12 @@ const SideMenu = ({
                     {t($ => $.page.dashboards.editor.dashboardElements)}
                 </Typography>
                 {dashboardWidgets.map((widget: any) => {
-                    const itemId = String(widget.dashboardItemId ?? widget.dashboardTitolId);
-                    const isSelected = selectedItemId === itemId;
+                    const rawId = String(widget.tipus === 'TITOL' ? widget.dashboardTitolId : widget.dashboardItemId);
+                    const itemGridId = `${rawId}-${widget.tipus}`;
+                    const isSelected = selectedItemId === itemGridId;
                     return (
                         <Box
-                            key={itemId}
+                            key={itemGridId}
                             onClick={() => onSelectItem?.(widget)}
                             sx={{
                                 display: 'flex',
@@ -853,7 +882,7 @@ const SideMenu = ({
                         >
                             <Icon sx={{ fontSize: '0.875rem' }}>{TIPUS_ICON[widget.tipus] ?? 'widgets'}</Icon>
                             <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {widget.titol ?? itemId}
+                                {widget.titol ?? rawId}
                             </Box>
                         </Box>
                     );

@@ -33,7 +33,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.security.access.AccessDeniedException;
+import es.caib.comanda.ms.logic.intf.jms.NetejaEntornAppMessage;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
@@ -68,10 +70,11 @@ public class EntornAppServiceImplTest {
                                           RestTemplate restTemplate,
                                           Validator validator,
                                           ResourceEntityMappingHelper resourceEntityMappingHelper,
-                                          Environment environment) {
+                                          Environment environment,
+                                          JmsTemplate jmsTemplate) {
             super(appIntegracioRepository, subsistemaRepository, contextRepository, entornAppRepository, entornAppHistRepository, appInfoHelper,
                     cacheHeper, entornAppHelper, authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient,
-                    restTemplate, validator, resourceEntityMappingHelper, environment);
+                    restTemplate, validator, resourceEntityMappingHelper, environment, jmsTemplate);
         }
 
         @Override
@@ -158,6 +161,8 @@ public class EntornAppServiceImplTest {
     private ObjectMappingHelper objectMappingHelper;
     @Mock
     private Environment environment;
+    @Mock
+    private JmsTemplate jmsTemplate;
 
     private TestableEntornAppServiceImpl entornAppService;
 
@@ -187,7 +192,8 @@ public class EntornAppServiceImplTest {
             restTemplate,
             validator,
             resourceEntityMappingHelper,
-            environment
+            environment,
+            jmsTemplate
         );
         ReflectionTestUtils.setField(entornAppService, "objectMappingHelper", objectMappingHelper);
 
@@ -1411,5 +1417,62 @@ public class EntornAppServiceImplTest {
                 restTemplate, entornAppRepository, statsAuthUser, statsAuthPassword, environment);
 
         assertThrows(AccessDeniedException.class, () -> report.generateData(EntornApp.REPORT_DESCARREGAR_LOG, entornAppEntity, "server.log"));
+    }
+
+    @Test
+    @DisplayName("NetejaEstadisticaAction: llança AccessDeniedException si no és admin")
+    void netejaEstadisticaAction_quanNoAdmin_llancaAccessDeniedException() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+
+        EntornAppServiceImpl.NetejaEstadisticaActionExecutor executor =
+                entornAppService.new NetejaEstadisticaActionExecutor(jmsTemplate, authenticationHelper);
+
+        EntornApp.NetejaEstadisticaActionForm form = EntornApp.NetejaEstadisticaActionForm.builder()
+                .confirmoPerdua(true)
+                .build();
+
+        assertThrows(AccessDeniedException.class, () ->
+                executor.exec(EntornApp.ACTION_NETEJA_ESTADISTICA, entornAppEntity, form));
+    }
+
+    @Test
+    @DisplayName("NetejaEstadisticaAction: llança ActionExecutionException si no es confirma la pèrdua")
+    void netejaEstadisticaAction_quanSenseConfirmacio_llancaActionExecutionException() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+
+        EntornAppServiceImpl.NetejaEstadisticaActionExecutor executor =
+                entornAppService.new NetejaEstadisticaActionExecutor(jmsTemplate, authenticationHelper);
+
+        EntornApp.NetejaEstadisticaActionForm form = EntornApp.NetejaEstadisticaActionForm.builder()
+                .confirmoPerdua(false)
+                .build();
+
+        assertThrows(es.caib.comanda.ms.logic.intf.exception.ActionExecutionException.class, () ->
+                executor.exec(EntornApp.ACTION_NETEJA_ESTADISTICA, entornAppEntity, form));
+    }
+
+    @Test
+    @DisplayName("NetejaEstadisticaAction: neteja de fets d'entorn envia JMS amb entornAppId")
+    void netejaEstadisticaAction_quanConfirmat_enviaJmsCorrecte() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+
+        EntornAppServiceImpl.NetejaEstadisticaActionExecutor executor =
+                entornAppService.new NetejaEstadisticaActionExecutor(jmsTemplate, authenticationHelper);
+
+        EntornApp.NetejaEstadisticaActionForm form = EntornApp.NetejaEstadisticaActionForm.builder()
+                .confirmoPerdua(true)
+                .build();
+
+        EntornApp.NetejaEstadisticaResponse response =
+                executor.exec(EntornApp.ACTION_NETEJA_ESTADISTICA, entornAppEntity, form);
+
+        assertNotNull(response);
+        assertTrue(response.getSuccess());
+
+        org.mockito.ArgumentCaptor<NetejaEntornAppMessage> captor =
+                org.mockito.ArgumentCaptor.forClass(NetejaEntornAppMessage.class);
+        verify(jmsTemplate).convertAndSend(eq(es.caib.comanda.base.config.Cues.CUA_NETEJA_ESTADISTICA), captor.capture());
+        NetejaEntornAppMessage sent = captor.getValue();
+        assertEquals(entornAppEntity.getId(), sent.getEntornAppId());
     }
 }

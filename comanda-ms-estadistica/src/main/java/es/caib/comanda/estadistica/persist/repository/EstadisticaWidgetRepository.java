@@ -1,7 +1,11 @@
 package es.caib.comanda.estadistica.persist.repository;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -18,5 +22,66 @@ public interface EstadisticaWidgetRepository extends BaseRepository<EstadisticaW
     EstadisticaWidgetEntity findByAppIdAndTitol(Long appId, String titol);
 
     List<EstadisticaWidgetEntity> findByAppId(Long appId);
+
+    @Modifying
+    @Query("DELETE FROM EstadisticaWidgetEntity w WHERE w.appId = :appId")
+    void deleteByAppId(@Param("appId") Long appId);
+
+    // Nota de compatibilitat: Les següents consultes són natives (nativeQuery = true) per a
+    // permetre operacions massives directes sobre taules d'unió (@JoinTable) i columnes de
+    // subclasses (SINGLE_TABLE) sense carregar entitats a memòria. Tot i ser consultes natives,
+    // segueixen estrictament la sintaxi ANSI SQL estàndard (UPDATE/DELETE amb subqueries IN),
+    // de manera que són 100% compatibles i portables tant a PostgreSQL com a Oracle.
+
+    /**
+     * Desvincula l'indicador històric dels widgets associats a l'entorn indicat per mantenir
+     * la integritat referencial (clau forana com_widget_indicador_fk).
+     * Utilitza sintaxi ANSI SQL estàndard compatible tant amb PostgreSQL com amb Oracle.
+     *
+     * @param entornAppId identificador de l'entorn de l'aplicació
+     */
+    @Modifying
+    @Query(value = "UPDATE " + BaseConfig.DB_PREFIX + "est_widget SET indicador_id = NULL WHERE indicador_id IN (SELECT id FROM " + BaseConfig.DB_PREFIX + "est_indicador WHERE entorn_app_id = :entornAppId)", nativeQuery = true)
+    void clearIndicadorByEntornAppId(@Param("entornAppId") Long entornAppId);
+
+    /**
+     * Desvincula la dimensió d'agrupació dels widgets en format taula associats a l'entorn indicat.
+     * Utilitza sintaxi ANSI SQL estàndard compatible tant amb PostgreSQL com amb Oracle.
+     *
+     * @param entornAppId identificador de l'entorn de l'aplicació
+     */
+    @Modifying
+    @Query(value = "UPDATE " + BaseConfig.DB_PREFIX + "est_widget SET agrupament_dimensio_id = NULL WHERE agrupament_dimensio_id IN (SELECT id FROM " + BaseConfig.DB_PREFIX + "est_dimensio WHERE entorn_app_id = :entornAppId)", nativeQuery = true)
+    void clearTaulaDimensioAgrupacioByEntornAppId(@Param("entornAppId") Long entornAppId);
+
+    /**
+     * Desvincula la dimensió de descomposició dels widgets gràfics associats a l'entorn indicat.
+     * Utilitza sintaxi ANSI SQL estàndard compatible tant amb PostgreSQL com amb Oracle.
+     *
+     * @param entornAppId identificador de l'entorn de l'aplicació
+     */
+    @Modifying
+    @Query(value = "UPDATE " + BaseConfig.DB_PREFIX + "est_widget SET descomposicio_dimensio_id = NULL WHERE descomposicio_dimensio_id IN (SELECT id FROM " + BaseConfig.DB_PREFIX + "est_dimensio WHERE entorn_app_id = :entornAppId)", nativeQuery = true)
+    void clearGraficDescomposicioDimensioByEntornAppId(@Param("entornAppId") Long entornAppId);
+
+    /**
+     * Elimina les relacions de dimensions i valors dels widgets de l'aplicació a la taula d'unió (@JoinTable).
+     * Utilitza sintaxi ANSI SQL estàndard compatible tant amb PostgreSQL com amb Oracle.
+     *
+     * @param appId identificador de l'aplicació
+     */
+    @Modifying
+    @Query(value = "DELETE FROM " + BaseConfig.DB_PREFIX + "est_widget_dim_valor WHERE widget_id IN (SELECT id FROM " + BaseConfig.DB_PREFIX + "est_widget WHERE app_id = :appId)", nativeQuery = true)
+    void deleteWidgetDimValorByAppId(@Param("appId") Long appId);
+
+    /**
+     * Elimina les relacions de dimensions i valors vinculades a l'entorn indicat a la taula d'unió (@JoinTable).
+     * Utilitza sintaxi ANSI SQL estàndard compatible tant amb PostgreSQL com amb Oracle.
+     *
+     * @param entornAppId identificador de l'entorn de l'aplicació
+     */
+    @Modifying
+    @Query(value = "DELETE FROM " + BaseConfig.DB_PREFIX + "est_widget_dim_valor WHERE dimensio_valor_id IN (SELECT v.id FROM " + BaseConfig.DB_PREFIX + "est_dimensio_valor v JOIN " + BaseConfig.DB_PREFIX + "est_dimensio d ON v.dimensio_id = d.id WHERE d.entorn_app_id = :entornAppId)", nativeQuery = true)
+    void deleteWidgetDimValorByEntornAppId(@Param("entornAppId") Long entornAppId);
 
 }

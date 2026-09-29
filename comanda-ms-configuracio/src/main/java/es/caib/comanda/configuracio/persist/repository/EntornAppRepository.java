@@ -22,6 +22,8 @@ public interface EntornAppRepository extends BaseRepository<EntornAppEntity, Lon
 
 	Optional<EntornAppEntity> findByEntornIdAndAppId(Long entornId, Long appId);
 
+	List<EntornAppEntity> findByAppId(Long appId);
+
 	@Query("SELECT ae.id " +
 		"FROM EntornAppEntity ae " +
 		"WHERE ae.entorn.id = :entornId " +

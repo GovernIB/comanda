@@ -27,6 +27,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.util.ReflectionUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -55,7 +56,8 @@ public class AppImportExportTest {
                                       AuthenticationHelper authenticationHelper,
                                       HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
                                       AclServiceClient aclServiceClient,
-                                      ApplicationEventPublisher eventPublisher) {
+                                      ApplicationEventPublisher eventPublisher,
+                                      JmsTemplate jmsTemplate) {
             super(cacheHelper,
                     objectMapper,
                     appExportMapper,
@@ -66,7 +68,8 @@ public class AppImportExportTest {
                     authenticationHelper,
                     httpAuthorizationHeaderHelper,
                     aclServiceClient,
-                    eventPublisher);
+                    eventPublisher,
+                    jmsTemplate);
         }
         // Simplify mapping to avoid needing ObjectMappingHelper in unit tests
         @Override
@@ -90,6 +93,7 @@ public class AppImportExportTest {
     @Mock private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     @Mock private AclServiceClient aclServiceClient;
     @Mock private ApplicationEventPublisher eventPublisher;
+    @Mock private JmsTemplate jmsTemplate;
 
     private ObjectMapper realObjectMapper;
     private TestableAppServiceImpl service;
@@ -108,7 +112,8 @@ public class AppImportExportTest {
                 authenticationHelper,
                 httpAuthorizationHeaderHelper,
                 aclServiceClient,
-                eventPublisher);
+                eventPublisher,
+                jmsTemplate);
     }
 
     // ---------- EXPORT TESTS ----------

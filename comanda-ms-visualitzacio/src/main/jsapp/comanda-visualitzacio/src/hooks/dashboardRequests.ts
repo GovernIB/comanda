@@ -227,9 +227,9 @@ export const useDashboardWidgets = (
             setRequestState((prevState) => ({
                 ...prevState,
                 widgets: prevState.widgets?.map((item: any) => {
-                    const layoutItem = layoutItems.find(
-                        (li) => li.id === String(item.dashboardItemId ?? item.dashboardTitolId)
-                    );
+                    const rawId = item.tipus === 'TITOL' ? item.dashboardTitolId : item.dashboardItemId;
+                    const itemGridId = `${rawId}-${item.tipus}`;
+                    const layoutItem = layoutItems.find((li) => li.id === itemGridId);
                     return layoutItem
                         ? { ...item, posX: layoutItem.x, posY: layoutItem.y, width: layoutItem.w, height: layoutItem.h }
                         : item;

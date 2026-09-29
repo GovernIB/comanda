@@ -30,6 +30,8 @@ import es.caib.comanda.ms.logic.intf.model.ReportFileType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
+import es.caib.comanda.base.config.Cues;
+import es.caib.comanda.ms.logic.intf.jms.NetejaEntornAppMessage;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +41,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
 import org.springframework.http.*;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ReflectionUtils;
@@ -85,6 +88,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     private final Validator validator;
     private final ResourceEntityMappingHelper resourceEntityMappingHelper;
     private final Environment environment;
+    private final JmsTemplate jmsTemplate;
 
     @PostConstruct
     public void init() {
@@ -95,6 +99,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         register(EntornApp.REPORT_PREVISUALITZAR_LOG, new InformePrevisualitzarLog(restTemplate, statsAuthUser, statsAuthPassword, environment));
         register(EntornApp.ENTORN_APP_TOOGLE_ACTIVA, new ToogleActiva(resourceEntityMappingHelper));
         register(EntornApp.ENTORN_APP_REFRESH_INFO, new RefreshInfo(resourceEntityMappingHelper));
+        register(EntornApp.ACTION_NETEJA_ESTADISTICA, new NetejaEstadisticaActionExecutor(jmsTemplate, authenticationHelper));
         register(EntornApp.PERSPECTIVE_DEFAULT_LOGS, new DefaultLogsPerspectiveApplicator());
         register(EntornApp.PERSPECTIVE_HISTORICS_VERSIONS, new HistoricVersionsPerspectiveApplicator());
         register(EntornApp.PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS, new IntegracionsSubsistemesContextsPerspectiveApplicator());
@@ -489,6 +494,40 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                 entity.isParametreAuth(), entity.getNomUsuariAuth(), entity.getContrasenyaAuth());
             appInfoHelper.refreshAppInfo(appInfoProjection);
             return resourceEntityMappingHelper.entityToResource(entity, EntornApp.class);
+        }
+    }
+
+    @RequiredArgsConstructor
+    public class NetejaEstadisticaActionExecutor implements ActionExecutor<EntornAppEntity, EntornApp.NetejaEstadisticaActionForm, EntornApp.NetejaEstadisticaResponse> {
+        private final JmsTemplate jmsTemplate;
+        private final AuthenticationHelper authenticationHelper;
+
+        @Override
+        public void onChange(Serializable id, EntornApp.NetejaEstadisticaActionForm previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, EntornApp.NetejaEstadisticaActionForm target) {
+        }
+
+        @Override
+        public EntornApp.NetejaEstadisticaResponse exec(String code, EntornAppEntity entity, EntornApp.NetejaEstadisticaActionForm params) throws ActionExecutionException {
+            if (!authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)) {
+                throw new AccessDeniedException("Sense permisos per a executar la neteja de dades estadístiques");
+            }
+            if (entity == null) {
+                throw new ActionExecutionException(EntornApp.class, null, code, "EntornApp no trobat");
+            }
+            if (params == null || !params.isConfirmoPerdua()) {
+                throw new ActionExecutionException(EntornApp.class, entity.getId(), code,
+                        I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.intf.model.EntornApp.NetejaEstadisticaActionForm.confirmoPerdua.required"));
+            }
+
+            NetejaEntornAppMessage message = new NetejaEntornAppMessage(entity.getId());
+
+            log.info("Sol·licitant neteja d'estadístiques per entornApp {} (només fets)", entity.getId());
+            jmsTemplate.convertAndSend(Cues.CUA_NETEJA_ESTADISTICA, message);
+
+            String msg = I18nUtil.getInstance().getI18nMessage(
+                    "es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.NetejaEstadisticaAction.sollicitadaDades");
+
+            return new EntornApp.NetejaEstadisticaResponse(true, msg);
         }
     }
 
