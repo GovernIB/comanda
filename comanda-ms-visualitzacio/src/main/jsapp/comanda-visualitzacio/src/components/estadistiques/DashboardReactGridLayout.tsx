@@ -331,9 +331,9 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
         const rawId = gridId.substring(0, lastDash);
         const type = gridId.substring(lastDash + 1);
         if (type === 'TITOL') {
-            return dashboardWidgets.find((widget: any) => String(widget.dashboardTitolId) === rawId);
+            return dashboardWidgets?.find((widget: any) => String(widget.dashboardTitolId) === rawId);
         }
-        return dashboardWidgets.find((widget: any) => String(widget.dashboardItemId) === rawId);
+        return dashboardWidgets?.find((widget: any) => String(widget.dashboardItemId) === rawId);
     };
 
     const [contextMenu, setContextMenu] = React.useState<{ mouseX: number; mouseY: number; entity: any } | null>(null);
@@ -653,15 +653,21 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                         transformScale={scale}
                     >
                         {gridLayoutItems.map((item) => {
-                            const dashboardWidget = dashboardWidgets.find(w => String(w.dashboardItemId) === String(item.rawId));
-                            const dashboardTitol = dashboardWidgets.find(w => String(w.dashboardTitolId) === String(item.rawId));
+                            const isTitol = item.type === 'TITOL';
+                            const dashboardWidget = isTitol
+                                ? undefined
+                                : dashboardWidgets?.find(w => String(w.dashboardItemId) === String(item.rawId));
+                            const dashboardTitol = isTitol
+                                ? dashboardWidgets?.find(w => String(w.dashboardTitolId) === String(item.rawId))
+                                : undefined;
+                            const entity = isTitol ? dashboardTitol : dashboardWidget;
                             return (
                                 <CustomGridItemComponent
                                     key={item.id}
                                     editable={editable}
                                     selected={selectedItemId === item.id || !!multiSelectedItemIds?.includes(item.id)}
                                     itemId={item.id}
-                                    entity={dashboardWidget ?? dashboardTitol}
+                                    entity={entity}
                                     onItemContextMenu={handleItemContextMenu}
                                 >
                                     <ErrorBoundary FallbackComponent={SalutErrorBoundaryFallback}>

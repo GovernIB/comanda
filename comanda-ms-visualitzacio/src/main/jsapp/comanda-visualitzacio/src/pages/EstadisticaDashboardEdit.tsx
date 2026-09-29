@@ -356,7 +356,10 @@ const EstadisticaDashboardEdit: React.FC = () => {
         if (entities.length === 1) { selectDashboardElement(entities[0]); return; }
         setEditorSelection({
             kind: 'multi',
-            ids: entities.map((e) => `${e.dashboardItemId ?? e.dashboardTitolId ?? e.id}-${e.tipus}`)
+            ids: entities.map((e) => {
+                const rawId = e.tipus === 'TITOL' ? (e.dashboardTitolId ?? e.id) : (e.dashboardItemId ?? e.id);
+                return `${rawId}-${e.tipus}`;
+            }),
         });
     };
 
@@ -856,7 +859,7 @@ const SideMenu = ({
                     {t($ => $.page.dashboards.editor.dashboardElements)}
                 </Typography>
                 {dashboardWidgets.map((widget: any) => {
-                    const rawId = String(widget.dashboardItemId ?? widget.dashboardTitolId);
+                    const rawId = String(widget.tipus === 'TITOL' ? widget.dashboardTitolId : widget.dashboardItemId);
                     const itemGridId = `${rawId}-${widget.tipus}`;
                     const isSelected = selectedItemId === itemGridId;
                     return (

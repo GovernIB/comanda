@@ -501,6 +501,33 @@ describe('DashboardReactGridLayout', () => {
         expect(onDeleteItem).toHaveBeenCalledWith(expect.objectContaining({ dashboardItemId: 1 }));
     });
 
+    it('DashboardReactGridLayout_quanWidgetITitolComparteixenId_elMenuContextualDelTitolObreElTitolINoElWidget', () => {
+        mocks.isEqualMock.mockReturnValue(true);
+        const onSelectItem = vi.fn();
+
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={true}
+                dashboardWidgets={[
+                    { dashboardItemId: 1, titol: 'Widget simple', tipus: 'SIMPLE' },
+                    { dashboardTitolId: 1, titol: 'Títol', tipus: 'TITOL' },
+                ]}
+                gridLayoutItems={[
+                    { id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 },
+                    { id: '1-TITOL', rawId: 1, type: 'TITOL', x: 2, y: 0, w: 4, h: 1 },
+                ]}
+                onSelectItem={onSelectItem}
+            />
+        );
+
+        const items = screen.getAllByTestId('grid-item');
+        fireEvent.contextMenu(items[1], { clientX: 50, clientY: 60 });
+        fireEvent.click(screen.getByText('Modificar'));
+
+        expect(onSelectItem).toHaveBeenCalledWith(expect.objectContaining({ dashboardTitolId: 1, tipus: 'TITOL' }));
+    });
+
     it('DashboardReactGridLayout_quanNoEsEditable_noObreElMenuContextual', () => {
         mocks.isEqualMock.mockReturnValue(true);
 

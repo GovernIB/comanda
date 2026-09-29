@@ -227,7 +227,7 @@ export const useDashboardWidgets = (
             setRequestState((prevState) => ({
                 ...prevState,
                 widgets: prevState.widgets?.map((item: any) => {
-                    const rawId = item.dashboardItemId ?? item.dashboardTitolId;
+                    const rawId = item.tipus === 'TITOL' ? item.dashboardTitolId : item.dashboardItemId;
                     const itemGridId = `${rawId}-${item.tipus}`;
                     const layoutItem = layoutItems.find((li) => li.id === itemGridId);
                     return layoutItem
