@@ -31,6 +31,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 config={getAuthConfig()}
                 mandatory
                 silentCheckSsoRedirectUri={`${import.meta.env.BASE_URL}silent-check-sso.html`}
+                // Activat automàticament en dev (npm run dev) perquè a la consola es vegi quin mecanisme exacte
+                // (onTokenExpired, manteniment de sessió periòdic, onAuthRefreshError...) dispara cada renovació
+                // o redirect, útil mentre es depura el refresc espontani de la interfície.
+                debug={import.meta.env.DEV ? true : undefined}
             >
                 <ResourceApiProvider apiUrl={getEnvApiUrl()} userSessionActive>
                     <UserProvider>

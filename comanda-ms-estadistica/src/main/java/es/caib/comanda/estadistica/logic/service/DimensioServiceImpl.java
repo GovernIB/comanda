@@ -11,8 +11,8 @@ import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum;
 import es.caib.comanda.estadistica.logic.intf.service.DimensioService;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
-import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 import es.caib.comanda.estadistica.persist.repository.DimensioRepository;
 import es.caib.comanda.estadistica.persist.repository.DimensioValorRepository;
 import es.caib.comanda.estadistica.persist.repository.FetRepository;
@@ -21,7 +21,6 @@ import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 

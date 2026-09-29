@@ -1281,6 +1281,25 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
     const isAuthenticated = authContext?.isAuthenticated;
     const bearerTokenActive = authContext?.bearerTokenActive;
     const getToken = authContext?.getToken;
+    const getTokenParsed = authContext?.getTokenParsed;
+    const signIn = authContext?.signIn;
+    // Indica si, en el moment de rebre una resposta d'error d'autenticació/autorització, la sessió local ja no és
+    // vàlida (sense token, o amb el token caducat). Ho usam per distingir una sessió perduda (s'ha de redirigir a
+    // login) d'un 403 "real" (usuari autenticat sense permisos suficients, que s'ha de mostrar com a error normal).
+    const isSessionInvalid = () => {
+        const tokenParsed = getTokenParsed?.();
+        const expiresAtMillis = tokenParsed?.exp != null ? tokenParsed.exp * 1000 : undefined;
+        return !tokenParsed || (expiresAtMillis != null && expiresAtMillis <= Date.now());
+    };
+    // Evita cridar signIn() repetides vegades si diverses peticions fallen amb 401/403 gairebé simultàniament
+    // (per exemple, diverses graelles carregant-se alhora quan la sessió caduca).
+    const sessionRedirectTriggeredRef = React.useRef<boolean>(false);
+    const triggerSessionRedirect = () => {
+        if (!sessionRedirectTriggeredRef.current) {
+            sessionRedirectTriggeredRef.current = true;
+            signIn?.();
+        }
+    };
     const kettingClientRef = React.useRef<Client>(undefined);
     const openAnswerRequiredDialogRef = React.useRef<OpenAnswerRequiredDialogFn>(undefined);
     const [httpHeaders, setHttpHeaders] = React.useState<Record<string, string>[]>();
@@ -1316,7 +1335,21 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
                     Object.entries(e).forEach(([key, value]) => newRequest.headers.set(key, value));
                 });
             }
-            return next(newRequest);
+            return next(newRequest).then((response) => {
+                // Si la resposta indica que ja no estam autenticats (401) o que no tenim permisos (403) i, en
+                // aquest darrer cas, el token local ja no és vàlid (sessió caducada/perduda), redirigim a la
+                // pàgina de login en lloc de deixar que l'error arribi tal qual als components. Sense això,
+                // aquests errors es mostren com un error funcional qualsevol (per exemple, com si una URL
+                // comprovada a un formulari fos incorrecta), fent creure que el problema és un altre quan en
+                // realitat només cal tornar a iniciar sessió.
+                if (
+                    signIn &&
+                    (response.status === 401 || (response.status === 403 && isSessionInvalid()))
+                ) {
+                    triggerSessionRedirect();
+                }
+                return response;
+            });
         });
         kettingClientRef.current = kettingClient;
     };
