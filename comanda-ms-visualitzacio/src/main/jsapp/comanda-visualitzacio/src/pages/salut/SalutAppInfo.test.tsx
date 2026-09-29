@@ -290,6 +290,7 @@ const createAppInfoData = (overrides: Record<string, unknown> = {}) => ({
         revisioSimplificat: 'abc123',
         jdkVersion: '17',
         logsUrl: 'http://logs',
+        logsDisponibles: true,
         entornAppHistorics: [
         {
             id: 1,
@@ -664,7 +665,7 @@ describe('SalutAppInfo', () => {
     });
 
     it('SalutAppInfo_quanNoHiHaLogsDeshabilitaElTabDeLogs', () => {
-        // Verifica que el tab de logs queda deshabilitat si l'entorn no publica l'enllaç de logs.
+        // Verifica que el tab de logs queda deshabilitat si l'entorn no té logs disponibles.
         render(
             <SalutAppInfo
                 ready
@@ -675,12 +676,36 @@ describe('SalutAppInfo', () => {
                         revisioSimplificat: 'abc123',
                         jdkVersion: '17',
                         logsUrl: null,
+                        logsDisponibles: false,
                     },
                 }) as any}
             />
         );
 
         expect(screen.getByRole('tab', { name: /Logs/i })).toBeDisabled();
+    });
+
+    it('SalutAppInfo_quanLogsDisponiblesPeroSenseLogsUrl_permetObrirElTabDeLogs', () => {
+        // Verifica que un usuari amb permís de Salut (logsUrl censurat però logsDisponibles true) pot obrir el tab de logs.
+        render(
+            <SalutAppInfo
+                ready
+                appInfoData={createAppInfoData({
+                    entornApp: {
+                        id: 7,
+                        versio: '1.0.0',
+                        revisioSimplificat: 'abc123',
+                        jdkVersion: '17',
+                        logsUrl: null,
+                        logsDisponibles: true,
+                    },
+                }) as any}
+            />
+        );
+
+        fireEvent.click(screen.getByRole('tab', { name: /Logs/i }));
+
+        expect(screen.getByText('Logs viewer 7')).toBeInTheDocument();
     });
 
     it('SalutAppInfo_quanSactivaElTabDeLogsSenseEntornMostraSpinner', () => {

@@ -119,6 +119,7 @@ const Entorns: React.FC = () => {
                 title={t($ => $.page.versionsEntorns.title)}
                 resourceName="app"
                 columns={columns}
+                namedQueries={['permis_salut']}
                 readOnly
                 toolbarType="upper"
                 paginationActive

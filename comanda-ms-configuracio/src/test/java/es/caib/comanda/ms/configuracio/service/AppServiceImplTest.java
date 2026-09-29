@@ -32,6 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import static org.mockito.Mockito.lenient;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
 
@@ -327,6 +328,61 @@ public class AppServiceImplTest {
     }
 
     @Test
+    @DisplayName("namedFilterToSpringFilter: permis_disseny retorna null quan l'usuari és ADMIN")
+    void namedFilterToSpringFilter_quanPermisDissenyIAdmin_llavorsRetornaNull() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+
+        String result = appService.exposedNamedFilterToSpringFilter(App.NAMED_FILTER_PERMIS_DISSENY);
+
+        assertNull(result);
+        verifyNoInteractions(aclServiceClient);
+        verifyNoInteractions(entornAppRepository);
+    }
+
+    @Test
+    @DisplayName("namedFilterToSpringFilter: permis_disseny no retorna null per a CONSULTA si no té permisos")
+    void namedFilterToSpringFilter_quanPermisDissenyIConsultaSensePermisos_llavorsRetornaIdZero() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("user1");
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"COM_CONSULTA"});
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
+
+        mockAllowedIds(ResourceType.APP, PermissionEnum.PERM1, Collections.emptySet());
+        mockAllowedIds(ResourceType.ENTORN_APP, PermissionEnum.PERM1, Collections.emptySet());
+
+        String result = appService.exposedNamedFilterToSpringFilter(App.NAMED_FILTER_PERMIS_DISSENY);
+
+        assertEquals("id:0", result);
+        verifyNoInteractions(entornAppRepository);
+    }
+
+    @Test
+    @DisplayName("namedFilterToSpringFilter: permis_disseny retorna les apps amb permís directe")
+    void namedFilterToSpringFilter_quanPermisDissenyAmbPermisApp_llavorsRetornaFiltreApp() {
+        mockUsuariSenseRols();
+        mockAllowedIds(ResourceType.APP, PermissionEnum.PERM1, Set.of(10L, 20L));
+        mockAllowedIds(ResourceType.ENTORN_APP, PermissionEnum.PERM1, Collections.emptySet());
+
+        String result = appService.exposedNamedFilterToSpringFilter(App.NAMED_FILTER_PERMIS_DISSENY);
+
+        assertEquals("id:10 or id:20", result);
+        verifyNoInteractions(entornAppRepository);
+    }
+
+    @Test
+    @DisplayName("namedFilterToSpringFilter: permis_disseny resol les apps dels entorns-app amb permís")
+    void namedFilterToSpringFilter_quanPermisDissenyAmbPermisEntornApp_llavorsRetornaLesSevesApps() {
+        mockUsuariSenseRols();
+        mockAllowedIds(ResourceType.APP, PermissionEnum.PERM1, Collections.emptySet());
+        mockAllowedIds(ResourceType.ENTORN_APP, PermissionEnum.PERM1, Set.of(50L));
+        when(entornAppRepository.findAppIdsByEntornAppIds(Set.of(50L))).thenReturn(Set.of(30L));
+
+        String result = appService.exposedNamedFilterToSpringFilter(App.NAMED_FILTER_PERMIS_DISSENY);
+
+        assertEquals("id:30", result);
+    }
+
+    @Test
     @DisplayName("namedFilterToSpringFilter: delega els filtres desconeguts a la implementació base")
     void namedFilterToSpringFilter_quanElFiltreEsDesconegut_llavorsDelegaALaBase() {
         assertNull(appService.exposedNamedFilterToSpringFilter("filtre_inexistent"));
@@ -337,16 +393,20 @@ public class AppServiceImplTest {
 
     private void mockUsuariSenseRols() {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
-        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+        lenient().when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
         when(authenticationHelper.getCurrentUserName()).thenReturn("user1");
         when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"COM_USER"});
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
     }
 
     private void mockAllowedIds(ResourceType resourceType, Set<Long> ids) {
+        mockAllowedIds(resourceType, PermissionEnum.PERM2, ids);
+    }
+
+    private void mockAllowedIds(ResourceType resourceType, PermissionEnum permission, Set<Long> ids) {
         when(aclServiceClient.findIdsWithAnyPermission(
                 eq(resourceType),
-                eq(Collections.singletonList(PermissionEnum.PERM2)),
+                eq(Collections.singletonList(permission)),
                 eq("user1"),
                 any(),
                 any()))

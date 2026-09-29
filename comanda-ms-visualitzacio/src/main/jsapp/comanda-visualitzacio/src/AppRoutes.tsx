@@ -2,7 +2,6 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Navigate, useLocation } from 'react-router-dom';
 import { Box, CircularProgress } from '@mui/material';
-import { useResourceApiService } from 'reactlib';
 import Salut from './pages/salut/Salut';
 import NotFoundPage from './pages/NotFound';
 import Apps, { AppForm } from './pages/Apps';
@@ -31,8 +30,10 @@ import Paletes from './pages/Paletes';
 import ProtectedRoute from './components/ProtectedRoute';
 import Sitemap from './pages/Sitemap';
 import Accessibilitat from './pages/accessibilitat/Accessibilitat';
-import { useIsUserAdmin, useIsUserConsulta, useIsUserUsuari, useUserContext } from './components/UserContext';
+import { useIsUserAdmin, useIsUserConsulta } from './components/UserContext';
 import useStatsEnabled from './hooks/useStatsEnabled';
+import useHasSalutAccess from './hooks/useHasSalutAccess';
+import useHasDashboardAccess from './hooks/useHasDashboardAccess';
 import {Plantilla} from "./pages/Plantilla.tsx";
 import EntornAppHist from './pages/EntornsAppHistorics.tsx';
 import MonitorDb from './pages/MonitorDb.tsx';
@@ -47,37 +48,6 @@ const LoadingRoute: React.FC = () => (
         <CircularProgress />
     </Box>
 );
-
-const useHasSalutAccess = () => {
-    const isUserAdmin = useIsUserAdmin();
-    const isUserConsulta = useIsUserConsulta();
-    const isUserUsuari = useIsUserUsuari();
-    const { user } = useUserContext();
-    const { isReady: entornAppApiIsReady, find: entornAppFind } = useResourceApiService('entornApp');
-    const [hasSalutAccess, setHasSalutAccess] = React.useState<boolean>();
-
-    React.useEffect(() => {
-        if (!isUserUsuari && (isUserAdmin || isUserConsulta)) {
-            setHasSalutAccess(true);
-            return;
-        }
-        if (user == null || !entornAppApiIsReady) {
-            return;
-        }
-        void entornAppFind({
-            page: 0,
-            size: 1,
-            namedQueries: ['permis_salut'],
-            filter: 'activa:true and app.activa:true',
-        }).then(response => {
-            setHasSalutAccess((response.rows?.length ?? 0) > 0);
-        }).catch(() => {
-            setHasSalutAccess(false);
-        });
-    }, [entornAppApiIsReady, entornAppFind, isUserAdmin, isUserConsulta, isUserUsuari, user]);
-
-    return hasSalutAccess;
-};
 
 const HomeRoute: React.FC = () => {
     const hasSalutAccess = useHasSalutAccess();
@@ -98,11 +68,13 @@ const UserRoleRouteGuard: React.FC<{ children: React.ReactNode }> = ({ children 
     const isUserConsulta = useIsUserConsulta();
     // const isUserUsuari = useIsUserUsuari();
     const hasSalutAccess = useHasSalutAccess();
+    const hasDashboardAccess = useHasDashboardAccess();
     const statsEnabled = useStatsEnabled();
     const location = useLocation();
     const isStatsRoute = statsRoutePrefixes.some(path =>
         location.pathname === path || location.pathname.startsWith(path + '/')
     );
+    const isDashboardRoute = location.pathname === '/dashboard' || location.pathname.startsWith('/dashboard/');
 
     if (statsEnabled === undefined && isStatsRoute) {
         return <LoadingRoute />;
@@ -116,7 +88,7 @@ const UserRoleRouteGuard: React.FC<{ children: React.ReactNode }> = ({ children 
         return <>{children}</>;
     }
 
-    if (hasSalutAccess === undefined) {
+    if (hasSalutAccess === undefined || (isDashboardRoute && hasDashboardAccess === undefined)) {
         return <LoadingRoute />;
     }
 
@@ -135,7 +107,7 @@ const UserRoleRouteGuard: React.FC<{ children: React.ReactNode }> = ({ children 
             '/alarmes',
             '/sitemap',
             '/accessibilitat',
-            ...(statsEnabled ? ['/estadistiques', '/dashboard', '/dimensio', '/indicador', '/calendari'] : []),
+            ...(statsEnabled ? ['/estadistiques', ...(hasDashboardAccess ? ['/dashboard'] : []), '/dimensio', '/indicador', '/calendari'] : []),
         ]
         : [
             ...(hasSalutAccess ? ['/', '/appinfo', '/alarma',] : []),
@@ -144,7 +116,7 @@ const UserRoleRouteGuard: React.FC<{ children: React.ReactNode }> = ({ children 
             '/alarmes',
             '/sitemap',
             '/accessibilitat',
-            ...(statsEnabled ? ['/estadistiques', '/dashboard'] : []),
+            ...(statsEnabled ? ['/estadistiques', ...(hasDashboardAccess ? ['/dashboard'] : [])] : []),
         ];
     const isAllowedPath = allowedPrefixes.some(path =>
         location.pathname === path || (path !== '/' && location.pathname.startsWith(path + '/'))

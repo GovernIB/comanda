@@ -150,7 +150,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
 
     @Override
     protected void beforeDelete(DashboardEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
-        dashboardPermisosHelper.checkCanDesign(entity.getId(), entity.getAppId(), entity.getEntornId(), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.permisos.eliminar"));
+        dashboardPermisosHelper.checkCanDeleteDashboard(entity.getAppId(), entity.getEntornId(), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.permisos.eliminar"));
     }
 
     @Override
@@ -489,6 +489,9 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
         @Override
         public DashboardImportResult exec(String code, DashboardEntity entity, DashboardImportParams params) {
             try {
+                dashboardPermisosHelper.checkHasCreationPermission(
+                        I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.permisos.importarSenseCreacio"));
+
                 String jsonString = new String(params.getFile().getContent(), StandardCharsets.UTF_8);
                 List<DashboardExport> dashboards = parseDashboardsJson(jsonString);
 
@@ -548,6 +551,9 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
         @Override
         public void onChange(Serializable id, DashboardImportParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, DashboardImportParams target) {
             if (DashboardImportParams.Fields.file.equals(fieldName)) {
+                dashboardPermisosHelper.checkHasCreationPermission(
+                        I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.permisos.importarSenseCreacio"));
+
                 FileReference file = (FileReference) fieldValue;
                 if (file == null || file.getContent() == null) {
                     target.setConflicts(new ArrayList<>());

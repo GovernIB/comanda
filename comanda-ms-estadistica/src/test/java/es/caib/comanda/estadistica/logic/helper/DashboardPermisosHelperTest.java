@@ -447,6 +447,27 @@ class DashboardPermisosHelperTest {
     }
 
     @Test
+    @DisplayName("buildDashboardFilter per a CONSULTA: lliure en lectura però filtra per ACLs en escriptura")
+    void buildDashboardFilter_quanConsulta_lliureEnLecturaIFiltraEnEscriptura() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(true);
+
+        // En lectura (isWrite = false): exempt de filtre
+        assertThat(dashboardPermisosHelper.buildDashboardFilter("nom:'Test'", false)).isEqualTo("nom:'Test'");
+
+        // En escriptura (isWrite = true): aplica les seves ACLs d'escriptura
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), anyList(), anyString(), anyList(), anyString()))
+            .thenReturn(ResponseEntity.ok(Set.of(5L)));
+
+        String writeResult = dashboardPermisosHelper.buildDashboardFilter("actiu:true", true);
+        assertThat(writeResult).isEqualTo("actiu:true and id:5");
+    }
+
+    @Test
     @DisplayName("buildDashboardFilter aplica filtres correctes per a Dashboard quan usuari no és admin")
     void buildDashboardFilter_quanNoAdmin_aplicaFiltres() {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
@@ -825,5 +846,100 @@ class DashboardPermisosHelperTest {
         assertThat(dashboardPermisosHelper.extractEntornIdFromNamedQueries(new String[]{"altre:123"})).isNull();
         assertThat(dashboardPermisosHelper.extractEntornIdFromNamedQueries(new String[]{"filterByEntorn:5"})).isEqualTo(5L);
         assertThat(dashboardPermisosHelper.extractEntornIdFromNamedQueries(new String[]{"filterByEntorn:abc"})).isNull();
+    }
+
+    // ========================================================================
+    // 7. CREACIÓ, ESBORRAT I LECTURA GENERAL DE DASHBOARDS
+    // ========================================================================
+
+    @Test
+    @DisplayName("hasCreationPermission retorna true per a ADMIN")
+    void hasCreationPermission_quanAdmin_retornaTrue() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        assertThat(dashboardPermisosHelper.hasCreationPermission()).isTrue();
+    }
+
+    @Test
+    @DisplayName("hasCreationPermission retorna true si té permisos d'escriptura sobre alguna APP")
+    void hasCreationPermission_quanPermisApp_retornaTrue() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Set.of(1L)));
+
+        assertThat(dashboardPermisosHelper.hasCreationPermission()).isTrue();
+    }
+
+    @Test
+    @DisplayName("hasCreationPermission retorna true si té permisos d'escriptura sobre algun ENTORN_APP")
+    void hasCreationPermission_quanPermisEntornApp_retornaTrue() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Set.of(5L)));
+
+        assertThat(dashboardPermisosHelper.hasCreationPermission()).isTrue();
+    }
+
+    @Test
+    @DisplayName("hasCreationPermission retorna false si no té permisos d'APP ni ENTORN_APP (encara que en tingui sobre un Dashboard)")
+    void hasCreationPermission_senseAppNiEntornApp_retornaFalse() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        assertThat(dashboardPermisosHelper.hasCreationPermission()).isFalse();
+        assertThatThrownBy(() -> dashboardPermisosHelper.checkHasCreationPermission("error"))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("error");
+    }
+
+    @Test
+    @DisplayName("canDeleteDashboard retorna true quan pot crear a l'app/entorn")
+    void canDeleteDashboard_quanPotCrear_retornaTrue() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        assertThat(dashboardPermisosHelper.canDeleteDashboard(1L, 2L)).isTrue();
+    }
+
+    @Test
+    @DisplayName("canDeleteDashboard retorna false quan no té permisos a l'app ni entorn (no n'hi ha prou amb permís al dashboard)")
+    void canDeleteDashboard_sensePermisApp_retornaFalse() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.anyPermissionGranted(eq(ResourceType.APP), eq(1L), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(false));
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(1L, 2L)).thenReturn(null);
+
+        assertThat(dashboardPermisosHelper.canDeleteDashboard(1L, 2L)).isFalse();
+        assertThatThrownBy(() -> dashboardPermisosHelper.checkCanDeleteDashboard(1L, 2L, "error"))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("error");
+    }
+
+    @Test
+    @DisplayName("canReadDashboard retorna true quan usuari té permís READ al dashboard")
+    void canReadDashboard_ambPermisDashboard_retornaTrue() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+        when(aclServiceClient.anyPermissionGranted(eq(ResourceType.DASHBOARD), eq(10L), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(true));
+
+        assertThat(dashboardPermisosHelper.canReadDashboard(10L, 1L, 2L)).isTrue();
+    }
+
+    @Test
+    @DisplayName("canReadDashboard retorna false quan no té cap permís de lectura")
+    void canReadDashboard_sensePermis_retornaFalse() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+        when(aclServiceClient.anyPermissionGranted(any(), any(), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(false));
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(any(), any())).thenReturn(null);
+
+        assertThat(dashboardPermisosHelper.canReadDashboard(10L, 1L, 2L)).isFalse();
+        assertThatThrownBy(() -> dashboardPermisosHelper.checkCanReadDashboard(10L, 1L, 2L, "error"))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("error");
     }
 }

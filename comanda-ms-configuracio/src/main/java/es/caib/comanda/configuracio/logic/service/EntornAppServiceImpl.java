@@ -39,6 +39,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
 import org.springframework.http.*;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -102,6 +103,10 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
     @Override
     protected void afterConversion(EntornAppEntity entity, EntornApp resource) {
+        if (resource != null) {
+            String logsUrl = (entity != null && entity.getLogsUrl() != null) ? entity.getLogsUrl() : resource.getLogsUrl();
+            resource.setLogsDisponibles(logsUrl != null && !logsUrl.isBlank());
+        }
         if (!hasPermission(Collections.singletonList(entity)).get(0)) {
             censorFields(resource);
         }
@@ -115,7 +120,12 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         List<Boolean> permissions = hasPermission(entities);
 
         for (int i = 0; i < entities.size(); i++) {
+            EntornAppEntity entity = entities.get(i);
             EntornApp resource = resources.get(i);
+            if (resource != null) {
+                String logsUrl = (entity != null && entity.getLogsUrl() != null) ? entity.getLogsUrl() : resource.getLogsUrl();
+                resource.setLogsDisponibles(logsUrl != null && !logsUrl.isBlank());
+            }
             if (!permissions.get(i)) {
                 censorFields(resource);
             }
@@ -151,6 +161,27 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             return true;
         }
         return false;
+    }
+
+    public boolean hasLogsPermission(EntornAppEntity entity) {
+        if (entity == null) {
+            return false;
+        }
+        if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
+                || authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
+            return true;
+        }
+        List<PermissionEnum> permissions = List.of(PermissionEnum.READ, PermissionEnum.PERM2);
+        Set<Serializable> allowedEntornAppIds = getAllowedIds(ResourceType.ENTORN_APP, permissions);
+        Set<Serializable> allowedAppIds = getAllowedIds(ResourceType.APP, permissions);
+        return hasPermission(entity, allowedEntornAppIds, allowedAppIds);
+    }
+
+    public void checkLogsPermission(EntornAppEntity entity) {
+        if (!hasLogsPermission(entity)) {
+            throw new AccessDeniedException(I18nUtil.getInstance().getI18nMessage(
+                    "es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.permisos.consultarLogs"));
+        }
     }
 
     private boolean isAllowed(Set<Serializable> allowedIds, Serializable id) {
@@ -206,22 +237,32 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                     || authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
                 return null;
             }
-            Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP, Collections.singletonList(PermissionEnum.PERM2));
-            Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP, Collections.singletonList(PermissionEnum.PERM2));
-            String appFilter = buildOrFilter("app.id", appPermissionIds);
-            String entornAppFilter = buildOrFilter("id", entornAppPermissionIds);
-            if (appFilter == null && entornAppFilter == null) {
-                return "id:0";
+            return buildAclPermissionsFilter(Collections.singletonList(PermissionEnum.PERM2));
+        }
+        if (EntornApp.NAMED_FILTER_PERMIS_DISSENY.equals(name)) {
+            if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)) {
+                return null;
             }
-            if (appFilter == null) {
-                return entornAppFilter;
-            }
-            if (entornAppFilter == null) {
-                return appFilter;
-            }
-            return appFilter + " or " + entornAppFilter;
+            return buildAclPermissionsFilter(Collections.singletonList(PermissionEnum.PERM1));
         }
         return super.namedFilterToSpringFilter(name);
+    }
+
+    private String buildAclPermissionsFilter(List<PermissionEnum> permissions) {
+        Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP, permissions);
+        Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP, permissions);
+        String appFilter = buildOrFilter("app.id", appPermissionIds);
+        String entornAppFilter = buildOrFilter("id", entornAppPermissionIds);
+        if (appFilter == null && entornAppFilter == null) {
+            return "id:0";
+        }
+        if (appFilter == null) {
+            return entornAppFilter;
+        }
+        if (entornAppFilter == null) {
+            return appFilter;
+        }
+        return appFilter + " or " + entornAppFilter;
     }
 
     private Set<Serializable> getAllowedIds(ResourceType resourceType) {
@@ -452,7 +493,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     }
 
     @RequiredArgsConstructor
-    private static class InformeLlistarLogs implements ReportGenerator<EntornAppEntity, Long, FitxerInfo> {
+    public class InformeLlistarLogs implements ReportGenerator<EntornAppEntity, Long, FitxerInfo> {
         private final RestTemplate restTemplate;
         private final String statsAuthUser;
         private final String statsAuthPassword;
@@ -460,6 +501,13 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
         @Override
         public List<FitxerInfo> generateData(String code, EntornAppEntity entornAppEntity, Long params) throws ReportGenerationException {
+            checkLogsPermission(entornAppEntity);
+
+            String logsUrl = entornAppEntity.getLogsUrl();
+            if (logsUrl == null || logsUrl.isBlank()) {
+                return Collections.emptyList();
+            }
+
             HttpEntity<Void> httpEntity = AuthHeaderUtil.buildAuthHttpEntity(
                 statsAuthUser, statsAuthPassword,
                 entornAppEntity.getNomUsuariAuth(),
@@ -468,7 +516,6 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                 environment
             );
 
-            String logsUrl = entornAppEntity.getLogsUrl();
             URI uri = URI.create(logsUrl);
             ResponseEntity<List<FitxerInfo>> response = restTemplate
                 .exchange(uri, HttpMethod.GET, httpEntity, new ParameterizedTypeReference<List<FitxerInfo>>() {
@@ -482,23 +529,24 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         }
     }
 
+    @Getter
+    @AllArgsConstructor
+    public static class DescarregarLogParams implements Serializable {
+        private Long entornAppId;
+        private String nomFitxer;
+    }
+
     @RequiredArgsConstructor
-    public static class InformeDescarregarLog implements ReportGenerator<EntornAppEntity, String, InformeDescarregarLog.DescarregarLogParams> {
+    public class InformeDescarregarLog implements ReportGenerator<EntornAppEntity, String, DescarregarLogParams> {
         private final RestTemplate restTemplate;
         private final EntornAppRepository entornAppRepository;
         private final String statsAuthUser;
         private final String statsAuthPassword;
         private final Environment environment;
 
-        @Getter
-        @AllArgsConstructor
-        public static class DescarregarLogParams implements Serializable {
-            private Long entornAppId;
-            private String nomFitxer;
-        }
-
         @Override
         public List<DescarregarLogParams> generateData(String code, EntornAppEntity entity, String fileParams) throws ReportGenerationException {
+            checkLogsPermission(entity);
             return List.of(new DescarregarLogParams(entity.getId(), fileParams));
         }
 
@@ -506,6 +554,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         public DownloadableFile generateFile(String code, List<?> data, ReportFileType fileType, OutputStream out) {
             DescarregarLogParams params = (DescarregarLogParams) data.get(0);
             EntornAppEntity entornAppEntity = entornAppRepository.findById(params.getEntornAppId()).get();
+            checkLogsPermission(entornAppEntity);
             HttpEntity<Void> httpEntity = AuthHeaderUtil.buildAuthHttpEntity(
                 statsAuthUser, statsAuthPassword,
                 entornAppEntity.getNomUsuariAuth(),
@@ -564,7 +613,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     }
 
     @RequiredArgsConstructor
-    public static class InformePrevisualitzarLog implements ReportGenerator<EntornAppEntity, EntornApp.PrevisualitzarLogParams, EntornApp.PrevisualitzarLogResponse> {
+    public class InformePrevisualitzarLog implements ReportGenerator<EntornAppEntity, EntornApp.PrevisualitzarLogParams, EntornApp.PrevisualitzarLogResponse> {
         private final RestTemplate restTemplate;
         private final String statsAuthUser;
         private final String statsAuthPassword;
@@ -572,6 +621,13 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
         @Override
         public List<EntornApp.PrevisualitzarLogResponse> generateData(String code, EntornAppEntity entornAppEntity, EntornApp.PrevisualitzarLogParams params) throws ReportGenerationException {
+            checkLogsPermission(entornAppEntity);
+
+            String baseUrl = entornAppEntity.getLogsUrl();
+            if (baseUrl == null || baseUrl.isBlank()) {
+                return Collections.emptyList();
+            }
+
             HttpEntity<Void> httpEntity = AuthHeaderUtil.buildAuthHttpEntity(
                 statsAuthUser, statsAuthPassword,
                 entornAppEntity.getNomUsuariAuth(),
@@ -580,7 +636,6 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                 environment
             );
 
-            String baseUrl = entornAppEntity.getLogsUrl();
             String logsUrl = baseUrl + (baseUrl.endsWith("/") ? "" : "/") + params.getFileName() + "/linies/" + params.getLineCount();
             URI uri = URI.create(logsUrl);
             ResponseEntity<List<String>> response = restTemplate

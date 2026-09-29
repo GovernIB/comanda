@@ -1632,4 +1632,23 @@ class ConsultaEstadisticaHelperTest {
             .hasCause(internalException)
             .hasMessageContaining("Internal error details");
     }
+
+    @Test
+    @DisplayName("getDadesWidgetSimple: llança ReportGenerationException quan indicadorInfo és null")
+    void getDadesWidgetSimple_quanIndicadorInfoEsNull_llavorsLlancaReportGenerationException() {
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setId(1L);
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        item.setWidget(widget);
+
+        DadesComunsWidgetConsulta dadesComuns = DadesComunsWidgetConsulta.builder()
+            .entornAppId(1L)
+            .periodeDates(new PeriodeResolverHelper.PeriodeDates(java.time.LocalDate.now().minusDays(7), java.time.LocalDate.now()))
+            .build();
+
+        assertThatThrownBy(() -> org.springframework.test.util.ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "getDadesWidgetSimple", item, dadesComuns, null, null))
+            .isInstanceOf(ReportGenerationException.class)
+            .hasMessageContaining("widgetSimpleSenseIndicador");
+    }
 }

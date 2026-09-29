@@ -26,4 +26,7 @@ public interface UnitatOrganitzativaRepository extends BaseRepository<UnitatOrga
 
     /** Totes les unitats d'un mateix arbre (mateixa arrel Dir3) - vegeu OrganitzativaTreeHelper. */
     List<UnitatOrganitzativaEntity> findByCodiUnitatArrel(String codiUnitatArrel);
+
+    /** Totes les unitats dels arbres dels codis Dir3 indicats - per propagar permisos d'Entitat a les seves UOs. */
+    List<UnitatOrganitzativaEntity> findByCodiUnitatArrelIn(Collection<String> codisUnitatArrel);
 }
