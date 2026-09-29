@@ -510,7 +510,7 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
             return `title-${selection.mode}-${selection.mode === 'edit' ? selection.dashboardTitolId : 'new'}`;
         }
         if (selection.kind === 'filtre') {
-            return `filtre-${selection.mode}-${selection.mode === 'edit' ? selection.dashboardFiltreId : 'new'}`;
+            return `filtre-${selection.mode}-${selection.mode === 'edit' ? selection.dashboardFiltreId : `new-${selection.nextOrdre ?? '0'}`}`;
         }
         if (selection.kind === 'multi') {
             return `multi-${selection.ids.join(',')}`;
@@ -964,10 +964,15 @@ const FiltreDimensioCodiField: React.FC<{ aplicacioId: any; label: string; exclu
             find({ namedQueries: [`filterByApp:${aplicacioId}`], unpaged: true }).then((response) => {
                 if (cancelled) return;
                 const rows = (response.rows ?? []) as Array<{ codi?: string; nom?: string }>;
+                const validRows = rows.filter((row) => typeof row.codi === 'string' && row.codi.length > 0);
+                const uniqueRows = validRows.filter((row, index, self) => 
+                    index === self.findIndex((r) => r.codi === row.codi)
+                );
                 setOptions(
-                    rows
-                        .filter((row) => typeof row.codi === 'string' && row.codi.length > 0)
-                        .map((row) => ({ codi: row.codi as string, nom: row.nom || (row.codi as string) }))
+                    uniqueRows.map((row) => ({ 
+                        codi: row.codi as string, 
+                        nom: row.nom || (row.codi as string) 
+                    }))
                 );
             });
         }
@@ -988,6 +993,7 @@ const FiltreDimensioCodiField: React.FC<{ aplicacioId: any; label: string; exclu
         <Autocomplete
             size="small"
             options={visibleOptions}
+            getOptionKey={(option) => option.codi}
             value={selected}
             getOptionLabel={(option) => option.nom}
             isOptionEqualToValue={(option, val) => option.codi === val.codi}
