@@ -19,6 +19,7 @@ import {
 import PageTitle from '../components/PageTitle.tsx';
 import FormActionDialog from "../components/FormActionDialog.tsx";
 import DimensioFetConsProgressDialog from "../components/DimensioFetConsProgressDialog.tsx";
+import { useIsUserAdmin } from '../components/UserContext.ts';
 
 const EntitatValorTipusField: React.FC = () => {
     const { t } = useTranslation();
@@ -92,12 +93,21 @@ const useChangeTipus = (refresh?: () => void, addConstToFet?: (id:any) => void) 
     }
 }
 
-type DimensionsFilterProps = { onSpringFilterChange: (springFilter?: string) => void };
+type DimensionsFilterProps = {
+    onSpringFilterChange: (springFilter?: string) => void;
+    onRefresh?: () => void;
+};
 const DimensionsFilter = (props: DimensionsFilterProps) => {
-    const { onSpringFilterChange } = props;
+    const { onSpringFilterChange, onRefresh } = props;
     const { t } = useTranslation();
     const { isReady: entornAppApiIsReady, find: entornAppGetAll } = useResourceApiService('entornApp');
+    const { artifactAction: indicadorApiAction } = useResourceApiService('indicador');
     const filterApiRef = useFilterApiRef();
+    const isCurrentUserAdmin = useIsUserAdmin();
+    const { temporalMessageShow, messageDialogShow } = useBaseAppContext();
+    const confirmDialogButtons = useConfirmDialogButtons();
+    const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
+    const [selectedEntornAppId, setSelectedEntornAppId] = useState<any>(null);
     type EntornAppItem = { id: string | number; entornAppDescription?: string };
     const [entornApp, setEntornApp] = useState<EntornAppItem[] | null>([]);
 
@@ -117,7 +127,34 @@ const DimensionsFilter = (props: DimensionsFilterProps) => {
 
     const netejar = () => {
         filterApiRef?.current?.clear();
-    }
+        setSelectedEntornAppId(null);
+    };
+
+    const handleSincronitzar = () => {
+        if (!selectedEntornAppId) return;
+        messageDialogShow(
+            t($ => $.page.dimensions.action.sincronitzarCataleg),
+            t($ => $.page.dimensions.action.sincronitzarCatalegConfirm),
+            confirmDialogButtons,
+            confirmDialogComponentProps
+        ).then((confirmed: any) => {
+            if (confirmed) {
+                indicadorApiAction(null, {
+                    code: 'sincronitzar_cataleg',
+                    data: { entornAppId: selectedEntornAppId }
+                }).then((res: any) => {
+                    if (res?.success) {
+                        temporalMessageShow(null, res?.message || t($ => $.page.dimensions.action.sincronitzarCatalegSuccess), 'success');
+                        onRefresh?.();
+                    } else {
+                        temporalMessageShow(null, res?.message || t($ => $.common.error), 'error');
+                    }
+                }).catch((err: any) => {
+                    temporalMessageShow(null, err?.message || t($ => $.common.error), 'error');
+                });
+            }
+        });
+    };
 
     return (
         <MuiFilter
@@ -131,10 +168,10 @@ const DimensionsFilter = (props: DimensionsFilterProps) => {
             commonFieldComponentProps={{ size: 'small' }}
             onSpringFilterChange={onSpringFilterChange}
             springFilterBuilder={data => {
-                // Build Spring filter based on available fields in the artifact
-                // Fallback to empty if no values provided
+                const eaId = data?.entornApp?.id ?? data?.entornApp ?? null;
+                setSelectedEntornAppId(eaId);
                 return springFilterBuilder.and(
-                    data?.entornApp && springFilterBuilder.eq('entornAppId', data?.entornApp?.id ?? data?.entornApp),
+                    eaId && springFilterBuilder.eq('entornAppId', eaId),
                     data?.codi && springFilterBuilder.like('codi', data?.codi),
                     data?.nom && springFilterBuilder.like('nom', data?.nom),
                 ) || '';
@@ -167,6 +204,15 @@ const DimensionsFilter = (props: DimensionsFilterProps) => {
                     <Grid size={4}><FormField name={'codi'} /></Grid>
                     <Grid size={4}><FormField name={'nom'} /></Grid>
                 </Grid>
+                {isCurrentUserAdmin && (
+                    <IconButton
+                        onClick={handleSincronitzar}
+                        disabled={!selectedEntornAppId}
+                        title={t($ => $.page.dimensions.action.sincronitzarCataleg)}
+                        sx={{ mr: 1 }}>
+                        <Icon>sync</Icon>
+                    </IconButton>
+                )}
                 <IconButton
                     onClick={netejar}
                     title={t($ => $.components.clear)}
@@ -196,12 +242,12 @@ const Dimensions: React.FC = () => {
         { field: 'tipus', flex: 2 },
         // { field: 'agrupableCount', headerName: t('page.dimensions.column.agrupacions'), flex: 1 },
     ];
-    const filterElement = <DimensionsFilter onSpringFilterChange={setFilter}/>;
 
     const gridApiRef = useMuiDataGridApiRef();
     const refresh = () => {
         gridApiRef?.current?.refresh?.();
     }
+    const filterElement = <DimensionsFilter onSpringFilterChange={setFilter} onRefresh={refresh}/>;
 
     const addConstToFet = (id:any) => {
         fetConsCompletedRef.current = false;

@@ -17,6 +17,7 @@ import {
     springFilterBuilder,
     useBaseAppContext,
     useCloseDialogButtons,
+    useConfirmDialogButtons,
     useFormContext,
     useMuiContentDialog,
     useMuiDataGridApiRef,
@@ -691,7 +692,39 @@ const AppsEntorns: React.FC<{ appNom?: string }> = ({ appNom }) => {
     });
     const gestorReadOnly = useReadOnlyGestor();
     const isCurrentUserAdmin = useIsUserAdmin();
+    const { temporalMessageShow, messageDialogShow } = useBaseAppContext();
+    const confirmDialogButtons = useConfirmDialogButtons();
+    const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
+    const { artifactAction: indicadorApiAction } = useResourceApiService('indicador');
     const { handleShow: handleShowNeteja, content: netejaDialogComponent } = useNetejaEstadisticaAction(refresh, appNom);
+
+    const handleSincronitzarEntorn = (id: any, row: any) => {
+        const nomEntorn = row?.entorn?.nom || row?.entornDescription || '';
+        const title = t($ => $.page.appsEntorns.action.sincronitzarCataleg.label);
+        const confirmMsg = t($ => $.page.appsEntorns.action.sincronitzarCataleg.confirm, { nom: nomEntorn });
+        messageDialogShow(
+            title,
+            confirmMsg,
+            confirmDialogButtons,
+            confirmDialogComponentProps
+        ).then((confirmed: any) => {
+            if (confirmed) {
+                indicadorApiAction(null, {
+                    code: 'sincronitzar_cataleg',
+                    data: { entornAppId: id }
+                }).then((res: any) => {
+                    if (res?.success) {
+                        temporalMessageShow(null, res?.message || t($ => $.page.appsEntorns.action.sincronitzarCataleg.success), 'success');
+                    } else {
+                        temporalMessageShow(null, res?.message || t($ => $.common.error), 'error');
+                    }
+                }).catch((err: any) => {
+                    temporalMessageShow(null, err?.message || t($ => $.common.error), 'error');
+                });
+            }
+        });
+    };
+
     const actions = [
         {
             label: t($ => $.page.appsEntorns.action.toolbarActiva.activar),
@@ -719,6 +752,14 @@ const AppsEntorns: React.FC<{ appNom?: string }> = ({ appNom }) => {
             showInMenu: true,
             onClick: (id: any, row: any) => handleShowNeteja(id, row),
             hidden: (): boolean => !isCurrentUserAdmin || Boolean(gestorReadOnly),
+        },
+        {
+            label: t($ => $.page.appsEntorns.action.sincronitzarCataleg.label),
+            action: 'sincronitzar_cataleg',
+            icon: "sync",
+            showInMenu: true,
+            onClick: (id: any, row: any) => handleSincronitzarEntorn(id, row),
+            hidden: (row: any): boolean => !isCurrentUserAdmin || Boolean(gestorReadOnly) || Boolean(!row?.activa),
         },
     ].filter(notNull);
     return (
@@ -928,10 +969,13 @@ const AppsAclEntryForm: React.FC = () => {
 
 const Apps: React.FC = () => {
     const { t } = useTranslation();
-    const { temporalMessageShow } = useBaseAppContext();
+    const { temporalMessageShow, messageDialogShow } = useBaseAppContext();
     const navigate = useNavigate();
     const gridApiRef = useMuiDataGridApiRef();
     const { appExport } = useActions();
+    const confirmDialogButtons = useConfirmDialogButtons();
+    const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
+    const { artifactAction: indicadorApiAction } = useResourceApiService('indicador');
 
     const appColumns = useMemo(() => getAppColumns(t), [t]);
 
@@ -990,6 +1034,34 @@ const Apps: React.FC = () => {
         gridApiRef?.current?.refresh?.();
     };
     const { handleShow: handleShowNetejaApp, content: netejaAppDialogComponent } = useNetejaEstadisticaAppAction(refresh);
+
+    const handleSincronitzarApp = (id: any, row: any) => {
+        const appNom = row?.nom || row?.appNom || '';
+        const title = t($ => $.page.apps.action.sincronitzarCataleg);
+        const confirmMsg = t($ => $.page.apps.sincronitzarCataleg.confirm, { nom: appNom });
+        messageDialogShow(
+            title,
+            confirmMsg,
+            confirmDialogButtons,
+            confirmDialogComponentProps
+        ).then((confirmed: any) => {
+            if (confirmed) {
+                indicadorApiAction(null, {
+                    code: 'sincronitzar_cataleg',
+                    data: { appId: id }
+                }).then((res: any) => {
+                    if (res?.success) {
+                        temporalMessageShow(null, res?.message || t($ => $.page.apps.sincronitzarCataleg.success), 'success');
+                    } else {
+                        temporalMessageShow(null, res?.message || t($ => $.common.error), 'error');
+                    }
+                }).catch((err: any) => {
+                    temporalMessageShow(null, err?.message || t($ => $.common.error), 'error');
+                });
+            }
+        });
+    };
+
     const appActions: DataCommonAdditionalAction[] = [
         gestorReadOnly ? {
             label: t($ => $.components.details),
@@ -1008,6 +1080,14 @@ const Apps: React.FC = () => {
             icon: 'delete_sweep',
             showInMenu: true,
             onClick: (id: any, row: any) => handleShowNetejaApp(id, row),
+            hidden: (): boolean => !isCurrentUserAdmin || Boolean(gestorReadOnly),
+        },
+        {
+            label: t($ => $.page.apps.action.sincronitzarCataleg),
+            action: 'sincronitzar_cataleg',
+            icon: 'sync',
+            showInMenu: true,
+            onClick: (id: any, row: any) => handleSincronitzarApp(id, row),
             hidden: (): boolean => !isCurrentUserAdmin || Boolean(gestorReadOnly),
         },
     ].filter(notNull);

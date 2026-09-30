@@ -761,6 +761,11 @@ const translationEn: translationResourcesType = {
                 export: "Export application",
                 import: "Import application",
                 netejaEstadistica: "Statistics cleanup",
+                sincronitzarCataleg: "Synchronize statistical catalog (all environments)",
+            },
+            sincronitzarCataleg: {
+                confirm: "Are you sure you want to synchronize the statistical catalog of all active environments of this application?",
+                success: "Catalog synchronized successfully: {{message}}",
             },
             netejaEstadistica: {
                 label: "Statistics cleanup",
@@ -836,7 +841,12 @@ const translationEn: translationResourcesType = {
                     confirmButton: "Delete data",
                     cancelButton: "Cancel",
                     success: "Statistical data cleanup requested successfully",
-                }
+                },
+                sincronitzarCataleg: {
+                    label: "Synchronize statistical catalog",
+                    confirm: "Are you sure you want to synchronize the statistical catalog of this environment?",
+                    success: "Catalog synchronized successfully: {{message}}",
+                },
             }
         },
         versionsEntorns: {
@@ -936,6 +946,9 @@ const translationEn: translationResourcesType = {
                     ok: "Updated successfully",
                     save: "Save",
                 },
+                sincronitzarCataleg: "Synchronize catalog",
+                sincronitzarCatalegConfirm: "Are you sure you want to synchronize the statistical catalog of the selected environment?",
+                sincronitzarCatalegSuccess: "Catalog synchronized successfully: {{message}}",
             },
             editaEntitat: {
                 field: {
@@ -980,6 +993,9 @@ const translationEn: translationResourcesType = {
                 createFormula: "Create formula indicator",
                 editFormula: "Edit formula",
                 copiarEntorn: "Copy to another environment",
+                sincronitzarCataleg: "Synchronize catalog",
+                sincronitzarCatalegConfirm: "Are you sure you want to synchronize the statistical catalog of the selected environment?",
+                sincronitzarCatalegSuccess: "Catalog synchronized successfully: {{message}}",
             },
             formulaForm: {
                 createTitle: "Create formula indicator",

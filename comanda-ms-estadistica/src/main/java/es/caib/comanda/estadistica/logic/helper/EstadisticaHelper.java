@@ -5,6 +5,7 @@ import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesPluginDir3;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.EntitatValorTipus;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Indicador.SincronitzarCatalegResponse;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet.FetObtenirResponse;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Temps;
@@ -143,9 +144,9 @@ public class EstadisticaHelper {
 
 
     // Obtenir informació estadística de l'app i dimensions
-    private void processEstadisticaInfo(EntornApp entornApp,
-                                        RestTemplate restTemplate,
-                                        MonitorEstadistica monitorEstadistica) throws RestClientException {
+    private EstadistiquesInfo processEstadisticaInfo(EntornApp entornApp,
+                                                     RestTemplate restTemplate,
+                                                     MonitorEstadistica monitorEstadistica) throws RestClientException {
         Object lock = LOCKS.computeIfAbsent(entornApp.getId(), k -> new Object());
         synchronized (lock) {
             monitorEstadistica.startInfoAction();
@@ -163,7 +164,120 @@ public class EstadisticaHelper {
             monitorEstadistica.endInfoAction();
             // Guardar la inforció de l'estructura de les dades estadístiques
             crearIndicadorsIDimensions(estadistiquesInfo, entornApp.getId());
+            return estadistiquesInfo;
         }
+    }
+
+    /**
+     * Sincronitza manualment el catàleg estadístic (indicadors, dimensions i entitats) d'un entorn d'aplicació.
+     *
+     * @param entornApp Objecte que representa l'aplicació i l'entorn per als quals se sincronitza el catàleg.
+     * @return SincronitzarCatalegResponse amb el resultat i recompte d'indicadors i dimensions processats.
+     */
+    @Transactional
+    public SincronitzarCatalegResponse sincronitzarEstadisticaInfo(EntornApp entornApp) {
+        if (entornApp == null) {
+            throw new IllegalArgumentException("L'entornApp no pot ser nul");
+        }
+        if (Strings.isBlank(entornApp.getEstadisticaInfoUrl())) {
+            return SincronitzarCatalegResponse.builder()
+                .success(false)
+                .message(I18nUtil.getInstance().getI18nMessage(
+                    "es.caib.comanda.estadistica.logic.helper.EstadisticaHelper.sincronitzarCataleg.error.senseUrl"))
+                .build();
+        }
+        MonitorEstadistica monitorEstadistica = initializeMonitor(entornApp, entornApp.getEstadisticaInfoUrl());
+        try {
+            EstadistiquesInfo info = processEstadisticaInfo(entornApp, restTemplate, monitorEstadistica);
+            int indCount = info != null && info.getIndicadors() != null ? info.getIndicadors().size() : 0;
+            int dimCount = info != null && info.getDimensions() != null ? info.getDimensions().size() : 0;
+            int entCount = info != null && info.getEntitats() != null ? info.getEntitats().size() : 0;
+
+            return SincronitzarCatalegResponse.builder()
+                .success(true)
+                .indicadorsCount(indCount)
+                .dimensionsCount(dimCount)
+                .entitatsCount(entCount)
+                .entornsCount(1)
+                .message(I18nUtil.getInstance().getI18nMessage(
+                    "es.caib.comanda.estadistica.logic.helper.EstadisticaHelper.sincronitzarCataleg.success",
+                    indCount, dimCount))
+                .build();
+        } catch (RestClientException ex) {
+            handleEstadisticaException(entornApp, monitorEstadistica, ex);
+            return SincronitzarCatalegResponse.builder()
+                .success(false)
+                .message(ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : ex.getMessage())
+                .build();
+        }
+    }
+
+    /**
+     * Sincronitza manualment el catàleg estadístic de tots els entorns actius d'una aplicació en bucle.
+     *
+     * @param appId Identificador de l'aplicació.
+     * @return SincronitzarCatalegResponse agregat.
+     */
+    @Transactional
+    public SincronitzarCatalegResponse sincronitzarEstadisticaInfoPerApp(Long appId) {
+        List<EntornApp> entorns = estadisticaClientHelper.getEntornAppsByAppId(appId);
+        if (entorns == null || entorns.isEmpty()) {
+            return SincronitzarCatalegResponse.builder()
+                .success(false)
+                .message(I18nUtil.getInstance().getI18nMessage(
+                    "es.caib.comanda.estadistica.logic.helper.EstadisticaHelper.sincronitzarCatalegApp.error.senseEntorns"))
+                .build();
+        }
+
+        int totalIndicadors = 0;
+        int totalDimensions = 0;
+        int totalEntitats = 0;
+        int entornsSincronitzats = 0;
+        List<String> avisos = new ArrayList<>();
+
+        for (EntornApp entornApp : entorns) {
+            if (!entornApp.isActiva()) {
+                continue;
+            }
+            if (Strings.isBlank(entornApp.getEstadisticaInfoUrl())) {
+                String nomEntorn = entornApp.getEntorn() != null ? entornApp.getEntorn().getNom() : entornApp.getId().toString();
+                avisos.add(nomEntorn + " (sense URL)");
+                continue;
+            }
+            SincronitzarCatalegResponse res = self.sincronitzarEstadisticaInfo(entornApp);
+            if (res.isSuccess()) {
+                totalIndicadors += res.getIndicadorsCount();
+                totalDimensions += res.getDimensionsCount();
+                totalEntitats += res.getEntitatsCount();
+                entornsSincronitzats++;
+            } else {
+                String nomEntorn = entornApp.getEntorn() != null ? entornApp.getEntorn().getNom() : entornApp.getId().toString();
+                avisos.add(nomEntorn + ": " + res.getMessage());
+            }
+        }
+
+        if (entornsSincronitzats == 0 && !avisos.isEmpty()) {
+            return SincronitzarCatalegResponse.builder()
+                .success(false)
+                .message(String.join("; ", avisos))
+                .build();
+        }
+
+        String msg = I18nUtil.getInstance().getI18nMessage(
+            "es.caib.comanda.estadistica.logic.helper.EstadisticaHelper.sincronitzarCatalegApp.success",
+            entornsSincronitzats, totalIndicadors, totalDimensions);
+        if (!avisos.isEmpty()) {
+            msg += " (" + String.join(", ", avisos) + ")";
+        }
+
+        return SincronitzarCatalegResponse.builder()
+            .success(true)
+            .indicadorsCount(totalIndicadors)
+            .dimensionsCount(totalDimensions)
+            .entitatsCount(totalEntitats)
+            .entornsCount(entornsSincronitzats)
+            .message(msg)
+            .build();
     }
 
     // Obtenir les dades estadístiques

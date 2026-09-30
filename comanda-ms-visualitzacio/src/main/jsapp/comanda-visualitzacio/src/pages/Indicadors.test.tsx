@@ -21,6 +21,9 @@ const mocks = vi.hoisted(() => ({
                         createFormula: 'Crear indicador de fórmula',
                         editFormula: 'Editar fórmula',
                         copiarEntorn: 'Copiar a un altre entorn',
+                        sincronitzarCataleg: 'Sincronitzar catàleg',
+                        sincronitzarCatalegConfirm: 'Segur que voleu sincronitzar?',
+                        sincronitzarCatalegSuccess: 'Catàleg sincronitzat correctament',
                     },
                     formulaForm: {
                         createTitle: 'Crear indicador de fórmula',
@@ -52,6 +55,8 @@ const mocks = vi.hoisted(() => ({
     entornFindMock: vi.fn(),
     indicadorFindMock: vi.fn(),
     indicadorDeleteMock: vi.fn(),
+    indicadorArtifactActionMock: vi.fn(),
+    isUserAdminMock: vi.fn(() => true),
     termeFindMock: vi.fn(),
     termeCreateMock: vi.fn(),
     termeDeleteMock: vi.fn(),
@@ -59,6 +64,7 @@ const mocks = vi.hoisted(() => ({
     formDialogShowMock: vi.fn(),
     copiarEntornExecMock: vi.fn(),
     temporalMessageShowMock: vi.fn(),
+    messageDialogShowMock: vi.fn(),
     dataDispatchActionMock: vi.fn(),
     formComponentPropsCapture: undefined as any,
     rowAdditionalActionsCapture: undefined as any,
@@ -103,7 +109,19 @@ vi.mock('reactlib', () => ({
             </section>
         );
     },
-    MuiFilter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    MuiFilter: ({ children, springFilterBuilder }: { children: React.ReactNode; springFilterBuilder?: (data: any) => string }) => (
+        <div>
+            {children}
+            {springFilterBuilder && (
+                <button
+                    data-testid="simulate-filter-entornapp"
+                    onClick={() => springFilterBuilder({ entornApp: { id: 7 } })}
+                >
+                    Simular EntornApp
+                </button>
+            )}
+        </div>
+    ),
     MuiFormDialog: ({ children, formComponentProps }: { children: React.ReactNode; formComponentProps?: any }) => {
         mocks.formComponentPropsCapture = formComponentProps;
         return <div data-testid="formula-dialog">{children}</div>;
@@ -142,9 +160,11 @@ vi.mock('reactlib', () => ({
             close: vi.fn(),
         },
     }),
+    useConfirmDialogButtons: () => <button>Confirmar</button>,
     useFormDialogButtons: () => [],
     useBaseAppContext: () => ({
         temporalMessageShow: mocks.temporalMessageShowMock,
+        messageDialogShow: mocks.messageDialogShowMock,
     }),
     useMuiActionReportLogic: vi.fn((_resourceName: string, action?: string) => {
         if (action === 'copiar_indicador_entorn') {
@@ -173,7 +193,12 @@ vi.mock('reactlib', () => ({
             };
         }
         if (resourceName === 'indicador') {
-            return { isReady: true, find: mocks.indicadorFindMock, delete: mocks.indicadorDeleteMock };
+            return {
+                isReady: true,
+                find: mocks.indicadorFindMock,
+                delete: mocks.indicadorDeleteMock,
+                artifactAction: mocks.indicadorArtifactActionMock,
+            };
         }
         return { isReady: true, find: mocks.findMock };
     },
@@ -188,6 +213,10 @@ vi.mock('reactlib', () => ({
         fields: [],
         fieldErrors: [],
     }),
+}));
+
+vi.mock('../components/UserContext.ts', () => ({
+    useIsUserAdmin: () => mocks.isUserAdminMock(),
 }));
 
 vi.mock('../components/sharedAdvancedSearch/advancedSearchColumns', () => ({
@@ -225,6 +254,7 @@ describe('Indicadors', () => {
         vi.clearAllMocks();
         document.body.removeAttribute('data-options');
         mocks.useReadOnlyGestorMock.mockReturnValue(false);
+        mocks.isUserAdminMock.mockReturnValue(true);
     });
 
     it('Indicadors_quanEsRenderitza_mostraLaGraellaElFiltreIElFormulariCondicional', async () => {
@@ -488,6 +518,48 @@ describe('Indicadors', () => {
 
         expect(mocks.indicadorDeleteMock).not.toHaveBeenCalled();
         expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Error de xarxa', 'error');
+    });
+
+    it('Indicadors_quanEsAdminIEntornAppSeleccionat_executaSincronitzarCatalegAlConfirmar', async () => {
+        mocks.messageDialogShowMock.mockResolvedValue(true);
+        mocks.indicadorArtifactActionMock.mockResolvedValue({ success: true, message: 'Catàleg sincronitzat' });
+
+        render(<Indicadors />);
+
+        await waitFor(() => {
+            expect(mocks.entornAppFindMock).toHaveBeenCalled();
+        });
+
+        const syncButton = screen.getByTitle('Sincronitzar catàleg');
+        expect(syncButton).toBeInTheDocument();
+        expect(syncButton).toBeDisabled();
+
+        fireEvent.click(screen.getByTestId('simulate-filter-entornapp'));
+        expect(syncButton).toBeEnabled();
+
+        fireEvent.click(syncButton);
+
+        await waitFor(() => {
+            expect(mocks.messageDialogShowMock).toHaveBeenCalled();
+            expect(mocks.indicadorArtifactActionMock).toHaveBeenCalledWith(null, {
+                code: 'sincronitzar_cataleg',
+                data: { entornAppId: 7 },
+            });
+            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Catàleg sincronitzat', 'success');
+            expect(mocks.gridRefreshMock).toHaveBeenCalled();
+        });
+    });
+
+    it('Indicadors_quanNoEsAdmin_noMostraBotoSincronitzarCataleg', async () => {
+        mocks.isUserAdminMock.mockReturnValue(false);
+
+        render(<Indicadors />);
+
+        await waitFor(() => {
+            expect(mocks.entornAppFindMock).toHaveBeenCalled();
+        });
+
+        expect(screen.queryByTitle('Sincronitzar catàleg')).not.toBeInTheDocument();
     });
 });
 

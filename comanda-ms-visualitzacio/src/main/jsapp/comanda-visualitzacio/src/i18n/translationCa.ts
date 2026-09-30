@@ -761,6 +761,11 @@ const translationCa = {
                 export: "Exportar aplicació",
                 import: "Importar aplicació",
                 netejaEstadistica: "Neteja d'estadístiques",
+                sincronitzarCataleg: "Sincronitzar catàleg estadístic (tots els entorns)",
+            },
+            sincronitzarCataleg: {
+                confirm: "Segur que voleu sincronitzar el catàleg estadístic de tots els entorns actius d'aquesta aplicació?",
+                success: "Catàleg sincronitzat correctament: {{message}}",
             },
             netejaEstadistica: {
                 label: "Neteja d'estadístiques",
@@ -836,7 +841,12 @@ const translationCa = {
                     confirmButton: "Esborrar dades",
                     cancelButton: "Cancel·lar",
                     success: "S'ha sol·licitat la neteja de les dades estadístiques correctament",
-                }
+                },
+                sincronitzarCataleg: {
+                    label: "Sincronitzar catàleg estadístic",
+                    confirm: "Segur que voleu sincronitzar el catàleg estadístic d'aquest entorn?",
+                    success: "Catàleg sincronitzat correctament: {{message}}",
+                },
             }
         },
         versionsEntorns: {
@@ -936,6 +946,9 @@ const translationCa = {
                     ok: "S'ha actualitzat correctament",
                     save: "Desar",
                 },
+                sincronitzarCataleg: "Sincronitzar catàleg",
+                sincronitzarCatalegConfirm: "Segur que voleu sincronitzar el catàleg estadístic de l'entorn seleccionat?",
+                sincronitzarCatalegSuccess: "Catàleg sincronitzat correctament: {{message}}",
             },
             editaEntitat: {
                 field: {
@@ -980,6 +993,9 @@ const translationCa = {
                 createFormula: "Crear indicador de fórmula",
                 editFormula: "Editar fórmula",
                 copiarEntorn: "Copiar a un altre entorn",
+                sincronitzarCataleg: "Sincronitzar catàleg",
+                sincronitzarCatalegConfirm: "Segur que voleu sincronitzar el catàleg estadístic de l'entorn seleccionat?",
+                sincronitzarCatalegSuccess: "Catàleg sincronitzat correctament: {{message}}",
             },
             formulaForm: {
                 createTitle: "Crear indicador de fórmula",

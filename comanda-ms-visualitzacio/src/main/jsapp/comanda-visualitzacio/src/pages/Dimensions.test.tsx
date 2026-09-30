@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => ({
     findMock: vi.fn(),
     showMock: vi.fn(), // Nou: per mockejar l'obertura del diàleg
     artifactActionMock: vi.fn(),
+    indicadorArtifactActionMock: vi.fn(),
+    isUserAdminMock: vi.fn(() => true),
     temporalMessageShowMock: vi.fn(),
     messageDialogShowMock: vi.fn(),
     formContextData: { tipus: undefined as string | undefined },
@@ -40,6 +42,9 @@ const mocks = vi.hoisted(() => ({
                             label: 'UPDATE_ENTITATS',
                             ok: 'Entitats actualitzades',
                         },
+                        sincronitzarCataleg: 'Sincronitzar catàleg',
+                        sincronitzarCatalegConfirm: 'Segur que voleu sincronitzar?',
+                        sincronitzarCatalegSuccess: 'Catàleg sincronitzat correctament',
                     },
                     column: {
                         entornApp: 'Entorn app',
@@ -176,11 +181,20 @@ vi.mock('reactlib', () => ({
                 artifactAction: mocks.artifactActionMock,
             };
         }
+        if (resourceName === 'indicador') {
+            return {
+                artifactAction: mocks.indicadorArtifactActionMock,
+            };
+        }
         return {
             isReady: true,
             find: mocks.findMock,
         };
     },
+}));
+
+vi.mock('../components/UserContext.ts', () => ({
+    useIsUserAdmin: () => mocks.isUserAdminMock(),
 }));
 
 vi.mock('../components/FormActionDialog.tsx', () => ({
@@ -220,6 +234,7 @@ describe('Dimensions', () => {
         document.body.removeAttribute('data-dimension-options');
         mocks.formContextData.tipus = undefined;
         mocks.mockRowTipus = 'ORGAN_GESTOR';
+        mocks.isUserAdminMock.mockReturnValue(true);
     });
 
     it('Dimensions_quanEsRenderitza_mostraElGridElFiltreIElLinkAlsValors', async () => {
@@ -556,5 +571,46 @@ describe('Dimensions', () => {
         });
 
         expect(screen.queryByTestId('field-entitatValorTipus')).not.toBeInTheDocument();
+    });
+
+    it('Dimensions_quanEsAdminIEntornAppSeleccionat_executaSincronitzarCatalegAlConfirmar', async () => {
+        mocks.messageDialogShowMock.mockResolvedValue(true);
+        mocks.indicadorArtifactActionMock.mockResolvedValue({ success: true, message: 'Catàleg sincronitzat' });
+
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(mocks.findMock).toHaveBeenCalled();
+        });
+
+        const syncButton = screen.getByTitle('Sincronitzar catàleg');
+        expect(syncButton).toBeInTheDocument();
+        expect(syncButton).toBeDisabled();
+
+        fireEvent.click(screen.getByTestId('simulate-filter-entornapp'));
+        expect(syncButton).toBeEnabled();
+
+        fireEvent.click(syncButton);
+
+        await waitFor(() => {
+            expect(mocks.messageDialogShowMock).toHaveBeenCalled();
+            expect(mocks.indicadorArtifactActionMock).toHaveBeenCalledWith(null, {
+                code: 'sincronitzar_cataleg',
+                data: { entornAppId: 9 },
+            });
+            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Catàleg sincronitzat', 'success');
+        });
+    });
+
+    it('Dimensions_quanNoEsAdmin_noMostraBotoSincronitzarCataleg', async () => {
+        mocks.isUserAdminMock.mockReturnValue(false);
+
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(mocks.findMock).toHaveBeenCalled();
+        });
+
+        expect(screen.queryByTitle('Sincronitzar catàleg')).not.toBeInTheDocument();
     });
 });

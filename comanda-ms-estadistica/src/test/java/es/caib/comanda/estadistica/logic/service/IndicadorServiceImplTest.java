@@ -1,12 +1,17 @@
 package es.caib.comanda.estadistica.logic.service;
 
+import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.model.App;
 import es.caib.comanda.client.model.AppRef;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.EntornRef;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
+import es.caib.comanda.estadistica.logic.helper.EstadisticaHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Indicador;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Indicador.SincronitzarCatalegParams;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Indicador.SincronitzarCatalegResponse;
+import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.OperadorFormulaEnum;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EntornResource;
@@ -50,6 +55,10 @@ class IndicadorServiceImplTest {
     @Mock
     private IndicadorFormulaTermeRepository indicadorFormulaTermeRepository;
     @Mock
+    private EstadisticaHelper estadisticaHelper;
+    @Mock
+    private AuthenticationHelper authenticationHelper;
+    @Mock
     private I18nUtil i18nUtil;
     @Mock
     private ApplicationContext applicationContext;
@@ -58,6 +67,7 @@ class IndicadorServiceImplTest {
     private IndicadorServiceImpl indicadorService;
 
     private IndicadorServiceImpl.CopiarIndicadorEntornAction copiarIndicadorEntornAction;
+    private IndicadorServiceImpl.SincronitzarCatalegActionExecutor sincronitzarCatalegAction;
 
     @BeforeEach
     void setUpCopiarEntornAction() {
@@ -67,6 +77,7 @@ class IndicadorServiceImplTest {
         lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(i -> i.getArgument(0));
 
         copiarIndicadorEntornAction = indicadorService.new CopiarIndicadorEntornAction();
+        sincronitzarCatalegAction = indicadorService.new SincronitzarCatalegActionExecutor();
     }
 
     @Test
@@ -97,11 +108,11 @@ class IndicadorServiceImplTest {
         // Arrange
         String currentFilter = "codi:'TEST'";
         String[] namedQueries = {"filterByApp:100"};
-        
+
         // Simulem el comportament de springFilterHelper (com que retorna un objecte complex, podem mockejar-lo)
         // Però additionalSpringFilter crida a generate() de Filter.
         // Donat que Filter és una classe externa complexa, ens centrem en que es crida el helper.
-        
+
         // Act
         indicadorService.additionalSpringFilter(currentFilter, namedQueries);
 
@@ -272,5 +283,85 @@ class IndicadorServiceImplTest {
         assertThat(termeCaptor.getValue().getIndicadorComponent()).isSameAs(componentDesti);
         assertThat(termeCaptor.getValue().getIndicadorFormula()).isSameAs(nou);
         assertThat(termeCaptor.getValue().getOperador()).isEqualTo(OperadorFormulaEnum.RESTA);
+    }
+
+    @Test
+    @DisplayName("sincronitzarCataleg: llança excepció de seguretat quan l'usuari no és administrador")
+    void sincronitzarCataleg_quanNoEsAdmin_llancaExcepcio() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+
+        SincronitzarCatalegParams params = SincronitzarCatalegParams.builder().entornAppId(10L).build();
+        assertThatThrownBy(() -> sincronitzarCatalegAction.exec(Indicador.ACTION_SINCRONITZAR_CATALEG, null, params))
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
+        verifyNoInteractions(estadisticaHelper);
+    }
+
+    @Test
+    @DisplayName("sincronitzarCataleg: llança excepció quan els paràmetres són nuls o buits")
+    void sincronitzarCataleg_quanParamsNulsOBuits_llancaExcepcio() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+
+        assertThatThrownBy(() -> sincronitzarCatalegAction.exec(Indicador.ACTION_SINCRONITZAR_CATALEG, null, null))
+                .isInstanceOf(ActionExecutionException.class);
+
+        SincronitzarCatalegParams buits = SincronitzarCatalegParams.builder().build();
+        assertThatThrownBy(() -> sincronitzarCatalegAction.exec(Indicador.ACTION_SINCRONITZAR_CATALEG, null, buits))
+                .isInstanceOf(ActionExecutionException.class);
+        verifyNoInteractions(estadisticaHelper);
+    }
+
+    @Test
+    @DisplayName("sincronitzarCataleg: llança excepció quan l'entornApp indicat no existeix")
+    void sincronitzarCataleg_quanEntornAppInexistent_llancaExcepcio() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        when(estadisticaClientHelper.entornAppFindById(99L)).thenReturn(null);
+
+        SincronitzarCatalegParams params = SincronitzarCatalegParams.builder().entornAppId(99L).build();
+        assertThatThrownBy(() -> sincronitzarCatalegAction.exec(Indicador.ACTION_SINCRONITZAR_CATALEG, null, params))
+                .isInstanceOf(ActionExecutionException.class);
+        verifyNoInteractions(estadisticaHelper);
+    }
+
+    @Test
+    @DisplayName("sincronitzarCataleg: executa sincronització per entornApp quan s'especifica entornAppId")
+    void sincronitzarCataleg_quanEntornAppId_executaSincronitzacioEntorn() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        EntornApp entorn = new EntornApp();
+        entorn.setId(10L);
+        when(estadisticaClientHelper.entornAppFindById(10L)).thenReturn(entorn);
+
+        SincronitzarCatalegResponse mockResponse = SincronitzarCatalegResponse.builder()
+                .success(true)
+                .indicadorsCount(4)
+                .dimensionsCount(2)
+                .build();
+        when(estadisticaHelper.sincronitzarEstadisticaInfo(entorn)).thenReturn(mockResponse);
+
+        SincronitzarCatalegParams params = SincronitzarCatalegParams.builder().entornAppId(10L).build();
+        SincronitzarCatalegResponse response = sincronitzarCatalegAction.exec(Indicador.ACTION_SINCRONITZAR_CATALEG, null, params);
+
+        assertThat(response).isSameAs(mockResponse);
+        verify(estadisticaHelper).sincronitzarEstadisticaInfo(entorn);
+        verify(estadisticaHelper, never()).sincronitzarEstadisticaInfoPerApp(any());
+    }
+
+    @Test
+    @DisplayName("sincronitzarCataleg: executa sincronització per aplicació quan s'especifica appId")
+    void sincronitzarCataleg_quanAppId_executaSincronitzacioPerApp() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        SincronitzarCatalegResponse mockResponse = SincronitzarCatalegResponse.builder()
+                .success(true)
+                .entornsCount(3)
+                .indicadorsCount(12)
+                .dimensionsCount(6)
+                .build();
+        when(estadisticaHelper.sincronitzarEstadisticaInfoPerApp(5L)).thenReturn(mockResponse);
+
+        SincronitzarCatalegParams params = SincronitzarCatalegParams.builder().appId(5L).build();
+        SincronitzarCatalegResponse response = sincronitzarCatalegAction.exec(Indicador.ACTION_SINCRONITZAR_CATALEG, null, params);
+
+        assertThat(response).isSameAs(mockResponse);
+        verify(estadisticaHelper).sincronitzarEstadisticaInfoPerApp(5L);
+        verify(estadisticaHelper, never()).sincronitzarEstadisticaInfo(any());
     }
 }

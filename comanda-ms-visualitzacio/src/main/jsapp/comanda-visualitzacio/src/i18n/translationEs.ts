@@ -761,6 +761,11 @@ const translationEs: translationResourcesType = {
                 export: "Exportar aplicación",
                 import: "Importar aplicación",
                 netejaEstadistica: "Limpieza de estadísticas",
+                sincronitzarCataleg: "Sincronizar catálogo estadístico (todos los entornos)",
+            },
+            sincronitzarCataleg: {
+                confirm: "¿Seguro que desea sincronizar el catálogo estadístico de todos los entornos activos de esta aplicación?",
+                success: "Catálogo sincronizado correctamente: {{message}}",
             },
             netejaEstadistica: {
                 label: "Limpieza de estadísticas",
@@ -836,7 +841,12 @@ const translationEs: translationResourcesType = {
                     confirmButton: "Borrar datos",
                     cancelButton: "Cancelar",
                     success: "Se ha solicitado el borrado de los datos estadísticos correctamente",
-                }
+                },
+                sincronitzarCataleg: {
+                    label: "Sincronizar catálogo estadístico",
+                    confirm: "¿Seguro que desea sincronizar el catálogo estadístico de este entorno?",
+                    success: "Catálogo sincronizado correctamente: {{message}}",
+                },
             }
         },
         versionsEntorns: {
@@ -936,6 +946,9 @@ const translationEs: translationResourcesType = {
                     ok: "Se ha actualizado correctamente",
                     save: "Guardar",
                 },
+                sincronitzarCataleg: "Sincronizar catálogo",
+                sincronitzarCatalegConfirm: "¿Seguro que desea sincronizar el catálogo estadístico del entorno seleccionado?",
+                sincronitzarCatalegSuccess: "Catálogo sincronizado correctamente: {{message}}",
             },
             editaEntitat: {
                 field: {
@@ -980,6 +993,9 @@ const translationEs: translationResourcesType = {
                 createFormula: "Crear indicador de fórmula",
                 editFormula: "Editar fórmula",
                 copiarEntorn: "Copiar a otro entorno",
+                sincronitzarCataleg: "Sincronizar catálogo",
+                sincronitzarCatalegConfirm: "¿Seguro que desea sincronizar el catálogo estadístico del entorno seleccionado?",
+                sincronitzarCatalegSuccess: "Catálogo sincronizado correctamente: {{message}}",
             },
             formulaForm: {
                 createTitle: "Crear indicador de fórmula",

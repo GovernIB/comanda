@@ -6,6 +6,8 @@ import Apps, { AppForm } from './Apps';
 const mocks = vi.hoisted(() => ({
     useParamsMock: vi.fn(),
     temporalMessageShowMock: vi.fn(),
+    messageDialogShowMock: vi.fn(),
+    indicadorArtifactActionMock: vi.fn(),
     refreshMock: vi.fn(),
     artifactActionMock: vi.fn(),
     artifactReportMock: vi.fn(),
@@ -47,6 +49,12 @@ const mocks = vi.hoisted(() => ({
                         export: 'Exportar',
                         import: 'Importar',
                         netejaEstadistica: 'Neteja estadístiques',
+                        sincronitzarCataleg: 'Sincronitzar catàleg',
+                    },
+                    sincronitzarCataleg: {
+                        title: 'Sincronitzar catàleg',
+                        confirm: 'Segur que voleu sincronitzar?',
+                        success: 'Catàleg sincronitzat correctament',
                     },
                     netejaEstadistica: {
                         label: 'Neteja estadístiques',
@@ -133,6 +141,12 @@ const mocks = vi.hoisted(() => ({
                             confirmButton: 'Esborrar dades',
                             cancelButton: 'Cancel·lar',
                             success: 'Neteja sol·licitada correctament',
+                        },
+                        sincronitzarCataleg: {
+                            label: 'Sincronitzar catàleg entorn',
+                            title: 'Sincronitzar catàleg',
+                            confirm: 'Segur que voleu sincronitzar entorn?',
+                            success: 'Catàleg sincronitzat correctament',
                         },
                     },
                 },
@@ -276,7 +290,9 @@ vi.mock('reactlib', () => ({
     },
     useBaseAppContext: () => ({
         temporalMessageShow: mocks.temporalMessageShowMock,
+        messageDialogShow: mocks.messageDialogShowMock,
     }),
+    useConfirmDialogButtons: () => [{ value: false, text: 'Cancel·lar' }, { value: true, text: 'Confirmar' }],
     useFormContext: () => mocks.useFormContextValue,
     useMuiDataGridApiRef: () => ({
         current: {
@@ -287,6 +303,11 @@ vi.mock('reactlib', () => ({
         if (resourceName === 'entornApp') {
             return {
                 artifactAction: mocks.artifactActionMock,
+            };
+        }
+        if (resourceName === 'indicador') {
+            return {
+                artifactAction: mocks.indicadorArtifactActionMock,
             };
         }
         return {
@@ -618,6 +639,65 @@ describe('AppForm', () => {
         expect(screen.queryByTestId('field-abast')).not.toBeInTheDocument();
         expect(screen.queryByTestId('field-esborrarWidgets')).not.toBeInTheDocument();
     });
+
+    it('AppForm_quanEsPremSincronitzarCatalegEntorn_mostraConfirmacioIExecutaAccio', async () => {
+        mocks.useParamsMock.mockReturnValue({ id: '12' });
+        mocks.messageDialogShowMock.mockResolvedValue(true);
+        mocks.indicadorArtifactActionMock.mockResolvedValue({ success: true, message: 'Sincronitzat' });
+
+        render(<AppForm />);
+
+        const syncButton = screen.getByRole('button', { name: 'Sincronitzar catàleg entorn' });
+        fireEvent.click(syncButton);
+
+        await waitFor(() => {
+            expect(mocks.messageDialogShowMock).toHaveBeenCalled();
+            expect(mocks.indicadorArtifactActionMock).toHaveBeenCalledWith(null, {
+                code: 'sincronitzar_cataleg',
+                data: { entornAppId: undefined },
+            });
+            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Sincronitzat', 'success');
+        });
+    });
+
+    it('AppForm_quanEntornNoEsActiu_amagaSincronitzarCatalegEntorn', () => {
+        mocks.useParamsMock.mockReturnValue({ id: '12' });
+
+        render(<AppForm />);
+
+        const action = mocks.lastRowAdditionalActions.find(
+            (a: any) => a?.action === 'sincronitzar_cataleg'
+        );
+        expect(action).toBeDefined();
+        expect(action.hidden({ activa: true })).toBe(false);
+        expect(action.hidden({ activa: false })).toBe(true);
+    });
+
+    it('AppForm_quanNoEsAdmin_amagaSincronitzarCatalegEntorn', () => {
+        mocks.useParamsMock.mockReturnValue({ id: '12' });
+        mocks.isUserAdminMock.mockReturnValue(false);
+
+        render(<AppForm />);
+
+        const action = mocks.lastRowAdditionalActions.find(
+            (a: any) => a?.action === 'sincronitzar_cataleg'
+        );
+        expect(action).toBeDefined();
+        expect(action.hidden({ activa: true })).toBe(true);
+    });
+
+    it('AppForm_quanEsGestorReadOnly_amagaSincronitzarCatalegEntorn', () => {
+        mocks.useParamsMock.mockReturnValue({ id: '12' });
+        mocks.readOnlyGestorMock.mockReturnValue(true);
+
+        render(<AppForm />);
+
+        const action = mocks.lastRowAdditionalActions.find(
+            (a: any) => a?.action === 'sincronitzar_cataleg'
+        );
+        expect(action).toBeDefined();
+        expect(action.hidden({ activa: true })).toBe(true);
+    });
 });
 
 describe('Apps', () => {
@@ -897,6 +977,52 @@ describe('Apps', () => {
         fireEvent.click(abastChangeBtn);
 
         expect(mocks.setFieldValueMock).toHaveBeenCalledWith('esborrarWidgets', false);
+    });
+
+    it('Apps_quanEsPremSincronitzarCatalegApp_mostraConfirmacioIExecutaAccio', async () => {
+        mocks.useParamsMock.mockReturnValue({ id: undefined });
+        mocks.messageDialogShowMock.mockResolvedValue(true);
+        mocks.indicadorArtifactActionMock.mockResolvedValue({ success: true, message: 'Sincronitzat app' });
+
+        render(<Apps />);
+
+        const syncButton = screen.getByRole('button', { name: 'Sincronitzar catàleg' });
+        fireEvent.click(syncButton);
+
+        await waitFor(() => {
+            expect(mocks.messageDialogShowMock).toHaveBeenCalled();
+            expect(mocks.indicadorArtifactActionMock).toHaveBeenCalledWith(null, {
+                code: 'sincronitzar_cataleg',
+                data: { appId: 12 },
+            });
+            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Sincronitzat app', 'success');
+        });
+    });
+
+    it('Apps_quanNoEsAdmin_amagaLAccioSincronitzarCataleg', () => {
+        mocks.useParamsMock.mockReturnValue({ id: undefined });
+        mocks.isUserAdminMock.mockReturnValue(false);
+
+        render(<Apps />);
+
+        const action = mocks.lastRowAdditionalActions.find(
+            (a: any) => a?.action === 'sincronitzar_cataleg'
+        );
+        expect(action).toBeDefined();
+        expect(action.hidden()).toBe(true);
+    });
+
+    it('Apps_quanEsGestorReadOnly_amagaLAccioSincronitzarCataleg', () => {
+        mocks.useParamsMock.mockReturnValue({ id: undefined });
+        mocks.readOnlyGestorMock.mockReturnValue(true);
+
+        render(<Apps />);
+
+        const action = mocks.lastRowAdditionalActions.find(
+            (a: any) => a?.action === 'sincronitzar_cataleg'
+        );
+        expect(action).toBeDefined();
+        expect(action.hidden()).toBe(true);
     });
 });
 
