@@ -245,6 +245,55 @@ class EstadisticaHelperTest {
     }
 
     @Test
+    @DisplayName("getEstadisticaDadesAmbUrl: retorna error quan hi ha RestClientException")
+    void getEstadisticaDadesAmbUrl_retornaErrorQuanHiHaExcepcio() {
+        // Given
+        entornApp.setEstadisticaAuth(false);
+        when(restTemplate.getForObject(eq(DADES_URL), eq(RegistresEstadistics.class)))
+            .thenThrow(new RestClientException("Connection refused"));
+        // When
+        FetObtenirResponse result = estadisticaHelper.getEstadisticaDadesAmbUrl(entornApp, DADES_URL, false);
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getSuccess()).isFalse();
+        assertThat(result.getMessage()).contains("Connection refused");
+        verify(restTemplate, never()).getForObject(eq(INFO_URL), any());
+    }
+
+    @Test
+    @DisplayName("getEstadisticaDadesAmbUrl: quan dades correctes no consulta la URL d'informació de catàleg")
+    void getEstadisticaDadesAmbUrl_quanCorrecte_noConsultaCataleg() {
+        // Given
+        entornApp.setEstadisticaAuth(false);
+        RegistresEstadistics registres = buildRegistresEstadistics();
+        when(restTemplate.getForObject(eq(DADES_URL), eq(RegistresEstadistics.class)))
+            .thenReturn(registres);
+        // When
+        FetObtenirResponse result = estadisticaHelper.getEstadisticaDadesAmbUrl(entornApp, DADES_URL, false);
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getSuccess()).isTrue();
+        verify(restTemplate, never()).getForObject(eq(INFO_URL), any());
+    }
+
+    @Test
+    @DisplayName("getEstadisticaDadesAmbUrl: quan app o entorn són nuls, no llança NullPointerException")
+    void getEstadisticaDadesAmbUrl_quanAppOEntornNul_noLlancaNullPointerException() {
+        // Given
+        entornApp.setApp(null);
+        entornApp.setEntorn(null);
+        entornApp.setEstadisticaAuth(false);
+        RegistresEstadistics registres = buildRegistresEstadistics();
+        when(restTemplate.getForObject(eq(DADES_URL), eq(RegistresEstadistics.class)))
+            .thenReturn(registres);
+        // When
+        FetObtenirResponse result = estadisticaHelper.getEstadisticaDadesAmbUrl(entornApp, DADES_URL, false);
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getSuccess()).isTrue();
+    }
+
+    @Test
     @DisplayName("getEstadisticaInfoDades: amb múltiples dies, concatena el paràmetre a la URL")
     void getEstadisticaInfoDades_ambMultiplesDies_concatenaUrl() {
         // Given

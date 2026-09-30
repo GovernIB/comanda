@@ -10,6 +10,7 @@ interface UseCalendarEventsProps {
   datesAmbDades: string[];
   emptyDates: string[];
   loadingDates: string[];
+  backgroundProcessingDates?: string[];
   errors: ErrorInfo[];
   datesDisponiblesError: boolean;
 }
@@ -21,6 +22,7 @@ export const useCalendarEvents = ({
   datesAmbDades,
   emptyDates,
   loadingDates,
+  backgroundProcessingDates = [],
   errors,
   datesDisponiblesError
 }: UseCalendarEventsProps) => {
@@ -40,6 +42,8 @@ export const useCalendarEvents = ({
         return null;
       }
 
+      const isBackgroundProcessing = backgroundProcessingDates.includes(date);
+
       // Loading
       if (isLoading) {
         return [
@@ -47,7 +51,7 @@ export const useCalendarEvents = ({
             title: t($ => $.calendari.carregant),
             date,
             backgroundColor: '#f5f5f5',
-            extendedProps: { esDisponible: false, hasError: false, isLoading: true },
+            extendedProps: { esDisponible: false, hasError: false, isLoading: true, isBackgroundProcessing: false },
             allDay: true,
             display: 'background'
           },
@@ -57,7 +61,30 @@ export const useCalendarEvents = ({
             classNames: ['cal-event-loading'],
             textColor: '#888',
             backgroundColor: '#fff',
-            extendedProps: { esDisponible: false, hasError: false, isLoading: true, hasContent: true },
+            extendedProps: { esDisponible: false, hasError: false, isLoading: true, isBackgroundProcessing: false, hasContent: true },
+            allDay: true
+          }
+        ];
+      }
+
+      // Background processing
+      if (isBackgroundProcessing && !hasDades) {
+        return [
+          {
+            title: t($ => $.calendari.processant_segon_pla),
+            date,
+            backgroundColor: '#fff8e1',
+            extendedProps: { esDisponible: false, hasError: false, isLoading: false, isBackgroundProcessing: true },
+            allDay: true,
+            display: 'background'
+          },
+          {
+            title: t($ => $.calendari.processant_segon_pla),
+            date,
+            classNames: ['cal-event-background-processing'],
+            textColor: '#ed6c02',
+            backgroundColor: '#fff',
+            extendedProps: { esDisponible: false, hasError: false, isLoading: false, isBackgroundProcessing: true, hasContent: true },
             allDay: true
           }
         ];
@@ -70,7 +97,7 @@ export const useCalendarEvents = ({
             title: hasEmptyDades ? t($ => $.calendari.dades_buides) : t($ => $.calendari.sense_dades),
             date,
             backgroundColor: hasEmptyDades ? '#f6af2a' : '#79b2ef',
-            extendedProps: { esDisponible: false, hasError: false, isLoading: false },
+            extendedProps: { esDisponible: false, hasError: false, isLoading: false, isBackgroundProcessing: false },
             allDay: true,
             display: 'background'
           },
@@ -80,7 +107,7 @@ export const useCalendarEvents = ({
             classNames: ['cal-event-download'],
             textColor: '#888',
             backgroundColor: '#fff',
-            extendedProps: { esDisponible: false, hasError: false, isLoading: false, hasContent: true },
+            extendedProps: { esDisponible: false, hasError: false, isLoading: false, isBackgroundProcessing: false, hasContent: true },
             allDay: true
           }
         ];
@@ -92,7 +119,7 @@ export const useCalendarEvents = ({
           title: hasDades ? '' : t($ => $.calendari.error_dades),
           date,
           backgroundColor: hasDades ? '#b7ecaf' : '#dc7352',
-          extendedProps: { esDisponible: hasDades, hasError: hasError, isLoading: false },
+          extendedProps: { esDisponible: hasDades, hasError: hasError, isLoading: false, isBackgroundProcessing: false },
           allDay: true,
           display: 'background'
         },
@@ -100,9 +127,9 @@ export const useCalendarEvents = ({
           title: hasDades ? t($ => $.calendari.dades_disponibles) : t($ => $.calendari.error_dades),
           date,
           backgroundColor: hasDades ? '#e9f9e6' : '#dc7352',
-          borerColor: hasDades ? '#b7ecaf' : '#dc7352',
+          borderColor: hasDades ? '#b7ecaf' : '#dc7352',
           textColor: '#fff',
-          extendedProps: { esDisponible: hasDades, hasError: hasError, isLoading: false, hasContent: true },
+          extendedProps: { esDisponible: hasDades, hasError: hasError, isLoading: false, isBackgroundProcessing: false, hasContent: true },
           allDay: true
         }
       ];
@@ -117,6 +144,7 @@ export const useCalendarEvents = ({
     JSON.stringify(datesAmbDades),
     JSON.stringify(emptyDates),
     JSON.stringify(loadingDates),
+    JSON.stringify(backgroundProcessingDates),
     JSON.stringify(errors),
     datesDisponiblesError,
     t

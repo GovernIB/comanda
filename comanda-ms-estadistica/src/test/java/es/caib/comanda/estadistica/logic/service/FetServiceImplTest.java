@@ -49,6 +49,7 @@ class FetServiceImplTest {
     @Mock private FetRepository fetRepository;
     @Mock private TempsMapper tempsMapper;
     @Mock private FetMapper fetMapper;
+    @Mock private ProcesBaixaPrioritatService procesBaixaPrioritatService;
 
     @InjectMocks
     private FetServiceImpl fetService;
@@ -352,5 +353,172 @@ class FetServiceImplTest {
         // Assert
         assertThat(result.getSuccess()).isFalse();
         assertThat(result.getMessage()).contains("Error de xarxa");
+    }
+
+    // ========================================================================
+    // 6. TESTOS PER A BAIXA PRIORITAT
+    // ========================================================================
+
+    @Test
+    @DisplayName("ObtenirPerDataAction: quan baixaPrioritat=true delega a procesBaixaPrioritatService")
+    void obtenirPerDataAction_quanBaixaPrioritat_llavorsIniciaProcesEnSegonPla() throws ActionExecutionException {
+        // Arrange
+        FetServiceImpl.ObtenirPerDataAction action = new FetServiceImpl.ObtenirPerDataAction(
+                estadisticaClientHelper, estadisticaHelper, procesBaixaPrioritatService);
+
+        FetObtenirParamAction params = new FetObtenirParamAction();
+        params.setEntornAppId(1L);
+        params.setDataInici(LocalDate.of(2023, 10, 25));
+        params.setBaixaPrioritat(true);
+
+        // Act
+        FetObtenirResponse result = action.exec("CODE", null, params);
+
+        // Assert
+        assertThat(result.getSuccess()).isTrue();
+        verify(procesBaixaPrioritatService, times(1)).iniciarProces(1L, LocalDate.of(2023, 10, 25), LocalDate.of(2023, 10, 25));
+        verify(estadisticaHelper, times(0)).getEstadisticaInfoDadesAmbUrl(any(), anyString(), any(Boolean.class));
+    }
+
+    @Test
+    @DisplayName("ObtenirPerIntervalAction: quan baixaPrioritat=true delega a procesBaixaPrioritatService")
+    void obtenirPerIntervalAction_quanBaixaPrioritat_llavorsIniciaProcesEnSegonPla() throws ActionExecutionException {
+        // Arrange
+        FetServiceImpl.ObtenirPerIntervalAction action = new FetServiceImpl.ObtenirPerIntervalAction(
+                estadisticaClientHelper, estadisticaHelper, procesBaixaPrioritatService);
+
+        FetObtenirParamAction params = new FetObtenirParamAction();
+        params.setEntornAppId(1L);
+        params.setDataInici(LocalDate.of(2023, 10, 25));
+        params.setDataFi(LocalDate.of(2023, 10, 27));
+        params.setBaixaPrioritat(true);
+
+        // Act
+        FetObtenirResponse result = action.exec("CODE", null, params);
+
+        // Assert
+        assertThat(result.getSuccess()).isTrue();
+        verify(procesBaixaPrioritatService, times(1)).iniciarProces(1L, LocalDate.of(2023, 10, 25), LocalDate.of(2023, 10, 27));
+        verify(estadisticaHelper, times(0)).getEstadisticaInfoDadesAmbUrl(any(), anyString(), any(Boolean.class));
+    }
+
+    @Test
+    @DisplayName("ObtenirPerIntervalAction: quan baixaPrioritat=true amb pausaMs delega a procesBaixaPrioritatService amb pausa")
+    void obtenirPerIntervalAction_quanBaixaPrioritatAmbPausa_llavorsIniciaProcesAmbPausa() throws ActionExecutionException {
+        // Arrange
+        FetServiceImpl.ObtenirPerIntervalAction action = new FetServiceImpl.ObtenirPerIntervalAction(
+                estadisticaClientHelper, estadisticaHelper, procesBaixaPrioritatService);
+
+        FetObtenirParamAction params = new FetObtenirParamAction();
+        params.setEntornAppId(1L);
+        params.setDataInici(LocalDate.of(2023, 10, 25));
+        params.setDataFi(LocalDate.of(2023, 10, 27));
+        params.setBaixaPrioritat(true);
+        params.setPausaMs(180000L);
+
+        // Act
+        FetObtenirResponse result = action.exec("CODE", null, params);
+
+        // Assert
+        assertThat(result.getSuccess()).isTrue();
+        verify(procesBaixaPrioritatService, times(1)).iniciarProces(1L, LocalDate.of(2023, 10, 25), LocalDate.of(2023, 10, 27), 180000L);
+        verify(estadisticaHelper, times(0)).getEstadisticaInfoDadesAmbUrl(any(), anyString(), any(Boolean.class));
+    }
+
+    @Test
+    @DisplayName("ObtenirPerIntervalAction: quan iniciarProces falla llavors retorna success=false")
+    void obtenirPerIntervalAction_quanIniciarProcesFalla_retornaError() throws ActionExecutionException {
+        // Arrange
+        FetServiceImpl.ObtenirPerIntervalAction action = new FetServiceImpl.ObtenirPerIntervalAction(
+                estadisticaClientHelper, estadisticaHelper, procesBaixaPrioritatService);
+
+        FetObtenirParamAction params = new FetObtenirParamAction();
+        params.setEntornAppId(1L);
+        params.setDataInici(LocalDate.of(2023, 10, 25));
+        params.setDataFi(LocalDate.of(2023, 10, 27));
+        params.setBaixaPrioritat(true);
+
+        es.caib.comanda.estadistica.logic.intf.model.estadistiques.ProcesBaixaPrioritat errorProc =
+                es.caib.comanda.estadistica.logic.intf.model.estadistiques.ProcesBaixaPrioritat.builder()
+                        .id("err-proc")
+                        .estat(es.caib.comanda.estadistica.logic.intf.model.estadistiques.ProcesBaixaPrioritat.ESTAT_ERROR)
+                        .missatge("Cua plena")
+                        .build();
+
+        when(procesBaixaPrioritatService.iniciarProces(1L, LocalDate.of(2023, 10, 25), LocalDate.of(2023, 10, 27)))
+                .thenReturn(errorProc);
+
+        // Act
+        FetObtenirResponse result = action.exec("CODE", null, params);
+
+        // Assert
+        assertThat(result.getSuccess()).isFalse();
+        assertThat(result.getMessage()).isEqualTo("Cua plena");
+    }
+
+    @Test
+    @DisplayName("ObtenirPerIntervalAction: quan iniciarProces llança excepció llavors retorna success=false amb el missatge de l'error")
+    void obtenirPerIntervalAction_quanIniciarProcesLlancaExcepcio_retornaSuccessFalse() throws ActionExecutionException {
+        // Arrange
+        FetServiceImpl.ObtenirPerIntervalAction action = new FetServiceImpl.ObtenirPerIntervalAction(
+                estadisticaClientHelper, estadisticaHelper, procesBaixaPrioritatService);
+
+        FetObtenirParamAction params = new FetObtenirParamAction();
+        params.setEntornAppId(1L);
+        params.setDataInici(LocalDate.of(2023, 10, 25));
+        params.setDataFi(LocalDate.of(2023, 10, 27));
+        params.setBaixaPrioritat(true);
+
+        when(procesBaixaPrioritatService.iniciarProces(1L, LocalDate.of(2023, 10, 25), LocalDate.of(2023, 10, 27)))
+                .thenThrow(new IllegalStateException("L'entornApp 1 no està actiu"));
+
+        // Act
+        FetObtenirResponse result = action.exec("CODE", null, params);
+
+        // Assert
+        assertThat(result.getSuccess()).isFalse();
+        assertThat(result.getMessage()).isEqualTo("L'entornApp 1 no està actiu");
+    }
+
+    @Test
+    @DisplayName("ProcessosBaixaPrioritatReportGenerator: retorna llista de processos")
+    void processosBaixaPrioritatReportGenerator_quanEsCrida_llavorsRetornaLlista() throws Exception {
+        // Arrange
+        FetServiceImpl.ProcessosBaixaPrioritatReportGenerator generator =
+                new FetServiceImpl.ProcessosBaixaPrioritatReportGenerator(procesBaixaPrioritatService);
+
+        es.caib.comanda.estadistica.logic.intf.model.estadistiques.ProcesBaixaPrioritat p =
+                es.caib.comanda.estadistica.logic.intf.model.estadistiques.ProcesBaixaPrioritat.builder()
+                        .id("proc-1")
+                        .entornAppId(1L)
+                        .estat(es.caib.comanda.estadistica.logic.intf.model.estadistiques.ProcesBaixaPrioritat.ESTAT_EN_EXECUCIO)
+                        .build();
+
+        when(procesBaixaPrioritatService.getProcessos(1L)).thenReturn(List.of(p));
+
+        // Act
+        List<es.caib.comanda.estadistica.logic.intf.model.estadistiques.ProcesBaixaPrioritat> result =
+                generator.generateData("CODE", null, 1L);
+
+        // Assert
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getId()).isEqualTo("proc-1");
+    }
+
+    @Test
+    @DisplayName("CancelarBaixaPrioritatAction: cancel·la procés correctament")
+    void cancelarBaixaPrioritatAction_quanEsCrida_llavorsCancelaProces() throws Exception {
+        // Arrange
+        FetServiceImpl.CancelarBaixaPrioritatAction action =
+                new FetServiceImpl.CancelarBaixaPrioritatAction(procesBaixaPrioritatService);
+
+        when(procesBaixaPrioritatService.cancelarProces("proc-1")).thenReturn(true);
+
+        // Act
+        Boolean result = action.exec("CODE", null, "proc-1");
+
+        // Assert
+        assertThat(result).isTrue();
+        verify(procesBaixaPrioritatService, times(1)).cancelarProces("proc-1");
     }
 }

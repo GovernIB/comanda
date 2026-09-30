@@ -19,8 +19,10 @@ import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.ProcesBaixaPrioritat;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -67,13 +69,16 @@ public class FetServiceImpl extends BaseMutableResourceService<Fet, Long, FetEnt
     private final FetRepository fetRepository;
     private final TempsMapper tempsMapper;
     private final FetMapper fetMapper;
+    private final ProcesBaixaPrioritatService procesBaixaPrioritatService;
 
     @PostConstruct
     public void init() {
         register(Fet.FET_REPORT_DATES_DISPONIBLES, new DatesDisponiblesReportGenerator(tempsRepository, tempsMapper));
         register(Fet.FET_REPORT_DADES_DIA, new DadesDiaReportGenerator(fetRepository, fetMapper));
-        register(Fet.FET_ACTION_OBTENIR_PER_DATA, new ObtenirPerDataAction(estadisticaClientHelper, estadisticaHelper));
-        register(Fet.FET_ACTION_OBTENIR_PER_INTERVAL, new ObtenirPerIntervalAction(estadisticaClientHelper, estadisticaHelper));
+        register(Fet.FET_ACTION_OBTENIR_PER_DATA, new ObtenirPerDataAction(estadisticaClientHelper, estadisticaHelper, procesBaixaPrioritatService));
+        register(Fet.FET_ACTION_OBTENIR_PER_INTERVAL, new ObtenirPerIntervalAction(estadisticaClientHelper, estadisticaHelper, procesBaixaPrioritatService));
+        register(Fet.FET_REPORT_PROCESSOS_BAIXA_PRIORITAT, new ProcessosBaixaPrioritatReportGenerator(procesBaixaPrioritatService));
+        register(Fet.FET_ACTION_CANCELAR_BAIXA_PRIORITAT, new CancelarBaixaPrioritatAction(procesBaixaPrioritatService));
     }
 
     @Override
@@ -208,16 +213,33 @@ public class FetServiceImpl extends BaseMutableResourceService<Fet, Long, FetEnt
         }
     }
 
+    @AllArgsConstructor
     @RequiredArgsConstructor
     public static class ObtenirPerDataAction implements ActionExecutor<FetEntity, FetObtenirParamAction, FetObtenirResponse> {
         private final EstadisticaClientHelper estadisticaClientHelper;
         private final EstadisticaHelper estadisticaHelper;
+        private ProcesBaixaPrioritatService procesBaixaPrioritatService;
 
         @Override
         public FetObtenirResponse exec(String code, FetEntity entity, FetObtenirParamAction params) throws ActionExecutionException {
             Long entornAppId = params.getEntornAppId();
             LocalDate data = params.getDataInici();
             try {
+                if (Boolean.TRUE.equals(params.getBaixaPrioritat()) && procesBaixaPrioritatService != null) {
+                    log.info("Iniciant recuperació en baixa prioritat per a la data {} i entornAppId: {}", data, entornAppId);
+                    ProcesBaixaPrioritat proces = procesBaixaPrioritatService.iniciarProces(entornAppId, data, data);
+                    if (proces != null && ProcesBaixaPrioritat.ESTAT_ERROR.equals(proces.getEstat())) {
+                        return FetObtenirResponse.builder()
+                                .success(false)
+                                .message(proces.getMissatge())
+                                .build();
+                    }
+                    return FetObtenirResponse.builder()
+                            .success(true)
+                            .message("S'ha iniciat el procés de recuperació de baixa prioritat en segon pla.")
+                            .build();
+                }
+
                 log.info("Obtenint dades estadístiques per a la data {} i entornAppId: {}", data, entornAppId);
                 EntornApp entornApp = estadisticaClientHelper.entornAppFindById(entornAppId);
 
@@ -242,10 +264,12 @@ public class FetServiceImpl extends BaseMutableResourceService<Fet, Long, FetEnt
         }
     }
 
+    @AllArgsConstructor
     @RequiredArgsConstructor
     public static class ObtenirPerIntervalAction implements ActionExecutor<FetEntity, FetObtenirParamAction, FetObtenirResponse> {
         private final EstadisticaClientHelper estadisticaClientHelper;
         private final EstadisticaHelper estadisticaHelper;
+        private ProcesBaixaPrioritatService procesBaixaPrioritatService;
 
         @Override
         public FetObtenirResponse exec(String code, FetEntity entity, FetObtenirParamAction params) throws ActionExecutionException {
@@ -253,6 +277,24 @@ public class FetServiceImpl extends BaseMutableResourceService<Fet, Long, FetEnt
             LocalDate dataInici = params.getDataInici();
             LocalDate dataFi = params.getDataFi();
             try {
+                if (Boolean.TRUE.equals(params.getBaixaPrioritat()) && procesBaixaPrioritatService != null) {
+                    log.info("Iniciant recuperació en baixa prioritat per a l'interval {} a {} i entornAppId: {} (pausa: {} ms)",
+                            dataInici, dataFi, entornAppId, params.getPausaMs());
+                    ProcesBaixaPrioritat proces = params.getPausaMs() != null
+                            ? procesBaixaPrioritatService.iniciarProces(entornAppId, dataInici, dataFi, params.getPausaMs())
+                            : procesBaixaPrioritatService.iniciarProces(entornAppId, dataInici, dataFi);
+                    if (proces != null && ProcesBaixaPrioritat.ESTAT_ERROR.equals(proces.getEstat())) {
+                        return FetObtenirResponse.builder()
+                                .success(false)
+                                .message(proces.getMissatge())
+                                .build();
+                    }
+                    return FetObtenirResponse.builder()
+                            .success(true)
+                            .message("S'ha iniciat el procés de recuperació de baixa prioritat en segon pla.")
+                            .build();
+                }
+
                 log.info("Obtenint dades estadístiques per a l'interval {} a {} i entornAppId: {}",
                         dataInici, dataFi, entornAppId);
                 EntornApp entornApp = estadisticaClientHelper.entornAppFindById(entornAppId);
@@ -277,6 +319,46 @@ public class FetServiceImpl extends BaseMutableResourceService<Fet, Long, FetEnt
 
         @Override
         public void onChange(Serializable id, FetObtenirParamAction previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, FetObtenirParamAction target) {
+        }
+    }
+
+    @RequiredArgsConstructor
+    public static class ProcessosBaixaPrioritatReportGenerator implements ReportGenerator<FetEntity, Long, ProcesBaixaPrioritat> {
+        private final ProcesBaixaPrioritatService procesBaixaPrioritatService;
+
+        @Override
+        public List<ProcesBaixaPrioritat> generateData(String code, FetEntity entity, Long entornAppId) throws ReportGenerationException {
+            log.info("Obtenint processos de baixa prioritat per a entornAppId: {}", entornAppId);
+            try {
+                return procesBaixaPrioritatService.getProcessos(entornAppId);
+            } catch (Exception e) {
+                log.error("Error en obtenir processos de baixa prioritat", e);
+                return List.of();
+            }
+        }
+
+        @Override
+        public void onChange(Serializable id, Long previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Long target) {
+        }
+    }
+
+    @RequiredArgsConstructor
+    public static class CancelarBaixaPrioritatAction implements ActionExecutor<FetEntity, String, Boolean> {
+        private final ProcesBaixaPrioritatService procesBaixaPrioritatService;
+
+        @Override
+        public Boolean exec(String code, FetEntity entity, String procesId) throws ActionExecutionException {
+            try {
+                log.info("Cancel·lant procés de baixa prioritat: {}", procesId);
+                return procesBaixaPrioritatService.cancelarProces(procesId);
+            } catch (Exception e) {
+                log.error("Error al cancel·lar el procés de baixa prioritat {}", procesId, e);
+                return false;
+            }
+        }
+
+        @Override
+        public void onChange(Serializable id, String previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, String target) {
         }
     }
 

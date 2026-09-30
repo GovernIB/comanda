@@ -107,7 +107,7 @@ const UserRoleRouteGuard: React.FC<{ children: React.ReactNode }> = ({ children 
             '/alarmes',
             '/sitemap',
             '/accessibilitat',
-            ...(statsEnabled ? ['/estadistiques', ...(hasDashboardAccess ? ['/dashboard'] : []), '/dimensio', '/indicador', '/calendari'] : []),
+            ...(statsEnabled ? ['/estadistiques', ...(hasDashboardAccess ? ['/dashboard'] : []), '/dimensio', '/indicador'] : []),
         ]
         : [
             ...(hasSalutAccess ? ['/', '/appinfo', '/alarma',] : []),

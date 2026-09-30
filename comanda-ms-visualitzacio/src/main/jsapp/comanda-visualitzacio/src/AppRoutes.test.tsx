@@ -501,4 +501,34 @@ describe('AppRoutes', () => {
 
         expect(await screen.findByText('EstadisticaDashboards page')).toBeInTheDocument();
     });
+
+    it('AppRoutes_quanUsuariEsAdmin_potAccedirACalendari', async () => {
+        mocks.useUserContextMock.mockReturnValue({ user: { id: 1 } });
+        mocks.useIsUserAdminMock.mockReturnValue(true);
+        mocks.useIsUserConsultaMock.mockReturnValue(false);
+        mocks.useIsUserUsuariMock.mockReturnValue(false);
+
+        render(
+            <MemoryRouter initialEntries={['/calendari']}>
+                <AppRoutes />
+            </MemoryRouter>
+        );
+
+        expect(await screen.findByText('CalendariEstadistiques page')).toBeInTheDocument();
+    });
+
+    it('AppRoutes_quanUsuariEsConsulta_noPotAccedirACalendariIRedirigeix', async () => {
+        mocks.useUserContextMock.mockReturnValue({ user: { id: 1 } });
+        mocks.useIsUserAdminMock.mockReturnValue(false);
+        mocks.useIsUserConsultaMock.mockReturnValue(true);
+        mocks.useIsUserUsuariMock.mockReturnValue(false);
+
+        render(
+            <MemoryRouter initialEntries={['/calendari']}>
+                <AppRoutes />
+            </MemoryRouter>
+        );
+
+        expect(await screen.findByText('Salut page')).toBeInTheDocument();
+    });
 });

@@ -117,10 +117,12 @@ vi.mock('reactlib', () => ({
                     children,
                     persistentStateActive,
                     persistentStateKey,
+                    springFilterBuilder,
                 }: {
         children: React.ReactNode;
         persistentStateActive?: boolean;
         persistentStateKey?: string;
+        springFilterBuilder?: (data: any) => string;
     }) => (
         <div>
             <div
@@ -129,6 +131,14 @@ vi.mock('reactlib', () => ({
                 data-key={persistentStateKey ?? ''}
             />
             {children}
+            {springFilterBuilder && (
+                <button
+                    data-testid="simulate-filter-entornapp"
+                    onClick={() => springFilterBuilder({ entornApp: { id: 9 } })}
+                >
+                    Simular EntornApp
+                </button>
+            )}
         </div>
     ),
     FormField: ({ name, label, optionsRequest }: { name: string; label?: string; optionsRequest?: (q: string) => Promise<{ options: Array<{ description?: string }> }> }) => (
