@@ -110,13 +110,14 @@ public class DimensioValor extends BaseResource<Long> {
     }
 
     public String getCodiNom() {
-        return valor +
-            (unitatOrganitzativa != null
-                ?" - " + unitatOrganitzativa.getDescription()
-                :"") +
-            (entitat != null
-                ?" - " + entitat.getDescription()
-                :"");
+        return valor + getResourceReferenceDescription(unitatOrganitzativa) + getResourceReferenceDescription(entitat);
+    }
+
+    private String getResourceReferenceDescription(ResourceReference resourceReference) {
+        if (resourceReference != null && resourceReference.getDescription() != null && !resourceReference.getDescription().isEmpty()) {
+            return " - " + resourceReference.getDescription();
+        }
+        return "";
     }
 
     @Getter
