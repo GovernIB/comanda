@@ -41,6 +41,8 @@ public class EstadisticaSimpleWidgetHelper {
         if (indicadorTaulaEntity == null) {
             indicadorTaulaEntity = new IndicadorTaulaEntity();
             indicadorTaulaEntity.setWidget(entity);
+        } else if (indicadorTaulaEntity.getWidget() == null) {
+            indicadorTaulaEntity.setWidget(entity);
         }
         indicadorTaulaEntity.setTitol(resource.getTitolIndicador());
         indicadorTaulaEntity.setAgregacio(resource.getTipusIndicador());
@@ -52,15 +54,11 @@ public class EstadisticaSimpleWidgetHelper {
                     .ifPresent(indicadorTaulaEntity::setIndicador);
             }
         }
-        if (entity.getId() != null) {
-            // El widget ja existeix a BD: cal desar explícitament aquí l'IndicadorTaulaEntity (abans del
-            // save/flush del widget fet per BaseMutableResourceService) per evitar el bloqueig optimista
-            // i les files duplicades comentats més amunt. En creació el widget encara és transitori (id
-            // null): un save() explícit fallaria amb TransientPropertyValueException perquè la FK
-            // 'widget' apuntaria a una entitat encara no persistida — es deixa que el cascade=ALL
-            // d''indicadorInfo' el persisteixi juntament amb el widget quan aquest es desi.
-            indicadorTaulaEntity = indicadorTaulaRepository.save(indicadorTaulaEntity);
-        }
+        // No es crida indicadorTaulaRepository.save(indicadorTaulaEntity): la relació
+        // @OneToOne(mappedBy = "widget", cascade = CascadeType.ALL) de l'entitat widget
+        // s'encarrega de persistir o actualitzar IndicadorTaulaEntity en fer saveAndFlush del widget.
+        // Cridar save() explícitament causava un cicle merge() desconnectat i un error de bloqueig
+        // optimista (StaleStateException) en servidors d'aplicacions amb JTA.
         entity.setIndicadorInfo(indicadorTaulaEntity);
     }
 

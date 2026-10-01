@@ -242,6 +242,19 @@ class EstadisticaWidgetHelperTest {
         assertThat(ref.getDescription()).isEqualTo("Dimensio [Descripció Test]");
     }
 
+    @Test
+    @DisplayName("afterConversionGetDimensions: quan entity te dimensionsValor null no llança NullPointerException")
+    void afterConversionGetDimensions_quanEntityDimensionsValorEsNull_llavorsNoFalla() {
+        // Arrange
+        entity.setDimensionsValor(null);
+
+        // Act
+        estadisticaWidgetHelper.afterConversionGetDimensions(entity, resource);
+
+        // Assert
+        assertThat(resource.getDimensionsValor()).isEmpty();
+    }
+
     // ========================================================================
     // 4. TESTOS PER A clearDashboardWidgetCacheByWidget
     // ========================================================================

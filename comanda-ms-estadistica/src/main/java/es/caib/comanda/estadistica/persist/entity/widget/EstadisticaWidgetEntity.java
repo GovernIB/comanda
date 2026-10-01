@@ -28,6 +28,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -86,7 +87,7 @@ public abstract class EstadisticaWidgetEntity<R> extends BaseAuditableEntity<R> 
             joinColumns = @JoinColumn(name = "widget_id"),
             inverseJoinColumns = @JoinColumn(name = "dimensio_valor_id")
     )
-    protected List<DimensioValorEntity> dimensionsValor;
+    protected List<DimensioValorEntity> dimensionsValor = new ArrayList<>();
 
     // Periode de temps que es vol mostrar
     // /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

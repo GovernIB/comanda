@@ -59,8 +59,8 @@ class EstadisticaSimpleWidgetHelperTest {
     // ========================================================================
 
     @Test
-    @DisplayName("upsertIndicadorTaula: widget existent (té id) i indicadorInfo null - desa explícitament la nova entitat")
-    void upsertIndicadorTaula_quanWidgetJaExisteixIIndicadorInfoEsNull_llavorsDesaExplicitamentNovaEntitat() {
+    @DisplayName("upsertIndicadorTaula: widget existent (té id) i indicadorInfo null - crea la nova entitat sense desar-la explícitament (deixa el cascade)")
+    void upsertIndicadorTaula_quanWidgetJaExisteixIIndicadorInfoEsNull_llavorsCreaNovaEntitatSenseDesarExplicitament() {
         // Arrange
         entity.setId(1L);
         entity.setIndicadorInfo(null);
@@ -69,22 +69,16 @@ class EstadisticaSimpleWidgetHelperTest {
         resource.setPeriodeIndicador(PeriodeUnitat.MES);
         resource.setIndicador(null);
 
-        IndicadorTaulaEntity savedEntity = new IndicadorTaulaEntity();
-        when(indicadorTaulaRepository.save(any(IndicadorTaulaEntity.class))).thenReturn(savedEntity);
-
         // Act
         estadisticaSimpleWidgetHelper.upsertIndicadorTaula(entity, resource);
 
         // Assert
-        ArgumentCaptor<IndicadorTaulaEntity> captor = ArgumentCaptor.forClass(IndicadorTaulaEntity.class);
-        verify(indicadorTaulaRepository, times(1)).save(captor.capture());
-
-        IndicadorTaulaEntity captured = captor.getValue();
-        assertThat(captured.getWidget()).isSameAs(entity);
-        assertThat(captured.getTitol()).isEqualTo("Titol Test");
-        assertThat(captured.getAgregacio()).isEqualTo(TableColumnsEnum.SUM);
-        assertThat(captured.getUnitatAgregacio()).isEqualTo(null);
-        assertThat(entity.getIndicadorInfo()).isSameAs(savedEntity);
+        verify(indicadorTaulaRepository, never()).save(any());
+        assertThat(entity.getIndicadorInfo()).isNotNull();
+        assertThat(entity.getIndicadorInfo().getWidget()).isSameAs(entity);
+        assertThat(entity.getIndicadorInfo().getTitol()).isEqualTo("Titol Test");
+        assertThat(entity.getIndicadorInfo().getAgregacio()).isEqualTo(TableColumnsEnum.SUM);
+        assertThat(entity.getIndicadorInfo().getUnitatAgregacio()).isNull();
     }
 
     @Test
@@ -122,12 +116,11 @@ class EstadisticaSimpleWidgetHelperTest {
         resource.setPeriodeIndicador(PeriodeUnitat.SETMANA);
         resource.setIndicador(null);
 
-        when(indicadorTaulaRepository.save(any(IndicadorTaulaEntity.class))).thenReturn(existing);
-
         // Act
         estadisticaSimpleWidgetHelper.upsertIndicadorTaula(entity, resource);
 
         // Assert
+        verify(indicadorTaulaRepository, never()).save(any());
         assertThat(existing.getTitol()).isEqualTo("Nou Titol");
         assertThat(existing.getAgregacio()).isEqualTo(TableColumnsEnum.AVERAGE);
         assertThat(existing.getUnitatAgregacio()).isEqualTo(PeriodeUnitat.SETMANA);
@@ -140,7 +133,6 @@ class EstadisticaSimpleWidgetHelperTest {
         // Arrange
         entity.setIndicadorInfo(new IndicadorTaulaEntity());
         resource.setIndicador(null);
-        when(indicadorTaulaRepository.save(any())).thenReturn(new IndicadorTaulaEntity());
 
         // Act
         estadisticaSimpleWidgetHelper.upsertIndicadorTaula(entity, resource);
@@ -157,7 +149,6 @@ class EstadisticaSimpleWidgetHelperTest {
         ResourceReference ref = new ResourceReference();
         ref.setId(null);
         resource.setIndicador(ref);
-        when(indicadorTaulaRepository.save(any())).thenReturn(new IndicadorTaulaEntity());
 
         // Act
         estadisticaSimpleWidgetHelper.upsertIndicadorTaula(entity, resource);
@@ -177,7 +168,6 @@ class EstadisticaSimpleWidgetHelperTest {
         ResourceReference ref = new ResourceReference();
         ref.setId(5L);
         resource.setIndicador(ref);
-        when(indicadorTaulaRepository.save(any())).thenReturn(existing);
 
         // Act
         estadisticaSimpleWidgetHelper.upsertIndicadorTaula(entity, resource);
@@ -200,7 +190,6 @@ class EstadisticaSimpleWidgetHelperTest {
 
         IndicadorEntity newIndicador = new IndicadorEntity();
         when(indicadorRepository.findById(10L)).thenReturn(Optional.of(newIndicador));
-        when(indicadorTaulaRepository.save(any())).thenReturn(existing);
 
         // Act
         estadisticaSimpleWidgetHelper.upsertIndicadorTaula(entity, resource);
@@ -223,7 +212,6 @@ class EstadisticaSimpleWidgetHelperTest {
         resource.setIndicador(ref);
 
         when(indicadorRepository.findById(10L)).thenReturn(Optional.empty());
-        when(indicadorTaulaRepository.save(any())).thenReturn(existing);
 
         // Act
         estadisticaSimpleWidgetHelper.upsertIndicadorTaula(entity, resource);

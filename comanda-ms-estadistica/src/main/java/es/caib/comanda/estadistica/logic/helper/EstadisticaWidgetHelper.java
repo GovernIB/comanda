@@ -52,17 +52,16 @@ public class EstadisticaWidgetHelper {
         List<DimensioValorEntity> dimensionsValorsEntities = entity.getDimensionsValor();
         List<ResourceReference<DimensioValor, Long>> dimensionsValors = resource.getDimensionsValor();
 
-        if (dimensionsValors == null || dimensionsValors.isEmpty()) {
-            if (dimensionsValorsEntities != null && !dimensionsValorsEntities.isEmpty()) {
-                dimensionsValorsEntities.clear();
-            }
-            return;
-        }
-
         if (dimensionsValorsEntities == null) {
             dimensionsValorsEntities = new ArrayList<>();
             entity.setDimensionsValor(dimensionsValorsEntities);
         }
+
+        if (dimensionsValors == null || dimensionsValors.isEmpty()) {
+            dimensionsValorsEntities.clear();
+            return;
+        }
+
         List<DimensioValorEntity> persistValues = dimensionsValors.stream()
             .map(ResourceReference::getId)
             .filter(Objects::nonNull)
@@ -91,10 +90,12 @@ public class EstadisticaWidgetHelper {
     public <E extends EstadisticaWidgetEntity, R extends EstadisticaWidget> void afterConversionGetDimensions(E entity, R resource) {
         List<DimensioValorEntity> dimensionsValorsEntities = entity.getDimensionsValor();
         List<ResourceReference<DimensioValor, Long>> dimensionsValors = new ArrayList<>();
-        for (DimensioValorEntity dimensioValorEntity : dimensionsValorsEntities) {
-            DimensioValor dimensioValor = resourceEntityMappingHelper.entityToResource(dimensioValorEntity, DimensioValor.class);
-            ResourceReference<DimensioValor, Long> resourceReference = ResourceReference.toResourceReference(dimensioValorEntity.getId(), dimensioValor.getDesc());
-            dimensionsValors.add(resourceReference);
+        if (dimensionsValorsEntities != null) {
+            for (DimensioValorEntity dimensioValorEntity : dimensionsValorsEntities) {
+                DimensioValor dimensioValor = resourceEntityMappingHelper.entityToResource(dimensioValorEntity, DimensioValor.class);
+                ResourceReference<DimensioValor, Long> resourceReference = ResourceReference.toResourceReference(dimensioValorEntity.getId(), dimensioValor.getDesc());
+                dimensionsValors.add(resourceReference);
+            }
         }
         resource.setDimensionsValor(dimensionsValors);
     }
