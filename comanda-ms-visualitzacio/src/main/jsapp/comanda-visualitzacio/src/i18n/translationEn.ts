@@ -882,6 +882,7 @@ const translationEn: translationResourcesType = {
                         title: "Refreshing organizational units",
                         waiting: "Preparing the update...",
                         processed: "{{processats}} of {{total}} processed",
+                        hideInBackground: "Continue in the background",
                     },
                 },
                 organigrama: {
@@ -930,6 +931,7 @@ const translationEn: translationResourcesType = {
                         title: "Refreshing ministry data",
                         waiting: "Preparing the update...",
                         processed: "{{processats}} of {{total}} processed",
+                        hideInBackground: "Continue in the background",
                     },
                 },
                 sincronitzar: {

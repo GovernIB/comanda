@@ -882,6 +882,7 @@ const translationCa = {
                         title: "Actualitzant unitats organitzatives",
                         waiting: "Preparant l'actualització...",
                         processed: "{{processats}} de {{total}} processades",
+                        hideInBackground: "Continuar en segon pla",
                     },
                 },
                 organigrama: {
@@ -930,6 +931,7 @@ const translationCa = {
                         title: "Actualitzant dades de la conselleria",
                         waiting: "Preparant l'actualització...",
                         processed: "{{processats}} de {{total}} processats",
+                        hideInBackground: "Continuar en segon pla",
                     },
                 },
                 sincronitzar: {

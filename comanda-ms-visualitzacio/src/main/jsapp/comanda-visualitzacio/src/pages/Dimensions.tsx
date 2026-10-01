@@ -277,6 +277,9 @@ const Dimensions: React.FC = () => {
             temporalMessageShow(null, t($ => $.page.dimensions.action.refreshCons.ok), 'success');
         }
     }
+    const hideFetConsDialog = () => {
+        setFetConsProgressId(null);
+    };
     const clearTipus = (id:any) => {
         apiAction(id, {code: 'CHANGE_TIPUS', data: {tipus: null}})
             .then(() => {
@@ -360,6 +363,7 @@ const Dimensions: React.FC = () => {
                 open={fetConsProgressId != null}
                 dimensioId={fetConsProgressId}
                 onComplete={onFetConsComplete}
+                onHide={hideFetConsDialog}
             />
         </>
     );

@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import LinearProgress from '@mui/material/LinearProgress';
@@ -28,9 +30,11 @@ type DimensioFetConsProgressDialogProps = {
      * ha fet cap feina i la seva pròpia resposta HTTP no reflecteix quan acaba el procés real.
      */
     onComplete?: (error: boolean) => void;
+    /** Event quant es vol ocultar el diàleg */
+    onHide?: () => void;
 };
 
-const DimensioFetConsProgressDialog: React.FC<DimensioFetConsProgressDialogProps> = ({ open, dimensioId, onComplete }) => {
+const DimensioFetConsProgressDialog: React.FC<DimensioFetConsProgressDialogProps> = ({ open, dimensioId, onComplete, onHide }) => {
     const { t } = useTranslation();
     const { subscribe } = useSseContext();
     const [progress, setProgress] = React.useState<{ processats: number; total: number } | null>(null);
@@ -79,6 +83,13 @@ const DimensioFetConsProgressDialog: React.FC<DimensioFetConsProgressDialogProps
                     </Typography>
                 </Box>
             </DialogContent>
+            {onHide && (
+                <DialogActions>
+                    <Button onClick={onHide} variant="text">
+                        {t($ => $.page.dimensions.action.refreshCons.progress.hideInBackground)}
+                    </Button>
+                </DialogActions>
+            )}
         </Dialog>
     );
 };

@@ -882,6 +882,7 @@ const translationEs: translationResourcesType = {
                         title: "Actualizando unidades organizativas",
                         waiting: "Preparando la actualización...",
                         processed: "{{processats}} de {{total}} procesadas",
+                        hideInBackground: "Continuar en segundo plano",
                     },
                 },
                 organigrama: {
@@ -930,6 +931,7 @@ const translationEs: translationResourcesType = {
                         title: "Actualizando datos de la consejería",
                         waiting: "Preparando la actualización...",
                         processed: "{{processats}} de {{total}} procesados",
+                        hideInBackground: "Continuar en segundo plano",
                     },
                 },
                 sincronitzar: {

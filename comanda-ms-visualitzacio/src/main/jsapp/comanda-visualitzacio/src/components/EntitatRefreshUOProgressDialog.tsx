@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import LinearProgress from '@mui/material/LinearProgress';
@@ -28,10 +30,12 @@ type EntitatRefreshUOProgressDialogProps = {
      * ha fet cap feina i la seva pròpia resposta HTTP no reflecteix quan acaba el procés real.
      */
     onComplete?: (error: boolean) => void;
+    /** Event quant es vol ocultar el diàleg */
+    onHide?: () => void;
 };
 
 /** Mateix patró que DimensioFetConsProgressDialog (acció FET_CONS de Dimensio), per a l'acció REFRESH_UO d'Entitat. */
-const EntitatRefreshUOProgressDialog: React.FC<EntitatRefreshUOProgressDialogProps> = ({ open, entitatId, onComplete }) => {
+const EntitatRefreshUOProgressDialog: React.FC<EntitatRefreshUOProgressDialogProps> = ({ open, entitatId, onComplete, onHide }) => {
     const { t } = useTranslation();
     const { subscribe } = useSseContext();
     const [progress, setProgress] = React.useState<{ processats: number; total: number } | null>(null);
@@ -83,6 +87,13 @@ const EntitatRefreshUOProgressDialog: React.FC<EntitatRefreshUOProgressDialogPro
                     </Typography>
                 </Box>
             </DialogContent>
+            {onHide && (
+                <DialogActions>
+                    <Button onClick={onHide} variant="text">
+                        {t($ => $.page.entitats.action.refreshUO.progress.hideInBackground)}
+                    </Button>
+                </DialogActions>
+            )}
         </Dialog>
     );
 };

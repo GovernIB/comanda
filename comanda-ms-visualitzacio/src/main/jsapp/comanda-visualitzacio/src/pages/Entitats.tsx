@@ -137,6 +137,9 @@ const Entitats = () => {
             temporalMessageShow(null, t($ => $.page.entitats.action.refreshUO.ok), 'success');
         }
     }
+    const hideRefreshUODialog = () => {
+        setRefreshUOProgressId(null);
+    };
 
     return (
         <>
@@ -174,6 +177,7 @@ const Entitats = () => {
                 open={refreshUOProgressId != null}
                 entitatId={refreshUOProgressId}
                 onComplete={onRefreshUOComplete}
+                onHide={hideRefreshUODialog}
             />
         </>
     )
