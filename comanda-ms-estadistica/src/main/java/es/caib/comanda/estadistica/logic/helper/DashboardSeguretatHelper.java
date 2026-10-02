@@ -91,6 +91,14 @@ public class DashboardSeguretatHelper {
             return SeguretatDadesResultat.builder().exempt(true).build();
         }
 
+        Optional<DimensioEntity> dimensioEntitat = dimensioRepository.findByEntornAppIdAndTipus(entornAppId, TipusDimensioEnum.ENTITAT);
+        Optional<DimensioEntity> dimensioOrgan = dimensioRepository.findByEntornAppIdAndTipus(entornAppId, TipusDimensioEnum.ORGAN_GESTOR);
+
+        if (dimensioEntitat.isEmpty() && dimensioOrgan.isEmpty()) {
+            // Aquesta app no té ni dimensió ENTITAT ni ORGAN_GESTOR: la restricció no li és aplicable.
+            return SeguretatDadesResultat.builder().exempt(true).build();
+        }
+
         Set<Serializable> entitatIds = getAllowedIds(ResourceType.ENTITAT);
         Set<Serializable> unitatIds = getAllowedIds(ResourceType.UNITAT);
         if (entitatIds.isEmpty() && unitatIds.isEmpty()) {
@@ -98,26 +106,17 @@ public class DashboardSeguretatHelper {
         }
 
         SeguretatFiltreSql.SeguretatFiltreSqlBuilder filtre = SeguretatFiltreSql.builder();
-        boolean algunaDimensioAplicable = false;
 
-        Optional<DimensioEntity> dimensioEntitat = dimensioRepository.findByEntornAppIdAndTipus(entornAppId, TipusDimensioEnum.ENTITAT);
         if (dimensioEntitat.isPresent()) {
-            algunaDimensioAplicable = true;
             filtre.dimensioEntitatCodi(dimensioEntitat.get().getCodi());
             filtre.valorsEntitatPermesos(resoldreCodisEntitatsPermeses(entitatIds, dimensioEntitat.get()));
         }
 
-        Optional<DimensioEntity> dimensioOrgan = dimensioRepository.findByEntornAppIdAndTipus(entornAppId, TipusDimensioEnum.ORGAN_GESTOR);
         if (dimensioOrgan.isPresent()) {
-            algunaDimensioAplicable = true;
             filtre.dimensioOrganCodi(dimensioOrgan.get().getCodi());
             filtre.valorsOrganPermesos(resoldreCodisOrgansPermesosAmbDescendents(unitatIds, entitatIds));
         }
 
-        if (!algunaDimensioAplicable) {
-            // Aquesta app no té ni dimensió ENTITAT ni ORGAN_GESTOR: la restricció no li és aplicable.
-            return SeguretatDadesResultat.builder().exempt(true).build();
-        }
         return SeguretatDadesResultat.builder().filtreSql(filtre.build()).build();
     }
 
