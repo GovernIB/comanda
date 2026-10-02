@@ -14,6 +14,7 @@ import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceFieldNotFoundException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +53,29 @@ public class EstadisticaSimpleWidgetServiceImpl extends BaseMutableResourceServi
         return estadisticaWidgetHelper.namedFilterToSpecification(name);
     }
 
+    @Override
+    protected void beforeCreateEntity(EstadisticaSimpleWidgetEntity entity, EstadisticaSimpleWidget resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotCreatedException {
+        Long appId = (resource != null && resource.getAppId() != null)
+                ? resource.getAppId()
+                : (resource != null && resource.getAplicacio() != null ? resource.getAplicacio().getId() : (entity != null ? entity.getAppId() : null));
+        dashboardPermisosHelper.checkCanCreateWidget(appId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.EstadisticaWidget.permisos.crear"));
+    }
+
+    @Override
+    protected void beforeUpdateEntity(EstadisticaSimpleWidgetEntity entity, EstadisticaSimpleWidget resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
+        dashboardPermisosHelper.checkCanDesignWidget(entity, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.EstadisticaWidget.permisos.modificar"));
+        Long targetAppId = (resource != null && resource.getAppId() != null)
+                ? resource.getAppId()
+                : (resource != null && resource.getAplicacio() != null ? resource.getAplicacio().getId() : null);
+        if (targetAppId != null && entity != null && !Objects.equals(targetAppId, entity.getAppId())) {
+            dashboardPermisosHelper.checkCanCreateWidget(targetAppId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.EstadisticaWidget.permisos.modificar"));
+        }
+    }
+
+    @Override
+    protected void beforeDelete(EstadisticaSimpleWidgetEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        dashboardPermisosHelper.checkCanDeleteWidget(entity, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.EstadisticaWidget.permisos.eliminar"));
+    }
 
     @Override
     protected void beforeCreateSave(EstadisticaSimpleWidgetEntity entity, EstadisticaSimpleWidget resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotCreatedException {

@@ -67,12 +67,17 @@ import javax.validation.constraints.Size;
         accessConstraints = {
                 @ResourceAccessConstraint(
                         type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,
-                        grantedPermissions = { PermissionEnum.READ }
+                        grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE, PermissionEnum.CREATE, PermissionEnum.DELETE }
                 ),
                 @ResourceAccessConstraint(
                         type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
                         roles = { BaseConfig.ROLE_ADMIN },
                         grantedPermissions = { PermissionEnum.READ, PermissionEnum.WRITE, PermissionEnum.CREATE, PermissionEnum.DELETE }
+                ),
+                @ResourceAccessConstraint(
+                        type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                        roles = { BaseConfig.ROLE_CONSULTA },
+                        grantedPermissions = { PermissionEnum.READ }
                 )
         }
 )

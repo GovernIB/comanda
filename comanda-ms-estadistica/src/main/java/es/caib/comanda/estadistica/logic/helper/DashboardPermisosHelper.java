@@ -594,6 +594,154 @@ public class DashboardPermisosHelper {
     }
 
     /**
+     * Comprova si l'usuari actual pot dissenyar o crear continguts (widgets i títols) per a una aplicació concreta
+     * (és ADMIN, té WRITE sobre l'App, té WRITE sobre algun EntornApp de l'App, o té WRITE sobre algun Dashboard de l'App).
+     */
+    public boolean canDesignApp(Long appId) {
+        if (isAdmin()) {
+            return true;
+        }
+        if (appId == null) {
+            // En cas de creació, els usuaris no poden crear dashboards sense app.
+            // En cas d'edició, l'usuari només pot editar un dashboard sense app mitjançant permís a nivell de dashboard.
+            return false;
+        }
+        if (containsId(getAllowedAppIds(true), appId)) {
+            return true;
+        }
+        Set<Serializable> allowedEntornAppIds = getAllowedEntornAppIds(true);
+        for (Serializable eaId : allowedEntornAppIds) {
+            try {
+                Long id = (eaId instanceof Number) ? ((Number) eaId).longValue() : Long.parseLong(eaId.toString());
+                EntornApp ea = estadisticaClientHelper.entornAppFindById(id);
+                if (ea != null && ea.getApp() != null && appId.equals(ea.getApp().getId())) {
+                    return true;
+                }
+            } catch (Exception e) {
+                log.warn("Error resolvent EntornApp per id=" + eaId, e);
+            }
+        }
+        Set<Serializable> allowedDashboardIds = getAllowedDashboardIds(true);
+        for (Serializable dashId : allowedDashboardIds) {
+            try {
+                Long id = (dashId instanceof Number) ? ((Number) dashId).longValue() : Long.parseLong(dashId.toString());
+                DashboardEntity dashboard = dashboardRepository.findById(id).orElse(null);
+                if (dashboard != null && appId.equals(dashboard.getAppId())) {
+                    return true;
+                }
+            } catch (Exception e) {
+                log.warn("Error resolvent Dashboard per id=" + dashId, e);
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Comprova si l'usuari actual pot dissenyar, modificar o eliminar el widget estadístic indicat.
+     * Es permet si:
+     * - L'usuari és ADMIN.
+     * - O pot dissenyar per a l'aplicació del widget (canDesignApp).
+     * - O pot dissenyar algun dashboard que contingui aquest widget.
+     */
+    public boolean canDesignWidget(EstadisticaWidgetEntity<?> widget) {
+        if (isAdmin()) {
+            return true;
+        }
+        if (widget == null) {
+            return false;
+        }
+        if (canDesignApp(widget.getAppId())) {
+            return true;
+        }
+        Set<Serializable> allowedDashboardIds = getAllowedDashboardIds(true);
+        if (widget.getId() != null && !allowedDashboardIds.isEmpty() && dashboardItemRepository != null) {
+            List<Long> dashIds = allowedDashboardIds.stream()
+                    .map(id -> (id instanceof Number) ? ((Number) id).longValue() : Long.parseLong(id.toString()))
+                    .collect(Collectors.toList());
+            if (!dashIds.isEmpty() && dashboardItemRepository.existsByWidgetIdAndDashboardIdIn(widget.getId(), dashIds)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void checkCanCreateWidget(Long appId, String errorMessage) {
+        if (!canDesignApp(appId)) {
+            throw new AccessDeniedException(errorMessage);
+        }
+    }
+
+    public void checkCanDesignWidget(EstadisticaWidgetEntity<?> widget, String errorMessage) {
+        if (!canDesignWidget(widget)) {
+            throw new AccessDeniedException(errorMessage);
+        }
+    }
+
+    public void checkCanDesignWidget(Long widgetId, String errorMessage) {
+        if (widgetId == null) {
+            throw new AccessDeniedException(errorMessage);
+        }
+        if (estadisticaWidgetRepository != null) {
+            EstadisticaWidgetEntity<?> widget = estadisticaWidgetRepository.findById(widgetId).orElse(null);
+            if (!canDesignWidget(widget)) {
+                throw new AccessDeniedException(errorMessage);
+            }
+        } else if (!isAdmin()) {
+            throw new AccessDeniedException(errorMessage);
+        }
+    }
+
+    /**
+     * Comprova si l'usuari actual pot eliminar el widget estadístic indicat.
+     * Es permet si:
+     * - L'usuari és ADMIN.
+     * - O bé l'usuari pot dissenyar el widget (canDesignWidget) I a més, si el widget s'utilitza en algun dashboard,
+     *   l'usuari té permís de disseny sobre TOTS els dashboards que el referencien.
+     */
+    public boolean canDeleteWidget(EstadisticaWidgetEntity<?> widget) {
+        if (isAdmin()) {
+            return true;
+        }
+        if (widget == null) {
+            return false;
+        }
+        if (!canDesignWidget(widget)) {
+            return false;
+        }
+        if (widget.getId() != null && dashboardItemRepository != null) {
+            List<DashboardItemEntity> items = dashboardItemRepository.findByWidgetId(widget.getId());
+            if (items != null) {
+                for (DashboardItemEntity item : items) {
+                    if (item.getDashboard() != null && !canDesignDashboard(item.getDashboard().getId())) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    public void checkCanDeleteWidget(EstadisticaWidgetEntity<?> widget, String errorMessage) {
+        if (!canDeleteWidget(widget)) {
+            throw new AccessDeniedException(errorMessage);
+        }
+    }
+
+    public void checkCanDeleteWidget(Long widgetId, String errorMessage) {
+        if (widgetId == null) {
+            throw new AccessDeniedException(errorMessage);
+        }
+        if (estadisticaWidgetRepository != null) {
+            EstadisticaWidgetEntity<?> widget = estadisticaWidgetRepository.findById(widgetId).orElse(null);
+            if (!canDeleteWidget(widget)) {
+                throw new AccessDeniedException(errorMessage);
+            }
+        } else if (!isAdmin()) {
+            throw new AccessDeniedException(errorMessage);
+        }
+    }
+
+    /**
      * Construeix el filtre Spring Filter d'autorització per als widgets estadístics (Simple, Gràfic, Taula).
      * <p>
      * Si l'usuari és ADMIN o CONSULTA, no s'aplica cap restricció.
