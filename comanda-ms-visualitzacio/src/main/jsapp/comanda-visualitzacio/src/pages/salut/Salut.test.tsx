@@ -606,4 +606,28 @@ describe('Salut', () => {
 
         expect(screen.getByText('SalutLlistat 1')).toBeInTheDocument();
     });
+
+    it('Salut_quanFiltreAppNoEsArray_emetWarningICarregaSenseTrencarLaPagina', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const invalidFilterData = {
+            app: { id: '1', description: 'App invàlida' },
+        };
+        (globalThis as Record<string, unknown>).__salutToolbarStateMock = () => ({
+            filterData: invalidFilterData,
+        });
+
+        render(<Salut />);
+
+        await waitFor(() => {
+            expect(screen.getByText('SalutLlistat 1')).toBeInTheDocument();
+        });
+
+        expect(warnSpy).toHaveBeenCalledWith(
+            'Error mapping salut app filter:',
+            expect.any(TypeError)
+        );
+
+        delete (globalThis as Record<string, unknown>).__salutToolbarStateMock;
+        warnSpy.mockRestore();
+    });
 });

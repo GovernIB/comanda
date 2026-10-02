@@ -164,4 +164,35 @@ describe('useSalutToolbarState', () => {
         expect(result.current.dataRangeDuration).toBe('PT15M');
         expect(result.current.grouping).toBe(GroupingEnum.APPLICATION);
     });
+
+    it('useSalutToolbarState_quanFiltreSalutTeFormatAnticObjecte_recuperaBuitIEmetWarning', () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        // Format antic on app era un objecte en lloc d'un array
+        localStorage.setItem('filterDataSalut', JSON.stringify({ app: { id: '5', description: 'APP' } }));
+
+        const { result } = renderHook(() => useSalutToolbarState());
+
+        expect(result.current.filterData).toEqual({});
+        expect(warnSpy).toHaveBeenCalledWith(
+            expect.stringContaining('[SalutToolbar] Invalid filter schema in localStorage'),
+            expect.anything()
+        );
+        expect(localStorage.getItem('filterDataSalut')).toBeNull();
+        warnSpy.mockRestore();
+    });
+
+    it('useSalutToolbarState_quanFiltreSalutTeJsonCorrupte_recuperaBuitIEmetWarning', () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        localStorage.setItem('filterDataSalut', '{invalid json');
+
+        const { result } = renderHook(() => useSalutToolbarState());
+
+        expect(result.current.filterData).toEqual({});
+        expect(warnSpy).toHaveBeenCalledWith(
+            expect.stringContaining('[SalutToolbar] Corrupted JSON in localStorage'),
+            expect.anything()
+        );
+        expect(localStorage.getItem('filterDataSalut')).toBeNull();
+        warnSpy.mockRestore();
+    });
 });
