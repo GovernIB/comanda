@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.service;
 
 import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesRestClient;
+import es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper;
 import es.caib.comanda.estadistica.logic.helper.DimensioFetConsProgressHelper;
 import es.caib.comanda.estadistica.logic.helper.EntitatResolverHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
@@ -60,6 +61,7 @@ class DimensioServiceImplTest {
     @Mock private ResourceEntityMappingHelper resourceEntityMappingHelper;
     @Mock private UnitatsOrganitzativesRestClient unitatsOrganitzativesRestClient;
     @Mock private DimensioFetConsProgressHelper dimensioFetConsProgressHelper;
+    @Mock private DashboardPermisosHelper dashboardPermisosHelper;
 
     @InjectMocks
     private DimensioServiceImpl dimensioService;
@@ -68,6 +70,8 @@ class DimensioServiceImplTest {
     void setUp() {
         ReflectionTestUtils.setField(dimensioService, "resourceEntityMappingHelper", resourceEntityMappingHelper);
         lenient().when(unitatsOrganitzativesRestClient.getCodiArrel()).thenReturn("ARREL_TEST");
+        lenient().when(dashboardPermisosHelper.buildEntornAppFilterForProperty(any(), any()))
+                .thenAnswer(inv -> inv.getArgument(0));
         // Per defecte cada test és "propietari" de la seva execució FET_CONS (com si no n'hi hagués cap altra
         // en curs); els tests que verifiquen el camí piggyback sobreescriuen aquest stub a false.
         // any() (no anyLong()) perquè alguns tests existents no assignen id a l'entitat i anyLong() no
@@ -209,6 +213,22 @@ class DimensioServiceImplTest {
         // Assert
         assertThat(result).isEqualTo("codi : 'TEST'");
         verify(springFilterHelper, never()).filterByApp(anyLong(), anyString());
+    }
+
+    @Test
+    @DisplayName("additionalSpringFilter: delega el filtre d'entornApp a DashboardPermisosHelper")
+    void additionalSpringFilter_quanDashboardPermisosHelper_llavorsAplicaFiltreEntornApp() {
+        // Arrange
+        String currentFilter = "codi:'TEST'";
+        when(dashboardPermisosHelper.buildEntornAppFilterForProperty(any(), eq(Dimensio.Fields.entornAppId)))
+                .thenReturn("codi : 'TEST' and entornAppId in (10, 20)");
+
+        // Act
+        String result = dimensioService.additionalSpringFilter(currentFilter, null);
+
+        // Assert
+        assertThat(result).isEqualTo("codi : 'TEST' and entornAppId in (10, 20)");
+        verify(dashboardPermisosHelper).buildEntornAppFilterForProperty(any(), eq(Dimensio.Fields.entornAppId));
     }
 
     // ========================================================================

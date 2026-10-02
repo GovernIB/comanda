@@ -5,6 +5,7 @@ import es.caib.comanda.client.model.App;
 import es.caib.comanda.client.model.AppRef;
 import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.EntornRef;
+import es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
@@ -59,6 +60,8 @@ class IndicadorServiceImplTest {
     @Mock
     private AuthenticationHelper authenticationHelper;
     @Mock
+    private DashboardPermisosHelper dashboardPermisosHelper;
+    @Mock
     private I18nUtil i18nUtil;
     @Mock
     private ApplicationContext applicationContext;
@@ -75,6 +78,7 @@ class IndicadorServiceImplTest {
         ReflectionTestUtils.setField(I18nUtil.class, "applicationContext", applicationContext);
         lenient().when(applicationContext.getBean(I18nUtil.class)).thenReturn(i18nUtil);
         lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(i -> i.getArgument(0));
+        lenient().when(dashboardPermisosHelper.buildEntornAppFilterForProperty(any(), any())).thenAnswer(i -> i.getArgument(0));
 
         copiarIndicadorEntornAction = indicadorService.new CopiarIndicadorEntornAction();
         sincronitzarCatalegAction = indicadorService.new SincronitzarCatalegActionExecutor();
@@ -363,5 +367,21 @@ class IndicadorServiceImplTest {
         assertThat(response).isSameAs(mockResponse);
         verify(estadisticaHelper).sincronitzarEstadisticaInfoPerApp(5L);
         verify(estadisticaHelper, never()).sincronitzarEstadisticaInfo(any());
+    }
+
+    @Test
+    @DisplayName("additionalSpringFilter: delega el filtre d'entornApp a DashboardPermisosHelper")
+    void additionalSpringFilter_quanDashboardPermisosHelper_llavorsAplicaFiltreEntornApp() {
+        // Arrange
+        String currentFilter = "codi:'IND1'";
+        when(dashboardPermisosHelper.buildEntornAppFilterForProperty(any(), eq(Indicador.Fields.entornAppId)))
+                .thenReturn("codi : 'IND1' and entornAppId in (10, 20)");
+
+        // Act
+        String result = indicadorService.additionalSpringFilter(currentFilter, null);
+
+        // Assert
+        assertThat(result).isEqualTo("codi : 'IND1' and entornAppId in (10, 20)");
+        verify(dashboardPermisosHelper).buildEntornAppFilterForProperty(any(), eq(Indicador.Fields.entornAppId));
     }
 }

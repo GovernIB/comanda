@@ -121,6 +121,8 @@ class DashboardSeguretatHelperTest {
     @DisplayName("resoldre: retorna sensePermisos=true si l'usuari no té cap permís (llista buida)")
     void resoldre_quanNoTeCapPermis_retornaSensePermisosTrue() {
         mockNonExemptUser();
+        when(dimensioRepository.findByEntornAppIdAndTipus(1L, TipusDimensioEnum.ENTITAT))
+            .thenReturn(Optional.of(new DimensioEntity()));
         mockAclResponse(ResourceType.ENTITAT, Collections.emptySet());
         mockAclResponse(ResourceType.UNITAT, Collections.emptySet());
 
@@ -133,17 +135,13 @@ class DashboardSeguretatHelperTest {
     @Test
     @DisplayName("resoldre: retorna exempt=true si l'app no té dimensions ENTITAT ni ORGAN_GESTOR")
     void resoldre_quanAppNoTeDimensionsAplicables_retornaExemptTrue() {
-        mockNonExemptUser();
-        Set<Serializable> ids = new HashSet<>(Arrays.asList(1L));
-        mockAclResponse(ResourceType.ENTITAT, ids);
-        mockAclResponse(ResourceType.UNITAT, Collections.emptySet());
-
         when(dimensioRepository.findByEntornAppIdAndTipus(1L, TipusDimensioEnum.ENTITAT)).thenReturn(Optional.empty());
         when(dimensioRepository.findByEntornAppIdAndTipus(1L, TipusDimensioEnum.ORGAN_GESTOR)).thenReturn(Optional.empty());
 
         SeguretatDadesResultat result = dashboardSeguretatHelper.resoldre(1L);
 
         assertThat(result.isExempt()).isTrue();
+        verifyNoInteractions(aclServiceClient);
     }
 
     @Test
@@ -312,6 +310,8 @@ class DashboardSeguretatHelperTest {
     @DisplayName("resoldre: gestiona correctament quan el AclServiceClient retorna null (cos de la resposta buit)")
     void resoldre_quanAclRetornaNull_retornaSetBuit() {
         mockNonExemptUser();
+        when(dimensioRepository.findByEntornAppIdAndTipus(1L, TipusDimensioEnum.ENTITAT))
+            .thenReturn(Optional.of(new DimensioEntity()));
 
         when(aclServiceClient.findIdsWithAnyPermission(
             eq(ResourceType.ENTITAT),
@@ -332,6 +332,44 @@ class DashboardSeguretatHelperTest {
         SeguretatDadesResultat result = dashboardSeguretatHelper.resoldre(1L);
 
         assertThat(result.isSensePermisos()).isTrue();
+    }
+
+    @Test
+    @DisplayName("resoldreCodisOrgansPermesos: retorna null si l'usuari és exempt")
+    void resoldreCodisOrgansPermesos_quanEsExempt_retornaNull() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        assertThat(dashboardSeguretatHelper.resoldreCodisOrgansPermesos()).isNull();
+        verifyNoInteractions(aclServiceClient);
+    }
+
+    @Test
+    @DisplayName("resoldreCodisOrgansPermesos: retorna llista buida si no té permisos d'organ")
+    void resoldreCodisOrgansPermesos_quanNoTePermisos_retornaLlistaBuida() {
+        mockNonExemptUser();
+        mockAclResponse(ResourceType.ENTITAT, Collections.emptySet());
+        mockAclResponse(ResourceType.UNITAT, Collections.emptySet());
+        assertThat(dashboardSeguretatHelper.resoldreCodisOrgansPermesos()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("resoldreCodisOrgansPermesos: gestiona correctament quan getCurrentUserRealmRoles retorna null")
+    void resoldreCodisOrgansPermesos_quanCurrentUserRealmRolesEsNull_noLlancaNPE() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+        when(authenticationHelper.getCurrentUserName()).thenReturn("user_test");
+        when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(null);
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer dummy_token");
+        when(aclServiceClient.findIdsWithAnyPermission(any(), any(), any(), eq(Collections.emptyList()), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        assertThat(dashboardSeguretatHelper.resoldreCodisOrgansPermesos()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("resoldreCodisOrgansPermesosAmbDescendents: gestiona paràmetres null sense llançar NPE")
+    void resoldreCodisOrgansPermesosAmbDescendents_quanParamsNull_retornaLlistaBuidaSenseNPE() {
+        List<String> result = dashboardSeguretatHelper.resoldreCodisOrgansPermesosAmbDescendents(null, null);
+        assertThat(result).isEmpty();
     }
 
     private void mockNonExemptUser() {

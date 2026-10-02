@@ -8,6 +8,7 @@ import es.caib.comanda.client.model.EntornRef;
 import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
+import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
@@ -941,5 +942,261 @@ class DashboardPermisosHelperTest {
         assertThatThrownBy(() -> dashboardPermisosHelper.checkCanReadDashboard(10L, 1L, 2L, "error"))
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessage("error");
+    }
+
+    // ========================================================================
+    // 16. TESTOS PER A getEffectiveAllowedEntornAppIds, buildEntornAppFilterForProperty, canDesignApp, canDesignWidget
+    // ========================================================================
+
+    @Test
+    @DisplayName("getEffectiveAllowedEntornAppIds: retorna null quan usuari és ADMIN o CONSULTA")
+    void getEffectiveAllowedEntornAppIds_quanAdminOConsulta_retornaNull() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        assertThat(dashboardPermisosHelper.getEffectiveAllowedEntornAppIds()).isNull();
+    }
+
+    @Test
+    @DisplayName("getEffectiveAllowedEntornAppIds: combina permisos d'EntornApp, App i Dashboard")
+    void getEffectiveAllowedEntornAppIds_quanUsuariAmbPermisos_combinaEntornApps() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+
+        // 1. Directe EntornApp
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Set.of(101L)));
+
+        // 2. Directe App
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Set.of(1L)));
+        when(estadisticaClientHelper.getEntornAppsIdByAppId(1L)).thenReturn(List.of(201L, 202L));
+
+        // 3. Directe Dashboard
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Set.of(5L)));
+        DashboardEntity dash = new DashboardEntity();
+        dash.setId(5L);
+        dash.setAppId(2L);
+        dash.setEntornId(3L);
+        when(dashboardRepository.findById(5L)).thenReturn(Optional.of(dash));
+        EntornApp ea = new EntornApp();
+        ea.setId(301L);
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(2L, 3L)).thenReturn(ea);
+
+        Set<Long> result = dashboardPermisosHelper.getEffectiveAllowedEntornAppIds();
+        assertThat(result).containsExactlyInAnyOrder(101L, 201L, 202L, 301L);
+    }
+
+    @Test
+    @DisplayName("buildEntornAppFilterForProperty: retorna filtre original quan usuari és ADMIN")
+    void buildEntornAppFilterForProperty_quanAdmin_retornaFiltreOriginal() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        String result = dashboardPermisosHelper.buildEntornAppFilterForProperty("codi:'TEST'", "entornAppId");
+        assertThat(result).isEqualTo("codi:'TEST'");
+    }
+
+    @Test
+    @DisplayName("buildEntornAppFilterForProperty: retorna id:0 quan no té permisos")
+    void buildEntornAppFilterForProperty_quanSensePermisos_retornaId0() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+        when(aclServiceClient.findIdsWithAnyPermission(any(), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        String result = dashboardPermisosHelper.buildEntornAppFilterForProperty("codi:'TEST'", "entornAppId");
+        assertThat(result).isEqualTo("codi:'TEST' and id:0");
+    }
+
+    @Test
+    @DisplayName("canDesignApp: retorna true quan usuari té WRITE sobre l'App")
+    void canDesignApp_quanAppWrite_retornaTrue() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), eq(List.of(PermissionEnum.PERM1)), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Set.of(10L)));
+
+        assertThat(dashboardPermisosHelper.canDesignApp(10L)).isTrue();
+    }
+
+    @Test
+    @DisplayName("canDesignApp: retorna false i checkCanCreateWidget llança excepció quan no té permisos")
+    void canDesignApp_quanSensePermisos_retornaFalseILlancaExcepcio() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.findIdsWithAnyPermission(any(), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        assertThat(dashboardPermisosHelper.canDesignApp(10L)).isFalse();
+        assertThatThrownBy(() -> dashboardPermisosHelper.checkCanCreateWidget(10L, "Sense permisos"))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Sense permisos");
+    }
+
+    @Test
+    @DisplayName("canDesignWidget: retorna true quan pot dissenyar l'App del widget")
+    void canDesignWidget_quanPotDissenyarApp_retornaTrue() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), eq(List.of(PermissionEnum.PERM1)), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Set.of(10L)));
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setAppId(10L);
+
+        assertThat(dashboardPermisosHelper.canDesignWidget(widget)).isTrue();
+    }
+
+    @Test
+    @DisplayName("canDesignWidget: retorna true quan usuari pot dissenyar un dashboard que conté el widget")
+    void canDesignWidget_quanDashboardConteWidget_retornaTrue() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), eq(List.of(PermissionEnum.WRITE)), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Set.of(50L)));
+
+        when(dashboardItemRepository.existsByWidgetIdAndDashboardIdIn(100L, List.of(50L))).thenReturn(true);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setAppId(10L);
+
+        assertThat(dashboardPermisosHelper.canDesignWidget(widget)).isTrue();
+    }
+
+    @Test
+    @DisplayName("canDesignWidget: llança AccessDeniedException quan no té permís")
+    void canDesignWidget_quanSensePermis_llancaAccessDeniedException() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.findIdsWithAnyPermission(any(), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setAppId(10L);
+
+        assertThat(dashboardPermisosHelper.canDesignWidget(widget)).isFalse();
+        assertThatThrownBy(() -> dashboardPermisosHelper.checkCanDesignWidget(widget, "Sense permisos"))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Sense permisos");
+    }
+
+    @Test
+    @DisplayName("getEffectiveAllowedEntornAppIds: resol EntornApps quan dashboard té entornId null")
+    void getEffectiveAllowedEntornAppIds_quanDashboardEntornIdNull_resolPerAppId() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), eq(List.of(PermissionEnum.READ, PermissionEnum.WRITE)), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Set.of(300L)));
+
+        DashboardEntity dash = new DashboardEntity();
+        dash.setId(300L);
+        dash.setAppId(40L);
+        dash.setEntornId(null);
+        when(dashboardRepository.findById(300L)).thenReturn(Optional.of(dash));
+        when(estadisticaClientHelper.getEntornAppsIdByAppId(40L)).thenReturn(List.of(401L, 402L));
+
+        Set<Long> result = dashboardPermisosHelper.getEffectiveAllowedEntornAppIds();
+
+        assertThat(result).containsExactlyInAnyOrder(401L, 402L);
+    }
+
+    @Test
+    @DisplayName("canDeleteWidget: admin sempre pot eliminar")
+    void canDeleteWidget_quanAdmin_retornaTrue() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+
+        assertThat(dashboardPermisosHelper.canDeleteWidget(widget)).isTrue();
+    }
+
+    @Test
+    @DisplayName("canDeleteWidget: retorna false i checkCanDeleteWidget llança si usuari no pot dissenyar widget")
+    void canDeleteWidget_quanNoPotDissenyarWidget_retornaFalse() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.findIdsWithAnyPermission(any(), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setAppId(10L);
+
+        assertThat(dashboardPermisosHelper.canDeleteWidget(widget)).isFalse();
+        assertThatThrownBy(() -> dashboardPermisosHelper.checkCanDeleteWidget(widget, "Sense permisos eliminar"))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessage("Sense permisos eliminar");
+    }
+
+    @Test
+    @DisplayName("canDeleteWidget: retorna true quan usuari pot dissenyar tots els dashboards on s'utilitza")
+    void canDeleteWidget_quanPotDissenyarTotsDashboards_retornaTrue() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), eq(List.of(PermissionEnum.WRITE)), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Set.of(50L)));
+
+        when(dashboardItemRepository.existsByWidgetIdAndDashboardIdIn(100L, List.of(50L))).thenReturn(true);
+
+        DashboardEntity dash50 = new DashboardEntity();
+        dash50.setId(50L);
+        when(dashboardRepository.findById(50L)).thenReturn(Optional.of(dash50));
+        when(aclServiceClient.anyPermissionGranted(eq(ResourceType.DASHBOARD), eq(50L), eq(List.of(PermissionEnum.WRITE)), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(true));
+
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setDashboard(dash50);
+        when(dashboardItemRepository.findByWidgetId(100L)).thenReturn(List.of(item));
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setAppId(10L);
+
+        assertThat(dashboardPermisosHelper.canDeleteWidget(widget)).isTrue();
+    }
+
+    @Test
+    @DisplayName("canDeleteWidget: retorna false quan el widget s'utilitza en un dashboard que no pot dissenyar")
+    void canDeleteWidget_quanDashboardNoDissenyable_retornaFalse() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), eq(List.of(PermissionEnum.WRITE)), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Set.of(50L)));
+
+        when(dashboardItemRepository.existsByWidgetIdAndDashboardIdIn(100L, List.of(50L))).thenReturn(true);
+
+        DashboardEntity dash50 = new DashboardEntity();
+        dash50.setId(50L);
+        DashboardEntity dash60 = new DashboardEntity();
+        dash60.setId(60L);
+
+        when(dashboardRepository.findById(50L)).thenReturn(Optional.of(dash50));
+        when(dashboardRepository.findById(60L)).thenReturn(Optional.of(dash60));
+        when(aclServiceClient.anyPermissionGranted(eq(ResourceType.DASHBOARD), eq(50L), eq(List.of(PermissionEnum.WRITE)), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(true));
+        when(aclServiceClient.anyPermissionGranted(eq(ResourceType.DASHBOARD), eq(60L), eq(List.of(PermissionEnum.WRITE)), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(false));
+
+        DashboardItemEntity item1 = new DashboardItemEntity();
+        item1.setDashboard(dash50);
+        DashboardItemEntity item2 = new DashboardItemEntity();
+        item2.setDashboard(dash60);
+        when(dashboardItemRepository.findByWidgetId(100L)).thenReturn(List.of(item1, item2));
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setAppId(10L);
+
+        assertThat(dashboardPermisosHelper.canDeleteWidget(widget)).isFalse();
+        assertThatThrownBy(() -> dashboardPermisosHelper.checkCanDeleteWidget(widget, "Sense permisos"))
+                .isInstanceOf(AccessDeniedException.class);
     }
 }
