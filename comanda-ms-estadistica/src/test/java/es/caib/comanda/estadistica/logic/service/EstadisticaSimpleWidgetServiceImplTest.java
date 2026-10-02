@@ -7,6 +7,7 @@ import es.caib.comanda.estadistica.logic.helper.EstadisticaWidgetHelper;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple;
 import es.caib.comanda.estadistica.logic.intf.model.widget.EstadisticaSimpleWidget;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetBaseResource;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceFieldNotFoundException;
@@ -298,5 +299,83 @@ class EstadisticaSimpleWidgetServiceImplTest {
 
         assertThat(result).isSameAs(mockSpec);
         verify(estadisticaWidgetHelper).namedFilterToSpecification(namedFilter);
+    }
+
+    // ========================================================================
+    // 8. TEST PER A entityDetachConvertAndMerge
+    // ========================================================================
+
+    @Test
+    @DisplayName("entityDetachConvertAndMerge: converteix entitat a recurs sense desacoblar ni refusionar")
+    void entityDetachConvertAndMerge_converteixSenseDetachNiMerge() {
+        // Arrange
+        EstadisticaSimpleWidgetEntity entity = new EstadisticaSimpleWidgetEntity();
+        entity.setId(112L);
+        es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper resourceEntityMappingHelper = org.mockito.Mockito.mock(es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper.class);
+        EstadisticaSimpleWidget expectedResource = new EstadisticaSimpleWidget();
+        when(resourceEntityMappingHelper.entityToResource(entity, EstadisticaSimpleWidget.class)).thenReturn(expectedResource);
+
+        org.springframework.test.util.ReflectionTestUtils.setField(estadisticaSimpleWidgetService, "resourceEntityMappingHelper", resourceEntityMappingHelper);
+
+        // Act
+        EstadisticaSimpleWidget result = org.springframework.test.util.ReflectionTestUtils.invokeMethod(
+            estadisticaSimpleWidgetService,
+            "entityDetachConvertAndMerge",
+            entity,
+            new HashMap<>(),
+            false
+        );
+
+        // Assert
+        assertThat(result).isSameAs(expectedResource);
+    }
+
+    @Test
+    @DisplayName("updateEntityWithResource: preserva indicadorInfo existent de l'entitat")
+    void updateEntityWithResource_preservaIndicadorInfoExistent() {
+        // Arrange
+        EstadisticaSimpleWidgetEntity entity = new EstadisticaSimpleWidgetEntity();
+        entity.setId(112L);
+        IndicadorTaulaEntity prevIndicador = new IndicadorTaulaEntity();
+        entity.setIndicadorInfo(prevIndicador);
+
+        EstadisticaSimpleWidget resource = new EstadisticaSimpleWidget();
+        es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper resourceEntityMappingHelper = org.mockito.Mockito.mock(es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(estadisticaSimpleWidgetService, "resourceEntityMappingHelper", resourceEntityMappingHelper);
+
+        // Act
+        org.springframework.test.util.ReflectionTestUtils.invokeMethod(
+            estadisticaSimpleWidgetService,
+            "updateEntityWithResource",
+            entity,
+            resource,
+            new HashMap<>()
+        );
+
+        // Assert
+        assertThat(entity.getIndicadorInfo()).isSameAs(prevIndicador);
+    }
+
+    @Test
+    @DisplayName("entitySaveFlushAndRefresh: desa i fa flush sense cridar refresh")
+    void entitySaveFlushAndRefresh_desaSenseRefresh() {
+        // Arrange
+        EstadisticaSimpleWidgetEntity entity = new EstadisticaSimpleWidgetEntity();
+        entity.setId(112L);
+        es.caib.comanda.ms.persist.repository.BaseRepository mockRepo = org.mockito.Mockito.mock(es.caib.comanda.ms.persist.repository.BaseRepository.class);
+        when(mockRepo.saveAndFlush(entity)).thenReturn(entity);
+        org.springframework.test.util.ReflectionTestUtils.setField(estadisticaSimpleWidgetService, "entityRepository", mockRepo);
+
+        // Act
+        EstadisticaSimpleWidgetEntity result = org.springframework.test.util.ReflectionTestUtils.invokeMethod(
+            estadisticaSimpleWidgetService,
+            "entitySaveFlushAndRefresh",
+            entity
+        );
+
+        // Assert
+        assertThat(result).isSameAs(entity);
+        verify(mockRepo, times(1)).saveAndFlush(entity);
+        verify(mockRepo, never()).refresh(any());
     }
 }
