@@ -48,7 +48,10 @@ public class NetejaEntornAppJmsListener {
         jmsTemplate.convertAndSend(CUA_NETEJA_TASQUES, new NetejaEntornAppMessage(entornAppId));
         jmsTemplate.convertAndSend(CUA_NETEJA_AVISOS, new NetejaEntornAppMessage(entornAppId));
         jmsTemplate.convertAndSend(CUA_NETEJA_ALARMES, new NetejaEntornAppMessage(entornAppId));
-        jmsTemplate.convertAndSend(CUA_NETEJA_ESTADISTICA, new NetejaEntornAppMessage(entornAppId));
+        jmsTemplate.convertAndSend(CUA_NETEJA_ESTADISTICA, new NetejaEntornAppMessage(entornAppId), msg -> {
+            msg.setStringProperty("TIPUS_MISSATGE", "ENTORN");
+            return msg;
+        });
         jmsMessage.acknowledge();
         log.info("Missatges de neteja enviats per entornApp {}", entornAppId);
     }
