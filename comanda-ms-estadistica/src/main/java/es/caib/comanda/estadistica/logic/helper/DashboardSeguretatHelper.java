@@ -186,12 +186,16 @@ public class DashboardSeguretatHelper {
     }
 
     private Set<Serializable> getAllowedIds(ResourceType resourceType) {
+        String[] realmRoles = authenticationHelper != null ? authenticationHelper.getCurrentUserRealmRoles() : null;
+        List<String> rolesList = realmRoles != null ? Arrays.asList(realmRoles) : Collections.emptyList();
+        String userName = authenticationHelper != null ? authenticationHelper.getCurrentUserName() : null;
+        String authHeader = httpAuthorizationHeaderHelper != null ? httpAuthorizationHeaderHelper.getAuthorizationHeader() : null;
         return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
                 resourceType,
                 List.of(PermissionEnum.PERM0),
-                authenticationHelper.getCurrentUserName(),
-                Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
-                httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
+                userName,
+                rolesList,
+                authHeader).getBody())
             .orElse(Collections.emptySet());
     }
 
