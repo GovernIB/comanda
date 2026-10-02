@@ -13,7 +13,6 @@ import es.caib.comanda.ms.logic.intf.jms.NetejaEntornAppMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jms.annotation.JmsListener;
-import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 import javax.jms.JMSException;
@@ -31,39 +30,37 @@ public class EstadisticaNetejaJmsListener {
     private final MonitorServiceClient monitorServiceClient;
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
 
-    @JmsListener(destination = Cues.CUA_NETEJA_ESTADISTICA)
-    public void processaNeteja(@Payload Object message, Message jmsMessage) throws JMSException {
+    @JmsListener(destination = Cues.CUA_NETEJA_ESTADISTICA, selector = "TIPUS_MISSATGE = 'APP'")
+    public void processaNetejaApp(NetejaAppMessage appMessage, Message jmsMessage) throws JMSException {
         int deliveryCount = jmsMessage.getIntProperty("JMSXDeliveryCount");
-        if (message instanceof NetejaAppMessage) {
-            NetejaAppMessage appMessage = (NetejaAppMessage) message;
-            Long appId = appMessage.getAppId();
-            try {
-                estadisticaNetejaService.netejaPerApp(
-                        appId,
-                        appMessage.getEntornAppIds(),
-                        appMessage.isEsborrarCataleg(),
-                        appMessage.isEsborrarWidgets()
-                );
-                jmsMessage.acknowledge();
-                log.info("Neteja Estadistica completada per appId {}", appId);
-            } catch (Exception e) {
-                handleError(appMessage.getEntornAppIds(), "appId: " + appId, deliveryCount, jmsMessage, e);
-            }
-        } else if (message instanceof NetejaEntornAppMessage) {
-            NetejaEntornAppMessage entornMessage = (NetejaEntornAppMessage) message;
-            Long entornAppId = entornMessage.getEntornAppId();
-            log.info("Neteja Estadistica per entornApp {} (intent {})", entornAppId, deliveryCount);
-            try {
-                estadisticaNetejaService.netejaPerEntornApp(entornAppId);
-                jmsMessage.acknowledge();
-                log.info("Neteja Estadistica completada per entornApp {}", entornAppId);
-            } catch (Exception e) {
-                List<Long> entornAppIds = entornAppId != null ? List.of(entornAppId) : Collections.emptyList();
-                handleError(entornAppIds, "entornAppId: " + entornAppId, deliveryCount, jmsMessage, e);
-            }
-        } else {
-            log.warn("Missatge desconegut rebut a CUA_NETEJA_ESTADISTICA: {}", message != null ? message.getClass() : "null");
+        Long appId = appMessage.getAppId();
+        log.info("Procesant neteja APP per appId {} (intent {})", appId, deliveryCount);
+        try {
+            estadisticaNetejaService.netejaPerApp(
+                appId,
+                appMessage.getEntornAppIds(),
+                appMessage.isEsborrarCataleg(),
+                appMessage.isEsborrarWidgets()
+            );
             jmsMessage.acknowledge();
+            log.info("Neteja Estadistica completada per appId {}", appId);
+        } catch (Exception e) {
+            handleError(appMessage.getEntornAppIds(), "appId: " + appId, deliveryCount, jmsMessage, e);
+        }
+    }
+
+    @JmsListener(destination = Cues.CUA_NETEJA_ESTADISTICA, selector = "TIPUS_MISSATGE = 'ENTORN'")
+    public void processaNetejaEntorn(NetejaEntornAppMessage entornMessage, Message jmsMessage) throws JMSException {
+        int deliveryCount = jmsMessage.getIntProperty("JMSXDeliveryCount");
+        Long entornAppId = entornMessage.getEntornAppId();
+        log.info("Procesant neteja ENTORN per entornApp {} (intent {})", entornAppId, deliveryCount);
+        try {
+            estadisticaNetejaService.netejaPerEntornApp(entornAppId);
+            jmsMessage.acknowledge();
+            log.info("Neteja Estadistica completada per entornApp {}", entornAppId);
+        } catch (Exception e) {
+            List<Long> entornAppIds = entornAppId != null ? List.of(entornAppId) : Collections.emptyList();
+            handleError(entornAppIds, "entornAppId: " + entornAppId, deliveryCount, jmsMessage, e);
         }
     }
 

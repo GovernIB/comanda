@@ -1471,7 +1471,7 @@ public class EntornAppServiceImplTest {
 
         org.mockito.ArgumentCaptor<NetejaEntornAppMessage> captor =
                 org.mockito.ArgumentCaptor.forClass(NetejaEntornAppMessage.class);
-        verify(jmsTemplate).convertAndSend(eq(es.caib.comanda.base.config.Cues.CUA_NETEJA_ESTADISTICA), captor.capture());
+        verify(jmsTemplate).convertAndSend(eq(es.caib.comanda.base.config.Cues.CUA_NETEJA_ESTADISTICA), captor.capture(), any());
         NetejaEntornAppMessage sent = captor.getValue();
         assertEquals(entornAppEntity.getId(), sent.getEntornAppId());
     }

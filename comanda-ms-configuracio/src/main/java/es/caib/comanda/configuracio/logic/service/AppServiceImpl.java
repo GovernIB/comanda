@@ -521,7 +521,10 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
 
             log.info("Sol·licitant neteja d'estadístiques per appId {} (entorns: {}, cataleg: {}, widgets: {})",
                     entity.getId(), entornAppIds, esborrarCataleg, esborrarWidgets);
-            jmsTemplate.convertAndSend(Cues.CUA_NETEJA_ESTADISTICA, message);
+            jmsTemplate.convertAndSend(Cues.CUA_NETEJA_ESTADISTICA, message, msg -> {
+                msg.setStringProperty("TIPUS_MISSATGE", "APP");
+                return msg;
+            });
 
             String msg = I18nUtil.getInstance().getI18nMessage(
                     "es.caib.comanda.configuracio.logic.service.AppServiceImpl.NetejaEstadisticaAction.sollicitada");

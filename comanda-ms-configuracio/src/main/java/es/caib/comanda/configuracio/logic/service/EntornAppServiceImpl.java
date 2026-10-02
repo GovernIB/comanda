@@ -522,7 +522,10 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             NetejaEntornAppMessage message = new NetejaEntornAppMessage(entity.getId());
 
             log.info("Sol·licitant neteja d'estadístiques per entornApp {} (només fets)", entity.getId());
-            jmsTemplate.convertAndSend(Cues.CUA_NETEJA_ESTADISTICA, message);
+            jmsTemplate.convertAndSend(Cues.CUA_NETEJA_ESTADISTICA, message, msg -> {
+                msg.setStringProperty("TIPUS_MISSATGE", "ENTORN");
+                return msg;
+            });
 
             String msg = I18nUtil.getInstance().getI18nMessage(
                     "es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.NetejaEstadisticaAction.sollicitadaDades");

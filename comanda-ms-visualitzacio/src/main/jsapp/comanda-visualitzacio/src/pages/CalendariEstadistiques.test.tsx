@@ -1172,7 +1172,7 @@ it('CalendariEstadistiques_quanNoHiHaEntornSeleccionat_mostraMissatgeAjudaIAmaga
         expect(checkboxReobert).not.toBeChecked();
     });
 
-    it('CalendariEstadistiques_carregaTotsElsProcessosSenseFiltrePerPermetreElFiltreGlobal', async () => {
+    it('CalendariEstadistiques_quanEsSeleccionaUnEntorn_carregaProcessosFiltratsPerAquestEntorn', async () => {
         mocks.entornAppFindMock.mockResolvedValue({
             rows: [{ id: 7, app: { description: 'App Demo' }, entorn: { description: 'PRO' } }],
         });
@@ -1195,7 +1195,7 @@ it('CalendariEstadistiques_quanNoHiHaEntornSeleccionat_mostraMissatgeAjudaIAmaga
         await waitFor(() => {
             expect(mocks.fetReportMock).toHaveBeenCalledWith(null, {
                 code: 'processos_baixa_prioritat',
-                data: null,
+                data: { entornAppId: 7, },
             });
         });
     });

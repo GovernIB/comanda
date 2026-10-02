@@ -35,6 +35,8 @@ export interface CalendariProcessosDialogProps {
     onRefresh: () => void;
     onCancelProces: (id: string) => Promise<boolean>;
     entornAppId?: number | string;
+    mostrarTots?: boolean;
+    onMostrarTotsChange?: (value: boolean) => void;
 }
 
 const CalendariProcessosDialog: React.FC<CalendariProcessosDialogProps> = ({
@@ -45,17 +47,11 @@ const CalendariProcessosDialog: React.FC<CalendariProcessosDialogProps> = ({
     onRefresh,
     onCancelProces,
     entornAppId,
+    mostrarTots = false,
+    onMostrarTotsChange,
 }) => {
     const { t } = useTranslation();
-    const [mostrarTots, setMostrarTots] = useState(false);
     const [cancelingId, setCancelingId] = useState<string | null>(null);
-
-    const filteredProcessos = React.useMemo(() => {
-        if (mostrarTots || !entornAppId) {
-            return processos;
-        }
-        return processos.filter((p) => String(p.entornAppId) === String(entornAppId));
-    }, [processos, mostrarTots, entornAppId]);
 
     const getEstatChip = (estat: string, missatge?: string) => {
         let chip: React.ReactElement;
@@ -95,6 +91,7 @@ const CalendariProcessosDialog: React.FC<CalendariProcessosDialogProps> = ({
                     <Chip
                         size="small"
                         variant="outlined"
+                        color="default"
                         icon={<Icon sx={{ fontSize: '16px !important' }}>cancel</Icon>}
                         label={t($ => $.calendari.estat_cancelat)}
                     />
@@ -137,43 +134,15 @@ const CalendariProcessosDialog: React.FC<CalendariProcessosDialogProps> = ({
 
     const getVelocitatChip = (pausaMs?: number) => {
         if (pausaMs === undefined || pausaMs === null) {
-            return (
-                <Chip
-                    size="small"
-                    color="error"
-                    label={t($ => $.calendari.prioritat_alta)}
-                    data-testid="chip-prioritat-alta"
-                />
-            );
+            return <Chip size="small" color="error" label={t($ => $.calendari.prioritat_alta)} data-testid="chip-prioritat-alta" />;
         }
         if (pausaMs >= 600000) {
-            return (
-                <Chip
-                    size="small"
-                    color="success"
-                    label={t($ => $.calendari.prioritat_baixa)}
-                    data-testid="chip-prioritat-baixa"
-                />
-            );
+            return <Chip size="small" color="success" label={t($ => $.calendari.prioritat_baixa)} data-testid="chip-prioritat-baixa" />;
         }
         if (pausaMs >= 180000) {
-            return (
-                <Chip
-                    size="small"
-                    color="warning"
-                    label={t($ => $.calendari.prioritat_mitja)}
-                    data-testid="chip-prioritat-mitja"
-                />
-            );
+            return <Chip size="small" color="warning" label={t($ => $.calendari.prioritat_mitja)} data-testid="chip-prioritat-mitja" />;
         }
-        return (
-            <Chip
-                size="small"
-                color="error"
-                label={t($ => $.calendari.prioritat_alta)}
-                data-testid="chip-prioritat-alta"
-            />
-        );
+        return <Chip size="small" color="error" label={t($ => $.calendari.prioritat_alta)} data-testid="chip-prioritat-alta" />;
     };
 
     const handleCancel = async (id: string) => {
@@ -195,13 +164,13 @@ const CalendariProcessosDialog: React.FC<CalendariProcessosDialogProps> = ({
                     <Typography variant="h6">{t($ => $.calendari.titol_processos_baixa_prioritat)}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    {entornAppId && (
+                    {entornAppId && onMostrarTotsChange && (
                         <FormControlLabel
                             control={
                                 <Switch
                                     size="small"
                                     checked={mostrarTots}
-                                    onChange={(e) => setMostrarTots(e.target.checked)}
+                                    onChange={(e) => onMostrarTotsChange(e.target.checked)}
                                     data-testid="switch-mostrar-tots"
                                 />
                             }
@@ -226,7 +195,7 @@ const CalendariProcessosDialog: React.FC<CalendariProcessosDialogProps> = ({
                 </Box>
             </DialogTitle>
             <DialogContent dividers>
-                {filteredProcessos.length === 0 ? (
+                {processos.length === 0 ? (
                     <Box textAlign="center" py={4}>
                         <Icon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }}>inbox</Icon>
                         <Typography color="text.secondary">
@@ -247,7 +216,7 @@ const CalendariProcessosDialog: React.FC<CalendariProcessosDialogProps> = ({
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {filteredProcessos.map((p) => {
+                                {processos.map((p) => {
                                     const percent = p.percentatge ?? 0;
                                     const canCancel = p.estat === 'EN_EXECUCIO' || p.estat === 'PENDENT';
                                     const isCanceling = cancelingId === p.id;

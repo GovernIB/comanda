@@ -74,7 +74,7 @@ import java.util.Map;
                                 roles = { BaseConfig.ROLE_ADMIN }
                         )
                 }),
-                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Fet.FET_REPORT_PROCESSOS_BAIXA_PRIORITAT, formClass = Long.class, accessConstraints = {
+                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Fet.FET_REPORT_PROCESSOS_BAIXA_PRIORITAT, formClass = Fet.FetProcessosParam.class, accessConstraints = {
                         @ResourceAccessConstraint(
                                 type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
                                 roles = { BaseConfig.ROLE_ADMIN }
@@ -144,5 +144,14 @@ public class Fet extends BaseResource<Long> {
         private String message;
         private Map<String, Boolean> diesAmbDades;
         private Map<String, String> diesAmbErrors;
+    }
+
+    @Getter
+    @Setter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class FetProcessosParam implements Serializable {
+        private Long entornAppId;
     }
 }

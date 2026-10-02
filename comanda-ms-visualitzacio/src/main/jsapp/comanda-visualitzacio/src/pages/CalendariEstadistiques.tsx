@@ -151,6 +151,7 @@ const CalendariEstadistiques: React.FC = () => {
     const [datesDisponiblesError, setDatesDisponiblesError] = useState<boolean>(true);
     const [currentViewMonth, setCurrentViewMonth] = useState(dayjs().month());
     const [currentViewYear, setCurrentViewYear] = useState(dayjs().year());
+    const [mostrarTotsProcessos, setMostrarTotsProcessos] = useState(false);
 
     // State for low priority background processes
     const [processosModalOpen, setProcessosModalOpen] = useState(false);
@@ -289,7 +290,7 @@ const CalendariEstadistiques: React.FC = () => {
     }, [apiAction, showMessage, t]);
 
     // Obtenir els dies en que es disposa de dades estadístiques
-    const obtenirDatesDisponibles = React.useCallback(async (entornAppId: any): Promise<boolean> => {
+    const obtenirDatesDisponibles = React.useCallback(async (entornAppId: number | string): Promise<boolean> => {
         try {
             const data = (await apiReport(
                 null,
@@ -401,9 +402,13 @@ const CalendariEstadistiques: React.FC = () => {
             if (!silencios) {
                 setIsLoadingProcessos(true);
             }
+            const idParaEnviar = mostrarTotsProcessos ? null : (entornAppId !== '' ? Number(entornAppId) : null);
+            const params = {
+                entornAppId: idParaEnviar
+            };
             const data = (await apiReport(
                 null,
-                { code: 'processos_baixa_prioritat', data: null }
+                { code: 'processos_baixa_prioritat', data: params }
             )) as ProcesBaixaPrioritat[];
             setProcessos(Array.isArray(data) ? data : []);
         } catch (error: any) {
@@ -413,7 +418,7 @@ const CalendariEstadistiques: React.FC = () => {
                 setIsLoadingProcessos(false);
             }
         }
-    }, [apiReport]);
+    }, [apiReport, entornAppId, mostrarTotsProcessos]);
 
     const handleCancelProces = useCallback(async (id: string): Promise<boolean> => {
         try {
@@ -954,6 +959,8 @@ const CalendariEstadistiques: React.FC = () => {
                 onRefresh={() => carregarProcessos(false)}
                 onCancelProces={handleCancelProces}
                 entornAppId={entornAppId}
+                mostrarTots={mostrarTotsProcessos}
+                onMostrarTotsChange={setMostrarTotsProcessos}
             />
             {component}
         </>

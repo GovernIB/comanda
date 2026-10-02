@@ -493,7 +493,7 @@ public class AppServiceImplTest {
         assertTrue(response.getSuccess());
 
         ArgumentCaptor<NetejaAppMessage> captor = ArgumentCaptor.forClass(NetejaAppMessage.class);
-        verify(jmsTemplate).convertAndSend(eq(es.caib.comanda.base.config.Cues.CUA_NETEJA_ESTADISTICA), captor.capture());
+        verify(jmsTemplate).convertAndSend(eq(es.caib.comanda.base.config.Cues.CUA_NETEJA_ESTADISTICA), captor.capture(), any());
         NetejaAppMessage sent = captor.getValue();
         assertEquals(appEntity.getId(), sent.getAppId());
         assertEquals(List.of(101L, 102L), sent.getEntornAppIds());
@@ -524,7 +524,7 @@ public class AppServiceImplTest {
         assertTrue(response.getSuccess());
 
         ArgumentCaptor<NetejaAppMessage> captor = ArgumentCaptor.forClass(NetejaAppMessage.class);
-        verify(jmsTemplate).convertAndSend(eq(es.caib.comanda.base.config.Cues.CUA_NETEJA_ESTADISTICA), captor.capture());
+        verify(jmsTemplate).convertAndSend(eq(es.caib.comanda.base.config.Cues.CUA_NETEJA_ESTADISTICA), captor.capture(), any());
         NetejaAppMessage sent = captor.getValue();
         assertFalse(sent.isEsborrarCataleg());
         assertFalse(sent.isEsborrarWidgets());

@@ -123,7 +123,8 @@ describe('CalendariProcessosDialog', () => {
         expect(screen.getByTestId('btn-cancel-proc-1')).toBeInTheDocument();
     });
 
-    it('quanCanviaElSwitchDeFiltre_mostraTotsElsProcessos', () => {
+    it('quanCanviaElSwitchDeFiltre_cridaOnMostrarTotsChangePerqueElPareRefresqui', () => {
+        const onMostrarTotsChangeMock = vi.fn();
         render(
             <CalendariProcessosDialog
                 open={true}
@@ -132,16 +133,16 @@ describe('CalendariProcessosDialog', () => {
                 onRefresh={vi.fn()}
                 onCancelProces={vi.fn()}
                 entornAppId={10}
+                mostrarTots={false}
+                onMostrarTotsChange={onMostrarTotsChangeMock}
             />
         );
 
-        expect(screen.queryByText('App Two - PRE')).not.toBeInTheDocument();
-
         const switchElem = screen.getByTestId('switch-mostrar-tots');
+        expect(switchElem).not.toBeChecked();
         fireEvent.click(switchElem);
 
-        expect(screen.getByText('App Two - PRE')).toBeInTheDocument();
-        expect(screen.getByText('Finalitzat')).toBeInTheDocument();
+        expect(onMostrarTotsChangeMock).toHaveBeenCalledWith(true);
     });
 
     it('quanEsPremRefrescar_cridaOnRefresh', () => {

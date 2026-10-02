@@ -16,13 +16,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import javax.jms.JMSException;
 import javax.jms.Message;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -44,11 +44,11 @@ class EstadisticaNetejaJmsListenerTest {
 
     @Test
     @DisplayName("NetejaAppMessage: quan té èxit, crida el servei i fa acknowledge")
-    void processaNeteja_quanAppMessageExit_llavorsExecutaIAcknowledge() throws Exception {
+    void processaNetejaApp_quanAppMessageExit_llavorsExecutaIAcknowledge() throws Exception {
         NetejaAppMessage message = new NetejaAppMessage(10L, List.of(42L, 43L), true, false);
         when(jmsMessage.getIntProperty("JMSXDeliveryCount")).thenReturn(1);
 
-        jmsListener.processaNeteja(message, jmsMessage);
+        jmsListener.processaNetejaApp(message, jmsMessage);
 
         verify(estadisticaNetejaService).netejaPerApp(10L, List.of(42L, 43L), true, false);
         verify(jmsMessage).acknowledge();
@@ -57,12 +57,12 @@ class EstadisticaNetejaJmsListenerTest {
 
     @Test
     @DisplayName("NetejaAppMessage: quan falla amb menys de 3 intents, llança excepció per reintentar")
-    void processaNeteja_quanAppMessageErrorMenys3Intents_llavorsReintenta() throws Exception {
+    void processaNetejaApp_quanAppMessageErrorMenys3Intents_llavorsReintenta() throws Exception {
         NetejaAppMessage message = new NetejaAppMessage(10L, List.of(42L), false, false);
         when(jmsMessage.getIntProperty("JMSXDeliveryCount")).thenReturn(1);
         doThrow(new RuntimeException("DB error")).when(estadisticaNetejaService).netejaPerApp(any(), any(), anyBoolean(), anyBoolean());
 
-        assertThrows(RuntimeException.class, () -> jmsListener.processaNeteja(message, jmsMessage));
+        assertThrows(RuntimeException.class, () -> jmsListener.processaNetejaApp(message, jmsMessage));
 
         verify(jmsMessage, never()).acknowledge();
         verifyNoInteractions(monitorServiceClient);
@@ -70,13 +70,13 @@ class EstadisticaNetejaJmsListenerTest {
 
     @Test
     @DisplayName("NetejaAppMessage: quan falla al 3r intent, fa acknowledge i notifica al monitor per a cada entorn")
-    void processaNeteja_quanAppMessageError3Intents_llavorsNotificaMonitorPerCadaEntorn() throws Exception {
+    void processaNetejaApp_quanAppMessageError3Intents_llavorsNotificaMonitorPerCadaEntorn() throws Exception {
         NetejaAppMessage message = new NetejaAppMessage(10L, List.of(42L, 43L), false, false);
         when(jmsMessage.getIntProperty("JMSXDeliveryCount")).thenReturn(3);
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
         doThrow(new RuntimeException("Error en neteja")).when(estadisticaNetejaService).netejaPerApp(any(), any(), anyBoolean(), anyBoolean());
 
-        jmsListener.processaNeteja(message, jmsMessage);
+        jmsListener.processaNetejaApp(message, jmsMessage);
 
         verify(jmsMessage).acknowledge();
         ArgumentCaptor<Monitor> captor = ArgumentCaptor.forClass(Monitor.class);
@@ -94,11 +94,11 @@ class EstadisticaNetejaJmsListenerTest {
 
     @Test
     @DisplayName("NetejaEntornAppMessage: quan té èxit, crida el servei i fa acknowledge")
-    void processaNeteja_quanEntornMessageExit_llavorsExecutaIAcknowledge() throws Exception {
+    void processaNetejaEntorn_quanEntornMessageExit_llavorsExecutaIAcknowledge() throws Exception {
         NetejaEntornAppMessage message = new NetejaEntornAppMessage(42L);
         when(jmsMessage.getIntProperty("JMSXDeliveryCount")).thenReturn(1);
 
-        jmsListener.processaNeteja(message, jmsMessage);
+        jmsListener.processaNetejaEntorn(message, jmsMessage);
 
         verify(estadisticaNetejaService).netejaPerEntornApp(42L);
         verify(jmsMessage).acknowledge();
@@ -107,13 +107,13 @@ class EstadisticaNetejaJmsListenerTest {
 
     @Test
     @DisplayName("NetejaEntornAppMessage: quan falla al 3r intent, notifica al monitor amb l'entornAppId")
-    void processaNeteja_quanEntornMessageError3Intents_llavorsNotificaMonitor() throws Exception {
+    void processaNetejaEntorn_quanEntornMessageError3Intents_llavorsNotificaMonitor() throws Exception {
         NetejaEntornAppMessage message = new NetejaEntornAppMessage(42L);
         when(jmsMessage.getIntProperty("JMSXDeliveryCount")).thenReturn(3);
         when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
         doThrow(new RuntimeException("DB down")).when(estadisticaNetejaService).netejaPerEntornApp(42L);
 
-        jmsListener.processaNeteja(message, jmsMessage);
+        jmsListener.processaNetejaEntorn(message, jmsMessage);
 
         verify(jmsMessage).acknowledge();
         ArgumentCaptor<Monitor> captor = ArgumentCaptor.forClass(Monitor.class);

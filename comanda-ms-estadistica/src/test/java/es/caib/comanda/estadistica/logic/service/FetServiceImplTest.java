@@ -498,7 +498,7 @@ class FetServiceImplTest {
 
         // Act
         List<es.caib.comanda.estadistica.logic.intf.model.estadistiques.ProcesBaixaPrioritat> result =
-                generator.generateData("CODE", null, 1L);
+                generator.generateData("CODE", null, new Fet.FetProcessosParam(1L));
 
         // Assert
         assertThat(result).hasSize(1);

@@ -323,11 +323,12 @@ public class FetServiceImpl extends BaseMutableResourceService<Fet, Long, FetEnt
     }
 
     @RequiredArgsConstructor
-    public static class ProcessosBaixaPrioritatReportGenerator implements ReportGenerator<FetEntity, Long, ProcesBaixaPrioritat> {
+    public static class ProcessosBaixaPrioritatReportGenerator implements ReportGenerator<FetEntity, Fet.FetProcessosParam, ProcesBaixaPrioritat> {
         private final ProcesBaixaPrioritatService procesBaixaPrioritatService;
 
         @Override
-        public List<ProcesBaixaPrioritat> generateData(String code, FetEntity entity, Long entornAppId) throws ReportGenerationException {
+        public List<ProcesBaixaPrioritat> generateData(String code, FetEntity entity, Fet.FetProcessosParam params) throws ReportGenerationException {
+            Long entornAppId = (params != null) ? params.getEntornAppId() : null;
             log.info("Obtenint processos de baixa prioritat per a entornAppId: {}", entornAppId);
             try {
                 return procesBaixaPrioritatService.getProcessos(entornAppId);
@@ -338,7 +339,7 @@ public class FetServiceImpl extends BaseMutableResourceService<Fet, Long, FetEnt
         }
 
         @Override
-        public void onChange(Serializable id, Long previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Long target) {
+        public void onChange(Serializable id, Fet.FetProcessosParam previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Fet.FetProcessosParam target) {
         }
     }
 
