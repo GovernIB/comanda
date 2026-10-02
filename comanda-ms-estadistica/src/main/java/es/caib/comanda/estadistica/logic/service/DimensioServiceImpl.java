@@ -3,6 +3,7 @@ package es.caib.comanda.estadistica.logic.service;
 import com.turkraft.springfilter.FilterBuilder;
 import com.turkraft.springfilter.parser.Filter;
 import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesRestClient;
+import es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper;
 import es.caib.comanda.estadistica.logic.helper.DimensioFetConsProgressHelper;
 import es.caib.comanda.estadistica.logic.helper.EntitatResolverHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
@@ -63,6 +64,7 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
     private final EntitatResolverHelper entitatResolverHelper;
     private final UnitatsOrganitzativesRestClient unitatsOrganitzativesRestClient;
     private final DimensioFetConsProgressHelper dimensioFetConsProgressHelper;
+    private final DashboardPermisosHelper dashboardPermisosHelper;
 
     @PostConstruct
     public void init() {
@@ -114,16 +116,19 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
         }
         if (namedQueries != null) {
             for (String namedQuery : namedQueries) {
-                if (namedQuery.contains(Dimensio.FILTER_BY_APP_NAMEDFILTER)) {
-                    long appId = Long.parseLong(namedQuery.split(":")[1]);
-                    filters.add(springFilterHelper.filterByApp(appId, Dimensio.Fields.entornAppId));
+                if (namedQuery != null && namedQuery.contains(Dimensio.FILTER_BY_APP_NAMEDFILTER) && namedQuery.contains(":")) {
+                    try {
+                        long appId = Long.parseLong(namedQuery.split(":")[1]);
+                        filters.add(springFilterHelper.filterByApp(appId, Dimensio.Fields.entornAppId));
+                    } catch (NumberFormatException ignored) {}
                 }
             }
         }
         List<Filter> result = filters.stream().
             filter(f -> f != null && !String.valueOf(f).isEmpty()).
             collect(Collectors.toList());
-        return result.isEmpty() ? null : FilterBuilder.and(result).generate();
+        String baseFilter = result.isEmpty() ? null : FilterBuilder.and(result).generate();
+        return dashboardPermisosHelper.buildEntornAppFilterForProperty(baseFilter, Dimensio.Fields.entornAppId);
     }
 
     public class ChangeTipusActionExecutor implements ActionExecutor<DimensioEntity, Dimensio.ChangeTipusActionForm, Dimensio> {

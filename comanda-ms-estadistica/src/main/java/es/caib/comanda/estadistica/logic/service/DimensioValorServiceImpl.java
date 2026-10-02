@@ -3,6 +3,7 @@ package es.caib.comanda.estadistica.logic.service;
 import com.turkraft.springfilter.FilterBuilder;
 import com.turkraft.springfilter.parser.Filter;
 import es.caib.comanda.estadistica.logic.dir3.SistemaExternException;
+import es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper;
 import es.caib.comanda.estadistica.logic.helper.DashboardSeguretatHelper;
 import es.caib.comanda.estadistica.logic.helper.EntitatResolverHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
@@ -65,6 +66,7 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
     private final UnitatOrganitzativaHelper unitatOrganitzativaHelper;
     private final EntitatResolverHelper entitatResolverHelper;
     private final DashboardSeguretatHelper dashboardSeguretatHelper;
+    private final DashboardPermisosHelper dashboardPermisosHelper;
 
     @PostConstruct
     public void init() {
@@ -153,52 +155,98 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
         }
         if (namedQueries != null) {
             for (String namedQuery : namedQueries) {
-                if (namedQuery.contains(DimensioValor.FILTER_BY_APP_NAMEDFILTER)) {
-                    long appId = Long.parseLong(namedQuery.split(":")[1]);
-                    filters.add(springFilterHelper.filterByApp(appId, DimensioValor.Fields.dimensio + "." + Dimensio.Fields.entornAppId));
+                if (namedQuery != null && namedQuery.contains(DimensioValor.FILTER_BY_APP_NAMEDFILTER) && namedQuery.contains(":")) {
+                    try {
+                        long appId = Long.parseLong(namedQuery.split(":")[1]);
+                        filters.add(springFilterHelper.filterByApp(appId, DimensioValor.Fields.dimensio + "." + Dimensio.Fields.entornAppId));
+                    } catch (NumberFormatException ignored) {}
                 }
             }
         }
         List<Filter> result = filters.stream().
             filter(f -> f != null && !String.valueOf(f).isEmpty()).
             collect(Collectors.toList());
-        return result.isEmpty() ? null : FilterBuilder.and(result).generate();
+        String baseFilter = result.isEmpty() ? null : FilterBuilder.and(result).generate();
+        return dashboardPermisosHelper.buildEntornAppFilterForProperty(baseFilter, DimensioValor.Fields.dimensio + "." + Dimensio.Fields.entornAppId);
     }
 
     /**
-     * Restringeix les opcions de valors de dimensions de tipus ENTITAT a les entitats sobre les que l'usuari
-     * actual té permís (vegeu DashboardSeguretatHelper) - imprescindible perquè el filtre d'entitat d'un dashboard
-     * només mostri, com a opcions seleccionables, les entitats visibles per l'usuari. No afecta la resta de tipus
-     * de dimensió. Contempla tant la coincidència directa per codi/codiDir3 com la sobreescriptura manual
-     * (entitatMapejada), igual que EntitatResolverHelper.
+     * Restringeix les opcions de valors de dimensions de tipus ENTITAT i ORGAN_GESTOR a les entitats i unitats
+     * sobre les que l'usuari actual té permís (vegeu DashboardSeguretatHelper) - imprescindible perquè els filtres
+     * d'entitat i d'òrgan gestor d'un dashboard només mostrin, com a opcions seleccionables, les dades visibles
+     * per l'usuari. No afecta la resta de tipus de dimensió (ni les dimensions sense tipus).
+     * Per a ENTITAT contempla tant la coincidència directa per codi/codiDir3 com la sobreescriptura manual (entitatMapejada).
+     * Per a ORGAN_GESTOR contempla la jerarquia de descendents i la propagació des d'Entitat.
      */
     @Override
     protected Specification<DimensioValorEntity> additionalSpecification(String[] namedQueries) {
         List<EntitatEntity> entitatsPermeses = dashboardSeguretatHelper.resoldreEntitatsPermeses();
-        if (entitatsPermeses == null) {
+        List<String> codisOrgansPermesos = dashboardSeguretatHelper.resoldreCodisOrgansPermesos();
+        if (entitatsPermeses == null && codisOrgansPermesos == null) {
             return null;
         }
-        List<String> valorsPermesos = new ArrayList<>();
-        List<Long> idsPermesos = new ArrayList<>();
-        for (EntitatEntity entitat : entitatsPermeses) {
-            if (entitat.getCodi() != null) {
-                valorsPermesos.add(entitat.getCodi());
-            }
-            if (entitat.getCodiDir3() != null) {
-                valorsPermesos.add(entitat.getCodiDir3());
-            }
-            idsPermesos.add(entitat.getId());
-        }
+
         return (root, query, cb) -> {
-            List<Predicate> orPredicates = new ArrayList<>();
-            orPredicates.add(cb.notEqual(root.get("dimensio").get("tipus"), TipusDimensioEnum.ENTITAT));
-            if (!valorsPermesos.isEmpty()) {
-                orPredicates.add(root.get("valor").in(valorsPermesos));
+            List<Predicate> allowedPredicates = new ArrayList<>();
+
+            // 1. Dimensió ENTITAT
+            Predicate isEntitat = cb.equal(root.get("dimensio").get("tipus"), TipusDimensioEnum.ENTITAT);
+            if (entitatsPermeses == null) {
+                allowedPredicates.add(isEntitat);
+            } else {
+                List<String> valorsPermesos = new ArrayList<>();
+                List<Long> idsPermesos = new ArrayList<>();
+                for (EntitatEntity entitat : entitatsPermeses) {
+                    if (entitat.getCodi() != null) {
+                        valorsPermesos.add(entitat.getCodi());
+                    }
+                    if (entitat.getCodiDir3() != null) {
+                        valorsPermesos.add(entitat.getCodiDir3());
+                    }
+                    idsPermesos.add(entitat.getId());
+                }
+                List<Predicate> entitatPreds = new ArrayList<>();
+                if (!valorsPermesos.isEmpty()) {
+                    entitatPreds.add(root.get("valor").in(valorsPermesos));
+                }
+                if (!idsPermesos.isEmpty()) {
+                    entitatPreds.add(root.get("entitatMapejada").get("id").in(idsPermesos));
+                }
+                if (!entitatPreds.isEmpty()) {
+                    allowedPredicates.add(cb.and(isEntitat, cb.or(entitatPreds.toArray(new Predicate[0]))));
+                }
             }
-            if (!idsPermesos.isEmpty()) {
-                orPredicates.add(root.get("entitatMapejada").get("id").in(idsPermesos));
+
+            // 2. Dimensió ORGAN_GESTOR
+            Predicate isOrgan = cb.equal(root.get("dimensio").get("tipus"), TipusDimensioEnum.ORGAN_GESTOR);
+            if (codisOrgansPermesos == null) {
+                allowedPredicates.add(isOrgan);
+            } else if (!codisOrgansPermesos.isEmpty()) {
+                Predicate organValorMatch;
+                if (codisOrgansPermesos.size() <= CODI_IN_QUERY_BATCH_SIZE) {
+                    organValorMatch = root.get("valor").in(codisOrgansPermesos);
+                } else {
+                    List<Predicate> batches = new ArrayList<>();
+                    for (int i = 0; i < codisOrgansPermesos.size(); i += CODI_IN_QUERY_BATCH_SIZE) {
+                        List<String> sub = codisOrgansPermesos.subList(i, Math.min(i + CODI_IN_QUERY_BATCH_SIZE, codisOrgansPermesos.size()));
+                        batches.add(root.get("valor").in(sub));
+                    }
+                    organValorMatch = cb.or(batches.toArray(new Predicate[0]));
+                }
+                allowedPredicates.add(cb.and(isOrgan, organValorMatch));
             }
-            return cb.or(orPredicates.toArray(new Predicate[0]));
+
+            // 3. Altres dimensions (ni ENTITAT ni ORGAN_GESTOR, o tipus nul)
+            Predicate isOther = cb.or(
+                    cb.isNull(root.get("dimensio").get("tipus")),
+                    cb.and(
+                            cb.notEqual(root.get("dimensio").get("tipus"), TipusDimensioEnum.ENTITAT),
+                            cb.notEqual(root.get("dimensio").get("tipus"), TipusDimensioEnum.ORGAN_GESTOR)
+                    )
+            );
+            allowedPredicates.add(isOther);
+
+            return cb.or(allowedPredicates.toArray(new Predicate[0]));
         };
     }
 

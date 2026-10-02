@@ -62,6 +62,10 @@ import java.util.List;
         descriptionField = "codiNomDescription",
         accessConstraints = {
                 @ResourceAccessConstraint(
+                        type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,
+                        grantedPermissions = { PermissionEnum.READ }
+                ),
+                @ResourceAccessConstraint(
                         type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
                         roles = { BaseConfig.ROLE_ADMIN },
                         // CREATE/WRITE/DELETE calen perquè els indicadors de tipus FORMULA es creen i

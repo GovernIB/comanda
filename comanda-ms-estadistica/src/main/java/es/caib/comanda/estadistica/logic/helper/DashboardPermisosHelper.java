@@ -6,6 +6,7 @@ import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
+import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
@@ -515,6 +516,81 @@ public class DashboardPermisosHelper {
         if (!canAccessWidget(widgetId, entornId)) {
             throw new AccessDeniedException(errorMessage);
         }
+    }
+
+    /**
+     * Retorna el conjunt d'identificadors d'EntornApp accessibles per a l'usuari actual en mode lectura
+     * a través de qualsevol dels seus permisos (directes d'EntornApp, d'App o de Dashboard).
+     * Si l'usuari és ADMIN o CONSULTA, retorna null (sense restriccions).
+     */
+    public Set<Long> getEffectiveAllowedEntornAppIds() {
+        if (isAdminOrConsulta()) {
+            return null;
+        }
+        Set<Long> allowed = new HashSet<>();
+
+        // 1. Permisos directes sobre EntornApp
+        for (Serializable eaId : getAllowedEntornAppIds(false)) {
+            try {
+                allowed.add(Long.valueOf(String.valueOf(eaId)));
+            } catch (NumberFormatException ignored) {}
+        }
+
+        // 2. Permisos directes sobre App (atorga accés a tots els entorns de l'App)
+        for (Serializable appId : getAllowedAppIds(false)) {
+            try {
+                Long id = Long.valueOf(String.valueOf(appId));
+                List<Long> eaIds = estadisticaClientHelper.getEntornAppsIdByAppId(id);
+                if (eaIds != null) {
+                    allowed.addAll(eaIds);
+                }
+            } catch (Exception e) {
+                log.warn("Error resolvent EntornApps per appId=" + appId, e);
+            }
+        }
+
+        // 3. Permisos directes sobre Dashboard
+        for (Serializable dashId : getAllowedDashboardIds(false)) {
+            try {
+                Long id = Long.valueOf(String.valueOf(dashId));
+                DashboardEntity dashboard = dashboardRepository.findById(id).orElse(null);
+                if (dashboard != null && dashboard.getAppId() != null) {
+                    if (dashboard.getEntornId() != null) {
+                        EntornApp ea = estadisticaClientHelper.entornAppFindByAppAndEntorn(dashboard.getAppId(), dashboard.getEntornId());
+                        if (ea != null && ea.getId() != null) {
+                            allowed.add(ea.getId());
+                        }
+                    } else {
+                        List<Long> eaIds = estadisticaClientHelper.getEntornAppsIdByAppId(dashboard.getAppId());
+                        if (eaIds != null) {
+                            allowed.addAll(eaIds);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Error resolvent EntornApp per a dashboard=" + dashId, e);
+            }
+        }
+
+        return allowed;
+    }
+
+    /**
+     * Construeix el filtre Spring Filter d'autorització per a un recurs amb camp entornAppId
+     * (com ara Dimensio, Indicador, o dimensio.entornAppId per a DimensioValor).
+     */
+    public String buildEntornAppFilterForProperty(String currentSpringFilter, String entornAppIdProperty) {
+        Set<Long> allowed = getEffectiveAllowedEntornAppIds();
+        if (allowed == null) {
+            // Usuari ADMIN o CONSULTA: sense restriccions d'entornApp, retorna el filtre original
+            return currentSpringFilter;
+        }
+        if (allowed.isEmpty()) {
+            // Usuari sense cap permís sobre cap App, EntornApp o Dashboard: bloqueig (fail-closed)
+            return SpringFilterHelper.and(currentSpringFilter, "id:0");
+        }
+        String filter = SpringFilterHelper.buildOrFilter(entornAppIdProperty, allowed);
+        return SpringFilterHelper.and(currentSpringFilter, (filter == null || filter.isBlank()) ? "id:0" : filter);
     }
 
     /**

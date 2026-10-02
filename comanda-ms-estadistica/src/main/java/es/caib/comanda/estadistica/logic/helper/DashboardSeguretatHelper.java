@@ -122,7 +122,7 @@ public class DashboardSeguretatHelper {
     }
 
     private List<String> resoldreCodisEntitatsPermeses(Set<Serializable> entitatIds, DimensioEntity dimensioEntitat) {
-        if (entitatIds.isEmpty()) {
+        if (entitatIds == null || entitatIds.isEmpty()) {
             return List.of();
         }
         List<EntitatEntity> entitats = entitatRepository.findAllById(toLongIds(entitatIds));
@@ -133,12 +133,27 @@ public class DashboardSeguretatHelper {
             .collect(Collectors.toList());
     }
 
-    private List<String> resoldreCodisOrgansPermesosAmbDescendents(
+    /**
+     * Codis d'òrgans gestors que l'usuari actual pot veure a les opcions d'un filtre de dashboard de tipus ORGAN_GESTOR
+     * (incloent els descendents i la propagació des d'Entitat). Retorna {@code null} si l'usuari és exempt
+     * (administrador/consulta) i no s'ha d'aplicar cap restricció. Si no és exempt, retorna la llista de codis
+     * d'òrgans sobre els quals té permís (buida si no en té cap).
+     */
+    public List<String> resoldreCodisOrgansPermesos() {
+        if (isExempt()) {
+            return null;
+        }
+        Set<Serializable> entitatIds = getAllowedIds(ResourceType.ENTITAT);
+        Set<Serializable> unitatIds = getAllowedIds(ResourceType.UNITAT);
+        return resoldreCodisOrgansPermesosAmbDescendents(unitatIds, entitatIds);
+    }
+
+    public List<String> resoldreCodisOrgansPermesosAmbDescendents(
             Set<Serializable> unitatIds,
             Set<Serializable> entitatIds) {
         Set<String> codisPermesos = new HashSet<>();
 
-        if (!entitatIds.isEmpty()) {
+        if (entitatIds != null && !entitatIds.isEmpty()) {
             List<EntitatEntity> entitats = entitatRepository.findAllById(toLongIds(entitatIds));
             List<String> codisArrel = entitats.stream()
                 .map(EntitatEntity::getCodiDir3)
@@ -153,7 +168,7 @@ public class DashboardSeguretatHelper {
             }
         }
 
-        if (!unitatIds.isEmpty()) {
+        if (unitatIds != null && !unitatIds.isEmpty()) {
             List<UnitatOrganitzativaEntity> uosDirectes = unitatOrganitzativaRepository.findAllById(toLongIds(unitatIds));
             codisPermesos.addAll(organitzativaTreeHelper.getDescendentsIElMateix(uosDirectes));
         }
@@ -165,6 +180,9 @@ public class DashboardSeguretatHelper {
     }
 
     private List<Long> toLongIds(Set<Serializable> ids) {
+        if (ids == null) {
+            return Collections.emptyList();
+        }
         return ids.stream().map(id -> Long.valueOf(String.valueOf(id))).collect(Collectors.toList());
     }
 

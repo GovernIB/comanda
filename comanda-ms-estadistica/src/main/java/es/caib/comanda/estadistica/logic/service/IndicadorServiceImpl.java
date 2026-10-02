@@ -17,6 +17,7 @@ import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaHelper;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import lombok.RequiredArgsConstructor;
@@ -62,6 +63,7 @@ public class IndicadorServiceImpl extends BaseMutableResourceService<Indicador, 
     private final IndicadorFormulaTermeRepository indicadorFormulaTermeRepository;
     private final EstadisticaHelper estadisticaHelper;
     private final AuthenticationHelper authenticationHelper;
+    private final DashboardPermisosHelper dashboardPermisosHelper;
 
     @PostConstruct
     public void init() {
@@ -111,16 +113,19 @@ public class IndicadorServiceImpl extends BaseMutableResourceService<Indicador, 
         }
         if (namedQueries != null) {
             for (String namedQuery : namedQueries) {
-                if (namedQuery.contains(Indicador.FILTER_BY_APP_NAMEDFILTER)){
-                    long appId = Long.parseLong(namedQuery.split(":")[1]);
-                    filters.add(springFilterHelper.filterByApp(appId, Indicador.Fields.entornAppId));
+                if (namedQuery != null && namedQuery.contains(Indicador.FILTER_BY_APP_NAMEDFILTER) && namedQuery.contains(":")) {
+                    try {
+                        long appId = Long.parseLong(namedQuery.split(":")[1]);
+                        filters.add(springFilterHelper.filterByApp(appId, Indicador.Fields.entornAppId));
+                    } catch (NumberFormatException ignored) {}
                 }
             }
         }
         List<Filter> result = filters.stream().
                 filter(f -> f != null && !String.valueOf(f).isEmpty()).
                 collect(Collectors.toList());
-        return result.isEmpty() ? null : FilterBuilder.and(result).generate();
+        String baseFilter = result.isEmpty() ? null : FilterBuilder.and(result).generate();
+        return dashboardPermisosHelper.buildEntornAppFilterForProperty(baseFilter, Indicador.Fields.entornAppId);
     }
 
     /**
