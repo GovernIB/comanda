@@ -18,6 +18,7 @@ import {
 import DashboardEditorSidePanel, {
     DashboardEditorSelection,
     DashboardWidgetType,
+    LayoutData,
 } from '../components/estadistiques/DashboardEditorSidePanel.tsx';
 import WidgetCreationWizard from '../components/estadistiques/WidgetCreationWizard.tsx';
 import { isEqual } from 'lodash';
@@ -332,6 +333,25 @@ const EstadisticaDashboardEdit: React.FC = () => {
         return editorSelection.kind === 'multi' ? editorSelection.ids : [];
     }, [editorSelection]);
     const selectedFiltreId = React.useMemo(() => editorSelection.kind === 'filtre' && editorSelection.mode === 'edit' ? String(editorSelection.dashboardFiltreId) : null, [editorSelection]);
+    const selectedLayoutData = React.useMemo<LayoutData | null>(() => {
+        if (!dashboardWidgets || editorSelection.kind === 'none' || editorSelection.kind === 'multi') return null;
+
+        if (editorSelection.kind === 'widget' && editorSelection.mode === 'edit') {
+            const widget = (dashboardWidgets as Array<Record<string, any>>).find(
+                (w) => String(w.dashboardItemId) === String(editorSelection.dashboardItemId)
+            );
+            return widget ? { posX: widget.posX, posY: widget.posY, width: widget.width, height: widget.height } : null;
+        }
+
+        if (editorSelection.kind === 'title' && editorSelection.mode === 'edit') {
+            const titol = (dashboardWidgets as Array<Record<string, any>>).find(
+                (w) => String(w.dashboardTitolId) === String(editorSelection.dashboardTitolId)
+            );
+            return titol ? { posX: titol.posX, posY: titol.posY, width: titol.width, height: titol.height } : null;
+        }
+
+        return null;
+    }, [editorSelection, dashboardWidgets]);
 
     const selectDashboardFiltre = (filtre: { id?: string | number } | null | undefined) => {
         setEditorSelection(filtre ? { kind: 'filtre', mode: 'edit', dashboardFiltreId: filtre.id } : { kind: 'none' });
@@ -632,6 +652,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
                                             onSelectionChange={setEditorSelection}
                                             dashboardFiltres={dashboardFiltres}
                                             onLiveTitleDataChange={handleLiveTitleDataChange}
+                                            selectedLayoutData={selectedLayoutData}
                                             onSaved={(dashboardItemId?: any) => {
                                                 if (editorSelection.kind === 'filtre') forceRefreshDashboardFiltres();
                                                 else if (editorSelection.kind === 'none') forceRefreshDashboard();

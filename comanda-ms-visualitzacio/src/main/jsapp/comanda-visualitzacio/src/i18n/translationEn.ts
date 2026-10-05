@@ -454,6 +454,10 @@ const translationEn: translationResourcesType = {
                 multiSelection: {
                     message: "{{count}} elements selected",
                 },
+                filtre: {
+                    noAppAndPeriodUsed: "No more filters can be added. This dashboard has no associated application (required for dimension filters) and already contains the period filter.",
+                    noAppWarning: "To create dimension filters, an application must be defined for the dashboard.",
+                },
             },
             edit: "Edit",
             dashboardView: "Go to dashboard",

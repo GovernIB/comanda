@@ -454,6 +454,10 @@ const translationCa = {
                 multiSelection: {
                     message: "{{count}} elements seleccionats",
                 },
+                filtre: {
+                    noAppAndPeriodUsed: "No es poden afegir més filtres. Aquest tauler de control no té una aplicació associada (necessària per als filtres de dimensions) i ja conté el filtre de període.",
+                    noAppWarning: "Per a crear filtres de dimensions cal definir una aplicació al tauler de control.",
+                },
             },
             edit: "Editar",
             dashboardView: "Anar al tauler de control",

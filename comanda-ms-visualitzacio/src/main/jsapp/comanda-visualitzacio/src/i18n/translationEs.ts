@@ -454,6 +454,10 @@ const translationEs: translationResourcesType = {
                 multiSelection: {
                     message: "{{count}} elementos seleccionados",
                 },
+                filtre: {
+                    noAppAndPeriodUsed: "No se pueden añadir más filtros. Este panel de control no tiene una aplicación asociada (necesaria para los filtros de dimensiones) y ya contiene el filtro de período.",
+                    noAppWarning: "Para crear filtros de dimensiones es necesario definir una aplicación en el panel de control.",
+                },
             },
             edit: "Editar",
             dashboardView: "Ir al panel de control",
