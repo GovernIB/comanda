@@ -30,7 +30,7 @@ public class EstadisticaNetejaJmsListener {
     private final MonitorServiceClient monitorServiceClient;
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
 
-    @JmsListener(destination = Cues.CUA_NETEJA_ESTADISTICA, selector = "TIPUS_MISSATGE = 'APP'")
+    @JmsListener(destination = Cues.CUA_NETEJA_ESTADISTICA, selector = Cues.SELECTOR_NETEJA_ESTADISTICA + " = '" + Cues.VALOR_APP + "'")
     public void processaNetejaApp(NetejaAppMessage appMessage, Message jmsMessage) throws JMSException {
         int deliveryCount = jmsMessage.getIntProperty("JMSXDeliveryCount");
         Long appId = appMessage.getAppId();
@@ -49,11 +49,11 @@ public class EstadisticaNetejaJmsListener {
         }
     }
 
-    @JmsListener(destination = Cues.CUA_NETEJA_ESTADISTICA, selector = "TIPUS_MISSATGE = 'ENTORN'")
+    @JmsListener(destination = Cues.CUA_NETEJA_ESTADISTICA, selector = Cues.SELECTOR_NETEJA_ESTADISTICA + " = '" + Cues.VALOR_ENTORN_APP + "'")
     public void processaNetejaEntorn(NetejaEntornAppMessage entornMessage, Message jmsMessage) throws JMSException {
         int deliveryCount = jmsMessage.getIntProperty("JMSXDeliveryCount");
         Long entornAppId = entornMessage.getEntornAppId();
-        log.info("Procesant neteja ENTORN per entornApp {} (intent {})", entornAppId, deliveryCount);
+        log.info("Neteja Estadistica per entornApp {} (intent {})", entornAppId, deliveryCount);
         try {
             estadisticaNetejaService.netejaPerEntornApp(entornAppId);
             jmsMessage.acknowledge();

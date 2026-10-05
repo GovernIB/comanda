@@ -523,7 +523,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
             log.info("Sol·licitant neteja d'estadístiques per entornApp {} (només fets)", entity.getId());
             jmsTemplate.convertAndSend(Cues.CUA_NETEJA_ESTADISTICA, message, msg -> {
-                msg.setStringProperty("TIPUS_MISSATGE", "ENTORN");
+                msg.setStringProperty(Cues.SELECTOR_NETEJA_ESTADISTICA, Cues.VALOR_ENTORN_APP);
                 return msg;
             });
 

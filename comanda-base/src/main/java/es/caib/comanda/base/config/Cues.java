@@ -12,4 +12,9 @@ public class Cues {
     public static final String CUA_NETEJA_ALARMES = "netejaEntornAppAlarmesQueue";
     public static final String CUA_NETEJA_ESTADISTICA = "netejaEntornAppEstadisticaQueue";
 
+    //Valors per a la lògica de Cues
+    public static final String SELECTOR_NETEJA_ESTADISTICA = "TIPUS_MISSATGE";
+    public static final String VALOR_APP = "APP";
+    public static final String VALOR_ENTORN_APP = "ENTORNAPP";
+
 }

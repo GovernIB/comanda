@@ -522,7 +522,7 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
             log.info("Sol·licitant neteja d'estadístiques per appId {} (entorns: {}, cataleg: {}, widgets: {})",
                     entity.getId(), entornAppIds, esborrarCataleg, esborrarWidgets);
             jmsTemplate.convertAndSend(Cues.CUA_NETEJA_ESTADISTICA, message, msg -> {
-                msg.setStringProperty("TIPUS_MISSATGE", "APP");
+                msg.setStringProperty(Cues.SELECTOR_NETEJA_ESTADISTICA, Cues.VALOR_APP);
                 return msg;
             });
 
