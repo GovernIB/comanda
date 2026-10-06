@@ -22,6 +22,9 @@ public interface DashboardItemRepository extends BaseRepository<DashboardItemEnt
 
     List<DashboardItemEntity> findByDashboardId(Long dashboardId);
 
+    @Query("SELECT di FROM DashboardItemEntity di WHERE di.entornId = :entornId AND di.widget.appId = :appId")
+    List<DashboardItemEntity> findByEntornIdAndWidgetAppId(@Param("entornId") Long entornId, @Param("appId") Long appId);
+
     @Query("SELECT MAX(d.posY + d.height) FROM DashboardItemEntity d WHERE d.dashboard.id = :dashboardId")
     Integer findMaxBottomPositionByDashboardId(@Param("dashboardId") Long dashboardId);
 

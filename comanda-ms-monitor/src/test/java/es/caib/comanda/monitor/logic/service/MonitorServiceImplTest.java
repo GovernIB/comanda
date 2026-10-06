@@ -24,6 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -33,6 +34,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.jms.core.JmsTemplate;
+import org.springframework.jms.core.MessagePostProcessor;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
@@ -48,6 +50,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -393,9 +396,63 @@ public class MonitorServiceImplTest {
             Arguments.of(ModulEnum.SALUT, Cues.CUA_NETEJA_SALUT),
             Arguments.of(ModulEnum.TASCA, Cues.CUA_NETEJA_TASQUES),
             Arguments.of(ModulEnum.AVIS, Cues.CUA_NETEJA_AVISOS),
-            Arguments.of(ModulEnum.ALARMES, Cues.CUA_NETEJA_ALARMES),
-            Arguments.of(ModulEnum.ESTADISTICA, Cues.CUA_NETEJA_ESTADISTICA)
+            Arguments.of(ModulEnum.ALARMES, Cues.CUA_NETEJA_ALARMES)
         );
+    }
+
+    @Test
+    @DisplayName("DeleteAlarmaConfigAction: per a ESTADISTICA envia el missatge amb TIPUS_MISSATGE='ENTORN'")
+    void testDeleteAlarmaConfigAction_Estadistica_afegeixTipusMissatge() throws Exception {
+        monitorEntity.setOperacio("netejaEntornApp");
+        monitorEntity.setModul(ModulEnum.ESTADISTICA);
+        monitorEntity.setEntornAppId(99L);
+
+        MonitorServiceImpl.DeleteAlarmaConfigAction action =
+            monitorService.new DeleteAlarmaConfigAction(jmsTemplate);
+
+        action.exec(Monitor.MONITOR_DELETE_ENTORN_APP_BY_MODUL_ACTION, monitorEntity, null);
+
+        ArgumentCaptor<NetejaEntornAppMessage> messageCaptor = ArgumentCaptor.forClass(NetejaEntornAppMessage.class);
+        ArgumentCaptor<MessagePostProcessor> postProcessorCaptor = ArgumentCaptor.forClass(MessagePostProcessor.class);
+        verify(jmsTemplate).convertAndSend(
+            org.mockito.ArgumentMatchers.eq(Cues.CUA_NETEJA_ESTADISTICA),
+            messageCaptor.capture(),
+            postProcessorCaptor.capture()
+        );
+        assertThat(messageCaptor.getValue().getEntornAppId()).isEqualTo(99L);
+        assertThat(messageCaptor.getValue().isEntornAppEsborrat()).isFalse();
+        javax.jms.Message jmsMessage = mock(javax.jms.Message.class);
+        postProcessorCaptor.getValue().postProcessMessage(jmsMessage);
+        verify(jmsMessage).setStringProperty("TIPUS_MISSATGE", "ENTORN");
+    }
+
+
+    @Test
+    @DisplayName("DeleteAlarmaConfigAction: per a un entornApp esborrat reenvia l'app, l'entorn i l'indicador d'entornApp esborrat")
+    void testDeleteAlarmaConfigAction_EntornAppEsborrat_reenviaDadesNeteja() throws Exception {
+        monitorEntity.setOperacio("netejaEntornApp");
+        monitorEntity.setModul(ModulEnum.ESTADISTICA);
+        monitorEntity.setEntornAppId(99L);
+        monitorEntity.setAppId(5L);
+        monitorEntity.setEntornId(7L);
+        monitorEntity.setEntornAppEsborrat(true);
+
+        MonitorServiceImpl.DeleteAlarmaConfigAction action =
+            monitorService.new DeleteAlarmaConfigAction(jmsTemplate);
+
+        action.exec(Monitor.MONITOR_DELETE_ENTORN_APP_BY_MODUL_ACTION, monitorEntity, null);
+
+        ArgumentCaptor<NetejaEntornAppMessage> messageCaptor = ArgumentCaptor.forClass(NetejaEntornAppMessage.class);
+        verify(jmsTemplate).convertAndSend(
+            org.mockito.ArgumentMatchers.eq(Cues.CUA_NETEJA_ESTADISTICA),
+            messageCaptor.capture(),
+            any(MessagePostProcessor.class)
+        );
+        NetejaEntornAppMessage message = messageCaptor.getValue();
+        assertThat(message.getEntornAppId()).isEqualTo(99L);
+        assertThat(message.getAppId()).isEqualTo(5L);
+        assertThat(message.getEntornId()).isEqualTo(7L);
+        assertThat(message.isEntornAppEsborrat()).isTrue();
     }
 
 }

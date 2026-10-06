@@ -27,6 +27,19 @@ public interface EstadisticaWidgetRepository extends BaseRepository<EstadisticaW
     @Query("DELETE FROM EstadisticaWidgetEntity w WHERE w.appId = :appId")
     void deleteByAppId(@Param("appId") Long appId);
 
+    /**
+     * Retorna els identificadors dels widgets que referencien algun element del catàleg (indicadors,
+     * dimensions o valors de dimensió) d'un entorn d'aplicació.
+     *
+     * @param entornAppId identificador de l'entorn de l'aplicació
+     */
+    @Query("SELECT w.id FROM EstadisticaWidgetEntity w WHERE " +
+            "w.id IN (SELECT it.widget.id FROM IndicadorTaulaEntity it WHERE it.indicador.entornAppId = :entornAppId) " +
+            "OR w.id IN (SELECT wdv.id FROM EstadisticaWidgetEntity wdv JOIN wdv.dimensionsValor dv WHERE dv.dimensio.entornAppId = :entornAppId) " +
+            "OR w.id IN (SELECT wt.id FROM EstadisticaTaulaWidgetEntity wt WHERE wt.dimensioAgrupacio.entornAppId = :entornAppId) " +
+            "OR w.id IN (SELECT wg.id FROM EstadisticaGraficWidgetEntity wg WHERE wg.descomposicioDimensio.entornAppId = :entornAppId)")
+    List<Long> findIdsByCatalegEntornAppId(@Param("entornAppId") Long entornAppId);
+
     // Nota de compatibilitat: Les següents consultes són natives (nativeQuery = true) per a
     // permetre operacions massives directes sobre taules d'unió (@JoinTable) i columnes de
     // subclasses (SINGLE_TABLE) sense carregar entitats a memòria. Tot i ser consultes natives,

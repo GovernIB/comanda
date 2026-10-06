@@ -461,7 +461,7 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
         super.afterDelete(entity, answers);
         cacheHelper.evictAppCacheItem(entity.getId(), entity.getCodi());
         for (EntornAppEntity entornApp : entity.getEntornApps()) {
-            entornAppHelper.logicAfterDelete(entornApp.getId());
+            entornAppHelper.logicAfterDelete(entornApp);
         }
         eventPublisher.publishEvent(new ComandaSsePublishRequest(
             new ComandaSseEvent(ComandaSseEventTypes.APP_CHANGED, entity.getId(), LocalDateTime.now())));

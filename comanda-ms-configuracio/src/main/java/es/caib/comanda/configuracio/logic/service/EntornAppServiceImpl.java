@@ -313,7 +313,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     @Override
     protected void afterDelete(EntornAppEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
         super.afterDelete(entity, answers);
-        entornAppHelper.logicAfterDelete(entity.getId());
+        entornAppHelper.logicAfterDelete(entity);
     }
 
     // ACCIONS

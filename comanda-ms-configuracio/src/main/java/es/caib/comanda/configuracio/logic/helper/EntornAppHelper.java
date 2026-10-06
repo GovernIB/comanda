@@ -1,5 +1,6 @@
 package es.caib.comanda.configuracio.logic.helper;
 
+import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.intf.event.EntornAppEsborratEvent;
 import es.caib.comanda.ms.sse.ComandaSseEvent;
@@ -25,11 +26,14 @@ public class EntornAppHelper {
      * relacionades en altres microserveis (amb reintents i fallback), notificant
      * posteriorment el canvi via SSE.
      *
-     * @param entornAppId l'identificador de l'EntornApp eliminat.
+     * @param entornApp l'EntornApp eliminat.
      */
-    public void logicAfterDelete(Long entornAppId) {
+    public void logicAfterDelete(EntornAppEntity entornApp) {
+        Long entornAppId = entornApp.getId();
+        Long appId = entornApp.getApp() != null ? entornApp.getApp().getId() : null;
+        Long entornId = entornApp.getEntorn() != null ? entornApp.getEntorn().getId() : null;
         cacheHelper.evictEntornAppCacheItem(entornAppId);
-        eventPublisher.publishEvent(new EntornAppEsborratEvent(entornAppId));
+        eventPublisher.publishEvent(new EntornAppEsborratEvent(entornAppId, appId, entornId));
         publishEntornAppChanged(entornAppId);
     }
 

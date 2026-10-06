@@ -263,7 +263,7 @@ public class AppServiceImplTest {
         appService.afterDelete(appEntity, answers);
 
         verify(cacheHelper, times(1)).evictAppCacheItem(appEntity.getId(), appEntity.getCodi());
-        verify(entornAppHelper, times(1)).logicAfterDelete(entornAppEntity.getId());
+        verify(entornAppHelper, times(1)).logicAfterDelete(entornAppEntity);
 
         ArgumentCaptor<ComandaSsePublishRequest> captor = ArgumentCaptor.forClass(ComandaSsePublishRequest.class);
         verify(eventPublisher).publishEvent(captor.capture());

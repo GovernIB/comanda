@@ -20,6 +20,14 @@ public class Monitor {
 
     @Setter
     private Long entornAppId;
+    /** Aplicació i entorn de l'entornApp, per si l'entornApp s'ha esborrat i ja no es pot consultar. */
+    @Setter
+    private Long appId;
+    @Setter
+    private Long entornId;
+    /** Indica si l'operació de neteja correspon a un entornApp esborrat (neteja completa). */
+    @Setter
+    private Boolean entornAppEsborrat;
     private ModulEnum modul;
     private AccioTipusEnum tipus;
     @Setter

@@ -1,6 +1,9 @@
 package es.caib.comanda.ms.configuracio.helper;
 
 import es.caib.comanda.configuracio.logic.helper.EntornAppHelper;
+import es.caib.comanda.configuracio.persist.entity.AppEntity;
+import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
+import es.caib.comanda.configuracio.persist.entity.EntornEntity;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.intf.event.EntornAppEsborratEvent;
 import es.caib.comanda.ms.sse.ComandaSseEventTypes;
@@ -29,14 +32,25 @@ public class EntornAppHelperTest {
     @Test
     void logicAfterDelete_netetjaCacheIPublicaEsdeveniments() {
         Long entornAppId = 1L;
-        entornAppHelper.logicAfterDelete(entornAppId);
+        AppEntity app = new AppEntity();
+        app.setId(5L);
+        EntornEntity entorn = new EntornEntity();
+        entorn.setId(7L);
+        EntornAppEntity entornApp = new EntornAppEntity();
+        entornApp.setId(entornAppId);
+        entornApp.setApp(app);
+        entornApp.setEntorn(entorn);
+        entornAppHelper.logicAfterDelete(entornApp);
 
         verify(cacheHelper).evictEntornAppCacheItem(entornAppId);
         ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
         verify(eventPublisher, times(2)).publishEvent(eventCaptor.capture());
         var publishedEvents = eventCaptor.getAllValues();
         assertTrue(publishedEvents.stream().anyMatch(e ->
-            e instanceof EntornAppEsborratEvent && ((EntornAppEsborratEvent) e).getEntornAppId().equals(entornAppId)
+            e instanceof EntornAppEsborratEvent
+                && ((EntornAppEsborratEvent) e).getEntornAppId().equals(entornAppId)
+                && ((EntornAppEsborratEvent) e).getAppId().equals(5L)
+                && ((EntornAppEsborratEvent) e).getEntornId().equals(7L)
         ));
         assertTrue(publishedEvents.stream().anyMatch(e ->
             e instanceof ComandaSsePublishRequest &&

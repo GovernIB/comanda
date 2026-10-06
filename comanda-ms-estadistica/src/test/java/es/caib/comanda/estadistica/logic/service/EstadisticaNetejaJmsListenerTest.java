@@ -101,6 +101,21 @@ class EstadisticaNetejaJmsListenerTest {
         jmsListener.processaNetejaEntorn(message, jmsMessage);
 
         verify(estadisticaNetejaService).netejaPerEntornApp(42L);
+        verify(estadisticaNetejaService, never()).netejaPerEntornAppEsborrat(any(), any(), any());
+        verify(jmsMessage).acknowledge();
+        verifyNoInteractions(monitorServiceClient);
+    }
+
+    @Test
+    @DisplayName("NetejaEntornAppMessage: quan l'entornApp s'ha esborrat, fa la neteja completa amb l'app i l'entorn")
+    void processaNetejaEntorn_quanEntornAppEsborrat_llavorsNetejaCompleta() throws Exception {
+        NetejaEntornAppMessage message = new NetejaEntornAppMessage(42L, 5L, 7L, true);
+        when(jmsMessage.getIntProperty("JMSXDeliveryCount")).thenReturn(1);
+
+        jmsListener.processaNetejaEntorn(message, jmsMessage);
+
+        verify(estadisticaNetejaService).netejaPerEntornAppEsborrat(42L, 5L, 7L);
+        verify(estadisticaNetejaService, never()).netejaPerEntornApp(any());
         verify(jmsMessage).acknowledge();
         verifyNoInteractions(monitorServiceClient);
     }
@@ -124,5 +139,25 @@ class EstadisticaNetejaJmsListenerTest {
         assertEquals(ModulEnum.ESTADISTICA, monitor.getModul());
         assertEquals("netejaEntornApp", monitor.getOperacio());
         assertEquals(EstatEnum.ERROR, monitor.getEstat());
+    }
+
+    @Test
+    @DisplayName("NetejaEntornAppMessage: quan falla al 3r intent un entornApp esborrat, desa l'app, l'entorn i l'indicador al monitor")
+    void processaNetejaEntorn_quanEntornAppEsborratError3Intents_llavorsDesaDadesReintentAlMonitor() throws Exception {
+        NetejaEntornAppMessage message = new NetejaEntornAppMessage(42L, 5L, 7L, true);
+        when(jmsMessage.getIntProperty("JMSXDeliveryCount")).thenReturn(3);
+        when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
+        doThrow(new RuntimeException("DB down")).when(estadisticaNetejaService).netejaPerEntornAppEsborrat(42L, 5L, 7L);
+
+        jmsListener.processaNetejaEntorn(message, jmsMessage);
+
+        ArgumentCaptor<Monitor> captor = ArgumentCaptor.forClass(Monitor.class);
+        verify(monitorServiceClient).create(captor.capture(), eq("Bearer token"));
+        Monitor monitor = captor.getValue();
+        assertEquals(42L, monitor.getEntornAppId());
+        assertEquals(5L, monitor.getAppId());
+        assertEquals(7L, monitor.getEntornId());
+        assertEquals(Boolean.TRUE, monitor.getEntornAppEsborrat());
+        assertEquals("netejaEntornApp", monitor.getOperacio());
     }
 }

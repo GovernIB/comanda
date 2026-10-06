@@ -56,6 +56,18 @@ public class MonitorEntity extends BaseEntity<Monitor> {
     @Column(name = "entorn_app_id")
     private Long entornAppId;
 
+    /** Aplicació de l'entornApp, per si l'entornApp s'ha esborrat i ja no es pot consultar. */
+    @Column(name = "app_id")
+    private Long appId;
+
+    /** Entorn de l'entornApp, per si l'entornApp s'ha esborrat i ja no es pot consultar. */
+    @Column(name = "entorn_id")
+    private Long entornId;
+
+    /** Indica si l'operació de neteja correspon a un entornApp esborrat (neteja completa). */
+    @Column(name = "entorn_app_esborrat")
+    private Boolean entornAppEsborrat;
+
     @Column(name = "codi", length = 16, nullable = false)
     @Enumerated(EnumType.STRING)
     private ModulEnum modul;

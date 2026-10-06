@@ -45,7 +45,7 @@ public class EstadisticaNetejaJmsListener {
             jmsMessage.acknowledge();
             log.info("Neteja Estadistica completada per appId {}", appId);
         } catch (Exception e) {
-            handleError(appMessage.getEntornAppIds(), "appId: " + appId, deliveryCount, jmsMessage, e);
+            handleError(appMessage.getEntornAppIds(), null, "appId: " + appId, deliveryCount, jmsMessage, e);
         }
     }
 
@@ -55,16 +55,24 @@ public class EstadisticaNetejaJmsListener {
         Long entornAppId = entornMessage.getEntornAppId();
         log.info("Neteja Estadistica per entornApp {} (intent {})", entornAppId, deliveryCount);
         try {
-            estadisticaNetejaService.netejaPerEntornApp(entornAppId);
+            if (entornMessage.isEntornAppEsborrat()) {
+                estadisticaNetejaService.netejaPerEntornAppEsborrat(entornAppId, entornMessage.getAppId(), entornMessage.getEntornId());
+            } else {
+                estadisticaNetejaService.netejaPerEntornApp(entornAppId);
+            }
             jmsMessage.acknowledge();
             log.info("Neteja Estadistica completada per entornApp {}", entornAppId);
         } catch (Exception e) {
             List<Long> entornAppIds = entornAppId != null ? List.of(entornAppId) : Collections.emptyList();
-            handleError(entornAppIds, "entornAppId: " + entornAppId, deliveryCount, jmsMessage, e);
+            handleError(entornAppIds, entornMessage, "entornAppId: " + entornAppId, deliveryCount, jmsMessage, e);
         }
     }
 
-    private void handleError(List<Long> entornAppIds, String targetDesc, int deliveryCount, Message jmsMessage, Exception e) {
+    /**
+     * @param entornMessage missatge de neteja d'entornApp original (null per a la neteja d'app): se'n desen l'app,
+     *                      l'entorn i l'indicador d'entornApp esborrat al monitor perquè el reintent faci la mateixa neteja.
+     */
+    private void handleError(List<Long> entornAppIds, NetejaEntornAppMessage entornMessage, String targetDesc, int deliveryCount, Message jmsMessage, Exception e) {
         if (deliveryCount >= 3) {
             log.error("Neteja Estadistica fallida per {} després de {} intents", targetDesc, deliveryCount, e);
             try {
@@ -74,10 +82,10 @@ public class EstadisticaNetejaJmsListener {
             }
             if (entornAppIds != null && !entornAppIds.isEmpty()) {
                 for (Long entornAppId : entornAppIds) {
-                    crearEntradaMonitorError(entornAppId, ModulEnum.ESTADISTICA, e);
+                    crearEntradaMonitorError(entornAppId, entornMessage, ModulEnum.ESTADISTICA, e);
                 }
             } else {
-                crearEntradaMonitorError(null, ModulEnum.ESTADISTICA, e);
+                crearEntradaMonitorError(null, entornMessage, ModulEnum.ESTADISTICA, e);
             }
         } else {
             log.warn("Neteja Estadistica fallida per {} (intent {}), es reintentarà", targetDesc, deliveryCount, e);
@@ -85,7 +93,7 @@ public class EstadisticaNetejaJmsListener {
         }
     }
 
-    private void crearEntradaMonitorError(Long entornAppId, ModulEnum modul, Exception e) {
+    private void crearEntradaMonitorError(Long entornAppId, NetejaEntornAppMessage entornMessage, ModulEnum modul, Exception e) {
         try {
             String desc = "Error en la neteja del mòdul " + modul;
             if (entornAppId != null) {
@@ -93,6 +101,9 @@ public class EstadisticaNetejaJmsListener {
             }
             Monitor monitor = Monitor.builder()
                     .entornAppId(entornAppId)
+                    .appId(entornMessage != null ? entornMessage.getAppId() : null)
+                    .entornId(entornMessage != null ? entornMessage.getEntornId() : null)
+                    .entornAppEsborrat(entornMessage != null && entornMessage.isEntornAppEsborrat())
                     .modul(modul)
                     .tipus(AccioTipusEnum.INTERNA)
                     .data(LocalDateTime.now())
