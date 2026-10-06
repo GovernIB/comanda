@@ -78,7 +78,7 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 				collect(Collectors.toList());
 		return aclHelper.anyPermissionGranted(
 				getClassFromResourceType(resourceType),
-				resourceId,
+                normalizeResourceId(resourceId),
 				aclPermissions,
 				toSids(user, roles).toArray(new Sid[0]));
 	}
@@ -103,7 +103,7 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
     @Override
     @Cacheable(value = HazelCastCacheConfig.ACL_COUNT_CACHE, key = "#resourceType?.name() + '_' + #resourceId?.toString()")
     public Integer countSidsWithPermission(ResourceType resourceType, Serializable resourceId) {
-        return aclHelper.countSidsWithPermission(getClassFromResourceType(resourceType), resourceId);
+        return aclHelper.countSidsWithPermission(getClassFromResourceType(resourceType), normalizeResourceId(resourceId));
     }
 
     @Override
@@ -464,4 +464,26 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
         }
     }
 
+    /**
+     * Si l'id és un Long o un String el retornarà amb aquest format.
+     * Aquest mètode és necessària per a les cridades fetes des d'un FeignClient.
+     * Si en un futur, hi ha tipus de dades amb ID que pugui donar error en ser un Long emprarem el valor ResourceType.
+     **/
+    private Serializable normalizeResourceId(Serializable resourceId) {
+        if (resourceId == null) {
+            return null;
+        }
+        if (resourceId instanceof Number) {
+            return ((Number) resourceId).longValue();
+        }
+        if (resourceId instanceof String) {
+            String strId = (String) resourceId;
+            try {
+                return Long.valueOf(strId);
+            } catch (NumberFormatException e) {
+                return strId;
+            }
+        }
+        return resourceId;
+    }
 }
