@@ -59,7 +59,7 @@ public class NetejaEntornAppJmsListener {
                 message.getAppId(),
                 message.getEntornId(),
                 true), msg -> {
-            msg.setStringProperty("TIPUS_MISSATGE", "ENTORN");
+            msg.setStringProperty(SELECTOR_NETEJA_ESTADISTICA, VALOR_ENTORN_APP);
             return msg;
         });
         jmsMessage.acknowledge();
