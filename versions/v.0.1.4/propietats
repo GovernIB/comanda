@@ -1,3 +1,7 @@
+# Propietats a fitxer
 es.caib.comanda.plugin.unitats.organitzatives.dir3.service.url=https://dev.caib.es/dir3caib
 es.caib.comanda.plugin.unitats.organitzatives.dir3.service.username=DIR3_SERVICE_USERNAME
 es.caib.comanda.plugin.unitats.organitzatives.dir3.service.password=DIR3_SERVICE_PASSWORD
+
+# Propietats editables a base de dades
+es.caib.comanda.plugin.unitats.organitzatives.dir3.govern.codi.arrel=A04003003
