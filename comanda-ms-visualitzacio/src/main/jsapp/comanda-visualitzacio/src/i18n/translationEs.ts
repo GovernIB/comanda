@@ -770,7 +770,7 @@ const translationEs: translationResourcesType = {
             },
             sincronitzarCataleg: {
                 confirm: "¿Seguro que desea sincronizar el catálogo estadístico de todos los entornos activos de esta aplicación?",
-                success: "Catálogo sincronizado correctamente: {{message}}",
+                success: "Catálogo sincronizado correctamente",
             },
             netejaEstadistica: {
                 label: "Limpieza de estadísticas",
@@ -850,7 +850,7 @@ const translationEs: translationResourcesType = {
                 sincronitzarCataleg: {
                     label: "Sincronizar catálogo estadístico",
                     confirm: "¿Seguro que desea sincronizar el catálogo estadístico de este entorno?",
-                    success: "Catálogo sincronizado correctamente: {{message}}",
+                    success: "Catálogo sincronizado correctamente",
                 },
             }
         },
@@ -955,7 +955,7 @@ const translationEs: translationResourcesType = {
                 },
                 sincronitzarCataleg: "Sincronizar catálogo",
                 sincronitzarCatalegConfirm: "¿Seguro que desea sincronizar el catálogo estadístico del entorno seleccionado?",
-                sincronitzarCatalegSuccess: "Catálogo sincronizado correctamente: {{message}}",
+                sincronitzarCatalegSuccess: "Catálogo sincronizado correctamente",
             },
             editaEntitat: {
                 field: {
@@ -1002,7 +1002,7 @@ const translationEs: translationResourcesType = {
                 copiarEntorn: "Copiar a otro entorno",
                 sincronitzarCataleg: "Sincronizar catálogo",
                 sincronitzarCatalegConfirm: "¿Seguro que desea sincronizar el catálogo estadístico del entorno seleccionado?",
-                sincronitzarCatalegSuccess: "Catálogo sincronizado correctamente: {{message}}",
+                sincronitzarCatalegSuccess: "Catálogo sincronizado correctamente",
             },
             formulaForm: {
                 createTitle: "Crear indicador de fórmula",

@@ -770,7 +770,7 @@ const translationCa = {
             },
             sincronitzarCataleg: {
                 confirm: "Segur que voleu sincronitzar el catàleg estadístic de tots els entorns actius d'aquesta aplicació?",
-                success: "Catàleg sincronitzat correctament: {{message}}",
+                success: "Catàleg sincronitzat correctament",
             },
             netejaEstadistica: {
                 label: "Neteja d'estadístiques",
@@ -850,7 +850,7 @@ const translationCa = {
                 sincronitzarCataleg: {
                     label: "Sincronitzar catàleg estadístic",
                     confirm: "Segur que voleu sincronitzar el catàleg estadístic d'aquest entorn?",
-                    success: "Catàleg sincronitzat correctament: {{message}}",
+                    success: "Catàleg sincronitzat correctament",
                 },
             }
         },
@@ -955,7 +955,7 @@ const translationCa = {
                 },
                 sincronitzarCataleg: "Sincronitzar catàleg",
                 sincronitzarCatalegConfirm: "Segur que voleu sincronitzar el catàleg estadístic de l'entorn seleccionat?",
-                sincronitzarCatalegSuccess: "Catàleg sincronitzat correctament: {{message}}",
+                sincronitzarCatalegSuccess: "Catàleg sincronitzat correctament",
             },
             editaEntitat: {
                 field: {
@@ -1002,7 +1002,7 @@ const translationCa = {
                 copiarEntorn: "Copiar a un altre entorn",
                 sincronitzarCataleg: "Sincronitzar catàleg",
                 sincronitzarCatalegConfirm: "Segur que voleu sincronitzar el catàleg estadístic de l'entorn seleccionat?",
-                sincronitzarCatalegSuccess: "Catàleg sincronitzat correctament: {{message}}",
+                sincronitzarCatalegSuccess: "Catàleg sincronitzat correctament",
             },
             formulaForm: {
                 createTitle: "Crear indicador de fórmula",

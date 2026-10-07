@@ -770,7 +770,7 @@ const translationEn: translationResourcesType = {
             },
             sincronitzarCataleg: {
                 confirm: "Are you sure you want to synchronize the statistical catalog of all active environments of this application?",
-                success: "Catalog synchronized successfully: {{message}}",
+                success: "Catalog synchronized successfully",
             },
             netejaEstadistica: {
                 label: "Statistics cleanup",
@@ -850,7 +850,7 @@ const translationEn: translationResourcesType = {
                 sincronitzarCataleg: {
                     label: "Synchronize statistical catalog",
                     confirm: "Are you sure you want to synchronize the statistical catalog of this environment?",
-                    success: "Catalog synchronized successfully: {{message}}",
+                    success: "Catalog synchronized successfully",
                 },
             }
         },
@@ -955,7 +955,7 @@ const translationEn: translationResourcesType = {
                 },
                 sincronitzarCataleg: "Synchronize catalog",
                 sincronitzarCatalegConfirm: "Are you sure you want to synchronize the statistical catalog of the selected environment?",
-                sincronitzarCatalegSuccess: "Catalog synchronized successfully: {{message}}",
+                sincronitzarCatalegSuccess: "Catalog synchronized successfully",
             },
             editaEntitat: {
                 field: {
@@ -1002,7 +1002,7 @@ const translationEn: translationResourcesType = {
                 copiarEntorn: "Copy to another environment",
                 sincronitzarCataleg: "Synchronize catalog",
                 sincronitzarCatalegConfirm: "Are you sure you want to synchronize the statistical catalog of the selected environment?",
-                sincronitzarCatalegSuccess: "Catalog synchronized successfully: {{message}}",
+                sincronitzarCatalegSuccess: "Catalog synchronized successfully",
             },
             formulaForm: {
                 createTitle: "Create formula indicator",

@@ -24,6 +24,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
@@ -1171,5 +1172,26 @@ class EstadisticaHelperTest {
         assertThat(res.getIndicadorsCount()).isEqualTo(1);
         assertThat(res.getDimensionsCount()).isEqualTo(1);
         assertThat(res.getMessage()).isNotBlank();
+    }
+
+    @Test
+    @DisplayName("missatges i18n: els missatges de sincronització substitueixen correctament els paràmetres i mantenen l'apòstrof")
+    void missatgesSincronitzacioCataleg_substitueixenParametresCorrectament() {
+        ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
+        messageSource.setBasename("classpath:comanda.estadistica-messages");
+        messageSource.setDefaultEncoding("UTF-8");
+        messageSource.setDefaultLocale(Locale.forLanguageTag("ca"));
+
+        String msgInd = messageSource.getMessage(
+                "es.caib.comanda.estadistica.logic.helper.EstadisticaHelper.sincronitzarCataleg.success",
+                new Object[]{5, 2},
+                Locale.forLanguageTag("ca"));
+        assertThat(msgInd).isEqualTo("S'han sincronitzat 5 indicadors i 2 dimensions correctament");
+
+        String msgApp = messageSource.getMessage(
+                "es.caib.comanda.estadistica.logic.helper.EstadisticaHelper.sincronitzarCatalegApp.success",
+                new Object[]{3, 10, 4},
+                Locale.forLanguageTag("ca"));
+        assertThat(msgApp).isEqualTo("S'han sincronitzat 3 entorns (10 indicadors i 4 dimensions)");
     }
 }
