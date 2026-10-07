@@ -193,7 +193,7 @@ export const EntornAppSelector : React.FC<any> = (props) => {
 }
 
 interface AlarmaConfigAdminAndCorreuGenericCheckboxProps {
-    disabled: boolean;
+    disabled?: boolean;
 }
 
 const AlarmaConfigAdminAndCorreuGenericCheckbox: React.FC<AlarmaConfigAdminAndCorreuGenericCheckboxProps> = (props) => {
@@ -221,7 +221,8 @@ const AlarmaConfigAdminAndCorreuGenericCheckbox: React.FC<AlarmaConfigAdminAndCo
 const AlarmaConfigReglaField: React.FC<{
     subsystemOptions: { codi: string, description: string }[];
     integrationOptions: { codi: string, description: string }[];
-}> = ({ subsystemOptions, integrationOptions }) => {
+    readOnly?: boolean;
+}> = ({ subsystemOptions, integrationOptions, readOnly }) => {
     const { t } = useTranslation();
     const tStatusOption = useStatusOptionsTranslation();
     const tComparatorOption = useComparatorOptionsTranslation();
@@ -312,6 +313,7 @@ const AlarmaConfigReglaField: React.FC<{
                                         size="small"
                                         label={t($ => $.page.alarmaConfig.condicio.scope)}
                                         value={condition.ambit}
+                                        disabled={readOnly}
                                         onChange={event => updateCondition(index, { ambit: event.target.value as RuleScope })}
                                     >
                                         <MenuItem value="APLICACIO">{t($ => $.page.alarmaConfig.condicio.scopeOptions.aplicacio)}</MenuItem>
@@ -328,6 +330,7 @@ const AlarmaConfigReglaField: React.FC<{
                                             size="small"
                                             label={t($ => $.page.alarmaConfig.condicio.code)}
                                             value={condition.codiObjecte ?? ''}
+                                            disabled={readOnly}
                                             onChange={event => updateCondition(index, { codiObjecte: event.target.value })}
                                         >
                                             {useCodeSelect && codeOptions.map((option) => (
@@ -343,6 +346,7 @@ const AlarmaConfigReglaField: React.FC<{
                                         size="small"
                                         label={t($ => $.page.alarmaConfig.condicio.metric)}
                                         value={condition.metrica}
+                                        disabled={readOnly}
                                         onChange={event => updateCondition(index, { metrica: event.target.value as RuleMetric })}
                                     >
                                         {metrics.map(metric => (
@@ -363,6 +367,7 @@ const AlarmaConfigReglaField: React.FC<{
                                         size="small"
                                         label={t($ => $.page.alarmaConfig.condicio.comparator)}
                                         value={condition.comparador}
+                                        disabled={readOnly}
                                         onChange={event => updateCondition(index, { comparador: event.target.value as RuleComparator })}
                                     >
                                         {comparators.map(comparator => (
@@ -381,6 +386,7 @@ const AlarmaConfigReglaField: React.FC<{
                                             SelectProps={{ multiple: true }}
                                             label={t($ => $.page.alarmaConfig.condicio.value)}
                                             value={condition.valorsText ?? []}
+                                            disabled={readOnly}
                                             onChange={event => {
                                                 const eventTargetValue = event.target
                                                     .value as unknown as string[];
@@ -410,6 +416,7 @@ const AlarmaConfigReglaField: React.FC<{
                                             type="number"
                                             label={condition.metrica === 'LATENCIA' ? t($ => $.page.alarmaConfig.condicio.valueMs) : t($ => $.page.alarmaConfig.condicio.value)}
                                             value={condition.valorNumeric ?? ''}
+                                            disabled={readOnly}
                                             onChange={event => updateCondition(index, { valorNumeric: event.target.value })}
                                         />
                                     )}
@@ -418,7 +425,7 @@ const AlarmaConfigReglaField: React.FC<{
                                     <Button
                                         color="error"
                                         onClick={() => removeCondition(index)}
-                                        disabled={conditions.length === 1}
+                                        disabled={readOnly || conditions.length === 1}
                                         fullWidth
                                         sx={{ height: '100%' }}
                                     >
@@ -429,7 +436,7 @@ const AlarmaConfigReglaField: React.FC<{
                         );
                     })}
                     <Grid size={12}>
-                        <Button startIcon={<Icon>add</Icon>} onClick={addCondition}>
+                        <Button startIcon={<Icon>add</Icon>} onClick={addCondition} disabled={readOnly}>
                             {t($ => $.page.alarmaConfig.condicio.add)}
                         </Button>
                     </Grid>
@@ -446,7 +453,8 @@ export const AlarmaConfigForm: React.FC<{
     dialogModeOnGoBack?: () => void;
     id?: number | string,
     hideToolbarSave?: boolean;
-}> = ({ id: idProp, entornAppId: entornAppIdProp, dialogMode, dialogModeOnGoBack, hideToolbarSave }) => {
+    readOnly?: boolean;
+}> = ({ id: idProp, entornAppId: entornAppIdProp, dialogMode, dialogModeOnGoBack, hideToolbarSave, readOnly }) => {
     const { t } = useTranslation();
     const { t: tLib } = useBaseAppContext();
     const { id: idFromPath } = useParams();
@@ -497,6 +505,8 @@ export const AlarmaConfigForm: React.FC<{
             formApiRef.current?.setFieldValue('inactiuFins', null);
         }
     }
+    const titlePage = readOnly ? t($ =>$.page.alarmaConfig.view) :
+        id ? t($ =>$.page.alarmaConfig.update) : t($ =>$.page.alarmaConfig.create);
 
     React.useEffect(() => {
         if (!entornAppApiReady || !entornAppId) {
@@ -559,9 +569,9 @@ export const AlarmaConfigForm: React.FC<{
     return (
         <>
             {dialogMode && (<>
-                <PageTitle title={id ? t($ => $.page.alarmaConfig.update) : t($ => $.page.alarmaConfig.create)} />
+                <PageTitle title={titlePage} />
                 <Toolbar
-                    title={id ? t($ => $.page.alarmaConfig.update) : t($ => $.page.alarmaConfig.create)}
+                    title={titlePage}
                     elementsWithPositions={[
                         {
                             position: 0,
@@ -587,7 +597,7 @@ export const AlarmaConfigForm: React.FC<{
             </>)}
             <MuiForm
                 id={id}
-                title={id ? t($ => $.page.alarmaConfig.update) : t($ => $.page.alarmaConfig.create)}
+                title={titlePage}
                 resourceName="alarmaConfig"
                 goBackLink="/alarma"
                 createLink="form/{{id}}"
@@ -605,32 +615,31 @@ export const AlarmaConfigForm: React.FC<{
                                 id={entornAppId}
                                 onEntornAppChange={handleEntornAppChange}
                                 validationErrors={validationErrors}
-                                disabled={!!id}
+                                disabled={!!id || readOnly}
                             />
                         </Grid>
                     }
                     <Grid size={dialogMode ? 12 : 9}>
-                        <FormField
-                            name="nom"
+                        <FormField name="nom" readOnly={readOnly}
                             componentProps={{ title: t($ => $.page.alarmaConfig.nomHelperText) }}
                         />
                     </Grid>
                     <Grid size={12}>
-                        <AlarmaConfigReglaField subsystemOptions={subsystemOptions} integrationOptions={integrationOptions} />
+                        <AlarmaConfigReglaField subsystemOptions={subsystemOptions} integrationOptions={integrationOptions} readOnly={readOnly} />
                     </Grid>
                     <Grid size={12}>
-                        <FormField name="missatge" />
+                        <FormField name="missatge" readOnly={readOnly}/>
                     </Grid>
                     <Grid size={6}>
-                        <FormField name="aturarAvaluacioPosteriors" />
+                        <FormField name="aturarAvaluacioPosteriors" readOnly={readOnly}/>
                     </Grid>
                     <Grid size={6}>
-                        <FormField name="notificacioFinalitzada" />
+                        <FormField name="notificacioFinalitzada" readOnly={readOnly}/>
                     </Grid>
-                    {isCurrentUserAdmin && (<AlarmaConfigAdminAndCorreuGenericCheckbox disabled={!!id}/>)}
+                    {isCurrentUserAdmin && (<AlarmaConfigAdminAndCorreuGenericCheckbox disabled={!!id || readOnly}/>)}
                     <Grid size={6}>
                         <FormControlLabel
-                            control={<Switch size="small" checked={periodeShow ?? false} onChange={handlePeriodeShowChange}/>}
+                            control={<Switch size="small" checked={periodeShow ?? false} onChange={handlePeriodeShowChange} disabled={readOnly}/>}
                             label={t($ => $.page.alarmaConfig.periode.switch)}
                             sx={{ ml: 1 }} />
                     </Grid>
@@ -647,10 +656,10 @@ export const AlarmaConfigForm: React.FC<{
                             <CardContent>
                                 <Grid container spacing={1}>
                                     <Grid size={3}>
-                                        <FormField name="periodeValor" />
+                                        <FormField name="periodeValor" readOnly={readOnly}/>
                                     </Grid>
                                     <Grid size={9}>
-                                        <FormField name="periodeUnitat" />
+                                        <FormField name="periodeUnitat" readOnly={readOnly}/>
                                     </Grid>
                                 </Grid>
                             </CardContent>
@@ -658,7 +667,7 @@ export const AlarmaConfigForm: React.FC<{
                     </Grid>}
                     <Grid size={6}>
                         <FormControlLabel
-                            control={<Switch size="small" checked={periodeInactiuShow ?? false} onChange={handlePeriodeInactiuShowChange}/>}
+                            control={<Switch size="small" checked={periodeInactiuShow ?? false} onChange={handlePeriodeInactiuShowChange} disabled={readOnly}/>}
                             label={t($ => $.page.alarmaConfig.periodeInactiu.switch)}
                             sx={{ ml: 1 }} />
                     </Grid>
@@ -675,10 +684,10 @@ export const AlarmaConfigForm: React.FC<{
                             <CardContent>
                                 <Grid container spacing={1}>
                                     <Grid size={6}>
-                                        <FormField name="inactiuDesde" />
+                                        <FormField name="inactiuDesde" readOnly={readOnly}/>
                                     </Grid>
                                     <Grid size={6}>
-                                        <FormField name="inactiuFins" />
+                                        <FormField name="inactiuFins" readOnly={readOnly}/>
                                     </Grid>
                                 </Grid>
                             </CardContent>
@@ -947,11 +956,12 @@ const AlarmaConfigUsuariGrid: React.FC<{
                     buttons={closeDialogButtons}
                     componentProps={{ maxWidth: 'lg', fullWidth: true }}
                 >
-                    <Box sx={{ mt: 3, height: '500px' }}>
+                    <Box sx={{ mt: 3, maxHeight: '80vh', }}>
                         <AlarmaConfigForm
                             id={String(viewId)}
                             dialogMode
                             hideToolbarSave
+                            readOnly
                             dialogModeOnGoBack={() => setViewId(null)}
                         />
                     </Box>

@@ -252,10 +252,10 @@ const AppEntornPicker: React.FC<AppEntornPickerProps> = ({ dashboard, initialApl
         >
             <Grid container spacing={1}>
                 <Grid size={6}>
-                    <FormField name="entorn" disabled={entornFixed} />
+                    <FormField name="entorn" disabled={entornFixed} advancedSearchColumns={[{ field: 'codi', flex: 1, }, { field: 'nom', flex: 2, },]}/>
                 </Grid>
                 <Grid size={6}>
-                    <FormField name="app" disabled={aplicacioFixed} />
+                    <FormField name="app" disabled={aplicacioFixed} advancedSearchColumns={[{ field: 'codi', flex: 1, }, { field: 'nom', flex: 2, },]}/>
                 </Grid>
             </Grid>
         </MuiFilter>

@@ -632,6 +632,7 @@ const translationCa = {
             title: "Configuració d'alarmes",
             create: "Crear configuració d'alarma",
             update: "Modificar configuració d'alarma",
+            view: "Visualitzar configuració d'alarma",
             nomHelperText: "En fer-se una notificació per correu de l'alarma, el nom s'usa per a indicar l'alarma a l'assumpte del correu.",
             filterWarning: "No es pot reordenar les alarmes quan hi ha filtres aplicats",
             condicio: {

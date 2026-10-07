@@ -632,6 +632,7 @@ const translationEs: translationResourcesType = {
             title: "Configuración de alarmas",
             create: "Crear configuración de alarma",
             update: "Modificar configuración de alarma",
+            view: "Visualizar configuración de alarma",
             nomHelperText: "Al realizarse una notificación por correo de la alarma, el nombre se utiliza para indicar la alarma en el asunto del correo.",
             filterWarning: "No es posible reordenar las alarmas cuando hay filtros aplicados",
             condicio: {
