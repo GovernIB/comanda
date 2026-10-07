@@ -34,7 +34,8 @@ UPDATE com_est_dashboard_titol SET mostrar_vora_top = COALESCE(mostrar_vora, 0),
                                    ample_vora_bottom = COALESCE(ample_vora, ample_vora_bottom),
                                    mostrar_vora_left = COALESCE(mostrar_vora, 0),
                                    color_vora_left = COALESCE(color_vora, color_vora_left),
-                                   ample_vora_left = COALESCE(ample_vora, ample_vora_left);
+                                   ample_vora_left = COALESCE(ample_vora, ample_vora_left)
+WHERE 1 = 1;
 
 -- Changeset db/changelog/changes/est/0.1.4/0.1.4_est_015.yaml::est-dashboard-item-sync-entorn-id-0.1.4-001::limit
 -- Sincronitzar el camp entorn_id dels ítems de dashboard (com_est_dashboard_item) amb l'entorn_id del seu dashboard pare (com_est_dashboard) per a tots aquells dashboards que tenen entorn definit.
