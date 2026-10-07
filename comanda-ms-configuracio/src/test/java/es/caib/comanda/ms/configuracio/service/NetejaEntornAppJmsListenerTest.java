@@ -1,5 +1,6 @@
 package es.caib.comanda.ms.configuracio.service;
 
+import es.caib.comanda.base.config.Cues;
 import es.caib.comanda.configuracio.logic.service.NetejaEntornAppJmsListener;
 import es.caib.comanda.ms.logic.intf.event.EntornAppEsborratEvent;
 import es.caib.comanda.ms.logic.intf.jms.NetejaEntornAppMessage;
@@ -70,7 +71,7 @@ class NetejaEntornAppJmsListenerTest {
 
         Message estadisticaJmsMessage = mock(Message.class);
         postProcessorCaptor.getValue().postProcessMessage(estadisticaJmsMessage);
-        verify(estadisticaJmsMessage).setStringProperty("TIPUS_MISSATGE", "ENTORN");
+        verify(estadisticaJmsMessage).setStringProperty(SELECTOR_NETEJA_ESTADISTICA, VALOR_ENTORN_APP);
         verify(jmsMessage).acknowledge();
     }
 
