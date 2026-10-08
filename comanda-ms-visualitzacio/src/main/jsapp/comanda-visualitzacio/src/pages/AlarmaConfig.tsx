@@ -1230,7 +1230,7 @@ const AlarmaConfig: React.FC<{
         ) : springFilterBuilder.eq('admin', true),
     );
 
-    return (<>
+    return (<Box sx={{ height: '100%', overflowY: 'auto', }}>
         <PageTitle title={t(($) => $.page.alarma.snackbar.title)} />
         <MuiDataGrid
             apiRef={apiRef}
@@ -1277,7 +1277,7 @@ const AlarmaConfig: React.FC<{
                 ))}
             </Box>
         )}
-    </>);
+    </Box>);
 }
 
 export default AlarmaConfig;
