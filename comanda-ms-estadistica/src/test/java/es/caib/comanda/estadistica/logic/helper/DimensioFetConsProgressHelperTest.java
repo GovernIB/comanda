@@ -18,6 +18,8 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -128,18 +130,14 @@ class DimensioFetConsProgressHelperTest {
     }
 
     @Test
-    @DisplayName("tryStart: quan encara no s'ha publicat cap progrés per a la dimensió en curs, republica 0/0 sense llançar excepció")
-    void tryStart_quanEncaraNoHiHaProgresPublicat_republica0de0() {
+    @DisplayName("tryStart: quan encara no s'ha publicat cap progrés per a la dimensió en curs, no republica cap event per evitar tancament prematur 0/0")
+    void tryStart_quanEncaraNoHiHaProgresPublicat_noRepublicaCapEvent() {
         dimensioFetConsProgressHelper.tryStart(7L);
 
-        dimensioFetConsProgressHelper.tryStart(7L);
+        boolean owner = dimensioFetConsProgressHelper.tryStart(7L);
 
-        ArgumentCaptor<ComandaSsePublishRequest> captor = ArgumentCaptor.forClass(ComandaSsePublishRequest.class);
-        verify(eventPublisher).publishEvent(captor.capture());
-        DimensioFetConsProgressHelper.Progress republished =
-            (DimensioFetConsProgressHelper.Progress) captor.getValue().getEvent().getPayload();
-        assertThat(republished.getProcessats()).isZero();
-        assertThat(republished.getTotal()).isZero();
+        assertThat(owner).isFalse();
+        verify(eventPublisher, never()).publishEvent(any());
     }
 
     @Test

@@ -121,6 +121,19 @@ describe('DimensioFetConsProgressDialog', () => {
         expect(onComplete).not.toHaveBeenCalled();
     });
 
+    it('DimensioFetConsProgressDialog_quanLaDimensioNoTeFetsATotal0_cridaOnCompleteSenseError', () => {
+        // Dimensió sense cap fet o base de dades buida: l'únic event que arribarà és (0 de 0),
+        // i cal que igualment es doni el procés per acabat sense quedar-se encallat.
+        const onComplete = vi.fn();
+        render(<DimensioFetConsProgressDialog open dimensioId={5} onComplete={onComplete} />);
+
+        act(() => {
+            lastListener?.({ type: 'dimensio.fetCons.progress', payload: { dimensioId: 5, processats: 0, total: 0 } });
+        });
+
+        expect(onComplete).toHaveBeenCalledWith(false);
+    });
+
     it('DimensioFetConsProgressDialog_quanArribaUnEventDErrorPelMateixId_cridaOnCompleteAmbError', () => {
         const onComplete = vi.fn();
         render(<DimensioFetConsProgressDialog open dimensioId={5} onComplete={onComplete} />);

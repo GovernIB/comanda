@@ -3,6 +3,7 @@ package es.caib.comanda.estadistica.logic.service;
 import com.turkraft.springfilter.FilterBuilder;
 import com.turkraft.springfilter.parser.Filter;
 import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesRestClient;
+import es.caib.comanda.estadistica.logic.helper.AbstractActionProgressHelper;
 import es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper;
 import es.caib.comanda.estadistica.logic.helper.DimensioFetConsProgressHelper;
 import es.caib.comanda.estadistica.logic.helper.EntitatResolverHelper;
@@ -199,10 +200,11 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
                         List<FetEntity> fetEntityList = fetRepository.findByEntornAppIdAddCons(entity.getEntornAppId(), entity.getCodi(), codiArrel);
                         int total = fetEntityList.size();
                         // Com a màxim ~20 notificacions de progrés, independentment de la mida de fetEntityList
-                        int progressStep = Math.max(1, total / 20);
-                        if (total > 0) {
-                            dimensioFetConsProgressHelper.publishProgress(entity.getId(), 0, total);
-                        }
+                        int progressStep = AbstractActionProgressHelper.calculateStep(total);
+                        // Publicam sempre l'estat inicial, encara que total sigui 0 (sense fets a actualitzar): és
+                        // l'únic event que la modal del frontend rebrà en aquest cas, i li cal per saber que el procés
+                        // ja ha acabat (vegeu DimensioFetConsProgressDialog, que hi completa amb total==0).
+                        dimensioFetConsProgressHelper.publishProgress(entity.getId(), 0, total);
                         int processats = 0;
                         for (FetEntity f : fetEntityList) {
                             String organValor = f.getDimensionsJson().get(entity.getCodi());
@@ -219,11 +221,18 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
                         }
                         if (!fetEntityList.isEmpty())
                             fetRepository.saveAll(fetEntityList);
-                    } catch (RuntimeException e) {
+                    } catch (Exception e) {
                         // Perquè qualsevol modal oberta (propietària o enganxada via tryStart) sàpiga que el
                         // procés real ha fallat i no es quedi esperant indefinidament un 100% que no arribarà mai.
                         dimensioFetConsProgressHelper.publishError(entity.getId());
-                        throw e;
+                        if (e instanceof RuntimeException) {
+                            throw (RuntimeException) e;
+                        }
+                        throw new ActionExecutionException(
+                            Dimensio.class,
+                            null,
+                            code,
+                            e.getMessage());
                     } finally {
                         dimensioFetConsProgressHelper.finish(entity.getId());
                     }

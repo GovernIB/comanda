@@ -17,6 +17,7 @@ import es.caib.comanda.estadistica.persist.repository.DimensioValorRepository;
 import es.caib.comanda.estadistica.persist.repository.FetRepository;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -62,6 +64,8 @@ class DimensioServiceImplTest {
     @Mock private UnitatsOrganitzativesRestClient unitatsOrganitzativesRestClient;
     @Mock private DimensioFetConsProgressHelper dimensioFetConsProgressHelper;
     @Mock private DashboardPermisosHelper dashboardPermisosHelper;
+    @Mock private I18nUtil i18nUtil;
+    @Mock private ApplicationContext applicationContext;
 
     @InjectMocks
     private DimensioServiceImpl dimensioService;
@@ -69,6 +73,10 @@ class DimensioServiceImplTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(dimensioService, "resourceEntityMappingHelper", resourceEntityMappingHelper);
+        ReflectionTestUtils.setField(I18nUtil.class, "applicationContext", applicationContext);
+        lenient().when(applicationContext.getBean(I18nUtil.class)).thenReturn(i18nUtil);
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(inv -> inv.getArgument(0));
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(inv -> inv.getArgument(0));
         lenient().when(unitatsOrganitzativesRestClient.getCodiArrel()).thenReturn("ARREL_TEST");
         lenient().when(dashboardPermisosHelper.buildEntornAppFilterForProperty(any(), any()))
                 .thenAnswer(inv -> inv.getArgument(0));
@@ -591,8 +599,9 @@ class DimensioServiceImplTest {
     }
 
     @Test
-    @DisplayName("FetConsActionExecutor: no publica cap progrés quan no hi ha fets per processar")
-    void fetConsActionExecutor_quanNoHiHaFets_llavorsNoPublicaProgres() {
+    @DisplayName("FetConsActionExecutor: publica l'estat inicial 0 de 0 quan no hi ha fets per processar, " +
+        "perquè la modal del frontend rebi la finalització immediata i no es quedi blocada")
+    void fetConsActionExecutor_quanNoHiHaFets_llavorsPublicaProgresInicial0de0() {
         // Arrange
         DimensioEntity entity = new DimensioEntity();
         entity.setId(7L);
@@ -609,7 +618,7 @@ class DimensioServiceImplTest {
         dimensioService.new FetConsActionExecutor().exec("FET_CONS", entity, null);
 
         // Assert
-        verify(dimensioFetConsProgressHelper, never()).publishProgress(any(), anyInt(), anyInt());
+        verify(dimensioFetConsProgressHelper).publishProgress(7L, 0, 0);
     }
 
     @Test

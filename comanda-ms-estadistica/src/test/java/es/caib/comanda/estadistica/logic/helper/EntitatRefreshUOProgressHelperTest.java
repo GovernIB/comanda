@@ -18,6 +18,8 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -99,6 +101,17 @@ class EntitatRefreshUOProgressHelperTest {
         boolean owner = entitatRefreshUOProgressHelper.tryStart(7L);
 
         assertThat(owner).isFalse();
+    }
+
+    @Test
+    @DisplayName("tryStart: quan encara no s'ha publicat cap progrés per a l'entitat en curs, no republica cap event per evitar tancament prematur 0/0")
+    void tryStart_quanEncaraNoHiHaProgresPublicat_noRepublicaCapEvent() {
+        entitatRefreshUOProgressHelper.tryStart(7L);
+
+        boolean owner = entitatRefreshUOProgressHelper.tryStart(7L);
+
+        assertThat(owner).isFalse();
+        verify(eventPublisher, never()).publishEvent(any());
     }
 
     @Test

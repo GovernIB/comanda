@@ -3,6 +3,7 @@ package es.caib.comanda.estadistica.logic.service;
 import es.caib.comanda.client.AclServiceClient;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesPlugin;
+import es.caib.comanda.estadistica.logic.helper.AbstractActionProgressHelper;
 import es.caib.comanda.estadistica.logic.helper.EntitatRefreshUOProgressHelper;
 import es.caib.comanda.estadistica.logic.helper.UnitatOrganitzativaHelper;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Entitat;
@@ -112,7 +113,7 @@ public class EntitatServiceImpl extends BaseMutableResourceService<Entitat, Long
                 List<UnitatOrganitzativaEntity> uoList = unitatsOrganitzativesPlugin.findAll(entity.getCodiDir3());
                 int total = uoList.size();
                 // Com a màxim ~20 notificacions de progrés, independentment de la mida de uoList
-                int progressStep = Math.max(1, total / 20);
+                int progressStep = AbstractActionProgressHelper.calculateStep(total);
                 // Publicam sempre l'estat inicial, encara que total sigui 0 (entitat sense unitats a Dir3): és
                 // l'únic event que la modal del frontend rebrà en aquest cas, i li cal per saber que el procés
                 // ja ha acabat (vegeu EntitatRefreshUOProgressDialog, que hi completa amb total==0).
