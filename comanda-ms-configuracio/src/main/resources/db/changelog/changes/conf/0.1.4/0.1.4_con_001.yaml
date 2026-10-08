@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: con-change-0.1.4-001
+      author: limit
+      comment: Afegir paràmetre per limitar el nombre màxim de resultats als selects
+      changes:
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "General"
+              - column:
+                  name: SUBGRUP
+                  value: "Configuració"
+              - column:
+                  name: TIPUS
+                  value: "NUMERIC"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.monitor.general.max.result.selects"
+              - column:
+                  name: NOM
+                  value: "Màxim de resultats als selectors"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Nombre màxim d'elements que es mostren als selectors. En canviar el valor, és necessari refrescar la pàgina."
+              - column:
+                  name: VALOR
+                  value: "20"
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 1

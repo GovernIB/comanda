@@ -16,6 +16,7 @@ import MuiThemeProvider from './components/MuiThemeProvider.tsx';
 import { HelmetProvider } from '@dr.pogodin/react-helmet';
 import AlarmsProvider from './components/AlarmsProvider.tsx';
 import { getAuthConfig, getEnvApiUrl, isAuthUrlPresent } from './util/envUtils.ts';
+import ParameterProvider from './components/ParameterProvider.tsx';
 
 dayjs.extend(duration);
 
@@ -37,18 +38,20 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 debug={import.meta.env.DEV ? true : undefined}
             >
                 <ResourceApiProvider apiUrl={getEnvApiUrl()} userSessionActive>
-                    <UserProvider>
-                        <SseProvider>
-                            <AlarmsProvider>
-                                <MuiThemeProvider>
-                                    <CssBaseline enableColorScheme />
-                                    <BrowserRouter basename={import.meta.env.BASE_URL}>
-                                        <App />
-                                    </BrowserRouter>
-                                </MuiThemeProvider>
-                            </AlarmsProvider>
-                        </SseProvider>
-                    </UserProvider>
+                    <ParameterProvider>
+                        <UserProvider>
+                            <SseProvider>
+                                <AlarmsProvider>
+                                    <MuiThemeProvider>
+                                        <CssBaseline enableColorScheme />
+                                        <BrowserRouter basename={import.meta.env.BASE_URL}>
+                                            <App />
+                                        </BrowserRouter>
+                                    </MuiThemeProvider>
+                                </AlarmsProvider>
+                            </SseProvider>
+                        </UserProvider>
+                    </ParameterProvider>
                 </ResourceApiProvider>
             </AuthProvider>
         </HelmetProvider>

@@ -218,7 +218,7 @@ const AppEntornForm: React.FC = () => {
     return (
         <><Grid container spacing={2}>
             <Grid size={9}>
-                <FormField name="entorn" disabled={data?.id != null} readOnly={data?.id != null} filter={entornFilter} optionsUnpaged/>
+                <FormField name="entorn" disabled={data?.id != null} readOnly={data?.id != null} filter={entornFilter} />
             </Grid>
             <Grid size={3}>
                 <FormField name="activa" />

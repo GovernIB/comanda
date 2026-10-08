@@ -1774,6 +1774,9 @@ const translationEn: translationResourcesType = {
             title: "Permissions",
             resourceTitle: "permission"
         },
+        appFormFieldReference: {
+            mostrarTots: 'Show all...',
+        },
     },
     form: {
         field: {

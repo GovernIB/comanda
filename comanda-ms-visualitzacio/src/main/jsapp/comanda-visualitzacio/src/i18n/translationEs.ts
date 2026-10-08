@@ -1774,6 +1774,9 @@ const translationEs: translationResourcesType = {
             title: "Permisos",
             resourceTitle: "permiso"
         },
+        appFormFieldReference: {
+            mostrarTots: 'Mostrar todos...',
+        },
     },
     form: {
         field: {

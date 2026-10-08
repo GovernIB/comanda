@@ -215,7 +215,7 @@ const SalutEntornAppFilterForm: React.FC = () => {
 
     return <Grid container spacing={1} sx={{ mt: 1 }}>
         <Grid size={12}>
-            <FormField name="app" componentProps={{ size: 'small', }} multiple optionsUnpaged
+            <FormField name="app" componentProps={{ size: 'small', }} multiple
                         namedQueries={['permis_salut']}
                         advancedSearchColumns={[{
                             field: 'codi',
@@ -234,7 +234,7 @@ const SalutEntornAppFilterForm: React.FC = () => {
             />
         </Grid>
         <Grid size={12}>
-            <FormField name="entorn" componentProps={{ size: 'small', }} multiple optionsUnpaged
+            <FormField name="entorn" componentProps={{ size: 'small', }} multiple
                         advancedSearchColumns={[{
                             field: 'codi',
                             flex: 0.5,

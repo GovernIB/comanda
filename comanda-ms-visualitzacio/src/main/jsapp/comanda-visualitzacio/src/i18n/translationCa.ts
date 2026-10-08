@@ -1774,6 +1774,9 @@ const translationCa = {
             title: "Permisos",
             resourceTitle: "permís"
         },
+        appFormFieldReference: {
+            mostrarTots: 'Mostrar tots...',
+        },
     },
     form: {
         field: {
