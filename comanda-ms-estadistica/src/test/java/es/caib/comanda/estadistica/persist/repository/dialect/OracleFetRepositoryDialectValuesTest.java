@@ -1,8 +1,10 @@
 package es.caib.comanda.estadistica.persist.repository.dialect;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.oracle.OracleContainer;
@@ -24,16 +26,20 @@ class OracleFetRepositoryDialectValuesTest extends AbstractFetRepositoryDialectV
                     .withTimes(1)
                     .withStartupTimeout(Duration.ofMinutes(5)));
 
+    private static HikariDataSource dataSource;
     private static NamedParameterJdbcTemplate jdbcTemplate;
     private static final OracleFetRepositoryDialect DIALECT = new OracleFetRepositoryDialect();
 
     @BeforeAll
     static void createSchema() {
-        SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
-        dataSource.setDriverClass(oracle.jdbc.OracleDriver.class);
-        dataSource.setUrl(ORACLE.getJdbcUrl());
-        dataSource.setUsername(ORACLE.getUsername());
-        dataSource.setPassword(ORACLE.getPassword());
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(ORACLE.getJdbcUrl());
+        config.setUsername(ORACLE.getUsername());
+        config.setPassword(ORACLE.getPassword());
+        config.setDriverClassName("oracle.jdbc.OracleDriver");
+        config.setMaximumPoolSize(3);
+        config.setMinimumIdle(1);
+        dataSource = new HikariDataSource(config);
         jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
 
         // Oracle no té el tipus BIGINT (ORA-00902); NUMBER(19) és l'equivalent.
@@ -54,6 +60,13 @@ class OracleFetRepositoryDialectValuesTest extends AbstractFetRepositoryDialectV
                         "dimensions_json VARCHAR2(4000), " +
                         "indicadors_json VARCHAR2(4000), " +
                         "entorn_app_id NUMBER(19) NOT NULL)");
+    }
+
+    @AfterAll
+    static void closeDataSource() {
+        if (dataSource != null) {
+            dataSource.close();
+        }
     }
 
     @Override

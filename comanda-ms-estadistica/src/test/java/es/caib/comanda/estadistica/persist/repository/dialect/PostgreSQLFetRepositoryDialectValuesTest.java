@@ -1,8 +1,10 @@
 package es.caib.comanda.estadistica.persist.repository.dialect;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -19,16 +21,20 @@ class PostgreSQLFetRepositoryDialectValuesTest extends AbstractFetRepositoryDial
     @Container
     private static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
 
+    private static HikariDataSource dataSource;
     private static NamedParameterJdbcTemplate jdbcTemplate;
     private static final PostgreSQLFetRepositoryDialect DIALECT = new PostgreSQLFetRepositoryDialect();
 
     @BeforeAll
     static void createSchema() {
-        SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
-        dataSource.setDriverClass(org.postgresql.Driver.class);
-        dataSource.setUrl(POSTGRES.getJdbcUrl());
-        dataSource.setUsername(POSTGRES.getUsername());
-        dataSource.setPassword(POSTGRES.getPassword());
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(POSTGRES.getJdbcUrl());
+        config.setUsername(POSTGRES.getUsername());
+        config.setPassword(POSTGRES.getPassword());
+        config.setDriverClassName("org.postgresql.Driver");
+        config.setMaximumPoolSize(3);
+        config.setMinimumIdle(1);
+        dataSource = new HikariDataSource(config);
         jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
 
         jdbcTemplate.getJdbcTemplate().execute(
@@ -48,6 +54,13 @@ class PostgreSQLFetRepositoryDialectValuesTest extends AbstractFetRepositoryDial
                         "dimensions_json VARCHAR(4000), " +
                         "indicadors_json VARCHAR(4000), " +
                         "entorn_app_id BIGINT NOT NULL)");
+    }
+
+    @AfterAll
+    static void closeDataSource() {
+        if (dataSource != null) {
+            dataSource.close();
+        }
     }
 
     @Override
