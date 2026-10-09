@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { 
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, 
+import {
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
     Paper, TableSortLabel, Box, LinearProgress, Typography, IconButton,
     CircularProgress
 } from '@mui/material';
@@ -12,7 +12,7 @@ import { EntornAppModel } from '../../types/app.model.tsx';
 import { calcularPercentatgeUs, getColorForPercentage } from '../../util/recursosUtils';
 
 type RecursRowData = {
-    id: string; 
+    id: string;
     appName: string;
     entornName: string;
     memoriaTotal: string;
@@ -26,7 +26,7 @@ type RecursRowData = {
 type Order = 'asc' | 'desc';
 
 interface RecursosEntornsProps {
-    salutGroups: any[]; 
+    salutGroups: any[];
     loading: boolean;
 }
 
@@ -34,7 +34,7 @@ const RecursosEntorns: React.FC<RecursosEntornsProps> = ({ salutGroups, loading 
     const { t } = useTranslation();
     const navigate = useNavigate();
     const [orderBy, setOrderBy] = useState<keyof RecursRowData>('memoriaPercent');
-    const [order, setOrder] = useState<Order>('desc'); 
+    const [order, setOrder] = useState<Order>('desc');
 
     const rows = useMemo<RecursRowData[]>(() => {
         const flattened: RecursRowData[] = [];
@@ -86,7 +86,7 @@ const RecursosEntorns: React.FC<RecursosEntornsProps> = ({ salutGroups, loading 
     }
 
     return (
-        <TableContainer component={Paper} sx={{ mt: 2, mx: 2 }}>
+        <TableContainer component={Paper}>
             <Table size="small" aria-label="taula de recursos">
                 <TableHead sx={{ backgroundColor: 'action.hover' }}>
                     <TableRow>
@@ -146,11 +146,11 @@ const RecursosEntorns: React.FC<RecursosEntornsProps> = ({ salutGroups, loading 
                             <TableCell>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <Box sx={{ width: '100%' }}>
-                                        <LinearProgress 
-                                            variant="determinate" 
-                                            color={getColorForPercentage(row.memoriaPercent)} 
-                                            value={row.memoriaPercent} 
-                                            sx={{ height: 8, borderRadius: '4px' }} 
+                                        <LinearProgress
+                                            variant="determinate"
+                                            color={getColorForPercentage(row.memoriaPercent)}
+                                            value={row.memoriaPercent}
+                                            sx={{ height: 8, borderRadius: '4px' }}
                                         />
                                     </Box>
                                     <Typography variant="body2" sx={{ minWidth: 45, textAlign: 'right' }}>
@@ -164,11 +164,11 @@ const RecursosEntorns: React.FC<RecursosEntornsProps> = ({ salutGroups, loading 
                             <TableCell>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <Box sx={{ width: '100%' }}>
-                                        <LinearProgress 
-                                            variant="determinate" 
-                                            color={getColorForPercentage(row.discPercent)} 
-                                            value={row.discPercent} 
-                                            sx={{ height: 8, borderRadius: '4px' }} 
+                                        <LinearProgress
+                                            variant="determinate"
+                                            color={getColorForPercentage(row.discPercent)}
+                                            value={row.discPercent}
+                                            sx={{ height: 8, borderRadius: '4px' }}
                                         />
                                     </Box>
                                     <Typography variant="body2" sx={{ minWidth: 45, textAlign: 'right' }}>
@@ -177,11 +177,11 @@ const RecursosEntorns: React.FC<RecursosEntornsProps> = ({ salutGroups, loading 
                                 </Box>
                             </TableCell>
                             <TableCell align="center">
-                                <IconButton 
-                                    size="small" 
+                                <IconButton
+                                    size="small"
                                     color="primary"
                                     title={t($ => $.page.salut.recursos.columns.detallsTitle)}
-                                    onClick={() => navigate(`appinfo/${row.id}`)} 
+                                    onClick={() => navigate(`appinfo/${row.id}`)}
                                 >
                                     <Icon fontSize="small">visibility</Icon>
                                 </IconButton>
