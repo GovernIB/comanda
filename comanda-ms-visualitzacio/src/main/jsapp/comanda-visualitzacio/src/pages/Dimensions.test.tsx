@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => ({
     findMock: vi.fn(),
     showMock: vi.fn(), // Nou: per mockejar l'obertura del diàleg
     artifactActionMock: vi.fn(),
+    indicadorArtifactActionMock: vi.fn(),
+    isUserAdminMock: vi.fn(() => true),
     temporalMessageShowMock: vi.fn(),
     messageDialogShowMock: vi.fn(),
     formContextData: { tipus: undefined as string | undefined },
@@ -21,6 +23,7 @@ const mocks = vi.hoisted(() => ({
                         refreshCons: {
                             label: 'FET_CONS',
                             ok: 'Consergeria actualitzada',
+                            error: 'Error actualitzant la consergeria',
                             title: 'Voleu actualitzar la consergeria?',
                         },
                         changeTipus: {
@@ -39,6 +42,9 @@ const mocks = vi.hoisted(() => ({
                             label: 'UPDATE_ENTITATS',
                             ok: 'Entitats actualitzades',
                         },
+                        sincronitzarCataleg: 'Sincronitzar catàleg',
+                        sincronitzarCatalegConfirm: 'Segur que voleu sincronitzar?',
+                        sincronitzarCatalegSuccess: 'Catàleg sincronitzat correctament',
                     },
                     column: {
                         entornApp: 'Entorn app',
@@ -65,12 +71,18 @@ vi.mock('reactlib', () => ({
                       toolbarAdditionalRow,
                       rowAdditionalActions,
                       columns,
+                      persistentStateActive,
+                      persistentStateKey,
+                      persistentStateClearPageSortPropsOnTopLevelRouteChange,
                   }: {
         title: string;
         filter?: string;
         toolbarAdditionalRow?: React.ReactNode;
         rowAdditionalActions?: Array<{ label: string; linkTo?: string; onClick?: (id: string, row: any) => void; showInMenu?: boolean; hidden?: boolean | ((row: any) => boolean) }>;
         columns: Array<{ field: string }>;
+        persistentStateActive?: boolean;
+        persistentStateKey?: string;
+        persistentStateClearPageSortPropsOnTopLevelRouteChange?: boolean;
     }) => {
         // Simulem una fila per passar-la als onClick i poder provar lògica que depèn de 'row'
         const mockRow = { id: '15', entornAppId: 99, tipus: mocks.mockRowTipus };
@@ -80,6 +92,12 @@ vi.mock('reactlib', () => ({
                 <div data-testid="filter-value">{filter}</div>
                 <div data-testid="columns">{columns.map((column) => column.field).join(',')}</div>
                 <div data-testid="row-link">{rowAdditionalActions?.find(a => a.linkTo)?.linkTo}</div>
+                <div
+                    data-testid="datagrid-persistent-state"
+                    data-active={String(!!persistentStateActive)}
+                    data-key={persistentStateKey ?? ''}
+                    data-clear-on-top-level={String(!!persistentStateClearPageSortPropsOnTopLevelRouteChange)}
+                />
                 <div>{toolbarAdditionalRow}</div>
                 {rowAdditionalActions?.filter(a => a.onClick).map((action) => (
                     <button
@@ -95,7 +113,34 @@ vi.mock('reactlib', () => ({
             </section>
         )
     },
-    MuiFilter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    MuiFilter: ({
+                    children,
+                    persistentStateActive,
+                    persistentStateKey,
+                    springFilterBuilder,
+                }: {
+        children: React.ReactNode;
+        persistentStateActive?: boolean;
+        persistentStateKey?: string;
+        springFilterBuilder?: (data: any) => string;
+    }) => (
+        <div>
+            <div
+                data-testid="filter-persistent-state"
+                data-active={String(!!persistentStateActive)}
+                data-key={persistentStateKey ?? ''}
+            />
+            {children}
+            {springFilterBuilder && (
+                <button
+                    data-testid="simulate-filter-entornapp"
+                    onClick={() => springFilterBuilder({ entornApp: { id: 9 } })}
+                >
+                    Simular EntornApp
+                </button>
+            )}
+        </div>
+    ),
     FormField: ({ name, label, optionsRequest }: { name: string; label?: string; optionsRequest?: (q: string) => Promise<{ options: Array<{ description?: string }> }> }) => (
         <div>
             <span data-testid={`field-${name}`}>{label ?? name}</span>
@@ -146,11 +191,20 @@ vi.mock('reactlib', () => ({
                 artifactAction: mocks.artifactActionMock,
             };
         }
+        if (resourceName === 'indicador') {
+            return {
+                artifactAction: mocks.indicadorArtifactActionMock,
+            };
+        }
         return {
             isReady: true,
             find: mocks.findMock,
         };
     },
+}));
+
+vi.mock('../components/UserContext.ts', () => ({
+    useIsUserAdmin: () => mocks.isUserAdminMock(),
 }));
 
 vi.mock('../components/FormActionDialog.tsx', () => ({
@@ -168,6 +222,15 @@ vi.mock('../components/PageTitle.tsx', () => ({
     default: ({ title }: { title: string }) => <div data-testid="page-title">{title}</div>,
 }));
 
+vi.mock('../components/DimensioFetConsProgressDialog.tsx', () => ({
+    default: ({ open, dimensioId, onComplete }: { open: boolean; dimensioId?: any; onComplete?: (error: boolean) => void }) => (
+        <div data-testid="fet-cons-progress-dialog" data-open={String(!!open)} data-dimensio-id={String(dimensioId ?? '')}>
+            <button onClick={() => onComplete?.(false)}>Simula onComplete èxit</button>
+            <button onClick={() => onComplete?.(true)}>Simula onComplete error</button>
+        </div>
+    ),
+}));
+
 describe('Dimensions', () => {
     beforeEach(() => {
         vi.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -181,6 +244,7 @@ describe('Dimensions', () => {
         document.body.removeAttribute('data-dimension-options');
         mocks.formContextData.tipus = undefined;
         mocks.mockRowTipus = 'ORGAN_GESTOR';
+        mocks.isUserAdminMock.mockReturnValue(true);
     });
 
     it('Dimensions_quanEsRenderitza_mostraElGridElFiltreIElLinkAlsValors', async () => {
@@ -196,6 +260,23 @@ describe('Dimensions', () => {
         // Corregit: s'ha afegit 'tipus' a les columnes esperades
         expect(screen.getByTestId('columns')).toHaveTextContent('codi,nom,descripcio,tipus');
         expect(screen.getByTestId('row-link')).toHaveTextContent('valor/{{id}}');
+    });
+
+    it('Dimensions_quanEsRenderitza_activaLaPersistenciaDEstatDelFiltreIDeLaGraella', async () => {
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(mocks.findMock).toHaveBeenCalled();
+        });
+
+        const filterPersistentState = screen.getByTestId('filter-persistent-state');
+        expect(filterPersistentState).toHaveAttribute('data-active', 'true');
+        expect(filterPersistentState).toHaveAttribute('data-key', 'dimensioFilter');
+
+        const gridPersistentState = screen.getByTestId('datagrid-persistent-state');
+        expect(gridPersistentState).toHaveAttribute('data-active', 'true');
+        expect(gridPersistentState).toHaveAttribute('data-key', 'dimensio');
+        expect(gridPersistentState).toHaveAttribute('data-clear-on-top-level', 'true');
     });
 
     it('Dimensions_quanEsCarreguenLesOpcionsDelFiltre_utilitzaElsEntornsRecuperats', async () => {
@@ -224,7 +305,7 @@ describe('Dimensions', () => {
         expect(mocks.clearMock).toHaveBeenCalled();
     });
 
-    it('Dimensions_quanEsPremAccioFET_CONS_cridaApiActionIMostraMissatgeExit', async () => {
+    it('Dimensions_quanEsPremAccioFET_CONS_cridaApiAction', async () => {
         mocks.artifactActionMock.mockResolvedValue({});
 
         render(<Dimensions />);
@@ -239,8 +320,124 @@ describe('Dimensions', () => {
             expect(mocks.artifactActionMock).toHaveBeenCalledWith('15', {
                 code: 'FET_CONS',
             });
-            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Consergeria actualitzada', 'success');
         });
+    });
+
+    it('Dimensions_quanEsPremAccioFET_CONS_obreLaModalDeProgresIEsMantéObertaEncaraQueLaCridaHttpResolgui', async () => {
+        // La resolució de la crida HTTP, per si sola, no ha de tancar la modal: qui pot no fer cap feina real
+        // (perquè ja hi ha una execució en curs) rebria una resposta ràpida sense que el procés real hagi acabat.
+        // Només onComplete (senyal SSE real) ha de tancar-la.
+        let resolveAction: (value: any) => void = () => undefined;
+        mocks.artifactActionMock.mockImplementation(() => new Promise((resolve) => { resolveAction = resolve; }));
+
+        render(<Dimensions />);
+
+        expect(screen.getByTestId('fet-cons-progress-dialog')).toHaveAttribute('data-open', 'false');
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'FET_CONS' })).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'FET_CONS' }));
+
+        await waitFor(() => {
+            const dialog = screen.getByTestId('fet-cons-progress-dialog');
+            expect(dialog).toHaveAttribute('data-open', 'true');
+            expect(dialog).toHaveAttribute('data-dimensio-id', '15');
+        });
+
+        resolveAction({});
+
+        await waitFor(() => {
+            expect(mocks.artifactActionMock).toHaveBeenCalled();
+        });
+        expect(screen.getByTestId('fet-cons-progress-dialog')).toHaveAttribute('data-open', 'true');
+    });
+
+    it('Dimensions_quanLaModalCridaOnCompleteSenseError_tancaLaModalIMostraMissatgeExit', async () => {
+        mocks.artifactActionMock.mockResolvedValue({});
+
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'FET_CONS' })).toBeInTheDocument();
+        });
+        fireEvent.click(screen.getByRole('button', { name: 'FET_CONS' }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId('fet-cons-progress-dialog')).toHaveAttribute('data-open', 'true');
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Simula onComplete èxit' }));
+
+        expect(screen.getByTestId('fet-cons-progress-dialog')).toHaveAttribute('data-open', 'false');
+        expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Consergeria actualitzada', 'success');
+    });
+
+    it('Dimensions_quanLaModalCridaOnCompleteAmbError_tancaLaModalIMostraMissatgeError', async () => {
+        mocks.artifactActionMock.mockResolvedValue({});
+
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'FET_CONS' })).toBeInTheDocument();
+        });
+        fireEvent.click(screen.getByRole('button', { name: 'FET_CONS' }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId('fet-cons-progress-dialog')).toHaveAttribute('data-open', 'true');
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Simula onComplete error' }));
+
+        expect(screen.getByTestId('fet-cons-progress-dialog')).toHaveAttribute('data-open', 'false');
+        expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Error actualitzant la consergeria', 'error');
+    });
+
+    it('Dimensions_quanLaCridaHttpFallaAbansQueArribiCapOnComplete_tancaLaModalIMostraLErrorHttp', async () => {
+        // Cobreix el cas d'una fallada abans que arrenqui cap procés real (p.ex. error de xarxa o de
+        // permisos): mai arribarà cap event SSE, així que la crida HTTP és l'únic senyal disponible.
+        mocks.artifactActionMock.mockRejectedValue({ message: 'Error de xarxa' });
+
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'FET_CONS' })).toBeInTheDocument();
+        });
+        fireEvent.click(screen.getByRole('button', { name: 'FET_CONS' }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId('fet-cons-progress-dialog')).toHaveAttribute('data-open', 'false');
+        });
+        expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Error de xarxa', 'error');
+    });
+
+    it('Dimensions_quanLaCridaHttpFallaDespresQueOnCompleteJaHaTancatLaModal_noDuplicaElMissatge', async () => {
+        // Cas de l'execució propietària: onComplete (SSE) i el rebuig de la seva pròpia crida HTTP arriben
+        // gairebé alhora pel mateix error real; només s'ha de mostrar un missatge, no dos.
+        let rejectAction: (reason: any) => void = () => undefined;
+        mocks.artifactActionMock.mockImplementation(() => new Promise((_resolve, reject) => { rejectAction = reject; }));
+
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'FET_CONS' })).toBeInTheDocument();
+        });
+        fireEvent.click(screen.getByRole('button', { name: 'FET_CONS' }));
+
+        await waitFor(() => {
+            expect(screen.getByTestId('fet-cons-progress-dialog')).toHaveAttribute('data-open', 'true');
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Simula onComplete error' }));
+        expect(mocks.temporalMessageShowMock).toHaveBeenCalledTimes(1);
+
+        rejectAction({ message: 'Error de xarxa' });
+
+        await waitFor(() => {
+            expect(mocks.artifactActionMock).toHaveBeenCalled();
+        });
+        expect(mocks.temporalMessageShowMock).toHaveBeenCalledTimes(1);
     });
 
     it('Dimensions_quanEsPremAccioCanviarTipus_obreElDialogAmbLesDadesActualsPrecarregades', async () => {
@@ -384,5 +581,46 @@ describe('Dimensions', () => {
         });
 
         expect(screen.queryByTestId('field-entitatValorTipus')).not.toBeInTheDocument();
+    });
+
+    it('Dimensions_quanEsAdminIEntornAppSeleccionat_executaSincronitzarCatalegAlConfirmar', async () => {
+        mocks.messageDialogShowMock.mockResolvedValue(true);
+        mocks.indicadorArtifactActionMock.mockResolvedValue({ success: true, message: 'Catàleg sincronitzat' });
+
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(mocks.findMock).toHaveBeenCalled();
+        });
+
+        const syncButton = screen.getByTitle('Sincronitzar catàleg');
+        expect(syncButton).toBeInTheDocument();
+        expect(syncButton).toBeDisabled();
+
+        fireEvent.click(screen.getByTestId('simulate-filter-entornapp'));
+        expect(syncButton).toBeEnabled();
+
+        fireEvent.click(syncButton);
+
+        await waitFor(() => {
+            expect(mocks.messageDialogShowMock).toHaveBeenCalled();
+            expect(mocks.indicadorArtifactActionMock).toHaveBeenCalledWith(null, {
+                code: 'sincronitzar_cataleg',
+                data: { entornAppId: 9 },
+            });
+            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Catàleg sincronitzat', 'success');
+        });
+    });
+
+    it('Dimensions_quanNoEsAdmin_noMostraBotoSincronitzarCataleg', async () => {
+        mocks.isUserAdminMock.mockReturnValue(false);
+
+        render(<Dimensions />);
+
+        await waitFor(() => {
+            expect(mocks.findMock).toHaveBeenCalled();
+        });
+
+        expect(screen.queryByTitle('Sincronitzar catàleg')).not.toBeInTheDocument();
     });
 });

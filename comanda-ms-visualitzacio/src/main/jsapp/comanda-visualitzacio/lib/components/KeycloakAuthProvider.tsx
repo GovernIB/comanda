@@ -4,6 +4,10 @@ import useLogConsole, { LogConsoleType } from '../util/useLogConsole';
 import AuthContext, { AuthConfig } from './AuthContext';
 
 const LOG_PREFIX = '[KAUTH]';
+// Per defecte, cada quant temps forçam una renovació del token mentre la finestra estigui oberta i autenticada
+// (vegeu el useEffect de manteniment de sessió a AuthProvider). 5 minuts és prudencialment curt respecte als
+// "SSO Session Idle" habituals (sovint 15-30 min), per evitar que la sessió es doni per inactiva a Keycloak.
+const DEFAULT_SESSION_KEEPALIVE_INTERVAL_MS = 5 * 60 * 1000;
 
 type KeycloakAuthProviderProps = React.PropsWithChildren & {
     /** La configuració necessària per a crear la instància del Keycloak */
@@ -16,12 +20,23 @@ type KeycloakAuthProviderProps = React.PropsWithChildren & {
     forceCheckSso?: true;
     /**
      * URL (relativa o absoluta) d'una pàgina estàtica mínima (vegeu public/silent-check-sso.html) que confina la
-     * comprovació periòdica de la sessió SSO (checkLoginIframe, per defecte cada 5 s) a un iframe ocult. Sense
-     * això, quan aquesta comprovació detecta la sessió com a "canviada", keycloak-js fa un redirect de tota la
-     * finestra cap a l'endpoint /auth i tornada, que es percep com un refresc de la interfície sense interacció
-     * de l'usuari. Molt recomanable configurar-ho sempre que s'usi 'check-sso'.
+     * comprovació SSO inicial (feta durant `init()` quan s'usa 'check-sso') a un iframe ocult, evitant que aquesta
+     * comprovació puntual faci un redirect de tota la finestra cap a l'endpoint /auth i tornada. Molt recomanable
+     * configurar-ho sempre que s'usi 'check-sso'.
+     *
+     * @warning Això NO evita el refresc de tota la interfície causat per checkLoginIframe (vegeu més avall):
+     * és una comprovació diferent, feta només una vegada a l'inici.
      */
     silentCheckSsoRedirectUri?: string;
+    /**
+     * Interval (en ms) amb què es força una renovació del token mentre l'aplicació estigui oberta i autenticada,
+     * encara que l'access token vigent no hagi caducat (vegeu el comentari de DEFAULT_SESSION_KEEPALIVE_INTERVAL_MS).
+     * Sense això, si l'"Access Token Lifespan" del realm és igual o més llarg que el "SSO Session Idle", pot passar
+     * que no es faci cap petició a Keycloak durant tot aquest temps: la sessió es dona per inactiva i caduca, i la
+     * següent renovació (a onTokenExpired) falla amb un redirect complet de finestra (pèrdua de l'estat de la UI
+     * no persistit) encara que l'usuari hagi tingut la pantalla oberta tota l'estona.
+     */
+    sessionKeepAliveIntervalMs?: number;
     /** Indica si s'han d'imprimir a la consola missatges de depuració */
     debug?: true;
 };
@@ -44,6 +59,16 @@ const kcInit = async (
             // silenci silentCheckSsoRedirectUri a 'false' i torna a caure en el redirect de finestra
             // completa que precisament volem evitar.
             silentCheckSsoFallback: silentCheckSsoRedirectUri ? false : undefined,
+            // Per defecte keycloak-js comprova cada 5 s (checkLoginIframe) si la sessió SSO ha "canviat" mitjançant
+            // un iframe ocult. Aquesta comprovació és poc fiable (falsos positius per rotació normal de l'estat de
+            // la sessió, bloqueig de cookies de tercers...) i, quan detecta un "canvi", crida internament
+            // kc.clearToken(), que -amb onLoad 'login-required'- fa un kc.login() immediat, és a dir, un redirect
+            // de tota la finestra cap a l'endpoint /auth i tornada. Com que no hi ha cap interacció de l'usuari,
+            // això es percep com un "refresc" periòdic i espontani de tota la interfície, amb la conseqüent pèrdua
+            // de qualsevol estat no persistit (filtres, pàgina, mida de pàgina, amplada/ordre de columnes...).
+            // El refresc del token ja el gestiona onTokenExpired/updateToken() més avall, així que no necessitam
+            // aquesta comprovació addicional.
+            checkLoginIframe: false,
             enableLogging: debug,
         });
         debug && logConsole.debug('Initialized', '(isAuthenticated=' + isAuthenticated + ')');
@@ -123,7 +148,16 @@ const kcNewInstance = (
 };
 
 export const AuthProvider = (props: KeycloakAuthProviderProps) => {
-    const { config, mandatory, offlineAccess, forceCheckSso, silentCheckSsoRedirectUri, debug, children } = props;
+    const {
+        config,
+        mandatory,
+        offlineAccess,
+        forceCheckSso,
+        silentCheckSsoRedirectUri,
+        sessionKeepAliveIntervalMs,
+        debug,
+        children,
+    } = props;
     const logConsole = useLogConsole(LOG_PREFIX);
     const [isLoading, setIsLoading] = React.useState<boolean>(true);
     const [isAuthenticated, setIsAuthenticated] = React.useState<boolean>(false);
@@ -154,6 +188,19 @@ export const AuthProvider = (props: KeycloakAuthProviderProps) => {
             keycloakRef.current?.login();
         }
     }, [forceCheckSso, isLoading, mandatory, isAuthenticated]);
+    React.useEffect(() => {
+        if (!isAuthenticated) {
+            return;
+        }
+        const intervalMs = sessionKeepAliveIntervalMs ?? DEFAULT_SESSION_KEEPALIVE_INTERVAL_MS;
+        const intervalId = setInterval(() => {
+            debug && logConsole.debug('Manteniment de sessió: forçant renovació periòdica del token');
+            keycloakRef.current?.updateToken(-1)?.catch((error) => {
+                logConsole.error('Manteniment de sessió: no s\'ha pogut renovar el token', error);
+            });
+        }, intervalMs);
+        return () => clearInterval(intervalId);
+    }, [isAuthenticated, sessionKeepAliveIntervalMs, debug, logConsole]);
     const signIn = isLoading
         ? undefined
         : () => {

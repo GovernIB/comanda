@@ -51,10 +51,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Stream;
@@ -81,6 +85,8 @@ class ConsultaEstadisticaHelperTest {
     @Mock private DashboardSeguretatHelper dashboardSeguretatHelper;
     @Mock private OrganitzativaTreeHelper organitzativaTreeHelper;
     @Mock private es.caib.comanda.ms.logic.helper.AuthenticationHelper authenticationHelper;
+    @Mock private es.caib.comanda.ms.logic.intf.util.I18nUtil i18nUtil;
+    @Mock private org.springframework.context.ApplicationContext applicationContext;
 
     @InjectMocks
     private ConsultaEstadisticaHelper consultaEstadisticaHelper;
@@ -119,6 +125,15 @@ class ConsultaEstadisticaHelperTest {
         lenient().when(atributsVisualsHelper.getAtributsVisuals(any(DashboardItemEntity.class))).thenReturn(null);
         lenient().when(atributsVisualsHelper.getAtributsVisuals(any(EstadisticaWidgetEntity.class))).thenReturn(null);
         lenient().when(dashboardSeguretatHelper.resoldre(any())).thenReturn(SeguretatDadesResultat.builder().exempt(true).build());
+
+        ReflectionTestUtils.setField(es.caib.comanda.ms.logic.intf.util.I18nUtil.class, "applicationContext", applicationContext);
+        lenient().when(applicationContext.getBean(es.caib.comanda.ms.logic.intf.util.I18nUtil.class)).thenReturn(i18nUtil);
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(inv -> inv.getArgument(0));
+        lenient().when(i18nUtil.getI18nMessage(any(), any())).thenAnswer(inv -> inv.getArgument(0));
+        lenient().when(i18nUtil.getI18nMessage(eq("es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper.widgetDosIndicadorsSenseMaxim")))
+            .thenReturn("El widget DOS_INDICADORS no té indicador de màxim configurat");
+        lenient().when(i18nUtil.getI18nMessage(eq("es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper.entornNoTrobat"), any()))
+            .thenAnswer(inv -> "No s'ha trobat l'entorn amb identificador " + (inv.getArguments().length > 1 ? inv.getArgument(1) : ""));
     }
 
     // ========================================================================
@@ -289,6 +304,25 @@ class ConsultaEstadisticaHelperTest {
     }
 
     @Test
+    @DisplayName("getDadesWidget: participa en la transacció del cridador i mai n'obre una de nova (REQUIRES_NEW esgotaria el pool de connexions)")
+    void getDadesWidget_participaEnLaTransaccioDelCridador() throws NoSuchMethodException {
+        Method method = ConsultaEstadisticaHelper.class.getMethod(
+            "getDadesWidget", DashboardItemEntity.class, boolean.class, DashboardFiltreSeleccio.class);
+
+        Transactional transactional = method.getAnnotation(Transactional.class);
+
+        assertThat(transactional).isNotNull();
+        // REQUIRES_NEW aquí suspèn la transacció de BaseReadonlyResourceService.artifactReportGenerateData
+        // sense alliberar-ne la connexió JDBC, de manera que cada petició de widget en retindria dues alhora.
+        // Com que el frontend demana tots els widgets en paral·lel, amb prou widgets concurrents totes les
+        // connexions del pool queden retingudes per transaccions exteriors que esperen una segona connexió
+        // que ja no pot alliberar ningú: interbloqueig del pool i timeouts en obrir el dashboard.
+        assertThat(transactional.propagation()).isEqualTo(Propagation.REQUIRED);
+        assertThat(transactional.readOnly()).isTrue();
+        assertThat(method.getAnnotation(Cacheable.class)).isNotNull();
+    }
+
+    @Test
     @DisplayName("getEstadistiquesPeriodeAmbDimensions: delega a getEstadistiquesPeriode quan dimensions és null o buit")
     void getEstadistiquesPeriodeAmbDimensions_quanDimensionsBuit_delegaAMetodeBase() {
         Long entornAppId = 1L;
@@ -400,6 +434,7 @@ class ConsultaEstadisticaHelperTest {
         ReflectionTestUtils.setField(indicadorTaula, "indicador", new IndicadorEntity());
         widget.setColumnes(Collections.singletonList(indicadorTaula));
         widget.setTitolAgrupament("titol_agrupament");
+        widget.setDescripcio("Descripció de la taula");
         dashboardItem.setWidget(widget);
 
         DadesComunsWidgetConsulta dadesComuns = DadesComunsWidgetConsulta.builder()
@@ -427,6 +462,7 @@ class ConsultaEstadisticaHelperTest {
         assertThat(result).isNotNull();
         InformeWidgetTaulaItem taulaItem = (InformeWidgetTaulaItem) result;
         assertThat(taulaItem.getFiles().get(0).get("agrupacio")).isEqualTo("Nom Real");
+        assertThat(taulaItem.getDescripcio()).isEqualTo("Descripció de la taula");
         verify(unitatOrganitzativaRepository).findByCodiIn(anyList());
     }
 
@@ -1537,5 +1573,82 @@ class ConsultaEstadisticaHelperTest {
         List<Map<String, String>> result = ConsultaEstadisticaHelper.applyFilesFilterSortLimit(files, widget);
 
         assertThat(result).extracting(row -> row.get("agrupacio")).containsExactly("C");
+    }
+
+    @Test
+    @DisplayName("getDadesWidget: llança ReportGenerationException quan entornApp és null")
+    void getDadesWidget_quanEntornAppEsNull_llavorsLlancaReportGenerationException() {
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setId(1L);
+        item.setEntornId(10L);
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setAppId(5L);
+        item.setWidget(widget);
+
+        when(dashboardItemRepository.findById(1L)).thenReturn(Optional.of(item));
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(5L, 10L)).thenReturn(null);
+
+        assertThatThrownBy(() -> consultaEstadisticaHelper.getDadesWidget(item, false, null))
+            .isInstanceOf(ReportGenerationException.class)
+            .hasMessageContaining("es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper.aplicacioDesvinculadaEntorn");
+    }
+
+    @Test
+    @DisplayName("getDadesWidget: llança ReportGenerationException quan entornById és null")
+    void getDadesWidget_quanEntornEsNull_llavorsLlancaReportGenerationException() {
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setId(1L);
+        item.setEntornId(10L);
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        widget.setAppId(5L);
+        item.setWidget(widget);
+
+        es.caib.comanda.client.model.EntornApp entornApp = new es.caib.comanda.client.model.EntornApp();
+        entornApp.setId(100L);
+        es.caib.comanda.client.model.EntornRef entornRef = es.caib.comanda.client.model.EntornRef.builder().id(10L).nom("DEV").build();
+        entornApp.setEntorn(entornRef);
+
+        when(dashboardItemRepository.findById(1L)).thenReturn(Optional.of(item));
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(5L, 10L)).thenReturn(entornApp);
+        when(estadisticaClientHelper.entornById(10L)).thenReturn(null);
+
+        assertThatThrownBy(() -> consultaEstadisticaHelper.getDadesWidget(item, false, null))
+            .isInstanceOf(ReportGenerationException.class)
+            .hasMessageContaining("No s'ha trobat l'entorn");
+    }
+
+    @Test
+    @DisplayName("getDadesWidget: preserva la causa i el missatge quan es llança una excepció interna")
+    void getDadesWidget_quanExceptionInterna_llavorsPreservaCausaIMissatge() {
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setId(1L);
+        IllegalStateException internalException = new IllegalStateException("Internal error details");
+        when(dashboardItemRepository.findById(1L)).thenThrow(internalException);
+
+        assertThatThrownBy(() -> consultaEstadisticaHelper.getDadesWidget(item, false, null))
+            .isInstanceOf(ReportGenerationException.class)
+            .hasCause(internalException)
+            .hasMessageContaining("Internal error details");
+    }
+
+    @Test
+    @DisplayName("getDadesWidgetSimple: llança ReportGenerationException quan indicadorInfo és null")
+    void getDadesWidgetSimple_quanIndicadorInfoEsNull_llavorsLlancaReportGenerationException() {
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setId(1L);
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(100L);
+        item.setWidget(widget);
+
+        DadesComunsWidgetConsulta dadesComuns = DadesComunsWidgetConsulta.builder()
+            .entornAppId(1L)
+            .periodeDates(new PeriodeResolverHelper.PeriodeDates(java.time.LocalDate.now().minusDays(7), java.time.LocalDate.now()))
+            .build();
+
+        assertThatThrownBy(() -> org.springframework.test.util.ReflectionTestUtils.invokeMethod(consultaEstadisticaHelper, "getDadesWidgetSimple", item, dadesComuns, null, null))
+            .isInstanceOf(ReportGenerationException.class)
+            .hasMessageContaining("widgetSimpleSenseIndicador");
     }
 }

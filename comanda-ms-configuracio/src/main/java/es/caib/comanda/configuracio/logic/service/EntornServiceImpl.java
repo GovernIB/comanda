@@ -77,7 +77,7 @@ public class EntornServiceImpl extends BaseMutableResourceService<Entorn, Long, 
 
         cacheHelper.evictEntornCacheItem(entity.getId(), entity.getCodi());
         for (EntornAppEntity entornApp : entity.getEntornAppEntities()) {
-            entornAppHelper.logicAfterDelete(entornApp.getId());
+            entornAppHelper.logicAfterDelete(entornApp);
         }
         eventPublisher.publishEvent(new ComandaSsePublishRequest(
             new ComandaSseEvent(ComandaSseEventTypes.ENTORN_CHANGED, entity.getId(), LocalDateTime.now())));

@@ -13,4 +13,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EntornAppEsborratEvent {
     private final Long entornAppId;
+    private final Long appId;
+    private final Long entornId;
 }

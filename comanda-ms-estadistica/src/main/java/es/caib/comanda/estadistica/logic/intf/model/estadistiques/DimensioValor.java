@@ -55,6 +55,10 @@ import java.io.Serializable;
         descriptionField = "desc",
         accessConstraints = {
                 @ResourceAccessConstraint(
+                        type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,
+                        grantedPermissions = { PermissionEnum.READ }
+                ),
+                @ResourceAccessConstraint(
                         type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
                         roles = { BaseConfig.ROLE_ADMIN },
                         grantedPermissions = { PermissionEnum.READ }
@@ -110,13 +114,14 @@ public class DimensioValor extends BaseResource<Long> {
     }
 
     public String getCodiNom() {
-        return valor +
-            (unitatOrganitzativa != null
-                ?" - " + unitatOrganitzativa.getDescription()
-                :"") +
-            (entitat != null
-                ?" - " + entitat.getDescription()
-                :"");
+        return valor + getResourceReferenceDescription(unitatOrganitzativa) + getResourceReferenceDescription(entitat);
+    }
+
+    private String getResourceReferenceDescription(ResourceReference resourceReference) {
+        if (resourceReference != null && resourceReference.getDescription() != null && !resourceReference.getDescription().isEmpty()) {
+            return " - " + resourceReference.getDescription();
+        }
+        return "";
     }
 
     @Getter

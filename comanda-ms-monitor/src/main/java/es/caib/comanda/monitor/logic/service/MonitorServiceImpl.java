@@ -93,7 +93,22 @@ public class MonitorServiceImpl extends BaseMutableResourceService<Monitor, Long
                 throw new ActionExecutionException(Monitor.class, entity.getId(), Monitor.MONITOR_DELETE_ENTORN_APP_BY_MODUL_ACTION,
                     "El modul associat no esta implementar al microservei de monitor, soliciteu ajuda al programador");
             }
-            jmsTemplate.convertAndSend(cua, new NetejaEntornAppMessage(entity.getEntornAppId()));
+            // Es reenvien l'app, l'entorn i l'indicador d'entornApp esborrat perquè, si l'entornApp s'ha esborrat,
+            // el reintent faci la mateixa neteja que l'original (a estadístiques: catàleg, widgets i dashboards).
+            NetejaEntornAppMessage message = new NetejaEntornAppMessage(
+                    entity.getEntornAppId(),
+                    entity.getAppId(),
+                    entity.getEntornId(),
+                    Boolean.TRUE.equals(entity.getEntornAppEsborrat()));
+            if (Cues.CUA_NETEJA_ESTADISTICA.equals(cua)) {
+                // El listener d'estadístiques filtra per TIPUS_MISSATGE: sense aquesta propietat el missatge no es consumiria
+                jmsTemplate.convertAndSend(cua, message, msg -> {
+                    msg.setStringProperty("TIPUS_MISSATGE", "ENTORN");
+                    return msg;
+                });
+            } else {
+                jmsTemplate.convertAndSend(cua, message);
+            }
             log.info("Reintent de neteja encuat per entornApp {} mòdul {}", entity.getEntornAppId(), entity.getModul());
             entity.setOperacio("netejaEntornAppCompletat");
             return null;

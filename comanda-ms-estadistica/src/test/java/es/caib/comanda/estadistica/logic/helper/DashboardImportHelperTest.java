@@ -8,9 +8,12 @@ import es.caib.comanda.estadistica.logic.intf.model.export.*;
 import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
 import es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.Conflict;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
+import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardFiltreEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
+import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltreTipus;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.PaletaColorEntity;
@@ -20,6 +23,7 @@ import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaGrupPaletesEnt
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
+import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.*;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
@@ -61,6 +65,7 @@ class DashboardImportHelperTest {
     @Mock private DimensioValorRepository dimensioValorRepository;
     @Mock private PaletaRepository paletaRepository;
     @Mock private IndicadorExportHelper indicadorExportHelper;
+    @Mock private DashboardFiltreRepository dashboardFiltreRepository;
     @Mock private javax.validation.Validator validator;
     @Mock private I18nUtil i18nUtil;
     @Mock private ApplicationContext applicationContext;
@@ -200,8 +205,39 @@ class DashboardImportHelperTest {
         // Assert
         assertThat(result.getTitol()).isSameAs(conflict.getNouNom());
         assertThat(result.getIndicadorInfo().getWidget()).isSameAs(result);
-        verify(estadisticaWidgetRepository).findByAppIdAndTitol(any(), any());
+        verify(estadisticaWidgetRepository).findByAppIdAndTitol(1L, "Nou Widget Simple");
         verify(estadisticaWidgetRepository).save(result);
+    }
+
+    @Test
+    @DisplayName("importWidget: retorna widget existent si ja existeix amb el nou nom proporcionat")
+    void importWidget_quanCrearAmbAltreNomIExisteixWidgetAmbNouNom_llavorsRetornaWidgetExistent() {
+        // Arrange
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setTitol("Widget Simple");
+        widget.setAppId(1L);
+
+        Conflict conflict = new Conflict();
+        conflict.setTitol(widget.getTitol());
+        conflict.setAppId(widget.getAppId());
+        conflict.setNouNom("Nou Widget Simple");
+        conflict.setOverwrite(OverwriteEnum.CREAR_AMB_ALTRE_NOM);
+        conflict.setTipo(EstadisticaWidgetExport.class.getSimpleName());
+
+        EstadisticaWidgetEntity existingWidget = new EstadisticaSimpleWidgetEntity();
+        existingWidget.setTitol("Nou Widget Simple");
+        existingWidget.setAppId(1L);
+
+        when(estadisticaWidgetRepository.findByAppIdAndTitol(1L, "Nou Widget Simple")).thenReturn(existingWidget);
+
+        // Act
+        EstadisticaWidgetEntity result = (EstadisticaWidgetEntity) ReflectionTestUtils.invokeMethod(
+            dashboardImportHelper, "importWidget", widget, List.of(conflict));
+
+        // Assert
+        assertThat(result).isSameAs(existingWidget);
+        verify(estadisticaWidgetRepository).findByAppIdAndTitol(1L, "Nou Widget Simple");
+        verify(estadisticaWidgetRepository, never()).save(widget);
     }
 
     @Test
@@ -254,7 +290,7 @@ class DashboardImportHelperTest {
     // ========================================================================
 
     @Test
-    @DisplayName("checkDashboardConflicts: llança AnswerRequiredException quan l'Entorn no existeix")
+    @DisplayName("checkDashboardConflicts: afegeix conflicte bloquejant quan l'Entorn no existeix")
     void checkDashboardConflicts_quanEntornNoExisteix_llancaExcepcio() {
         // Arrange
         DashboardExport dashboard = new DashboardExport();
@@ -262,14 +298,20 @@ class DashboardImportHelperTest {
 
         when(estadisticaClientHelper.entornByCodi("ENTORN_INEXISTENT")).thenReturn(null);
 
-        // Act & Assert
-        assertThatThrownBy(() -> dashboardImportHelper.checkDashboardConflicts(dashboard, Collections.emptyList()))
-            .isInstanceOf(AnswerRequiredException.class)
-            .hasMessageContaining("Answer 'ENTORN' required to process changes");
+        // Act
+        List<Conflict> conflicts = new ArrayList<>();
+        dashboardImportHelper.checkDashboardConflicts(dashboard, conflicts);
+
+        // Assert
+        assertThat(conflicts).hasSize(1);
+        Conflict conflict = conflicts.get(0);
+        assertThat(conflict.isBloquejant()).isTrue();
+        assertThat(conflict.getTipo()).isEqualTo("EntornExport");
+        assertThat(conflict.getCodi()).isEqualTo("ENTORN_INEXISTENT");
     }
 
     @Test
-    @DisplayName("checkDashboardConflicts: llança AnswerRequiredException quan l'App no existeix")
+    @DisplayName("checkDashboardConflicts: afegeix conflicte bloquejant quan l'App no existeix")
     void checkDashboardConflicts_quanAppNoExisteix_llancaExcepcio() {
         // Arrange
         DashboardExport dashboard = new DashboardExport();
@@ -279,14 +321,20 @@ class DashboardImportHelperTest {
 
         when(estadisticaClientHelper.appFindByCodi("APP_INEXISTENT")).thenReturn(null);
 
-        // Act & Assert
-        assertThatThrownBy(() -> dashboardImportHelper.checkDashboardConflicts(dashboard, Collections.emptyList()))
-            .isInstanceOf(AnswerRequiredException.class)
-            .hasMessageContaining("Answer 'APP' required to process changes");
+        // Act
+        List<Conflict> conflicts = new ArrayList<>();
+        dashboardImportHelper.checkDashboardConflicts(dashboard, conflicts);
+
+        // Assert
+        assertThat(conflicts).hasSize(1);
+        Conflict conflict = conflicts.get(0);
+        assertThat(conflict.isBloquejant()).isTrue();
+        assertThat(conflict.getTipo()).isEqualTo("AppExport");
+        assertThat(conflict.getCodi()).isEqualTo("APP_INEXISTENT");
     }
 
     @Test
-    @DisplayName("checkDashboardItemConflicts: llança AnswerRequiredException quan l'Indicador no existeix (Simple Widget)")
+    @DisplayName("checkDashboardItemConflicts: afegeix conflicte bloquejant quan l'Indicador no existeix (Simple Widget)")
     void checkDashboardItemConflicts_quanIndicadorNoExisteixSimple_llancaExcepcio() {
         // Arrange
         DashboardItemExport item = new DashboardItemExport();
@@ -303,8 +351,10 @@ class DashboardImportHelperTest {
 
         Entorn entorn = new Entorn();
         ReflectionTestUtils.setField(entorn, "id", 1L);
+        ReflectionTestUtils.setField(entorn, "nom", "Entorn Test");
         App app = new App();
         ReflectionTestUtils.setField(app, "id", 2L);
+        ReflectionTestUtils.setField(app, "nom", "App Test");
         EntornApp entornApp = new EntornApp();
         entornApp.setId(10L);
         when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(entorn);
@@ -312,16 +362,26 @@ class DashboardImportHelperTest {
         when(estadisticaClientHelper.entornAppFindByAppAndEntorn(anyLong(), anyLong())).thenReturn(entornApp);
         when(indicadorRepository.findByCodiAndEntornAppId("IND1", 10L)).thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThatThrownBy(() -> {
-            List<Conflict> conflicts = Collections.emptyList();
-            ReflectionTestUtils.invokeMethod(dashboardImportHelper, "checkDashboardItemConflicts", item, conflicts);
-        }).isInstanceOf(AnswerRequiredException.class)
-            .hasMessageContaining("Answer 'INDICADOR' required to process changes");
+        // Act
+        List<Conflict> conflicts = new ArrayList<>();
+        ReflectionTestUtils.invokeMethod(dashboardImportHelper, "checkDashboardItemConflicts", item, conflicts);
+
+        // Assert
+        assertThat(conflicts).hasSize(1);
+        Conflict conflict = conflicts.get(0);
+        assertThat(conflict.isBloquejant()).isTrue();
+        assertThat(conflict.getTipo()).isEqualTo("IndicadorExport");
+        assertThat(conflict.getCodi()).isEqualTo("IND1");
+
+        verify(i18nUtil).getI18nMessage(
+                "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.indicador",
+                "IND1",
+                "App Test",
+                "Entorn Test");
     }
 
     @Test
-    @DisplayName("checkDashboardItemConflicts: llança AnswerRequiredException quan la Dimensio no existeix (Taula Widget)")
+    @DisplayName("checkDashboardItemConflicts: afegeix conflicte bloquejant quan la Dimensio no existeix (Taula Widget)")
     void checkDashboardItemConflicts_quanDimensioNoExisteixTaula_llancaExcepcio() {
         // Arrange
         DashboardItemExport item = new DashboardItemExport();
@@ -336,8 +396,10 @@ class DashboardImportHelperTest {
 
         Entorn entorn = new Entorn();
         ReflectionTestUtils.setField(entorn, "id", 1L);
+        ReflectionTestUtils.setField(entorn, "nom", "Entorn Test");
         App app = new App();
         ReflectionTestUtils.setField(app, "id", 2L);
+        ReflectionTestUtils.setField(app, "nom", "App Test");
         EntornApp entornApp = new EntornApp();
         entornApp.setId(20L);
         when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(entorn);
@@ -345,12 +407,114 @@ class DashboardImportHelperTest {
         when(estadisticaClientHelper.entornAppFindByAppAndEntorn(anyLong(), anyLong())).thenReturn(entornApp);
         when(dimensioRepository.findByCodiAndEntornAppId("DIM1", 20L)).thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThatThrownBy(() -> {
-            List<Conflict> conflicts = Collections.emptyList();
-            ReflectionTestUtils.invokeMethod(dashboardImportHelper, "checkDashboardItemConflicts", item, conflicts);
-        }).isInstanceOf(AnswerRequiredException.class)
-            .hasMessageContaining("Answer 'DIMENSIO' required to process changes");
+        // Act
+        List<Conflict> conflicts = new ArrayList<>();
+        ReflectionTestUtils.invokeMethod(dashboardImportHelper, "checkDashboardItemConflicts", item, conflicts);
+
+        // Assert
+        assertThat(conflicts).hasSize(1);
+        Conflict conflict = conflicts.get(0);
+        assertThat(conflict.isBloquejant()).isTrue();
+        assertThat(conflict.getTipo()).isEqualTo("DimensioExport");
+        assertThat(conflict.getCodi()).isEqualTo("DIM1");
+
+        verify(i18nUtil).getI18nMessage(
+                "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.dimensio",
+                "DIM1",
+                "App Test",
+                "Entorn Test");
+    }
+
+    @Test
+    @DisplayName("checkDashboardItemConflicts: afegeix conflicte bloquejant quan el DimensioValor no existeix")
+    void checkDashboardItemConflicts_quanDimensioValorNoExisteix_afegeixConflicteBloquejant() {
+        // Arrange
+        DashboardItemExport item = new DashboardItemExport();
+        item.setEntornCodi("ENT");
+        item.setAppCodi("APP");
+
+        EstadisticaSimpleWidgetExport widget = new EstadisticaSimpleWidgetExport();
+        widget.setTitol("Widget Simple");
+        DimensioValorExport dmv = new DimensioValorExport("DIM1", "VAL1");
+        widget.setDimensionsValor(List.of(dmv));
+        item.setWidget(widget);
+
+        Entorn entorn = new Entorn();
+        ReflectionTestUtils.setField(entorn, "id", 1L);
+        ReflectionTestUtils.setField(entorn, "nom", "Entorn Test");
+        App app = new App();
+        ReflectionTestUtils.setField(app, "id", 2L);
+        ReflectionTestUtils.setField(app, "nom", "App Test");
+        EntornApp entornApp = new EntornApp();
+        entornApp.setId(20L);
+        when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(entorn);
+        when(estadisticaClientHelper.appFindByCodi("APP")).thenReturn(app);
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(anyLong(), anyLong())).thenReturn(entornApp);
+
+        DimensioEntity dimensio = new DimensioEntity();
+        dimensio.setCodi("DIM1");
+        dimensio.setEntornAppId(20L);
+        when(dimensioRepository.findByCodiAndEntornAppId("DIM1", 20L)).thenReturn(Optional.of(dimensio));
+        when(dimensioValorRepository.findByDimensioAndValor(dimensio, "VAL1")).thenReturn(Optional.empty());
+
+        // Act
+        List<Conflict> conflicts = new ArrayList<>();
+        ReflectionTestUtils.invokeMethod(dashboardImportHelper, "checkDashboardItemConflicts", item, conflicts);
+
+        // Assert
+        assertThat(conflicts).hasSize(1);
+        Conflict conflict = conflicts.get(0);
+        assertThat(conflict.isBloquejant()).isTrue();
+        assertThat(conflict.getTipo()).isEqualTo("DimensioValorExport");
+        assertThat(conflict.getCodi()).isEqualTo("DIM1 (VAL1)");
+        assertThat(conflict.getTitol()).isEqualTo("DIM1 (VAL1)");
+
+        verify(i18nUtil).getI18nMessage(
+                "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.dimensioValor",
+                "VAL1",
+                "DIM1",
+                "App Test",
+                "Entorn Test");
+    }
+
+    @Test
+    @DisplayName("checkDashboardItemConflicts: no afegeix conflicte quan el DimensioValor existeix")
+    void checkDashboardItemConflicts_quanDimensioValorExisteix_noAfegeixConflicte() {
+        // Arrange
+        DashboardItemExport item = new DashboardItemExport();
+        item.setEntornCodi("ENT");
+        item.setAppCodi("APP");
+
+        EstadisticaSimpleWidgetExport widget = new EstadisticaSimpleWidgetExport();
+        widget.setTitol("Widget Simple");
+        DimensioValorExport dmv = new DimensioValorExport("DIM1", "VAL1");
+        widget.setDimensionsValor(List.of(dmv));
+        item.setWidget(widget);
+
+        Entorn entorn = new Entorn();
+        ReflectionTestUtils.setField(entorn, "id", 1L);
+        ReflectionTestUtils.setField(entorn, "nom", "Entorn Test");
+        App app = new App();
+        ReflectionTestUtils.setField(app, "id", 2L);
+        ReflectionTestUtils.setField(app, "nom", "App Test");
+        EntornApp entornApp = new EntornApp();
+        entornApp.setId(20L);
+        when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(entorn);
+        when(estadisticaClientHelper.appFindByCodi("APP")).thenReturn(app);
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(anyLong(), anyLong())).thenReturn(entornApp);
+
+        DimensioEntity dimensio = new DimensioEntity();
+        dimensio.setCodi("DIM1");
+        dimensio.setEntornAppId(20L);
+        when(dimensioRepository.findByCodiAndEntornAppId("DIM1", 20L)).thenReturn(Optional.of(dimensio));
+        when(dimensioValorRepository.findByDimensioAndValor(dimensio, "VAL1")).thenReturn(Optional.of(new DimensioValorEntity()));
+
+        // Act
+        List<Conflict> conflicts = new ArrayList<>();
+        ReflectionTestUtils.invokeMethod(dashboardImportHelper, "checkDashboardItemConflicts", item, conflicts);
+
+        // Assert
+        assertThat(conflicts).noneMatch(Conflict::isBloquejant);
     }
 
     // ========================================================================
@@ -401,6 +565,21 @@ class DashboardImportHelperTest {
 
         // Assert
         assertThat(result).isEqualTo("Original (2)");
+    }
+
+    @Test
+    @DisplayName("getElementNewNom: trunca la base quan el nom generat superaria la longitud màxima de l'entitat")
+    void getElementNewNom_quanNomExcedeixLongitudMaxima_llavorsTruncaLaBase() {
+        String titol64 = "A".repeat(64);
+        when(dashboardRepository.findByTitol(titol64)).thenReturn(new DashboardEntity());
+        String expectedSuggestion = "A".repeat(60) + " (1)";
+        when(dashboardRepository.findByTitol(expectedSuggestion)).thenReturn(null);
+
+        String result = (String) ReflectionTestUtils.invokeMethod(
+            dashboardImportHelper, "getElementNewNom", titol64, null, "DashboardExport");
+
+        assertThat(result).isEqualTo(expectedSuggestion);
+        assertThat(result).hasSize(DashboardEntity.TITOL_MAX_LENGTH);
     }
 
     @Test
@@ -574,6 +753,10 @@ class DashboardImportHelperTest {
             assertThat(c.getSuggerenciaNouNom()).isNotNull();
             assertThat(c.getSuggerenciaNouNom()).isEqualTo(c.getTitol() + " (1)");
         });
+        Conflict dashConflict = conflicts.stream()
+                .filter(c -> DashboardExport.class.getSimpleName().equals(c.getTipo()))
+                .findFirst().orElseThrow();
+        assertThat(dashConflict.getOverwrite()).isEqualTo(OverwriteEnum.CREAR_AMB_ALTRE_NOM);
     }
 
     @Test
@@ -766,7 +949,386 @@ class DashboardImportHelperTest {
         dashboardImportHelper.importDashboardFromExport(exports, Collections.emptyList());
 
         // Assert
-        verify(indicadorExportHelper).importIndicadorsFormula(export.getIndicadors());
+        verify(indicadorExportHelper).importIndicadorsFormula(eq(export), anyList(), anyMap());
         verify(dashboardExportMapper).toDashboardEntity(eq(exports), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("checkIndicadorConflicts: detecta conflicte quan l'indicador ja existeix per nom")
+    void checkIndicadorConflicts_quanExisteixPerNom_afegeixConflicte() {
+        DashboardExport dashboard = new DashboardExport();
+        dashboard.setEntornCodi("ENT");
+        dashboard.setAppCodi("APP");
+        IndicadorExport indExport = IndicadorExport.builder()
+                .codi("IND_FORM").nom("Indicador Formula").tipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus.FORMULA)
+                .entornCodi("ENT").appCodi("APP").build();
+        dashboard.setIndicadors(List.of(indExport));
+
+        Entorn entorn = new Entorn();
+        ReflectionTestUtils.setField(entorn, "id", 1L);
+        App app = new App();
+        ReflectionTestUtils.setField(app, "id", 2L);
+        EntornApp entornApp = new EntornApp();
+        entornApp.setId(10L);
+
+        when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(entorn);
+        when(estadisticaClientHelper.appFindByCodi("APP")).thenReturn(app);
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(2L, 1L)).thenReturn(entornApp);
+
+        IndicadorEntity existent = new IndicadorEntity();
+        existent.setCodi("IND_FORM_EXISTENT");
+        existent.setNom("Indicador Formula");
+        when(indicadorRepository.findByNomAndEntornAppId("Indicador Formula", 10L)).thenReturn(Optional.of(existent));
+
+        List<Conflict> conflicts = new ArrayList<>();
+        dashboardImportHelper.checkDashboardConflicts(dashboard, conflicts);
+
+        assertThat(conflicts).hasSize(1);
+        Conflict conflict = conflicts.get(0);
+        assertThat(conflict.getTipo()).isEqualTo("IndicadorExport");
+        assertThat(conflict.getTitol()).isEqualTo("Indicador Formula");
+        assertThat(conflict.getCodi()).isEqualTo("IND_FORM");
+        assertThat(conflict.getEntornAppId()).isEqualTo(10L);
+        assertThat(conflict.isBloquejant()).isTrue();
+    }
+
+    @Test
+    @DisplayName("checkIndicadorConflicts: detecta conflicte quan l'indicador ja existeix per codi")
+    void checkIndicadorConflicts_quanExisteixPerCodi_afegeixConflicte() {
+        DashboardExport dashboard = new DashboardExport();
+        dashboard.setEntornCodi("ENT");
+        dashboard.setAppCodi("APP");
+        IndicadorExport indExport = IndicadorExport.builder()
+                .codi("IND_FORM").nom("Indicador Nou").tipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus.FORMULA)
+                .entornCodi("ENT").appCodi("APP").build();
+        dashboard.setIndicadors(List.of(indExport));
+
+        Entorn entorn = new Entorn();
+        ReflectionTestUtils.setField(entorn, "id", 1L);
+        App app = new App();
+        ReflectionTestUtils.setField(app, "id", 2L);
+        EntornApp entornApp = new EntornApp();
+        entornApp.setId(10L);
+
+        when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(entorn);
+        when(estadisticaClientHelper.appFindByCodi("APP")).thenReturn(app);
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(2L, 1L)).thenReturn(entornApp);
+
+        when(indicadorRepository.findByNomAndEntornAppId("Indicador Nou", 10L)).thenReturn(Optional.empty());
+        IndicadorEntity existent = new IndicadorEntity();
+        existent.setCodi("IND_FORM");
+        existent.setNom("Indicador Amb Codi Existent");
+        when(indicadorRepository.findByCodiAndEntornAppId("IND_FORM", 10L)).thenReturn(Optional.of(existent));
+
+        List<Conflict> conflicts = new ArrayList<>();
+        dashboardImportHelper.checkDashboardConflicts(dashboard, conflicts);
+
+        assertThat(conflicts).hasSize(1);
+        Conflict conflict = conflicts.get(0);
+        assertThat(conflict.getTipo()).isEqualTo("IndicadorExport");
+        assertThat(conflict.getCodi()).isEqualTo("IND_FORM");
+        assertThat(conflict.isBloquejant()).isFalse();
+    }
+
+    @Test
+    @DisplayName("checkIndicadorConflicts: no afegeix conflicte quan l'indicador no existeix a la base de dades")
+    void checkIndicadorConflicts_quanNoExisteix_noAfegeixConflicte() {
+        DashboardExport dashboard = new DashboardExport();
+        dashboard.setEntornCodi("ENT");
+        dashboard.setAppCodi("APP");
+        IndicadorExport indExport = IndicadorExport.builder()
+                .codi("IND_FORM").nom("Indicador Nou").tipus(es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus.FORMULA)
+                .entornCodi("ENT").appCodi("APP").build();
+        dashboard.setIndicadors(List.of(indExport));
+
+        Entorn entorn = new Entorn();
+        ReflectionTestUtils.setField(entorn, "id", 1L);
+        App app = new App();
+        ReflectionTestUtils.setField(app, "id", 2L);
+        EntornApp entornApp = new EntornApp();
+        entornApp.setId(10L);
+
+        when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(entorn);
+        when(estadisticaClientHelper.appFindByCodi("APP")).thenReturn(app);
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(2L, 1L)).thenReturn(entornApp);
+
+        when(indicadorRepository.findByNomAndEntornAppId("Indicador Nou", 10L)).thenReturn(Optional.empty());
+        when(indicadorRepository.findByCodiAndEntornAppId("IND_FORM", 10L)).thenReturn(Optional.empty());
+
+        List<Conflict> conflicts = new ArrayList<>();
+        dashboardImportHelper.checkDashboardConflicts(dashboard, conflicts);
+
+        assertThat(conflicts).isEmpty();
+    }
+
+    @Test
+    @DisplayName("addBlockingConflict: permet conflictes bloquejants per al mateix codi i app si entornAppId és diferent, però evita duplicats si és igual")
+    void addBlockingConflict_quanDiferentEntornAppId_afegeixAmbdosConflictes() {
+        List<Conflict> conflicts = new ArrayList<>();
+
+        ReflectionTestUtils.invokeMethod(dashboardImportHelper, "addBlockingConflict", "IND", "IND", 1L, 10L, "IndicadorExport", "Error Entorn 1", conflicts);
+        ReflectionTestUtils.invokeMethod(dashboardImportHelper, "addBlockingConflict", "IND", "IND", 1L, 20L, "IndicadorExport", "Error Entorn 2", conflicts);
+
+        assertThat(conflicts).hasSize(2);
+        assertThat(conflicts.get(0).getEntornAppId()).isEqualTo(10L);
+        assertThat(conflicts.get(1).getEntornAppId()).isEqualTo(20L);
+
+        // Si s'intenta afegir un duplicat per al mateix entornAppId, no s'afegeix
+        ReflectionTestUtils.invokeMethod(dashboardImportHelper, "addBlockingConflict", "IND", "IND", 1L, 10L, "IndicadorExport", "Error Entorn 1 duplicat", conflicts);
+        assertThat(conflicts).hasSize(2);
+    }
+
+    // ========================================================================
+    // TESTOS PER A DUPLICATS EN EL MATEIX FITXER D'IMPORTACIÓ (POINT 3)
+    // ========================================================================
+
+    @Test
+    @DisplayName("importPlantilla: quan conflicte és null però la plantilla ja ha estat guardada a la BBDD, retorna l'existent sense duplicar save")
+    void importPlantilla_quanConflicteNullIExisteixEnBBDD_llavorsRetornaExistentISenseGuardar() {
+        PlantillaEntity plantilla = new PlantillaEntity();
+        plantilla.setNom("Plantilla Compartida");
+
+        PlantillaEntity existent = new PlantillaEntity();
+        existent.setNom("Plantilla Compartida");
+        when(plantillaRepository.findByNom("Plantilla Compartida")).thenReturn(Optional.of(existent));
+
+        PlantillaEntity result = (PlantillaEntity) ReflectionTestUtils.invokeMethod(
+                dashboardImportHelper, "importPlantilla", plantilla, Collections.emptyList());
+
+        assertThat(result).isSameAs(existent);
+        verify(plantillaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("importPaleta: quan conflicte és null però la paleta ja ha estat guardada a la BBDD, retorna l'existent sense duplicar save")
+    void importPaleta_quanConflicteNullIExisteixEnBBDD_llavorsRetornaExistentISenseGuardar() {
+        PaletaEntity paleta = new PaletaEntity();
+        paleta.setNom("Paleta Compartida");
+
+        PaletaEntity existent = new PaletaEntity();
+        existent.setNom("Paleta Compartida");
+        when(paletaRepository.findByNom("Paleta Compartida")).thenReturn(Optional.of(existent));
+
+        PaletaEntity result = (PaletaEntity) ReflectionTestUtils.invokeMethod(
+                dashboardImportHelper, "importPaleta", paleta, Collections.emptyList());
+
+        assertThat(result).isSameAs(existent);
+        verify(paletaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("importWidget: quan conflicte és null però el widget ja ha estat guardat a la BBDD, retorna l'existent sense duplicar save")
+    void importWidget_quanConflicteNullIExisteixEnBBDD_llavorsRetornaExistentISenseGuardar() {
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setTitol("Widget Compartit");
+        widget.setAppId(10L);
+
+        EstadisticaWidgetEntity existent = new EstadisticaSimpleWidgetEntity();
+        existent.setTitol("Widget Compartit");
+        existent.setAppId(10L);
+        when(estadisticaWidgetRepository.findByAppIdAndTitol(10L, "Widget Compartit")).thenReturn(existent);
+
+        EstadisticaWidgetEntity result = (EstadisticaWidgetEntity) ReflectionTestUtils.invokeMethod(
+                dashboardImportHelper, "importWidget", widget, Collections.emptyList());
+
+        assertThat(result).isSameAs(existent);
+        verify(estadisticaWidgetRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("importPlantilla: reutilitza la paleta ja guardada quan s'utilitza a múltiples llocs dins la mateixa importació")
+    void importPlantilla_quanMateixaPaletaEnDosGrups_llavorsGuardaPaletaUnSolCop() {
+        PlantillaEntity plantilla = new PlantillaEntity();
+        plantilla.setNom("Plantilla Nova");
+
+        PaletaEntity paletaCompartida = new PaletaEntity();
+        paletaCompartida.setNom("Paleta Compartida");
+        paletaCompartida.setColors(new ArrayList<>());
+
+        PlantillaGrupPaletesEntity grup1 = new PlantillaGrupPaletesEntity();
+        grup1.setPlantilla(plantilla);
+        grup1.setWidgetPalette(paletaCompartida);
+
+        PlantillaGrupPaletesEntity grup2 = new PlantillaGrupPaletesEntity();
+        grup2.setPlantilla(plantilla);
+        grup2.setWidgetPalette(paletaCompartida);
+
+        plantilla.setPaletteGroups(List.of(grup1, grup2));
+        plantilla.setStyleProperties(new ArrayList<>());
+
+        when(plantillaRepository.findByNom("Plantilla Nova")).thenReturn(Optional.empty());
+
+        PaletaEntity paletaJaGuardada = new PaletaEntity();
+        paletaJaGuardada.setNom("Paleta Compartida");
+
+        // La primera crida no troba la paleta (es guardarà), la segona ja la troba
+        when(paletaRepository.findByNom("Paleta Compartida"))
+                .thenReturn(Optional.empty())
+                .thenReturn(Optional.of(paletaJaGuardada));
+
+        PlantillaEntity result = (PlantillaEntity) ReflectionTestUtils.invokeMethod(
+                dashboardImportHelper, "importPlantilla", plantilla, Collections.emptyList());
+
+        assertThat(result).isNotNull();
+        verify(plantillaRepository, times(1)).save(plantilla);
+        // La paleta només s'ha de guardar una sola vegada!
+        verify(paletaRepository, times(1)).save(paletaCompartida);
+        assertThat(grup2.getWidgetPalette()).isSameAs(paletaJaGuardada);
+    }
+
+    @Test
+    @DisplayName("importPlantilla, importPaleta, importWidget: retornen null quan l'entitat d'entrada és null")
+    void importMethods_quanEntitatsNull_llavorsRetornaNull() {
+        PlantillaEntity resultPlantilla = (PlantillaEntity) ReflectionTestUtils.invokeMethod(
+                dashboardImportHelper, "importPlantilla", (PlantillaEntity) null, Collections.emptyList());
+        assertThat(resultPlantilla).isNull();
+
+        PaletaEntity resultPaleta = (PaletaEntity) ReflectionTestUtils.invokeMethod(
+                dashboardImportHelper, "importPaleta", (PaletaEntity) null, Collections.emptyList());
+        assertThat(resultPaleta).isNull();
+
+        EstadisticaWidgetEntity resultWidget = (EstadisticaWidgetEntity) ReflectionTestUtils.invokeMethod(
+                dashboardImportHelper, "importWidget", (EstadisticaWidgetEntity) null, Collections.emptyList());
+        assertThat(resultWidget).isNull();
+    }
+
+    // ========================================================================
+    // TESTOS PER A FILTRES DE CAPÇALERA (DashboardFiltreEntity)
+    // ========================================================================
+
+    @Test
+    @DisplayName("checkDashboardConflicts: filtre DIMENSIO amb dimensioCodi inexistent genera conflicte bloquejant")
+    void checkDashboardConflicts_quanFiltreDimensioNoExisteix_llavorsAfegeixConflicteBloquejant() {
+        DashboardExport dashboard = new DashboardExport();
+        dashboard.setTitol("Dash amb filtre");
+        dashboard.setEntornCodi("ENT");
+        dashboard.setAppCodi("APP");
+
+        DashboardFiltreExport filtre = new DashboardFiltreExport();
+        filtre.setTipus(DashboardFiltreTipus.DIMENSIO);
+        filtre.setDimensioCodi("DIM_INEXISTENT");
+        filtre.setOrdre(1);
+        dashboard.setFiltres(List.of(filtre));
+
+        Entorn entorn = new Entorn();
+        ReflectionTestUtils.setField(entorn, "id", 1L);
+        App app = new App();
+        ReflectionTestUtils.setField(app, "id", 2L);
+        EntornApp entornApp = new EntornApp();
+        entornApp.setId(10L);
+
+        when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(entorn);
+        when(estadisticaClientHelper.appFindByCodi("APP")).thenReturn(app);
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(2L, 1L)).thenReturn(entornApp);
+        when(dimensioRepository.findByCodiAndEntornAppId("DIM_INEXISTENT", 10L)).thenReturn(Optional.empty());
+
+        List<Conflict> conflicts = new ArrayList<>();
+        dashboardImportHelper.checkDashboardConflicts(dashboard, conflicts);
+
+        // Ha d'haver-hi almenys un conflicte bloquejant per la dimensió
+        assertThat(conflicts.stream().anyMatch(c -> c.isBloquejant() && "DimensioExport".equals(c.getTipo()))).isTrue();
+    }
+
+    @Test
+    @DisplayName("checkDashboardConflicts: filtre PERIODE no valida dimensioCodi")
+    void checkDashboardConflicts_quanFiltrePeriode_noValidaDimensio() {
+        DashboardExport dashboard = new DashboardExport();
+        dashboard.setTitol("Dash amb filtre període");
+        dashboard.setEntornCodi("ENT");
+        dashboard.setAppCodi("APP");
+
+        DashboardFiltreExport filtre = new DashboardFiltreExport();
+        filtre.setTipus(DashboardFiltreTipus.PERIODE);
+        filtre.setDimensioCodi(null);
+        filtre.setOrdre(1);
+        dashboard.setFiltres(List.of(filtre));
+
+        Entorn entorn = new Entorn();
+        ReflectionTestUtils.setField(entorn, "id", 1L);
+        App app = new App();
+        ReflectionTestUtils.setField(app, "id", 2L);
+
+        when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(entorn);
+        when(estadisticaClientHelper.appFindByCodi("APP")).thenReturn(app);
+
+        List<Conflict> conflicts = new ArrayList<>();
+        dashboardImportHelper.checkDashboardConflicts(dashboard, conflicts);
+
+        // Només el conflicte del dashboard (addConflict), cap bloquejant per dimensió
+        assertThat(conflicts.stream().noneMatch(c -> c.isBloquejant() && "DimensioExport".equals(c.getTipo()))).isTrue();
+    }
+
+    @Test
+    @DisplayName("checkDashboardConflicts: filtre DIMENSIO amb dimensioCodi existent no genera conflicte bloquejant")
+    void checkDashboardConflicts_quanFiltreDimensioExisteix_noAfegeixConflicteBloquejant() {
+        DashboardExport dashboard = new DashboardExport();
+        dashboard.setTitol("Dash amb filtre vàlid");
+        dashboard.setEntornCodi("ENT");
+        dashboard.setAppCodi("APP");
+
+        DashboardFiltreExport filtre = new DashboardFiltreExport();
+        filtre.setTipus(DashboardFiltreTipus.DIMENSIO);
+        filtre.setDimensioCodi("DIM_OK");
+        filtre.setOrdre(1);
+        dashboard.setFiltres(List.of(filtre));
+
+        Entorn entorn = new Entorn();
+        ReflectionTestUtils.setField(entorn, "id", 1L);
+        App app = new App();
+        ReflectionTestUtils.setField(app, "id", 2L);
+        EntornApp entornApp = new EntornApp();
+        entornApp.setId(10L);
+
+        when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(entorn);
+        when(estadisticaClientHelper.appFindByCodi("APP")).thenReturn(app);
+        when(estadisticaClientHelper.entornAppFindByAppAndEntorn(2L, 1L)).thenReturn(entornApp);
+
+        DimensioEntity dimensio = new DimensioEntity();
+        dimensio.setCodi("DIM_OK");
+        when(dimensioRepository.findByCodiAndEntornAppId("DIM_OK", 10L)).thenReturn(Optional.of(dimensio));
+
+        List<Conflict> conflicts = new ArrayList<>();
+        dashboardImportHelper.checkDashboardConflicts(dashboard, conflicts);
+
+        assertThat(conflicts.stream().noneMatch(c -> c.isBloquejant() && "DimensioExport".equals(c.getTipo()))).isTrue();
+    }
+
+    @Test
+    @DisplayName("importDashboardFromEntity: quan dashboard té filtres, guarda cada filtre amb la referència al dashboard")
+    void importDashboardFromEntity_quanDashboardTeFiltres_llavorsGuardaFiltres() {
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setTitol("Dash Import");
+
+        DashboardFiltreEntity filtre1 = new DashboardFiltreEntity();
+        filtre1.setTipus(DashboardFiltreTipus.DIMENSIO);
+        filtre1.setDimensioCodi("DIM1");
+        filtre1.setOrdre(1);
+
+        DashboardFiltreEntity filtre2 = new DashboardFiltreEntity();
+        filtre2.setTipus(DashboardFiltreTipus.PERIODE);
+        filtre2.setOrdre(2);
+
+        dashboard.setFiltres(new ArrayList<>(List.of(filtre1, filtre2)));
+
+        dashboardImportHelper.importDashboardFromEntity(dashboard, Collections.emptyList());
+
+        verify(dashboardRepository).save(dashboard);
+        verify(dashboardFiltreRepository).save(filtre1);
+        verify(dashboardFiltreRepository).save(filtre2);
+        assertThat(filtre1.getDashboard()).isSameAs(dashboard);
+        assertThat(filtre2.getDashboard()).isSameAs(dashboard);
+    }
+
+    @Test
+    @DisplayName("importDashboardFromEntity: quan filtres és null, no falla")
+    void importDashboardFromEntity_quanFiltresNull_noFalla() {
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setTitol("Dash Sense Filtres");
+        dashboard.setFiltres(null);
+
+        dashboardImportHelper.importDashboardFromEntity(dashboard, Collections.emptyList());
+
+        verify(dashboardRepository).save(dashboard);
+        verify(dashboardFiltreRepository, never()).save(any());
     }
 }

@@ -30,6 +30,7 @@ import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetE
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.*;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -191,7 +192,17 @@ public class ConsultaEstadisticaHelper {
 
     // La clau de cache HA d'incloure l'usuari: el resultat depèn dels seus permisos d'entitat/òrgan (vegeu
     // DashboardSeguretatHelper), així que usuaris diferents no es poden compartir la mateixa entrada de cache.
-    @Cacheable(value = DASHBOARD_WIDGET_CACHE, key = "#dashboardItem.id + '_' + #temaFosc + '_' + (#filtreSeleccio != null ? #filtreSeleccio.cacheKey() : '') + '_' + @authenticationHelper.getCurrentUserName() + '_' + T(java.time.LocalDate).now()")
+    // Perquè una crida JPA fallida d'aquí no emmascari la traça real amb UnexpectedRollbackException, l'excepció
+    // ha de propagar-se fins a dalt en lloc de capturar-se dins la mateixa transacció.
+    @Transactional(readOnly = true)
+    @Cacheable(
+        value = DASHBOARD_WIDGET_CACHE,
+        // Alerta al editar la cache key, s'han d'actualitzar els evicts relacionats
+        key = "#dashboardItem.id + '_' + "
+            + "#temaFosc + '_' + "
+            + "(#filtreSeleccio != null ? #filtreSeleccio.cacheKey() : '') + '_' + "
+            + "(@dashboardSeguretatHelper.isExempt() ? '' : @authenticationHelper.getCurrentUserName() + '_') + "
+            + "T(java.time.LocalDate).now()")
     public InformeWidgetItem getDadesWidget(DashboardItemEntity dashboardItem,
                                             boolean temaFosc,
                                             DashboardFiltreSeleccio filtreSeleccio) {
@@ -220,10 +231,10 @@ public class ConsultaEstadisticaHelper {
             throw e;
         } catch (Exception e) {
             log.error("Error obtnint dades de dashboard widget: " + e.getMessage(), e);
-            throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId().toString(), e.getMessage(), e.getCause());
+            throw new ReportGenerationException(DashboardItem.class, dashboardItem != null ? dashboardItem.getId() : null, null, e.getMessage(), e);
         }
 
-        throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, "Tipus de widget incorrecte");
+        throw new ReportGenerationException(DashboardItem.class, dashboardItem != null ? dashboardItem.getId() : null, null, "Tipus de widget incorrecte");
     }
 
     /**
@@ -252,6 +263,9 @@ public class ConsultaEstadisticaHelper {
                                                    SeguretatFiltreSql seguretat) {
 
         EstadisticaSimpleWidgetEntity widget = (EstadisticaSimpleWidgetEntity) dashboardItem.getWidget();
+        if (widget.getIndicadorInfo() == null || widget.getIndicadorInfo().getIndicador() == null) {
+            throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, es.caib.comanda.ms.logic.intf.util.I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper.widgetSimpleSenseIndicador"));
+        }
         TableColumnsEnum agregacio = widget.getIndicadorInfo().getAgregacio();
 //        Format format = widget.getIndicadorInfo().getIndicador().getFormat();
         boolean compararPeriodeAnterior = widget.isCompararPeriodeAnterior() && !TableColumnsEnum.FIRST_SEEN.equals(agregacio) && !TableColumnsEnum.LAST_SEEN.equals(agregacio);
@@ -298,14 +312,15 @@ public class ConsultaEstadisticaHelper {
         if (UN_INDICADOR.equals(widget.getTipusDades()) || UN_INDICADOR_AMB_DESCOMPOSICIO.equals(widget.getTipusDades()) || DOS_INDICADORS.equals(widget.getTipusDades())) {
 
             IndicadorTaulaEntity indicadorInfo = resolveIndicadorInfoPerRol(widget, IndicadorRolEnum.VALOR);
-            IndicadorAgregacio indicadorAgregacio = indicadorInfo != null ?
-                IndicadorAgregacio.builder()
-                    .indicadorCodi(indicadorInfo.getIndicador().getCodi())
-                    .agregacio(indicadorInfo.getAgregacio())
-                    .unitatAgregacio(indicadorInfo.getUnitatAgregacio())
-                    .termesFormula(resoldreTermesFormula(indicadorInfo.getIndicador().getCodi(), dadesComunsConsulta.getEntornAppId()))
-                    .build()
-                : null;
+            if (indicadorInfo == null || indicadorInfo.getIndicador() == null) {
+                throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, es.caib.comanda.ms.logic.intf.util.I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper.widgetGraficSenseIndicador"));
+            }
+            IndicadorAgregacio indicadorAgregacio = IndicadorAgregacio.builder()
+                .indicadorCodi(indicadorInfo.getIndicador().getCodi())
+                .agregacio(indicadorInfo.getAgregacio())
+                .unitatAgregacio(indicadorInfo.getUnitatAgregacio())
+                .termesFormula(resoldreTermesFormula(indicadorInfo.getIndicador().getCodi(), dadesComunsConsulta.getEntornAppId()))
+                .build();
 
             if (UN_INDICADOR.equals(widget.getTipusDades())) {
                 labels.add(Map.of("id", "agrupacio", "label", getLabelAgrupacioTemporal(tempsAgrupacio)));
@@ -323,6 +338,9 @@ public class ConsultaEstadisticaHelper {
             } else if (UN_INDICADOR_AMB_DESCOMPOSICIO.equals(widget.getTipusDades())) {
 
                 DimensioEntity descomposicioDimensio = widget.getDescomposicioDimensio();
+                if (descomposicioDimensio == null) {
+                    throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, es.caib.comanda.ms.logic.intf.util.I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper.widgetGraficSenseDimensio"));
+                }
                 boolean agruparPerDimensioDescomposicio = Boolean.TRUE.equals(widget.getAgruparPerDimensioDescomposicio());
                 if (agruparPerDimensioDescomposicio) {
                     labels.add(Map.of("id", "agrupacio", "label", descomposicioDimensio.getNom()));
@@ -366,7 +384,7 @@ public class ConsultaEstadisticaHelper {
                     : null;
 
                 if (indicadorMaxAgregacio == null) {
-                    throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, "El widget DOS_INDICADORS no té indicador de màxim configurat");
+                    throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, es.caib.comanda.ms.logic.intf.util.I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper.widgetDosIndicadorsSenseMaxim"));
                 }
 
                 labels.add(Map.of("id", "agrupacio", "label", getLabelAgrupacioTemporal(tempsAgrupacio)));
@@ -384,6 +402,9 @@ public class ConsultaEstadisticaHelper {
                 // files: [{'agrupacio': '', 'col1': '<valor>', 'col2': '<màxim>'}]
             }
         } else if (VARIS_INDICADORS.equals(widget.getTipusDades())) {
+            if (widget.getIndicadorsInfo() == null || widget.getIndicadorsInfo().isEmpty() || widget.getIndicadorsInfo().stream().anyMatch(c -> c.getIndicador() == null)) {
+                throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, es.caib.comanda.ms.logic.intf.util.I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper.widgetGraficSenseIndicador"));
+            }
             List<IndicadorAgregacio> indicadorsAgregacio = widget.getIndicadorsInfo().stream()
                 .map(columna -> IndicadorAgregacio.builder()
                     .indicadorCodi(columna.getIndicador().getCodi())
@@ -636,6 +657,9 @@ public class ConsultaEstadisticaHelper {
         if (widget.getDimensioAgrupacio() == null) {
             throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, es.caib.comanda.ms.logic.intf.util.I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper.widgetTaulaSenseDimensio"));
         }
+        if (widget.getColumnes() == null || widget.getColumnes().isEmpty() || widget.getColumnes().stream().anyMatch(c -> c.getIndicador() == null)) {
+            throw new ReportGenerationException(DashboardItem.class, dashboardItem.getId(), null, es.caib.comanda.ms.logic.intf.util.I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper.widgetTaulaSenseColumnes"));
+        }
         // Mapa de dimensions per filtrar la consulta (pròpies del widget + selecció de filtres del dashboard)
         Map<String, List<String>> dimensionsFiltre = resolveDimensionsFiltre(widget, dadesComunsConsulta.getEntornAppId(), filtreSeleccio);
         // Indicadors a calcular
@@ -694,6 +718,7 @@ public class ConsultaEstadisticaHelper {
             .tipus(WidgetTipus.TAULA)
             .entornCodi(dadesComunsConsulta.getEntornCodi())
             .titol(widget.getTitol())
+            .descripcio(widget.getDescripcio())
             .titolAgrupament(titolAgrupacioEfectiu)
             .columnes(columnes)
             .files(files)
@@ -862,7 +887,21 @@ public class ConsultaEstadisticaHelper {
                                                              DashboardFiltreSeleccio filtreSeleccio) {
         EstadisticaWidgetEntity widget = dashboardItem.getWidget();
         var entornApp = estadisticaClientHelper.entornAppFindByAppAndEntorn(widget.getAppId(), dashboardItem.getEntornId());
+        if (entornApp == null || entornApp.getEntorn() == null) {
+            throw new ReportGenerationException(
+                DashboardItem.class,
+                dashboardItem.getId(),
+                null,
+                I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper.aplicacioDesvinculadaEntorn"));
+        }
         var entorn = estadisticaClientHelper.entornById(entornApp.getEntorn().getId());
+        if (entorn == null) {
+            throw new ReportGenerationException(
+                DashboardItem.class,
+                dashboardItem.getId(),
+                null,
+                I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper.entornNoTrobat", entornApp.getEntorn().getId()));
+        }
         // El període seleccionat pel filtre de capçalera del dashboard, si n'hi ha, no sobreescriu el període
         // propi del widget: en manté el tipus (p. ex. "darrer dia complet" o "darrers 30 dies"), però ancorat i
         // limitat al període configurat al filtre (vegeu PeriodeResolverHelper#resolvePeriod amb filterBounds).

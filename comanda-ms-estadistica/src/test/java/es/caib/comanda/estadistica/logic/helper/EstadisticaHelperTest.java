@@ -5,6 +5,7 @@ import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.EntornRef;
 import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesPluginDir3;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Fet.FetObtenirResponse;
+import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Indicador.SincronitzarCatalegResponse;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
@@ -13,6 +14,7 @@ import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.TempsEntity;
 import es.caib.comanda.estadistica.persist.repository.*;
 import es.caib.comanda.model.v1.estadistica.*;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,6 +23,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
@@ -66,6 +70,10 @@ class EstadisticaHelperTest {
     private EntitatRepository entitatRepository;
     @Mock
     private UnitatOrganitzativaHelper unitatOrganitzativaHelper;
+    @Mock
+    private I18nUtil i18nUtil;
+    @Mock
+    private ApplicationContext applicationContext;
 
     @InjectMocks
     private EstadisticaHelper estadisticaHelper;
@@ -76,6 +84,10 @@ class EstadisticaHelperTest {
 
     @BeforeEach
     void setUp() {
+        ReflectionTestUtils.setField(I18nUtil.class, "applicationContext", applicationContext);
+        lenient().when(applicationContext.getBean(I18nUtil.class)).thenReturn(i18nUtil);
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(i -> i.getArgument(0));
+
         ReflectionTestUtils.setField(estadisticaHelper, "statsAuthUser", "staticUser");
         ReflectionTestUtils.setField(estadisticaHelper, "statsAuthPassword", "staticPass");
         ReflectionTestUtils.setField(estadisticaHelper, "self", estadisticaHelper);
@@ -231,6 +243,55 @@ class EstadisticaHelperTest {
         assertThat(result).isNotNull();
         assertThat(result.getSuccess()).isFalse();
         assertThat(result.getMessage()).contains("Connection refused");
+    }
+
+    @Test
+    @DisplayName("getEstadisticaDadesAmbUrl: retorna error quan hi ha RestClientException")
+    void getEstadisticaDadesAmbUrl_retornaErrorQuanHiHaExcepcio() {
+        // Given
+        entornApp.setEstadisticaAuth(false);
+        when(restTemplate.getForObject(eq(DADES_URL), eq(RegistresEstadistics.class)))
+            .thenThrow(new RestClientException("Connection refused"));
+        // When
+        FetObtenirResponse result = estadisticaHelper.getEstadisticaDadesAmbUrl(entornApp, DADES_URL, false);
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getSuccess()).isFalse();
+        assertThat(result.getMessage()).contains("Connection refused");
+        verify(restTemplate, never()).getForObject(eq(INFO_URL), any());
+    }
+
+    @Test
+    @DisplayName("getEstadisticaDadesAmbUrl: quan dades correctes no consulta la URL d'informació de catàleg")
+    void getEstadisticaDadesAmbUrl_quanCorrecte_noConsultaCataleg() {
+        // Given
+        entornApp.setEstadisticaAuth(false);
+        RegistresEstadistics registres = buildRegistresEstadistics();
+        when(restTemplate.getForObject(eq(DADES_URL), eq(RegistresEstadistics.class)))
+            .thenReturn(registres);
+        // When
+        FetObtenirResponse result = estadisticaHelper.getEstadisticaDadesAmbUrl(entornApp, DADES_URL, false);
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getSuccess()).isTrue();
+        verify(restTemplate, never()).getForObject(eq(INFO_URL), any());
+    }
+
+    @Test
+    @DisplayName("getEstadisticaDadesAmbUrl: quan app o entorn són nuls, no llança NullPointerException")
+    void getEstadisticaDadesAmbUrl_quanAppOEntornNul_noLlancaNullPointerException() {
+        // Given
+        entornApp.setApp(null);
+        entornApp.setEntorn(null);
+        entornApp.setEstadisticaAuth(false);
+        RegistresEstadistics registres = buildRegistresEstadistics();
+        when(restTemplate.getForObject(eq(DADES_URL), eq(RegistresEstadistics.class)))
+            .thenReturn(registres);
+        // When
+        FetObtenirResponse result = estadisticaHelper.getEstadisticaDadesAmbUrl(entornApp, DADES_URL, false);
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getSuccess()).isTrue();
     }
 
     @Test
@@ -1008,5 +1069,129 @@ class EstadisticaHelperTest {
         // Assert
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getEntornAppId()).isEqualTo(10L);
+    }
+
+    @Test
+    @DisplayName("sincronitzarEstadisticaInfo: llança IllegalArgumentException si entornApp és nul")
+    void sincronitzarEstadisticaInfo_quanEntornAppNul_llancaExcepcio() {
+        org.junit.jupiter.api.Assertions.assertThrows(
+            IllegalArgumentException.class,
+            () -> estadisticaHelper.sincronitzarEstadisticaInfo(null)
+        );
+    }
+
+    @Test
+    @DisplayName("sincronitzarEstadisticaInfo: retorna error si l'entorn no té URL d'informació estadística")
+    void sincronitzarEstadisticaInfo_quanSenseUrl_retornaError() {
+        entornApp.setEstadisticaInfoUrl(null);
+
+        SincronitzarCatalegResponse res = estadisticaHelper.sincronitzarEstadisticaInfo(entornApp);
+
+        assertThat(res.isSuccess()).isFalse();
+        assertThat(res.getMessage()).isNotBlank();
+    }
+
+    @Test
+    @DisplayName("sincronitzarEstadisticaInfo: retorna error quan la crida HTTP falla amb RestClientException")
+    void sincronitzarEstadisticaInfo_quanRestClientException_retornaError() {
+        entornApp.setEstadisticaAuth(false);
+        when(restTemplate.getForObject(eq(INFO_URL), eq(EstadistiquesInfo.class)))
+            .thenThrow(new RestClientException("Connection timed out"));
+
+        SincronitzarCatalegResponse res = estadisticaHelper.sincronitzarEstadisticaInfo(entornApp);
+
+        assertThat(res.isSuccess()).isFalse();
+        assertThat(res.getMessage()).contains("Connection timed out");
+    }
+
+    @Test
+    @DisplayName("sincronitzarEstadisticaInfo: quan dades correctes, retorna success amb comptadors d'elements")
+    void sincronitzarEstadisticaInfo_quanDadesCorrectes_retornaSuccessIComptadors() {
+        entornApp.setEstadisticaAuth(false);
+        mockEstadistiquesInfoResponse();
+        when(indicadorRepository.findByCodiAndEntornAppId(anyString(), anyLong())).thenReturn(Optional.empty());
+        when(dimensioRepository.findByCodiAndEntornAppId(anyString(), anyLong())).thenReturn(Optional.empty());
+        when(dimensioRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        SincronitzarCatalegResponse res = estadisticaHelper.sincronitzarEstadisticaInfo(entornApp);
+
+        assertThat(res.isSuccess()).isTrue();
+        assertThat(res.getIndicadorsCount()).isEqualTo(1);
+        assertThat(res.getDimensionsCount()).isEqualTo(1);
+        assertThat(res.getEntornsCount()).isEqualTo(1);
+        assertThat(res.getMessage()).isNotBlank();
+    }
+
+    @Test
+    @DisplayName("sincronitzarEstadisticaInfoPerApp: retorna error quan l'aplicació no té entorns")
+    void sincronitzarEstadisticaInfoPerApp_quanSenseEntorns_retornaError() {
+        when(estadisticaClientHelper.getEntornAppsByAppId(1L)).thenReturn(Collections.emptyList());
+
+        SincronitzarCatalegResponse res = estadisticaHelper.sincronitzarEstadisticaInfoPerApp(1L);
+
+        assertThat(res.isSuccess()).isFalse();
+        assertThat(res.getMessage()).isNotBlank();
+    }
+
+    @Test
+    @DisplayName("sincronitzarEstadisticaInfoPerApp: retorna error quan tots els entorns són inactius o sense URL")
+    void sincronitzarEstadisticaInfoPerApp_quanTotsInactiusOSenseUrl_retornaError() {
+        EntornApp inactiu = new EntornApp();
+        inactiu.setId(101L);
+        inactiu.setActiva(false);
+
+        EntornApp senseUrl = new EntornApp();
+        senseUrl.setId(102L);
+        senseUrl.setActiva(true);
+        senseUrl.setEstadisticaInfoUrl("");
+        senseUrl.setEntorn(new EntornRef(2L, "PROD"));
+
+        when(estadisticaClientHelper.getEntornAppsByAppId(1L)).thenReturn(List.of(inactiu, senseUrl));
+
+        SincronitzarCatalegResponse res = estadisticaHelper.sincronitzarEstadisticaInfoPerApp(1L);
+
+        assertThat(res.isSuccess()).isFalse();
+        assertThat(res.getMessage()).contains("PROD (sense URL)");
+    }
+
+    @Test
+    @DisplayName("sincronitzarEstadisticaInfoPerApp: quan entorns actius, sincronitza en bucle i agrega comptadors")
+    void sincronitzarEstadisticaInfoPerApp_quanEntornsActius_agregaComptadors() {
+        entornApp.setActiva(true);
+        entornApp.setEstadisticaAuth(false);
+        mockEstadistiquesInfoResponse();
+        when(indicadorRepository.findByCodiAndEntornAppId(anyString(), anyLong())).thenReturn(Optional.empty());
+        when(dimensioRepository.findByCodiAndEntornAppId(anyString(), anyLong())).thenReturn(Optional.empty());
+        when(dimensioRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(estadisticaClientHelper.getEntornAppsByAppId(1L)).thenReturn(List.of(entornApp));
+
+        SincronitzarCatalegResponse res = estadisticaHelper.sincronitzarEstadisticaInfoPerApp(1L);
+
+        assertThat(res.isSuccess()).isTrue();
+        assertThat(res.getEntornsCount()).isEqualTo(1);
+        assertThat(res.getIndicadorsCount()).isEqualTo(1);
+        assertThat(res.getDimensionsCount()).isEqualTo(1);
+        assertThat(res.getMessage()).isNotBlank();
+    }
+
+    @Test
+    @DisplayName("missatges i18n: els missatges de sincronització substitueixen correctament els paràmetres i mantenen l'apòstrof")
+    void missatgesSincronitzacioCataleg_substitueixenParametresCorrectament() {
+        ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
+        messageSource.setBasename("classpath:comanda.estadistica-messages");
+        messageSource.setDefaultEncoding("UTF-8");
+        messageSource.setDefaultLocale(Locale.forLanguageTag("ca"));
+
+        String msgInd = messageSource.getMessage(
+                "es.caib.comanda.estadistica.logic.helper.EstadisticaHelper.sincronitzarCataleg.success",
+                new Object[]{5, 2},
+                Locale.forLanguageTag("ca"));
+        assertThat(msgInd).isEqualTo("S'han sincronitzat 5 indicadors i 2 dimensions correctament");
+
+        String msgApp = messageSource.getMessage(
+                "es.caib.comanda.estadistica.logic.helper.EstadisticaHelper.sincronitzarCatalegApp.success",
+                new Object[]{3, 10, 4},
+                Locale.forLanguageTag("ca"));
+        assertThat(msgApp).isEqualTo("S'han sincronitzat 3 entorns (10 indicadors i 4 dimensions)");
     }
 }

@@ -1,7 +1,27 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import EstadisticaDashboardEdit from './EstadisticaDashboardEdit';
 import translationCa from '../i18n/translationCa';
+
+vi.mock('../theme.ts', async () => {
+    const mui = await vi.importActual<typeof import('@mui/material/styles')>('@mui/material/styles');
+    return {
+        lightTheme: mui.createTheme({
+            palette: {
+                mode: 'light',
+                background: { default: '#ffffff', paper: '#ffffff' },
+                text: { primary: '#000000' },
+            }
+        }),
+        darkTheme: mui.createTheme({
+            palette: {
+                mode: 'dark',
+                background: { default: '#121212', paper: '#121212' },
+                text: { primary: '#ffffff' },
+            }
+        }),
+    };
+});
 
 const mocks = vi.hoisted(() => ({
     useParamsMock: vi.fn(),
@@ -12,6 +32,7 @@ const mocks = vi.hoisted(() => ({
     showFormDialogMock: vi.fn(),
     useDashboardMock: vi.fn(),
     useDashboardWidgetsMock: vi.fn(),
+    updateWidgetsLayoutMock: vi.fn(),
     useDashboardFiltresMock: vi.fn(),
     useMapDashboardItemsMock: vi.fn(),
     createDashboardItemMock: vi.fn(),
@@ -53,6 +74,7 @@ const mocks = vi.hoisted(() => ({
                             ...translationCa.page.dashboards.editor,
                             expandPanel: 'Expandir panell',
                             collapsePanel: 'Compactar panell',
+                            darkModeToggle: 'Mode fosc',
                         },
                         action: {
                             ...translationCa.page.dashboards.action,
@@ -100,18 +122,6 @@ vi.mock('reactlib', async (importOriginal) => {
 
     return {
         ...original,
-    BasePage: ({
-        toolbar,
-        children,
-    }: {
-        toolbar: React.ReactNode;
-        children: React.ReactNode;
-    }) => (
-        <div>
-            <div data-testid="toolbar">{toolbar}</div>
-            <div>{children}</div>
-        </div>
-    ),
     MuiDataGrid: ({
         title,
         rowAdditionalActions,
@@ -242,7 +252,7 @@ vi.mock('../../lib/components/mui/form/FormDialog.tsx', () => ({
 
 vi.mock('../hooks/dashboardRequests.ts', () => ({
     useDashboard: (id: string) => mocks.useDashboardMock(id),
-    useDashboardWidgets: (id: string) => mocks.useDashboardWidgetsMock(id),
+    useDashboardWidgets: (id: string) => ({ updateWidgetsLayout: mocks.updateWidgetsLayoutMock, ...mocks.useDashboardWidgetsMock(id) }),
     useDashboardFiltres: (id: string) => mocks.useDashboardFiltresMock(id),
 }));
 
@@ -267,7 +277,7 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', async () => 
         dashboardId: number;
         editable: boolean;
         dashboardWidgets?: Array<Record<string, unknown>>;
-        onGridLayoutItemsChange?: (items: Array<{ id: number; x: number; y: number; w: number; h: number; type?: string }>) => void;
+        onGridLayoutItemsChange?: (items: Array<{ id: string; rawId: string | number; x: number; y: number; w: number; h: number; type?: string }>) => void;
         onDeleteItem?: (entity: any) => void;
         onDuplicateItem?: (entity: any) => void;
         onSelectItems?: (entities: any[]) => void;
@@ -286,7 +296,7 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', async () => 
             <button
                 type="button"
                 onClick={() =>
-                    onGridLayoutItemsChange?.([{ id: 1, x: 1, y: 1, w: 4, h: 4 }])
+                    onGridLayoutItemsChange?.([{ id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 1, y: 1, w: 4, h: 4 }])
                 }
             >
                 Moure layout
@@ -295,8 +305,8 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', async () => 
                 type="button"
                 onClick={() =>
                     onGridLayoutItemsChange?.([
-                        { id: 1, x: 1, y: 1, w: 4, h: 4 },
-                        { id: 2, x: 6, y: 6, w: 3, h: 3 },
+                        { id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 1, y: 1, w: 4, h: 4 },
+                        { id: '2-SIMPLE', rawId: 2, type: 'SIMPLE', x: 6, y: 6, w: 3, h: 3 },
                     ])
                 }
             >
@@ -418,7 +428,7 @@ describe('EstadisticaDashboardEdit', () => {
             loading: false,
             forceRefresh: vi.fn(),
         });
-        mocks.useMapDashboardItemsMock.mockReturnValue([{ id: 1, x: 0, y: 0, w: 3, h: 3 }]);
+        mocks.useMapDashboardItemsMock.mockReturnValue([{ id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 0, y: 0, w: 3, h: 3 }]);
         mocks.createDashboardItemMock.mockResolvedValue(undefined);
         mocks.patchDashboardItemMock.mockResolvedValue(undefined);
         mocks.patchDashboardTitolMock.mockResolvedValue(undefined);
@@ -516,10 +526,10 @@ describe('EstadisticaDashboardEdit', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Simular selecció múltiple' }));
 
         expect(screen.getByTestId('editor-selection')).toHaveTextContent(
-            JSON.stringify({ kind: 'multi', ids: ['1', '2'] })
+            JSON.stringify({ kind: 'multi', ids: ['1-SIMPLE', '2-SIMPLE'] })
         );
         expect(screen.getByTestId('dashboard-multi-selected-ids')).toHaveTextContent(
-            JSON.stringify(['1', '2'])
+            JSON.stringify(['1-SIMPLE', '2-SIMPLE'])
         );
     });
 
@@ -626,13 +636,13 @@ describe('EstadisticaDashboardEdit', () => {
         });
 
         const toolbar = screen.getByTestId('dashboard-editor-toolbar');
-        // Tema clar per defecte: la capçalera usa grey[200] (#eeeeee).
-        expect(getComputedStyle(toolbar).backgroundColor).toBe('rgb(238, 238, 238)');
+        // Tema clar per defecte
+        expect(getComputedStyle(toolbar).backgroundColor).toBe('rgb(255, 255, 255)');
 
         fireEvent.click(screen.getByRole('switch', { name: 'Mode fosc' }));
 
-        // Tema fosc: la capçalera ha de passar a usar grey[900] (#212121), no només els widgets.
-        expect(getComputedStyle(toolbar).backgroundColor).toBe('rgb(33, 33, 33)');
+        // Tema fosc: la capçalera
+        expect(getComputedStyle(toolbar).backgroundColor).toBe('rgb(18, 18, 18)');
     });
 
     it('EstadisticaDashboardEdit_quanHiHaErrorGeneric_mostraLalertaDeCarrega', () => {
@@ -725,6 +735,24 @@ describe('EstadisticaDashboardEdit', () => {
         expect(forceRefreshMock).not.toHaveBeenCalled();
     });
 
+    it('EstadisticaDashboardEdit_quanEsMouUnElement_actualitzaLEstatLocalPerPoderDesarElRetornAlOrigen', async () => {
+        // Regressió: l'estat local no s'actualitzava en moure un sol element, així que en tornar-lo a la posició
+        // original el canvi es comparava contra la posició antiga, es donava per "sense canvis" i no es desava.
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'Moure layout' }));
+
+        await waitFor(() => {
+            expect(mocks.updateWidgetsLayoutMock).toHaveBeenCalledWith([
+                expect.objectContaining({ id: '1-SIMPLE', x: 1, y: 1, w: 4, h: 4 }),
+            ]);
+        });
+    });
+
     it('EstadisticaDashboardEdit_quanEsMouUnGrupDeMultiplesElements_refrescaElsWidgetsPerActualitzarLaRestaAlCanvas', async () => {
         // Regressió: en moure un grup (selecció múltiple), react-grid-layout només mostra internament la
         // posició de l'element realment arrossegat; encara que la resta ja s'han desat correctament, calia
@@ -737,8 +765,8 @@ describe('EstadisticaDashboardEdit', () => {
             forceRefresh: forceRefreshMock,
         });
         mocks.useMapDashboardItemsMock.mockReturnValue([
-            { id: 1, x: 0, y: 0, w: 3, h: 3 },
-            { id: 2, x: 5, y: 5, w: 3, h: 3 },
+            { id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 0, y: 0, w: 3, h: 3 },
+            { id: '2-SIMPLE', rawId: 2, type: 'SIMPLE', x: 5, y: 5, w: 3, h: 3 },
         ]);
 
         render(<EstadisticaDashboardEdit />);
@@ -810,7 +838,8 @@ describe('EstadisticaDashboardEdit', () => {
             expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
         });
 
-        const leftToggle = screen.getAllByTitle('Compactar panell')[0];
+        const leftPanelHandle = await waitFor(() => screen.getByTestId('left-panel-resize-handle'));
+        const leftToggle = within(leftPanelHandle).getByRole('button');
         fireEvent.click(leftToggle);
 
         expect(localStorage.getItem('comanda.dashboardEdit.panelCollapsed.left')).toBe('true');
@@ -822,9 +851,8 @@ describe('EstadisticaDashboardEdit', () => {
         await waitFor(() => {
             expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
         });
-        // Només queda un botó "Compactar panell" (el dret), ja que l'esquerre s'ha quedat contret.
-        expect(screen.getAllByTitle('Compactar panell')).toHaveLength(1);
-        expect(screen.getByTitle('Expandir panell')).toBeInTheDocument();
+        expect(localStorage.getItem('comanda.dashboardEdit.panelCollapsed.left')).toBe('true');
+        expect(localStorage.getItem('comanda.dashboardEdit.panelCollapsed.right')).not.toBe('true');
     });
 
     it('EstadisticaDashboardEdit_quanEsRedimensionaElPanellDret_esGuardaLaMidaAlLocalStorage', async () => {
@@ -836,7 +864,7 @@ describe('EstadisticaDashboardEdit', () => {
             expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
         });
 
-        const handle = screen.getByTestId('right-panel-resize-handle');
+        const handle = await waitFor(() => screen.getByTestId('right-panel-resize-handle'));
         fireEvent.mouseDown(handle, { clientX: 500 });
         fireEvent.mouseMove(document, { clientX: 440 }); // arrossegar cap a l'esquerra: panell més ample
         fireEvent.mouseUp(document);
@@ -849,10 +877,8 @@ describe('EstadisticaDashboardEdit', () => {
         await waitFor(() => {
             expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
         });
-        const restoredHandle = container.querySelector(
-            '[data-testid="right-panel-resize-handle"]'
-        )?.parentElement as HTMLElement;
-        expect(getComputedStyle(restoredHandle).width).toBe('500px');
+        const restoredHandle = await waitFor(() => container.querySelector('[data-testid="right-panel-resize-handle"]') as HTMLElement);
+        expect(getComputedStyle(restoredHandle.parentElement!).width).toBe('500px');
     });
 
     it('EstadisticaDashboardEdit_perDefecte_usaElModeEscalatPerAjustarSe', async () => {
@@ -917,10 +943,13 @@ describe('EstadisticaDashboardEdit', () => {
             expect(screen.getByTestId('dashboard-reserved-right-width')).toHaveTextContent('440');
         });
 
-        // El botó "Compactar panell" del plafó dret és el segon (l'esquerre és el primer).
-        fireEvent.click(screen.getAllByTitle('Compactar panell')[1]);
+        const rightPanelHandle = await waitFor(() => screen.getByTestId('right-panel-resize-handle'));
+        const rightToggle = within(rightPanelHandle).getByRole('button');
+        fireEvent.click(rightToggle);
 
-        expect(screen.getByTestId('dashboard-reserved-right-width')).toHaveTextContent('0');
+        await waitFor(() => {
+            expect(screen.getByTestId('dashboard-reserved-right-width')).toHaveTextContent('0');
+        });
     });
 
     it('EstadisticaDashboardEdit_quanElPlafoTeUnaAmpladaPersonalitzada_laReservaLaReflecteix', async () => {

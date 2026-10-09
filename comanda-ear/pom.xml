@@ -148,7 +148,8 @@
 				<artifactId>docker-maven-plugin</artifactId>
 				<version>0.45.0</version>
 				<configuration>
-					<dockerHost>unix:///run/user/1000/podman/podman.sock</dockerHost>
+<!--                    Descomentar si s'usa podman enlloc de docker -->
+<!--					<dockerHost>unix:///run/user/1000/podman/podman.sock</dockerHost>-->
 					<verbose>true</verbose>
 					<images>
 						<image>

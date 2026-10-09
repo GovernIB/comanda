@@ -11,6 +11,7 @@ import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -61,6 +62,10 @@ import java.util.List;
         descriptionField = "codiNomDescription",
         accessConstraints = {
                 @ResourceAccessConstraint(
+                        type = ResourceAccessConstraint.ResourceAccessConstraintType.AUTHENTICATED,
+                        grantedPermissions = { PermissionEnum.READ }
+                ),
+                @ResourceAccessConstraint(
                         type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
                         roles = { BaseConfig.ROLE_ADMIN },
                         // CREATE/WRITE/DELETE calen perquè els indicadors de tipus FORMULA es creen i
@@ -83,6 +88,14 @@ import java.util.List;
 										roles = { BaseConfig.ROLE_ADMIN },
 										grantedPermissions = { PermissionEnum.WRITE }
 								)
+						}),
+				@ResourceArtifact(type = ResourceArtifactType.ACTION, code = Indicador.ACTION_SINCRONITZAR_CATALEG, requiresId = false, formClass = Indicador.SincronitzarCatalegParams.class,
+						accessConstraints = {
+								@ResourceAccessConstraint(
+										type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+										roles = { BaseConfig.ROLE_ADMIN },
+										grantedPermissions = { PermissionEnum.WRITE }
+								)
 						})
 		}
 )
@@ -94,6 +107,8 @@ public class Indicador extends BaseResource<Long> {
     public static final String FILTER_BY_APP_NAMEDFILTER = "filterByApp";
     /** Acció per copiar un indicador de tipus FORMULA a un altre entorn de la mateixa App (vegeu IndicadorServiceImpl). */
     public static final String COPIAR_ENTORN_ACTION = "copiar_indicador_entorn";
+    /** Acció per sincronitzar/carregar manualment els indicadors i dimensions d'un entorn o app des de la seva URL. */
+    public static final String ACTION_SINCRONITZAR_CATALEG = "sincronitzar_cataleg";
 
     @NotNull
     @Pattern(regexp = "^[a-zA-Z0-9_]*$", message = "El codi només pot contenir caràcters alfanumèrics")
@@ -141,6 +156,32 @@ public class Indicador extends BaseResource<Long> {
     public static class CopiarIndicadorEntornParams implements Serializable {
         @NotNull
         private ResourceReference<EntornResource, Long> entornDesti;
+    }
+
+    /** Paràmetres per a l'acció {@link #ACTION_SINCRONITZAR_CATALEG}: es pot indicar un entornAppId concret o un appId per sincronitzar tots els seus entorns. */
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class SincronitzarCatalegParams implements Serializable {
+        private Long entornAppId;
+        private Long appId;
+    }
+
+    /** Resposta de l'acció {@link #ACTION_SINCRONITZAR_CATALEG}. */
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class SincronitzarCatalegResponse implements Serializable {
+        private boolean success;
+        private String message;
+        private int indicadorsCount;
+        private int dimensionsCount;
+        private int entitatsCount;
+        private int entornsCount;
     }
 
 }

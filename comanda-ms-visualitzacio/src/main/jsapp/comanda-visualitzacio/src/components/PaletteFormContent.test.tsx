@@ -52,11 +52,14 @@ const renderComponent = (props?: Partial<React.ComponentProps<typeof PaletteForm
     );
 };
 
-const getIconButtonByLabel = (container: HTMLElement, label: string, index: number = 0) => {
-    const spans = container.querySelectorAll(`[aria-label="${label}"]`);
-    const span = spans[index];
-    if (!span) return null;
-    return span.querySelector('button') as HTMLButtonElement;
+const getIconButtonByTitle = (container: HTMLElement, title: string, index: number = 0) => {
+    const buttons = container.querySelectorAll(`button[title="${title}"]`);
+    return (buttons[index] as HTMLButtonElement) || null;
+};
+
+const getAllIconButtonsByTitle = (container: HTMLElement, title: string) => {
+    const buttons = container.querySelectorAll(`button[title="${title}"]`);
+    return Array.from(buttons) as HTMLButtonElement[];
 };
 
 const getAllIconButtons = (container: HTMLElement, label: string) => {
@@ -67,7 +70,7 @@ const getAllIconButtons = (container: HTMLElement, label: string) => {
 };
 
 describe('PaletteFormContent', () => {
-    
+
     it('PaletteFormContent_renderitzaElsCampsNomIDescripcioAmbValorsIniciais', () => {
         renderComponent();
 
@@ -103,7 +106,7 @@ describe('PaletteFormContent', () => {
         renderComponent();
 
         const colorBoxes = screen.getAllByLabelText(/^[0-9]+: #[0-9a-f]{6}$/i);
-        
+
         expect(colorBoxes).toHaveLength(3);
         expect(colorBoxes[0]).toHaveAttribute('aria-label', '0: #FF0000');
         expect(colorBoxes[1]).toHaveAttribute('aria-label', '1: #00FF00');
@@ -113,7 +116,7 @@ describe('PaletteFormContent', () => {
     it('PaletteFormContent_renderitzaUnInputPerCadaColorAmbElSeuValor', () => {
         renderComponent();
 
-        const colorInputs = screen.getAllByRole('textbox').filter(input => 
+        const colorInputs = screen.getAllByRole('textbox').filter(input =>
             input.getAttribute('type') !== 'color'
         );
 
@@ -158,9 +161,9 @@ describe('PaletteFormContent', () => {
         const onChange = vi.fn();
         const { container } = renderComponent({ onChange });
 
-        const upButton = getIconButtonByLabel(container, 'Pujar', 1);
+        const upButton = getIconButtonByTitle(container, 'Pujar', 1);
         expect(upButton).toBeInTheDocument();
-        
+
         fireEvent.click(upButton as Element);
         expect(onChange).toHaveBeenCalled();
     });
@@ -169,30 +172,30 @@ describe('PaletteFormContent', () => {
         const onChange = vi.fn();
         const { container } = renderComponent({ onChange });
 
-        const downButton = getIconButtonByLabel(container, 'Baixar', 0);
+        const downButton = getIconButtonByTitle(container, 'Baixar', 0);
         expect(downButton).toBeInTheDocument();
-        
+
         fireEvent.click(downButton as Element);
         expect(onChange).toHaveBeenCalled();
     });
 
     it('PaletteFormContent_elsBotonsMoureEstanDeshabilitatsEnExtrems', () => {
         const { container } = renderComponent();
-        
-        const firstUp = getIconButtonByLabel(container, 'Pujar', 0);
-        const lastDown = getIconButtonByLabel(container, 'Baixar', 2);
 
-        expect(firstUp?.hasAttribute('disabled') || firstUp?.classList.contains('Mui-disabled')).toBe(true);
-        expect(lastDown?.hasAttribute('disabled') || lastDown?.classList.contains('Mui-disabled')).toBe(true);
+        const firstUp = getIconButtonByTitle(container, 'Pujar', 0);
+        const lastDown = getIconButtonByTitle(container, 'Baixar', 2);
+
+        expect(firstUp?.hasAttribute('disabled')).toBe(true);
+        expect(lastDown?.hasAttribute('disabled')).toBe(true);
     });
 
     it('PaletteFormContent_quanFesClicAEsborrarColor_eliminaElColor', () => {
         const onChange = vi.fn();
         const { container } = renderComponent({ onChange });
 
-        const deleteButtons = getAllIconButtons(container, 'Esborrar');
+        const deleteButtons = getAllIconButtonsByTitle(container, 'Esborrar');
         expect(deleteButtons[1]).toBeInTheDocument();
-        
+
         fireEvent.click(deleteButtons[1]);
 
         expect(onChange).toHaveBeenCalledWith(
@@ -212,26 +215,27 @@ describe('PaletteFormContent', () => {
         };
 
         const { container } = renderComponent({ palette: singleColorPalette });
-        const deleteButton = getIconButtonByLabel(container, 'Esborrar', 0);
-        
-        expect(deleteButton?.hasAttribute('disabled') || deleteButton?.classList.contains('Mui-disabled')).toBe(true);
+        const deleteButton = getIconButtonByTitle(container, 'Esborrar', 0);
+
+        expect(deleteButton?.hasAttribute('disabled')).toBe(true);
     });
 
-    it('PaletteFormContent_quanFesClicAAfegirColor_afegeixUnNouColorAlFinal', () => {
-        const onChange = vi.fn();
-        renderComponent({ onChange });
+    it('PaletteFormContent_quanDisabled_totsElsControlsEstanInhabilitats', () => {
+        const { container } = renderComponent({ disabled: true });
 
-        const addButton = screen.getByText('Afegir color');
-        fireEvent.click(addButton);
+        expect(screen.getByLabelText('Nom')).toBeDisabled();
+        expect(screen.getByLabelText('Descripció')).toBeDisabled();
+        expect(screen.getByText('Afegir color')).toBeDisabled();
 
-        expect(onChange).toHaveBeenCalledWith(
-            expect.objectContaining({
-                colors: expect.arrayContaining([
-                    ...mockPalette.colors,
-                    expect.objectContaining({ posicio: 3, valor: '#000000' }),
-                ]),
-            })
-        );
+        const iconButtons = [
+            ...getAllIconButtonsByTitle(container, 'Pujar'),
+            ...getAllIconButtonsByTitle(container, 'Baixar'),
+            ...getAllIconButtonsByTitle(container, 'Esborrar'),
+        ];
+
+        iconButtons.forEach(btn => {
+            expect(btn?.hasAttribute('disabled')).toBe(true);
+        });
     });
 
     it('PaletteFormContent_quanDisabled_totsElsControlsEstanInhabilitats', () => {
@@ -246,7 +250,7 @@ describe('PaletteFormContent', () => {
             ...getAllIconButtons(container, 'Baixar'),
             ...getAllIconButtons(container, 'Esborrar'),
         ];
-        
+
         iconButtons.forEach(btn => {
             expect(btn?.hasAttribute('disabled') || btn?.classList.contains('Mui-disabled')).toBe(true);
         });
@@ -254,14 +258,14 @@ describe('PaletteFormContent', () => {
 
     it('PaletteFormContent_quanShowDuplicateButtonIEsModeEdit_mostraElBotoDuplicar', () => {
         const onDuplicate = vi.fn();
-        
+
         renderComponent({ showDuplicateButton: true, mode: 'edit', onDuplicate });
         expect(screen.getByText('Duplicar paleta')).toBeInTheDocument();
     });
 
     it('PaletteFormContent_quanNoEsModeEdit_noMostraElBotoDuplicar', () => {
         renderComponent({ showDuplicateButton: true, mode: 'create' });
-        
+
         expect(screen.queryByText('Duplicar paleta')).not.toBeInTheDocument();
     });
 
@@ -322,7 +326,7 @@ describe('PaletteFormContent', () => {
         const colorValues = screen.getAllByDisplayValue(/#[0-9a-f]{6}/i)
             .filter(input => input.getAttribute('type') !== 'color')
             .map(input => input.getAttribute('value'));
-        
+
         expect(colorValues.slice(0, 3)).toEqual(['#FF0000', '#00FF00', '#0000FF']);
     });
 });

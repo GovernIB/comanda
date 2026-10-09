@@ -44,6 +44,11 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
     protected void afterCreate(AclEntryEntity entity, AclEntry resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
         cacheHelper.evictCacheItemByPrefix(HazelCastCacheConfig.ACL_IDS_WITH_PERMISSION_CACHE, entity.getResource().getResourceType().name());
         cacheHelper.evictCacheItemByPrefix(HazelCastCacheConfig.ACL_COUNT_CACHE, entity.getResource().getResourceType().name());
+        evictDashboardCacheBySubjectTransition(null, entity.getResource());
+    }
+    @Override
+    protected void beforeUpdateEntity(AclEntryEntity entity, AclEntry resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        evictDashboardCacheBySubjectTransition(entity.getResource(), resource);
     }
     @Override
     protected void afterUpdate(AclEntryEntity entity, AclEntry resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
@@ -56,6 +61,7 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
         cacheHelper.evictCacheItemByPrefix(HazelCastCacheConfig.ACL_HAS_PERMISSION_CACHE, entity.getResource().getResourceType().name() + "_" + entity.getResource().getResourceId());
         cacheHelper.evictCacheItemByPrefix(HazelCastCacheConfig.ACL_IDS_WITH_PERMISSION_CACHE, entity.getResource().getResourceType().name());
         cacheHelper.evictCacheItemByPrefix(HazelCastCacheConfig.ACL_COUNT_CACHE, entity.getResource().getResourceType().name());
+        evictDashboardCacheBySubjectTransition(null, entity.getResource());
     }
 
     @Override
@@ -72,7 +78,7 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 				collect(Collectors.toList());
 		return aclHelper.anyPermissionGranted(
 				getClassFromResourceType(resourceType),
-				resourceId,
+                normalizeResourceId(resourceId),
 				aclPermissions,
 				toSids(user, roles).toArray(new Sid[0]));
 	}
@@ -97,7 +103,7 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
     @Override
     @Cacheable(value = HazelCastCacheConfig.ACL_COUNT_CACHE, key = "#resourceType?.name() + '_' + #resourceId?.toString()")
     public Integer countSidsWithPermission(ResourceType resourceType, Serializable resourceId) {
-        return aclHelper.countSidsWithPermission(getClassFromResourceType(resourceType), resourceId);
+        return aclHelper.countSidsWithPermission(getClassFromResourceType(resourceType), normalizeResourceId(resourceId));
     }
 
     @Override
@@ -440,4 +446,44 @@ public class AclEntryServiceImpl extends BaseMutableResourceService<AclEntry, St
 		};
 	}
 
+    private void evictDashboardCacheBySubjectTransition(AclEntry oldResource, AclEntry newResource) {
+        if (!ResourceType.ENTITAT.equals(newResource.getResourceType()) &&
+            !ResourceType.UNITAT.equals(newResource.getResourceType())) {
+            return;
+        }
+        if (newResource.getSubjectType() == SubjectType.ROLE ||
+            (oldResource != null && !newResource.getSubjectType().equals(oldResource.getSubjectType()))) {
+            cacheHelper.evictCache(HazelCastCacheConfig.DASHBOARD_WIDGET_CACHE);
+            return;
+        }
+        if (newResource.getSubjectType() == SubjectType.USER) {
+            cacheHelper.evictDashboardWidgetCacheByUser(newResource.getSubjectValue());
+            if (oldResource != null && !Objects.equals(newResource.getSubjectValue(), oldResource.getSubjectValue())) {
+                cacheHelper.evictDashboardWidgetCacheByUser(oldResource.getSubjectValue());
+            }
+        }
+    }
+
+    /**
+     * Si l'id és un Long o un String el retornarà amb aquest format.
+     * Aquest mètode és necessària per a les cridades fetes des d'un FeignClient.
+     * Si en un futur, hi ha tipus de dades amb ID que pugui donar error en ser un Long emprarem el valor ResourceType.
+     **/
+    private Serializable normalizeResourceId(Serializable resourceId) {
+        if (resourceId == null) {
+            return null;
+        }
+        if (resourceId instanceof Number) {
+            return ((Number) resourceId).longValue();
+        }
+        if (resourceId instanceof String) {
+            String strId = (String) resourceId;
+            try {
+                return Long.valueOf(strId);
+            } catch (NumberFormatException e) {
+                return strId;
+            }
+        }
+        return resourceId;
+    }
 }

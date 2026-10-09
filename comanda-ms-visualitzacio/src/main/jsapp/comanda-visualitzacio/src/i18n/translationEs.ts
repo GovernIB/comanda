@@ -272,7 +272,10 @@ const translationEs: translationResourcesType = {
             },
             latencia: {
                 title: "Latencia",
-                error: "Ha habido un error al mostrar el gráfico",
+                error: "Ha habido un error al mostrar el componente",
+                errorDetailsButton: "Ver detalle del error",
+                errorDetailsTitle: "Detalle del error",
+                errorDetailsClose: "Cerrar",
             },
             historicEstat: {
                 title: "Histórico de estado",
@@ -474,6 +477,10 @@ const translationEs: translationResourcesType = {
                 multiSelection: {
                     message: "{{count}} elementos seleccionados",
                 },
+                filtre: {
+                    noAppAndPeriodUsed: "No se pueden añadir más filtros. Este panel de control no tiene una aplicación asociada (necesaria para los filtros de dimensiones) y ya contiene el filtro de período.",
+                    noAppWarning: "Para crear filtros de dimensiones es necesario definir una aplicación en el panel de control.",
+                },
             },
             edit: "Editar",
             dashboardView: "Ir al panel de control",
@@ -519,9 +526,15 @@ const translationEs: translationResourcesType = {
                     analyzing: "Analizando el archivo y verificando posibles conflictos...",
                     noConflicts: "No se ha detectado ningún conflicto.",
                     importing: "Importando tablero de control y recursos asociados...",
+                    blockingChip: "Bloqueante",
+                    blockingErrorTitle: "Se han detectado dependencias no resueltas",
+                    blockingErrorDescription: "No se puede importar el tablero de control porque contiene dependencias que no existen en la aplicación o entorno de destino.",
+                    reanalyze: "Volver a analizar",
                     groups: {
                         dashboard: "Tableros de control",
                         widget: "Widgets",
+                        indicador: "Indicadores",
+                        dimensio: "Dimensiones",
                         plantilla: "Plantillas",
                         paleta: "Paletas",
                         other: "Otros elementos",
@@ -530,8 +543,10 @@ const translationEs: translationResourcesType = {
                         selectedCount: "{{count}} seleccionados",
                         useExisting: "Utilizar existente",
                         createWithAnotherName: "Crear con otro nombre",
+                        overwrite: "Sobrescribir",
                         selectAll: "Seleccionar todo",
                         deselectAll: "Deseleccionar",
+                        mixedSelectionInfo: "Algunas opciones se han deshabilitado porque la selección contiene una combinación de elementos con acciones incompatibles (p. ej.: los indicadores no se pueden resolver con la opción de crear con otro nombre, los paneles no permiten utilizar existente y el resto de elementos no admiten la de sobrescribir)",
                     },
                     warningExistingTitle: "Elementos compartidos entre paneles de control",
                     warningExistingDescription: "Los elementos con la opción \"Utilizar existente\" quedarán vinculados entre los paneles. Las modificaciones que se realicen posteriormente afectarán automáticamente a todos los paneles de control que los utilicen.",
@@ -640,6 +655,7 @@ const translationEs: translationResourcesType = {
             title: "Configuración de alarmas",
             create: "Crear configuración de alarma",
             update: "Modificar configuración de alarma",
+            view: "Visualizar configuración de alarma",
             nomHelperText: "Al realizarse una notificación por correo de la alarma, el nombre se utiliza para indicar la alarma en el asunto del correo.",
             filterWarning: "No es posible reordenar las alarmas cuando hay filtros aplicados",
             condicio: {
@@ -772,6 +788,36 @@ const translationEs: translationResourcesType = {
             action: {
                 export: "Exportar aplicación",
                 import: "Importar aplicación",
+                netejaEstadistica: "Limpieza de estadísticas",
+                sincronitzarCataleg: "Sincronizar catálogo estadístico (todos los entornos)",
+            },
+            sincronitzarCataleg: {
+                confirm: "¿Seguro que desea sincronizar el catálogo estadístico de todos los entornos activos de esta aplicación?",
+                success: "Catálogo sincronizado correctamente",
+            },
+            netejaEstadistica: {
+                label: "Limpieza de estadísticas",
+                dialogTitle: "Limpieza de estadísticas de la aplicación",
+                alertTitle: "Atención: Operación irreversible a nivel global",
+                alertDades: "Esta acción borrará de forma permanente todos los datos estadísticos registrados (hechos) de todos los entornos de esta aplicación.",
+                alertCataleg: "Atención: También se borrará el catálogo de estadística (indicadores, dimensiones y términos de fórmulas) compartido por todos los entornos.",
+                alertWidgets: "Se desvincularán o borrarán los widgets y elementos de cuadros de mando afectados.",
+                alertBackupTip: "Recomendación: Si tiene cuadros de mando configurados para esta aplicación, es imprescindible exportarlos como copia de seguridad antes de continuar.",
+                abastOptions: {
+                    nomesDades: "Sólo datos registrados (hechos)",
+                    dadesICataleg: "Datos registrados y catálogo (indicadores, dimensiones y opcionalmente widgets)",
+                },
+                fields: {
+                    abast: "Alcance de la limpieza",
+                    esborrarWidgets: "Borrar también los widgets de cuadros de mando de la aplicación",
+                    confirmoPerdua: "Confirmo que he exportado los cuadros de mando si era necesario y acepto la pérdida irreversible de los datos seleccionados",
+                },
+                validation: {
+                    confirmoRequired: "Debe confirmar expresamente que acepta la pérdida irreversible de los datos",
+                },
+                confirmButton: "Ejecutar limpieza",
+                cancelButton: "Cancelar",
+                success: "Se ha solicitado la limpieza de los datos estadísticos correctamente",
             },
             import: {
                 title: "Importar aplicación",
@@ -806,7 +852,29 @@ const translationEs: translationResourcesType = {
                     desactivar: "Desactivar",
                     permisos: "Permisos",
                     ok: "La acción se ha ejecutado correctamente",
-                }
+                },
+                netejaEstadistica: {
+                    label: "Borrar datos estadísticos",
+                    dialogTitle: "Borrar datos estadísticos del entorno",
+                    alertTitle: "Atención: Operación irreversible en el entorno",
+                    alertDades: "Esta acción borrará de forma permanente todos los datos estadísticos registrados (hechos) para este entorno.",
+                    alertScopeInfo: "Para borrar el catálogo (indicadores, dimensiones) o widgets, debe utilizar la acción de limpieza a nivel de Aplicación.",
+                    fields: {
+                        esborrarCatalegDisabled: "Borrar catálogo y widgets (Sólo disponible a nivel de Aplicación)",
+                        confirmoPerdua: "Confirmo que acepto la pérdida irreversible de todos los datos estadísticos registrados (hechos) para este entorno",
+                    },
+                    validation: {
+                        confirmoRequired: "Debe confirmar expresamente que acepta la pérdida irreversible de los datos",
+                    },
+                    confirmButton: "Borrar datos",
+                    cancelButton: "Cancelar",
+                    success: "Se ha solicitado el borrado de los datos estadísticos correctamente",
+                },
+                sincronitzarCataleg: {
+                    label: "Sincronizar catálogo estadístico",
+                    confirm: "¿Seguro que desea sincronizar el catálogo estadístico de este entorno?",
+                    success: "Catálogo sincronizado correctamente",
+                },
             }
         },
         versionsEntorns: {
@@ -837,6 +905,13 @@ const translationEs: translationResourcesType = {
                 refreshUO: {
                     label: "Actualizar unidades organizativas",
                     ok: "Unidades organizativas recargadas correctamente",
+                    error: "Se ha producido un error al actualizar las unidades organizativas",
+                    progress: {
+                        title: "Actualizando unidades organizativas",
+                        waiting: "Preparando la actualización...",
+                        processed: "{{processats}} de {{total}} procesadas",
+                        hideInBackground: "Continuar en segundo plano",
+                    },
                 },
                 organigrama: {
                     label: "Organigrama",
@@ -879,6 +954,13 @@ const translationEs: translationResourcesType = {
                     label: "Actualizar datos de la consejería",
                     title: "¿Desea actualizar los datos de la consejería?",
                     ok: "Los datos de la consejería se han actualizado correctamente",
+                    error: "Se ha producido un error al actualizar los datos de la consejería",
+                    progress: {
+                        title: "Actualizando datos de la consejería",
+                        waiting: "Preparando la actualización...",
+                        processed: "{{processats}} de {{total}} procesados",
+                        hideInBackground: "Continuar en segundo plano",
+                    },
                 },
                 sincronitzar: {
                     label: "Obtener/Actualizar nombres de órganos gestores",
@@ -894,6 +976,9 @@ const translationEs: translationResourcesType = {
                     ok: "Se ha actualizado correctamente",
                     save: "Guardar",
                 },
+                sincronitzarCataleg: "Sincronizar catálogo",
+                sincronitzarCatalegConfirm: "¿Seguro que desea sincronizar el catálogo estadístico del entorno seleccionado?",
+                sincronitzarCatalegSuccess: "Catálogo sincronizado correctamente",
             },
             editaEntitat: {
                 field: {
@@ -938,6 +1023,9 @@ const translationEs: translationResourcesType = {
                 createFormula: "Crear indicador de fórmula",
                 editFormula: "Editar fórmula",
                 copiarEntorn: "Copiar a otro entorno",
+                sincronitzarCataleg: "Sincronizar catálogo",
+                sincronitzarCatalegConfirm: "¿Seguro que desea sincronizar el catálogo estadístico del entorno seleccionado?",
+                sincronitzarCatalegSuccess: "Catálogo sincronizado correctamente",
             },
             formulaForm: {
                 createTitle: "Crear indicador de fórmula",
@@ -1709,6 +1797,9 @@ const translationEs: translationResourcesType = {
             title: "Permisos",
             resourceTitle: "permiso"
         },
+        appFormFieldReference: {
+            mostrarTots: 'Mostrar todos...',
+        },
     },
     form: {
         field: {
@@ -1760,6 +1851,42 @@ const translationEs: translationResourcesType = {
         modal_dades_dia: "Datos disponibles del día",
         dimensions: "Dimensiones",
         indicadors: "Indicadores",
+        baixa_prioritat: "Baja prioridad",
+        baixa_prioritat_descripcio: "Recupera los datos de manera progresiva en segundo plano para evitar ralentizar el resto de procesos",
+        success_baixa_prioritat: "Se ha iniciado el proceso de recuperación de baja prioridad en segundo plano",
+        processos_baixa_prioritat: "Procesos de baja prioridad",
+        titol_processos_baixa_prioritat: "Procesos de baja prioridad",
+        sense_processos: "No hay ningún proceso de baja prioridad",
+        estat_en_execucio: "En ejecución",
+        estat_finalitzat: "Finalizado",
+        estat_error: "Error",
+        estat_cancelat: "Cancelado",
+        estat_pendent: "Pendiente",
+        cancelar_proces: "Cancelar proceso",
+        proces_cancelat: "Proceso cancelado correctamente",
+        progres: "Progreso",
+        periode: "Período",
+        entorn: "Entorno",
+        filtre_tots_entorns: "Todos los entornos",
+        filtre_entorn_actual: "Solo entorno actual",
+        estat: "Estado",
+        accions: "Acciones",
+        dia: "día",
+        dies: "días",
+        errors: "errores",
+        processant: "Procesando:",
+        refrescar: "Refrescar",
+        error_cancelar_proces: "No se ha podido cancelar el proceso (quizá ya ha finalizado)",
+        processant_segon_pla: "En segundo plano...",
+        processant_segon_pla_tooltip: "Hay un proceso de recuperación en segundo plano para este día",
+        velocitat: "Velocidad",
+        velocitat_recuperacio: "Velocidad de recuperación",
+        prioritat_baixa: "Baja (10 minutos)",
+        prioritat_baixa_desc: "Mínimo impacto en el servidor. Pausa de 10 minutos entre días.",
+        prioritat_mitja: "Media (3 minutos)",
+        prioritat_mitja_desc: "Impacto moderado. Pausa de 3 minutos entre días.",
+        prioritat_alta: "Alta (Sin retraso)",
+        prioritat_alta_desc: "Recuperación rápida con pausa mínima (500 ms). Mayor impacto en el servidor.",
     },
     treeData: {
         treeView: "Vista en árbol",

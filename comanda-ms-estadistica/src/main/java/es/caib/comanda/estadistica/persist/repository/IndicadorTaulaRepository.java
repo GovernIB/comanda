@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 /**
  * Repositori per a la gestió d'operacions de persistència de l'entitat IndicadorTaulaEntity.
  *
@@ -18,8 +20,15 @@ public interface IndicadorTaulaRepository extends BaseRepository<IndicadorTaulaE
 
     IndicadorTaulaEntity findByWidgetId(Long widgetId);
 
+    @Query("SELECT it FROM IndicadorTaulaEntity it WHERE it.widget.id = :widgetId AND it.indicador.entornAppId = :entornAppId")
+    List<IndicadorTaulaEntity> findByWidgetIdAndIndicadorEntornAppId(@Param("widgetId") Long widgetId, @Param("entornAppId") Long entornAppId);
+
     @Modifying
     @Query("DELETE FROM IndicadorTaulaEntity it WHERE it.indicador IN (SELECT i FROM IndicadorEntity i WHERE i.entornAppId = :entornAppId)")
     void deleteByIndicadorEntornAppId(@Param("entornAppId") Long entornAppId);
+
+    @Modifying
+    @Query("DELETE FROM IndicadorTaulaEntity it WHERE it.widget.id IN (SELECT w.id FROM EstadisticaWidgetEntity w WHERE w.appId = :appId)")
+    void deleteByWidgetAppId(@Param("appId") Long appId);
 
 }

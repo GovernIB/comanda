@@ -238,7 +238,7 @@ export const FormFieldReference: React.FC<FormFieldRefProps> = (props) => {
                 });
             }
         },
-        [optionsRequestProp, field, filter, sortModel, namedQueries, perspectives]
+        [optionsRequestProp, field, filter, sortModel, namedQueries, perspectives, optionsUnpaged]
     );
     const {
         loading: optionsLoading,

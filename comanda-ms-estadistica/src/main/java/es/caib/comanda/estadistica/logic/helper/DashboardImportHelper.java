@@ -3,16 +3,20 @@ package es.caib.comanda.estadistica.logic.helper;
 import es.caib.comanda.client.model.App;
 import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.OverwriteEnum;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.IndicadorTipus;
+import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltreTipus;
 import es.caib.comanda.estadistica.logic.intf.model.export.*;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
 import es.caib.comanda.estadistica.logic.service.DashboardServiceImpl;
 import es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.Conflict;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
+import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardFiltreEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.*;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
@@ -30,9 +34,11 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -54,6 +60,7 @@ public class DashboardImportHelper {
     private final DimensioValorRepository dimensioValorRepository;
     private final PaletaRepository paletaRepository;
     private final IndicadorExportHelper indicadorExportHelper;
+    private final DashboardFiltreRepository dashboardFiltreRepository;
     private final Validator validator;
 
     public void validateDashboardExport(List<DashboardExport> dashboards) {
@@ -99,7 +106,8 @@ public class DashboardImportHelper {
         // Cal crear els indicadors de tipus FORMULA inclosos a l'exportació abans de convertir els dashboards a
         // entity, ja que aquesta conversió resol les referències dels widgets als indicadors pel seu codi
         // (vegeu DashboardExportMapper#toIndicadorEntity), que ha de trobar-los ja creats a l'entornApp destí.
-        dashboardExportList.forEach(dashboard -> indicadorExportHelper.importIndicadorsFormula(dashboard.getIndicadors()));
+        Map<String, String> remappedCodis = new HashMap<>();
+        dashboardExportList.forEach(dashboard -> indicadorExportHelper.importIndicadorsFormula(dashboard, conflicts, remappedCodis));
         List<DashboardEntity> dashboardsToImport = this.toDashboardEntity(dashboardExportList);
         return this.importDashboardFromEntity(dashboardsToImport, conflicts);
     }
@@ -147,6 +155,9 @@ public class DashboardImportHelper {
         if (dashboardEntity.getItems() != null) {
             this.importDashboardItem(dashboardEntity.getItems(), dashboardEntity, conflicts);
         }
+        if (dashboardEntity.getFiltres() != null) {
+            this.importDashboardFiltre(dashboardEntity.getFiltres(), dashboardEntity);
+        }
         return dashboardEntity;
     }
 
@@ -185,7 +196,19 @@ public class DashboardImportHelper {
         return dashboardItemEntity;
     }
 
+    private List<DashboardFiltreEntity> importDashboardFiltre(List<DashboardFiltreEntity> filtreEntityList, DashboardEntity dashboardEntity) {
+        if (filtreEntityList == null) return Collections.emptyList();
+        return filtreEntityList.stream()
+                .filter(Objects::nonNull)
+                .peek(filtre -> {
+                    filtre.setDashboard(dashboardEntity);
+                    dashboardFiltreRepository.save(filtre);
+                })
+                .collect(Collectors.toList());
+    }
+
     private EstadisticaWidgetEntity importWidget(EstadisticaWidgetEntity widgetEntity, List<Conflict> conflicts) {
+        if (widgetEntity == null) return null;
         Conflict conflicte = this.findConflictByNom(
                 widgetEntity.getTitol(),
                 widgetEntity.getAppId(),
@@ -202,7 +225,7 @@ public class DashboardImportHelper {
                     if (conflicte.getNouNom() != null && !conflicte.getNouNom().isBlank()) {
                         nom = conflicte.getNouNom();
 
-                        EstadisticaWidgetEntity widget = estadisticaWidgetRepository.findByAppIdAndTitol(widgetEntity.getAppId(), widgetEntity.getTitol());
+                        EstadisticaWidgetEntity widget = estadisticaWidgetRepository.findByAppIdAndTitol(widgetEntity.getAppId(), nom);
                         if (widget != null) return widget;
                     } else {
                         nom = this.getElementNewNom(
@@ -215,20 +238,29 @@ public class DashboardImportHelper {
                     widgetEntity.setTitol(nom);
                     break;
             }
+        } else {
+            EstadisticaWidgetEntity existent = estadisticaWidgetRepository.findByAppIdAndTitol(widgetEntity.getAppId(), widgetEntity.getTitol());
+            if (existent != null) return existent;
         }
 
         if (widgetEntity instanceof EstadisticaSimpleWidgetEntity) {
-            ((EstadisticaSimpleWidgetEntity) widgetEntity).getIndicadorInfo().setWidget(widgetEntity);
+            if (((EstadisticaSimpleWidgetEntity) widgetEntity).getIndicadorInfo() != null) {
+                ((EstadisticaSimpleWidgetEntity) widgetEntity).getIndicadorInfo().setWidget(widgetEntity);
+            }
         }
         if (widgetEntity instanceof EstadisticaGraficWidgetEntity) {
-            ((EstadisticaGraficWidgetEntity) widgetEntity).getIndicadorsInfo().forEach(c -> {
-                c.setWidget(widgetEntity);
-            });
+            if (((EstadisticaGraficWidgetEntity) widgetEntity).getIndicadorsInfo() != null) {
+                ((EstadisticaGraficWidgetEntity) widgetEntity).getIndicadorsInfo().forEach(c -> {
+                    c.setWidget(widgetEntity);
+                });
+            }
         }
         if (widgetEntity instanceof EstadisticaTaulaWidgetEntity) {
-            ((EstadisticaTaulaWidgetEntity) widgetEntity).getColumnes().forEach(c -> {
-                c.setWidget(widgetEntity);
-            });
+            if (((EstadisticaTaulaWidgetEntity) widgetEntity).getColumnes() != null) {
+                ((EstadisticaTaulaWidgetEntity) widgetEntity).getColumnes().forEach(c -> {
+                    c.setWidget(widgetEntity);
+                });
+            }
         }
 
         estadisticaWidgetRepository.save(widgetEntity);
@@ -236,6 +268,7 @@ public class DashboardImportHelper {
     }
 
     private PlantillaEntity importPlantilla(PlantillaEntity plantillaEntity, List<Conflict> conflicts) {
+        if (plantillaEntity == null) return null;
         Conflict conflicte = this.findConflictByNom(
                 plantillaEntity.getNom(),
                 null,
@@ -265,6 +298,9 @@ public class DashboardImportHelper {
                     plantillaEntity.setNom(nom);
                     break;
             }
+        } else {
+            PlantillaEntity existent = plantillaRepository.findByNom(plantillaEntity.getNom()).orElse(null);
+            if (existent != null) return existent;
         }
 
         this.importPlantillaGrupPaletes(plantillaEntity.getPaletteGroups(), plantillaEntity, conflicts);
@@ -276,24 +312,28 @@ public class DashboardImportHelper {
     }
 
     private List<WidgetStylePropertyEntity> importWidgetStyleProperty(List<WidgetStylePropertyEntity> widgetStylePropertyEntityList, PlantillaEntity plantillaEntity, List<Conflict> conflicts) {
+        if (widgetStylePropertyEntityList == null) return Collections.emptyList();
         return widgetStylePropertyEntityList.stream()
                 .map(d -> this.importWidgetStyleProperty(d, plantillaEntity, conflicts))
                 .collect(Collectors.toList());
     }
 
     private WidgetStylePropertyEntity importWidgetStyleProperty(WidgetStylePropertyEntity widgetStylePropertyEntity, PlantillaEntity plantillaEntity, List<Conflict> conflicts) {
+        if (widgetStylePropertyEntity == null) return null;
         widgetStylePropertyEntity.setPlantilla(plantillaEntity);
 //        widgetStylePropertyRepository.save(widgetStylePropertyEntity);
         return widgetStylePropertyEntity;
     }
 
     private List<PlantillaGrupPaletesEntity> importPlantillaGrupPaletes(List<PlantillaGrupPaletesEntity> plantillaGrupPaletesEntityList, PlantillaEntity plantillaEntity, List<Conflict> conflicts) {
+        if (plantillaGrupPaletesEntityList == null) return Collections.emptyList();
         return plantillaGrupPaletesEntityList.stream()
                 .map(d -> this.importPlantillaGrupPaletes(d, plantillaEntity, conflicts))
                 .collect(Collectors.toList());
     }
 
     private PlantillaGrupPaletesEntity importPlantillaGrupPaletes(PlantillaGrupPaletesEntity plantillaGrupPaletesEntity, PlantillaEntity plantillaEntity, List<Conflict> conflicts) {
+        if (plantillaGrupPaletesEntity == null) return null;
         plantillaGrupPaletesEntity.setPlantilla(plantillaEntity);
         plantillaGrupPaletesEntity.setWidgetPalette(this.importPaleta(plantillaGrupPaletesEntity.getWidgetPalette(), conflicts));
         plantillaGrupPaletesEntity.setChartPalette(this.importPaleta(plantillaGrupPaletesEntity.getChartPalette(), conflicts));
@@ -302,6 +342,7 @@ public class DashboardImportHelper {
     }
 
     private PaletaEntity importPaleta(PaletaEntity paletaEntity, List<Conflict> conflicts) {
+        if (paletaEntity == null) return null;
         Conflict conflicte = this.findConflictByNom(
                 paletaEntity.getNom(),
                 null,
@@ -331,6 +372,9 @@ public class DashboardImportHelper {
                     paletaEntity.setNom(nom);
                     break;
             }
+        } else {
+            PaletaEntity existent = paletaRepository.findByNom(paletaEntity.getNom()).orElse(null);
+            if (existent != null) return existent;
         }
 //        PaletaColorEntity
         this.importPaletaColor(paletaEntity.getColors(), paletaEntity);
@@ -341,20 +385,23 @@ public class DashboardImportHelper {
     }
 
     private List<PaletaColorEntity> importPaletaColor(List<PaletaColorEntity> paletaColorEntityList, PaletaEntity paletaEntity) {
+        if (paletaColorEntityList == null) return Collections.emptyList();
         return paletaColorEntityList.stream()
                 .map(d -> this.importPaletaColor(d, paletaEntity))
                 .collect(Collectors.toList());
     }
 
     private PaletaColorEntity importPaletaColor(PaletaColorEntity paletaColorEntity, PaletaEntity paletaEntity) {
+        if (paletaColorEntity == null) return null;
         paletaColorEntity.setPaleta(paletaEntity);
 //        paletaColorRepository.save(paletaColorEntity);
         return paletaColorEntity;
     }
 
     private Conflict findConflictByNom(String nom, Long appId, String tipus, List<Conflict> conflicts) {
+        if (conflicts == null) return null;
         return conflicts.stream()
-                .filter(c -> Objects.equals(nom, c.getTitol()) && Objects.equals(appId, c.getAppId()) && Objects.equals(tipus, c.getTipo()))
+                .filter(c -> !c.isBloquejant() && Objects.equals(nom, c.getTitol()) && Objects.equals(appId, c.getAppId()) && Objects.equals(tipus, c.getTipo()))
                 .findFirst()
                 .orElse(null);
     }
@@ -372,10 +419,10 @@ public class DashboardImportHelper {
         this.addConflict(dashboard.getTitol(), null, DashboardExport.class.getSimpleName(), conflicts);
 
         if (dashboard.getEntornCodi() != null) {
-            this.checkEntorn(dashboard.getEntornCodi());
+            this.checkEntorn(dashboard.getEntornCodi(), conflicts);
         }
         if (dashboard.getAppCodi() != null) {
-            this.checkApp(dashboard.getAppCodi());
+            this.checkApp(dashboard.getAppCodi(), conflicts);
         }
 
         if (dashboard.getItems() != null) {
@@ -393,17 +440,77 @@ public class DashboardImportHelper {
         }
         this.checkPlantillaConflicts(dashboard.getPlantilla(), conflicts);
 
+        if (dashboard.getFiltres() != null) {
+            for (DashboardFiltreExport filtre : dashboard.getFiltres()) {
+                if (filtre != null
+                        && DashboardFiltreTipus.DIMENSIO.equals(filtre.getTipus())
+                        && filtre.getDimensioCodi() != null) {
+                    this.checkDimensio(
+                            filtre.getDimensioCodi(),
+                            dashboard.getEntornCodi(),
+                            dashboard.getAppCodi(),
+                            conflicts);
+                }
+            }
+        }
+
         // Els indicadors de tipus FORMULA inclosos a l'exportació es crearan automàticament (vegeu
         // importDashboardFromExport), però els seus components (sempre SIMPLE) han d'existir ja a l'entornApp
         // destí: es gestionen només per sincronització automàtica des de les apps, mai es creen des d'aquí.
         if (dashboard.getIndicadors() != null) {
             for (IndicadorExport indicadorExport : dashboard.getIndicadors()) {
-                if (IndicadorTipus.FORMULA.equals(indicadorExport.getTipus()) && indicadorExport.getFormula() != null) {
-                    for (IndicadorFormulaTermeExport terme : indicadorExport.getFormula()) {
-                        this.checkIndicador(terme.getIndicadorComponentCodi(), indicadorExport.getEntornCodi(), indicadorExport.getAppCodi());
+                if (IndicadorTipus.FORMULA.equals(indicadorExport.getTipus())) {
+                    if (indicadorExport.getFormula() != null) {
+                        for (IndicadorFormulaTermeExport terme : indicadorExport.getFormula()) {
+                            this.checkIndicador(terme.getIndicadorComponentCodi(), indicadorExport.getEntornCodi(), indicadorExport.getAppCodi(), dashboard, conflicts);
+                        }
                     }
+                    this.checkIndicadorConflicts(indicadorExport, conflicts);
                 }
             }
+        }
+    }
+
+    private void checkIndicadorConflicts(IndicadorExport indicadorExport,
+                                         List<Conflict> conflicts) {
+        if (indicadorExport == null) return;
+        EntornApp entornApp = this.checkEntornApp(indicadorExport.getEntornCodi(), indicadorExport.getAppCodi(), conflicts);
+        if (entornApp == null) return;
+        Long entornAppId = entornApp.getId();
+        Long appId = entornApp.getApp() != null ? entornApp.getApp().getId() : null;
+
+        boolean existsByCodi = indicadorRepository.findByCodiAndEntornAppId(indicadorExport.getCodi(), entornAppId).isPresent();
+        Optional<IndicadorEntity> existentPerNom = indicadorRepository.findByNomAndEntornAppId(indicadorExport.getNom(), entornAppId);
+
+        if (existsByCodi) {
+            String nom = indicadorExport.getNom();
+            if (conflicts.stream().noneMatch(c -> Objects.equals(indicadorExport.getCodi(), c.getCodi())
+                    && Objects.equals(entornAppId, c.getEntornAppId())
+                    && Objects.equals(IndicadorExport.class.getSimpleName(), c.getTipo())
+                    && !c.isBloquejant())) {
+                Conflict conflict = new Conflict(nom, appId, IndicadorExport.class.getSimpleName());
+                conflict.setEntornAppId(entornAppId);
+                conflict.setCodi(indicadorExport.getCodi());
+                conflicts.add(conflict);
+            }
+        } else if (existentPerNom.isPresent()) {
+            Entorn entorn = estadisticaClientHelper.entornByCodi(indicadorExport.getEntornCodi());
+            App app = estadisticaClientHelper.appFindByCodi(indicadorExport.getAppCodi());
+            String appNom = (app != null && app.getNom() != null) ? app.getNom() : indicadorExport.getAppCodi();
+            String entornNom = (entorn != null && entorn.getNom() != null) ? entorn.getNom() : indicadorExport.getEntornCodi();
+            this.addBlockingConflict(
+                    indicadorExport.getNom(),
+                    indicadorExport.getCodi(),
+                    appId,
+                    entornAppId,
+                    IndicadorExport.class.getSimpleName(),
+                    I18nUtil.getInstance().getI18nMessage(
+                            "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.indicadorNomExistent",
+                            indicadorExport.getNom(),
+                            existentPerNom.get().getCodi(),
+                            appNom,
+                            entornNom),
+                    conflicts);
         }
     }
 
@@ -416,7 +523,7 @@ public class DashboardImportHelper {
                                              DashboardExport dashboard,
                                              List<Conflict> conflicts) {
         if (item == null) return;
-        App app = item.getAppCodi() != null ? this.checkApp(item.getAppCodi()) : null;
+        App app = item.getAppCodi() != null ? this.checkApp(item.getAppCodi(), conflicts) : null;
         Long appId = app != null ? app.getId() : null;
         if (item.getWidget() != null) {
             this.addConflict(item.getWidget().getTitol(), appId, EstadisticaWidgetExport.class.getSimpleName(), conflicts);
@@ -427,7 +534,11 @@ public class DashboardImportHelper {
         if (widget != null && widget.getDimensionsValor() != null) {
             for (DimensioValorExport dmv : widget.getDimensionsValor()) {
                 if (dmv != null && dmv.getDimensioCodi() != null) {
-                    this.checkDimensio(dmv.getDimensioCodi(), item.getEntornCodi(), item.getAppCodi());
+                    if (dmv.getValor() != null && !dmv.getValor().isBlank()) {
+                        this.checkDimensioValor(dmv.getDimensioCodi(), dmv.getValor(), item.getEntornCodi(), item.getAppCodi(), conflicts);
+                    } else {
+                        this.checkDimensio(dmv.getDimensioCodi(), item.getEntornCodi(), item.getAppCodi(), conflicts);
+                    }
                 }
             }
         }
@@ -435,29 +546,29 @@ public class DashboardImportHelper {
         if (widget instanceof EstadisticaSimpleWidgetExport) {
             EstadisticaSimpleWidgetExport w = (EstadisticaSimpleWidgetExport) widget;
             if (w.getIndicadorInfo() != null)
-                this.checkIndicador(w.getIndicadorInfo().getIndicadorCodi(), item.getEntornCodi(), item.getAppCodi(), dashboard);
+                this.checkIndicador(w.getIndicadorInfo().getIndicadorCodi(), item.getEntornCodi(), item.getAppCodi(), dashboard, conflicts);
         } else if (widget instanceof EstadisticaGraficWidgetExport) {
             EstadisticaGraficWidgetExport w = (EstadisticaGraficWidgetExport) widget;
             if (w.getIndicadorInfo() != null)
-                this.checkIndicador(w.getIndicadorInfo().getIndicadorCodi(), item.getEntornCodi(), item.getAppCodi(), dashboard);
+                this.checkIndicador(w.getIndicadorInfo().getIndicadorCodi(), item.getEntornCodi(), item.getAppCodi(), dashboard, conflicts);
             if (w.getIndicadorsInfo() != null) {
                 for (IndicadorTaulaExport info : w.getIndicadorsInfo()) {
                     if (info != null && info.getIndicadorCodi() != null)
-                        this.checkIndicador(info.getIndicadorCodi(), item.getEntornCodi(), item.getAppCodi(), dashboard);
+                        this.checkIndicador(info.getIndicadorCodi(), item.getEntornCodi(), item.getAppCodi(), dashboard, conflicts);
                 }
             }
             if (w.getDescomposicioDimensioCodi() != null)
-                this.checkDimensio(w.getDescomposicioDimensioCodi(), item.getEntornCodi(), item.getAppCodi());
+                this.checkDimensio(w.getDescomposicioDimensioCodi(), item.getEntornCodi(), item.getAppCodi(), conflicts);
         } else if (widget instanceof EstadisticaTaulaWidgetExport) {
             EstadisticaTaulaWidgetExport w = (EstadisticaTaulaWidgetExport) widget;
             if (w.getColumnes() != null) {
                 for (IndicadorTaulaExport columna : w.getColumnes()) {
                     if (columna != null && columna.getIndicadorCodi() != null)
-                        this.checkIndicador(columna.getIndicadorCodi(), item.getEntornCodi(), item.getAppCodi(), dashboard);
+                        this.checkIndicador(columna.getIndicadorCodi(), item.getEntornCodi(), item.getAppCodi(), dashboard, conflicts);
                 }
             }
             if (w.getDimensioAgrupacioCodi() != null)
-                this.checkDimensio(w.getDimensioAgrupacioCodi(), item.getEntornCodi(), item.getAppCodi());
+                this.checkDimensio(w.getDimensioAgrupacioCodi(), item.getEntornCodi(), item.getAppCodi(), conflicts);
         }
     }
 
@@ -489,6 +600,9 @@ public class DashboardImportHelper {
                 String suggerenciaNouNom = this.getElementNewNom(nom, appId, tipus);
                 Conflict conflict = new Conflict(nom, appId, tipus);
                 conflict.setSuggerenciaNouNom(suggerenciaNouNom);
+                if (DashboardExport.class.getSimpleName().equals(tipus)) {
+                    conflict.setOverwrite(OverwriteEnum.CREAR_AMB_ALTRE_NOM);
+                }
                 conflicts.add(conflict);
             }
         }
@@ -511,6 +625,19 @@ public class DashboardImportHelper {
 
     private static final int MAX_TRIES_NOU_NOM = 100;
 
+    private int getElementMaxNomLength(String tipus) {
+        if (DashboardExport.class.getSimpleName().equals(tipus)) {
+            return DashboardEntity.TITOL_MAX_LENGTH;
+        } else if (EstadisticaWidgetExport.class.getSimpleName().equals(tipus)) {
+            return EstadisticaWidgetEntity.TITOL_MAX_LENGTH;
+        } else if (PlantillaExport.class.getSimpleName().equals(tipus)) {
+            return PlantillaEntity.NOM_MAX_LENGTH;
+        } else if (PaletaExport.class.getSimpleName().equals(tipus)) {
+            return PaletaEntity.NOM_MAX_LENGTH;
+        }
+        return 64;
+    }
+
     private String getElementNewNom(String nomEntrada, Long appId, String tipus) {
         int contador = 0;
         String temp = nomEntrada;
@@ -519,70 +646,103 @@ public class DashboardImportHelper {
             if (contador > MAX_TRIES_NOU_NOM) {
                 return nomEntrada;
             }
-            temp = nomEntrada + " (" + contador + ")";
+            String suffix = " (" + contador + ")";
+            int maxLen = getElementMaxNomLength(tipus);
+            int maxBaseLen = maxLen - suffix.length();
+            String base = nomEntrada.length() > maxBaseLen ? nomEntrada.substring(0, maxBaseLen) : nomEntrada;
+            temp = base + suffix;
         }
         return temp;
     }
 
     /*///////////////////////////////////////////////////////////////////////*/
 
-    private Entorn checkEntorn(String entornCodi) {
+    private void addBlockingConflict(String codi, Long appId, String tipus, String missatgeError, List<Conflict> conflicts) {
+        this.addBlockingConflict(codi, codi, appId, null, tipus, missatgeError, conflicts);
+    }
+
+    private void addBlockingConflict(String titol, String codi, Long appId, Long entornAppId, String tipus, String missatgeError, List<Conflict> conflicts) {
+        if (conflicts != null && conflicts.stream().noneMatch(c -> Objects.equals(codi, c.getCodi())
+                && Objects.equals(appId, c.getAppId())
+                && Objects.equals(entornAppId, c.getEntornAppId())
+                && Objects.equals(tipus, c.getTipo())
+                && c.isBloquejant())) {
+            Conflict conflict = new Conflict(titol, appId, tipus);
+            conflict.setCodi(codi);
+            conflict.setEntornAppId(entornAppId);
+            conflict.setBloquejant(true);
+            conflict.setMissatgeError(missatgeError);
+            conflicts.add(conflict);
+        }
+    }
+
+    private Entorn checkEntorn(String entornCodi, List<Conflict> conflicts) {
         Entorn entorn = estadisticaClientHelper.entornByCodi(entornCodi);
         if (entorn == null) {
-            throw new AnswerRequiredException(
-                    DashboardServiceImpl.DashboardImportParams.class,
-                    "ENTORN",
+            this.addBlockingConflict(entornCodi, null, "EntornExport",
                     I18nUtil.getInstance().getI18nMessage(
                             "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.entorn",
-                            entornCodi));
+                            entornCodi),
+                    conflicts);
+            return null;
         }
         return entorn;
     }
 
-    private App checkApp(String appCodi) {
+    private App checkApp(String appCodi, List<Conflict> conflicts) {
         App app = estadisticaClientHelper.appFindByCodi(appCodi);
         if (app == null) {
-            throw new AnswerRequiredException(
-                    DashboardServiceImpl.DashboardImportParams.class,
-                    "APP",
+            this.addBlockingConflict(appCodi, null, "AppExport",
                     I18nUtil.getInstance().getI18nMessage(
                             "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.app",
-                            appCodi));
+                            appCodi),
+                    conflicts);
+            return null;
         }
         return app;
     }
 
-    private EntornApp checkEntornApp(String entornCodi, String appCodi) {
-        Entorn entorn = this.checkEntorn(entornCodi);
-        App app = this.checkApp(appCodi);
+    private EntornApp checkEntornApp(String entornCodi, String appCodi, List<Conflict> conflicts) {
+        Entorn entorn = this.checkEntorn(entornCodi, conflicts);
+        App app = this.checkApp(appCodi, conflicts);
+        if (entorn == null || app == null) {
+            return null;
+        }
         EntornApp entornApp = null;
         try {
             entornApp = estadisticaClientHelper.entornAppFindByAppAndEntorn(app.getId(), entorn.getId());
         } catch (Exception ignore) {}
         if (entornApp == null) {
-            throw new AnswerRequiredException(
-                    DashboardServiceImpl.DashboardImportParams.class,
-                    "ENTORN_APP",
+            this.addBlockingConflict(appCodi + " (" + entornCodi + ")", app.getId(), "EntornAppExport",
                     I18nUtil.getInstance().getI18nMessage(
                             "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.entornApp",
                             entornCodi,
-                            appCodi));
+                            appCodi),
+                    conflicts);
+            return null;
         }
         return entornApp;
     }
 
-    private IndicadorEntity checkIndicador(String indicadorCodi, String entornCodi, String appCodi) {
-        return this.checkIndicador(indicadorCodi, entornCodi, appCodi, null);
+    private EntornApp checkEntornApp(String entornCodi, String appCodi) {
+        return this.checkEntornApp(entornCodi, appCodi, null);
+    }
+
+    private IndicadorEntity checkIndicador(String indicadorCodi, String entornCodi, String appCodi, List<Conflict> conflicts) {
+        return this.checkIndicador(indicadorCodi, entornCodi, appCodi, null, conflicts);
     }
 
     /**
-     * Igual que {@link #checkIndicador(String, String, String)}, però si l'indicador no existeix encara a
+     * Igual que {@link #checkIndicador(String, String, String, List)}, però si l'indicador no existeix encara a
      * l'entornApp destí, no es considera un conflicte quan es tracta d'un indicador de tipus FORMULA inclòs a
      * {@code dashboard.getIndicadors()}: es crearà automàticament en importar (vegeu importDashboardFromExport
      * i IndicadorExportHelper#importIndicadorsFormula), per això aquí no cal bloquejar la importació.
      */
-    private IndicadorEntity checkIndicador(String indicadorCodi, String entornCodi, String appCodi, DashboardExport dashboard) {
-        EntornApp entornApp = this.checkEntornApp(entornCodi, appCodi);
+    private IndicadorEntity checkIndicador(String indicadorCodi, String entornCodi, String appCodi, DashboardExport dashboard, List<Conflict> conflicts) {
+        EntornApp entornApp = this.checkEntornApp(entornCodi, appCodi, conflicts);
+        if (entornApp == null) {
+            return null;
+        }
         IndicadorEntity indicador = indicadorRepository.findByCodiAndEntornAppId(indicadorCodi, entornApp.getId()).orElse(null);
         if (indicador == null) {
             boolean pendentImportacio = dashboard != null && dashboard.getIndicadors() != null
@@ -592,29 +752,74 @@ public class DashboardImportHelper {
                                     && Objects.equals(entornCodi, indicadorExport.getEntornCodi())
                                     && Objects.equals(appCodi, indicadorExport.getAppCodi()));
             if (pendentImportacio) return null;
-            throw new AnswerRequiredException(
-                    DashboardServiceImpl.DashboardImportParams.class,
-                    "INDICADOR",
+            Entorn entorn = estadisticaClientHelper.entornByCodi(entornCodi);
+            App app = estadisticaClientHelper.appFindByCodi(appCodi);
+            String appNom = (app != null && app.getNom() != null) ? app.getNom() : appCodi;
+            String entornNom = (entorn != null && entorn.getNom() != null) ? entorn.getNom() : entornCodi;
+            this.addBlockingConflict(indicadorCodi, indicadorCodi, app != null ? app.getId() : null, entornApp.getId(), IndicadorExport.class.getSimpleName(),
                     I18nUtil.getInstance().getI18nMessage(
                             "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.indicador",
                             indicadorCodi,
-                            entornApp.getId()));
+                            appNom,
+                            entornNom),
+                    conflicts);
+            return null;
         }
         return indicador;
     }
 
-    private DimensioEntity checkDimensio(String dimensioCodi, String entornCodi, String appCodi) {
-        EntornApp entornApp = this.checkEntornApp(entornCodi, appCodi);
+    private DimensioEntity checkDimensio(String dimensioCodi, String entornCodi, String appCodi, List<Conflict> conflicts) {
+        EntornApp entornApp = this.checkEntornApp(entornCodi, appCodi, conflicts);
+        if (entornApp == null) {
+            return null;
+        }
         DimensioEntity dimensio = dimensioRepository.findByCodiAndEntornAppId(dimensioCodi, entornApp.getId()).orElse(null);
         if (dimensio == null) {
-            throw new AnswerRequiredException(
-                    DashboardServiceImpl.DashboardImportParams.class,
-                    "DIMENSIO",
+            Entorn entorn = estadisticaClientHelper.entornByCodi(entornCodi);
+            App app = estadisticaClientHelper.appFindByCodi(appCodi);
+            String appNom = (app != null && app.getNom() != null) ? app.getNom() : appCodi;
+            String entornNom = (entorn != null && entorn.getNom() != null) ? entorn.getNom() : entornCodi;
+            this.addBlockingConflict(dimensioCodi, dimensioCodi, app != null ? app.getId() : null, entornApp.getId(), "DimensioExport",
                     I18nUtil.getInstance().getI18nMessage(
                             "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.dimensio",
                             dimensioCodi,
-                            entornApp.getId()));
+                            appNom,
+                            entornNom),
+                    conflicts);
+            return null;
         }
         return dimensio;
+    }
+
+    private DimensioValorEntity checkDimensioValor(String dimensioCodi, String valor, String entornCodi, String appCodi, List<Conflict> conflicts) {
+        DimensioEntity dimensio = this.checkDimensio(dimensioCodi, entornCodi, appCodi, conflicts);
+        if (dimensio == null) {
+            return null;
+        }
+        if (valor == null) {
+            return null;
+        }
+        DimensioValorEntity dimensioValor = dimensioValorRepository.findByDimensioAndValor(dimensio, valor).orElse(null);
+        if (dimensioValor == null) {
+            Entorn entorn = estadisticaClientHelper.entornByCodi(entornCodi);
+            App app = estadisticaClientHelper.appFindByCodi(appCodi);
+            String appNom = (app != null && app.getNom() != null) ? app.getNom() : appCodi;
+            String entornNom = (entorn != null && entorn.getNom() != null) ? entorn.getNom() : entornCodi;
+            this.addBlockingConflict(
+                    dimensioCodi + " (" + valor + ")",
+                    dimensioCodi + " (" + valor + ")",
+                    app != null ? app.getId() : null,
+                    dimensio.getEntornAppId(),
+                    "DimensioValorExport",
+                    I18nUtil.getInstance().getI18nMessage(
+                            "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.dimensioValor",
+                            valor,
+                            dimensioCodi,
+                            appNom,
+                            entornNom),
+                    conflicts);
+            return null;
+        }
+        return dimensioValor;
     }
 }

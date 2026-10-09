@@ -31,6 +31,7 @@ import es.caib.comanda.ms.logic.intf.exception.*;
 import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
 import es.caib.comanda.ms.logic.intf.model.FileReference;
 import es.caib.comanda.ms.logic.intf.model.ReportFileType;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import org.springframework.security.access.AccessDeniedException;
 import lombok.AllArgsConstructor;
@@ -120,36 +121,8 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     protected String additionalSpringFilter(
         String currentSpringFilter,
         String[] namedQueries) {
-        if (dashboardPermisosHelper.isAdminOrConsulta()) {
-            return currentSpringFilter;
-        }
-        List<String> namedQueriesList = namedQueries != null ? List.of(namedQueries) : Collections.emptyList();
-        boolean isWrite = namedQueriesList.contains("WRITE");
-
-        Set<Serializable> appPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.APP,
-            isWrite ? List.of(PermissionEnum.PERM1) : List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
-        String appFilter = SpringFilterHelper.buildOrFilter("appId", appPermissionIds);
-
-        Set<Serializable> entornAppPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.ENTORN_APP,
-            isWrite ? List.of(PermissionEnum.PERM1) : List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
-        String entornAppFilter = dashboardPermisosHelper.buildEntornAppFilter(entornAppPermissionIds, null);
-
-        Set<Serializable> dashboardPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.DASHBOARD,
-            isWrite ? List.of(PermissionEnum.WRITE) : List.of(PermissionEnum.READ, PermissionEnum.WRITE));
-        String dashboardFilter = SpringFilterHelper.buildOrFilter("id", dashboardPermissionIds);
-
-        String filter = SpringFilterHelper.or(
-            appFilter,
-            entornAppFilter,
-            dashboardFilter
-        );
-
-        return SpringFilterHelper.and(
-            currentSpringFilter,
-            (filter.isBlank())
-                ? "id:0"
-                : filter
-        );
+        boolean isWrite = namedQueries != null && Arrays.asList(namedQueries).contains("WRITE");
+        return dashboardPermisosHelper.buildDashboardFilter(currentSpringFilter, isWrite);
     }
 
     @Override
@@ -161,23 +134,23 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     protected void beforeCreateEntity(DashboardEntity entity, Dashboard resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
         Long appId = resource.getAplicacio() != null ? resource.getAplicacio().getId() : resource.getAppId();
         Long entornId = resource.getEntorn() != null ? resource.getEntorn().getId() : resource.getEntornId();
-        dashboardPermisosHelper.checkCanCreate(appId, entornId, "No teniu permisos de disseny per crear quadres de control per a aquesta aplicació/entorn");
+        dashboardPermisosHelper.checkCanCreate(appId, entornId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.permisos.crear"));
     }
 
     @Override
     protected void beforeUpdateEntity(DashboardEntity entity, Dashboard resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
-        dashboardPermisosHelper.checkCanDesign(entity.getId(), entity.getAppId(), entity.getEntornId(), "No teniu permisos de disseny per modificar aquest quadre de control");
+        dashboardPermisosHelper.checkCanDesign(entity.getId(), entity.getAppId(), entity.getEntornId(), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.permisos.modificar"));
         Long newAppId = resource.getAplicacio() != null ? resource.getAplicacio().getId() : (resource.getAppId() != null ? resource.getAppId() : entity.getAppId());
         Long newEntornId = resource.getEntorn() != null ? resource.getEntorn().getId() : (resource.getEntornId() != null ? resource.getEntornId() : entity.getEntornId());
         if (!Objects.equals(newAppId, entity.getAppId()) || !Objects.equals(newEntornId, entity.getEntornId())) {
-            dashboardPermisosHelper.checkCanCreate(newAppId, newEntornId, "No teniu permisos de disseny per moure aquest quadre de control a l'aplicació/entorn de destí");
+            dashboardPermisosHelper.checkCanCreate(newAppId, newEntornId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.permisos.moure"));
         }
         dashboardHelper.beforeUpdateEntityLogic(entity, resource, answers);
     }
 
     @Override
     protected void beforeDelete(DashboardEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
-        dashboardPermisosHelper.checkCanDesign(entity.getId(), entity.getAppId(), entity.getEntornId(), "No teniu permisos de disseny per eliminar aquest quadre de control");
+        dashboardPermisosHelper.checkCanDeleteDashboard(entity.getAppId(), entity.getEntornId(), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.permisos.eliminar"));
     }
 
     @Override
@@ -463,6 +436,11 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
         @NotNull private String tipo;
 
         private Long appId;
+        private Long entornAppId;
+        private String codi;
+
+        private boolean bloquejant = false;
+        private String missatgeError;
 
         public Conflict(String titol, String tipo) {
             this.titol = titol;
@@ -511,6 +489,9 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
         @Override
         public DashboardImportResult exec(String code, DashboardEntity entity, DashboardImportParams params) {
             try {
+                dashboardPermisosHelper.checkHasCreationPermission(
+                        I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.permisos.importarSenseCreacio"));
+
                 String jsonString = new String(params.getFile().getContent(), StandardCharsets.UTF_8);
                 List<DashboardExport> dashboards = parseDashboardsJson(jsonString);
 
@@ -532,14 +513,23 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                         }
                     }
                     dashboardPermisosHelper.checkCanCreate(appId, entornId,
-                            "No teniu permisos de disseny per importar quadres de control a l'aplicació o entorn indicat");
+                            I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.permisos.importar"));
                 }
 
-                List<Dashboard> importedDashboards = new ArrayList<>();
                 List<Conflict> conflicts = params.getConflicts() != null ? params.getConflicts() : Collections.emptyList();
-                dashboardImportHelper.importDashboardFromExport(dashboards, conflicts);
+                if (conflicts.stream().anyMatch(Conflict::isBloquejant)) {
+                    throw new ActionExecutionException(
+                            Dashboard.class,
+                            null,
+                            code,
+                            I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.error.conflictesBloquejants"));
+                }
+                List<DashboardEntity> importedEntities = dashboardImportHelper.importDashboardFromExport(dashboards, conflicts);
+                List<Dashboard> importedDashboards = (importedEntities != null && resourceEntityMappingHelper != null)
+                        ? importedEntities.stream().filter(Objects::nonNull).map(DashboardServiceImpl.this::entityToResource).collect(Collectors.toList())
+                        : Collections.emptyList();
                 return new DashboardImportResult(importedDashboards);
-            } catch (AccessDeniedException e) {
+            } catch (AccessDeniedException | ActionExecutionException e) {
                 throw e;
             } catch (IllegalArgumentException e) {
                 log.warn("Validation error importing dashboards from JSON: {}", e.getMessage());
@@ -561,6 +551,9 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
         @Override
         public void onChange(Serializable id, DashboardImportParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, DashboardImportParams target) {
             if (DashboardImportParams.Fields.file.equals(fieldName)) {
+                dashboardPermisosHelper.checkHasCreationPermission(
+                        I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.permisos.importarSenseCreacio"));
+
                 FileReference file = (FileReference) fieldValue;
                 if (file == null || file.getContent() == null) {
                     target.setConflicts(new ArrayList<>());
@@ -574,13 +567,33 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
                     if (dashboards != null && !dashboards.isEmpty()) {
                         dashboardImportHelper.checkDashboardConflicts(dashboards, dashboardConflicts);
                     }
-                    target.setConflicts(dashboardConflicts);
-                } catch (AnswerRequiredException a) {
-                    log.warn("Answer required during onChange: {}", a.getMessage());
-                    if (!answers.containsKey(a.getAnswerCode())) {
-                        throw a;
+
+                    // Preservar les eleccions prèvies de l'usuari (overwrite, nouNom) si n'hi havia
+                    if (previous != null && previous.getConflicts() != null && !previous.getConflicts().isEmpty()) {
+                        for (Conflict newC : dashboardConflicts) {
+                            if (!newC.isBloquejant()) {
+                                previous.getConflicts().stream()
+                                        .filter(prevC -> !prevC.isBloquejant()
+                                                && Objects.equals(newC.getTipo(), prevC.getTipo())
+                                                && (newC.getCodi() != null && prevC.getCodi() != null
+                                                        ? Objects.equals(newC.getCodi(), prevC.getCodi())
+                                                        : Objects.equals(newC.getTitol(), prevC.getTitol()))
+                                                && Objects.equals(newC.getEntornAppId(), prevC.getEntornAppId())
+                                                && Objects.equals(newC.getAppId(), prevC.getAppId()))
+                                        .findFirst()
+                                        .ifPresent(prevC -> {
+                                            if (prevC.getOverwrite() != null) {
+                                                newC.setOverwrite(prevC.getOverwrite());
+                                            }
+                                            if (prevC.getNouNom() != null) {
+                                                newC.setNouNom(prevC.getNouNom());
+                                            }
+                                        });
+                            }
+                        }
                     }
-                    target.setConflicts(new ArrayList<>());
+
+                    target.setConflicts(dashboardConflicts);
                 } catch (Exception e) {
                     log.warn("Error parsing JSON content in onChange", e);
                     target.setConflicts(new ArrayList<>());

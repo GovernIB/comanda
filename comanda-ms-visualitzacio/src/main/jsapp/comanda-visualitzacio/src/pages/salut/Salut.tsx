@@ -164,7 +164,7 @@ const splitSalutDataIntoGroups = ({
         const appIds = apps.map(({ id }) => id as number);
         appIds.forEach(appId => {
             const filteredEntornApps = entornApps.filter(({ app }) => app.id === appId);
-
+            // Una app sense cap entorn-app també genera el seu grup, per indicar que no està desplegada.
             groups.push(
                 generateGroup({
                     groupedApp: apps.find(({ id }) => id === appId),
@@ -269,8 +269,18 @@ const useSalutData = ({
         try {
             const dataReferencia = dayjs().format(ISO_DATE_FORMAT);
             const agrupacio = agrupacioFromMinutes(dataRangeMinutes);
-            const appsIds = filterDataApp?.map(({id}) => (id))
-            const entornsIds = filterDataEntorn?.map(({id}) => (id))
+            let appsIds: string[] | undefined;
+            try {
+                appsIds = filterDataApp?.map(({ id }) => id);
+            } catch (e) {
+                console.warn('Error mapping salut app filter:', e);
+            }
+            let entornsIds: string[] | undefined;
+            try {
+                entornsIds = filterDataEntorn?.map(({ id }) => id);
+            } catch (e) {
+                console.warn('Error mapping salut entorn filter:', e);
+            }
             const hasEstatFilter = filterDataEstatsSalut && filterDataEstatsSalut.length > 0;
             let entornAppIdsWithSalut;
 
@@ -318,6 +328,7 @@ const useSalutData = ({
             ] = await Promise.all([
                 entornAppFind({
                     unpaged: true,
+                    namedQueries: ['permis_salut'],
                     filter: springFilterBuilder.and(
                         springFilterBuilder.eq('activa', true),
                         springFilterBuilder.eq('app.activa', true),
@@ -328,6 +339,7 @@ const useSalutData = ({
                 }),
                 appFind({
                     unpaged: true,
+                    namedQueries: ['permis_salut'],
                     filter: springFilterBuilder.and(
                         springFilterBuilder.eq('activa', true),
                         springFilterBuilder.inn('id', appsIds),
@@ -414,6 +426,7 @@ const useSalutData = ({
         } catch (e) {
             if (sequence !== requestSequence.current) return;
 
+            console.warn('Error al carregar les dades de salut:', e);
             // TODO Mostrar error en la UI
             // No es reinicialitzen groups/apps/entorns: si ja hi havia dades carregades (p.ex. un
             // refresc en segon pla per un canvi d'entorn-app), es mantenen visibles en lloc de

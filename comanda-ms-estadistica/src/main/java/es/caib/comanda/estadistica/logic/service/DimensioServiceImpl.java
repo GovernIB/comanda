@@ -3,6 +3,9 @@ package es.caib.comanda.estadistica.logic.service;
 import com.turkraft.springfilter.FilterBuilder;
 import com.turkraft.springfilter.parser.Filter;
 import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesRestClient;
+import es.caib.comanda.estadistica.logic.helper.AbstractActionProgressHelper;
+import es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper;
+import es.caib.comanda.estadistica.logic.helper.DimensioFetConsProgressHelper;
 import es.caib.comanda.estadistica.logic.helper.EntitatResolverHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
@@ -10,8 +13,8 @@ import es.caib.comanda.estadistica.logic.intf.model.estadistiques.Dimensio;
 import es.caib.comanda.estadistica.logic.intf.model.estadistiques.TipusDimensioEnum;
 import es.caib.comanda.estadistica.logic.intf.service.DimensioService;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
-import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
+import es.caib.comanda.estadistica.persist.entity.estadistiques.FetEntity;
 import es.caib.comanda.estadistica.persist.repository.DimensioRepository;
 import es.caib.comanda.estadistica.persist.repository.DimensioValorRepository;
 import es.caib.comanda.estadistica.persist.repository.FetRepository;
@@ -20,7 +23,6 @@ import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -61,9 +63,9 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
     private final DimensioRepository dimensioRepository;
     private final DimensioValorRepository dimensioValorRepository;
     private final EntitatResolverHelper entitatResolverHelper;
-
-    @Value("${es.caib.comanda.estadistica.dir3.govern.codi.arrel:" + UnitatsOrganitzativesRestClient.CODI_ARREL_PER_DEFECTE + "}")
-    private String codiArrel;
+    private final UnitatsOrganitzativesRestClient unitatsOrganitzativesRestClient;
+    private final DimensioFetConsProgressHelper dimensioFetConsProgressHelper;
+    private final DashboardPermisosHelper dashboardPermisosHelper;
 
     @PostConstruct
     public void init() {
@@ -115,16 +117,19 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
         }
         if (namedQueries != null) {
             for (String namedQuery : namedQueries) {
-                if (namedQuery.contains(Dimensio.FILTER_BY_APP_NAMEDFILTER)) {
-                    long appId = Long.parseLong(namedQuery.split(":")[1]);
-                    filters.add(springFilterHelper.filterByApp(appId, Dimensio.Fields.entornAppId));
+                if (namedQuery != null && namedQuery.contains(Dimensio.FILTER_BY_APP_NAMEDFILTER) && namedQuery.contains(":")) {
+                    try {
+                        long appId = Long.parseLong(namedQuery.split(":")[1]);
+                        filters.add(springFilterHelper.filterByApp(appId, Dimensio.Fields.entornAppId));
+                    } catch (NumberFormatException ignored) {}
                 }
             }
         }
         List<Filter> result = filters.stream().
             filter(f -> f != null && !String.valueOf(f).isEmpty()).
             collect(Collectors.toList());
-        return result.isEmpty() ? null : FilterBuilder.and(result).generate();
+        String baseFilter = result.isEmpty() ? null : FilterBuilder.and(result).generate();
+        return dashboardPermisosHelper.buildEntornAppFilterForProperty(baseFilter, Dimensio.Fields.entornAppId);
     }
 
     public class ChangeTipusActionExecutor implements ActionExecutor<DimensioEntity, Dimensio.ChangeTipusActionForm, Dimensio> {
@@ -171,33 +176,37 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
         public Dimensio exec(String code, DimensioEntity entity, Serializable params) throws ActionExecutionException {
             try {
                 if (TipusDimensioEnum.ORGAN_GESTOR.equals(entity.getTipus())) {
-                    // Crear dimensió conselleria (si no existeix)
-                    List<DimensioEntity> dimensioEntityList = dimensioRepository.findByEntornAppId(entity.getEntornAppId());
-                    if (dimensioEntityList.stream().noneMatch(c -> c.getTipus() == TipusDimensioEnum.CONSELLERIA)) {
-                        DimensioEntity dEntity = new DimensioEntity();
-                        dEntity.setCodi("CONS");
-                        dEntity.setNom("Conselleria");
-                        dEntity.setEntornAppId(entity.getEntornAppId());
-                        dEntity.setTipus(TipusDimensioEnum.CONSELLERIA);
-                        dimensioRepository.save(dEntity);
+                    if (!dimensioFetConsProgressHelper.tryStart(entity.getId())) {
+                        // Ja hi ha una execució en curs per a aquesta dimensió (doble clic, dues pestanyes o dos
+                        // usuaris): no en duplicam la feina. tryStart ja ha republicat per SSE l'últim progrés
+                        // conegut, perquè una modal que s'acabi d'obrir el mostri de seguida.
+                        return resourceEntityMappingHelper.entityToResource(entity, Dimensio.class);
                     }
+                    try {
+                        // Crear dimensió conselleria (si no existeix)
+                        List<DimensioEntity> dimensioEntityList = dimensioRepository.findByEntornAppId(entity.getEntornAppId());
+                        if (dimensioEntityList.stream().noneMatch(c -> c.getTipus() == TipusDimensioEnum.CONSELLERIA)) {
+                            DimensioEntity dEntity = new DimensioEntity();
+                            dEntity.setCodi("CONS");
+                            dEntity.setNom("Conselleria");
+                            dEntity.setEntornAppId(entity.getEntornAppId());
+                            dEntity.setTipus(TipusDimensioEnum.CONSELLERIA);
+                            dimensioRepository.save(dEntity);
+                        }
 
-                    // Cambiar només els que no tenen "CONS"
-//                    List<FetEntity> fetEntityList = fetRepository.findByEntornAppIdAddCons(entity.getEntornAppId(), entity.getCodi(), "CONS", codiArrel);
-//                    fetEntityList = fetEntityList.stream()
-//                        .peek(f -> {
-//                            String c = unitatsOrganitzativesPlugin.getConsergeria(f.getDimensionsJson().get(entity.getCodi()));
-//                            if (c != null) f.getDimensionsJson().put("CONS", c);
-//                        })
-//                        .filter(f -> f.getDimensionsJson().containsKey("CONS"))
-//                        .collect(Collectors.toList());
-//                    if (!fetEntityList.isEmpty())
-//                        fetRepository.saveAll(fetEntityList);
-
-                    // Actualitzar tots els valors "CONS", tenint en compte l'entitat de cada fet (si en té)
-                    List<FetEntity> fetEntityList = fetRepository.findByEntornAppIdAddCons(entity.getEntornAppId(), entity.getCodi(), codiArrel);
-                    fetEntityList = fetEntityList.stream()
-                        .peek(f -> {
+                        // Actualitzar tots els valors "CONS", tenint en compte l'entitat de cada fet (si en té),
+                        // notificant el progrés per SSE perquè el frontend pugui mostrar-lo en una barra de progrés.
+                        String codiArrel = unitatsOrganitzativesRestClient.getCodiArrel();
+                        List<FetEntity> fetEntityList = fetRepository.findByEntornAppIdAddCons(entity.getEntornAppId(), entity.getCodi(), codiArrel);
+                        int total = fetEntityList.size();
+                        // Com a màxim ~20 notificacions de progrés, independentment de la mida de fetEntityList
+                        int progressStep = AbstractActionProgressHelper.calculateStep(total);
+                        // Publicam sempre l'estat inicial, encara que total sigui 0 (sense fets a actualitzar): és
+                        // l'únic event que la modal del frontend rebrà en aquest cas, i li cal per saber que el procés
+                        // ja ha acabat (vegeu DimensioFetConsProgressDialog, que hi completa amb total==0).
+                        dimensioFetConsProgressHelper.publishProgress(entity.getId(), 0, total);
+                        int processats = 0;
+                        for (FetEntity f : fetEntityList) {
                             String organValor = f.getDimensionsJson().get(entity.getCodi());
                             String c = entitatResolverHelper.resolveConselleria(entity.getEntornAppId(), organValor, f.getDimensionsJson());
                             if (c != null) {
@@ -205,10 +214,28 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
                             } else {
                                 f.getDimensionsJson().remove("CONS");
                             }
-                        })
-                        .collect(Collectors.toList());
-                    if (!fetEntityList.isEmpty())
-                        fetRepository.saveAll(fetEntityList);
+                            processats++;
+                            if (processats % progressStep == 0 || processats == total) {
+                                dimensioFetConsProgressHelper.publishProgress(entity.getId(), processats, total);
+                            }
+                        }
+                        if (!fetEntityList.isEmpty())
+                            fetRepository.saveAll(fetEntityList);
+                    } catch (Exception e) {
+                        // Perquè qualsevol modal oberta (propietària o enganxada via tryStart) sàpiga que el
+                        // procés real ha fallat i no es quedi esperant indefinidament un 100% que no arribarà mai.
+                        dimensioFetConsProgressHelper.publishError(entity.getId());
+                        if (e instanceof RuntimeException) {
+                            throw (RuntimeException) e;
+                        }
+                        throw new ActionExecutionException(
+                            Dimensio.class,
+                            null,
+                            code,
+                            e.getMessage());
+                    } finally {
+                        dimensioFetConsProgressHelper.finish(entity.getId());
+                    }
                 }
                 return resourceEntityMappingHelper.entityToResource(entity, Dimensio.class);
             } catch (ActionExecutionException a) {

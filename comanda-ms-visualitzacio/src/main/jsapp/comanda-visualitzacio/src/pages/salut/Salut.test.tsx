@@ -245,6 +245,47 @@ describe('Salut', () => {
         expect(screen.getByRole('heading', { name: 'Salut' })).toBeInTheDocument();
         expect(screen.getByTestId('salut-toolbar')).toHaveTextContent('Salut');
         expect(mocks.sseMock.subscribe).toHaveBeenCalled();
+        expect(mocks.findEntornAppMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                namedQueries: ['permis_salut'],
+            })
+        );
+        expect(mocks.findAppMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                namedQueries: ['permis_salut'],
+            })
+        );
+        // Els entorns es consideren sempre visibles, per això no s'hi aplica cap filtre de permisos
+        expect(mocks.findEntornMock).toHaveBeenCalledWith(
+            expect.not.objectContaining({
+                namedQueries: expect.anything(),
+            })
+        );
+    });
+
+    it('Salut_quanNoHiHaEntornAppsPerUnaApp_mostraElGrupPerIndicarQueNoEstaDesplegat', async () => {
+        // Verifica que si una aplicació no té cap entorn-app assignat, es genera el grup igualment
+        mocks.findEntornAppMock.mockResolvedValue({
+            rows: [
+                {
+                    id: 7,
+                    app: { id: 1, description: 'App Permesa' },
+                    entorn: { id: 2, description: 'PRO' },
+                },
+            ],
+        });
+        mocks.findAppMock.mockResolvedValue({
+            rows: [
+                { id: 1, description: 'App Permesa' },
+                { id: 2, description: 'App No Permesa' },
+            ],
+        });
+
+        render(<Salut />);
+
+        await waitFor(() => {
+            expect(screen.getByText('SalutLlistat 2')).toBeInTheDocument();
+        });
     });
 
     it('Salut_quanCarregaInicialment_activaElSkeletonDelLlistat', async () => {
@@ -564,5 +605,29 @@ describe('Salut', () => {
         });
 
         expect(screen.getByText('SalutLlistat 1')).toBeInTheDocument();
+    });
+
+    it('Salut_quanFiltreAppNoEsArray_emetWarningICarregaSenseTrencarLaPagina', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const invalidFilterData = {
+            app: { id: '1', description: 'App invàlida' },
+        };
+        (globalThis as Record<string, unknown>).__salutToolbarStateMock = () => ({
+            filterData: invalidFilterData,
+        });
+
+        render(<Salut />);
+
+        await waitFor(() => {
+            expect(screen.getByText('SalutLlistat 1')).toBeInTheDocument();
+        });
+
+        expect(warnSpy).toHaveBeenCalledWith(
+            'Error mapping salut app filter:',
+            expect.any(TypeError)
+        );
+
+        delete (globalThis as Record<string, unknown>).__salutToolbarStateMock;
+        warnSpy.mockRestore();
     });
 });

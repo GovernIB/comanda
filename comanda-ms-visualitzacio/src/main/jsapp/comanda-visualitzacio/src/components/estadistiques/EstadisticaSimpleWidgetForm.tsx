@@ -113,7 +113,6 @@ const EstadisticaSimpleWidgetForm: React.FC<EstadisticaSimpleWidgetFormProps> = 
                         namedQueries={indicadorNamedQueries}
                         advancedSearchColumns={columnesIndicador}
                         advancedSearchDataGridProps={{ rowHeight: 30 }}
-                        advancedSearchDialogHeight={500}
                     />
                 </Grid>
                 <Grid size={12}>

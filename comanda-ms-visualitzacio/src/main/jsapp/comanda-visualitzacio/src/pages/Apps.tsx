@@ -4,6 +4,7 @@ import { TFunction } from 'i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import Grid from '@mui/material/Grid';
 import {
+    DialogButton,
     FormField,
     FormPage,
     FormTabsValue,
@@ -16,12 +17,17 @@ import {
     springFilterBuilder,
     useBaseAppContext,
     useCloseDialogButtons,
+    useConfirmDialogButtons,
     useFormContext,
     useMuiContentDialog,
     useMuiDataGridApiRef,
+    useMuiFormDialogApiRef,
     useResourceApiService,
 } from 'reactlib';
 import {
+    Alert,
+    AlertTitle,
+    Box,
     FormControl,
     FormControlLabel,
     FormGroup,
@@ -31,6 +37,7 @@ import {
     RadioGroup,
     Typography,
 } from '@mui/material';
+import FormActionDialog from '../components/FormActionDialog.tsx';
 import LogoUpload from "../components/LogoUpload";
 import { ReactElementWithPosition } from '../../lib/util/reactNodePosition.ts';
 import BlockIcon from "@mui/icons-material/Block";
@@ -211,7 +218,7 @@ const AppEntornForm: React.FC = () => {
     return (
         <><Grid container spacing={2}>
             <Grid size={9}>
-                <FormField name="entorn" disabled={data?.id != null} readOnly={data?.id != null} filter={entornFilter}/>
+                <FormField name="entorn" disabled={data?.id != null} readOnly={data?.id != null} filter={entornFilter} />
             </Grid>
             <Grid size={3}>
                 <FormField name="activa" />
@@ -356,6 +363,274 @@ const entornAppColumns: MuiDataGridColDef[] = [
     },
 ];
 
+const NetejaEstadisticaFormContent: React.FC = () => {
+    const { t } = useTranslation();
+
+    return (
+        <Grid container spacing={2} sx={{ mt: 0.5 }}>
+            <Grid size={12}>
+                <Alert severity="warning" sx={{ mb: 1 }}>
+                    <AlertTitle sx={{ fontWeight: 600 }}>
+                        {t($ => $.page.appsEntorns.action.netejaEstadistica.alertTitle)}
+                    </AlertTitle>
+                    <Box component="div" sx={{ mb: 1 }}>
+                        {t($ => $.page.appsEntorns.action.netejaEstadistica.alertDades)}
+                    </Box>
+                    <Box component="div" sx={{ fontStyle: 'italic' }}>
+                        {t($ => $.page.appsEntorns.action.netejaEstadistica.alertScopeInfo)}
+                    </Box>
+                </Alert>
+            </Grid>
+            <Grid size={12}>
+                <FormField
+                    name="esborrarCatalegDisabled"
+                    type="checkbox"
+                    label={t($ => $.page.appsEntorns.action.netejaEstadistica.fields.esborrarCatalegDisabled)}
+                    disabled
+                    readOnly
+                />
+            </Grid>
+            <Grid size={12}>
+                <FormField
+                    name="confirmoPerdua"
+                    type="checkbox"
+                    label={t($ => $.page.appsEntorns.action.netejaEstadistica.fields.confirmoPerdua)}
+                    required
+                    validator={(value) =>
+                        !value
+                            ? [
+                                  {
+                                      field: 'confirmoPerdua',
+                                      message: t($ => $.page.appsEntorns.action.netejaEstadistica.validation.confirmoRequired),
+                                  },
+                              ]
+                            : undefined
+                    }
+                />
+            </Grid>
+        </Grid>
+    );
+};
+
+const useNetejaEstadisticaAction = (refresh?: () => void, appNom?: string) => {
+    const { t } = useTranslation();
+    const apiRef = useMuiFormDialogApiRef();
+    const { temporalMessageShow } = useBaseAppContext();
+
+    const handleShow = (id: any, row?: any): void => {
+        apiRef.current?.show?.(id, {
+            confirmoPerdua: false,
+            esborrarCatalegDisabled: false,
+            entornDescripcio: row?.entorn?.description,
+        });
+    };
+
+    const onSuccess = (response: any): void => {
+        refresh?.();
+        const msg = response?.message || t($ => $.page.appsEntorns.action.netejaEstadistica.success);
+        temporalMessageShow(null, msg, 'success');
+    };
+
+    const formDialogButtons = useMemo<DialogButton[]>(
+        () => [
+            {
+                value: false,
+                text: t($ => $.page.appsEntorns.action.netejaEstadistica.cancelButton),
+                componentProps: { variant: 'outlined' },
+            },
+            {
+                value: true,
+                text: t($ => $.page.appsEntorns.action.netejaEstadistica.confirmButton),
+                icon: 'delete_forever',
+                componentProps: {
+                    variant: 'contained',
+                    color: 'error',
+                },
+            },
+        ],
+        [t]
+    );
+
+    const content = (
+        <FormActionDialog
+            resourceName="entornApp"
+            action="neteja_estadistica"
+            apiRef={apiRef}
+            title={(data: any) => {
+                const entornDesc = data?.entornDescripcio;
+                const baseTitle = t($ => $.page.appsEntorns.action.netejaEstadistica.dialogTitle);
+                if (entornDesc && appNom) {
+                    return `${baseTitle} - ${appNom} (${entornDesc})`;
+                } else if (entornDesc) {
+                    return `${baseTitle} (${entornDesc})`;
+                }
+                return baseTitle;
+            }}
+            onSuccess={onSuccess}
+            initialOnChange={false}
+            formDialogButtons={formDialogButtons}
+        >
+            <NetejaEstadisticaFormContent />
+        </FormActionDialog>
+    );
+
+    return {
+        handleShow,
+        content,
+    };
+};
+
+const NetejaEstadisticaAppFormContent: React.FC = () => {
+    const { t } = useTranslation();
+    const { data, apiRef } = useFormContext();
+    const isCataleg = data?.abast === 'DADES_I_CATALEG';
+
+    const abastOptions = useMemo(
+        () => [
+            {
+                value: 'NOMES_DADES',
+                description: t($ => $.page.apps.netejaEstadistica.abastOptions.nomesDades),
+            },
+            {
+                value: 'DADES_I_CATALEG',
+                description: t($ => $.page.apps.netejaEstadistica.abastOptions.dadesICataleg),
+            },
+        ],
+        [t]
+    );
+
+    const handleAbastChange = (value: any) => {
+        if (value !== 'DADES_I_CATALEG') {
+            apiRef?.current?.setFieldValue('esborrarWidgets', false);
+        }
+    };
+
+    return (
+        <Grid container spacing={2} sx={{ mt: 0.5 }}>
+            <Grid size={12}>
+                <Alert severity="warning" sx={{ mb: 1 }}>
+                    <AlertTitle sx={{ fontWeight: 600 }}>
+                        {t($ => $.page.apps.netejaEstadistica.alertTitle)}
+                    </AlertTitle>
+                    <Box component="div" sx={{ mb: 1 }}>
+                        {t($ => $.page.apps.netejaEstadistica.alertDades)}
+                    </Box>
+                    {isCataleg && (
+                        <Box component="div" sx={{ mb: 1 }}>
+                            {t($ => $.page.apps.netejaEstadistica.alertCataleg)}
+                            <br />
+                            {t($ => $.page.apps.netejaEstadistica.alertWidgets)}
+                        </Box>
+                    )}
+                    <Box component="div" sx={{ fontStyle: 'italic', mt: 1 }}>
+                        {t($ => $.page.apps.netejaEstadistica.alertBackupTip)}
+                    </Box>
+                </Alert>
+            </Grid>
+            <Grid size={12}>
+                <FormField
+                    name="abast"
+                    label={t($ => $.page.apps.netejaEstadistica.fields.abast)}
+                    options={abastOptions}
+                    onChange={handleAbastChange}
+                    required
+                />
+            </Grid>
+            {isCataleg && (
+                <Grid size={12}>
+                    <FormField
+                        name="esborrarWidgets"
+                        type="checkbox"
+                        label={t($ => $.page.apps.netejaEstadistica.fields.esborrarWidgets)}
+                    />
+                </Grid>
+            )}
+            <Grid size={12}>
+                <FormField
+                    name="confirmoPerdua"
+                    type="checkbox"
+                    label={t($ => $.page.apps.netejaEstadistica.fields.confirmoPerdua)}
+                    required
+                    validator={(value) =>
+                        !value
+                            ? [
+                                  {
+                                      field: 'confirmoPerdua',
+                                      message: t($ => $.page.apps.netejaEstadistica.validation.confirmoRequired),
+                                  },
+                              ]
+                            : undefined
+                    }
+                />
+            </Grid>
+        </Grid>
+    );
+};
+
+const useNetejaEstadisticaAppAction = (refresh?: () => void) => {
+    const { t } = useTranslation();
+    const apiRef = useMuiFormDialogApiRef();
+    const { temporalMessageShow } = useBaseAppContext();
+
+    const handleShow = (id: any, row?: any): void => {
+        apiRef.current?.show?.(id, {
+            abast: 'NOMES_DADES',
+            esborrarWidgets: false,
+            confirmoPerdua: false,
+            appNom: row?.nom,
+        });
+    };
+
+    const onSuccess = (response: any): void => {
+        refresh?.();
+        const msg = response?.message || t($ => $.page.apps.netejaEstadistica.success);
+        temporalMessageShow(null, msg, 'success');
+    };
+
+    const formDialogButtons = useMemo<DialogButton[]>(
+        () => [
+            {
+                value: false,
+                text: t($ => $.page.apps.netejaEstadistica.cancelButton),
+                componentProps: { variant: 'outlined' },
+            },
+            {
+                value: true,
+                text: t($ => $.page.apps.netejaEstadistica.confirmButton),
+                icon: 'delete_forever',
+                componentProps: {
+                    variant: 'contained',
+                    color: 'error',
+                },
+            },
+        ],
+        [t]
+    );
+
+    const content = (
+        <FormActionDialog
+            resourceName="app"
+            action="neteja_estadistica"
+            apiRef={apiRef}
+            title={(data: any) => {
+                const appNom = data?.appNom;
+                const baseTitle = t($ => $.page.apps.netejaEstadistica.dialogTitle);
+                return appNom ? `${baseTitle} - ${appNom}` : baseTitle;
+            }}
+            onSuccess={onSuccess}
+            initialOnChange={false}
+            formDialogButtons={formDialogButtons}
+        >
+            <NetejaEstadisticaAppFormContent />
+        </FormActionDialog>
+    );
+
+    return {
+        handleShow,
+        content,
+    };
+};
+
 const AppsEntorns: React.FC<{ appNom?: string }> = ({ appNom }) => {
     const { t } = useTranslation();
     const { id: appId } = useParams();
@@ -416,6 +691,40 @@ const AppsEntorns: React.FC<{ appNom?: string }> = ({ appNom }) => {
         formContent: <AppsAclEntryForm/>
     });
     const gestorReadOnly = useReadOnlyGestor();
+    const isCurrentUserAdmin = useIsUserAdmin();
+    const { temporalMessageShow, messageDialogShow } = useBaseAppContext();
+    const confirmDialogButtons = useConfirmDialogButtons();
+    const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
+    const { artifactAction: indicadorApiAction } = useResourceApiService('indicador');
+    const { handleShow: handleShowNeteja, content: netejaDialogComponent } = useNetejaEstadisticaAction(refresh, appNom);
+
+    const handleSincronitzarEntorn = (id: any, row: any) => {
+        const nomEntorn = row?.entorn?.nom || row?.entornDescription || '';
+        const title = t($ => $.page.appsEntorns.action.sincronitzarCataleg.label);
+        const confirmMsg = t($ => $.page.appsEntorns.action.sincronitzarCataleg.confirm, { nom: nomEntorn });
+        messageDialogShow(
+            title,
+            confirmMsg,
+            confirmDialogButtons,
+            confirmDialogComponentProps
+        ).then((confirmed: any) => {
+            if (confirmed) {
+                indicadorApiAction(null, {
+                    code: 'sincronitzar_cataleg',
+                    data: { entornAppId: id }
+                }).then((res: any) => {
+                    if (res?.success) {
+                        temporalMessageShow(null, res?.message || t($ => $.page.appsEntorns.action.sincronitzarCataleg.success), 'success');
+                    } else {
+                        temporalMessageShow(null, res?.message || t($ => $.common.error), 'error');
+                    }
+                }).catch((err: any) => {
+                    temporalMessageShow(null, err?.message || t($ => $.common.error), 'error');
+                });
+            }
+        });
+    };
+
     const actions = [
         {
             label: t($ => $.page.appsEntorns.action.toolbarActiva.activar),
@@ -435,6 +744,22 @@ const AppsEntorns: React.FC<{ appNom?: string }> = ({ appNom }) => {
             showInMenu: true,
             onClick: toogleActiva,
             hidden: (row: any): boolean => Boolean(!row?.activa || gestorReadOnly),
+        },
+        {
+            label: t($ => $.page.appsEntorns.action.netejaEstadistica.label),
+            action: 'neteja_estadistica',
+            icon: "delete_sweep",
+            showInMenu: true,
+            onClick: (id: any, row: any) => handleShowNeteja(id, row),
+            hidden: (): boolean => !isCurrentUserAdmin || Boolean(gestorReadOnly),
+        },
+        {
+            label: t($ => $.page.appsEntorns.action.sincronitzarCataleg.label),
+            action: 'sincronitzar_cataleg',
+            icon: "sync",
+            showInMenu: true,
+            onClick: (id: any, row: any) => handleSincronitzarEntorn(id, row),
+            hidden: (row: any): boolean => !isCurrentUserAdmin || Boolean(gestorReadOnly) || Boolean(!row?.activa),
         },
     ].filter(notNull);
     return (
@@ -459,6 +784,7 @@ const AppsEntorns: React.FC<{ appNom?: string }> = ({ appNom }) => {
                 rowHideDeleteButton={gestorReadOnly}
             />
             {permissionComponent}
+            {netejaDialogComponent}
         </>
     );
 };
@@ -643,10 +969,13 @@ const AppsAclEntryForm: React.FC = () => {
 
 const Apps: React.FC = () => {
     const { t } = useTranslation();
-    const { temporalMessageShow } = useBaseAppContext();
+    const { temporalMessageShow, messageDialogShow } = useBaseAppContext();
     const navigate = useNavigate();
     const gridApiRef = useMuiDataGridApiRef();
     const { appExport } = useActions();
+    const confirmDialogButtons = useConfirmDialogButtons();
+    const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
+    const { artifactAction: indicadorApiAction } = useResourceApiService('indicador');
 
     const appColumns = useMemo(() => getAppColumns(t), [t]);
 
@@ -700,6 +1029,39 @@ const Apps: React.FC = () => {
         formContent: <AppsAclEntryForm/>
     });
     const gestorReadOnly = useReadOnlyGestor();
+    const isCurrentUserAdmin = useIsUserAdmin();
+    const refresh = () => {
+        gridApiRef?.current?.refresh?.();
+    };
+    const { handleShow: handleShowNetejaApp, content: netejaAppDialogComponent } = useNetejaEstadisticaAppAction(refresh);
+
+    const handleSincronitzarApp = (id: any, row: any) => {
+        const appNom = row?.nom || row?.appNom || '';
+        const title = t($ => $.page.apps.action.sincronitzarCataleg);
+        const confirmMsg = t($ => $.page.apps.sincronitzarCataleg.confirm, { nom: appNom });
+        messageDialogShow(
+            title,
+            confirmMsg,
+            confirmDialogButtons,
+            confirmDialogComponentProps
+        ).then((confirmed: any) => {
+            if (confirmed) {
+                indicadorApiAction(null, {
+                    code: 'sincronitzar_cataleg',
+                    data: { appId: id }
+                }).then((res: any) => {
+                    if (res?.success) {
+                        temporalMessageShow(null, res?.message || t($ => $.page.apps.sincronitzarCataleg.success), 'success');
+                    } else {
+                        temporalMessageShow(null, res?.message || t($ => $.common.error), 'error');
+                    }
+                }).catch((err: any) => {
+                    temporalMessageShow(null, err?.message || t($ => $.common.error), 'error');
+                });
+            }
+        });
+    };
+
     const appActions: DataCommonAdditionalAction[] = [
         gestorReadOnly ? {
             label: t($ => $.components.details),
@@ -711,6 +1073,22 @@ const Apps: React.FC = () => {
             icon: 'download',
             showInMenu: true,
             onClick: appExport,
+        },
+        {
+            label: t($ => $.page.apps.action.netejaEstadistica),
+            action: 'neteja_estadistica',
+            icon: 'delete_sweep',
+            showInMenu: true,
+            onClick: (id: any, row: any) => handleShowNetejaApp(id, row),
+            hidden: (): boolean => !isCurrentUserAdmin || Boolean(gestorReadOnly),
+        },
+        {
+            label: t($ => $.page.apps.action.sincronitzarCataleg),
+            action: 'sincronitzar_cataleg',
+            icon: 'sync',
+            showInMenu: true,
+            onClick: (id: any, row: any) => handleSincronitzarApp(id, row),
+            hidden: (): boolean => !isCurrentUserAdmin || Boolean(gestorReadOnly),
         },
     ].filter(notNull);
     const { dataGridProps, loadingElement } = useReordering("app");
@@ -757,6 +1135,7 @@ const Apps: React.FC = () => {
                 {...(!gestorReadOnly ? dataGridProps : {})}
             />
             {appPermissionComponent}
+            {netejaAppDialogComponent}
         </>
     );
 };

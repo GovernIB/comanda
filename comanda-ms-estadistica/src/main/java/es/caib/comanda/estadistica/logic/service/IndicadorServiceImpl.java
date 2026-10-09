@@ -16,9 +16,14 @@ import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
+import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper;
+import es.caib.comanda.estadistica.logic.helper.EstadisticaHelper;
+import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -56,10 +61,14 @@ public class IndicadorServiceImpl extends BaseMutableResourceService<Indicador, 
     private final EstadisticaClientHelper estadisticaClientHelper;
     private final IndicadorRepository indicadorRepository;
     private final IndicadorFormulaTermeRepository indicadorFormulaTermeRepository;
+    private final EstadisticaHelper estadisticaHelper;
+    private final AuthenticationHelper authenticationHelper;
+    private final DashboardPermisosHelper dashboardPermisosHelper;
 
     @PostConstruct
     public void init() {
         register(Indicador.COPIAR_ENTORN_ACTION, new CopiarIndicadorEntornAction());
+        register(Indicador.ACTION_SINCRONITZAR_CATALEG, new SincronitzarCatalegActionExecutor());
     }
 
 	@Override
@@ -104,16 +113,19 @@ public class IndicadorServiceImpl extends BaseMutableResourceService<Indicador, 
         }
         if (namedQueries != null) {
             for (String namedQuery : namedQueries) {
-                if (namedQuery.contains(Indicador.FILTER_BY_APP_NAMEDFILTER)){
-                    long appId = Long.parseLong(namedQuery.split(":")[1]);
-                    filters.add(springFilterHelper.filterByApp(appId, Indicador.Fields.entornAppId));
+                if (namedQuery != null && namedQuery.contains(Indicador.FILTER_BY_APP_NAMEDFILTER) && namedQuery.contains(":")) {
+                    try {
+                        long appId = Long.parseLong(namedQuery.split(":")[1]);
+                        filters.add(springFilterHelper.filterByApp(appId, Indicador.Fields.entornAppId));
+                    } catch (NumberFormatException ignored) {}
                 }
             }
         }
         List<Filter> result = filters.stream().
                 filter(f -> f != null && !String.valueOf(f).isEmpty()).
                 collect(Collectors.toList());
-        return result.isEmpty() ? null : FilterBuilder.and(result).generate();
+        String baseFilter = result.isEmpty() ? null : FilterBuilder.and(result).generate();
+        return dashboardPermisosHelper.buildEntornAppFilterForProperty(baseFilter, Indicador.Fields.entornAppId);
     }
 
     /**
@@ -208,6 +220,40 @@ public class IndicadorServiceImpl extends BaseMutableResourceService<Indicador, 
         @Override
         public void onChange(Serializable id, Indicador.CopiarIndicadorEntornParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Indicador.CopiarIndicadorEntornParams target) {
             // No es necessari implementar aquest mètode
+        }
+    }
+
+    /**
+     * Acció per sincronitzar manualment el catàleg estadístic (indicadors i dimensions) d'un entorn o de tots els entorns d'una app.
+     */
+    public class SincronitzarCatalegActionExecutor implements BaseMutableResourceService.ActionExecutor<IndicadorEntity, Indicador.SincronitzarCatalegParams, Indicador.SincronitzarCatalegResponse> {
+
+        @Override
+        public Indicador.SincronitzarCatalegResponse exec(String code, IndicadorEntity entity, Indicador.SincronitzarCatalegParams params) throws ActionExecutionException {
+            if (!authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)) {
+                throw new AccessDeniedException("Sense permisos per a sincronitzar el catàleg estadístic");
+            }
+            if (params == null || (params.getEntornAppId() == null && params.getAppId() == null)) {
+                throw new ActionExecutionException(Indicador.class, null, code,
+                        I18nUtil.getInstance().getI18nMessage(
+                                "es.caib.comanda.estadistica.logic.service.IndicadorServiceImpl.error.paramRequerit"));
+            }
+
+            if (params.getEntornAppId() != null) {
+                EntornApp entornApp = estadisticaClientHelper.entornAppFindById(params.getEntornAppId());
+                if (entornApp == null) {
+                    throw new ActionExecutionException(Indicador.class, null, code,
+                            I18nUtil.getInstance().getI18nMessage(
+                                    "es.caib.comanda.estadistica.logic.service.IndicadorServiceImpl.error.entornAppInexistent"));
+                }
+                return estadisticaHelper.sincronitzarEstadisticaInfo(entornApp);
+            } else {
+                return estadisticaHelper.sincronitzarEstadisticaInfoPerApp(params.getAppId());
+            }
+        }
+
+        @Override
+        public void onChange(Serializable id, Indicador.SincronitzarCatalegParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Indicador.SincronitzarCatalegParams target) {
         }
     }
 

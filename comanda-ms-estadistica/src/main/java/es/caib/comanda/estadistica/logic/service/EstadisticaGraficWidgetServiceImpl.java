@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.service;
 
 import es.caib.comanda.estadistica.logic.helper.AtributsVisualsHelper;
+import es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaGraficWidgetHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaWidgetHelper;
 import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsGrafic;
@@ -13,9 +14,11 @@ import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceFieldNotFoundException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -40,6 +43,43 @@ public class EstadisticaGraficWidgetServiceImpl extends BaseMutableResourceServi
     @Autowired private EstadisticaGraficWidgetHelper estadisticaGraficWidgetHelper;
     @Autowired private EstadisticaWidgetHelper estadisticaWidgetHelper;
     @Autowired private AtributsVisualsHelper atributsVisualsHelper;
+    @Autowired private DashboardPermisosHelper dashboardPermisosHelper;
+
+    @Override
+    protected String additionalSpringFilter(
+        String currentSpringFilter,
+        String[] namedQueries) {
+        return dashboardPermisosHelper.buildWidgetFilter(currentSpringFilter, namedQueries);
+    }
+
+    @Override
+    protected Specification<EstadisticaGraficWidgetEntity> namedFilterToSpecification(String name) {
+        return estadisticaWidgetHelper.namedFilterToSpecification(name);
+    }
+
+    @Override
+    protected void beforeCreateEntity(EstadisticaGraficWidgetEntity entity, EstadisticaGraficWidget resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotCreatedException {
+        Long appId = (resource != null && resource.getAppId() != null)
+                ? resource.getAppId()
+                : (resource != null && resource.getAplicacio() != null ? resource.getAplicacio().getId() : (entity != null ? entity.getAppId() : null));
+        dashboardPermisosHelper.checkCanCreateWidget(appId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.EstadisticaWidget.permisos.crear"));
+    }
+
+    @Override
+    protected void beforeUpdateEntity(EstadisticaGraficWidgetEntity entity, EstadisticaGraficWidget resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
+        dashboardPermisosHelper.checkCanDesignWidget(entity, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.EstadisticaWidget.permisos.modificar"));
+        Long targetAppId = (resource != null && resource.getAppId() != null)
+                ? resource.getAppId()
+                : (resource != null && resource.getAplicacio() != null ? resource.getAplicacio().getId() : null);
+        if (targetAppId != null && entity != null && !Objects.equals(targetAppId, entity.getAppId())) {
+            dashboardPermisosHelper.checkCanCreateWidget(targetAppId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.EstadisticaWidget.permisos.modificar"));
+        }
+    }
+
+    @Override
+    protected void beforeDelete(EstadisticaGraficWidgetEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        dashboardPermisosHelper.checkCanDeleteWidget(entity, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.EstadisticaWidget.permisos.eliminar"));
+    }
 
     @Override
     protected void beforeCreateSave(EstadisticaGraficWidgetEntity entity, EstadisticaGraficWidget resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotCreatedException {

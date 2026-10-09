@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: monitor-change-0.1.4-001
+      author: limit
+      comment: Afegir app, entorn i indicador d'entornApp esborrat a la taula monitor per poder reintentar la neteja completa d'un entornApp esborrat
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}monitor
+            columns:
+              - column:
+                  name: app_id
+                  type: BIGINT
+                  remarks: Aplicació de l'entornApp (es conserva per si l'entornApp s'ha esborrat)
+              - column:
+                  name: entorn_id
+                  type: BIGINT
+                  remarks: Entorn de l'entornApp (es conserva per si l'entornApp s'ha esborrat)
+              - column:
+                  name: entorn_app_esborrat
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  remarks: Indica si l'operació de neteja correspon a un entornApp esborrat

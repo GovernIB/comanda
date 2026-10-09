@@ -133,14 +133,26 @@ public class DashboardHelper {
         beforeUpdateChangeEntornApp(entity, resource, answers);
     }
 
+    private boolean isAnswerRefused(Map<?, ?> answers, String answerCode) {
+        if (answers == null || !answers.containsKey(answerCode)) {
+            return false;
+        }
+        Object value = answers.get(answerCode);
+        if (value instanceof AnswerRequiredException.AnswerValue) {
+            return !((AnswerRequiredException.AnswerValue) value).valueAsBoolean();
+        } else if (value instanceof Boolean) {
+            return !((Boolean) value);
+        }
+        return true;
+    }
+
     private void beforeUpdateChangeEntornApp(DashboardEntity entity,
                                              Dashboard resource,
                                              Map<String, AnswerRequiredException.AnswerValue> answers) {
         if (entity.getItems().isEmpty()) {
             return;
         }
-        if ((answers.containsKey(ANSWER_CODE_ENTORN_ID) && !answers.get(ANSWER_CODE_ENTORN_ID).getBooleanValue()) ||
-            (answers.containsKey(ANSWER_CODE_APP_ID))) {
+        if (isAnswerRefused(answers, ANSWER_CODE_ENTORN_ID) || (answers != null && answers.containsKey(ANSWER_CODE_APP_ID))) {
             throw new ResourceNotUpdatedException(
                 Dashboard.class,
                 entity.getId().toString(),
@@ -160,7 +172,7 @@ public class DashboardHelper {
 
         for (DashboardItemEntity item : entity.getItems()) {
             // Validamos si el widget tiene app compatible
-            if (canviAppId && !answers.containsKey(ANSWER_CODE_APP_ID)) {
+            if (canviAppId && (answers == null || !answers.containsKey(ANSWER_CODE_APP_ID))) {
                 EstadisticaWidgetEntity<?> widget = item.getWidget();
                 if (widget != null && !Objects.equals(widget.getAppId(), newAppId)) {
                     throw new AnswerRequiredException(
@@ -171,16 +183,19 @@ public class DashboardHelper {
                 }
             }
 
-            // Comprovam que existeixi entornApp de destí
-            if (Objects.nonNull(newEntornApp)) {
-                item.setEntornId(newEntornId);
-            } else {
-                throw new AnswerRequiredException(
-                    Dashboard.class,
-                    ANSWER_CODE_ENTORN_ID,
-                    I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.error.entornId"),
-                    null
-                );
+            // Comprovam canvi d'entorn
+            if (canviEntornId) {
+                // Comprovam que existeixi entornApp de destí
+                if (Objects.nonNull(newEntornApp)) {
+                    item.setEntornId(newEntornId);
+                } else if (answers == null || !answers.containsKey(ANSWER_CODE_ENTORN_ID)) {
+                    throw new AnswerRequiredException(
+                        Dashboard.class,
+                        ANSWER_CODE_ENTORN_ID,
+                        I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.error.entornId"),
+                        null
+                    );
+                }
             }
         }
     }
@@ -255,22 +270,33 @@ public class DashboardHelper {
 
         @Override
         public Dashboard exec(String code, DashboardEntity entity, Dashboard params) throws ActionExecutionException {
-            Long targetAppId = entity.getAppId();
-            Long targetEntornId = entity.getEntornId();
-            if (Objects.nonNull(params)) {
-                if (params.getAplicacio() != null && params.getAplicacio().getId() != null) {
-                    targetAppId = params.getAplicacio().getId();
-                } else if (params.getAppId() != null) {
-                    targetAppId = params.getAppId();
-                }
-                if (params.getEntorn() != null && params.getEntorn().getId() != null) {
-                    targetEntornId = params.getEntorn().getId();
-                } else if (params.getEntornId() != null) {
-                    targetEntornId = params.getEntornId();
+            if (dashboardPermisosHelper != null) {
+                dashboardPermisosHelper.checkHasCreationPermission(
+                        I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.permisos.clonarSenseCreacio"));
+                if (entity != null) {
+                    dashboardPermisosHelper.checkCanReadDashboard(
+                            entity.getId(),
+                            entity.getAppId(),
+                            entity.getEntornId(),
+                            I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.permisos.clonarLecturaOrigen"));
                 }
             }
+
+            Long targetAppId;
+            Long targetEntornId;
+            if (Objects.nonNull(params)) {
+                targetAppId = (params.getAplicacio() != null && params.getAplicacio().getId() != null)
+                        ? params.getAplicacio().getId()
+                        : params.getAppId();
+                targetEntornId = (params.getEntorn() != null && params.getEntorn().getId() != null)
+                        ? params.getEntorn().getId()
+                        : params.getEntornId();
+            } else {
+                targetAppId = entity != null ? entity.getAppId() : null;
+                targetEntornId = entity != null ? entity.getEntornId() : null;
+            }
             if (dashboardPermisosHelper != null) {
-                dashboardPermisosHelper.checkCanCreate(targetAppId, targetEntornId, "No teniu permisos de disseny per clonar el quadre de control a l'aplicació/entorn indicats");
+                dashboardPermisosHelper.checkCanCreate(targetAppId, targetEntornId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.permisos.clonar"));
             }
 
             DashboardEntity newDashboard = new DashboardEntity();
@@ -365,8 +391,13 @@ public class DashboardHelper {
                         }
                     }
                     Long resolvedEntornId;
-                    if (!canviAppId && !canviEntornId) {
-                        resolvedEntornId = original.getEntornId();
+                    boolean esEntornPersonalitzat = original.getEntornId() != null
+                            && !Objects.equals(original.getEntornId(), originalDashboard.getEntornId());
+
+                    if (!canviEntornId || esEntornPersonalitzat) {
+                        resolvedEntornId = original.getEntornId() != null
+                                ? original.getEntornId()
+                                : (originalDashboard.getEntornId() != null ? originalDashboard.getEntornId() : newEntornId);
                     } else if (newEntornApp != null) {
                         resolvedEntornId = newEntornId != null ? newEntornId : original.getEntornId();
                     } else {
@@ -416,13 +447,15 @@ public class DashboardHelper {
         int counter = 1;
         while (appId != null && estadisticaWidgetRepository.findByAppIdAndTitol(appId, candidate) != null) {
             if (counter > MAX_TITOL_TRIES) {
-                throw new IllegalStateException("S'ha superat el nombre màxim d'intents (" + MAX_TITOL_TRIES + ") per generar un títol únic per al widget: " + originalTitol);
+                throw new IllegalStateException(I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.maximIntentsTitol", MAX_TITOL_TRIES, originalTitol));
             }
             int maxLength = EstadisticaWidgetEntity.TITOL_MAX_LENGTH;
-            String suffix = counter == 1 ? " (Copia)" : " (Copia " + counter + ")";
+            String suffix = counter == 1
+                    ? I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.suffixCopia")
+                    : I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.suffixCopiaN", counter);
             String base = originalTitol != null && originalTitol.length() + suffix.length() > maxLength
                     ? originalTitol.substring(0, maxLength - suffix.length())
-                    : (originalTitol != null ? originalTitol : "Widget");
+                    : (originalTitol != null ? originalTitol : I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.defaultWidgetTitol"));
             candidate = base + suffix;
             counter++;
         }
@@ -550,22 +583,30 @@ public class DashboardHelper {
         @Override
         public es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardItem exec(String code, DashboardEntity entity, es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.CloneAndAddWidgetParams params) throws ActionExecutionException {
             if (dashboardPermisosHelper != null) {
-                dashboardPermisosHelper.checkCanDesignDashboard(entity.getId(), "No teniu permisos de disseny per afegir widgets a aquest quadre de control");
+                dashboardPermisosHelper.checkCanDesignDashboard(entity.getId(), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.permisos.afegirWidgets"));
             }
             if (params == null || params.getWidgetId() == null) {
-                throw new ActionExecutionException(Dashboard.class, entity.getId(), code, "widgetId is required");
+                throw new ActionExecutionException(Dashboard.class, entity.getId(), code, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.action.cloneAndAddWidget.error.widgetIdRequerit"));
             }
 
             EstadisticaWidgetEntity originalWidget = estadisticaWidgetRepository.findById(params.getWidgetId()).orElseThrow(() ->
-                new ActionExecutionException(Dashboard.class, entity.getId(), code, "Original widget not found")
+                new ActionExecutionException(Dashboard.class, entity.getId(), code, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.helper.DashboardHelper.action.cloneAndAddWidget.error.widgetOriginalNoTrobat"))
             );
 
-//            TODO Check widget accessible/visible
-//            if (dashboardPermisosHelper != null && !dashboardPermisosHelper.isAdminOrConsulta()) {
-//                if (originalWidget.getAppId() != null && !dashboardPermisosHelper.hasPermission(ResourceType.APP, originalWidget.getAppId(), List.of(PermissionEnum.PERM0, PermissionEnum.PERM1))) {
-//                    throw new AccessDeniedException("No teniu permisos per accedir al widget original");
-//                }
-//            }
+            if (entity.getAppId() != null && originalWidget.getAppId() != null
+                    && !entity.getAppId().equals(originalWidget.getAppId())) {
+                throw new ActionExecutionException(
+                    Dashboard.class,
+                    entity.getId(),
+                    code,
+                    "Aquest widget no pertany a la aplicació seleccionada"
+                );
+            }
+
+            Long entornId = params.getEntornId() != null ? params.getEntornId() : entity.getEntornId();
+            if (dashboardPermisosHelper != null) {
+                dashboardPermisosHelper.checkCanAccessWidget(originalWidget, entornId, "No teniu permisos per accedir al widget original en aquest entorn");
+            }
 
             Map<Long, EstadisticaWidgetEntity> clonedWidgetsMap = new HashMap<>();
             EstadisticaWidgetEntity newWidget = DashboardHelper.cloneWidgetLogic(originalWidget, entity.getAppId(), clonedWidgetsMap, estadisticaWidgetRepository, dashboardClonerMapper);
@@ -574,7 +615,6 @@ public class DashboardHelper {
             newItem.setDashboard(entity);
             newItem.setWidget(newWidget);
 
-            Long entornId = params.getEntornId() != null ? params.getEntornId() : entity.getEntornId();
             if (entornId != null) {
                 newItem.setEntornId(entornId);
             }

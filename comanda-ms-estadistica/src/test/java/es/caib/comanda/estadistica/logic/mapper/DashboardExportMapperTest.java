@@ -626,4 +626,120 @@ class DashboardExportMapperTest {
         assertNull(result);
         verify(dimensioValorRepository, never()).findByDimensioAndValor(any(), anyString());
     }
+
+    @Test
+    void testToDashboardFiltreExport_DimensioType() {
+        // Given
+        es.caib.comanda.estadistica.persist.entity.dashboard.DashboardFiltreEntity filtreEntity =
+                new es.caib.comanda.estadistica.persist.entity.dashboard.DashboardFiltreEntity();
+        filtreEntity.setTipus(es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltreTipus.DIMENSIO);
+        filtreEntity.setDimensioCodi("DIM001");
+        filtreEntity.setTitol("Filtre per dimensió");
+        filtreEntity.setOrdre(1);
+        filtreEntity.setMultiple(true);
+
+        // When
+        DashboardFiltreExport result = mapper.toDashboardFiltreExport(filtreEntity);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltreTipus.DIMENSIO, result.getTipus());
+        assertEquals("DIM001", result.getDimensioCodi());
+        assertEquals("Filtre per dimensió", result.getTitol());
+        assertEquals(1, result.getOrdre());
+        assertTrue(result.isMultiple());
+    }
+
+    @Test
+    void testToDashboardFiltreExport_PeriodeType() {
+        // Given
+        es.caib.comanda.estadistica.persist.entity.dashboard.DashboardFiltreEntity filtreEntity =
+                new es.caib.comanda.estadistica.persist.entity.dashboard.DashboardFiltreEntity();
+        filtreEntity.setTipus(es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltreTipus.PERIODE);
+        filtreEntity.setDimensioCodi(null);
+        filtreEntity.setTitol("Període");
+        filtreEntity.setOrdre(2);
+        filtreEntity.setMultiple(false);
+
+        // When
+        DashboardFiltreExport result = mapper.toDashboardFiltreExport(filtreEntity);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltreTipus.PERIODE, result.getTipus());
+        assertNull(result.getDimensioCodi());
+        assertEquals("Període", result.getTitol());
+        assertEquals(2, result.getOrdre());
+        assertFalse(result.isMultiple());
+    }
+
+    @Test
+    void testToDashboardFiltreExport_NullEntity() {
+        // When
+        DashboardFiltreExport result = mapper.toDashboardFiltreExport(null);
+
+        // Then
+        assertNull(result);
+    }
+
+    @Test
+    void testToDashboardFiltreEntity_FromExport() {
+        // Given
+        DashboardFiltreExport export = new DashboardFiltreExport();
+        export.setTipus(es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltreTipus.DIMENSIO);
+        export.setDimensioCodi("DIM001");
+        export.setTitol("Filtre test");
+        export.setOrdre(3);
+        export.setMultiple(true);
+
+        // When
+        es.caib.comanda.estadistica.persist.entity.dashboard.DashboardFiltreEntity result =
+                mapper.toDashboardFiltreEntity(export);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltreTipus.DIMENSIO, result.getTipus());
+        assertEquals("DIM001", result.getDimensioCodi());
+        assertEquals("Filtre test", result.getTitol());
+        assertEquals(3, result.getOrdre());
+        assertTrue(result.isMultiple());
+        assertNull(result.getDashboard()); // dashboard is ignored in the mapping
+    }
+
+    @Test
+    void testToDashboardExport_WithFiltres() {
+        // Given
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        entity.setTitol("Dashboard amb filtres");
+        entity.setEntornId(entorn.getId());
+        entity.setAppId(app.getId());
+
+        es.caib.comanda.estadistica.persist.entity.dashboard.DashboardFiltreEntity filtre1 =
+                new es.caib.comanda.estadistica.persist.entity.dashboard.DashboardFiltreEntity();
+        filtre1.setTipus(es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltreTipus.DIMENSIO);
+        filtre1.setDimensioCodi("DIM001");
+        filtre1.setOrdre(1);
+        filtre1.setMultiple(true);
+
+        es.caib.comanda.estadistica.persist.entity.dashboard.DashboardFiltreEntity filtre2 =
+                new es.caib.comanda.estadistica.persist.entity.dashboard.DashboardFiltreEntity();
+        filtre2.setTipus(es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltreTipus.PERIODE);
+        filtre2.setOrdre(2);
+        filtre2.setMultiple(false);
+
+        entity.setFiltres(Arrays.asList(filtre1, filtre2));
+
+        // When
+        DashboardExport result = mapper.toDashboardExport(entity, estadisticaClientHelper, atributsVisualsHelper);
+
+        // Then
+        assertNotNull(result);
+        assertNotNull(result.getFiltres());
+        assertEquals(2, result.getFiltres().size());
+        assertEquals(es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltreTipus.DIMENSIO, result.getFiltres().get(0).getTipus());
+        assertEquals("DIM001", result.getFiltres().get(0).getDimensioCodi());
+        assertEquals(es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltreTipus.PERIODE, result.getFiltres().get(1).getTipus());
+        assertNull(result.getFiltres().get(1).getDimensioCodi());
+    }
 }

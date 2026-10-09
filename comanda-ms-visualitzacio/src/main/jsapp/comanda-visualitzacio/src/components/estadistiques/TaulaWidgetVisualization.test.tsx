@@ -3,6 +3,12 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { describe, expect, it, vi } from 'vitest';
 import TaulaWidgetVisualization from './TaulaWidgetVisualization';
 
+vi.mock('../salut/SalutErrorBoundaryFallback', () => ({
+    SalutErrorBoundaryFallback: (props: { error?: { message?: string; stack?: string } }) => (
+        <div data-testid="salut-error-boundary-fallback" data-error={JSON.stringify(props.error ?? null)} />
+    ),
+}));
+
 const renderComponent = (ui: React.ReactElement) =>
     render(<ThemeProvider theme={createTheme()}>{ui}</ThemeProvider>);
 
@@ -69,8 +75,11 @@ describe('TaulaWidgetVisualization', () => {
             />
         );
 
-        expect(screen.getByText('Error de dades')).toBeInTheDocument();
-        expect(screen.getByText('Traça taula')).toBeInTheDocument();
+        const fallback = screen.getByTestId('salut-error-boundary-fallback');
+        expect(JSON.parse(fallback.getAttribute('data-error') || 'null')).toEqual({
+            message: 'Error de dades',
+            stack: 'Traça taula',
+        });
     });
 
     it('TaulaWidgetVisualization_quanRepOnClick_invocaElCallbackEnClicar', () => {

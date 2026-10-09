@@ -6,7 +6,11 @@ import es.caib.comanda.client.model.EntornApp;
 import es.caib.comanda.client.model.acl.PermissionEnum;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
+import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
+import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
+import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
+import es.caib.comanda.estadistica.persist.repository.EstadisticaWidgetRepository;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +21,9 @@ import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static es.caib.comanda.estadistica.logic.intf.model.widget.WidgetBaseResource.FILTER_BY_ENTORN_NAMEDFILTER;
 
 /**
  * Helper centralitzat per a la comprovació de permisos ACL i drets de disseny
@@ -29,11 +36,18 @@ import java.util.*;
 @RequiredArgsConstructor
 public class DashboardPermisosHelper {
 
+    public static final List<PermissionEnum> PERMISSIONS_APP_READ = List.of(PermissionEnum.PERM0, PermissionEnum.PERM1);
+    public static final List<PermissionEnum> PERMISSIONS_APP_WRITE = List.of(PermissionEnum.PERM1);
+    public static final List<PermissionEnum> PERMISSIONS_DASHBOARD_READ = List.of(PermissionEnum.READ, PermissionEnum.WRITE);
+    public static final List<PermissionEnum> PERMISSIONS_DASHBOARD_WRITE = List.of(PermissionEnum.WRITE);
+
     private final AuthenticationHelper authenticationHelper;
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     private final AclServiceClient aclServiceClient;
     private final DashboardRepository dashboardRepository;
     private final EstadisticaClientHelper estadisticaClientHelper;
+    private final DashboardItemRepository dashboardItemRepository;
+    private final EstadisticaWidgetRepository estadisticaWidgetRepository;
 
     /**
      * Comprova si l'usuari actual té el rol ADMIN o CONSULTA (exempt de restriccions de lectura).
@@ -112,6 +126,18 @@ public class DashboardPermisosHelper {
         }
     }
 
+    public Set<Serializable> getAllowedAppIds(boolean isWrite) {
+        return getAllowedIds(ResourceType.APP, isWrite ? PERMISSIONS_APP_WRITE : PERMISSIONS_APP_READ);
+    }
+
+    public Set<Serializable> getAllowedEntornAppIds(boolean isWrite) {
+        return getAllowedIds(ResourceType.ENTORN_APP, isWrite ? PERMISSIONS_APP_WRITE : PERMISSIONS_APP_READ);
+    }
+
+    public Set<Serializable> getAllowedDashboardIds(boolean isWrite) {
+        return getAllowedIds(ResourceType.DASHBOARD, isWrite ? PERMISSIONS_DASHBOARD_WRITE : PERMISSIONS_DASHBOARD_READ);
+    }
+
     /**
      * Comprova si l'usuari actual pot dissenyar un dashboard coneguts el seu id, appId i entornId.
      * Jerarquia de permisos:
@@ -124,15 +150,15 @@ public class DashboardPermisosHelper {
         if (isAdmin()) {
             return true;
         }
-        if (dashboardId != null && hasPermission(ResourceType.DASHBOARD, dashboardId, List.of(PermissionEnum.WRITE))) {
+        if (dashboardId != null && hasPermission(ResourceType.DASHBOARD, dashboardId, PERMISSIONS_DASHBOARD_WRITE)) {
             return true;
         }
-        if (appId != null && hasPermission(ResourceType.APP, appId, List.of(PermissionEnum.PERM1))) {
+        if (appId != null && hasPermission(ResourceType.APP, appId, PERMISSIONS_APP_WRITE)) {
             return true;
         }
         if (appId != null && entornId != null) {
             EntornApp entornApp = estadisticaClientHelper.entornAppFindByAppAndEntorn(appId, entornId);
-            if (entornApp != null && hasPermission(ResourceType.ENTORN_APP, entornApp.getId(), List.of(PermissionEnum.PERM1))) {
+            if (entornApp != null && hasPermission(ResourceType.ENTORN_APP, entornApp.getId(), PERMISSIONS_APP_WRITE)) {
                 return true;
             }
         }
@@ -144,6 +170,75 @@ public class DashboardPermisosHelper {
      */
     public boolean canCreate(Long appId, Long entornId) {
         return canDesign(null, appId, entornId);
+    }
+
+    /**
+     * Comprova si l'usuari actual té permís de creació de dashboards en general
+     * (té accés d'escriptura a almenys una App o EntornApp, o és ADMIN).
+     * No és suficient tenir accés a un dashboard concret.
+     */
+    public boolean hasCreationPermission() {
+        if (isAdmin()) {
+            return true;
+        }
+        return !getAllowedAppIds(true).isEmpty() || !getAllowedEntornAppIds(true).isEmpty();
+    }
+
+    /**
+     * Verifica que l'usuari té permís de creació de dashboards en general, o llança {@link AccessDeniedException}.
+     */
+    public void checkHasCreationPermission(String errorMessage) {
+        if (!hasCreationPermission()) {
+            throw new AccessDeniedException(errorMessage);
+        }
+    }
+
+    /**
+     * Comprova si l'usuari actual pot esborrar un dashboard d'aquell tipus.
+     * Només permès per a usuaris que puguin crear dashboards d'aquell tipus, és a dir, amb accés a app/entornApp.
+     */
+    public boolean canDeleteDashboard(Long appId, Long entornId) {
+        return canCreate(appId, entornId);
+    }
+
+    /**
+     * Verifica que l'usuari pot esborrar el dashboard especificat pels seus appId i entornId, o llança {@link AccessDeniedException}.
+     */
+    public void checkCanDeleteDashboard(Long appId, Long entornId, String errorMessage) {
+        if (!canDeleteDashboard(appId, entornId)) {
+            throw new AccessDeniedException(errorMessage);
+        }
+    }
+
+    /**
+     * Comprova si l'usuari actual té permís de lectura sobre el dashboard indicat.
+     */
+    public boolean canReadDashboard(Long dashboardId, Long appId, Long entornId) {
+        if (isAdminOrConsulta()) {
+            return true;
+        }
+        if (dashboardId != null && hasPermission(ResourceType.DASHBOARD, dashboardId, PERMISSIONS_DASHBOARD_READ)) {
+            return true;
+        }
+        if (appId != null && hasPermission(ResourceType.APP, appId, PERMISSIONS_APP_READ)) {
+            return true;
+        }
+        if (appId != null && entornId != null) {
+            EntornApp entornApp = estadisticaClientHelper.entornAppFindByAppAndEntorn(appId, entornId);
+            if (entornApp != null && hasPermission(ResourceType.ENTORN_APP, entornApp.getId(), PERMISSIONS_APP_READ)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Verifica que l'usuari té permís de lectura sobre el dashboard indicat, o llança {@link AccessDeniedException}.
+     */
+    public void checkCanReadDashboard(Long dashboardId, Long appId, Long entornId, String errorMessage) {
+        if (!canReadDashboard(dashboardId, appId, entornId)) {
+            throw new AccessDeniedException(errorMessage);
+        }
     }
 
     /**
@@ -191,7 +286,7 @@ public class DashboardPermisosHelper {
     }
 
     /**
-     * Construeix una clàusula de filtre Spring RSQL a partir dels IDs d'EntornApp permesos.
+     * Construeix una clàusula de filtre Spring Filter a partir dels IDs d'EntornApp permesos.
      */
     public String buildEntornAppFilter(Set<Serializable> entornAppPermissionIds, String prefix) {
         String fieldPrefix = (prefix != null && !prefix.isBlank()) ? prefix + "." : "";
@@ -199,7 +294,7 @@ public class DashboardPermisosHelper {
     }
 
     /**
-     * Construeix una clàusula de filtre Spring RSQL a partir dels IDs d'EntornApp permesos,
+     * Construeix una clàusula de filtre Spring Filter a partir dels IDs d'EntornApp permesos,
      * permetent especificar els noms de propietat concrets per a l'aplicació i per a l'entorn.
      */
     public String buildEntornAppFilter(Set<Serializable> entornAppPermissionIds, String appProperty, String entornProperty) {
@@ -219,5 +314,522 @@ public class DashboardPermisosHelper {
             }
         }
         return clauses.isEmpty() ? null : String.join(" or ", clauses);
+    }
+
+    /**
+     * Construeix el filtre Spring Filter d'autorització per a un recurs combinant permisos d'APP, ENTORN_APP i DASHBOARD.
+     */
+    public String buildAclFilterPrefix(
+            String currentSpringFilter,
+            String appIdProperty,
+            String entornAppFilterPrefix,
+            String dashboardIdProperty,
+            boolean isWrite) {
+        if (isWrite ? isAdmin() : isAdminOrConsulta()) {
+            return currentSpringFilter;
+        }
+
+        String appFilter = SpringFilterHelper.buildOrFilter(
+                appIdProperty,
+                getAllowedAppIds(isWrite));
+
+        String entornAppFilter = buildEntornAppFilter(
+                getAllowedEntornAppIds(isWrite),
+                entornAppFilterPrefix);
+
+        String dashboardFilter = SpringFilterHelper.buildOrFilter(
+                dashboardIdProperty,
+                getAllowedDashboardIds(isWrite));
+
+        String filter = SpringFilterHelper.or(
+                appFilter,
+                entornAppFilter,
+                dashboardFilter
+        );
+
+        return SpringFilterHelper.and(
+                currentSpringFilter,
+                (filter.isBlank())
+                        ? "id:0"
+                        : filter
+        );
+    }
+
+    /**
+     * Construeix el filtre Spring Filter d'autorització per a un recurs amb propietats d'aplicació i entorn específiques (com a DashboardItem).
+     */
+    public String buildAclFilter(
+            String currentSpringFilter,
+            String appIdProperty,
+            String entornIdProperty,
+            String dashboardIdProperty,
+            boolean isWrite) {
+        if (isWrite ? isAdmin() : isAdminOrConsulta()) {
+            return currentSpringFilter;
+        }
+
+        String appFilter = SpringFilterHelper.buildOrFilter(
+                appIdProperty,
+                getAllowedAppIds(isWrite));
+
+        String entornAppFilter = buildEntornAppFilter(
+                getAllowedEntornAppIds(isWrite),
+                appIdProperty,
+                entornIdProperty);
+
+        String dashboardFilter = SpringFilterHelper.buildOrFilter(
+                dashboardIdProperty,
+                getAllowedDashboardIds(isWrite));
+
+        String filter = SpringFilterHelper.or(
+                appFilter,
+                entornAppFilter,
+                dashboardFilter
+        );
+
+        return SpringFilterHelper.and(
+                currentSpringFilter,
+                (filter.isBlank())
+                        ? "id:0"
+                        : filter
+        );
+    }
+
+    /**
+     * Construeix el filtre Spring Filter per a dashboards o entitats filles amb prefix comú (p. ex. dashboard.appId, dashboard.entornId, dashboard.id).
+     */
+    public String buildDashboardChildFilter(String currentSpringFilter, String dashboardPrefix) {
+        String p = (dashboardPrefix != null && !dashboardPrefix.isBlank()) ? dashboardPrefix + "." : "";
+        return buildAclFilterPrefix(currentSpringFilter, p + "appId", dashboardPrefix, p + "id", false);
+    }
+
+    /**
+     * Construeix el filtre Spring Filter per al quadre de control (Dashboard).
+     */
+    public String buildDashboardFilter(String currentSpringFilter, boolean isWrite) {
+        return buildAclFilterPrefix(currentSpringFilter, "appId", null, "id", isWrite);
+    }
+
+    /**
+     * Construeix el filtre Spring Filter per als elements d'un quadre de control (DashboardItem).
+     */
+    public String buildDashboardItemFilter(String currentSpringFilter) {
+        return buildAclFilter(currentSpringFilter, "widget.appId", "entornId", "dashboard.id", false);
+    }
+
+    /**
+     * Comprova si l'usuari actual pot accedir o visualitzar el widget estadístic indicat.
+     * Es pot visualitzar un widget si:
+     * - L'usuari és ADMIN o CONSULTA.
+     * - O pertany a alguna app amb permís directe (ResourceType.APP).
+     * - O pertany a algun dashboard amb permís directe (ResourceType.DASHBOARD).
+     * - O pertany a una app accessible a través d'EntornApp:
+     *     - Si s'especifica entornId (p. ex. a l'editor de dashboard o en validar per a un entorn específic),
+     *       només si l'entorn de l'EntornApp també coincideix.
+     *     - Si entornId és null ("de normal"), qualsevol EntornApp de la mateixa app és suficient.
+     *
+     * @param widget L'entitat del widget estadístic
+     * @param entornId L'identificador de l'entorn de context (opcional)
+     * @return true si l'accés és permès
+     */
+    public boolean canAccessWidget(EstadisticaWidgetEntity<?> widget, Long entornId) {
+        if (isAdminOrConsulta()) {
+            return true;
+        }
+        if (widget == null) {
+            return false;
+        }
+
+        Long appId = widget.getAppId();
+        Long widgetId = widget.getId();
+
+        // Permís directe sobre l'aplicació
+        if (appId != null && containsId(getAllowedAppIds(false), appId)) {
+            return true;
+        }
+
+        // Permís directe sobre algun dashboard que contingui aquest widget
+        Set<Serializable> allowedDashboardIds = getAllowedDashboardIds(false);
+        if (widgetId != null && !allowedDashboardIds.isEmpty() && dashboardItemRepository != null) {
+            List<Long> dashIds = allowedDashboardIds.stream()
+                    .map(id -> (id instanceof Number) ? ((Number) id).longValue() : Long.parseLong(id.toString()))
+                    .collect(Collectors.toList());
+            if (!dashIds.isEmpty() && dashboardItemRepository.existsByWidgetIdAndDashboardIdIn(widgetId, dashIds)) {
+                return true;
+            }
+        }
+
+        // Permís a través d'EntornApp
+        if (appId != null) {
+            Set<Serializable> allowedEntornAppIds = getAllowedEntornAppIds(false);
+            if (!allowedEntornAppIds.isEmpty()) {
+                if (entornId != null) {
+                    try {
+                        EntornApp ea = estadisticaClientHelper.entornAppFindByAppAndEntorn(appId, entornId);
+                        if (ea != null && ea.getId() != null && containsId(allowedEntornAppIds, ea.getId())) {
+                            return true;
+                        }
+                    } catch (Exception e) {
+                        log.warn("Error consultant EntornApp per appId=" + appId + " i entornId=" + entornId, e);
+                    }
+                } else {
+                    for (Serializable eaId : allowedEntornAppIds) {
+                        try {
+                            Long id = (eaId instanceof Number) ? ((Number) eaId).longValue() : Long.parseLong(eaId.toString());
+                            EntornApp ea = estadisticaClientHelper.entornAppFindById(id);
+                            if (ea != null && ea.getApp() != null && appId.equals(ea.getApp().getId())) {
+                                return true;
+                            }
+                        } catch (Exception e) {
+                            log.warn("Error resolvent EntornApp per id=" + eaId, e);
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public boolean canAccessWidget(Long widgetId, Long entornId) {
+        if (isAdminOrConsulta()) {
+            return true;
+        }
+        if (widgetId == null) {
+            return false;
+        }
+        if (estadisticaWidgetRepository != null) {
+            return estadisticaWidgetRepository.findById(widgetId)
+                    .map(w -> canAccessWidget(w, entornId))
+                    .orElse(false);
+        }
+        return false;
+    }
+
+    public void checkCanAccessWidget(EstadisticaWidgetEntity<?> widget, Long entornId, String errorMessage) {
+        if (!canAccessWidget(widget, entornId)) {
+            throw new AccessDeniedException(errorMessage);
+        }
+    }
+
+    public void checkCanAccessWidget(Long widgetId, Long entornId, String errorMessage) {
+        if (!canAccessWidget(widgetId, entornId)) {
+            throw new AccessDeniedException(errorMessage);
+        }
+    }
+
+    /**
+     * Retorna el conjunt d'identificadors d'EntornApp accessibles per a l'usuari actual en mode lectura
+     * a través de qualsevol dels seus permisos (directes d'EntornApp, d'App o de Dashboard).
+     * Si l'usuari és ADMIN o CONSULTA, retorna null (sense restriccions).
+     */
+    public Set<Long> getEffectiveAllowedEntornAppIds() {
+        if (isAdminOrConsulta()) {
+            return null;
+        }
+        Set<Long> allowed = new HashSet<>();
+
+        // 1. Permisos directes sobre EntornApp
+        for (Serializable eaId : getAllowedEntornAppIds(false)) {
+            try {
+                allowed.add(Long.valueOf(String.valueOf(eaId)));
+            } catch (NumberFormatException ignored) {}
+        }
+
+        // 2. Permisos directes sobre App (atorga accés a tots els entorns de l'App)
+        for (Serializable appId : getAllowedAppIds(false)) {
+            try {
+                Long id = Long.valueOf(String.valueOf(appId));
+                List<Long> eaIds = estadisticaClientHelper.getEntornAppsIdByAppId(id);
+                if (eaIds != null) {
+                    allowed.addAll(eaIds);
+                }
+            } catch (Exception e) {
+                log.warn("Error resolvent EntornApps per appId=" + appId, e);
+            }
+        }
+
+        // 3. Permisos directes sobre Dashboard
+        for (Serializable dashId : getAllowedDashboardIds(false)) {
+            try {
+                Long id = Long.valueOf(String.valueOf(dashId));
+                DashboardEntity dashboard = dashboardRepository.findById(id).orElse(null);
+                if (dashboard != null && dashboard.getAppId() != null) {
+                    if (dashboard.getEntornId() != null) {
+                        EntornApp ea = estadisticaClientHelper.entornAppFindByAppAndEntorn(dashboard.getAppId(), dashboard.getEntornId());
+                        if (ea != null && ea.getId() != null) {
+                            allowed.add(ea.getId());
+                        }
+                    } else {
+                        List<Long> eaIds = estadisticaClientHelper.getEntornAppsIdByAppId(dashboard.getAppId());
+                        if (eaIds != null) {
+                            allowed.addAll(eaIds);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Error resolvent EntornApp per a dashboard=" + dashId, e);
+            }
+        }
+
+        return allowed;
+    }
+
+    /**
+     * Construeix el filtre Spring Filter d'autorització per a un recurs amb camp entornAppId
+     * (com ara Dimensio, Indicador, o dimensio.entornAppId per a DimensioValor).
+     */
+    public String buildEntornAppFilterForProperty(String currentSpringFilter, String entornAppIdProperty) {
+        Set<Long> allowed = getEffectiveAllowedEntornAppIds();
+        if (allowed == null) {
+            // Usuari ADMIN o CONSULTA: sense restriccions d'entornApp, retorna el filtre original
+            return currentSpringFilter;
+        }
+        if (allowed.isEmpty()) {
+            // Usuari sense cap permís sobre cap App, EntornApp o Dashboard: bloqueig (fail-closed)
+            return SpringFilterHelper.and(currentSpringFilter, "id:0");
+        }
+        String filter = SpringFilterHelper.buildOrFilter(entornAppIdProperty, allowed);
+        return SpringFilterHelper.and(currentSpringFilter, (filter == null || filter.isBlank()) ? "id:0" : filter);
+    }
+
+    /**
+     * Comprova si l'usuari actual pot dissenyar o crear continguts (widgets i títols) per a una aplicació concreta
+     * (és ADMIN, té WRITE sobre l'App, té WRITE sobre algun EntornApp de l'App, o té WRITE sobre algun Dashboard de l'App).
+     */
+    public boolean canDesignApp(Long appId) {
+        if (isAdmin()) {
+            return true;
+        }
+        if (appId == null) {
+            // En cas de creació, els usuaris no poden crear dashboards sense app.
+            // En cas d'edició, l'usuari només pot editar un dashboard sense app mitjançant permís a nivell de dashboard.
+            return false;
+        }
+        if (containsId(getAllowedAppIds(true), appId)) {
+            return true;
+        }
+        Set<Serializable> allowedEntornAppIds = getAllowedEntornAppIds(true);
+        for (Serializable eaId : allowedEntornAppIds) {
+            try {
+                Long id = (eaId instanceof Number) ? ((Number) eaId).longValue() : Long.parseLong(eaId.toString());
+                EntornApp ea = estadisticaClientHelper.entornAppFindById(id);
+                if (ea != null && ea.getApp() != null && appId.equals(ea.getApp().getId())) {
+                    return true;
+                }
+            } catch (Exception e) {
+                log.warn("Error resolvent EntornApp per id=" + eaId, e);
+            }
+        }
+        Set<Serializable> allowedDashboardIds = getAllowedDashboardIds(true);
+        for (Serializable dashId : allowedDashboardIds) {
+            try {
+                Long id = (dashId instanceof Number) ? ((Number) dashId).longValue() : Long.parseLong(dashId.toString());
+                DashboardEntity dashboard = dashboardRepository.findById(id).orElse(null);
+                if (dashboard != null && appId.equals(dashboard.getAppId())) {
+                    return true;
+                }
+            } catch (Exception e) {
+                log.warn("Error resolvent Dashboard per id=" + dashId, e);
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Comprova si l'usuari actual pot dissenyar, modificar o eliminar el widget estadístic indicat.
+     * Es permet si:
+     * - L'usuari és ADMIN.
+     * - O pot dissenyar per a l'aplicació del widget (canDesignApp).
+     * - O pot dissenyar algun dashboard que contingui aquest widget.
+     */
+    public boolean canDesignWidget(EstadisticaWidgetEntity<?> widget) {
+        if (isAdmin()) {
+            return true;
+        }
+        if (widget == null) {
+            return false;
+        }
+        if (canDesignApp(widget.getAppId())) {
+            return true;
+        }
+        Set<Serializable> allowedDashboardIds = getAllowedDashboardIds(true);
+        if (widget.getId() != null && !allowedDashboardIds.isEmpty() && dashboardItemRepository != null) {
+            List<Long> dashIds = allowedDashboardIds.stream()
+                    .map(id -> (id instanceof Number) ? ((Number) id).longValue() : Long.parseLong(id.toString()))
+                    .collect(Collectors.toList());
+            if (!dashIds.isEmpty() && dashboardItemRepository.existsByWidgetIdAndDashboardIdIn(widget.getId(), dashIds)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void checkCanCreateWidget(Long appId, String errorMessage) {
+        if (!canDesignApp(appId)) {
+            throw new AccessDeniedException(errorMessage);
+        }
+    }
+
+    public void checkCanDesignWidget(EstadisticaWidgetEntity<?> widget, String errorMessage) {
+        if (!canDesignWidget(widget)) {
+            throw new AccessDeniedException(errorMessage);
+        }
+    }
+
+    public void checkCanDesignWidget(Long widgetId, String errorMessage) {
+        if (widgetId == null) {
+            throw new AccessDeniedException(errorMessage);
+        }
+        if (estadisticaWidgetRepository != null) {
+            EstadisticaWidgetEntity<?> widget = estadisticaWidgetRepository.findById(widgetId).orElse(null);
+            if (!canDesignWidget(widget)) {
+                throw new AccessDeniedException(errorMessage);
+            }
+        } else if (!isAdmin()) {
+            throw new AccessDeniedException(errorMessage);
+        }
+    }
+
+    /**
+     * Comprova si l'usuari actual pot eliminar el widget estadístic indicat.
+     * Es permet si:
+     * - L'usuari és ADMIN.
+     * - O bé l'usuari pot dissenyar el widget (canDesignWidget) I a més, si el widget s'utilitza en algun dashboard,
+     *   l'usuari té permís de disseny sobre TOTS els dashboards que el referencien.
+     */
+    public boolean canDeleteWidget(EstadisticaWidgetEntity<?> widget) {
+        if (isAdmin()) {
+            return true;
+        }
+        if (widget == null) {
+            return false;
+        }
+        if (!canDesignWidget(widget)) {
+            return false;
+        }
+        if (widget.getId() != null && dashboardItemRepository != null) {
+            List<DashboardItemEntity> items = dashboardItemRepository.findByWidgetId(widget.getId());
+            if (items != null) {
+                for (DashboardItemEntity item : items) {
+                    if (item.getDashboard() != null && !canDesignDashboard(item.getDashboard().getId())) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    public void checkCanDeleteWidget(EstadisticaWidgetEntity<?> widget, String errorMessage) {
+        if (!canDeleteWidget(widget)) {
+            throw new AccessDeniedException(errorMessage);
+        }
+    }
+
+    public void checkCanDeleteWidget(Long widgetId, String errorMessage) {
+        if (widgetId == null) {
+            throw new AccessDeniedException(errorMessage);
+        }
+        if (estadisticaWidgetRepository != null) {
+            EstadisticaWidgetEntity<?> widget = estadisticaWidgetRepository.findById(widgetId).orElse(null);
+            if (!canDeleteWidget(widget)) {
+                throw new AccessDeniedException(errorMessage);
+            }
+        } else if (!isAdmin()) {
+            throw new AccessDeniedException(errorMessage);
+        }
+    }
+
+    /**
+     * Construeix el filtre Spring Filter d'autorització per als widgets estadístics (Simple, Gràfic, Taula).
+     * <p>
+     * Si l'usuari és ADMIN o CONSULTA, no s'aplica cap restricció.
+     * En cas contrari, un widget és visible si:
+     * - Pertany a una aplicació sobre la qual l'usuari té permís directe (ResourceType.APP).
+     * - O pertany a algun dashboard sobre el qual l'usuari té permís directe (ResourceType.DASHBOARD).
+     * - O pertany a una aplicació accessible a través dels seus permisos sobre EntornApp:
+     *     - Si a namedQueries s'indica un entorn ("filterByEntorn:<id>"), només es mostren els widgets
+     *       de l'aplicació si l'entornApp té EXACTAMENT aquest mateix entorn (editor de dashboards).
+     *     - Si no s'indica cap entorn ("de normal"), es mostren tots els widgets de les aplicacions de les
+     *       quals l'usuari té permís sobre algun EntornApp.
+     */
+    public String buildWidgetFilter(String currentSpringFilter, String[] namedQueries) {
+        if (isAdminOrConsulta()) {
+            return currentSpringFilter;
+        }
+
+        Long entornId = extractEntornIdFromNamedQueries(namedQueries);
+
+        Set<Serializable> allowedApps = new HashSet<>(getAllowedAppIds(false));
+
+        Set<Serializable> allowedEntornAppIds = getAllowedEntornAppIds(false);
+        for (Serializable eaId : allowedEntornAppIds) {
+            try {
+                Long id = (eaId instanceof Number) ? ((Number) eaId).longValue() : Long.parseLong(eaId.toString());
+                EntornApp ea = estadisticaClientHelper.entornAppFindById(id);
+                if (ea != null && ea.getApp() != null && ea.getApp().getId() != null) {
+                    if (entornId != null) {
+                        if (ea.getEntorn() != null && entornId.equals(ea.getEntorn().getId())) {
+                            allowedApps.add(ea.getApp().getId());
+                        }
+                    } else {
+                        allowedApps.add(ea.getApp().getId());
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Error resolvent EntornApp per id=" + eaId, e);
+            }
+        }
+
+        String appFilter = SpringFilterHelper.buildOrFilter("appId", allowedApps);
+
+        Set<Serializable> allowedDashboardIds = getAllowedDashboardIds(false);
+        String dashboardWidgetFilter = null;
+        if (!allowedDashboardIds.isEmpty() && dashboardItemRepository != null) {
+            List<Long> dashIds = allowedDashboardIds.stream()
+                    .map(id -> (id instanceof Number) ? ((Number) id).longValue() : Long.parseLong(id.toString()))
+                    .collect(Collectors.toList());
+            if (!dashIds.isEmpty()) {
+                List<Long> widgetIds = dashboardItemRepository.findWidgetIdsByDashboardIdIn(dashIds);
+                dashboardWidgetFilter = SpringFilterHelper.buildOrFilter("id", widgetIds);
+            }
+        }
+
+        String filter = SpringFilterHelper.or(appFilter, dashboardWidgetFilter);
+
+        return SpringFilterHelper.and(
+                currentSpringFilter,
+                (filter.isBlank())
+                        ? "id:0"
+                        : filter
+        );
+    }
+
+    public Long extractEntornIdFromNamedQueries(String[] namedQueries) {
+        if (namedQueries == null) return null;
+        for (String q : namedQueries) {
+            if (q == null) continue;
+            if (q.startsWith(FILTER_BY_ENTORN_NAMEDFILTER)) {
+                try {
+                    String[] parts = q.split(":");
+                    if (parts.length > 1) {
+                        return Long.parseLong(parts[1].trim());
+                    }
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean containsId(Set<Serializable> ids, Long targetId) {
+        if (ids == null || targetId == null) return false;
+        return ids.stream().anyMatch(id -> {
+            if (id instanceof Number) {
+                return ((Number) id).longValue() == targetId;
+            }
+            return Objects.equals(id.toString(), targetId.toString());
+        });
     }
 }

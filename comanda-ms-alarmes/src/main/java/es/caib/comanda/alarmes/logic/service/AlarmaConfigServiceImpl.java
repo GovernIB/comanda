@@ -193,32 +193,35 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
 
         String subject = "";
         if (regla.getAmbit() == AlarmaConfigReglaAmbit.APLICACIO) {
-            subject = "Aplicacio";
+            subject = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.ambit.APLICACIO");
         } else if (regla.getAmbit() == AlarmaConfigReglaAmbit.SUBSISTEMA) {
-            subject = "Subsistema " + regla.getCodiObjecte();
+            subject = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.ambit.SUBSISTEMA", regla.getCodiObjecte());
         } else if (regla.getAmbit() == AlarmaConfigReglaAmbit.INTEGRACIO) {
-            subject = "Integracio " + regla.getCodiObjecte();
+            subject = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.ambit.INTEGRACIO", regla.getCodiObjecte());
         } else if (regla.getAmbit() == AlarmaConfigReglaAmbit.SISTEMA) {
-            subject = "Sistema";
+            subject = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.ambit.SISTEMA");
         }
         String metric = "";
         if (regla.getMetrica() == AlarmaConfigReglaMetrica.ESTAT) {
-            metric = "estat";
+            metric = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.metrica.ESTAT");
         } else if (regla.getMetrica() == AlarmaConfigReglaMetrica.LATENCIA) {
-            metric = "latència";
+            metric = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.metrica.LATENCIA");
         } else if (regla.getMetrica() == AlarmaConfigReglaMetrica.CARREGA_MITJANA_SISTEMA) {
-            metric = "càrrega mitjana";
+            metric = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.metrica.CARREGA_MITJANA_SISTEMA");
         } else if (regla.getMetrica() == AlarmaConfigReglaMetrica.MEMORIA_DISPONIBLE) {
-            metric = "memòria lliure";
+            metric = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.metrica.MEMORIA_DISPONIBLE");
         } else if (regla.getMetrica() == AlarmaConfigReglaMetrica.ESPAI_DISC_LLIURE) {
-            metric = "disc lliure";
+            metric = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.metrica.ESPAI_DISC_LLIURE");
         }
+        String comparador = regla.getComparador() == null ? "" : I18nUtil.getInstance().getI18nMessage("es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.comparador." + regla.getComparador().name());
         if (regla.getMetrica() == AlarmaConfigReglaMetrica.ESTAT) {
-            String comparador = regla.getComparador() == null ? "" : regla.getComparador().name();
-            return subject + " " + metric + " " + comparador + " " + String.join(", ", regla.getValorsText());
+            String valorsTranslated = regla.getValorsText().stream()
+                .map(v -> I18nUtil.getInstance().getI18nMessage("es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.estat." + v))
+                .collect(Collectors.joining(", "));
+            return subject + " " + metric + " " + comparador + " " + valorsTranslated;
         }
         BigDecimal valor = regla.getValorNumeric();
-        return subject + " " + metric + " " + regla.getComparador() + " " + (valor != null ? valor.toPlainString() : "");
+        return subject + " " + metric + " " + comparador + " " + (valor != null ? valor.toPlainString() : "");
     }
 
     private class DeleteAlarmaConfigAction implements ActionExecutor<AlarmaConfigEntity, String, AlarmaConfig> {

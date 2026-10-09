@@ -3,6 +3,8 @@ package es.caib.comanda.estadistica.logic.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.AclServiceClient;
+import es.caib.comanda.client.model.App;
+import es.caib.comanda.client.model.Entorn;
 import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.logic.helper.AtributsVisualsHelper;
 import es.caib.comanda.estadistica.logic.helper.ConsultaEstadisticaHelper;
@@ -16,6 +18,7 @@ import es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisu
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetItem;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetParams;
 import es.caib.comanda.estadistica.logic.intf.model.consulta.InformeWidgetTitolItem;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.OverwriteEnum;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.Dashboard;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardTitolTipus;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.PosicioSubtitol;
@@ -43,7 +46,9 @@ import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
 import es.caib.comanda.ms.logic.intf.model.FileReference;
 import es.caib.comanda.ms.logic.intf.model.ReportFileType;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService.ReportGenerator;
+import org.springframework.context.ApplicationContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -93,25 +98,38 @@ class DashboardServiceImplTest {
     @Mock private HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     @Mock private AclServiceClient aclServiceClient;
     @Mock private es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper dashboardPermisosHelper;
+    @Mock private ApplicationContext applicationContext;
+    @Mock private I18nUtil i18nUtil;
+    @Mock private es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper resourceEntityMappingHelper;
 
     @InjectMocks
     private DashboardServiceImpl dashboardService;
 
     @BeforeEach
     void setUp() {
+        ReflectionTestUtils.setField(I18nUtil.class, "applicationContext", applicationContext);
+        lenient().when(applicationContext.getBean(I18nUtil.class)).thenReturn(i18nUtil);
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(i -> i.getArgument(0));
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(i -> i.getArgument(0));
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any(Object[].class))).thenAnswer(i -> i.getArgument(0));
+
         dashboardPermisosHelper = org.mockito.Mockito.spy(new es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper(
             authenticationHelper,
             httpAuthorizationHeaderHelper,
             aclServiceClient,
             dashboardRepository,
-            estadisticaClientHelper
+            estadisticaClientHelper,
+            null,
+            null
         ));
         ReflectionTestUtils.setField(dashboardService, "dashboardPermisosHelper", dashboardPermisosHelper);
         ReflectionTestUtils.setField(dashboardService, "entityRepository", dashboardRepository);
+        ReflectionTestUtils.setField(dashboardService, "resourceEntityMappingHelper", resourceEntityMappingHelper);
         dashboardService.init();
         lenient().when(httpAuthorizationHeaderHelper.getAuthorizationHeader()).thenReturn("Bearer token");
         lenient().when(authenticationHelper.getCurrentUserName()).thenReturn("testUser");
         lenient().when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"ROLE_USER"});
+        lenient().when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
     }
 
     /**
@@ -848,6 +866,7 @@ class DashboardServiceImplTest {
 
         DashboardEntity entity = new DashboardEntity();
         entity.setId(10L);
+        entity.setAppId(1L);
         Map<String, AnswerRequiredException.AnswerValue> answers = new HashMap<>();
 
         assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(dashboardService, "beforeDelete", entity, answers))
@@ -1066,6 +1085,40 @@ class DashboardServiceImplTest {
     }
 
     @Test
+    @DisplayName("DashboardImport: exec retorna els dashboards importats en el DashboardImportResult")
+    void dashboardImport_exec_retornaDashboardsImportatsEnElResultat() throws Exception {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        String json = "[{\"titol\":\"Tauler 1\"}]";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.DashboardImportParams params = new DashboardServiceImpl.DashboardImportParams();
+        params.setFile(fileRef);
+
+        DashboardEntity importedEntity = new DashboardEntity();
+        importedEntity.setId(10L);
+        importedEntity.setTitol("Tauler 1");
+        when(dashboardImportHelper.importDashboardFromExport(anyList(), any())).thenReturn(List.of(importedEntity));
+
+        Dashboard expectedDashboard = new Dashboard();
+        expectedDashboard.setId(10L);
+        expectedDashboard.setTitol("Tauler 1");
+        when(resourceEntityMappingHelper.entityToResource(importedEntity, Dashboard.class)).thenReturn(expectedDashboard);
+
+        DashboardServiceImpl.DashboardImportResult result = executor.exec(Dashboard.DASHBOARD_IMPORT, new DashboardEntity(), params);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getDashboards()).hasSize(1);
+        assertThat(result.getDashboards().get(0)).isSameAs(expectedDashboard);
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
     @DisplayName("DashboardImport: onChange amb dashboard sense items ni titols popula conflictes sense fallar")
     void dashboardImport_onChange_ambDashboardSenseItemsNiTitols_populaConflictes() throws Exception {
         DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
@@ -1112,6 +1165,127 @@ class DashboardServiceImplTest {
         assertThatThrownBy(() -> executor.exec(Dashboard.DASHBOARD_IMPORT, new DashboardEntity(), params))
                 .isInstanceOf(ActionExecutionException.class)
                 .hasMessageContaining("Dades del tauler invàlides (titol: no pot ser buit)");
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
+    @DisplayName("DashboardImport: onChange preserva les eleccions d'usuari (overwrite i nouNom)")
+    void dashboardImport_onChange_preservaEleccionsUsuari() throws Exception {
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        String json = "[{\"titol\":\"Dashboard 1\"}]";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.Conflict prevConflict = new DashboardServiceImpl.Conflict("Dashboard 1", "DashboardExport");
+        prevConflict.setOverwrite(OverwriteEnum.CREAR_AMB_ALTRE_NOM);
+        prevConflict.setNouNom("Dashboard Nou");
+
+        DashboardServiceImpl.DashboardImportParams previous = new DashboardServiceImpl.DashboardImportParams();
+        previous.setConflicts(List.of(prevConflict));
+
+        doAnswer(invocation -> {
+            List<DashboardServiceImpl.Conflict> conflicts = invocation.getArgument(1);
+            conflicts.add(new DashboardServiceImpl.Conflict("Dashboard 1", "DashboardExport"));
+            return null;
+        }).when(dashboardImportHelper).checkDashboardConflicts(anyList(), anyList());
+
+        DashboardServiceImpl.DashboardImportParams target = new DashboardServiceImpl.DashboardImportParams();
+        executor.onChange(null, previous, DashboardServiceImpl.DashboardImportParams.Fields.file, fileRef, new HashMap<>(), new String[]{}, target);
+
+        assertThat(target.getConflicts()).hasSize(1);
+        DashboardServiceImpl.Conflict resultConflict = target.getConflicts().get(0);
+        assertThat(resultConflict.getOverwrite()).isEqualTo(OverwriteEnum.CREAR_AMB_ALTRE_NOM);
+        assertThat(resultConflict.getNouNom()).isEqualTo("Dashboard Nou");
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
+    @DisplayName("DashboardImport: onChange preserva les eleccions d'indicador per codi i entornAppId fins i tot si el títol ha canviat")
+    void dashboardImport_onChange_preservaEleccionsIndicadorPerCodiIEntornAppId() throws Exception {
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        String json = "[{\"titol\":\"Dashboard 1\"}]";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
+
+        // Conflicte previ per a entornAppId = 10L amb errata al nom ("Total Comades"), però codi = "IND_COM"
+        DashboardServiceImpl.Conflict prevConflict1 = new DashboardServiceImpl.Conflict("Total Comades", "IndicadorExport");
+        prevConflict1.setCodi("IND_COM");
+        prevConflict1.setEntornAppId(10L);
+        prevConflict1.setAppId(2L);
+        prevConflict1.setOverwrite(OverwriteEnum.SOBRESCRIURE);
+
+        // Conflicte previ per a entornAppId = 20L
+        DashboardServiceImpl.Conflict prevConflict2 = new DashboardServiceImpl.Conflict("Total Comades", "IndicadorExport");
+        prevConflict2.setCodi("IND_COM");
+        prevConflict2.setEntornAppId(20L);
+        prevConflict2.setAppId(2L);
+        prevConflict2.setOverwrite(OverwriteEnum.EMPRAR_EXISTENT);
+
+        DashboardServiceImpl.DashboardImportParams previous = new DashboardServiceImpl.DashboardImportParams();
+        previous.setConflicts(List.of(prevConflict1, prevConflict2));
+
+        // Nous conflictes generats per checkDashboardConflicts (ara el títol és "Total Comandes" corregit)
+        doAnswer(invocation -> {
+            List<DashboardServiceImpl.Conflict> conflicts = invocation.getArgument(1);
+            DashboardServiceImpl.Conflict newC1 = new DashboardServiceImpl.Conflict("Total Comandes", "IndicadorExport");
+            newC1.setCodi("IND_COM");
+            newC1.setEntornAppId(10L);
+            newC1.setAppId(2L);
+            conflicts.add(newC1);
+
+            DashboardServiceImpl.Conflict newC2 = new DashboardServiceImpl.Conflict("Total Comandes", "IndicadorExport");
+            newC2.setCodi("IND_COM");
+            newC2.setEntornAppId(20L);
+            newC2.setAppId(2L);
+            conflicts.add(newC2);
+            return null;
+        }).when(dashboardImportHelper).checkDashboardConflicts(anyList(), anyList());
+
+        DashboardServiceImpl.DashboardImportParams target = new DashboardServiceImpl.DashboardImportParams();
+        executor.onChange(null, previous, DashboardServiceImpl.DashboardImportParams.Fields.file, fileRef, new HashMap<>(), new String[]{}, target);
+
+        assertThat(target.getConflicts()).hasSize(2);
+        DashboardServiceImpl.Conflict res1 = target.getConflicts().stream()
+                .filter(c -> Objects.equals(10L, c.getEntornAppId())).findFirst().orElseThrow();
+        assertThat(res1.getOverwrite()).isEqualTo(OverwriteEnum.SOBRESCRIURE);
+
+        DashboardServiceImpl.Conflict res2 = target.getConflicts().stream()
+                .filter(c -> Objects.equals(20L, c.getEntornAppId())).findFirst().orElseThrow();
+        assertThat(res2.getOverwrite()).isEqualTo(OverwriteEnum.EMPRAR_EXISTENT);
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
+    @DisplayName("DashboardImport: exec llança ActionExecutionException quan hi ha conflictes bloquejants")
+    void dashboardImport_exec_llancaExcepcioQuanHiHaConflictesBloquejants() throws Exception {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        String json = "[{\"titol\":\"Dashboard 1\"}]";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.Conflict blockingConflict = new DashboardServiceImpl.Conflict("IND_ERR", "IndicadorExport");
+        blockingConflict.setBloquejant(true);
+        blockingConflict.setMissatgeError("Indicador no trobat");
+
+        DashboardServiceImpl.DashboardImportParams params = new DashboardServiceImpl.DashboardImportParams();
+        params.setFile(fileRef);
+        params.setConflicts(List.of(blockingConflict));
+
+        assertThatThrownBy(() -> executor.exec(Dashboard.DASHBOARD_IMPORT, new DashboardEntity(), params))
+                .isInstanceOf(ActionExecutionException.class);
 
         ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
     }
@@ -1251,7 +1425,7 @@ class DashboardServiceImplTest {
     void dashboardImport_exec_quanSensePermisos_llancaAccessDeniedException() throws Exception {
         DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
 
-        String json = "[{\"titol\":\"Titol\",\"appCodi\":\"APP_PROTECTED\"}]";
+        String json = "[{\"titol\":\"Titol\",\"appCodi\":\"APP_PROTECTED\",\"entornCodi\":\"PROD\"}]";
         FileReference fileRef = new FileReference();
         ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
 
@@ -1262,9 +1436,14 @@ class DashboardServiceImplTest {
         ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
 
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Set.of(1L)));
         App protectedApp = new App();
         ReflectionTestUtils.setField(protectedApp, "id", 99L);
         when(estadisticaClientHelper.appFindByCodi("APP_PROTECTED")).thenReturn(protectedApp);
+        Entorn prodEntorn = new Entorn();
+        ReflectionTestUtils.setField(prodEntorn, "id", 10L);
+        when(estadisticaClientHelper.entornByCodi("PROD")).thenReturn(prodEntorn);
         when(aclServiceClient.anyPermissionGranted(any(), eq(99L), any(), any(), any(), any()))
                 .thenReturn(ResponseEntity.ok(false));
 
@@ -1294,6 +1473,88 @@ class DashboardServiceImplTest {
                 .thenReturn(ResponseEntity.ok(false));
 
         assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(dashboardService, "beforeUpdateEntity", entity, resource, Collections.emptyMap()))
+                .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    @DisplayName("beforeDelete permet esborrar si l'usuari té permís d'escriptura a l'APP")
+    void beforeDelete_quanPermisApp_permetEsborrar() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.anyPermissionGranted(eq(ResourceType.APP), eq(10L), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(true));
+
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        entity.setAppId(10L);
+
+        // No ha de llançar excepció
+        ReflectionTestUtils.invokeMethod(dashboardService, "beforeDelete", entity, Collections.emptyMap());
+    }
+
+    @Test
+    @DisplayName("beforeDelete llança AccessDeniedException si l'usuari només té permís sobre el DASHBOARD però no sobre l'APP")
+    void beforeDelete_quanNomesPermisDashboard_llancaAccessDeniedException() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.anyPermissionGranted(eq(ResourceType.APP), eq(10L), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(false));
+        lenient().when(estadisticaClientHelper.entornAppFindByAppAndEntorn(any(), any())).thenReturn(null);
+
+        DashboardEntity entity = new DashboardEntity();
+        entity.setId(1L);
+        entity.setAppId(10L);
+
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(dashboardService, "beforeDelete", entity, Collections.emptyMap()))
+                .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    @DisplayName("DashboardImport exec llança AccessDeniedException si és no-admin i el dashboard és multientorn/multiapp")
+    void dashboardImport_exec_quanMultientornNoAdmin_llancaAccessDeniedException() throws Exception {
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+
+        // Falta entornCodi -> multientorn
+        String json = "[{\"titol\":\"Multientorn Dashboard\",\"appCodi\":\"APP_1\"}]";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.DashboardImportParams params = new DashboardServiceImpl.DashboardImportParams();
+        params.setFile(fileRef);
+
+        ObjectMapper realMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", realMapper);
+
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Set.of(1L)));
+        App app1 = new App();
+        ReflectionTestUtils.setField(app1, "id", 1L);
+        when(estadisticaClientHelper.appFindByCodi("APP_1")).thenReturn(app1);
+
+        assertThatThrownBy(() -> executor.exec(Dashboard.DASHBOARD_IMPORT, new DashboardEntity(), params))
+                .isInstanceOf(AccessDeniedException.class);
+
+        ReflectionTestUtils.setField(dashboardService, "objectMapper", objectMapper);
+    }
+
+    @Test
+    @DisplayName("DashboardImport exec llança AccessDeniedException si usuari no té permisos de creació en general")
+    void dashboardImport_exec_sensePermisCreacio_llancaAccessDeniedException() throws Exception {
+        DashboardServiceImpl.DashboardImportActionExecutor executor = createDashboardImportActionExecutor();
+
+        String json = "[{\"titol\":\"Dashboard\",\"appCodi\":\"APP_1\",\"entornCodi\":\"DEV\"}]";
+        FileReference fileRef = new FileReference();
+        ReflectionTestUtils.setField(fileRef, "content", json.getBytes(StandardCharsets.UTF_8));
+
+        DashboardServiceImpl.DashboardImportParams params = new DashboardServiceImpl.DashboardImportParams();
+        params.setFile(fileRef);
+
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), any(), any(), any(), any()))
+                .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+
+        assertThatThrownBy(() -> executor.exec(Dashboard.DASHBOARD_IMPORT, new DashboardEntity(), params))
                 .isInstanceOf(AccessDeniedException.class);
     }
 

@@ -36,12 +36,14 @@ vi.mock('./WidgetEstils', () => ({
         descText: (color: string) => ({ color, fontSize: '14px' }),
         footerDescText: (color: string) => ({ color, fontSize: '14px' }),
         percText: (color: string) => ({ color, fontSize: '14px' }),
-        errorAccordion: {},
-        errorSummary: () => ({}),
-        errorDetails: () => ({}),
-        errorIcon: () => ({}),
         paperContainer: () => ({}),
     },
+}));
+
+vi.mock('../salut/SalutErrorBoundaryFallback', () => ({
+    SalutErrorBoundaryFallback: (props: { error?: { message?: string; stack?: string } }) => (
+        <div data-testid="salut-error-boundary-fallback" data-error={JSON.stringify(props.error ?? null)} />
+    ),
 }));
 
 vi.mock('../../util/colorUtil', () => ({
@@ -239,7 +241,9 @@ describe('WidgetFooter', () => {
 });
 
 describe('WidgetErrorDisplay', () => {
-    it('WidgetErrorDisplay_quanHiHaError_mostraElMissatgeIExpandible', () => {
+    // Ha de veure's igual que l'error de renderitzat d'un gràfic (missatge genèric + icona amb modal),
+    // per això delega directament al mateix component SalutErrorBoundaryFallback.
+    it('WidgetErrorDisplay_esDelegaAlFallbackGenericPassantElMissatgeILaTracaComAError', () => {
         renderComponent(
             <WidgetErrorDisplay
                 errorMsg="Error de connexió"
@@ -247,21 +251,18 @@ describe('WidgetErrorDisplay', () => {
             />
         );
 
-        expect(screen.getByText('Error de connexió')).toBeInTheDocument();
+        const fallback = screen.getByTestId('salut-error-boundary-fallback');
+        expect(JSON.parse(fallback.getAttribute('data-error') || 'null')).toEqual({
+            message: 'Error de connexió',
+            stack: 'Stack trace detallat',
+        });
     });
 
-    it('WidgetErrorDisplay_quanNoHiHaErrorMsg_mostraTextPerDefecte', () => {
+    it('WidgetErrorDisplay_quanNoHiHaErrorMsgNiTrace_passaCampsBuitsAlFallback', () => {
         renderComponent(<WidgetErrorDisplay />);
 
-        expect(screen.getByText('Error')).toBeInTheDocument();
-    });
-
-    it('WidgetErrorDisplay_quanNoHiHaErrorTrace_mostraMissatgePerDefecte', () => {
-        renderComponent(
-            <WidgetErrorDisplay errorMsg="Error sense trace" />
-        );
-
-        expect(screen.getByText('Error sense trace')).toBeInTheDocument();
+        const fallback = screen.getByTestId('salut-error-boundary-fallback');
+        expect(JSON.parse(fallback.getAttribute('data-error') || 'null')).toEqual({});
     });
 });
 

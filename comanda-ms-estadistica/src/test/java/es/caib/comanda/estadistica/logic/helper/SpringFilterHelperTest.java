@@ -215,6 +215,41 @@ class SpringFilterHelperTest {
         assertThat(result).isEmpty();
     }
 
+    @Test
+    @DisplayName("and: agrupa amb parèntesis les clàusules que contenen OR de nivell superior")
+    void and_quanHiHaClausulaOr_llavorsAgrupaAmbParentesis() {
+        String result = SpringFilterHelper.and("a:1", "b:2 or c:3");
+        assertThat(result).isEqualTo("a:1 and (b:2 or c:3)");
+    }
+
+    @Test
+    @DisplayName("and: agrupa totes les clàusules si múltiples contenen OR de nivell superior")
+    void and_quanMultiplesClausulesTenenOr_llavorsAgrupaTotes() {
+        String result = SpringFilterHelper.and("a:1 or b:2", "c:3 or d:4");
+        assertThat(result).isEqualTo("(a:1 or b:2) and (c:3 or d:4)");
+    }
+
+    @Test
+    @DisplayName("and: no duplica parèntesis si la clàusula ja està totalment protegida per parèntesis")
+    void and_quanJaEstaAgrupatAmbParentesis_llavorsNoDuplicaParentesis() {
+        String result = SpringFilterHelper.and("a:1", "(b:2 or c:3)");
+        assertThat(result).isEqualTo("a:1 and (b:2 or c:3)");
+    }
+
+    @Test
+    @DisplayName("and: agrupa correctament quan hi ha múltiples grups amb parèntesis separats per OR")
+    void and_quanHiHaGrupsMultiplesSeparatsPerOr_llavorsAgrupaElConjunt() {
+        String result = SpringFilterHelper.and("a:1", "(b:1 and c:1) or (d:2 and e:2)");
+        assertThat(result).isEqualTo("a:1 and ((b:1 and c:1) or (d:2 and e:2))");
+    }
+
+    @Test
+    @DisplayName("and: no interpreta 'or' dins de cadenes de text entre cometes")
+    void and_quanOrDinsDeCometes_llavorsNoAgrupa() {
+        String result = SpringFilterHelper.and("nom:'test or exam'", "actiu:true");
+        assertThat(result).isEqualTo("nom:'test or exam' and actiu:true");
+    }
+
     // ========================================================================
     // 4. TESTOS PER A or
     // ========================================================================

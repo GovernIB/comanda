@@ -23,7 +23,16 @@ vi.mock('./SimpleWidgetVisualization', () => ({
 }));
 
 vi.mock('./GraficWidgetVisualization', () => ({
-    default: ({ titol }: { titol?: string }) => <div data-testid="grafic-widget">Grafic: {titol}</div>,
+    default: ({ titol }: { titol?: string }) => {
+        if (titol === 'Trencat') {
+            throw new Error('MUI X Charts: error simulat');
+        }
+        return <div data-testid="grafic-widget">Grafic: {titol}</div>;
+    },
+}));
+
+vi.mock('react-i18next', () => ({
+    useTranslation: () => ({ t: () => 'missatge-traduit' }),
 }));
 
 vi.mock('./TaulaWidgetVisualization', () => ({
@@ -72,6 +81,23 @@ describe('WidgetPreview', () => {
 
         expect(screen.getByTestId('grafic-widget')).toBeInTheDocument();
         expect(screen.getByText('Grafic: Widget Grafic')).toBeInTheDocument();
+    });
+
+    it('WidgetPreview_quanElWidgetLlancaUnError_mostraElFallbackEnLlocDeTombarLaPantalla', () => {
+        // Regressió: un error de renderitzat en un gràfic (configuració invàlida) deixava la pantalla de
+        // disseny en blanc perquè no hi havia cap error boundary.
+        const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        renderComponent(
+            <WidgetPreview
+                widgetType="GRAFIC"
+                widgetData={{ titol: 'Trencat', tipusGrafic: 'BAR_CHART' }}
+            />
+        );
+
+        expect(screen.queryByTestId('grafic-widget')).not.toBeInTheDocument();
+        expect(screen.getByText('missatge-traduit')).toBeInTheDocument();
+        consoleError.mockRestore();
     });
 
     it('WidgetPreview_quanEsRenderitzaAmbTipusTAULA_mostraTaulaWidgetVisualization', () => {

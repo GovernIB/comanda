@@ -118,7 +118,8 @@ describe('useMapDashboardItems', () => {
 
         expect(result.current).toEqual([
             {
-                id: '12',
+                id: '12-SIMPLE',
+                rawId: 12,
                 x: 1,
                 y: 2,
                 w: 3,
@@ -327,8 +328,8 @@ describe('DashboardReactGridLayout', () => {
                     { dashboardTitolId: 2, titol: 'Títol principal', tipus: 'TITOL' },
                 ]}
                 gridLayoutItems={[
-                    { id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 },
-                    { id: '2', type: 'TITOL', x: 2, y: 0, w: 2, h: 1 },
+                    { id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 },
+                    { id: '2-TITOL', rawId: 2, type: 'TITOL', x: 2, y: 0, w: 2, h: 1 },
                 ]}
             />
         );
@@ -347,19 +348,19 @@ describe('DashboardReactGridLayout', () => {
                 dashboardId={1}
                 editable={true}
                 dashboardWidgets={[{ dashboardItemId: 1, titol: 'Widget simple', tipus: 'SIMPLE' }]}
-                gridLayoutItems={[{ id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
+                gridLayoutItems={[{ id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
                 onGridLayoutItemsChange={onGridLayoutItemsChange}
             />
         );
 
         act(() => {
             mocks.responsiveProps.onLayoutChange([], {
-                md: [{ i: '1', x: 4, y: 5, w: 6, h: 7 }],
+                md: [{ i: '1-SIMPLE', x: 4, y: 5, w: 6, h: 7 }],
             });
         });
 
         expect(onGridLayoutItemsChange).toHaveBeenCalledWith([
-            { id: '1', type: 'SIMPLE', x: 4, y: 5, w: 6, h: 7 },
+            { id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 4, y: 5, w: 6, h: 7 },
         ]);
     });
 
@@ -377,12 +378,12 @@ describe('DashboardReactGridLayout', () => {
                 dashboardId={1}
                 editable={true}
                 dashboardWidgets={[{ dashboardItemId: 1, titol: 'Widget simple', tipus: 'SIMPLE' }]}
-                gridLayoutItems={[{ id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
+                gridLayoutItems={[{ id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
                 onSelectItem={onSelectItem}
             />
         );
 
-        const oldItem = { i: '1', x: 0, y: 0, w: 2, h: 2 };
+        const oldItem = { i: '1-SIMPLE', x: 0, y: 0, w: 2, h: 2 };
         act(() => {
             mocks.responsiveProps.onDragStart([], oldItem, oldItem, oldItem, { clientX: 100, clientY: 100 });
             mocks.responsiveProps.onDragStop([], oldItem, oldItem, oldItem, { clientX: 100, clientY: 100 });
@@ -405,13 +406,13 @@ describe('DashboardReactGridLayout', () => {
                 dashboardId={1}
                 editable={true}
                 dashboardWidgets={[{ dashboardItemId: 1, titol: 'Widget simple', tipus: 'SIMPLE' }]}
-                gridLayoutItems={[{ id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
+                gridLayoutItems={[{ id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
                 onSelectItem={onSelectItem}
             />
         );
 
-        const oldItem = { i: '1', x: 0, y: 0, w: 2, h: 2 };
-        const newItem = { i: '1', x: 3, y: 0, w: 2, h: 2 };
+        const oldItem = { i: '1-SIMPLE', x: 0, y: 0, w: 2, h: 2 };
+        const newItem = { i: '1-SIMPLE', x: 3, y: 0, w: 2, h: 2 };
         act(() => {
             mocks.responsiveProps.onDragStart([], oldItem, oldItem, oldItem, { clientX: 100, clientY: 100 });
             mocks.responsiveProps.onDragStop([], oldItem, newItem, newItem, { clientX: 160, clientY: 100 });
@@ -429,7 +430,7 @@ describe('DashboardReactGridLayout', () => {
                 dashboardId={1}
                 editable={true}
                 dashboardWidgets={[{ dashboardItemId: 1, titol: 'Widget simple', tipus: 'SIMPLE' }]}
-                gridLayoutItems={[{ id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
+                gridLayoutItems={[{ id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
             />
         );
 
@@ -449,7 +450,7 @@ describe('DashboardReactGridLayout', () => {
                 dashboardId={1}
                 editable={true}
                 dashboardWidgets={[{ dashboardItemId: 1, titol: 'Widget simple', tipus: 'SIMPLE' }]}
-                gridLayoutItems={[{ id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
+                gridLayoutItems={[{ id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
                 onSelectItem={onSelectItem}
             />
         );
@@ -469,7 +470,7 @@ describe('DashboardReactGridLayout', () => {
                 dashboardId={1}
                 editable={true}
                 dashboardWidgets={[{ dashboardItemId: 1, titol: 'Widget simple', tipus: 'SIMPLE' }]}
-                gridLayoutItems={[{ id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
+                gridLayoutItems={[{ id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
                 onDuplicateItem={onDuplicateItem}
             />
         );
@@ -489,7 +490,7 @@ describe('DashboardReactGridLayout', () => {
                 dashboardId={1}
                 editable={true}
                 dashboardWidgets={[{ dashboardItemId: 1, titol: 'Widget simple', tipus: 'SIMPLE' }]}
-                gridLayoutItems={[{ id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
+                gridLayoutItems={[{ id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
                 onDeleteItem={onDeleteItem}
             />
         );
@@ -500,6 +501,33 @@ describe('DashboardReactGridLayout', () => {
         expect(onDeleteItem).toHaveBeenCalledWith(expect.objectContaining({ dashboardItemId: 1 }));
     });
 
+    it('DashboardReactGridLayout_quanWidgetITitolComparteixenId_elMenuContextualDelTitolObreElTitolINoElWidget', () => {
+        mocks.isEqualMock.mockReturnValue(true);
+        const onSelectItem = vi.fn();
+
+        render(
+            <DashboardReactGridLayout
+                dashboardId={1}
+                editable={true}
+                dashboardWidgets={[
+                    { dashboardItemId: 1, titol: 'Widget simple', tipus: 'SIMPLE' },
+                    { dashboardTitolId: 1, titol: 'Títol', tipus: 'TITOL' },
+                ]}
+                gridLayoutItems={[
+                    { id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 },
+                    { id: '1-TITOL', rawId: 1, type: 'TITOL', x: 2, y: 0, w: 4, h: 1 },
+                ]}
+                onSelectItem={onSelectItem}
+            />
+        );
+
+        const items = screen.getAllByTestId('grid-item');
+        fireEvent.contextMenu(items[1], { clientX: 50, clientY: 60 });
+        fireEvent.click(screen.getByText('Modificar'));
+
+        expect(onSelectItem).toHaveBeenCalledWith(expect.objectContaining({ dashboardTitolId: 1, tipus: 'TITOL' }));
+    });
+
     it('DashboardReactGridLayout_quanNoEsEditable_noObreElMenuContextual', () => {
         mocks.isEqualMock.mockReturnValue(true);
 
@@ -508,7 +536,7 @@ describe('DashboardReactGridLayout', () => {
                 dashboardId={1}
                 editable={false}
                 dashboardWidgets={[{ dashboardItemId: 1, titol: 'Widget simple', tipus: 'SIMPLE' }]}
-                gridLayoutItems={[{ id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
+                gridLayoutItems={[{ id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
             />
         );
 
@@ -609,8 +637,8 @@ describe('DashboardReactGridLayout', () => {
                     { dashboardItemId: 2, titol: 'Widget 2', tipus: 'SIMPLE' },
                 ]}
                 gridLayoutItems={[
-                    { id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 },
-                    { id: '2', type: 'SIMPLE', x: 5, y: 5, w: 2, h: 2 },
+                    { id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 },
+                    { id: '2-SIMPLE', rawId: 2, type: 'SIMPLE', x: 5, y: 5, w: 2, h: 2 },
                 ]}
                 onSelectItems={onSelectItems}
             />
@@ -642,7 +670,7 @@ describe('DashboardReactGridLayout', () => {
                 dashboardId={1}
                 editable={true}
                 dashboardWidgets={[{ dashboardItemId: 1, titol: 'Widget 1', tipus: 'SIMPLE' }]}
-                gridLayoutItems={[{ id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
+                gridLayoutItems={[{ id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
                 onSelectItems={onSelectItems}
             />
         );
@@ -667,10 +695,10 @@ describe('DashboardReactGridLayout', () => {
                     { dashboardItemId: 2, tipus: 'SIMPLE' },
                 ]}
                 gridLayoutItems={[
-                    { id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 },
-                    { id: '2', type: 'SIMPLE', x: 5, y: 5, w: 2, h: 2 },
+                    { id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 },
+                    { id: '2-SIMPLE', rawId: 2, type: 'SIMPLE', x: 5, y: 5, w: 2, h: 2 },
                 ]}
-                multiSelectedItemIds={['1', '2']}
+                multiSelectedItemIds={['1-SIMPLE', '2-SIMPLE']}
             />
         );
 
@@ -687,8 +715,8 @@ describe('DashboardReactGridLayout', () => {
                 dashboardId={1}
                 editable={true}
                 dashboardWidgets={[{ dashboardItemId: 1, titol: 'Widget simple', tipus: 'SIMPLE' }]}
-                gridLayoutItems={[{ id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
-                multiSelectedItemIds={['1', '2']}
+                gridLayoutItems={[{ id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 }]}
+                multiSelectedItemIds={['1-SIMPLE', '2-SIMPLE']}
             />
         );
 
@@ -712,16 +740,16 @@ describe('DashboardReactGridLayout', () => {
                     { dashboardItemId: 2, tipus: 'SIMPLE' },
                 ]}
                 gridLayoutItems={[
-                    { id: '1', type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 },
-                    { id: '2', type: 'SIMPLE', x: 10, y: 10, w: 2, h: 2 },
+                    { id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 0, y: 0, w: 2, h: 2 },
+                    { id: '2-SIMPLE', rawId: 2, type: 'SIMPLE', x: 10, y: 10, w: 2, h: 2 },
                 ]}
-                multiSelectedItemIds={['1', '2']}
+                multiSelectedItemIds={['1-SIMPLE', '2-SIMPLE']}
                 onGridLayoutItemsChange={onGridLayoutItemsChange}
             />
         );
 
-        const oldItem = {i: '1', x: 0, y: 0, w: 2, h: 2};
-        const newItem = {i: '1', x: 3, y: 4, w: 2, h: 2};
+        const oldItem = {i: '1-SIMPLE', x: 0, y: 0, w: 2, h: 2};
+        const newItem = {i: '1-SIMPLE', x: 3, y: 4, w: 2, h: 2};
         act(() => {
             mocks.responsiveProps.onDragStart([], oldItem, oldItem, oldItem, {clientX: 100, clientY: 100});
             mocks.responsiveProps.onDragStop([], oldItem, newItem, newItem, {clientX: 160, clientY: 200});
@@ -731,15 +759,15 @@ describe('DashboardReactGridLayout', () => {
             // Layout tal com el reportaria react-grid-layout: només l'element arrossegat s'ha mogut.
             mocks.responsiveProps.onLayoutChange([], {
                 md: [
-                    {i: '1', x: 3, y: 4, w: 2, h: 2},
-                    {i: '2', x: 10, y: 10, w: 2, h: 2},
+                    {i: '1-SIMPLE', x: 3, y: 4, w: 2, h: 2},
+                    {i: '2-SIMPLE', x: 10, y: 10, w: 2, h: 2},
                 ],
             });
         });
 
         expect(onGridLayoutItemsChange).toHaveBeenCalledWith([
-            {id: '1', type: 'SIMPLE', x: 3, y: 4, w: 2, h: 2},
-            {id: '2', type: 'SIMPLE', x: 13, y: 14, w: 2, h: 2},
+            {id: '1-SIMPLE', rawId: 1, type: 'SIMPLE', x: 3, y: 4, w: 2, h: 2},
+            {id: '2-SIMPLE', rawId: 2, type: 'SIMPLE', x: 13, y: 14, w: 2, h: 2},
         ]);
     });
 });

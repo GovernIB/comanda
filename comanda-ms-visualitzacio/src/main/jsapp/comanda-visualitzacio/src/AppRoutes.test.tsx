@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
     useIsUserConsultaMock: vi.fn(),
     useIsUserUsuariMock: vi.fn(),
     entornAppFindMock: vi.fn(),
+    dashboardFindMock: vi.fn(),
     useStatsEnabledMock: vi.fn(),
 }));
 
@@ -142,8 +143,15 @@ vi.mock('reactlib', () => ({
                 find: mocks.entornAppFindMock,
             };
         }
+        if (resourceName === 'dashboard') {
+            return {
+                isReady: true,
+                find: mocks.dashboardFindMock,
+            };
+        }
         return {
             isReady: true,
+            find: vi.fn().mockResolvedValue({ rows: [] }),
         };
     },
 }));
@@ -155,6 +163,8 @@ vi.mock('./components/ProtectedRoute', () => ({
 describe('AppRoutes', () => {
     beforeEach(() => {
         mocks.useStatsEnabledMock.mockReturnValue(true);
+        mocks.entornAppFindMock.mockResolvedValue({ rows: [] });
+        mocks.dashboardFindMock.mockResolvedValue({ rows: [] });
     });
 
     it('AppRoutes_quanEsCarregaLaRutaArrelIUsuariAmbRolFuncional_mostraSalut', async () => {
@@ -188,6 +198,11 @@ describe('AppRoutes', () => {
         );
 
         expect(await screen.findByText('Salut page')).toBeInTheDocument();
+        expect(mocks.entornAppFindMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                namedQueries: ['permis_salut'],
+            })
+        );
     });
 
     it('AppRoutes_quanEsCarregaLaRutaArrelISenseRolNiPermisos_redirigeixATasca', async () => {
@@ -205,6 +220,11 @@ describe('AppRoutes', () => {
         );
 
         expect(await screen.findByText('Tasca page')).toBeInTheDocument();
+        expect(mocks.entornAppFindMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                namedQueries: ['permis_salut'],
+            })
+        );
     });
 
     it('AppRoutes_quanConsultorIntentaAccedirAUnaRutaForaDelSeuMenu_redirigeixALaPaginaPerDefecte', async () => {
@@ -402,6 +422,109 @@ describe('AppRoutes', () => {
 
         render(
             <MemoryRouter initialEntries={['/plantilla']}>
+                <AppRoutes />
+            </MemoryRouter>
+        );
+
+        expect(await screen.findByText('Salut page')).toBeInTheDocument();
+    });
+
+    it('AppRoutes_quanUsuariEsConsultaSensePermisDisseny_redirigeixDashboardASalut', async () => {
+        mocks.useUserContextMock.mockReturnValue({ user: { id: 1 } });
+        mocks.useIsUserAdminMock.mockReturnValue(false);
+        mocks.useIsUserConsultaMock.mockReturnValue(true);
+        mocks.useIsUserUsuariMock.mockReturnValue(false);
+        mocks.entornAppFindMock.mockResolvedValue({ rows: [] });
+        mocks.dashboardFindMock.mockResolvedValue({ rows: [] });
+
+        render(
+            <MemoryRouter initialEntries={['/dashboard']}>
+                <AppRoutes />
+            </MemoryRouter>
+        );
+
+        expect(await screen.findByText('Salut page')).toBeInTheDocument();
+    });
+
+    it('AppRoutes_quanUsuariEsConsultaAmbPermisDisseny_mostraEstadisticaDashboards', async () => {
+        mocks.useUserContextMock.mockReturnValue({ user: { id: 1 } });
+        mocks.useIsUserAdminMock.mockReturnValue(false);
+        mocks.useIsUserConsultaMock.mockReturnValue(true);
+        mocks.useIsUserUsuariMock.mockReturnValue(false);
+        mocks.entornAppFindMock.mockResolvedValue({ rows: [{ id: 10 }] });
+        mocks.dashboardFindMock.mockResolvedValue({ rows: [] });
+
+        render(
+            <MemoryRouter initialEntries={['/dashboard']}>
+                <AppRoutes />
+            </MemoryRouter>
+        );
+
+        expect(await screen.findByText('EstadisticaDashboards page')).toBeInTheDocument();
+    });
+
+    it('AppRoutes_quanUsuariEsUsuariSensePermisDisseny_redirigeixDashboard', async () => {
+        mocks.useUserContextMock.mockReturnValue({ user: { id: 1 } });
+        mocks.useIsUserAdminMock.mockReturnValue(false);
+        mocks.useIsUserConsultaMock.mockReturnValue(false);
+        mocks.useIsUserUsuariMock.mockReturnValue(true);
+        mocks.entornAppFindMock.mockResolvedValue({ rows: [] });
+        mocks.dashboardFindMock.mockResolvedValue({ rows: [] });
+
+        render(
+            <MemoryRouter initialEntries={['/dashboard']}>
+                <AppRoutes />
+            </MemoryRouter>
+        );
+
+        expect(await screen.findByText('Tasca page')).toBeInTheDocument();
+    });
+
+    it('AppRoutes_quanUsuariEsUsuariAmbPermisDisseny_mostraEstadisticaDashboards', async () => {
+        mocks.useUserContextMock.mockReturnValue({ user: { id: 1 } });
+        mocks.useIsUserAdminMock.mockReturnValue(false);
+        mocks.useIsUserConsultaMock.mockReturnValue(false);
+        mocks.useIsUserUsuariMock.mockReturnValue(true);
+        mocks.entornAppFindMock.mockImplementation(({ namedQueries }: { namedQueries?: string[] }) => {
+            if (namedQueries?.includes('permis_disseny')) {
+                return Promise.resolve({ rows: [{ id: 10 }] });
+            }
+            return Promise.resolve({ rows: [] });
+        });
+        mocks.dashboardFindMock.mockResolvedValue({ rows: [] });
+
+        render(
+            <MemoryRouter initialEntries={['/dashboard']}>
+                <AppRoutes />
+            </MemoryRouter>
+        );
+
+        expect(await screen.findByText('EstadisticaDashboards page')).toBeInTheDocument();
+    });
+
+    it('AppRoutes_quanUsuariEsAdmin_potAccedirACalendari', async () => {
+        mocks.useUserContextMock.mockReturnValue({ user: { id: 1 } });
+        mocks.useIsUserAdminMock.mockReturnValue(true);
+        mocks.useIsUserConsultaMock.mockReturnValue(false);
+        mocks.useIsUserUsuariMock.mockReturnValue(false);
+
+        render(
+            <MemoryRouter initialEntries={['/calendari']}>
+                <AppRoutes />
+            </MemoryRouter>
+        );
+
+        expect(await screen.findByText('CalendariEstadistiques page')).toBeInTheDocument();
+    });
+
+    it('AppRoutes_quanUsuariEsConsulta_noPotAccedirACalendariIRedirigeix', async () => {
+        mocks.useUserContextMock.mockReturnValue({ user: { id: 1 } });
+        mocks.useIsUserAdminMock.mockReturnValue(false);
+        mocks.useIsUserConsultaMock.mockReturnValue(true);
+        mocks.useIsUserUsuariMock.mockReturnValue(false);
+
+        render(
+            <MemoryRouter initialEntries={['/calendari']}>
                 <AppRoutes />
             </MemoryRouter>
         );

@@ -27,7 +27,7 @@ export default defineConfig(({ mode }) => {
             unstubGlobals: true,
             pool: 'forks',
             maxWorkers: env.TEST_MAX_WORKERS || undefined,
-            testTimeout: env.LOW_PERFORMANCE_TEST_MODE ? 10000 : undefined,
+            testTimeout: env.LOW_PERFORMANCE_TEST_MODE ? 20000 : undefined,
             reporters: ['default', 'junit', 'html'],
             outputFile: {
                 junit: './test-reports/junit.xml',

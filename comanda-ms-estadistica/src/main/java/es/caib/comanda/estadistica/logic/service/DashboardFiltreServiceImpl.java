@@ -1,9 +1,6 @@
 package es.caib.comanda.estadistica.logic.service;
 
-import es.caib.comanda.client.model.acl.PermissionEnum;
-import es.caib.comanda.client.model.acl.ResourceType;
 import es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper;
-import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltre;
 import es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltreTipus;
 import es.caib.comanda.estadistica.logic.intf.service.DashboardFiltreService;
@@ -18,8 +15,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.io.Serializable;
-import java.util.*;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Implementació del servei per gestionar la lògica de negoci relacionada amb els filtres de capçalera de dashboards.
@@ -41,7 +38,7 @@ public class DashboardFiltreServiceImpl extends BaseMutableResourceService<Dashb
         Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotCreatedException {
 
         Long dashboardId = resource.getDashboard() != null ? resource.getDashboard().getId() : (entity.getDashboard() != null ? entity.getDashboard().getId() : null);
-        dashboardPermisosHelper.checkCanDesignDashboard(dashboardId, "No teniu permisos de disseny per afegir filtres a aquest quadre de control");
+        dashboardPermisosHelper.checkCanDesignDashboard(dashboardId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardFiltreServiceImpl.permisos.afegirFiltres"));
 
         String errorMessage = findDuplicateErrorMessage(
             dashboardId,
@@ -60,9 +57,9 @@ public class DashboardFiltreServiceImpl extends BaseMutableResourceService<Dashb
         Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
 
         Long originalDashboardId = entity.getDashboard() != null ? entity.getDashboard().getId() : null;
-        dashboardPermisosHelper.checkCanDesignDashboard(originalDashboardId, "No teniu permisos de disseny per modificar filtres d'aquest quadre de control");
+        dashboardPermisosHelper.checkCanDesignDashboard(originalDashboardId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardFiltreServiceImpl.permisos.modificarFiltres"));
         if (resource.getDashboard() != null && !Objects.equals(resource.getDashboard().getId(), originalDashboardId)) {
-            dashboardPermisosHelper.checkCanDesignDashboard(resource.getDashboard().getId(), "No teniu permisos de disseny per moure filtres a aquest quadre de control");
+            dashboardPermisosHelper.checkCanDesignDashboard(resource.getDashboard().getId(), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardFiltreServiceImpl.permisos.moureFiltres"));
         }
 
         Long targetDashboardId = resource.getDashboard() != null ? resource.getDashboard().getId() : originalDashboardId;
@@ -75,7 +72,7 @@ public class DashboardFiltreServiceImpl extends BaseMutableResourceService<Dashb
     @Override
     protected void beforeDelete(DashboardFiltreEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
         Long dashboardId = entity.getDashboard() != null ? entity.getDashboard().getId() : null;
-        dashboardPermisosHelper.checkCanDesignDashboard(dashboardId, "No teniu permisos de disseny per eliminar filtres d'aquest quadre de control");
+        dashboardPermisosHelper.checkCanDesignDashboard(dashboardId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardFiltreServiceImpl.permisos.eliminarFiltres"));
     }
 
     /**
@@ -108,33 +105,7 @@ public class DashboardFiltreServiceImpl extends BaseMutableResourceService<Dashb
     protected String additionalSpringFilter(
         String currentSpringFilter,
         String[] namedQueries) {
-        if (dashboardPermisosHelper.isAdminOrConsulta()) {
-            return currentSpringFilter;
-        }
-        Set<Serializable> appPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.APP,
-            List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
-        String appFilter = SpringFilterHelper.buildOrFilter("dashboard.appId", appPermissionIds);
-
-        Set<Serializable> entornAppPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.ENTORN_APP,
-            List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
-        String entornAppFilter = dashboardPermisosHelper.buildEntornAppFilter(entornAppPermissionIds, "dashboard");
-
-        Set<Serializable> dashboardPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.DASHBOARD,
-            List.of(PermissionEnum.READ, PermissionEnum.WRITE));
-        String dashboardFilter = SpringFilterHelper.buildOrFilter("dashboard.id", dashboardPermissionIds);
-
-        String filter = SpringFilterHelper.or(
-            appFilter,
-            entornAppFilter,
-            dashboardFilter
-        );
-
-        return SpringFilterHelper.and(
-            currentSpringFilter,
-            (filter.isBlank())
-                ? "id:0"
-                : filter
-        );
+        return dashboardPermisosHelper.buildDashboardChildFilter(currentSpringFilter, DashboardFiltre.Fields.dashboard);
     }
 
 }

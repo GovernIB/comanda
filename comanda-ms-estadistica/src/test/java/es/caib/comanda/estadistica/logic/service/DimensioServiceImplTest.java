@@ -1,5 +1,8 @@
 package es.caib.comanda.estadistica.logic.service;
 
+import es.caib.comanda.estadistica.logic.dir3.UnitatsOrganitzativesRestClient;
+import es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper;
+import es.caib.comanda.estadistica.logic.helper.DimensioFetConsProgressHelper;
 import es.caib.comanda.estadistica.logic.helper.EntitatResolverHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
@@ -14,6 +17,7 @@ import es.caib.comanda.estadistica.persist.repository.DimensioValorRepository;
 import es.caib.comanda.estadistica.persist.repository.FetRepository;
 import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -33,11 +38,13 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -54,6 +61,11 @@ class DimensioServiceImplTest {
     @Mock private DimensioRepository dimensioRepository;
     @Mock private DimensioValorRepository dimensioValorRepository;
     @Mock private ResourceEntityMappingHelper resourceEntityMappingHelper;
+    @Mock private UnitatsOrganitzativesRestClient unitatsOrganitzativesRestClient;
+    @Mock private DimensioFetConsProgressHelper dimensioFetConsProgressHelper;
+    @Mock private DashboardPermisosHelper dashboardPermisosHelper;
+    @Mock private I18nUtil i18nUtil;
+    @Mock private ApplicationContext applicationContext;
 
     @InjectMocks
     private DimensioServiceImpl dimensioService;
@@ -61,8 +73,18 @@ class DimensioServiceImplTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(dimensioService, "resourceEntityMappingHelper", resourceEntityMappingHelper);
-        // Inicialitzem el valor injectat per @Value per a les proves
-        ReflectionTestUtils.setField(dimensioService, "codiArrel", "ARREL_TEST");
+        ReflectionTestUtils.setField(I18nUtil.class, "applicationContext", applicationContext);
+        lenient().when(applicationContext.getBean(I18nUtil.class)).thenReturn(i18nUtil);
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(inv -> inv.getArgument(0));
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(inv -> inv.getArgument(0));
+        lenient().when(unitatsOrganitzativesRestClient.getCodiArrel()).thenReturn("ARREL_TEST");
+        lenient().when(dashboardPermisosHelper.buildEntornAppFilterForProperty(any(), any()))
+                .thenAnswer(inv -> inv.getArgument(0));
+        // Per defecte cada test és "propietari" de la seva execució FET_CONS (com si no n'hi hagués cap altra
+        // en curs); els tests que verifiquen el camí piggyback sobreescriuen aquest stub a false.
+        // any() (no anyLong()) perquè alguns tests existents no assignen id a l'entitat i anyLong() no
+        // fa match amb null des de Mockito 2.1.0.
+        lenient().when(dimensioFetConsProgressHelper.tryStart(any())).thenReturn(true);
     }
 
     // ========================================================================
@@ -199,6 +221,22 @@ class DimensioServiceImplTest {
         // Assert
         assertThat(result).isEqualTo("codi : 'TEST'");
         verify(springFilterHelper, never()).filterByApp(anyLong(), anyString());
+    }
+
+    @Test
+    @DisplayName("additionalSpringFilter: delega el filtre d'entornApp a DashboardPermisosHelper")
+    void additionalSpringFilter_quanDashboardPermisosHelper_llavorsAplicaFiltreEntornApp() {
+        // Arrange
+        String currentFilter = "codi:'TEST'";
+        when(dashboardPermisosHelper.buildEntornAppFilterForProperty(any(), eq(Dimensio.Fields.entornAppId)))
+                .thenReturn("codi : 'TEST' and entornAppId in (10, 20)");
+
+        // Act
+        String result = dimensioService.additionalSpringFilter(currentFilter, null);
+
+        // Assert
+        assertThat(result).isEqualTo("codi : 'TEST' and entornAppId in (10, 20)");
+        verify(dashboardPermisosHelper).buildEntornAppFilterForProperty(any(), eq(Dimensio.Fields.entornAppId));
     }
 
     // ========================================================================
@@ -527,6 +565,125 @@ class DimensioServiceImplTest {
         org.junit.jupiter.api.Assertions.assertDoesNotThrow(() ->
             executor.onChange(1L, null, "field", "value", new HashMap<>(), new String[0], null)
         );
+    }
+
+    @Test
+    @DisplayName("FetConsActionExecutor: publica el progrés per SSE mentre processa els fets")
+    void fetConsActionExecutor_quanProcessaFets_llavorsPublicaElProgres() {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+        entity.setId(7L);
+        entity.setTipus(TipusDimensioEnum.ORGAN_GESTOR);
+        entity.setEntornAppId(1L);
+        entity.setCodi("TEST_ORGAN");
+
+        DimensioEntity existingCons = new DimensioEntity();
+        existingCons.setTipus(TipusDimensioEnum.CONSELLERIA);
+        when(dimensioRepository.findByEntornAppId(1L)).thenReturn(Arrays.asList(existingCons));
+
+        FetEntity fet1 = new FetEntity();
+        fet1.setDimensionsJson(new HashMap<>(Map.of("TEST_ORGAN", "ORG1")));
+        FetEntity fet2 = new FetEntity();
+        fet2.setDimensionsJson(new HashMap<>(Map.of("TEST_ORGAN", "ORG2")));
+
+        when(fetRepository.findByEntornAppIdAddCons(1L, "TEST_ORGAN", "ARREL_TEST")).thenReturn(Arrays.asList(fet1, fet2));
+        when(entitatResolverHelper.resolveConselleria(eq(1L), anyString(), any())).thenReturn("CONS1");
+
+        // Act
+        dimensioService.new FetConsActionExecutor().exec("FET_CONS", entity, null);
+
+        // Assert
+        verify(dimensioFetConsProgressHelper).publishProgress(7L, 0, 2);
+        verify(dimensioFetConsProgressHelper).publishProgress(7L, 1, 2);
+        verify(dimensioFetConsProgressHelper).publishProgress(7L, 2, 2);
+    }
+
+    @Test
+    @DisplayName("FetConsActionExecutor: publica l'estat inicial 0 de 0 quan no hi ha fets per processar, " +
+        "perquè la modal del frontend rebi la finalització immediata i no es quedi blocada")
+    void fetConsActionExecutor_quanNoHiHaFets_llavorsPublicaProgresInicial0de0() {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+        entity.setId(7L);
+        entity.setTipus(TipusDimensioEnum.ORGAN_GESTOR);
+        entity.setEntornAppId(1L);
+        entity.setCodi("TEST_ORGAN");
+
+        DimensioEntity existingCons = new DimensioEntity();
+        existingCons.setTipus(TipusDimensioEnum.CONSELLERIA);
+        when(dimensioRepository.findByEntornAppId(1L)).thenReturn(Arrays.asList(existingCons));
+        when(fetRepository.findByEntornAppIdAddCons(1L, "TEST_ORGAN", "ARREL_TEST")).thenReturn(Collections.emptyList());
+
+        // Act
+        dimensioService.new FetConsActionExecutor().exec("FET_CONS", entity, null);
+
+        // Assert
+        verify(dimensioFetConsProgressHelper).publishProgress(7L, 0, 0);
+    }
+
+    @Test
+    @DisplayName("FetConsActionExecutor: quan ja hi ha una execució en curs per a la dimensió, no fa cap feina " +
+        "(tryStart ja s'ha encarregat de republicar l'últim progrés per SSE)")
+    void fetConsActionExecutor_quanJaHiHaExecucioEnCurs_llavorsNoFaCapFeina() {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+        entity.setId(7L);
+        entity.setTipus(TipusDimensioEnum.ORGAN_GESTOR);
+        entity.setEntornAppId(1L);
+        entity.setCodi("TEST_ORGAN");
+
+        when(dimensioFetConsProgressHelper.tryStart(7L)).thenReturn(false);
+
+        // Act
+        dimensioService.new FetConsActionExecutor().exec("FET_CONS", entity, null);
+
+        // Assert
+        verifyNoInteractions(dimensioRepository, fetRepository, entitatResolverHelper);
+        verify(dimensioFetConsProgressHelper, never()).publishProgress(any(), anyInt(), anyInt());
+        verify(dimensioFetConsProgressHelper, never()).finish(any());
+    }
+
+    @Test
+    @DisplayName("FetConsActionExecutor: quan és propietària de l'execució i acaba correctament, allibera el registre amb finish")
+    void fetConsActionExecutor_quanAcabaCorrectament_llavorsAlliberaElRegistre() {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+        entity.setId(7L);
+        entity.setTipus(TipusDimensioEnum.ORGAN_GESTOR);
+        entity.setEntornAppId(1L);
+        entity.setCodi("TEST_ORGAN");
+
+        when(dimensioRepository.findByEntornAppId(1L)).thenReturn(Collections.emptyList());
+        when(fetRepository.findByEntornAppIdAddCons(1L, "TEST_ORGAN", "ARREL_TEST")).thenReturn(Collections.emptyList());
+
+        // Act
+        dimensioService.new FetConsActionExecutor().exec("FET_CONS", entity, null);
+
+        // Assert
+        verify(dimensioFetConsProgressHelper).finish(7L);
+        verify(dimensioFetConsProgressHelper, never()).publishError(any());
+    }
+
+    @Test
+    @DisplayName("FetConsActionExecutor: quan és propietària de l'execució i falla, publica l'error per SSE " +
+        "i allibera igualment el registre (finally) perquè una propera crida no es quedi bloquejada per sempre")
+    void fetConsActionExecutor_quanFalla_llavorsPublicaErrorIAlliberaElRegistre() {
+        // Arrange
+        DimensioEntity entity = new DimensioEntity();
+        entity.setId(7L);
+        entity.setTipus(TipusDimensioEnum.ORGAN_GESTOR);
+        entity.setEntornAppId(1L);
+        entity.setCodi("TEST_ORGAN");
+
+        when(dimensioRepository.findByEntornAppId(1L)).thenThrow(new RuntimeException("Error de BD"));
+
+        DimensioServiceImpl.FetConsActionExecutor executor = dimensioService.new FetConsActionExecutor();
+
+        // Act & Assert
+        assertThatThrownBy(() -> executor.exec("FET_CONS", entity, null))
+            .isInstanceOf(ActionExecutionException.class);
+        verify(dimensioFetConsProgressHelper).publishError(7L);
+        verify(dimensioFetConsProgressHelper).finish(7L);
     }
 
     // ========================================================================

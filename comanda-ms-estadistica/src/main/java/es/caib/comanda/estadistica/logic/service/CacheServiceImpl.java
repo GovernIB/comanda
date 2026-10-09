@@ -1,6 +1,7 @@
 package es.caib.comanda.estadistica.logic.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import es.caib.comanda.estadistica.logic.intf.model.cache.ComandaCache;
 import es.caib.comanda.estadistica.logic.intf.service.CacheService;
@@ -28,7 +29,9 @@ import java.util.stream.Collectors;
 @Service
 public class CacheServiceImpl extends BaseMutableResourceService<ComandaCache, String, FakeCacheEntity> implements CacheService {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    private static final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
     private final CacheHelper cacheHelper;
 
     @Override
@@ -92,6 +95,9 @@ public class CacheServiceImpl extends BaseMutableResourceService<ComandaCache, S
                 .entrades(cache.getNativeCache().size())
                 .mida(cache.getNativeCache().values().stream()
                         .mapToLong(value -> {
+                            if (value == null || value.getClass().getName().endsWith("NullDataSerializable")) {
+                                return 0L;
+                            }
                             try {
                                 return objectMapper.writeValueAsBytes(value).length;
                             } catch (Exception e) {

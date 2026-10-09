@@ -14,6 +14,12 @@ vi.mock('reactlib', () => ({
         mocks.numberFormatMock(value, options, language),
 }));
 
+vi.mock('../salut/SalutErrorBoundaryFallback', () => ({
+    SalutErrorBoundaryFallback: (props: { error?: { message?: string; stack?: string } }) => (
+        <div data-testid="salut-error-boundary-fallback" data-error={JSON.stringify(props.error ?? null)} />
+    ),
+}));
+
 const renderComponent = (ui: React.ReactElement) =>
     render(<ThemeProvider theme={createTheme()}>{ui}</ThemeProvider>);
 
@@ -51,8 +57,8 @@ describe('SimpleWidgetVisualization', () => {
         expect(screen.getByText('check_circle')).toBeInTheDocument();
     });
 
-    it('SimpleWidgetVisualization_quanHiHaError_mostraLacordioAmbElDetall', () => {
-        // Verifica que el component substitueix el contingut normal per l'estat d'error expandible.
+    it('SimpleWidgetVisualization_quanHiHaError_mostraLEstatDerror', () => {
+        // Verifica que el component substitueix el contingut normal pel bloc d'error genèric.
         mocks.useBaseAppContextMock.mockReturnValue({
             currentLanguage: 'ca',
         });
@@ -66,8 +72,11 @@ describe('SimpleWidgetVisualization', () => {
             />
         );
 
-        expect(screen.getByText("No s'han pogut carregar les dades")).toBeInTheDocument();
-        expect(screen.getByText('Traça tècnica')).toBeInTheDocument();
+        const fallback = screen.getByTestId('salut-error-boundary-fallback');
+        expect(JSON.parse(fallback.getAttribute('data-error') || 'null')).toEqual({
+            message: "No s'han pogut carregar les dades",
+            stack: 'Traça tècnica',
+        });
     });
 
     it('SimpleWidgetVisualization_quanRepOnClick_invocaElCallbackEnClicar', () => {

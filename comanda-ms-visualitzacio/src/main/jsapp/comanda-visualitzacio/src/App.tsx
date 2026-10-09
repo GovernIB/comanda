@@ -9,9 +9,10 @@ import { useIsUserAdmin, useIsUserUsuari, useUserContext } from './components/Us
 import KeepAlive from './components/KeepAlive';
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
-import { useResourceApiService } from 'reactlib';
 import useStatsEnabled from './hooks/useStatsEnabled';
 import useMonitorDbEnabled from './hooks/useMonitorDbEnabled';
+import useHasSalutAccess from './hooks/useHasSalutAccess';
+import useHasDashboardAccess from './hooks/useHasDashboardAccess';
 import notNull from './util/arrayUtils';
 import { MenuEstil } from './types/usuari.model.tsx';
 import {useResourceApiContext} from "reactlib";
@@ -61,8 +62,8 @@ export const useAppEntries = () => {
     const isUserReady = user != null;
     const statsEnabled = useStatsEnabled() === true;
     const monitorDbEnabled = useMonitorDbEnabled() === true;
-    const { isReady: entornAppApiIsReady, find: entornAppFind } = useResourceApiService('entornApp');
-    const [hasSalutAccess, setHasSalutAccess] = React.useState(false);
+    const hasSalutAccess = useHasSalutAccess() === true;
+    const hasDashboardAccess = useHasDashboardAccess() === true;
     const isLimitedUser = isUserReady && isUserUsuari;
     const menuSalut = {
         id: 'salut',
@@ -191,13 +192,6 @@ export const useAppEntries = () => {
                 resourceName: 'indicador',
             } : null,
             statsEnabled && isUserAdmin ? {
-                id: 'estadisticaWidget',
-                title: t($ => $.menu.widget),
-                to: '/estadisticaWidget',
-                icon: 'widgets',
-                resourceName: 'dashboard',
-            } : null,
-            statsEnabled && isUserAdmin ? {
                 id: 'plantilla',
                 title: t($ => $.menu.plantilla),
                 to: '/plantilla',
@@ -211,7 +205,7 @@ export const useAppEntries = () => {
                 icon: 'format_color_fill',
                 resourceName: 'paleta',
             } : null,
-            statsEnabled ? menuDashboard : null,
+            statsEnabled && hasDashboardAccess ? menuDashboard : null,
             statsEnabled ? {
                 id: 'calendari',
                 title: t($ => $.menu.calendari),
@@ -249,33 +243,14 @@ export const useAppEntries = () => {
         { ...menuTasca, resourceName: undefined },
         { ...menuAvis, resourceName: undefined },
         hasSalutAccess ? { ...menuAlarmaConfig, resourceName: undefined } : null,
-        (statsEnabled && hasSalutAccess) ? { ...menuEstadistiques, resourceName: undefined } : null,
-        (statsEnabled && hasSalutAccess) ? { ...menuDashboard, resourceName: undefined } : null,
+        statsEnabled ? { ...menuEstadistiques, resourceName: undefined } : null,
+        (statsEnabled && hasDashboardAccess) ? { ...menuDashboard, resourceName: undefined } : null,
     ].filter(notNull);
     const visibleMenuEntries = !isUserReady
         ? undefined
         : isLimitedUser
             ? limitedMenuEntries
             : caibMenuEntries;
-
-    React.useEffect(() => {
-        if (!isLimitedUser) {
-            setHasSalutAccess(false);
-            return;
-        }
-        if (!entornAppApiIsReady) {
-            return;
-        }
-        void entornAppFind({
-            page: 0,
-            size: 1,
-            filter: 'activa:true and app.activa:true',
-        }).then(response => {
-            setHasSalutAccess((response.rows?.length ?? 0) > 0);
-        }).catch(() => {
-            setHasSalutAccess(false);
-        });
-    }, [entornAppApiIsReady, entornAppFind, isLimitedUser]);
 
     return {
         caibMenuEntries: useBaseAppMenuEntries(visibleMenuEntries),

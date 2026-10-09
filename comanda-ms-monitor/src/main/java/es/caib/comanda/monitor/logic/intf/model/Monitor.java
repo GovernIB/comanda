@@ -92,6 +92,9 @@ public class Monitor extends BaseResource<Long> {
     public static final String FILTER_BY_ENTORN_NAMEDFILTER = "filterByEntorn:";
 
     private Long entornAppId;
+    private Long appId;
+    private Long entornId;
+    private Boolean entornAppEsborrat;
     @NotNull
     private ModulEnum modul;
     @NotNull

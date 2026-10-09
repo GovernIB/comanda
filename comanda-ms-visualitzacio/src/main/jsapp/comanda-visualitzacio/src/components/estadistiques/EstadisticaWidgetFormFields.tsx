@@ -388,7 +388,6 @@ export const DimensionsFields: React.FC = () => {
                     advancedSearchDataGridProps={{
                         rowHeight: 30,
                     }}
-                    advancedSearchDialogHeight={500}
                     multiple
                     advancedSearchColumns={columnesDimensioValor}
                     namedQueries={[

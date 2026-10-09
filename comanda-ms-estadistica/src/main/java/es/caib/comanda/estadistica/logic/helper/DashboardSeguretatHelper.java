@@ -24,6 +24,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -40,6 +41,10 @@ import java.util.stream.Collectors;
  * - Si té permisos d'ambdós tipus: veu la unió (dades de les entitats permeses, MÉS dades dels òrgans permesos,
  *   encara que l'òrgan pertanyi a una entitat sobre la qual no té permís).
  * - Si no té cap permís d'entitat ni d'òrgan: no ha de veure cap dada (vegeu {@link SeguretatDadesResultat#isSensePermisos()}).
+ * <p>
+ * Propagació d'Entitat → UnitatOrganitzativa: si l'usuari té permís sobre una Entitat i l'app té la dimensió
+ * ORGAN_GESTOR, totes les UnitatOrganitzativa que pertanyen a aquella entitat (codiUnitatArrel == entitat.codiDir3)
+ * s'afegeixen automàticament al filtre d'òrgans, sense necessitat de crear ACL directes per a cada UO.
  * <p>
  * La restricció només s'aplica a les apps que realment tenen configurada la dimensió ENTITAT i/o ORGAN_GESTOR
  * corresponent - si cap de les dues existeix per a una app concreta, aquesta funcionalitat no li és aplicable.
@@ -86,6 +91,14 @@ public class DashboardSeguretatHelper {
             return SeguretatDadesResultat.builder().exempt(true).build();
         }
 
+        Optional<DimensioEntity> dimensioEntitat = dimensioRepository.findByEntornAppIdAndTipus(entornAppId, TipusDimensioEnum.ENTITAT);
+        Optional<DimensioEntity> dimensioOrgan = dimensioRepository.findByEntornAppIdAndTipus(entornAppId, TipusDimensioEnum.ORGAN_GESTOR);
+
+        if (dimensioEntitat.isEmpty() && dimensioOrgan.isEmpty()) {
+            // Aquesta app no té ni dimensió ENTITAT ni ORGAN_GESTOR: la restricció no li és aplicable.
+            return SeguretatDadesResultat.builder().exempt(true).build();
+        }
+
         Set<Serializable> entitatIds = getAllowedIds(ResourceType.ENTITAT);
         Set<Serializable> unitatIds = getAllowedIds(ResourceType.UNITAT);
         if (entitatIds.isEmpty() && unitatIds.isEmpty()) {
@@ -93,31 +106,22 @@ public class DashboardSeguretatHelper {
         }
 
         SeguretatFiltreSql.SeguretatFiltreSqlBuilder filtre = SeguretatFiltreSql.builder();
-        boolean algunaDimensioAplicable = false;
 
-        Optional<DimensioEntity> dimensioEntitat = dimensioRepository.findByEntornAppIdAndTipus(entornAppId, TipusDimensioEnum.ENTITAT);
         if (dimensioEntitat.isPresent()) {
-            algunaDimensioAplicable = true;
             filtre.dimensioEntitatCodi(dimensioEntitat.get().getCodi());
             filtre.valorsEntitatPermesos(resoldreCodisEntitatsPermeses(entitatIds, dimensioEntitat.get()));
         }
 
-        Optional<DimensioEntity> dimensioOrgan = dimensioRepository.findByEntornAppIdAndTipus(entornAppId, TipusDimensioEnum.ORGAN_GESTOR);
         if (dimensioOrgan.isPresent()) {
-            algunaDimensioAplicable = true;
             filtre.dimensioOrganCodi(dimensioOrgan.get().getCodi());
-            filtre.valorsOrganPermesos(resoldreCodisOrgansPermesosAmbDescendents(unitatIds));
+            filtre.valorsOrganPermesos(resoldreCodisOrgansPermesosAmbDescendents(unitatIds, entitatIds));
         }
 
-        if (!algunaDimensioAplicable) {
-            // Aquesta app no té ni dimensió ENTITAT ni ORGAN_GESTOR: la restricció no li és aplicable.
-            return SeguretatDadesResultat.builder().exempt(true).build();
-        }
         return SeguretatDadesResultat.builder().filtreSql(filtre.build()).build();
     }
 
     private List<String> resoldreCodisEntitatsPermeses(Set<Serializable> entitatIds, DimensioEntity dimensioEntitat) {
-        if (entitatIds.isEmpty()) {
+        if (entitatIds == null || entitatIds.isEmpty()) {
             return List.of();
         }
         List<EntitatEntity> entitats = entitatRepository.findAllById(toLongIds(entitatIds));
@@ -128,25 +132,70 @@ public class DashboardSeguretatHelper {
             .collect(Collectors.toList());
     }
 
-    private List<String> resoldreCodisOrgansPermesosAmbDescendents(Set<Serializable> unitatIds) {
-        if (unitatIds.isEmpty()) {
+    /**
+     * Codis d'òrgans gestors que l'usuari actual pot veure a les opcions d'un filtre de dashboard de tipus ORGAN_GESTOR
+     * (incloent els descendents i la propagació des d'Entitat). Retorna {@code null} si l'usuari és exempt
+     * (administrador/consulta) i no s'ha d'aplicar cap restricció. Si no és exempt, retorna la llista de codis
+     * d'òrgans sobre els quals té permís (buida si no en té cap).
+     */
+    public List<String> resoldreCodisOrgansPermesos() {
+        if (isExempt()) {
+            return null;
+        }
+        Set<Serializable> entitatIds = getAllowedIds(ResourceType.ENTITAT);
+        Set<Serializable> unitatIds = getAllowedIds(ResourceType.UNITAT);
+        return resoldreCodisOrgansPermesosAmbDescendents(unitatIds, entitatIds);
+    }
+
+    public List<String> resoldreCodisOrgansPermesosAmbDescendents(
+            Set<Serializable> unitatIds,
+            Set<Serializable> entitatIds) {
+        Set<String> codisPermesos = new HashSet<>();
+
+        if (entitatIds != null && !entitatIds.isEmpty()) {
+            List<EntitatEntity> entitats = entitatRepository.findAllById(toLongIds(entitatIds));
+            List<String> codisArrel = entitats.stream()
+                .map(EntitatEntity::getCodiDir3)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+            if (!codisArrel.isEmpty()) {
+                unitatOrganitzativaRepository.findByCodiUnitatArrelIn(codisArrel).stream()
+                    .map(UnitatOrganitzativaEntity::getCodi)
+                    .filter(Objects::nonNull)
+                    .forEach(codisPermesos::add);
+            }
+        }
+
+        if (unitatIds != null && !unitatIds.isEmpty()) {
+            List<UnitatOrganitzativaEntity> uosDirectes = unitatOrganitzativaRepository.findAllById(toLongIds(unitatIds));
+            codisPermesos.addAll(organitzativaTreeHelper.getDescendentsIElMateix(uosDirectes));
+        }
+
+        if (codisPermesos.isEmpty()) {
             return List.of();
         }
-        List<UnitatOrganitzativaEntity> unitats = unitatOrganitzativaRepository.findAllById(toLongIds(unitatIds));
-        return new ArrayList<>(organitzativaTreeHelper.getDescendentsIElMateix(unitats));
+        return new ArrayList<>(codisPermesos);
     }
 
     private List<Long> toLongIds(Set<Serializable> ids) {
+        if (ids == null) {
+            return Collections.emptyList();
+        }
         return ids.stream().map(id -> Long.valueOf(String.valueOf(id))).collect(Collectors.toList());
     }
 
     private Set<Serializable> getAllowedIds(ResourceType resourceType) {
+        String[] realmRoles = authenticationHelper != null ? authenticationHelper.getCurrentUserRealmRoles() : null;
+        List<String> rolesList = realmRoles != null ? Arrays.asList(realmRoles) : Collections.emptyList();
+        String userName = authenticationHelper != null ? authenticationHelper.getCurrentUserName() : null;
+        String authHeader = httpAuthorizationHeaderHelper != null ? httpAuthorizationHeaderHelper.getAuthorizationHeader() : null;
         return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
                 resourceType,
-                List.of(PermissionEnum.READ),
-                authenticationHelper.getCurrentUserName(),
-                Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
-                httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
+                List.of(PermissionEnum.PERM0),
+                userName,
+                rolesList,
+                authHeader).getBody())
             .orElse(Collections.emptySet());
     }
 

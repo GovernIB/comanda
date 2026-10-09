@@ -8,6 +8,7 @@ import es.caib.comanda.ms.persist.entity.BaseAuditableEntity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -35,6 +36,7 @@ import javax.persistence.Table;
 @Getter
 @Setter
 @NoArgsConstructor
+@FieldNameConstants
 public class DashboardItemEntity extends BaseAuditableEntity<DashboardItem> {
 
     @ManyToOne(cascade = CascadeType.MERGE)

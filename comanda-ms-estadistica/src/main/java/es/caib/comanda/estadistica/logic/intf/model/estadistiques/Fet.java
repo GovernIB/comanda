@@ -74,6 +74,18 @@ import java.util.Map;
                                 roles = { BaseConfig.ROLE_ADMIN }
                         )
                 }),
+                @ResourceArtifact(type = ResourceArtifactType.REPORT, code = Fet.FET_REPORT_PROCESSOS_BAIXA_PRIORITAT, formClass = Fet.FetProcessosParam.class, accessConstraints = {
+                        @ResourceAccessConstraint(
+                                type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                                roles = { BaseConfig.ROLE_ADMIN }
+                        )
+                }),
+                @ResourceArtifact(type = ResourceArtifactType.ACTION, code = Fet.FET_ACTION_CANCELAR_BAIXA_PRIORITAT, formClass = String.class, accessConstraints = {
+                        @ResourceAccessConstraint(
+                                type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                                roles = { BaseConfig.ROLE_ADMIN }
+                        )
+                }),
         }
 )
 public class Fet extends BaseResource<Long> {
@@ -82,6 +94,8 @@ public class Fet extends BaseResource<Long> {
     public final static String FET_REPORT_DADES_DIA = "dades_dia";
     public final static String FET_ACTION_OBTENIR_PER_DATA = "obtenir_per_data";
     public final static String FET_ACTION_OBTENIR_PER_INTERVAL = "obtenir_per_interval";
+    public final static String FET_REPORT_PROCESSOS_BAIXA_PRIORITAT = "processos_baixa_prioritat";
+    public final static String FET_ACTION_CANCELAR_BAIXA_PRIORITAT = "cancelar_baixa_prioritat";
 
     @NotNull
     private Temps temps;
@@ -99,6 +113,7 @@ public class Fet extends BaseResource<Long> {
 
     @Getter
     @Setter
+    @Builder
     @AllArgsConstructor
     @NoArgsConstructor
     public static class FetObtenirParamAction implements Serializable {
@@ -107,6 +122,15 @@ public class Fet extends BaseResource<Long> {
         @NotNull
         private LocalDate dataInici;
         private LocalDate dataFi;
+        private Boolean baixaPrioritat;
+        private Long pausaMs;
+
+        public FetObtenirParamAction(Long entornAppId, LocalDate dataInici, LocalDate dataFi) {
+            this.entornAppId = entornAppId;
+            this.dataInici = dataInici;
+            this.dataFi = dataFi;
+            this.baixaPrioritat = false;
+        }
     }
 
     @Getter
@@ -120,5 +144,14 @@ public class Fet extends BaseResource<Long> {
         private String message;
         private Map<String, Boolean> diesAmbDades;
         private Map<String, String> diesAmbErrors;
+    }
+
+    @Getter
+    @Setter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class FetProcessosParam implements Serializable {
+        private Long entornAppId;
     }
 }

@@ -36,6 +36,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationContext;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -48,11 +50,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests per a DashboardItemServiceImpl")
@@ -74,16 +72,33 @@ class DashboardItemServiceImplTest {
     @Mock private es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper estadisticaClientHelper;
 
     @Mock private es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper dashboardPermisosHelper;
+    @Mock private ApplicationContext applicationContext;
+    @Mock private I18nUtil i18nUtil;
     @InjectMocks private DashboardItemServiceImpl dashboardItemService;
 
     @BeforeEach
     void setUp() {
+        ReflectionTestUtils.setField(I18nUtil.class, "applicationContext", applicationContext);
+        lenient().when(applicationContext.getBean(I18nUtil.class)).thenReturn(i18nUtil);
+        org.mockito.stubbing.Answer<String> i18nAnswer = invocation -> {
+            String code = invocation.getArgument(0);
+            if ("es.caib.comanda.estadistica.logic.service.DashboardItemServiceImpl.error.widgetDiferentApp".equals(code)) {
+                return "El widget no pertany a la mateixa aplicació que el quadre de control";
+            }
+            return code;
+        };
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(i18nAnswer);
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(i18nAnswer);
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any(Object[].class))).thenAnswer(i18nAnswer);
+
         dashboardPermisosHelper = org.mockito.Mockito.spy(new es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper(
             authenticationHelper,
             httpAuthorizationHeaderHelper,
             aclServiceClient,
             dashboardRepository,
-            estadisticaClientHelper
+            estadisticaClientHelper,
+            dashboardItemRepository,
+            estadisticaWidgetRepository
         ));
         ReflectionTestUtils.setField(dashboardItemService, "dashboardPermisosHelper", dashboardPermisosHelper);
         dashboardItemService.init();
@@ -450,8 +465,8 @@ class DashboardItemServiceImplTest {
     }
 
     @Test
-    @DisplayName("InformeWidget.generateData: captura excepció i retorna item amb estat d'error")
-    void informeWidgetGenerateData_quanFallaGeneracio_llavorsRetornaItemError() {
+    @DisplayName("InformeWidget.generateData: propaga l'excepció en lloc d'empassar-se-la, perquè la transacció faci rollback net")
+    void informeWidgetGenerateData_quanFallaGeneracio_llavorsPropagaExcepcio() {
         // Arrange
         Long itemId = 99L;
         DashboardItemEntity entity = new DashboardItemEntity();
@@ -462,21 +477,18 @@ class DashboardItemServiceImplTest {
 
         when(dashboardItemRepository.findById(itemId)).thenReturn(Optional.of(entity));
         when(consultaEstadisticaHelper.getDadesWidget(any(), anyBoolean(), any())).thenThrow(new RuntimeException("Fallada de xarxa"));
-        when(consultaEstadisticaHelper.determineWidgetType(entity)).thenReturn(WidgetTipus.SIMPLE);
 
         ReportGenerator<DashboardItemEntity, InformeWidgetParams, InformeWidgetItem> generator =
             dashboardItemService.new InformeWidget();
 
-        // Act
-        List<InformeWidgetItem> result = generator.generateData(DashboardItem.WIDGET_REPORT, entity, null);
-
-        // Assert
-        assertThat(result).hasSize(1);
-        InformeWidgetItem errorItem = result.get(0);
-        assertThat(errorItem.isError()).isTrue();
-        assertThat(errorItem.getErrorMsg()).contains("Error processing item 99");
-        assertThat(errorItem.getErrorTrace()).contains("java.lang.RuntimeException");
-        assertThat(errorItem.getTitol()).isEqualTo("Widget Test");
+        // Act & Assert
+        // Capturar l'excepció aquí faria que la transacció de artifactReportGenerateData, ja marcada com a
+        // rollback-only per la crida JPA fallida, llancés UnexpectedRollbackException en fer commit i
+        // s'emportés la traça real. Deixant-la propagar, la transacció fa rollback net i el GlobalExceptionHandler
+        // retorna l'error amb stackTrace (quan trace=true), que és el que el frontend ja tracta per widget.
+        assertThatThrownBy(() -> generator.generateData(DashboardItem.WIDGET_REPORT, entity, null))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("Fallada de xarxa");
     }
 
     @Test
@@ -559,6 +571,42 @@ class DashboardItemServiceImplTest {
     }
 
     @Test
+    @DisplayName("DuplicateDashboardItemAction: llança AccessDeniedException quan l'usuari no té permís sobre el widget original")
+    void duplicateDashboardItemAction_quanSensePermisSobreWidget_llancaAccessDeniedException() {
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
+
+        es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity dashboard =
+            new es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity();
+        dashboard.setId(1L);
+        dashboard.setAppId(20L);
+
+        EstadisticaSimpleWidgetEntity originalWidget = new EstadisticaSimpleWidgetEntity();
+        originalWidget.setId(100L);
+        originalWidget.setAppId(20L);
+
+        DashboardItemEntity originalItem = new DashboardItemEntity();
+        originalItem.setId(50L);
+        originalItem.setDashboard(dashboard);
+        originalItem.setWidget(originalWidget);
+
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), any(), any(), any(), any()))
+            .thenReturn(ResponseEntity.ok(Set.of(10L)));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), any(), any(), any(), any()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), any(), any(), any(), any()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        doNothing().when(dashboardPermisosHelper).checkCanDesignDashboard(eq(1L), anyString());
+
+        DashboardItemServiceImpl.DuplicateDashboardItemAction action =
+            dashboardItemService.new DuplicateDashboardItemAction();
+
+        assertThatThrownBy(() -> action.exec(DashboardItem.DUPLICATE_ACTION, originalItem, null))
+            .isInstanceOf(org.springframework.security.access.AccessDeniedException.class)
+            .hasMessageContaining("No teniu permisos sobre l'aplicació del widget d'origen");
+    }
+
+    @Test
     @DisplayName("beforeCreateEntity: permet quan l'usuari és ADMIN")
     void beforeCreateEntity_quanAdmin_permetCrear() {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
@@ -627,7 +675,6 @@ class DashboardItemServiceImplTest {
     }
 
     @Test
-    @Disabled("Pendent de revisar els permisos d'accés al widget segons TODO")
     @DisplayName("beforeCreateEntity: llança AccessDeniedException si el widget és d'una app sense accés")
     void beforeCreateEntity_quanWidgetAltraAppSensePermis_llancaAccessDeniedException() {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
@@ -636,11 +683,11 @@ class DashboardItemServiceImplTest {
         es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity dashboard =
             new es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity();
         dashboard.setId(1L);
-        dashboard.setAppId(10L);
+        dashboard.setAppId(20L);
 
         EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
         widget.setId(100L);
-        widget.setAppId(20L); // Diferent app
+        widget.setAppId(20L);
 
         when(dashboardRepository.findById(1L)).thenReturn(Optional.of(dashboard));
         when(aclServiceClient.anyPermissionGranted(any(), eq(1L), any(), any(), any(), any()))
@@ -649,6 +696,10 @@ class DashboardItemServiceImplTest {
         // L'usuari només té accés a l'app 10, no a la 20
         when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.APP), any(), any(), any(), any()))
             .thenReturn(ResponseEntity.ok(Set.of(10L)));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.DASHBOARD), any(), any(), any(), any()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
+        when(aclServiceClient.findIdsWithAnyPermission(eq(ResourceType.ENTORN_APP), any(), any(), any(), any()))
+            .thenReturn(ResponseEntity.ok(Collections.emptySet()));
 
         DashboardItemEntity entity = new DashboardItemEntity();
         DashboardItem resource = new DashboardItem();
@@ -695,5 +746,110 @@ class DashboardItemServiceImplTest {
         assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(dashboardItemService, "beforeCreateEntity", entity, resource, Collections.emptyMap()))
             .isInstanceOf(org.springframework.security.access.AccessDeniedException.class)
             .hasMessageContaining("mateixa aplicació");
+    }
+
+    // ========================================================================
+    // 6. TESTOS PER A ELIMINACIÓ D'ITEMS I NETEJA DE WIDGETS (afterDelete)
+    // ========================================================================
+
+    @Test
+    @DisplayName("afterDelete: quan el widget només s'usa a aquest item, esborra el dashboardItem i el widget")
+    void afterDelete_quanWidgetNomesSUtilitzaAAquestItem_llavorsEsborraElWidget() {
+        // Arrange
+        Long itemId = 1L;
+        Long widgetId = 100L;
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(widgetId);
+
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setId(itemId);
+        item.setWidget(widget);
+
+        when(dashboardItemRepository.findByWidgetId(widgetId)).thenReturn(Collections.emptyList());
+        when(estadisticaWidgetRepository.findById(widgetId)).thenReturn(Optional.of(widget));
+
+        // Act
+        ReflectionTestUtils.invokeMethod(dashboardItemService, "afterDelete", item, Collections.emptyMap());
+
+        // Assert
+        verify(estadisticaWidgetHelper, times(1)).clearDashboardWidgetCache(itemId);
+        verify(estadisticaWidgetHelper, times(1)).clearDashboardWidgetCacheByWidget(widgetId);
+        verify(estadisticaWidgetRepository, times(1)).delete(widget);
+        verify(estadisticaWidgetRepository, times(1)).flush();
+    }
+
+    @Test
+    @DisplayName("afterDelete: quan el widget s'usa a algun altre dashboardItem, només s'esborra el dashboardItem i no el widget")
+    void afterDelete_quanWidgetSUtilitzaAAltresItems_llavorsNoEsborraElWidget() {
+        // Arrange
+        Long item1Id = 1L;
+        Long item2Id = 2L;
+        Long widgetId = 100L;
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(widgetId);
+
+        DashboardItemEntity item1 = new DashboardItemEntity();
+        item1.setId(item1Id);
+        item1.setWidget(widget);
+
+        DashboardItemEntity item2 = new DashboardItemEntity();
+        item2.setId(item2Id);
+        item2.setWidget(widget);
+
+        when(dashboardItemRepository.findByWidgetId(widgetId)).thenReturn(List.of(item1, item2));
+
+        // Act
+        ReflectionTestUtils.invokeMethod(dashboardItemService, "afterDelete", item1, Collections.emptyMap());
+
+        // Assert
+        verify(estadisticaWidgetHelper, times(1)).clearDashboardWidgetCache(item1Id);
+        verify(estadisticaWidgetHelper, never()).clearDashboardWidgetCacheByWidget(anyLong());
+        verify(estadisticaWidgetRepository, never()).delete(any());
+        verify(estadisticaWidgetRepository, never()).flush();
+    }
+
+    @Test
+    @DisplayName("afterDelete: quan s'esborra el darrer item que utilitza el widget, s'esborra definitivament")
+    void afterDelete_quanSEsborraElDarrerItem_llavorsEsborraElWidgetDefinitivament() {
+        // Arrange
+        Long item2Id = 2L;
+        Long widgetId = 100L;
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(widgetId);
+
+        DashboardItemEntity item2 = new DashboardItemEntity();
+        item2.setId(item2Id);
+        item2.setWidget(widget);
+
+        // Només queda l'item actual (o la llista ja buida si el flush ja l'ha tret)
+        when(dashboardItemRepository.findByWidgetId(widgetId)).thenReturn(List.of(item2));
+        when(estadisticaWidgetRepository.findById(widgetId)).thenReturn(Optional.of(widget));
+
+        // Act
+        ReflectionTestUtils.invokeMethod(dashboardItemService, "afterDelete", item2, Collections.emptyMap());
+
+        // Assert
+        verify(estadisticaWidgetHelper, times(1)).clearDashboardWidgetCache(item2Id);
+        verify(estadisticaWidgetHelper, times(1)).clearDashboardWidgetCacheByWidget(widgetId);
+        verify(estadisticaWidgetRepository, times(1)).delete(widget);
+        verify(estadisticaWidgetRepository, times(1)).flush();
+    }
+
+    @Test
+    @DisplayName("afterDelete: quan el dashboardItem no té widget associat, no fa res i no falla")
+    void afterDelete_quanWidgetEsNull_noFaRes() {
+        // Arrange
+        Long itemId = 1L;
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setId(itemId);
+        item.setWidget(null);
+
+        // Act
+        ReflectionTestUtils.invokeMethod(dashboardItemService, "afterDelete", item, Collections.emptyMap());
+
+        // Assert
+        verify(estadisticaWidgetHelper, times(1)).clearDashboardWidgetCache(itemId);
+        verify(dashboardItemRepository, never()).findByWidgetId(anyLong());
+        verify(estadisticaWidgetRepository, never()).delete(any());
     }
 }

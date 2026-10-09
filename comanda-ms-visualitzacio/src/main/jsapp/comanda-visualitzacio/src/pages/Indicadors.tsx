@@ -24,6 +24,7 @@ import {
     useMuiFormDialogApiRef,
     useFormDialogButtons,
     useBaseAppContext,
+    useConfirmDialogButtons,
     MuiFormDialog,
 } from 'reactlib';
 import { FormFieldDataActionType } from '../../lib/components/form/FormContext.tsx';
@@ -32,14 +33,21 @@ import FormFieldCustomAdvancedSearch from '../components/FormFieldCustomAdvanced
 import FormActionDialog from '../components/FormActionDialog.tsx';
 import PageTitle from '../components/PageTitle.tsx';
 import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
+import { useIsUserAdmin } from '../components/UserContext.ts';
 import { findOptions } from '../util/requestUtils.ts';
 import type { MuiFormDialogApi } from 'reactlib';
 
-const IndicadorsFilter = (props: { onSpringFilterChange: (springFilter?: string) => void }) => {
-    const { onSpringFilterChange } = props;
+const IndicadorsFilter = (props: { onSpringFilterChange: (springFilter?: string) => void; onRefresh?: () => void }) => {
+    const { onSpringFilterChange, onRefresh } = props;
     const { t } = useTranslation();
     const { isReady: entornAppApiIsReady, find: entornAppGetAll } = useResourceApiService('entornApp');
+    const { artifactAction: indicadorApiAction } = useResourceApiService('indicador');
     const filterApiRef = useFilterApiRef();
+    const isCurrentUserAdmin = useIsUserAdmin();
+    const { temporalMessageShow, messageDialogShow } = useBaseAppContext();
+    const confirmDialogButtons = useConfirmDialogButtons();
+    const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
+    const [selectedEntornAppId, setSelectedEntornAppId] = useState<any>(null);
     const [entornApp, setEntornApp] = useState<Array<{ id?: number | string; entornAppDescription?: string }> | null>([]);
 
     // Al obrir la pàgina carreguem el llistat de EntornApp actius
@@ -58,7 +66,34 @@ const IndicadorsFilter = (props: { onSpringFilterChange: (springFilter?: string)
 
     const netejar = () => {
         filterApiRef?.current?.clear();
-    }
+        setSelectedEntornAppId(null);
+    };
+
+    const handleSincronitzar = () => {
+        if (!selectedEntornAppId) return;
+        messageDialogShow(
+            t($ => $.page.indicadors.action.sincronitzarCataleg),
+            t($ => $.page.indicadors.action.sincronitzarCatalegConfirm),
+            confirmDialogButtons,
+            confirmDialogComponentProps
+        ).then((confirmed: any) => {
+            if (confirmed) {
+                indicadorApiAction(null, {
+                    code: 'sincronitzar_cataleg',
+                    data: { entornAppId: selectedEntornAppId }
+                }).then((res: any) => {
+                    if (res?.success) {
+                        temporalMessageShow(null, res?.message || t($ => $.page.indicadors.action.sincronitzarCatalegSuccess), 'success');
+                        onRefresh?.();
+                    } else {
+                        temporalMessageShow(null, res?.message || t($ => $.common.error), 'error');
+                    }
+                }).catch((err: any) => {
+                    temporalMessageShow(null, err?.message || t($ => $.common.error), 'error');
+                });
+            }
+        });
+    };
 
     return (
         <MuiFilter
@@ -68,10 +103,10 @@ const IndicadorsFilter = (props: { onSpringFilterChange: (springFilter?: string)
             commonFieldComponentProps={{ size: 'small' }}
             onSpringFilterChange={onSpringFilterChange}
             springFilterBuilder={data => {
-                // Build Spring filter based on available fields in the artifact
-                // Fallback to empty if no values provided
+                const eaId = data?.entornApp?.id ?? data?.entornApp ?? null;
+                setSelectedEntornAppId(eaId);
                 return springFilterBuilder.and(
-                    data?.entornApp && springFilterBuilder.eq('entornAppId', data?.entornApp?.id ?? data?.entornApp),
+                    eaId && springFilterBuilder.eq('entornAppId', eaId),
                     data?.codi && springFilterBuilder.like('codi', data?.codi),
                     data?.nom && springFilterBuilder.like('nom', data?.nom),
                 ) || '';
@@ -104,6 +139,15 @@ const IndicadorsFilter = (props: { onSpringFilterChange: (springFilter?: string)
                     <Grid size={4}><FormField name={'codi'} /></Grid>
                     <Grid size={4}><FormField name={'nom'} /></Grid>
                 </Grid>
+                {isCurrentUserAdmin && (
+                    <IconButton
+                        onClick={handleSincronitzar}
+                        disabled={!selectedEntornAppId}
+                        title={t($ => $.page.indicadors.action.sincronitzarCataleg)}
+                        sx={{ mr: 1 }}>
+                        <Icon>sync</Icon>
+                    </IconButton>
+                )}
                 <IconButton
                     onClick={netejar}
                     title={t($ => $.components.clear)}
@@ -479,7 +523,7 @@ const Indicadors: React.FC = () => {
         }
     };
 
-    const filterElement = <IndicadorsFilter onSpringFilterChange={setFilter}/>;
+    const filterElement = <IndicadorsFilter onSpringFilterChange={setFilter} onRefresh={() => gridApiRef.current?.refresh?.()}/>;
 
     const IndicadorForm: React.FC = () => {
         const { data } = useFormContext();

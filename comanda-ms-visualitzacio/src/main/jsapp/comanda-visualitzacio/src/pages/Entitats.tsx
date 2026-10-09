@@ -9,13 +9,14 @@ import {
 } from "reactlib";
 import {useTranslation} from "react-i18next";
 import { Grid } from "@mui/material";
-import {useMemo} from "react";
+import {useMemo, useState} from "react";
 import {useAclCustomPermissionManager} from "../components/AclPermissionManager.tsx";
 import {useOrganigramaDialog} from "../components/EntitatOrganigrama.tsx";
 import * as React from "react";
 import IconButton from "@mui/material/IconButton";
 import Icon from "@mui/material/Icon";
 import Badge from "@mui/material/Badge";
+import EntitatRefreshUOProgressDialog from "../components/EntitatRefreshUOProgressDialog.tsx";
 
 const EntitatsFrom = () => {
     const {data} = useFormContext()
@@ -102,14 +103,43 @@ const Entitats = () => {
 
     const {handleOpen, dialog} = useOrganigramaDialog();
 
+    // Mateix patró que el refresc de dades de la conselleria a la pantalla de Dimensions (vegeu
+    // Dimensions.tsx/addConstToFet i DimensioFetConsProgressDialog): la modal de progrés es nodreix dels events
+    // SSE que publica el backend mentre dura l'acció REFRESH_UO, no de la resposta d'aquesta crida HTTP.
+    const [refreshUOProgressId, setRefreshUOProgressId] = useState<string | number | null>(null);
+    // Evita mostrar dos missatges quan la resolució de la pròpia crida HTTP i l'event SSE onComplete arriben
+    // gairebé alhora pel mateix resultat (cas de l'execució propietària).
+    const refreshUOCompletedRef = React.useRef(false);
+
+    // La resolució de la crida HTTP, per si sola, no tanca la modal (només ho fa onComplete, un senyal SSE real):
+    // si ja hi havia una execució en curs, qui hi ha arribat després rep una resposta ràpida sense que el procés
+    // real hagi acabat. Només capturam aquí una fallada de la pròpia crida HTTP (p.ex. xarxa o permisos) que mai
+    // arribarà a generar cap event SSE, com a xarxa de seguretat - mateix patró que Dimensions.tsx/addConstToFet.
     const refreshUO = (id:any) => {
+        refreshUOCompletedRef.current = false;
+        setRefreshUOProgressId(id);
         apiAction(id, {code: 'REFRESH_UO'})
-            .then(() => {
-                refresh()
-                temporalMessageShow(null, t($ => $.page.entitats.action.refreshUO.ok), 'success')
+            .catch(error => {
+                if (!refreshUOCompletedRef.current) {
+                    refreshUOCompletedRef.current = true;
+                    setRefreshUOProgressId(null);
+                    temporalMessageShow(null, error.message, 'error')
+                }
             })
-            .catch(error => temporalMessageShow(null, error.message, 'error'))
     }
+    const onRefreshUOComplete = (error?: boolean) => {
+        refreshUOCompletedRef.current = true;
+        setRefreshUOProgressId(null);
+        if (error) {
+            temporalMessageShow(null, t($ => $.page.entitats.action.refreshUO.error), 'error');
+        } else {
+            refresh();
+            temporalMessageShow(null, t($ => $.page.entitats.action.refreshUO.ok), 'success');
+        }
+    }
+    const hideRefreshUODialog = () => {
+        setRefreshUOProgressId(null);
+    };
 
     return (
         <>
@@ -143,6 +173,12 @@ const Entitats = () => {
             />
             {dialog}
             {permissionComponent}
+            <EntitatRefreshUOProgressDialog
+                open={refreshUOProgressId != null}
+                entitatId={refreshUOProgressId}
+                onComplete={onRefreshUOComplete}
+                onHide={hideRefreshUODialog}
+            />
         </>
     )
 }

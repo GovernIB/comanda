@@ -37,7 +37,11 @@ public class NetejaEntornAppJmsListener {
     @Async
     public void onEntornAppEsborrat(EntornAppEsborratEvent event) {
         log.debug("Enviant missatge de neteja per entornApp {} a la cua {}", event.getEntornAppId(), CUA_NETEJA_ENTORN_APP);
-        jmsTemplate.convertAndSend(CUA_NETEJA_ENTORN_APP, new NetejaEntornAppMessage(event.getEntornAppId()));
+        jmsTemplate.convertAndSend(CUA_NETEJA_ENTORN_APP, new NetejaEntornAppMessage(
+                event.getEntornAppId(),
+                event.getAppId(),
+                event.getEntornId(),
+                true));
     }
 
     @JmsListener(destination = CUA_NETEJA_ENTORN_APP)
@@ -48,7 +52,16 @@ public class NetejaEntornAppJmsListener {
         jmsTemplate.convertAndSend(CUA_NETEJA_TASQUES, new NetejaEntornAppMessage(entornAppId));
         jmsTemplate.convertAndSend(CUA_NETEJA_AVISOS, new NetejaEntornAppMessage(entornAppId));
         jmsTemplate.convertAndSend(CUA_NETEJA_ALARMES, new NetejaEntornAppMessage(entornAppId));
-        jmsTemplate.convertAndSend(CUA_NETEJA_ESTADISTICA, new NetejaEntornAppMessage(entornAppId));
+        // L'entornApp s'ha esborrat: el mòdul d'estadístiques ha d'esborrar també el catàleg, els widgets
+        // i els dashboards associats (no només els fets), per això s'hi propaguen l'app i l'entorn.
+        jmsTemplate.convertAndSend(CUA_NETEJA_ESTADISTICA, new NetejaEntornAppMessage(
+                entornAppId,
+                message.getAppId(),
+                message.getEntornId(),
+                true), msg -> {
+            msg.setStringProperty(SELECTOR_NETEJA_ESTADISTICA, VALOR_ENTORN_APP);
+            return msg;
+        });
         jmsMessage.acknowledge();
         log.info("Missatges de neteja enviats per entornApp {}", entornAppId);
     }

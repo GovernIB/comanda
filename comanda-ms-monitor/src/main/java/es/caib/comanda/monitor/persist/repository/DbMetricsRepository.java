@@ -1,24 +1,29 @@
 package es.caib.comanda.monitor.persist.repository;
 
 import es.caib.comanda.monitor.logic.intf.model.db.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
-@Repository
 @Slf4j
+@RequiredArgsConstructor
+@Repository
 public class DbMetricsRepository {
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
+
+    // Codi d'error Oracle quan l'objecte (taula/vista) no existeix o no és accessible amb l'esquema actual.
+    private static final String ORA_OBJECT_NOT_EXISTS = "ORA-00942";
 
     // USER_TABLES i USER_SEGMENTS no requereixen permisos addicionals (objectes propis).
     private static final String SQL_TABLE_STORAGE =
-            "SELECT t.TABLE_NAME, NVL(t.NUM_ROWS, 0), NVL(s.BYTES, 0), " +
+        "SELECT t.TABLE_NAME, NVL(t.NUM_ROWS, 0), NVL(s.BYTES, 0), " +
             "  CASE WHEN NVL(t.NUM_ROWS, 0) > 0 AND NVL(t.AVG_ROW_LEN, 0) > 0 " +
             "       THEN t.NUM_ROWS * t.AVG_ROW_LEN ELSE 0 END, t.LAST_ANALYZED " +
             "FROM USER_TABLES t " +
@@ -28,7 +33,7 @@ public class DbMetricsRepository {
 
     // Conduit des de USER_TABLES per incloure totes les taules COM_* (també les buides).
     private static final String SQL_SEGMENT_STATS =
-            "SELECT t.TABLE_NAME, " +
+        "SELECT t.TABLE_NAME, " +
             "  NVL(SUM(CASE WHEN ss.statistic_name = 'physical reads'    THEN ss.value ELSE 0 END), 0), " +
             "  NVL(SUM(CASE WHEN ss.statistic_name = 'logical reads'     THEN ss.value ELSE 0 END), 0), " +
             "  NVL(SUM(CASE WHEN ss.statistic_name = 'buffer busy waits' THEN ss.value ELSE 0 END), 0), " +
@@ -38,47 +43,103 @@ public class DbMetricsRepository {
             "WHERE t.TABLE_NAME LIKE 'COM\\_%' ESCAPE '\\' " +
             "GROUP BY t.TABLE_NAME " +
             "ORDER BY 2 DESC";
+    private static final String SQL_SEGMENT_STATS_SYS =
+        SQL_SEGMENT_STATS.replace("LEFT JOIN comanda_v_segment_stats", "LEFT JOIN SYS.comanda_v_segment_stats");
 
     private static final String SQL_SESSIONS =
-            "SELECT status, quantitat FROM comanda_v_sessions";
+        "SELECT status, quantitat FROM comanda_v_sessions";
+    private static final String SQL_SESSIONS_SYS =
+        "SELECT status, quantitat FROM SYS.comanda_v_sessions";
 
     private static final String SQL_TOP_SQL =
-            "SELECT sql_id, ROUND(elapsed_time / 1000000, 2), executions, " +
+        "SELECT sql_id, ROUND(elapsed_time / 1000000, 2), executions, " +
             "  CASE WHEN executions > 0 THEN ROUND(elapsed_time / executions / 1000, 2) ELSE 0 END, " +
             "  ROUND(buffer_gets / GREATEST(executions, 1), 0), sql_text " +
             "FROM comanda_v_top_sql " +
             "ORDER BY elapsed_time DESC " +
             "FETCH FIRST 50 ROWS ONLY";
+    private static final String SQL_TOP_SQL_SYS =
+        SQL_TOP_SQL.replace("FROM comanda_v_top_sql", "FROM SYS.comanda_v_top_sql");
 
     private static final String SQL_TABLESPACES =
-            "SELECT tablespace_name, total_mb, max_mb, usat_mb, lliure_mb, pct_usat " +
+        "SELECT tablespace_name, total_mb, max_mb, usat_mb, lliure_mb, pct_usat " +
             "FROM comanda_v_tablespaces " +
             "ORDER BY pct_usat DESC";
+    private static final String SQL_TABLESPACES_SYS =
+        SQL_TABLESPACES.replace("FROM comanda_v_tablespaces", "FROM SYS.comanda_v_tablespaces");
 
     private static final String SQL_HIT_RATIO =
-            "SELECT ROUND(" +
+        "SELECT ROUND(" +
             "  SUM(CASE WHEN name IN ('consistent gets','db block gets') THEN value ELSE 0 END) / " +
             "  GREATEST(SUM(value), 1) * 100, 2) " +
             "FROM comanda_v_sysstat";
+    private static final String SQL_HIT_RATIO_SYS =
+        SQL_HIT_RATIO.replace("FROM comanda_v_sysstat", "FROM SYS.comanda_v_sysstat");
 
     // Sense try-catch: el servei captura l'excepció per distingir "sense dades" de "vista inaccessible".
     private static final String SQL_BLOQUEIGS =
-            "SELECT sid, serial_num, username, status, object_name, object_type, " +
+        "SELECT sid, serial_num, username, status, object_name, object_type, " +
             "  lock_mode, lock_request, blocking " +
             "FROM comanda_v_bloquejos " +
             "ORDER BY blocking DESC, sid";
+    private static final String SQL_BLOQUEIGS_SYS =
+        SQL_BLOQUEIGS.replace("FROM comanda_v_bloquejos", "FROM SYS.comanda_v_bloquejos");
 
     // USER_INDEXES no requereix permisos addicionals (objectes propis).
     private static final String SQL_INDEXOS =
-            "SELECT index_name, table_name, status, uniqueness, " +
+        "SELECT index_name, table_name, status, uniqueness, " +
             "  NVL(num_rows, 0), last_analyzed, NVL(blevel, 0), NVL(leaf_blocks, 0) " +
             "FROM user_indexes " +
             "WHERE table_name LIKE 'COM\\_%' ESCAPE '\\' " +
             "ORDER BY CASE WHEN status = 'UNUSABLE' THEN 0 ELSE 1 END, table_name, index_name";
 
     private static final String SQL_COUNT_INDEX_FOR_COM =
-            "SELECT COUNT(*) FROM user_indexes " +
+        "SELECT COUNT(*) FROM user_indexes " +
             "WHERE index_name = ? AND table_name LIKE 'COM\\_%' ESCAPE '\\'";
+
+    /**
+     * Indica si l'excepció (o alguna de les seves causes) correspon a un objecte inexistent/inaccessible
+     * (ORA-00942), cas en el qual val la pena reintentar la consulta qualificant la vista amb SYS.
+     */
+    private boolean isMissingObject(Exception e) {
+        Throwable t = e;
+        while (t != null) {
+            String msg = t.getMessage();
+            if (msg != null && msg.toUpperCase().contains(ORA_OBJECT_NOT_EXISTS)) {
+                return true;
+            }
+            t = t.getCause();
+        }
+        return false;
+    }
+
+    /**
+     * Executa la consulta a la vista pròpia i, si l'objecte no existeix o no és accessible (ORA-00942),
+     * reintenta qualificant-la com SYS.&lt;vista&gt; (cas en què la vista només s'ha creat a SYS).
+     */
+    private <T> List<T> queryWithSysFallback(String sql, String sqlSys, String viewName, RowMapper<T> mapper) {
+        try {
+            return jdbcTemplate.query(sql, mapper);
+        } catch (Exception e) {
+            if (!isMissingObject(e)) {
+                throw e;
+            }
+            log.debug("Vista {} no accessible amb l'esquema actual, provant SYS.{}", viewName, viewName);
+            return jdbcTemplate.query(sqlSys, mapper);
+        }
+    }
+
+    private <T> T queryForObjectWithSysFallback(String sql, String sqlSys, String viewName, Class<T> type) {
+        try {
+            return jdbcTemplate.queryForObject(sql, type);
+        } catch (Exception e) {
+            if (!isMissingObject(e)) {
+                throw e;
+            }
+            log.debug("Vista {} no accessible amb l'esquema actual, provant SYS.{}", viewName, viewName);
+            return jdbcTemplate.queryForObject(sqlSys, type);
+        }
+    }
 
     public List<TaulaStorageDto> findTableStorage() {
         try {
@@ -99,7 +160,7 @@ public class DbMetricsRepository {
 
     public List<TaulaActivitatDto> findSegmentStats() {
         try {
-            return jdbcTemplate.query(SQL_SEGMENT_STATS, (rs, i) -> {
+            return queryWithSysFallback(SQL_SEGMENT_STATS, SQL_SEGMENT_STATS_SYS, "comanda_v_segment_stats", (rs, i) -> {
                 TaulaActivitatDto dto = new TaulaActivitatDto();
                 dto.setTaula(rs.getString(1));
                 dto.setLecturesFisiques(rs.getLong(2));
@@ -116,7 +177,7 @@ public class DbMetricsRepository {
 
     public List<SessionsResumDto> findSessions() {
         try {
-            return jdbcTemplate.query(SQL_SESSIONS, (rs, i) -> {
+            return queryWithSysFallback(SQL_SESSIONS, SQL_SESSIONS_SYS, "comanda_v_sessions", (rs, i) -> {
                 SessionsResumDto dto = new SessionsResumDto();
                 dto.setEstat(rs.getString(1));
                 dto.setQuantitat(rs.getLong(2));
@@ -130,7 +191,7 @@ public class DbMetricsRepository {
 
     public List<TopSqlDto> findTopSql() {
         try {
-            return jdbcTemplate.query(SQL_TOP_SQL, (rs, i) -> {
+            return queryWithSysFallback(SQL_TOP_SQL, SQL_TOP_SQL_SYS, "comanda_v_top_sql", (rs, i) -> {
                 TopSqlDto dto = new TopSqlDto();
                 dto.setSqlId(rs.getString(1));
                 dto.setTempsTotalS(rs.getDouble(2));
@@ -148,7 +209,7 @@ public class DbMetricsRepository {
 
     public List<TablespaceDto> findTablespaces() {
         try {
-            return jdbcTemplate.query(SQL_TABLESPACES, (rs, i) -> {
+            return queryWithSysFallback(SQL_TABLESPACES, SQL_TABLESPACES_SYS, "comanda_v_tablespaces", (rs, i) -> {
                 TablespaceDto dto = new TablespaceDto();
                 dto.setNom(rs.getString(1));
                 dto.setTotalMb(rs.getDouble(2));
@@ -166,16 +227,18 @@ public class DbMetricsRepository {
 
     public Double findHitRatioCache() {
         try {
-            return jdbcTemplate.queryForObject(SQL_HIT_RATIO, Double.class);
+            return queryForObjectWithSysFallback(SQL_HIT_RATIO, SQL_HIT_RATIO_SYS, "comanda_v_sysstat", Double.class);
         } catch (Exception e) {
             log.warn("Error consultant comanda_v_sysstat (vista no creada?): {}", e.getMessage());
             return null;
         }
     }
 
-    /** Llança excepció si la vista no és accessible (el servei la captura per marcar disponibilitat). */
+    /**
+     * Llança excepció si la vista no és accessible (el servei la captura per marcar disponibilitat).
+     */
     public List<BloqueigDto> findBloqueigs() {
-        return jdbcTemplate.query(SQL_BLOQUEIGS, (rs, i) -> {
+        return queryWithSysFallback(SQL_BLOQUEIGS, SQL_BLOQUEIGS_SYS, "comanda_v_bloquejos", (rs, i) -> {
             BloqueigDto dto = new BloqueigDto();
             dto.setSid(rs.getLong(1));
             dto.setSerialNum(rs.getLong(2));
@@ -210,12 +273,17 @@ public class DbMetricsRepository {
         }
     }
 
+    private static final Pattern PATTERN_INDEX_NAME = Pattern.compile("^[A-Z0-9_$#]+$");
+
     public boolean isIndexForComTable(String indexName) {
         Integer count = jdbcTemplate.queryForObject(SQL_COUNT_INDEX_FOR_COM, Integer.class, indexName);
         return count != null && count > 0;
     }
 
     public void rebuildIndex(String indexName) {
+        if (indexName == null || !PATTERN_INDEX_NAME.matcher(indexName).matches()) {
+            throw new IllegalArgumentException("Nom d'índex no vàlid per a la reconstrucció: " + indexName);
+        }
         jdbcTemplate.execute("ALTER INDEX " + indexName + " REBUILD");
     }
 }

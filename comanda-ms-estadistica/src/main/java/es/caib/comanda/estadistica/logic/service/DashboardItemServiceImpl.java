@@ -16,6 +16,7 @@ import es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
+import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
 import es.caib.comanda.estadistica.persist.repository.EstadisticaWidgetRepository;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
@@ -23,10 +24,10 @@ import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -55,6 +56,7 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
     private final AtributsVisualsHelper atributsVisualsHelper;
     private final EstadisticaWidgetHelper estadisticaWidgetHelper;
     private final DashboardItemTitolHelper dashboardItemTitolHelper;
+    private final DashboardItemRepository dashboardItemRepository;
     private final EstadisticaWidgetRepository estadisticaWidgetRepository;
     private final DashboardClonerMapper dashboardClonerMapper;
     private final DashboardPermisosHelper dashboardPermisosHelper;
@@ -78,51 +80,25 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
     protected String additionalSpringFilter(
         String currentSpringFilter,
         String[] namedQueries) {
-        if (dashboardPermisosHelper.isAdminOrConsulta()) {
-            return currentSpringFilter;
-        }
-        Set<Serializable> appPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.APP,
-            List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
-        String appFilter = SpringFilterHelper.buildOrFilter("widget.appId", appPermissionIds);
-
-        Set<Serializable> entornAppPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.ENTORN_APP,
-            List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
-        String entornAppFilter = dashboardPermisosHelper.buildEntornAppFilter(entornAppPermissionIds, "widget.appId", "entornId");
-
-        Set<Serializable> dashboardPermissionIds = dashboardPermisosHelper.getAllowedIds(ResourceType.DASHBOARD,
-            List.of(PermissionEnum.READ, PermissionEnum.WRITE));
-        String dashboardFilter = SpringFilterHelper.buildOrFilter("dashboard.id", dashboardPermissionIds);
-
-        String filter = SpringFilterHelper.or(
-            appFilter,
-            entornAppFilter,
-            dashboardFilter
-        );
-
-        return SpringFilterHelper.and(
-            currentSpringFilter,
-            (filter.isBlank())
-                ? "id:0"
-                : filter
-        );
+        return dashboardPermisosHelper.buildDashboardItemFilter(currentSpringFilter);
     }
 
     @Override
     protected void beforeCreateEntity(DashboardItemEntity entity, DashboardItem resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
         Long dashboardId = resource.getDashboard() != null ? resource.getDashboard().getId() : null;
-        dashboardPermisosHelper.checkCanDesignDashboard(dashboardId, "No teniu permisos de disseny per afegir elements a aquest quadre de control");
+        dashboardPermisosHelper.checkCanDesignDashboard(dashboardId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardItemServiceImpl.permisos.afegirElements"));
         validateItemWidget(resource, dashboardId);
     }
 
     @Override
     protected void beforeUpdateEntity(DashboardItemEntity entity, DashboardItem resource, Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceNotUpdatedException {
         Long currentDashboardId = entity.getDashboard() != null ? entity.getDashboard().getId() : null;
-        dashboardPermisosHelper.checkCanDesignDashboard(currentDashboardId, "No teniu permisos de disseny per modificar elements d'aquest quadre de control");
+        dashboardPermisosHelper.checkCanDesignDashboard(currentDashboardId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardItemServiceImpl.permisos.modificarElements"));
 
         Long targetDashboardId = currentDashboardId;
         if (resource.getDashboard() != null && !Objects.equals(resource.getDashboard().getId(), currentDashboardId)) {
             targetDashboardId = resource.getDashboard().getId();
-            dashboardPermisosHelper.checkCanDesignDashboard(targetDashboardId, "No teniu permisos de disseny per moure elements a aquest quadre de control");
+            dashboardPermisosHelper.checkCanDesignDashboard(targetDashboardId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardItemServiceImpl.permisos.moureElements"));
         }
         validateItemWidget(resource, targetDashboardId);
     }
@@ -130,23 +106,22 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
     private void validateItemWidget(DashboardItem resource, Long dashboardId) {
         if (resource != null && resource.getWidget() != null && resource.getWidget().getId() != null) {
             Long widgetId = resource.getWidget().getId();
-            EstadisticaWidgetEntity<?> widget = estadisticaWidgetRepository.findById(widgetId).orElse(null);
-//            TODO Check widget accessible/visible
-//            if (widget != null && !dashboardPermisosHelper.isAdminOrConsulta()) {
-//                if (widget.getAppId() != null) {
-//                    Set<Serializable> allowedApps = dashboardPermisosHelper.getAllowedIds(ResourceType.APP,
-//                            List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
-//                    if (!allowedApps.contains(widget.getAppId())) {
-//                        throw new AccessDeniedException("No teniu permisos per utilitzar aquest widget");
-//                    }
-//                }
-//            }
+            EstadisticaWidgetEntity<?> widget = estadisticaWidgetRepository.findById(widgetId).orElseThrow();
+            Long entornId = resource.getEntornId();
             if (dashboardId != null) {
                 DashboardEntity dashboard = dashboardRepository.findById(dashboardId).orElse(null);
-                if (dashboard != null && dashboard.getAppId() != null && widget.getAppId() != null
-                    && !dashboard.getAppId().equals(widget.getAppId())) {
-                    throw new AccessDeniedException("El widget no pertany a la mateixa aplicació que el quadre de control");
+                if (dashboard != null) {
+                    if (entornId == null) {
+                        entornId = dashboard.getEntornId();
+                    }
+                    if (dashboard.getAppId() != null && widget.getAppId() != null
+                        && !dashboard.getAppId().equals(widget.getAppId())) {
+                        throw new AccessDeniedException(I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardItemServiceImpl.error.widgetDiferentApp"));
+                    }
                 }
+            }
+            if (dashboardPermisosHelper != null) {
+                dashboardPermisosHelper.checkCanAccessWidget(widget, entornId, "No teniu permisos per utilitzar aquest widget");
             }
         }
     }
@@ -154,7 +129,29 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
     @Override
     protected void beforeDelete(DashboardItemEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
         Long dashboardId = entity.getDashboard() != null ? entity.getDashboard().getId() : null;
-        dashboardPermisosHelper.checkCanDesignDashboard(dashboardId, "No teniu permisos de disseny per eliminar elements d'aquest quadre de control");
+        dashboardPermisosHelper.checkCanDesignDashboard(dashboardId, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardItemServiceImpl.permisos.eliminarElements"));
+    }
+
+    @Override
+    protected void afterDelete(DashboardItemEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        super.afterDelete(entity, answers);
+        estadisticaWidgetHelper.clearDashboardWidgetCache(entity.getId());
+        if (entity.getWidget() != null && entity.getWidget().getId() != null) {
+            Long widgetId = entity.getWidget().getId();
+            List<DashboardItemEntity> remainingItems = dashboardItemRepository.findByWidgetId(widgetId);
+            boolean usedElsewhere = remainingItems.stream()
+                    .anyMatch(item -> !Objects.equals(item.getId(), entity.getId()));
+            if (!usedElsewhere) {
+                log.debug("El widget {} només s'utilitzava a l'element de dashboard {}. Eliminant el widget definitivament.", widgetId, entity.getId());
+                estadisticaWidgetHelper.clearDashboardWidgetCacheByWidget(widgetId);
+                estadisticaWidgetRepository.findById(widgetId).ifPresent(widget -> {
+                    estadisticaWidgetRepository.delete(widget);
+                    estadisticaWidgetRepository.flush();
+                });
+            } else {
+                log.debug("El widget {} encara s'utilitza a altres elements de dashboard. No s'elimina.", widgetId);
+            }
+        }
     }
 
     @Override
@@ -225,27 +222,15 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
                 InformeWidgetParams params) throws ReportGenerationException {
 
             DashboardItemEntity dashboardItem = getDashboardItem(code, entity);
-            InformeWidgetItem item;
-            try {
-                boolean temaFosc = params != null && Boolean.TRUE.equals(params.getTemaFosc());
-                item = consultaEstadisticaHelper.getDadesWidget(dashboardItem, temaFosc, params != null ? params.getFiltreSeleccio() : null);
-            } catch (Exception e) {
-                log.error("Error generant informe widget. Item {}: {}", dashboardItem.getId(), e.getMessage(), e);
-                item = InformeWidgetItem.builder()
-                        .dashboardItemId(dashboardItem.getId())
-                        .widgetId(dashboardItem.getWidget().getId())
-                        .titol(dashboardItem.getWidget() != null ? dashboardItem.getWidget().getTitol() : null)
-                        .tipus(consultaEstadisticaHelper.determineWidgetType(dashboardItem))
-                        .posX(dashboardItem.getPosX())
-                        .posY(dashboardItem.getPosY())
-                        .width(dashboardItem.getWidth())
-                        .height(dashboardItem.getHeight())
-                        .destacat(Boolean.TRUE.equals(dashboardItem.getDestacat()))
-                        .error(true)
-                        .errorMsg("Error processing item " + dashboardItem.getId() + ": " + e.getMessage())
-                        .errorTrace(ExceptionUtils.getStackTrace(e))
-                        .build();
-            }
+            boolean temaFosc = params != null && Boolean.TRUE.equals(params.getTemaFosc());
+            // L'excepció s'ha de propagar: capturar-la aquí deixaria commitar una transacció que la crida JPA
+            // fallida ja ha marcat com a rollback-only, i Spring llançaria UnexpectedRollbackException
+            // amagant la traça real. Propagant-la, la transacció fa rollback net i el GlobalExceptionHandler
+            // retorna l'error amb stackTrace (quan trace=true); el frontend ja tracta l'error widget a widget.
+            InformeWidgetItem item = consultaEstadisticaHelper.getDadesWidget(
+                    dashboardItem,
+                    temaFosc,
+                    params != null ? params.getFiltreSeleccio() : null);
 
             return List.of(item);
         }
@@ -270,24 +255,19 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
         @Override
         public DashboardItem exec(String code, DashboardItemEntity entity, Serializable params) throws ActionExecutionException {
             if (entity == null || entity.getDashboard() == null) {
-                throw new ActionExecutionException(DashboardItem.class, entity != null ? entity.getId() : null, code, "Dashboard item or dashboard is null");
+                throw new ActionExecutionException(DashboardItem.class, entity != null ? entity.getId() : null, code, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardItemServiceImpl.action.duplicate.error.itemOrDashboardNull"));
             }
 
-            dashboardPermisosHelper.checkCanDesignDashboard(entity.getDashboard().getId(), "No teniu permisos de disseny per duplicar elements d'aquest quadre de control");
+            dashboardPermisosHelper.checkCanDesignDashboard(entity.getDashboard().getId(), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardItemServiceImpl.permisos.duplicarElements"));
 
             EstadisticaWidgetEntity<?> originalWidget = entity.getWidget();
             if (originalWidget == null) {
-                throw new ActionExecutionException(DashboardItem.class, entity.getId(), code, "Original widget not found");
+                throw new ActionExecutionException(DashboardItem.class, entity.getId(), code, I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardItemServiceImpl.action.duplicate.error.widgetOriginalNoTrobat"));
             }
 
-//            TODO Check widget accessible/visible
-//            if (originalWidget.getAppId() != null && !dashboardPermisosHelper.isAdminOrConsulta()) {
-//                Set<Serializable> allowedApps = dashboardPermisosHelper.getAllowedIds(ResourceType.APP,
-//                        List.of(PermissionEnum.PERM0, PermissionEnum.PERM1));
-//                if (!allowedApps.contains(originalWidget.getAppId())) {
-//                    throw new AccessDeniedException("No teniu permisos per accedir al widget original");
-//                }
-//            }
+            Long entornId = entity.getEntornId() != null ? entity.getEntornId()
+                    : (entity.getDashboard() != null ? entity.getDashboard().getEntornId() : null);
+            dashboardPermisosHelper.checkCanAccessWidget(originalWidget, entornId, "No teniu permisos sobre l'aplicació del widget d'origen");
 
             // 1. Clona l'entitat DashboardItem amb MapStruct (copia destacat, personalitzat, plantilla, atributsVisualsJson, width, height)
             DashboardItemEntity newItem = dashboardClonerMapper.cloneItem(entity);

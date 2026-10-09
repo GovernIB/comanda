@@ -21,8 +21,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class MonitorEstadistica {
 
-    private static final String ESTADISTICA_INFO_ACCIO = "Obtenir dades estadístiques";
-    private static final String ESTADISTICA_DADES_ACCIO = "Obtenir informació de l'estructura de les estadístiques";
+    private static final String ESTADISTICA_INFO_ACCIO = "Obtenir informació de l'estructura de les estadístiques";
+    private static final String ESTADISTICA_DADES_ACCIO = "Obtenir dades estadístiques";
     private static final String ESTADISTICA_COMPACTAR_ACCIO = "Compactar dades estadístiques";
     private static final String ESTADISTICA_INFO_ERROR = "S'ha produït un error obtenint la informació de l'estructura de les estadístiques";
     private static final String ESTADISTICA_DADES_ERROR = "S'ha produït un error obtenint les dades estadístiques";
@@ -36,6 +36,9 @@ public class MonitorEstadistica {
     private Monitor monitorInfo;
     private Monitor monitorDades;
     private Monitor monitorCompactar;
+    private boolean startedInfoAction;
+    private boolean startedDadesAction;
+    private boolean startedCompactarAction;
     private boolean finishedInfoAction;
     private boolean finishedDadesAction;
     private boolean finishedCompactarAction;
@@ -65,16 +68,19 @@ public class MonitorEstadistica {
 
 
     public void startInfoAction() {
+        this.startedInfoAction = true;
         monitorInfo.setData(LocalDateTime.now());
         this.startInfoTime = System.currentTimeMillis();
     }
 
     public void startDadesAction() {
+        this.startedDadesAction = true;
         monitorDades.setData(LocalDateTime.now());
         this.startDadesTime = System.currentTimeMillis();
     }
 
     public void startCompactarAction() {
+        this.startedCompactarAction = true;
         monitorCompactar.setData(LocalDateTime.now());
         this.startCompactarTime = System.currentTimeMillis();
     }
@@ -85,39 +91,40 @@ public class MonitorEstadistica {
     }
 
     public void endInfoAction(Throwable t) {
+        this.finishedInfoAction = true;
         finalitzarError(monitorInfo, this.startInfoTime, ESTADISTICA_INFO_ERROR, t);
     }
 
     public void endDadesAction() {
         this.finishedDadesAction = true;
-        finalitzarOK(monitorDades, this.startInfoTime);
-
+        finalitzarOK(monitorDades, this.startDadesTime);
     }
 
     public void endDadesAction(Throwable t) {
+        this.finishedDadesAction = true;
         finalitzarError(monitorDades, this.startDadesTime, ESTADISTICA_DADES_ERROR, t);
     }
 
     public void endCompactarAction() {
         this.finishedCompactarAction = true;
         finalitzarOK(monitorCompactar, this.startCompactarTime);
-
     }
 
     public void endCompactarAction(Throwable t) {
+        this.finishedCompactarAction = true;
         finalitzarError(monitorCompactar, this.startCompactarTime, ESTADISTICA_COMPACTAR_ERROR, t);
     }
 
     // Helpers privats per eliminar duplicació
-    private void finalitzarOK(Monitor monitor, long startTime) {
+    private void finalitzarOK(Monitor monitor, Long startTime) {
         monitor.setEstat(EstatEnum.OK);
-        monitor.setTempsResposta(System.currentTimeMillis() - startTime);
+        monitor.setTempsResposta(startTime != null ? System.currentTimeMillis() - startTime : 0L);
         estadisticaClientHelper.monitorCreate(monitor);
     }
 
-    private void finalitzarError(Monitor monitor, long startTime, String errorDescripcio, Throwable t) {
+    private void finalitzarError(Monitor monitor, Long startTime, String errorDescripcio, Throwable t) {
         monitor.setEstat(EstatEnum.ERROR);
-        monitor.setTempsResposta(System.currentTimeMillis() - startTime);
+        monitor.setTempsResposta(startTime != null ? System.currentTimeMillis() - startTime : 0L);
         monitor.setErrorDescripcio(errorDescripcio);
         monitor.setExcepcioMessage(ExceptionUtils.getMessage(t));
         monitor.setExcepcioStacktrace(ExceptionUtils.getStackTrace(t));

@@ -265,7 +265,7 @@ export type MuiDataGridProps = {
     /** Referència a l'api interna del component DataGrid de MUI */
     datagridApiRef?: React.RefObject<DataGridApi | null>;
     /** Alçada del component en píxels */
-    height?: number;
+    height?: number | string;
     /**
      * Indica si l'alçada del component s'ha d'ajustar al nombre de files que s'han de mostrar
      * @warning Canviar aquest valor dinàmicament fa que el DataGrid de MUI es torni a montar de nou (l'estat intern i subscripcions a events es perden).

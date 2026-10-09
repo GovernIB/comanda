@@ -1,6 +1,8 @@
 package es.caib.comanda.estadistica.logic.service;
 
 import es.caib.comanda.estadistica.logic.dir3.SistemaExternException;
+import es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper;
+import es.caib.comanda.estadistica.logic.helper.DashboardSeguretatHelper;
 import es.caib.comanda.estadistica.logic.helper.EntitatResolverHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.helper.SpringFilterHelper;
@@ -25,18 +27,23 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,6 +56,8 @@ class DimensioValorServiceImplTest {
     @Mock private UnitatOrganitzativaHelper unitatOrganitzativaHelper;
     @Mock private EntitatResolverHelper entitatResolverHelper;
     @Mock private ResourceEntityMappingHelper resourceEntityMappingHelper;
+    @Mock private DashboardSeguretatHelper dashboardSeguretatHelper;
+    @Mock private DashboardPermisosHelper dashboardPermisosHelper;
 
     @InjectMocks
     private DimensioValorServiceImpl dimensioValorService;
@@ -56,6 +65,8 @@ class DimensioValorServiceImplTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(dimensioValorService, "resourceEntityMappingHelper", resourceEntityMappingHelper);
+        lenient().when(dashboardPermisosHelper.buildEntornAppFilterForProperty(any(), any()))
+                .thenAnswer(inv -> inv.getArgument(0));
     }
 
     // ========================================================================
@@ -232,6 +243,121 @@ class DimensioValorServiceImplTest {
         // Assert
         assertThat(result).isEqualTo("valor : 'TEST'");
         verify(springFilterHelper, never()).filterByApp(anyLong(), anyString());
+    }
+
+    @Test
+    @DisplayName("additionalSpringFilter: delega el filtre d'entornApp a DashboardPermisosHelper")
+    void additionalSpringFilter_quanDashboardPermisosHelper_llavorsAplicaFiltreEntornApp() {
+        // Arrange
+        String currentFilter = "valor:'TEST'";
+        when(dashboardPermisosHelper.buildEntornAppFilterForProperty(any(), eq("dimensio.entornAppId")))
+                .thenReturn("valor : 'TEST' and dimensio.entornAppId in (1, 2)");
+
+        // Act
+        String result = dimensioValorService.additionalSpringFilter(currentFilter, null);
+
+        // Assert
+        assertThat(result).isEqualTo("valor : 'TEST' and dimensio.entornAppId in (1, 2)");
+        verify(dashboardPermisosHelper).buildEntornAppFilterForProperty(any(), eq("dimensio.entornAppId"));
+    }
+
+    @Test
+    @DisplayName("additionalSpecification: retorna null quan l'usuari és exempt")
+    void additionalSpecification_quanExempt_retornaNull() {
+        // Arrange
+        when(dashboardSeguretatHelper.resoldreEntitatsPermeses()).thenReturn(null);
+        when(dashboardSeguretatHelper.resoldreCodisOrgansPermesos()).thenReturn(null);
+
+        // Act
+        Specification<DimensioValorEntity> spec = dimensioValorService.additionalSpecification(null);
+
+        // Assert
+        assertThat(spec).isNull();
+    }
+
+    @Test
+    @DisplayName("additionalSpecification: retorna Specification quan l'usuari no és exempt")
+    void additionalSpecification_quanNoExempt_retornaSpecification() {
+        // Arrange
+        EntitatEntity entitat = new EntitatEntity();
+        entitat.setId(10L);
+        entitat.setCodi("E1");
+        when(dashboardSeguretatHelper.resoldreEntitatsPermeses()).thenReturn(List.of(entitat));
+        when(dashboardSeguretatHelper.resoldreCodisOrgansPermesos()).thenReturn(List.of("ORG1"));
+
+        // Act
+        Specification<DimensioValorEntity> spec = dimensioValorService.additionalSpecification(null);
+
+        // Assert
+        assertThat(spec).isNotNull();
+    }
+
+    @Test
+    @DisplayName("additionalSpecification: agrupa codis d'organ en lots de 900 quan en supera 900")
+    @SuppressWarnings("unchecked")
+    void additionalSpecification_quanMoltOrgans_llavorsAgrupaEnLots() {
+        // Arrange: 1850 codis d'organ (> 2 lots de 900)
+        List<String> moltsOrgans = IntStream.range(0, 1850)
+                .mapToObj(i -> "ORG_" + i)
+                .collect(Collectors.toList());
+
+        when(dashboardSeguretatHelper.resoldreEntitatsPermeses()).thenReturn(Collections.emptyList());
+        when(dashboardSeguretatHelper.resoldreCodisOrgansPermesos()).thenReturn(moltsOrgans);
+
+        Specification<DimensioValorEntity> spec = dimensioValorService.additionalSpecification(null);
+        assertThat(spec).isNotNull();
+
+        // Mocks Criteria
+        Root<DimensioValorEntity> root = mock(Root.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class, invocation -> mock(Predicate.class));
+        Path<Object> pathDimensio = mock(Path.class);
+        Path<Object> pathTipus = mock(Path.class);
+        Path<Object> pathValor = mock(Path.class, invocation -> mock(Predicate.class));
+
+        when(root.get("dimensio")).thenReturn(pathDimensio);
+        when(pathDimensio.get("tipus")).thenReturn(pathTipus);
+        when(root.get("valor")).thenReturn(pathValor);
+
+        // Act
+        Predicate result = spec.toPredicate(root, query, cb);
+
+        // Assert: ha d'haver generat un cb.or per als lots de 900 i un cb.or final
+        assertThat(result).isNotNull();
+    }
+
+    @Test
+    @DisplayName("additionalSpecification: gestiona correctament quan no hi ha cap entitat ni organ permès")
+    @SuppressWarnings("unchecked")
+    void additionalSpecification_quanLlistesBuides_generaPredicatValid() {
+        when(dashboardSeguretatHelper.resoldreEntitatsPermeses()).thenReturn(Collections.emptyList());
+        when(dashboardSeguretatHelper.resoldreCodisOrgansPermesos()).thenReturn(Collections.emptyList());
+
+        Specification<DimensioValorEntity> spec = dimensioValorService.additionalSpecification(null);
+        assertThat(spec).isNotNull();
+
+        Root<DimensioValorEntity> root = mock(Root.class);
+        CriteriaQuery<?> query = mock(CriteriaQuery.class);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class, invocation -> mock(Predicate.class));
+        Path<Object> pathDimensio = mock(Path.class);
+        Path<Object> pathTipus = mock(Path.class);
+
+        when(root.get("dimensio")).thenReturn(pathDimensio);
+        when(pathDimensio.get("tipus")).thenReturn(pathTipus);
+
+        Predicate result = spec.toPredicate(root, query, cb);
+        assertThat(result).isNotNull();
+    }
+
+    @Test
+    @DisplayName("additionalSpringFilter: gestiona filtre nul amb restricció de dashboardPermisosHelper")
+    void additionalSpringFilter_quanNoExemptISenseFiltre_llavorsAplicaFiltreEntornApp() {
+        when(dashboardPermisosHelper.buildEntornAppFilterForProperty(isNull(), eq("dimensio.entornAppId")))
+                .thenReturn("dimensio.entornAppId:5");
+
+        String result = dimensioValorService.additionalSpringFilter(null, null);
+
+        assertThat(result).isEqualTo("dimensio.entornAppId:5");
     }
 
     // ========================================================================

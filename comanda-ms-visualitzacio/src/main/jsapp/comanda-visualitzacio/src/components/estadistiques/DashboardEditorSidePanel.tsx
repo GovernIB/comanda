@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {
+    Alert,
     Autocomplete,
     Box,
     Button,
@@ -87,6 +88,13 @@ export type DashboardEditorSelection =
           ids: string[];
       };
 
+export interface LayoutData {
+    posX: number;
+    posY: number;
+    width: number;
+    height: number;
+}
+
 type DashboardEditorSidePanelProps = {
     dashboard: any;
     dashboardId: string;
@@ -103,6 +111,7 @@ type DashboardEditorSidePanelProps = {
      * a l'últim estat desat) quan la selecció canviï sense haver-se desat.
      */
     onLiveTitleDataChange?: (dashboardTitolId: any, data: any) => void;
+    selectedLayoutData?: LayoutData | null;
 };
 
 const widgetTypeConfig: Record<
@@ -474,6 +483,29 @@ const WidgetTypeSelector = ({
     );
 };
 
+/** Pont invisible que llegeix la mida i lloc del patch de la taula i actualitza el context del formulari */
+const LayoutSyncBridge = ({ layoutData }: { layoutData?: LayoutData | null }) => {
+    const { dataDispatchAction, fields } = useFormContext();
+    React.useEffect(() => {
+        if (!layoutData) return;
+        const fieldsToUpdate = ['posX', 'posY', 'width', 'height'] as const;
+        fieldsToUpdate.forEach((fieldName) => {
+            const field = fields?.find((f: any) => f.name === fieldName);
+            if (field) {
+                dataDispatchAction({
+                    type: FormFieldDataActionType.FIELD_CHANGE,
+                    payload: {
+                        fieldName,
+                        field,
+                        value: layoutData[fieldName]
+                    },
+                });
+            }
+        });
+    }, [layoutData, dataDispatchAction, fields]);
+    return null;
+};
+
 export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> = ({
     dashboard,
     dashboardId,
@@ -483,6 +515,7 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
     onDeleted,
     dashboardFiltres,
     onLiveTitleDataChange,
+    selectedLayoutData,
 }) => {
     const widgetFormApiRef = React.useRef<FormApi | any>({});
     const dashboardItemFormApiRef = React.useRef<FormApi | any>({});
@@ -510,7 +543,7 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
             return `title-${selection.mode}-${selection.mode === 'edit' ? selection.dashboardTitolId : 'new'}`;
         }
         if (selection.kind === 'filtre') {
-            return `filtre-${selection.mode}-${selection.mode === 'edit' ? selection.dashboardFiltreId : 'new'}`;
+            return `filtre-${selection.mode}-${selection.mode === 'edit' ? selection.dashboardFiltreId : `new-${selection.nextOrdre ?? '0'}`}`;
         }
         if (selection.kind === 'multi') {
             return `multi-${selection.ids.join(',')}`;
@@ -663,6 +696,7 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
                         onSelectionChange={onSelectionChange}
                         activeTab={activeTab}
                         onActiveTabChange={setActiveTab}
+                        selectedLayoutData={selectedLayoutData}
                     />
                 ) : selection.kind === 'title' ? (
                     <TitleEditor
@@ -673,6 +707,7 @@ export const DashboardEditorSidePanel: React.FC<DashboardEditorSidePanelProps> =
                         titleFormApiRef={titleFormApiRef}
                         onLiveDataChange={onLiveTitleDataChange}
                         onHasOverridesChange={(value) => { titleHasOverridesRef.current = value; }}
+                        selectedLayoutData={selectedLayoutData}
                     />
                 ) : selection.kind === 'filtre' ? (
                     <FiltreEditor
@@ -724,6 +759,7 @@ type WidgetEditorProps = {
     onSelectionChange: (selection: DashboardEditorSelection) => void;
     activeTab: number;
     onActiveTabChange: (tab: number) => void;
+    selectedLayoutData?: LayoutData | null;
 };
 
 const WidgetEditor: React.FC<WidgetEditorProps> = ({
@@ -735,6 +771,7 @@ const WidgetEditor: React.FC<WidgetEditorProps> = ({
     onSelectionChange,
     activeTab,
     onActiveTabChange,
+    selectedLayoutData,
 }) => {
     const { t } = useTranslation();
     const widgetType = selection.widgetType;
@@ -812,6 +849,7 @@ const WidgetEditor: React.FC<WidgetEditorProps> = ({
                         <DestacatBridge onChange={setDestacat} />
                         <PlantillaBridge onChange={setPlantilla} />
                         <EntornIdBridge onChange={setEntornId} />
+                        <LayoutSyncBridge layoutData={selectedLayoutData} />
                         {activeTab === 1 && (
                             <VisualizationTabFields
                                 hasOverrides={hasOverrides}
@@ -854,6 +892,7 @@ type TitleEditorProps = {
     onLiveDataChange?: (dashboardTitolId: any, data: any) => void;
     /** Notifica el pare del valor actual de "té personalitzacions", perquè el pugui desar amb el mateix càlcul que mostra el indicador. */
     onHasOverridesChange?: (hasOverrides: boolean) => void;
+    selectedLayoutData?: LayoutData | null;
 };
 
 const TitleEditor: React.FC<TitleEditorProps> = ({
@@ -863,6 +902,7 @@ const TitleEditor: React.FC<TitleEditorProps> = ({
     titleFormApiRef,
     onLiveDataChange,
     onHasOverridesChange,
+    selectedLayoutData,
 }) => {
     const [titleData, setTitleData] = React.useState<any>({});
     const [visualExpanded, setVisualExpanded] = React.useState(false);
@@ -926,6 +966,7 @@ const TitleEditor: React.FC<TitleEditorProps> = ({
             componentProps={{ sx: { m: 0, mt: 0 } }}
         >
             <WidgetDataBridge onChange={handleTitleDataChange} />
+            <LayoutSyncBridge layoutData={selectedLayoutData} />
             <DashboardTitleFields
                 dashboardPlantilla={dashboardPlantilla}
                 hasOverrides={hasOverrides}
@@ -934,11 +975,6 @@ const TitleEditor: React.FC<TitleEditorProps> = ({
             />
         </MuiForm>
     );
-};
-
-const filtreDefaultData = {
-    tipus: 'DIMENSIO',
-    multiple: true,
 };
 
 /**
@@ -964,10 +1000,15 @@ const FiltreDimensioCodiField: React.FC<{ aplicacioId: any; label: string; exclu
             find({ namedQueries: [`filterByApp:${aplicacioId}`], unpaged: true }).then((response) => {
                 if (cancelled) return;
                 const rows = (response.rows ?? []) as Array<{ codi?: string; nom?: string }>;
+                const validRows = rows.filter((row) => typeof row.codi === 'string' && row.codi.length > 0);
+                const uniqueRows = validRows.filter((row, index, self) =>
+                    index === self.findIndex((r) => r.codi === row.codi)
+                );
                 setOptions(
-                    rows
-                        .filter((row) => typeof row.codi === 'string' && row.codi.length > 0)
-                        .map((row) => ({ codi: row.codi as string, nom: row.nom || (row.codi as string) }))
+                    uniqueRows.map((row) => ({
+                        codi: row.codi as string,
+                        nom: row.nom || (row.codi as string)
+                    }))
                 );
             });
         }
@@ -988,6 +1029,7 @@ const FiltreDimensioCodiField: React.FC<{ aplicacioId: any; label: string; exclu
         <Autocomplete
             size="small"
             options={visibleOptions}
+            getOptionKey={(option) => option.codi}
             value={selected}
             getOptionLabel={(option) => option.nom}
             isOptionEqualToValue={(option, val) => option.codi === val.codi}
@@ -1041,16 +1083,35 @@ const FiltreEditor: React.FC<FiltreEditorProps> = ({
     const dimensioCodisUsats = otherFiltres
         .filter((f) => f.tipus === 'DIMENSIO' && f.dimensioCodi)
         .map((f) => f.dimensioCodi as string);
+    const isCreating = selection.mode === 'create';
+    const hasAplicacio = !!dashboard?.aplicacio;
+    const cannotCreateAnyFiltre = isCreating && !hasAplicacio && periodeJaUsat;
+    const showNoAppWarning = isCreating && !hasAplicacio && !periodeJaUsat;
+    if (cannotCreateAnyFiltre) {
+        return (
+            <Alert severity="info" sx={{ mb: 2 }}>
+                {t($ => $.page.dashboards.editor.filtre.noAppAndPeriodUsed)}
+            </Alert>
+        );
+    }
+
+    const hiddenTipusValues = React.useMemo(() => {
+        const hidden: string[] = [];
+        if (periodeJaUsat) hidden.push('PERIODE');
+        if (!hasAplicacio) hidden.push('DIMENSIO');
+        return hidden.length > 0 ? hidden : undefined;
+    }, [periodeJaUsat, hasAplicacio]);
     return (
         <MuiForm
             resourceName="dashboardFiltre"
             id={selection.mode === 'edit' ? selection.dashboardFiltreId : undefined}
             additionalData={
-                selection.mode === 'create'
+                isCreating
                     ? {
                           dashboard: { id: dashboardId },
                           ordre: selection.nextOrdre ?? 0,
-                          ...filtreDefaultData,
+                          tipus: hasAplicacio ? 'DIMENSIO' : 'PERIODE',
+                          multiple: hasAplicacio ? true : undefined,
                       }
                     : undefined
             }
@@ -1061,10 +1122,15 @@ const FiltreEditor: React.FC<FiltreEditorProps> = ({
         >
             <WidgetDataBridge onChange={setFiltreData} />
             <Stack spacing={1.5}>
+                {showNoAppWarning && (
+                    <Alert severity="info" sx={{ mb: 1 }}>
+                        {t($ => $.page.dashboards.editor.filtre.noAppWarning)}
+                    </Alert>
+                )}
                 <FormField
                     name="tipus"
                     label={t($ => $.page.widget.editor.filtre.tipus)}
-                    hiddenEnumValues={periodeJaUsat ? ['PERIODE'] : undefined}
+                    hiddenEnumValues={hiddenTipusValues}
                 />
                 {filtreData?.tipus === 'DIMENSIO' && (
                     <FiltreDimensioCodiField

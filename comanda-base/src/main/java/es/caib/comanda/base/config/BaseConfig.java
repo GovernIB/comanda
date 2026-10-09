@@ -5,7 +5,7 @@ import java.util.Map;
 
 /**
  * Propietats de configuració de l'aplicació.
- * 
+ *
  * @author Límit Tecnologies
  */
 public class BaseConfig {
@@ -48,6 +48,10 @@ public class BaseConfig {
 	public static final String PROP_SCHEDULER_POOL_SIZE = PROPERTY_PREFIX + "scheduler.pool.size";
 	public static final String PROP_WORKER_POOL_SIZE = PROPERTY_PREFIX + "worker.pool.size";
 	public static final String PROP_WORKER_QUEUE_SIZE = PROPERTY_PREFIX + "worker.queue.size";
+	// Servidor d'autenticació (Keycloak) i realm amb què l'adaptador de JBoss autentica comanda-back: fallback del
+	// logout SSO quan no hi ha id_token (vegeu JbossKeycloakLogoutSuccessHandler)
+	public static final String PROP_AUTH_URL = PROPERTY_PREFIX + "auth.url";
+	public static final String PROP_AUTH_REALM = PROPERTY_PREFIX + "auth.realm";
 	public static final String PROP_HTTPAUTH_PROVIDER_BASE_URL = PROPERTY_PREFIX + "httpauth.provider.base.url";
 	public static final String PROP_HTTPAUTH_PROVIDER_REALM = PROPERTY_PREFIX + "httpauth.provider.realm";
 	public static final String PROP_HTTPAUTH_PROVIDER_CLIENT_ID = PROPERTY_PREFIX + "httpauth.provider.client.id";
@@ -121,6 +125,13 @@ public class BaseConfig {
     public static final String PROP_MONITOR_BUIDAT_ACTIU = PROP_MONITOR_PREFIX + "buidat.actiu";
     public static final String PROP_MONITOR_BUIDAT_RETENCIO_DIES = PROP_MONITOR_PREFIX + "buidat.retencio.dies";
     public static final String PROP_MONITOR_BUIDAT_PERIODE_MINUTS = PROP_MONITOR_PREFIX + "buidat.periode.minuts";
+
+    // Propietats de DIR3
+    public static final String PROP_DIR3_PREFIX = PROPERTY_PREFIX + "plugin.unitats.organitzatives.dir3.";
+    public static final String PROP_DIR3_SERVICE_URL = PROP_DIR3_PREFIX + "service.url";
+    public static final String PROP_DIR3_SERVICE_USERNAME = PROP_DIR3_PREFIX + "service.username";
+    public static final String PROP_DIR3_SERVICE_PASSWORD = PROP_DIR3_PREFIX + "service.password";
+    public static final String PROP_DIR3_GOVERN_CODI_ARREL = PROP_DIR3_PREFIX + "govern.codi.arrel";
 
     // Propietats de FRONT
 	public static final String PROP_FRONT_API_URL = PROPERTY_PREFIX_FRONT + "api.url";

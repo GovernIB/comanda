@@ -30,6 +30,8 @@ import es.caib.comanda.ms.logic.intf.model.ReportFileType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
+import es.caib.comanda.base.config.Cues;
+import es.caib.comanda.ms.logic.intf.jms.NetejaEntornAppMessage;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +41,8 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
 import org.springframework.http.*;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.jms.core.JmsTemplate;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -84,6 +88,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     private final Validator validator;
     private final ResourceEntityMappingHelper resourceEntityMappingHelper;
     private final Environment environment;
+    private final JmsTemplate jmsTemplate;
 
     @PostConstruct
     public void init() {
@@ -94,6 +99,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         register(EntornApp.REPORT_PREVISUALITZAR_LOG, new InformePrevisualitzarLog(restTemplate, statsAuthUser, statsAuthPassword, environment));
         register(EntornApp.ENTORN_APP_TOOGLE_ACTIVA, new ToogleActiva(resourceEntityMappingHelper));
         register(EntornApp.ENTORN_APP_REFRESH_INFO, new RefreshInfo(resourceEntityMappingHelper));
+        register(EntornApp.ACTION_NETEJA_ESTADISTICA, new NetejaEstadisticaActionExecutor(jmsTemplate, authenticationHelper));
         register(EntornApp.PERSPECTIVE_DEFAULT_LOGS, new DefaultLogsPerspectiveApplicator());
         register(EntornApp.PERSPECTIVE_HISTORICS_VERSIONS, new HistoricVersionsPerspectiveApplicator());
         register(EntornApp.PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS, new IntegracionsSubsistemesContextsPerspectiveApplicator());
@@ -102,6 +108,10 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
     @Override
     protected void afterConversion(EntornAppEntity entity, EntornApp resource) {
+        if (resource != null) {
+            String logsUrl = (entity != null && entity.getLogsUrl() != null) ? entity.getLogsUrl() : resource.getLogsUrl();
+            resource.setLogsDisponibles(logsUrl != null && !logsUrl.isBlank());
+        }
         if (!hasPermission(Collections.singletonList(entity)).get(0)) {
             censorFields(resource);
         }
@@ -115,7 +125,12 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         List<Boolean> permissions = hasPermission(entities);
 
         for (int i = 0; i < entities.size(); i++) {
+            EntornAppEntity entity = entities.get(i);
             EntornApp resource = resources.get(i);
+            if (resource != null) {
+                String logsUrl = (entity != null && entity.getLogsUrl() != null) ? entity.getLogsUrl() : resource.getLogsUrl();
+                resource.setLogsDisponibles(logsUrl != null && !logsUrl.isBlank());
+            }
             if (!permissions.get(i)) {
                 censorFields(resource);
             }
@@ -151,6 +166,27 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             return true;
         }
         return false;
+    }
+
+    public boolean hasLogsPermission(EntornAppEntity entity) {
+        if (entity == null) {
+            return false;
+        }
+        if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
+                || authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
+            return true;
+        }
+        List<PermissionEnum> permissions = List.of(PermissionEnum.READ, PermissionEnum.PERM2);
+        Set<Serializable> allowedEntornAppIds = getAllowedIds(ResourceType.ENTORN_APP, permissions);
+        Set<Serializable> allowedAppIds = getAllowedIds(ResourceType.APP, permissions);
+        return hasPermission(entity, allowedEntornAppIds, allowedAppIds);
+    }
+
+    public void checkLogsPermission(EntornAppEntity entity) {
+        if (!hasLogsPermission(entity)) {
+            throw new AccessDeniedException(I18nUtil.getInstance().getI18nMessage(
+                    "es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.permisos.consultarLogs"));
+        }
     }
 
     private boolean isAllowed(Set<Serializable> allowedIds, Serializable id) {
@@ -199,10 +235,49 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         return null;
     }
 
+    @Override
+    protected String namedFilterToSpringFilter(String name) {
+        if (EntornApp.NAMED_FILTER_PERMIS_SALUT.equals(name)) {
+            if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
+                    || authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
+                return null;
+            }
+            return buildAclPermissionsFilter(Collections.singletonList(PermissionEnum.PERM2));
+        }
+        if (EntornApp.NAMED_FILTER_PERMIS_DISSENY.equals(name)) {
+            if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)) {
+                return null;
+            }
+            return buildAclPermissionsFilter(Collections.singletonList(PermissionEnum.PERM1));
+        }
+        return super.namedFilterToSpringFilter(name);
+    }
+
+    private String buildAclPermissionsFilter(List<PermissionEnum> permissions) {
+        Set<Serializable> appPermissionIds = getAllowedIds(ResourceType.APP, permissions);
+        Set<Serializable> entornAppPermissionIds = getAllowedIds(ResourceType.ENTORN_APP, permissions);
+        String appFilter = buildOrFilter("app.id", appPermissionIds);
+        String entornAppFilter = buildOrFilter("id", entornAppPermissionIds);
+        if (appFilter == null && entornAppFilter == null) {
+            return "id:0";
+        }
+        if (appFilter == null) {
+            return entornAppFilter;
+        }
+        if (entornAppFilter == null) {
+            return appFilter;
+        }
+        return appFilter + " or " + entornAppFilter;
+    }
+
     private Set<Serializable> getAllowedIds(ResourceType resourceType) {
+        return getAllowedIds(resourceType, Collections.singletonList(PermissionEnum.READ));
+    }
+
+    private Set<Serializable> getAllowedIds(ResourceType resourceType, List<PermissionEnum> permissions) {
         return Optional.ofNullable(aclServiceClient.findIdsWithAnyPermission(
                 resourceType,
-                Collections.singletonList(PermissionEnum.READ),
+                permissions,
                 authenticationHelper.getCurrentUserName(),
                 Arrays.asList(authenticationHelper.getCurrentUserRealmRoles()),
                 httpAuthorizationHeaderHelper.getAuthorizationHeader()).getBody())
@@ -238,7 +313,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     @Override
     protected void afterDelete(EntornAppEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
         super.afterDelete(entity, answers);
-        entornAppHelper.logicAfterDelete(entity.getId());
+        entornAppHelper.logicAfterDelete(entity);
     }
 
     // ACCIONS
@@ -423,7 +498,44 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     }
 
     @RequiredArgsConstructor
-    private static class InformeLlistarLogs implements ReportGenerator<EntornAppEntity, Long, FitxerInfo> {
+    public class NetejaEstadisticaActionExecutor implements ActionExecutor<EntornAppEntity, EntornApp.NetejaEstadisticaActionForm, EntornApp.NetejaEstadisticaResponse> {
+        private final JmsTemplate jmsTemplate;
+        private final AuthenticationHelper authenticationHelper;
+
+        @Override
+        public void onChange(Serializable id, EntornApp.NetejaEstadisticaActionForm previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, EntornApp.NetejaEstadisticaActionForm target) {
+        }
+
+        @Override
+        public EntornApp.NetejaEstadisticaResponse exec(String code, EntornAppEntity entity, EntornApp.NetejaEstadisticaActionForm params) throws ActionExecutionException {
+            if (!authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)) {
+                throw new AccessDeniedException("Sense permisos per a executar la neteja de dades estadístiques");
+            }
+            if (entity == null) {
+                throw new ActionExecutionException(EntornApp.class, null, code, "EntornApp no trobat");
+            }
+            if (params == null || !params.isConfirmoPerdua()) {
+                throw new ActionExecutionException(EntornApp.class, entity.getId(), code,
+                        I18nUtil.getInstance().getI18nMessage("es.caib.comanda.configuracio.logic.intf.model.EntornApp.NetejaEstadisticaActionForm.confirmoPerdua.required"));
+            }
+
+            NetejaEntornAppMessage message = new NetejaEntornAppMessage(entity.getId());
+
+            log.info("Sol·licitant neteja d'estadístiques per entornApp {} (només fets)", entity.getId());
+            jmsTemplate.convertAndSend(Cues.CUA_NETEJA_ESTADISTICA, message, msg -> {
+                msg.setStringProperty(Cues.SELECTOR_NETEJA_ESTADISTICA, Cues.VALOR_ENTORN_APP);
+                return msg;
+            });
+
+            String msg = I18nUtil.getInstance().getI18nMessage(
+                    "es.caib.comanda.configuracio.logic.service.EntornAppServiceImpl.NetejaEstadisticaAction.sollicitadaDades");
+
+            return new EntornApp.NetejaEstadisticaResponse(true, msg);
+        }
+    }
+
+    @RequiredArgsConstructor
+    public class InformeLlistarLogs implements ReportGenerator<EntornAppEntity, Long, FitxerInfo> {
         private final RestTemplate restTemplate;
         private final String statsAuthUser;
         private final String statsAuthPassword;
@@ -431,6 +543,13 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
         @Override
         public List<FitxerInfo> generateData(String code, EntornAppEntity entornAppEntity, Long params) throws ReportGenerationException {
+            checkLogsPermission(entornAppEntity);
+
+            String logsUrl = entornAppEntity.getLogsUrl();
+            if (logsUrl == null || logsUrl.isBlank()) {
+                return Collections.emptyList();
+            }
+
             HttpEntity<Void> httpEntity = AuthHeaderUtil.buildAuthHttpEntity(
                 statsAuthUser, statsAuthPassword,
                 entornAppEntity.getNomUsuariAuth(),
@@ -439,7 +558,6 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                 environment
             );
 
-            String logsUrl = entornAppEntity.getLogsUrl();
             URI uri = URI.create(logsUrl);
             ResponseEntity<List<FitxerInfo>> response = restTemplate
                 .exchange(uri, HttpMethod.GET, httpEntity, new ParameterizedTypeReference<List<FitxerInfo>>() {
@@ -453,23 +571,24 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         }
     }
 
+    @Getter
+    @AllArgsConstructor
+    public static class DescarregarLogParams implements Serializable {
+        private Long entornAppId;
+        private String nomFitxer;
+    }
+
     @RequiredArgsConstructor
-    public static class InformeDescarregarLog implements ReportGenerator<EntornAppEntity, String, InformeDescarregarLog.DescarregarLogParams> {
+    public class InformeDescarregarLog implements ReportGenerator<EntornAppEntity, String, DescarregarLogParams> {
         private final RestTemplate restTemplate;
         private final EntornAppRepository entornAppRepository;
         private final String statsAuthUser;
         private final String statsAuthPassword;
         private final Environment environment;
 
-        @Getter
-        @AllArgsConstructor
-        public static class DescarregarLogParams implements Serializable {
-            private Long entornAppId;
-            private String nomFitxer;
-        }
-
         @Override
         public List<DescarregarLogParams> generateData(String code, EntornAppEntity entity, String fileParams) throws ReportGenerationException {
+            checkLogsPermission(entity);
             return List.of(new DescarregarLogParams(entity.getId(), fileParams));
         }
 
@@ -477,6 +596,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         public DownloadableFile generateFile(String code, List<?> data, ReportFileType fileType, OutputStream out) {
             DescarregarLogParams params = (DescarregarLogParams) data.get(0);
             EntornAppEntity entornAppEntity = entornAppRepository.findById(params.getEntornAppId()).get();
+            checkLogsPermission(entornAppEntity);
             HttpEntity<Void> httpEntity = AuthHeaderUtil.buildAuthHttpEntity(
                 statsAuthUser, statsAuthPassword,
                 entornAppEntity.getNomUsuariAuth(),
@@ -535,7 +655,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     }
 
     @RequiredArgsConstructor
-    public static class InformePrevisualitzarLog implements ReportGenerator<EntornAppEntity, EntornApp.PrevisualitzarLogParams, EntornApp.PrevisualitzarLogResponse> {
+    public class InformePrevisualitzarLog implements ReportGenerator<EntornAppEntity, EntornApp.PrevisualitzarLogParams, EntornApp.PrevisualitzarLogResponse> {
         private final RestTemplate restTemplate;
         private final String statsAuthUser;
         private final String statsAuthPassword;
@@ -543,6 +663,13 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
 
         @Override
         public List<EntornApp.PrevisualitzarLogResponse> generateData(String code, EntornAppEntity entornAppEntity, EntornApp.PrevisualitzarLogParams params) throws ReportGenerationException {
+            checkLogsPermission(entornAppEntity);
+
+            String baseUrl = entornAppEntity.getLogsUrl();
+            if (baseUrl == null || baseUrl.isBlank()) {
+                return Collections.emptyList();
+            }
+
             HttpEntity<Void> httpEntity = AuthHeaderUtil.buildAuthHttpEntity(
                 statsAuthUser, statsAuthPassword,
                 entornAppEntity.getNomUsuariAuth(),
@@ -551,7 +678,6 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
                 environment
             );
 
-            String baseUrl = entornAppEntity.getLogsUrl();
             String logsUrl = baseUrl + (baseUrl.endsWith("/") ? "" : "/") + params.getFileName() + "/linies/" + params.getLineCount();
             URI uri = URI.create(logsUrl);
             ResponseEntity<List<String>> response = restTemplate

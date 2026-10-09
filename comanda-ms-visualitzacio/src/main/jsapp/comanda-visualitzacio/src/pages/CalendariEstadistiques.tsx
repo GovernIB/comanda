@@ -2,7 +2,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import {useBaseAppContext, useResourceApiService, Toolbar, springFilterBuilder as builder} from 'reactlib';
-import {useState, useEffect, useCallback} from "react";
+import {useState, useEffect, useCallback, useMemo, useRef} from "react";
 import dayjs, { Dayjs } from 'dayjs';
 import '../fullcalendar-custom.css';
 import {
@@ -18,6 +18,11 @@ import {
     useTheme,
     useMediaQuery,
     Tooltip,
+    Checkbox,
+    FormControlLabel,
+    Chip,
+    Radio,
+    RadioGroup,
 } from "@mui/material";
 import DialogTitle from "@mui/material/DialogTitle";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
@@ -29,8 +34,9 @@ import {useTranslation} from "react-i18next";
 import * as React from "react";
 import {useMessage} from "../components/MessageShow.tsx";
 import { useCalendarEvents } from '../components/calendari/UseCalendarEventsProps.ts';
-import { ErrorInfo, PerData, PerInterval, Temps, DadesDia, CalendarStatusButtonProps } from '../components/calendari/CalendariTypes.ts';
+import { ErrorInfo, PerData, PerInterval, Temps, DadesDia, CalendarStatusButtonProps, ProcesBaixaPrioritat } from '../components/calendari/CalendariTypes.ts';
 import CalendariDadesDialog from '../components/calendari/CalendariDadesDialog.tsx';
+import CalendariProcessosDialog from '../components/calendari/CalendariProcessosDialog.tsx';
 import { EntornAppModel } from '../types/app.model';
 import PageTitle from '../components/PageTitle.tsx';
 import { StacktraceBlock } from '../components/RickTextDetail.tsx';
@@ -38,7 +44,8 @@ import { StacktraceBlock } from '../components/RickTextDetail.tsx';
 export const CalendarStatusButton: React.FC<CalendarStatusButtonProps> = ({
   hasError,
   isLoading,
-  esDisponible
+  esDisponible,
+  isBackgroundProcessing,
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -48,6 +55,8 @@ export const CalendarStatusButton: React.FC<CalendarStatusButtonProps> = ({
     ? <Icon>error</Icon>
     : esDisponible
     ? <Icon>check_circle</Icon>
+    : isBackgroundProcessing
+    ? <CircularProgress size={16} color="inherit" />
     : <Icon>download</Icon>;
 
   const label = hasError
@@ -56,6 +65,8 @@ export const CalendarStatusButton: React.FC<CalendarStatusButtonProps> = ({
     ? t($ => $.calendari.dades_disponibles)
     : isLoading
     ? t($ => $.calendari.obtenir_dades_carregant)
+    : isBackgroundProcessing
+    ? t($ => $.calendari.processant_segon_pla)
     : t($ => $.calendari.obtenir_dades);
 
   const tooltip = hasError
@@ -64,12 +75,16 @@ export const CalendarStatusButton: React.FC<CalendarStatusButtonProps> = ({
     ? t($ => $.calendari.dades_disponibles_tooltip)
     : isLoading
     ? t($ => $.calendari.obtenir_dades_carregant)
+    : isBackgroundProcessing
+    ? t($ => $.calendari.processant_segon_pla_tooltip)
     : t($ => $.calendari.obtenir_dades_tooltip);
 
-  const color: 'primary' | 'error' | 'success' = hasError
+  const color: 'primary' | 'error' | 'success' | 'warning' = hasError
     ? 'error'
     : esDisponible
     ? 'success'
+    : isBackgroundProcessing
+    ? 'warning'
     : 'primary';
 
   return (
@@ -79,13 +94,22 @@ export const CalendarStatusButton: React.FC<CalendarStatusButtonProps> = ({
             variant="contained"
             color={color}
             size="small"
-            startIcon={ isLoading ? ( <CircularProgress size={16} color="inherit" /> ) : ( icon ) }
-            disabled={isLoading}
+            startIcon={ (isLoading || isBackgroundProcessing) ? ( <CircularProgress size={16} color="inherit" /> ) : ( icon ) }
+            disabled={isLoading || isBackgroundProcessing}
             sx={{
                 whiteSpace: 'nowrap',
                 textTransform: 'none',
                 width: '100%',
                 minWidth: 0,
+                ...(isBackgroundProcessing && {
+                    backgroundColor: theme.palette.warning.main,
+                    color: theme.palette.warning.contrastText,
+                    '&.Mui-disabled': {
+                        backgroundColor: theme.palette.warning.main,
+                        color: theme.palette.warning.contrastText,
+                        opacity: 0.85,
+                    },
+                }),
             }}
         >
             {!isSmallScreen && label}
@@ -112,6 +136,8 @@ const CalendariEstadistiques: React.FC = () => {
     const { currentLanguage } = useBaseAppContext();
     const [dataInici, setDataInici] = useState<Dayjs | null>(null);
     const [dataFi, setDataFi] = useState<Dayjs | null>(null);
+    const [baixaPrioritat, setBaixaPrioritat] = useState(false);
+    const [pausaMs, setPausaMs] = useState<number>(180000);
     const [obrirDialog, setObrirDialog] = useState(false);
     const [entornAppId, setEntornAppId] = useState<number | string>('');
     const [isLoadingEntorn, setIsLoadingEntorn] = useState(false);
@@ -125,6 +151,12 @@ const CalendariEstadistiques: React.FC = () => {
     const [datesDisponiblesError, setDatesDisponiblesError] = useState<boolean>(true);
     const [currentViewMonth, setCurrentViewMonth] = useState(dayjs().month());
     const [currentViewYear, setCurrentViewYear] = useState(dayjs().year());
+    const [mostrarTotsProcessos, setMostrarTotsProcessos] = useState(false);
+
+    // State for low priority background processes
+    const [processosModalOpen, setProcessosModalOpen] = useState(false);
+    const [processos, setProcessos] = useState<ProcesBaixaPrioritat[]>([]);
+    const [isLoadingProcessos, setIsLoadingProcessos] = useState(false);
 
     // State for the day data modal
     const [dadesDiaModalOpen, setDadesDiaModalOpen] = useState(false);
@@ -178,6 +210,21 @@ const CalendariEstadistiques: React.FC = () => {
 
     // Obtenir dades estadístiques per un interval de dies
     const obtenirPerInterval = React.useCallback(async (additionalData: PerInterval): Promise<boolean> => {
+        if (additionalData.baixaPrioritat) {
+            try {
+                const data = await apiAction(null, { code: 'obtenir_per_interval', data: additionalData });
+                if (data.success) {
+                    showMessage(null, data.message || t($ => $.calendari.success_baixa_prioritat), 'success');
+                } else {
+                    showMessage(null, data.message || t($ => $.calendari.error_obtenir_dades), 'error');
+                }
+                return data.success;
+            } catch (error: any) {
+                showMessage(null, error.message || t($ => $.calendari.error_obtenir_dades), 'error');
+                return false;
+            }
+        }
+
         try {
             setGlobalLoading(true);
 
@@ -243,7 +290,7 @@ const CalendariEstadistiques: React.FC = () => {
     }, [apiAction, showMessage, t]);
 
     // Obtenir els dies en que es disposa de dades estadístiques
-    const obtenirDatesDisponibles = React.useCallback(async (entornAppId: any): Promise<boolean> => {
+    const obtenirDatesDisponibles = React.useCallback(async (entornAppId: number | string): Promise<boolean> => {
         try {
             const data = (await apiReport(
                 null,
@@ -350,23 +397,119 @@ const CalendariEstadistiques: React.FC = () => {
         }
     }, [entornAppId, obtenirPerData, obtenirDatesDisponibles, t]);
 
-    const carregarIntervalDades = useCallback(async (inici: string, fi: string) => {
+    const carregarProcessos = useCallback(async (silencios: boolean = false) => {
+        try {
+            if (!silencios) {
+                setIsLoadingProcessos(true);
+            }
+            const idParaEnviar = mostrarTotsProcessos ? null : (entornAppId !== '' ? Number(entornAppId) : null);
+            const params = {
+                entornAppId: idParaEnviar
+            };
+            const data = (await apiReport(
+                null,
+                { code: 'processos_baixa_prioritat', data: params }
+            )) as ProcesBaixaPrioritat[];
+            setProcessos(Array.isArray(data) ? data : []);
+        } catch (error: any) {
+            console.error('Error en carregar processos de baixa prioritat:', error);
+        } finally {
+            if (!silencios) {
+                setIsLoadingProcessos(false);
+            }
+        }
+    }, [apiReport, entornAppId, mostrarTotsProcessos]);
+
+    const handleCancelProces = useCallback(async (id: string): Promise<boolean> => {
+        try {
+            const result = await apiAction(null, { code: 'cancelar_baixa_prioritat', data: id });
+            const isSuccess = result === true || (result && typeof result === 'object' && (result as any).success !== false && (result as any).data !== false);
+            if (isSuccess && result !== false) {
+                temporalMessageShow(null, t($ => $.calendari.proces_cancelat), 'success');
+                await carregarProcessos(true);
+                return true;
+            } else {
+                temporalMessageShow(null, t($ => $.calendari.error_cancelar_proces), 'warning');
+                await carregarProcessos(true);
+                return false;
+            }
+        } catch (error: any) {
+            temporalMessageShow(null, error.message, 'error');
+            return false;
+        }
+    }, [apiAction, carregarProcessos, temporalMessageShow, t]);
+
+    const runningProcessosCount = useMemo(() => {
+        return processos.filter(p => {
+            const isRunning = p.estat === 'EN_EXECUCIO' || p.estat === 'PENDENT';
+            if (!entornAppId) return isRunning;
+            return isRunning && String(p.entornAppId) === String(entornAppId);
+        }).length;
+    }, [processos, entornAppId]);
+
+    const totalRunningCount = useMemo(() => {
+        return processos.filter(p => p.estat === 'EN_EXECUCIO' || p.estat === 'PENDENT').length;
+    }, [processos]);
+
+    const backgroundProcessingDates = useMemo(() => {
+        if (!entornAppId) return [];
+        const datesSet = new Set<string>();
+        processos
+            .filter(p => (p.estat === 'EN_EXECUCIO' || p.estat === 'PENDENT') && String(p.entornAppId) === String(entornAppId))
+            .forEach(p => {
+                let curr = dayjs(p.dataInici);
+                const end = dayjs(p.dataFi);
+                while (curr.isBefore(end) || curr.isSame(end, 'day')) {
+                    datesSet.add(curr.format('YYYY-MM-DD'));
+                    curr = curr.add(1, 'day');
+                }
+            });
+        return Array.from(datesSet);
+    }, [processos, entornAppId]);
+
+    useEffect(() => {
+        carregarProcessos(true);
+    }, [carregarProcessos]);
+
+    useEffect(() => {
+        if (!processosModalOpen && totalRunningCount === 0) return;
+
+        const interval = setInterval(() => {
+            carregarProcessos(true);
+        }, 3000);
+
+        return () => clearInterval(interval);
+    }, [processosModalOpen, totalRunningCount, carregarProcessos]);
+
+    const prevRunningCountRef = useRef(runningProcessosCount);
+    useEffect(() => {
+        if (prevRunningCountRef.current > 0 && runningProcessosCount === 0 && entornAppId !== '') {
+            obtenirDatesDisponibles(entornAppId);
+        }
+        prevRunningCountRef.current = runningProcessosCount;
+    }, [runningProcessosCount, entornAppId, obtenirDatesDisponibles]);
+
+    const carregarIntervalDades = useCallback(async (inici: string, fi: string, esBaixaPrioritat?: boolean, pausa?: number) => {
         if (entornAppId === '') return;
 
         const additionalData: PerInterval = {
             entornAppId: entornAppId as number,
             dataInici: inici,
-            dataFi: fi
+            dataFi: fi,
+            baixaPrioritat: esBaixaPrioritat ?? false,
+            pausaMs: esBaixaPrioritat ? pausa : undefined,
         };
 
         try {
             await obtenirPerInterval(additionalData);
-            // La funció obtenirPerInterval ja actualitza les dates disponibles si té èxit
+            if (esBaixaPrioritat) {
+                await carregarProcessos(true);
+            }
         } catch (error: any) {
             console.error('Error en carregar interval de dades:', error);
             alert(t($ => $.calendari.error_carregar_interval));
         }
-    }, [entornAppId, obtenirPerInterval, t]);
+    }, [entornAppId, obtenirPerInterval, carregarProcessos, t]);
 
     // Obtenir el primer i darrer dia del mes actual del calendari
     const getFirstAndLastDayOfMonth = useCallback(() => {
@@ -394,6 +537,7 @@ const CalendariEstadistiques: React.FC = () => {
         datesAmbDades,
         emptyDates,
         loadingDates,
+        backgroundProcessingDates,
         errors,
         datesDisponiblesError
     });
@@ -401,6 +545,11 @@ const CalendariEstadistiques: React.FC = () => {
     const handleEventClick = useCallback((info: any) => {
         // Si no hi ha un entornApp seleccionat, no fem res
         if (entornAppId === '') {
+            return;
+        }
+
+        // Si la cel·la està en procés en segon pla, no fem res
+        if (info.event.extendedProps.isBackgroundProcessing) {
             return;
         }
 
@@ -475,7 +624,7 @@ const CalendariEstadistiques: React.FC = () => {
                 elementsWithPositions={[
                     {
                         position: 2,
-                        element: <FormControl sx={{ minWidth: 250 }}>
+                        element: <FormControl sx={{ minWidth: 300 }}>
                             <InputLabel size={"small"} id="entorn-app-select-label">{t($ => $.calendari.seleccionar_entorn_app)}</InputLabel>
                             <Select
                                 labelId="entorn-app-select-label"
@@ -492,14 +641,37 @@ const CalendariEstadistiques: React.FC = () => {
                                 ))}
                             </Select>
                         </FormControl>
+                    },
+                    {
+                        position: 3,
+                        element: (
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                startIcon={<Icon>schedule</Icon>}
+                                onClick={() => setProcessosModalOpen(true)}
+                                data-testid="btn-processos-baixa-prioritat"
+                                sx={{ textTransform: 'none', height: 40 }}
+                            >
+                                {t($ => $.calendari.processos_baixa_prioritat)}
+                                {runningProcessosCount > 0 && (
+                                    <Chip
+                                        size="small"
+                                        color="warning"
+                                        label={runningProcessosCount}
+                                        sx={{ ml: 1, height: 20, fontSize: '0.75rem' }}
+                                    />
+                                )}
+                            </Button>
+                        )
                     }
                 ]}
             />
             {/* Sempre mostrem el calendari, però amb un missatge d'ajuda si no hi ha entorn seleccionat */}
             <Box
                 sx={{
-                    margin: '16px 24px',
-                    height: '100%',
+                    padding: '16px 24px',
+                    height: 'calc(100vh - 160px)',
                     '& .fc-header-toolbar': {
                         display: 'flex !important',
                         justifyContent: 'space-between !important',
@@ -566,6 +738,7 @@ const CalendariEstadistiques: React.FC = () => {
                                         hasError={arg.event.extendedProps.hasError}
                                         esDisponible={arg.event.extendedProps.esDisponible}
                                         isLoading={arg.event.extendedProps.isLoading}
+                                        isBackgroundProcessing={arg.event.extendedProps.isBackgroundProcessing}
                                     />
                                 </div>
                             );
@@ -601,6 +774,10 @@ const CalendariEstadistiques: React.FC = () => {
                                     return;
                                 }
 
+                                setDataInici(null);
+                                setDataFi(null);
+                                setBaixaPrioritat(false);
+                                setPausaMs(180000);
                                 setObrirDialog(true);
                             }
                         },
@@ -612,9 +789,12 @@ const CalendariEstadistiques: React.FC = () => {
                                     return;
                                 }
 
-                                // Get the dates using currentViewMonth and currentViewYear
                                 const dates = getFirstAndLastDayOfMonth();
-                                carregarIntervalDades(dates.firstDay, dates.lastDay);
+                                setDataInici(dayjs(dates.firstDay));
+                                setDataFi(dayjs(dates.lastDay));
+                                setBaixaPrioritat(true);
+                                setPausaMs(180000);
+                                setObrirDialog(true);
                             }
                         }
                     }}
@@ -644,16 +824,88 @@ const CalendariEstadistiques: React.FC = () => {
                             onChange={(newValue) => setDataFi(newValue)}
                         />
                     </Box>
+                    <Box sx={{ mt: 2 }}>
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={baixaPrioritat}
+                                    onChange={(e) => setBaixaPrioritat(e.target.checked)}
+                                    inputProps={{ 'data-testid': 'baixa-prioritat-checkbox' } as any}
+                                />
+                            }
+                            label={t($ => $.calendari.baixa_prioritat)}
+                        />
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 4 }}>
+                            {t($ => $.calendari.baixa_prioritat_descripcio)}
+                        </Typography>
+                        {baixaPrioritat && (
+                            <Box sx={{ mt: 2, ml: 4, p: 1.5, bgcolor: 'action.hover', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+                                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                                    {t($ => $.calendari.velocitat_recuperacio)}
+                                </Typography>
+                                <RadioGroup
+                                    value={pausaMs}
+                                    onChange={(e) => setPausaMs(Number(e.target.value))}
+                                    data-testid="pausa-ms-radiogroup"
+                                >
+                                    <FormControlLabel
+                                        value={600000}
+                                        control={<Radio size="small" color="success" />}
+                                        label={
+                                            <Box sx={{ my: 0.5 }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    <Chip size="small" color="success" label={t($ => $.calendari.prioritat_baixa)} sx={{ height: 20, fontSize: '0.75rem' }} />
+                                                </Box>
+                                                <Typography variant="caption" color="text.secondary" display="block">
+                                                    {t($ => $.calendari.prioritat_baixa_desc)}
+                                                </Typography>
+                                            </Box>
+                                        }
+                                    />
+                                    <FormControlLabel
+                                        value={180000}
+                                        control={<Radio size="small" color="warning" />}
+                                        label={
+                                            <Box sx={{ my: 0.5 }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    <Chip size="small" color="warning" label={t($ => $.calendari.prioritat_mitja)} sx={{ height: 20, fontSize: '0.75rem' }} />
+                                                </Box>
+                                                <Typography variant="caption" color="text.secondary" display="block">
+                                                    {t($ => $.calendari.prioritat_mitja_desc)}
+                                                </Typography>
+                                            </Box>
+                                        }
+                                    />
+                                    <FormControlLabel
+                                        value={500}
+                                        control={<Radio size="small" color="error" />}
+                                        label={
+                                            <Box sx={{ my: 0.5 }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    <Chip size="small" color="error" label={t($ => $.calendari.prioritat_alta)} sx={{ height: 20, fontSize: '0.75rem' }} />
+                                                </Box>
+                                                <Typography variant="caption" color="text.secondary" display="block">
+                                                    {t($ => $.calendari.prioritat_alta_desc)}
+                                                </Typography>
+                                            </Box>
+                                        }
+                                    />
+                                </RadioGroup>
+                            </Box>
+                        )}
+                    </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setObrirDialog(false)}>{t($ => $.calendari.cancelar)}</Button>
+                    <Button onClick={() => { setObrirDialog(false); setBaixaPrioritat(false); setPausaMs(180000); }}>{t($ => $.calendari.cancelar)}</Button>
                     <Button
                         onClick={() => {
                             if (dataInici && dataFi) {
                                 const iniciStr = dayjs(dataInici).format('YYYY-MM-DD');
                                 const fiStr = dayjs(dataFi).format('YYYY-MM-DD');
-                                carregarIntervalDades(iniciStr, fiStr);
+                                carregarIntervalDades(iniciStr, fiStr, baixaPrioritat, pausaMs);
                             }
+                            setBaixaPrioritat(false);
+                            setPausaMs(180000);
                             setObrirDialog(false);
                         }}
                         variant="contained"
@@ -698,6 +950,17 @@ const CalendariEstadistiques: React.FC = () => {
                 currentDataDia={currentDataDia}
                 dadesDiaModalOpen={dadesDiaModalOpen}
                 setDadesDiaModalOpen={setDadesDiaModalOpen}
+            />
+            <CalendariProcessosDialog
+                open={processosModalOpen}
+                onClose={() => setProcessosModalOpen(false)}
+                processos={processos}
+                isLoading={isLoadingProcessos}
+                onRefresh={() => carregarProcessos(false)}
+                onCancelProces={handleCancelProces}
+                entornAppId={entornAppId}
+                mostrarTots={mostrarTotsProcessos}
+                onMostrarTotsChange={setMostrarTotsProcessos}
             />
             {component}
         </>

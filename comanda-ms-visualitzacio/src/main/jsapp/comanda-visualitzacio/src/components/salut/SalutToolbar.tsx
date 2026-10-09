@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
+import * as z from 'zod';
 // import Menu from '@mui/material/Menu';
 // import ListItemIcon from '@mui/material/ListItemIcon';
 // import ListItemText from '@mui/material/ListItemText';
@@ -87,8 +88,8 @@ const getInitialGrouping = () => {
     return storedValue;
 };
 
-export const getIdList = (a: any[] = []) => {
-    return a?.map?.((uo: any) => uo.id) ?? [];
+export const getIdList = (a?: Array<{ id: string | number }> | null) => {
+    return a?.map?.(uo => uo.id) ?? [];
 };
 
 
@@ -222,7 +223,8 @@ const SalutEntornAppFilterForm: React.FC = () => {
 
     return <Grid container spacing={1} sx={{ mt: 1 }}>
         <Grid size={12}>
-            <FormField name="app" componentProps={{ size: 'small', }} multiple optionsUnpaged
+            <FormField name="app" componentProps={{ size: 'small', }} multiple
+                        namedQueries={['permis_salut']}
                         advancedSearchColumns={[{
                             field: 'codi',
                             flex: 0.5,
@@ -240,7 +242,7 @@ const SalutEntornAppFilterForm: React.FC = () => {
             />
         </Grid>
         <Grid size={12}>
-            <FormField name="entorn" componentProps={{ size: 'small', }} multiple optionsUnpaged
+            <FormField name="entorn" componentProps={{ size: 'small', }} multiple
                         advancedSearchColumns={[{
                             field: 'codi',
                             flex: 0.5,
@@ -293,21 +295,42 @@ const SalutEntornAppFilter: React.FC<{
 
 const FILTER_DATA_LOCALSTORAGE_KEY = 'filterDataSalut';
 
-const getInitialFilterData = () => {
-    const storedValue = localStorage.getItem(FILTER_DATA_LOCALSTORAGE_KEY);
-    return storedValue ? JSON.parse(storedValue) : {};
-};
+export const SalutFilterItemSchema = z.object({
+    id: z.coerce.string(),
+    description: z.string(),
+});
 
-export type SalutFilterDataType = {
-    app?: [{
-        id: string;
-        description: string;
-    }];
-    entorn?: [{
-        id: string;
-        description: string;
-    }];
-    estatsSalut?: SalutEstatEnum[];
+export const SalutFilterDataSchema = z.object({
+    app: z.array(SalutFilterItemSchema).nullish(),
+    entorn: z.array(SalutFilterItemSchema).nullish(),
+    estatsSalut: z.array(z.nativeEnum(SalutEstatEnum)).nullish(),
+});
+
+export type SalutFilterDataType = z.infer<typeof SalutFilterDataSchema>;
+
+const getInitialFilterData = (): SalutFilterDataType => {
+    const storedValue = localStorage.getItem(FILTER_DATA_LOCALSTORAGE_KEY);
+    if (!storedValue) return {};
+    try {
+        const rawJson: unknown = JSON.parse(storedValue);
+        const parsed = SalutFilterDataSchema.safeParse(rawJson);
+        if (parsed.success) {
+            return parsed.data;
+        }
+        console.warn(
+            `[SalutToolbar] Invalid filter schema in localStorage under "${FILTER_DATA_LOCALSTORAGE_KEY}". Resetting to default.`,
+            parsed.error
+        );
+        localStorage.removeItem(FILTER_DATA_LOCALSTORAGE_KEY);
+        return {};
+    } catch (e) {
+        console.warn(
+            `[SalutToolbar] Corrupted JSON in localStorage under "${FILTER_DATA_LOCALSTORAGE_KEY}". Resetting to default.`,
+            e
+        );
+        localStorage.removeItem(FILTER_DATA_LOCALSTORAGE_KEY);
+        return {};
+    }
 };
 
 const useSalutEntornAppFilter = ({
@@ -480,7 +503,7 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = React.memo((props) => {
             return t($ => $.page.salut.senseFiltres);
         }
         return parts.join(" - ");
-    }, [filterData, subtitle, t]);
+    }, [filterData, subtitle, t, tTitle]);
     const getRefreshButtonTitle = () => {
         let title = t($ => $.page.salut.refrescar);
         if (lastRefresh != null)

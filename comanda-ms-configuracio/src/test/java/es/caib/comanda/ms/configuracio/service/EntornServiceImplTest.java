@@ -170,7 +170,7 @@ public class EntornServiceImplTest {
         entornService.afterDelete(entornEntity, answers);
 
         verify(cacheHelper, times(1)).evictEntornCacheItem(entornEntity.getId(), entornEntity.getCodi());
-        verify(entornAppHelper, times(1)).logicAfterDelete(10L);
+        verify(entornAppHelper, times(1)).logicAfterDelete(entornAppEntity);
 
         ArgumentCaptor<ComandaSsePublishRequest> captor = ArgumentCaptor.forClass(ComandaSsePublishRequest.class);
         verify(eventPublisher).publishEvent(captor.capture());

@@ -37,6 +37,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
 import { Divider, ListItemIcon } from '@mui/material';
 import AccessTime from '@mui/icons-material/AccessTime';
+import AppFormFieldReference from './AppFormFieldReference';
 
 export type MenuEntryWithResource = MenuEntry & {
     resourceName?: string;
@@ -319,6 +320,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         routerUseLocationPath={useLocationPath}
         routerAnyHistoryEntryExist={anyHistoryEntryExist}
         linkComponent={Link}
+        formFieldComponents={[{ type: 'reference', component: AppFormFieldReference }]}
         menuEntries={baseAppMenuEntries}
         defaultMuiComponentProps={defaultMuiComponentProps}
         fixedContentExpandsToAvailableHeightEnabled

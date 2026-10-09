@@ -178,7 +178,7 @@ export const avisFilterBuilder = (data: any, currentUserCodi: string | null, isA
         springFilterBuilder.eq('entornId', data?.entorn?.id),
         springFilterBuilder.like('nom', data?.nom),
         springFilterBuilder.like('descripcio', data?.descripcio),
-        springFilterBuilder.eq('tipus', data?.tipus),
+        springFilterBuilder.eq('tipus', `'${data?.tipus}'`),
         data?.dataInici1 && springFilterBuilder.gte('dataInici', `'${formatStartOfDay(data?.dataInici1 as string)}'`),
         data?.dataInici2 && springFilterBuilder.lte('dataInici', `'${formatEndOfDay(data?.dataInici2 as string)}'`),
         responsableFilter

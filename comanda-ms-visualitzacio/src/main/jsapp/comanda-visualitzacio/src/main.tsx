@@ -16,6 +16,7 @@ import MuiThemeProvider from './components/MuiThemeProvider.tsx';
 import { HelmetProvider } from '@dr.pogodin/react-helmet';
 import AlarmsProvider from './components/AlarmsProvider.tsx';
 import { getAuthConfig, getEnvApiUrl, isAuthUrlPresent } from './util/envUtils.ts';
+import ParameterProvider from './components/ParameterProvider.tsx';
 
 dayjs.extend(duration);
 
@@ -31,20 +32,26 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 config={getAuthConfig()}
                 mandatory
                 silentCheckSsoRedirectUri={`${import.meta.env.BASE_URL}silent-check-sso.html`}
+                // Activat automàticament en dev (npm run dev) perquè a la consola es vegi quin mecanisme exacte
+                // (onTokenExpired, manteniment de sessió periòdic, onAuthRefreshError...) dispara cada renovació
+                // o redirect, útil mentre es depura el refresc espontani de la interfície.
+                debug={import.meta.env.DEV ? true : undefined}
             >
                 <ResourceApiProvider apiUrl={getEnvApiUrl()} userSessionActive>
-                    <UserProvider>
-                        <SseProvider>
-                            <AlarmsProvider>
-                                <MuiThemeProvider>
-                                    <CssBaseline enableColorScheme />
-                                    <BrowserRouter basename={import.meta.env.BASE_URL}>
-                                        <App />
-                                    </BrowserRouter>
-                                </MuiThemeProvider>
-                            </AlarmsProvider>
-                        </SseProvider>
-                    </UserProvider>
+                    <ParameterProvider>
+                        <UserProvider>
+                            <SseProvider>
+                                <AlarmsProvider>
+                                    <MuiThemeProvider>
+                                        <CssBaseline enableColorScheme />
+                                        <BrowserRouter basename={import.meta.env.BASE_URL}>
+                                            <App />
+                                        </BrowserRouter>
+                                    </MuiThemeProvider>
+                                </AlarmsProvider>
+                            </SseProvider>
+                        </UserProvider>
+                    </ParameterProvider>
                 </ResourceApiProvider>
             </AuthProvider>
         </HelmetProvider>

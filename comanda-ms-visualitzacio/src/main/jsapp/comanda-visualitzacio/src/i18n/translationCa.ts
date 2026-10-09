@@ -272,7 +272,10 @@ const translationCa = {
             },
             latencia: {
                 title: "Latència",
-                error: "Hi ha hagut un error al mostrar el gràfic",
+                error: "Hi ha hagut un error al mostrar el component",
+                errorDetailsButton: "Veure detall de l'error",
+                errorDetailsTitle: "Detall de l'error",
+                errorDetailsClose: "Tancar",
             },
             historicEstat: {
                 title: "Històric d'estat",
@@ -474,6 +477,10 @@ const translationCa = {
                 multiSelection: {
                     message: "{{count}} elements seleccionats",
                 },
+                filtre: {
+                    noAppAndPeriodUsed: "No es poden afegir més filtres. Aquest tauler de control no té una aplicació associada (necessària per als filtres de dimensions) i ja conté el filtre de període.",
+                    noAppWarning: "Per a crear filtres de dimensions cal definir una aplicació al tauler de control.",
+                },
             },
             edit: "Editar",
             dashboardView: "Anar al tauler de control",
@@ -519,9 +526,15 @@ const translationCa = {
                     analyzing: "Analitzant el fitxer i verificant possibles conflictes...",
                     noConflicts: "No s'ha detectat cap conflicte.",
                     importing: "Important tauler de control i recursos associats...",
+                    blockingChip: "Bloquejant",
+                    blockingErrorTitle: "S'han detectat dependències no resoltes",
+                    blockingErrorDescription: "No es pot importar el tauler de control perquè conté dependències que no existeixen a l'aplicació o entorn de destinació.",
+                    reanalyze: "Tornar a analitzar",
                     groups: {
                         dashboard: "Taulers de control",
                         widget: "Widgets",
+                        indicador: "Indicadors",
+                        dimensio: "Dimensions",
                         plantilla: "Plantilles",
                         paleta: "Paletes",
                         other: "Altres elements",
@@ -530,8 +543,10 @@ const translationCa = {
                         selectedCount: "{{count}} seleccionats",
                         useExisting: "Emprar existent",
                         createWithAnotherName: "Crear amb un altre nom",
+                        overwrite: "Sobrescriure",
                         selectAll: "Seleccionar-ho tot",
                         deselectAll: "Deseleccionar",
+                        mixedSelectionInfo: "Algunes opcions s'han deshabilitat perquè la selecció conté una combinació d'elements amb accions incompatibles (p. ex.: els indicadors no es poden resoldre amb l'opció de crear amb un altre nom, els taulers no permeten emprar l'existent i la resta d'elements no admeten la de sobrescriure)",
                     },
                     warningExistingTitle: "Elements compartits entre taulers de control",
                     warningExistingDescription: "Els elements amb l'opció \"Emprar existent\" quedaran vinculats entre els taulers. Les modificacions que s'hi facin posteriorment afectaran automàticament tots els taulers de control que els utilitzin.",
@@ -640,6 +655,7 @@ const translationCa = {
             title: "Configuració d'alarmes",
             create: "Crear configuració d'alarma",
             update: "Modificar configuració d'alarma",
+            view: "Visualitzar configuració d'alarma",
             nomHelperText: "En fer-se una notificació per correu de l'alarma, el nom s'usa per a indicar l'alarma a l'assumpte del correu.",
             filterWarning: "No es pot reordenar les alarmes quan hi ha filtres aplicats",
             condicio: {
@@ -772,6 +788,36 @@ const translationCa = {
             action: {
                 export: "Exportar aplicació",
                 import: "Importar aplicació",
+                netejaEstadistica: "Neteja d'estadístiques",
+                sincronitzarCataleg: "Sincronitzar catàleg estadístic (tots els entorns)",
+            },
+            sincronitzarCataleg: {
+                confirm: "Segur que voleu sincronitzar el catàleg estadístic de tots els entorns actius d'aquesta aplicació?",
+                success: "Catàleg sincronitzat correctament",
+            },
+            netejaEstadistica: {
+                label: "Neteja d'estadístiques",
+                dialogTitle: "Neteja d'estadístiques de l'aplicació",
+                alertTitle: "Atenció: Operació irreversible a nivell global",
+                alertDades: "Aquesta acció esborrarà de forma permanent totes les dades estadístiques registrades (fets) de tots els entorns d'aquesta aplicació.",
+                alertCataleg: "Atenció: També s'esborrarà el catàleg d'estadística (indicadors, dimensions i termes de fórmules) compartit per tots els entorns.",
+                alertWidgets: "Es desvincularan o esborraran els widgets i elements de quadres de comandament afectats.",
+                alertBackupTip: "Recomanació: Si teniu quadres de comandament configurats per a aquesta aplicació, és imprescindible exportar-los com a còpia de seguretat abans de continuar.",
+                abastOptions: {
+                    nomesDades: "Només dades registrades (fets)",
+                    dadesICataleg: "Dades registrades i catàleg (indicadors, dimensions i opcionalment widgets)",
+                },
+                fields: {
+                    abast: "Abast de la neteja",
+                    esborrarWidgets: "Esborrar també els widgets de quadres de comandament de l'aplicació",
+                    confirmoPerdua: "Confirm que he exportat els quadres de comandament si calia i accept la pèrdua irreversible de les dades seleccionades",
+                },
+                validation: {
+                    confirmoRequired: "Cal confirmar expressament que s'accepta la pèrdua irreversible de les dades",
+                },
+                confirmButton: "Executar neteja",
+                cancelButton: "Cancel·lar",
+                success: "S'ha sol·licitat la neteja de les dades estadístiques correctament",
             },
             import: {
                 title: "Importar aplicació",
@@ -806,7 +852,29 @@ const translationCa = {
                     desactivar: "Desactivar",
                     permisos: "Permisos",
                     ok: "L'acció s'ha executat correctament",
-                }
+                },
+                netejaEstadistica: {
+                    label: "Esborrar dades estadístiques",
+                    dialogTitle: "Esborrar dades estadístiques de l'entorn",
+                    alertTitle: "Atenció: Operació irreversible a l'entorn",
+                    alertDades: "Aquesta acció esborrarà de forma permanent totes les dades estadístiques registrades (fets) per a aquest entorn.",
+                    alertScopeInfo: "Per esborrar el catàleg (indicadors, dimensions) o widgets, cal utilitzar l'acció de neteja a nivell d'Aplicació.",
+                    fields: {
+                        esborrarCatalegDisabled: "Esborrar catàleg i widgets (Només disponible a nivell d'Aplicació)",
+                        confirmoPerdua: "Confirm que accept la pèrdua irreversible de totes les dades estadístiques registrades (fets) per a aquest entorn",
+                    },
+                    validation: {
+                        confirmoRequired: "Cal confirmar expressament que s'accepta la pèrdua irreversible de les dades",
+                    },
+                    confirmButton: "Esborrar dades",
+                    cancelButton: "Cancel·lar",
+                    success: "S'ha sol·licitat la neteja de les dades estadístiques correctament",
+                },
+                sincronitzarCataleg: {
+                    label: "Sincronitzar catàleg estadístic",
+                    confirm: "Segur que voleu sincronitzar el catàleg estadístic d'aquest entorn?",
+                    success: "Catàleg sincronitzat correctament",
+                },
             }
         },
         versionsEntorns: {
@@ -837,6 +905,13 @@ const translationCa = {
                 refreshUO: {
                     label: "Refrescar unitats organitzatives",
                     ok: "Unitats organitzatives recarregades correctament",
+                    error: "S'ha produït un error en actualitzar les unitats organitzatives",
+                    progress: {
+                        title: "Actualitzant unitats organitzatives",
+                        waiting: "Preparant l'actualització...",
+                        processed: "{{processats}} de {{total}} processades",
+                        hideInBackground: "Continuar en segon pla",
+                    },
                 },
                 organigrama: {
                     label: "Organigrama",
@@ -879,6 +954,13 @@ const translationCa = {
                     label: "Refrescar dades de la conselleria",
                     title: "Vols refrescar les dades de la conselleria?",
                     ok: "Les dades de la conselleria s'han refrescat correctament",
+                    error: "S'ha produït un error en actualitzar les dades de la conselleria",
+                    progress: {
+                        title: "Actualitzant dades de la conselleria",
+                        waiting: "Preparant l'actualització...",
+                        processed: "{{processats}} de {{total}} processats",
+                        hideInBackground: "Continuar en segon pla",
+                    },
                 },
                 sincronitzar: {
                     label: "Obtenir/refrescar noms d'òrgans gestors",
@@ -894,6 +976,9 @@ const translationCa = {
                     ok: "S'ha actualitzat correctament",
                     save: "Desar",
                 },
+                sincronitzarCataleg: "Sincronitzar catàleg",
+                sincronitzarCatalegConfirm: "Segur que voleu sincronitzar el catàleg estadístic de l'entorn seleccionat?",
+                sincronitzarCatalegSuccess: "Catàleg sincronitzat correctament",
             },
             editaEntitat: {
                 field: {
@@ -938,6 +1023,9 @@ const translationCa = {
                 createFormula: "Crear indicador de fórmula",
                 editFormula: "Editar fórmula",
                 copiarEntorn: "Copiar a un altre entorn",
+                sincronitzarCataleg: "Sincronitzar catàleg",
+                sincronitzarCatalegConfirm: "Segur que voleu sincronitzar el catàleg estadístic de l'entorn seleccionat?",
+                sincronitzarCatalegSuccess: "Catàleg sincronitzat correctament",
             },
             formulaForm: {
                 createTitle: "Crear indicador de fórmula",
@@ -1709,6 +1797,9 @@ const translationCa = {
             title: "Permisos",
             resourceTitle: "permís"
         },
+        appFormFieldReference: {
+            mostrarTots: 'Mostrar tots...',
+        },
     },
     form: {
         field: {
@@ -1754,12 +1845,48 @@ const translationCa = {
         error_dades_disponibles: "Error al obtenir els dies amb dades estadístiques disponibles",
         error_dades_dia: "Error al obtenir les dades estadístiques del dia",
         error_obtenir_dates_mes: "No s'han pogut determinar les dates del mes actual",
-        error_processar_dades_dia: "Error al procesar les dades del día",
+        error_processar_dades_dia: "Error en processar les dades del dia",
         carregant: "Carregant",
         carregant_dades: "Carregant dades estadístiques...",
         modal_dades_dia: "Dades disponibles del dia",
         dimensions: "Dimensions",
         indicadors: "Indicadors",
+        baixa_prioritat: "Baixa prioritat",
+        baixa_prioritat_descripcio: "Recupera les dades de manera progressiva en segon pla per evitar alentir la resta de processos",
+        success_baixa_prioritat: "S'ha iniciat el procés de recuperació de baixa prioritat en segon pla",
+        processos_baixa_prioritat: "Processos de baixa prioritat",
+        titol_processos_baixa_prioritat: "Processos de baixa prioritat",
+        sense_processos: "No hi ha cap procés de baixa prioritat",
+        estat_en_execucio: "En execució",
+        estat_finalitzat: "Finalitzat",
+        estat_error: "Error",
+        estat_cancelat: "Cancel·lat",
+        estat_pendent: "Pendent",
+        cancelar_proces: "Cancel·lar procés",
+        proces_cancelat: "Procés cancel·lat correctament",
+        progres: "Progrés",
+        periode: "Període",
+        entorn: "Entorn",
+        filtre_tots_entorns: "Tots els entorns",
+        filtre_entorn_actual: "Només entorn actual",
+        estat: "Estat",
+        accions: "Accions",
+        dia: "dia",
+        dies: "dies",
+        errors: "errors",
+        processant: "Processant:",
+        refrescar: "Refrescar",
+        error_cancelar_proces: "No s'ha pogut cancel·lar el procés (potser ja ha finalitzat)",
+        processant_segon_pla: "En segon pla...",
+        processant_segon_pla_tooltip: "Hi ha un procés de recuperació en segon pla per a aquest dia",
+        velocitat: "Velocitat",
+        velocitat_recuperacio: "Velocitat de recuperació",
+        prioritat_baixa: "Baixa (10 minuts)",
+        prioritat_baixa_desc: "Mínim impacte en el servidor. Pausa de 10 minuts entre dies.",
+        prioritat_mitja: "Mitja (3 minuts)",
+        prioritat_mitja_desc: "Impacte moderat. Pausa de 3 minuts entre dies.",
+        prioritat_alta: "Alta (Sense retard)",
+        prioritat_alta_desc: "Recuperació ràpida amb pausa mínima (500 ms). Major impacte en el servidor.",
     },
     treeData: {
         treeView: "Vista en arbre",

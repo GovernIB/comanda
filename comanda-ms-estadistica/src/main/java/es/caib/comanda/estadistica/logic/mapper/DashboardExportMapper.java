@@ -8,6 +8,7 @@ import es.caib.comanda.estadistica.logic.helper.EstadisticaClientHelper;
 import es.caib.comanda.estadistica.logic.intf.model.export.*;
 import es.caib.comanda.estadistica.logic.intf.model.widget.WidgetTipus;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
+import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardFiltreEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
@@ -78,6 +79,8 @@ public interface DashboardExportMapper {
 
     @Mapping(target = "plantilla", source = "plantilla")
     DashboardTitolEntity toDashboardTitolEntity(DashboardTitolExport export);
+
+    DashboardFiltreExport toDashboardFiltreExport(DashboardFiltreEntity filtreEntity);
 
     PlantillaExport toPlantillaExport(PlantillaEntity plantillaEntity);
     @Mapping(target = "ordre", source = "ordre")
@@ -339,6 +342,9 @@ public interface DashboardExportMapper {
 
     @Mapping(target = "plantilla", source = "plantilla")
     DashboardTitolExport toDashboardTitolEntity(DashboardTitolEntity export);
+
+    @Mapping(target = "dashboard", ignore = true)
+    DashboardFiltreEntity toDashboardFiltreEntity(DashboardFiltreExport filtreExport);
 
     PlantillaEntity toPlantillaEntity(PlantillaExport plantillaExport);
     @Mapping(target = "ordre", source = "ordre")

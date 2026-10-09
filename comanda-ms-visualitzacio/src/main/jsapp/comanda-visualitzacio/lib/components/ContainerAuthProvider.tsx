@@ -126,14 +126,21 @@ export const AuthProvider = (props: AuthProviderProps) => {
             checkTokenStop();
         };
     }, []);
-    const signIn = loading ? undefined : () => {};
+    // No hi ha cap flux client-side per (re)iniciar sessió: l'autenticació la fa el contenidor (gatekeeper) davant
+    // l'aplicació. Redirigim a logoutUrl (com fa checkToken quan detecta que la sessió ja no és vàlida): en tornar
+    // a carregar l'aplicació, si ja no hi ha sessió, el gatekeeper redirigirà a la pàgina de login.
+    const signIn = loading ? undefined : () => {
+        window.location.href = logoutUrl;
+    };
+    // El logout ha de ser una navegació real (mai fetch()): el backend respon amb un redirect a l'"end_session_endpoint"
+    // de l'IdP, que és l'únic que esborra la cookie SSO del seu domini. Amb fetch() aquest redirect no el fa mai el
+    // navegador, la sessió SSO queda oberta i en tornar a carregar l'aplicació l'usuari hi torna a entrar en silenci.
+    // Un cop tancada, l'IdP torna a l'aplicació (post_logout_redirect_uri).
     const signOut = loading
         ? undefined
         : () => {
-              fetch(signOutUrl).finally(() => {
-                  debug && logConsole.debug('Tancament de sessió');
-                  window.location.href = logoutUrl;
-              });
+              debug && logConsole.debug('Tancament de sessió');
+              window.location.href = signOutUrl;
           };
     const context = {
         isLoading: loading,

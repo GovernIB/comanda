@@ -28,11 +28,11 @@ import java.util.List;
  * Entitat JPA que representa un Indicador dins de l'entorn de l'aplicació.
  *
  * Aquesta entitat correspon a la taula "com_est_indicador" i permet emmagatzemar informació relacionada amb indicadors
- * estadístics o de mesura en el sistema. La taula inclou una restricció d'unicitat sobre el nom i l'identificador
- * de l'entorn (entorn_app_id) per evitar duplicats.
+ * estadístics o de mesura en el sistema. La taula inclou restriccions d'unicitat sobre el nom i el codi per
+ * a un mateix entorn (entorn_app_id) per evitar duplicats.
  *
  * Camps disponibles:
- * - codi: Identificador únic i obligatori de l'indicador, emmagatzemat amb una longitud màxima de 16 caràcters.
+ * - codi: Identificador únic i obligatori de l'indicador dins l'entorn, emmagatzemat amb una longitud màxima de 32 caràcters.
  * - nom: Nom descriptiu i obligatori de l'indicador, limitat a 64 caràcters.
  * - descripcio: Descripció opcional de l'indicador amb una longitud màxima de 1024 caràcters.
  * - entornAppId: Identificador obligatori que associa l'indicador al seu entorn d'aplicació.
@@ -43,8 +43,8 @@ import java.util.List;
  *   descriure'ls i associar-los amb l'entorn d'aplicació.
  *
  * Característiques tècniques:
- * - Mapatge JPA mitjançant anotacions `@Entity` i `@Table` amb una restricció d'unicitat definida per `@UniqueConstraint`
- *   sobre els camps "nom" i "entorn_app_id".
+ * - Mapatge JPA mitjançant anotacions `@Entity` i `@Table` amb restriccions d'unicitat definides per `@UniqueConstraint`
+ *   sobre els camps ("nom", "entorn_app_id") i ("codi", "entorn_app_id").
  * - Inclou validacions com la longitud màxima i camp obligatori a través de l'anotació `@Column`.
  * - Herència de la classe base `BaseEntity<Indicador>` per aprofitar funcionalitats bàsiques comunes.
  *
@@ -58,7 +58,8 @@ import java.util.List;
 @Table(
         name = BaseConfig.DB_PREFIX + "est_indicador",
         uniqueConstraints = {
-                @UniqueConstraint(name = BaseConfig.DB_PREFIX + "ind_nom_uk", columnNames = { "nom", "entorn_app_id" })
+                @UniqueConstraint(name = BaseConfig.DB_PREFIX + "ind_nom_uk", columnNames = { "nom", "entorn_app_id" }),
+                @UniqueConstraint(name = BaseConfig.DB_PREFIX + "ind_codi_uk", columnNames = { "codi", "entorn_app_id" })
         }
 )
 @Getter

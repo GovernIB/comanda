@@ -1,15 +1,10 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { Box, Typography, Chip, Icon, Skeleton, Paper } from '@mui/material';
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useTheme } from '@mui/material/styles';
 import estils, { PERCENTAGE_TRIANGLE_MARGIN } from './WidgetEstils';
 import { createTransparentColor } from '../../util/colorUtil';
+import { SalutErrorBoundaryFallback } from '../salut/SalutErrorBoundaryFallback';
 
 interface WidgetHeaderProps {
     titol?: string;
@@ -149,25 +144,11 @@ export const WidgetErrorDisplay: React.FC<WidgetErrorDisplayProps> = React.memo(
     errorMsg,
     errorTrace,
 }) => {
-    const { t } = useTranslation();
-    const theme = useTheme();
-
+    // Ha de veure's igual que un error de renderitzat del gràfic (missatge genèric + icona amb modal
+    // de detall), per això es delega directament al mateix component.
     return (
         <Box sx={{ flex: 1, p: 2, overflow: 'auto' }}>
-            <Accordion
-                sx={{...estils.errorAccordion, pointerEvents: 'auto'}}
-                onMouseDown={(event) => event.stopPropagation()}
-            >
-                <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={estils.errorSummary(theme)}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <ErrorOutlineIcon sx={estils.errorIcon(theme)} />
-                        <Typography sx={{fontSize: '0.75rem'}}>{errorMsg || t($ => $.common.error)}</Typography>
-                    </Box>
-                </AccordionSummary>
-                <AccordionDetails sx={estils.errorDetails(theme)}>
-                    {errorTrace || t($ => $.page.widget.noErrorTrace)}
-                </AccordionDetails>
-            </Accordion>
+            <SalutErrorBoundaryFallback error={{ message: errorMsg, stack: errorTrace }} />
         </Box>
     );
 });

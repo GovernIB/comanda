@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: plugin-uo-dir3-codi-arrel-parametre-update-0.1.4-001
+      author: limit
+      comment: Actualitzar paràmetre codi unitat arrel DIR3 per unificar la clau de configuració i fer-lo editable per BBDD
+      changes:
+        - update:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.plugin.unitats.organitzatives.dir3.govern.codi.arrel"
+              - column:
+                  name: VALOR
+                  value: "A04003003"
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 1
+            where: CODI = 'es.caib.comanda.estadistica.dir3.govern.codi.arrel'
+      rollback:
+        - update:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.estadistica.dir3.govern.codi.arrel"
+              - column:
+                  name: VALOR
+                  value: ""
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 0
+            where: CODI = 'es.caib.comanda.plugin.unitats.organitzatives.dir3.govern.codi.arrel'

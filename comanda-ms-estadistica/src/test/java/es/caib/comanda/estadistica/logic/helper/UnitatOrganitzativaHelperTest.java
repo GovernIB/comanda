@@ -321,6 +321,44 @@ class UnitatOrganitzativaHelperTest {
         assertThat(codisCaptor.getValue().get(0)).isEqualTo("UO001");
     }
 
+    @Test
+    @DisplayName("updateAll(list, onProgress): notifica el progrés després de cada unitat processada")
+    void updateAll_ambOnProgress_llavorsNotificaElProgresDespresDeCadaUnitat() {
+        // Arrange
+        UnitatOrganitzativaEntity uo1 = new UnitatOrganitzativaEntity();
+        uo1.setCodi("UO001");
+        UnitatOrganitzativaEntity uo2 = new UnitatOrganitzativaEntity();
+        uo2.setCodi("UO002");
+
+        when(unitatOrganitzativaRepository.findByCodiIn(anyList())).thenReturn(Collections.emptyList());
+        when(unitatOrganitzativaRepository.saveAll(anyList())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        List<Integer> notified = new java.util.ArrayList<>();
+
+        // Act
+        unitatOrganitzativaHelper.updateAll(Arrays.asList(uo1, uo2), notified::add);
+
+        // Assert
+        assertThat(notified).containsExactly(1, 2);
+    }
+
+    @Test
+    @DisplayName("updateAll(list, onProgress): amb onProgress null es comporta igual que updateAll(list)")
+    void updateAll_ambOnProgressNull_llavorsNoLlancaError() {
+        // Arrange
+        UnitatOrganitzativaEntity uo = new UnitatOrganitzativaEntity();
+        uo.setCodi("UO001");
+
+        when(unitatOrganitzativaRepository.findByCodiIn(anyList())).thenReturn(Collections.emptyList());
+        when(unitatOrganitzativaRepository.saveAll(anyList())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        List<UnitatOrganitzativaEntity> result = unitatOrganitzativaHelper.updateAll(Collections.singletonList(uo), null);
+
+        // Assert
+        assertThat(result).hasSize(1);
+    }
+
     // ========================================================================
     // 4. TESTOS PER A refreshFromEntitatCodiDir3
     // ========================================================================

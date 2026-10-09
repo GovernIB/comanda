@@ -13,6 +13,7 @@ vi.mock('react-i18next', () => ({
                     obtenir_dades: 'Obtenir dades',
                     error_dades: 'Error dades',
                     dades_disponibles: 'Dades disponibles',
+                    processant_segon_pla: 'En segon pla...',
                 },
             }),
     }),
@@ -102,5 +103,72 @@ describe('useCalendarEvents', () => {
         expect(events).toHaveLength(2);
         expect(events[0]).toEqual(expect.objectContaining({ title: 'Sense dades' }));
         expect(events[1]).toEqual(expect.objectContaining({ title: 'Obtenir dades' }));
+    });
+
+    it('useCalendarEvents_quanUnaDataEstaEnProcessamentEnSegonPla_retornaElsEventsDeSegonPla', () => {
+        // Verifica que una data en procés de baixa prioritat genera l'estat visual en segon pla.
+        const { result } = renderHook(() =>
+            useCalendarEvents({
+                currentViewMonth: 0,
+                currentViewYear: 2025,
+                entornAppId: 7,
+                datesAmbDades: [],
+                emptyDates: [],
+                loadingDates: [],
+                backgroundProcessingDates: ['2025-01-15'],
+                errors: [],
+                datesDisponiblesError: false,
+            })
+        );
+
+        const events = result.current.filter(event => event.date === '2025-01-15');
+        expect(events).toHaveLength(2);
+        expect(events[0]).toEqual(
+            expect.objectContaining({
+                title: 'En segon pla...',
+                display: 'background',
+                backgroundColor: '#fff8e1',
+                extendedProps: expect.objectContaining({ isBackgroundProcessing: true }),
+            })
+        );
+        expect(events[1]).toEqual(
+            expect.objectContaining({
+                title: 'En segon pla...',
+                classNames: ['cal-event-background-processing'],
+                textColor: '#ed6c02',
+                extendedProps: expect.objectContaining({ isBackgroundProcessing: true, hasContent: true }),
+            })
+        );
+    });
+
+    it('useCalendarEvents_quanUnaDataTeDadesEncaraQueEstiguiEnSegonPla_prioritzaDadesDisponibles', () => {
+        // Verifica que si ja té dades disponibles, manté l'estat de disponible per poder consultar-les.
+        const { result } = renderHook(() =>
+            useCalendarEvents({
+                currentViewMonth: 0,
+                currentViewYear: 2025,
+                entornAppId: 7,
+                datesAmbDades: ['2025-01-15'],
+                emptyDates: [],
+                loadingDates: [],
+                backgroundProcessingDates: ['2025-01-15'],
+                errors: [],
+                datesDisponiblesError: false,
+            })
+        );
+
+        const events = result.current.filter(event => event.date === '2025-01-15');
+        expect(events).toHaveLength(2);
+        expect(events[0]).toEqual(
+            expect.objectContaining({
+                extendedProps: expect.objectContaining({ esDisponible: true, isBackgroundProcessing: false }),
+            })
+        );
+        expect(events[1]).toEqual(
+            expect.objectContaining({
+                title: 'Dades disponibles',
+                extendedProps: expect.objectContaining({ esDisponible: true, isBackgroundProcessing: false }),
+            })
+        );
     });
 });

@@ -272,7 +272,10 @@ const translationEn: translationResourcesType = {
             },
             latencia: {
                 title: "Latency",
-                error: "There was an error displaying the chart",
+                error: "There was an error displaying the component",
+                errorDetailsButton: "View error details",
+                errorDetailsTitle: "Error details",
+                errorDetailsClose: "Close",
             },
             historicEstat: {
                 title: "State history",
@@ -474,6 +477,10 @@ const translationEn: translationResourcesType = {
                 multiSelection: {
                     message: "{{count}} elements selected",
                 },
+                filtre: {
+                    noAppAndPeriodUsed: "No more filters can be added. This dashboard has no associated application (required for dimension filters) and already contains the period filter.",
+                    noAppWarning: "To create dimension filters, an application must be defined for the dashboard.",
+                },
             },
             edit: "Edit",
             dashboardView: "Go to dashboard",
@@ -519,9 +526,15 @@ const translationEn: translationResourcesType = {
                     analyzing: "Analyzing the file and checking for potential conflicts...",
                     noConflicts: "No conflicts detected.",
                     importing: "Importing dashboard and associated resources...",
+                    blockingChip: "Blocking",
+                    blockingErrorTitle: "Unresolved dependencies detected",
+                    blockingErrorDescription: "The dashboard cannot be imported because it contains dependencies that do not exist in the target application or environment.",
+                    reanalyze: "Re-analyze",
                     groups: {
                         dashboard: "Dashboards",
                         widget: "Widgets",
+                        indicador: "Indicators",
+                        dimensio: "Dimensions",
                         plantilla: "Templates",
                         paleta: "Palettes",
                         other: "Other elements",
@@ -530,8 +543,10 @@ const translationEn: translationResourcesType = {
                         selectedCount: "{{count}} selected",
                         useExisting: "Use existing",
                         createWithAnotherName: "Create with another name",
+                        overwrite: "Overwrite",
                         selectAll: "Select all",
                         deselectAll: "Deselect",
+                        mixedSelectionInfo: "Some options have been disabled because the selection contains a mix of items with incompatible actions (e.g.: indicators cannot be resolved with the create with another name option, dashboards do not allow using existing, and other items do not allow overwriting)",
                     },
                     warningExistingTitle: "Shared items across dashboards",
                     warningExistingDescription: "Items with the \"Use existing\" option will be linked between dashboards. Subsequent modifications will automatically affect all dashboards that use them.",
@@ -640,6 +655,7 @@ const translationEn: translationResourcesType = {
             title: "Alarm configuration",
             create: "Create alarm configuration",
             update: "Edit alarm configuration",
+            view: "View alarm configuration",
             nomHelperText: "When an alarm email notification is sent, the name is used to identify the alarm in the email subject.",
             filterWarning: "Cannot reorder alarms when filters are applied",
             condicio: {
@@ -772,6 +788,36 @@ const translationEn: translationResourcesType = {
             action: {
                 export: "Export application",
                 import: "Import application",
+                netejaEstadistica: "Statistics cleanup",
+                sincronitzarCataleg: "Synchronize statistical catalog (all environments)",
+            },
+            sincronitzarCataleg: {
+                confirm: "Are you sure you want to synchronize the statistical catalog of all active environments of this application?",
+                success: "Catalog synchronized successfully",
+            },
+            netejaEstadistica: {
+                label: "Statistics cleanup",
+                dialogTitle: "Application statistics cleanup",
+                alertTitle: "Warning: Global irreversible operation",
+                alertDades: "This action will permanently delete all recorded statistical data (facts) across all environments of this application.",
+                alertCataleg: "Warning: The statistical catalog (indicators, dimensions, and formula terms) shared across all environments will also be deleted.",
+                alertWidgets: "Affected widgets and dashboard items will be unlinked or deleted.",
+                alertBackupTip: "Recommendation: If you have dashboards configured for this application, it is essential to export them as a backup before continuing.",
+                abastOptions: {
+                    nomesDades: "Recorded data only (facts)",
+                    dadesICataleg: "Recorded data and catalog (indicators, dimensions, and optionally widgets)",
+                },
+                fields: {
+                    abast: "Cleanup scope",
+                    esborrarWidgets: "Also delete dashboard widgets of the application",
+                    confirmoPerdua: "I confirm that I have exported dashboards if needed and accept the irreversible loss of selected data",
+                },
+                validation: {
+                    confirmoRequired: "You must expressly confirm that you accept the irreversible loss of data",
+                },
+                confirmButton: "Execute cleanup",
+                cancelButton: "Cancel",
+                success: "Statistical data cleanup requested successfully",
             },
             import: {
                 title: "Import application",
@@ -806,7 +852,29 @@ const translationEn: translationResourcesType = {
                     desactivar: "Deactivate",
                     permisos: "Permissions",
                     ok: "The action has been executed successfully",
-                }
+                },
+                netejaEstadistica: {
+                    label: "Delete statistical data",
+                    dialogTitle: "Delete statistical data for environment",
+                    alertTitle: "Warning: Irreversible operation on environment",
+                    alertDades: "This action will permanently delete all recorded statistical data (facts) for this environment.",
+                    alertScopeInfo: "To delete the catalog (indicators, dimensions) or widgets, use the cleanup action at Application level.",
+                    fields: {
+                        esborrarCatalegDisabled: "Delete catalog and widgets (Only available at Application level)",
+                        confirmoPerdua: "I confirm that I accept the irreversible loss of all recorded statistical data (facts) for this environment",
+                    },
+                    validation: {
+                        confirmoRequired: "You must expressly confirm that you accept the irreversible loss of data",
+                    },
+                    confirmButton: "Delete data",
+                    cancelButton: "Cancel",
+                    success: "Statistical data cleanup requested successfully",
+                },
+                sincronitzarCataleg: {
+                    label: "Synchronize statistical catalog",
+                    confirm: "Are you sure you want to synchronize the statistical catalog of this environment?",
+                    success: "Catalog synchronized successfully",
+                },
             }
         },
         versionsEntorns: {
@@ -837,6 +905,13 @@ const translationEn: translationResourcesType = {
                 refreshUO: {
                     label: "Refresh organizational units",
                     ok: "Organizational units refreshed successfully",
+                    error: "An error occurred while refreshing the organizational units",
+                    progress: {
+                        title: "Refreshing organizational units",
+                        waiting: "Preparing the update...",
+                        processed: "{{processats}} of {{total}} processed",
+                        hideInBackground: "Continue in the background",
+                    },
                 },
                 organigrama: {
                     label: "Organization chart",
@@ -879,6 +954,13 @@ const translationEn: translationResourcesType = {
                     label: "Refresh ministry data",
                     title: "Do you want to refresh the ministry data?",
                     ok: "Ministry data refreshed successfully",
+                    error: "An error occurred while refreshing the ministry data",
+                    progress: {
+                        title: "Refreshing ministry data",
+                        waiting: "Preparing the update...",
+                        processed: "{{processats}} of {{total}} processed",
+                        hideInBackground: "Continue in the background",
+                    },
                 },
                 sincronitzar: {
                     label: "Fetch/Refresh managing body names",
@@ -894,6 +976,9 @@ const translationEn: translationResourcesType = {
                     ok: "Updated successfully",
                     save: "Save",
                 },
+                sincronitzarCataleg: "Synchronize catalog",
+                sincronitzarCatalegConfirm: "Are you sure you want to synchronize the statistical catalog of the selected environment?",
+                sincronitzarCatalegSuccess: "Catalog synchronized successfully",
             },
             editaEntitat: {
                 field: {
@@ -938,6 +1023,9 @@ const translationEn: translationResourcesType = {
                 createFormula: "Create formula indicator",
                 editFormula: "Edit formula",
                 copiarEntorn: "Copy to another environment",
+                sincronitzarCataleg: "Synchronize catalog",
+                sincronitzarCatalegConfirm: "Are you sure you want to synchronize the statistical catalog of the selected environment?",
+                sincronitzarCatalegSuccess: "Catalog synchronized successfully",
             },
             formulaForm: {
                 createTitle: "Create formula indicator",
@@ -1709,6 +1797,9 @@ const translationEn: translationResourcesType = {
             title: "Permissions",
             resourceTitle: "permission"
         },
+        appFormFieldReference: {
+            mostrarTots: 'Show all...',
+        },
     },
     form: {
         field: {
@@ -1760,6 +1851,42 @@ const translationEn: translationResourcesType = {
         modal_dades_dia: "Available data for the day",
         dimensions: "Dimensions",
         indicadors: "Indicators",
+        baixa_prioritat: "Low priority",
+        baixa_prioritat_descripcio: "Recovers data progressively in the background to avoid slowing down other processes",
+        success_baixa_prioritat: "Low priority recovery process started in the background",
+        processos_baixa_prioritat: "Low priority processes",
+        titol_processos_baixa_prioritat: "Low priority processes",
+        sense_processos: "No low priority processes",
+        estat_en_execucio: "Running",
+        estat_finalitzat: "Finished",
+        estat_error: "Error",
+        estat_cancelat: "Cancelled",
+        estat_pendent: "Pending",
+        cancelar_proces: "Cancel process",
+        proces_cancelat: "Process cancelled successfully",
+        progres: "Progress",
+        periode: "Period",
+        entorn: "Environment",
+        filtre_tots_entorns: "All environments",
+        filtre_entorn_actual: "Current environment only",
+        estat: "Status",
+        accions: "Actions",
+        dia: "day",
+        dies: "days",
+        errors: "errors",
+        processant: "Processing:",
+        refrescar: "Refresh",
+        error_cancelar_proces: "Could not cancel the process (it may have already finished)",
+        processant_segon_pla: "In background...",
+        processant_segon_pla_tooltip: "A background recovery process is running for this day",
+        velocitat: "Speed",
+        velocitat_recuperacio: "Recovery speed",
+        prioritat_baixa: "Low (10 minutes)",
+        prioritat_baixa_desc: "Minimal server impact. 10-minute pause between days.",
+        prioritat_mitja: "Medium (3 minutes)",
+        prioritat_mitja_desc: "Moderate impact. 3-minute pause between days.",
+        prioritat_alta: "High (No delay)",
+        prioritat_alta_desc: "Fast recovery with minimal pause (500 ms). Higher server impact.",
     },
     treeData: {
         treeView: "Tree view",

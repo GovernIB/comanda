@@ -10,6 +10,8 @@ export interface IEntornAppModel extends IBaseEntity {
     activa?     : boolean;
 
     salutUrl?   : string;
+    logsUrl?    : string;
+    logsDisponibles? : boolean;
 
     integracioCount?: number;
     subsistemaCount?: number;
@@ -90,7 +92,8 @@ export class EntornAppModel extends BaseEntity implements Partial<IEntornAppMode
     activa?     : boolean;
 
     salutUrl?   : string;
-    logsUrl?   : string;
+    logsUrl?    : string;
+    logsDisponibles? : boolean;
 
     integracioCount?: number;
     subsistemaCount?: number;

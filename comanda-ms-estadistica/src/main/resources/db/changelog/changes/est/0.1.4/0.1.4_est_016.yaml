@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: est-indicador-codi-uk-0.1.4-001
+      author: limit
+      comment: Afegir restricció d'unicitat per a codi i entorn_app_id a la taula com_est_indicador
+      changes:
+        - addUniqueConstraint:
+            tableName: ${db_prefix}est_indicador
+            columnNames: codi, entorn_app_id
+            constraintName: ${db_prefix}ind_codi_uk
+      rollback:
+        - dropUniqueConstraint:
+            tableName: ${db_prefix}est_indicador
+            constraintName: ${db_prefix}ind_codi_uk

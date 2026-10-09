@@ -13,12 +13,17 @@ import es.caib.comanda.ms.logic.intf.exception.ResourceFieldNotFoundException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationContext;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -29,6 +34,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -47,8 +56,25 @@ class EstadisticaTaulaWidgetServiceImplTest {
     @Mock
     private AtributsVisualsHelper atributsVisualsHelper;
 
+    @Mock
+    private es.caib.comanda.estadistica.logic.helper.DashboardPermisosHelper dashboardPermisosHelper;
+
+    @Mock
+    private I18nUtil i18nUtil;
+
+    @Mock
+    private ApplicationContext applicationContext;
+
     @InjectMocks
     private EstadisticaTaulaWidgetServiceImpl estadisticaTaulaWidgetService;
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(I18nUtil.class, "applicationContext", applicationContext);
+        lenient().when(applicationContext.getBean(I18nUtil.class)).thenReturn(i18nUtil);
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(i -> i.getArgument(0));
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(i -> i.getArgument(0));
+    }
 
     // ========================================================================
     // 1. TESTOS PER A beforeCreateSave
@@ -296,5 +322,115 @@ class EstadisticaTaulaWidgetServiceImplTest {
 
         // Assert
         assertThat(changes).isEmpty();
+    }
+
+    // ========================================================================
+    // 6. TESTOS PER A additionalSpringFilter
+    // ========================================================================
+
+    @Test
+    @DisplayName("additionalSpringFilter: delega en DashboardPermisosHelper.buildWidgetFilter")
+    void additionalSpringFilter_delegaEnDashboardPermisosHelper() {
+        String[] namedQueries = new String[]{WidgetBaseResource.FILTER_BY_ENTORN_NAMEDFILTER + "1"};
+        when(dashboardPermisosHelper.buildWidgetFilter("original", namedQueries)).thenReturn("filtrat");
+
+        String result = estadisticaTaulaWidgetService.additionalSpringFilter("original", namedQueries);
+
+        assertThat(result).isEqualTo("filtrat");
+        verify(dashboardPermisosHelper).buildWidgetFilter("original", namedQueries);
+    }
+
+    // ========================================================================
+    // 7. TESTOS PER A namedFilterToSpecification
+    // ========================================================================
+
+    @Test
+    @DisplayName("namedFilterToSpecification: delega en EstadisticaWidgetHelper.namedFilterToSpecification")
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void namedFilterToSpecification_delegaEnEstadisticaWidgetHelper() {
+        String namedFilter = WidgetBaseResource.FILTER_NOT_IN_DASHBOARD_NAMEDFILTER + "10";
+        org.springframework.data.jpa.domain.Specification mockSpec = org.mockito.Mockito.mock(org.springframework.data.jpa.domain.Specification.class);
+        org.mockito.Mockito.doReturn(mockSpec).when(estadisticaWidgetHelper).namedFilterToSpecification(namedFilter);
+
+        org.springframework.data.jpa.domain.Specification<EstadisticaTaulaWidgetEntity> result = estadisticaTaulaWidgetService.namedFilterToSpecification(namedFilter);
+
+        assertThat(result).isSameAs(mockSpec);
+        verify(estadisticaWidgetHelper).namedFilterToSpecification(namedFilter);
+    }
+
+    // ========================================================================
+    // 8. TESTOS PER A PERMISOS (beforeCreateEntity, beforeUpdateEntity, beforeDelete)
+    // ========================================================================
+
+    @Test
+    @DisplayName("beforeCreateEntity: verifica permisos de creació per a l'app")
+    void beforeCreateEntity_verificaPermisosCreacio() {
+        EstadisticaTaulaWidget resource = new EstadisticaTaulaWidget();
+        resource.setAppId(10L);
+
+        estadisticaTaulaWidgetService.beforeCreateEntity(new EstadisticaTaulaWidgetEntity(), resource, null);
+
+        verify(dashboardPermisosHelper).checkCanCreateWidget(eq(10L), any());
+    }
+
+    @Test
+    @DisplayName("beforeCreateEntity: llança AccessDeniedException si no té permisos")
+    void beforeCreateEntity_quanSensePermisos_llancaAccessDeniedException() {
+        EstadisticaTaulaWidget resource = new EstadisticaTaulaWidget();
+        resource.setAppId(10L);
+        doThrow(new AccessDeniedException("Sense permisos"))
+                .when(dashboardPermisosHelper).checkCanCreateWidget(eq(10L), any());
+
+        assertThatThrownBy(() -> estadisticaTaulaWidgetService.beforeCreateEntity(new EstadisticaTaulaWidgetEntity(), resource, null))
+                .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    @DisplayName("beforeUpdateEntity: verifica permisos de disseny per al widget")
+    void beforeUpdateEntity_verificaPermisosDisseny() {
+        EstadisticaTaulaWidgetEntity entity = new EstadisticaTaulaWidgetEntity();
+        entity.setId(1L);
+        entity.setAppId(10L);
+        EstadisticaTaulaWidget resource = new EstadisticaTaulaWidget();
+        resource.setAppId(10L);
+
+        estadisticaTaulaWidgetService.beforeUpdateEntity(entity, resource, null);
+
+        verify(dashboardPermisosHelper).checkCanDesignWidget(eq(entity), any());
+    }
+
+    @Test
+    @DisplayName("beforeUpdateEntity: llança AccessDeniedException si no té permisos de disseny")
+    void beforeUpdateEntity_quanSensePermisos_llancaAccessDeniedException() {
+        EstadisticaTaulaWidgetEntity entity = new EstadisticaTaulaWidgetEntity();
+        entity.setId(1L);
+        doThrow(new AccessDeniedException("Sense permisos"))
+                .when(dashboardPermisosHelper).checkCanDesignWidget(eq(entity), any());
+
+        assertThatThrownBy(() -> estadisticaTaulaWidgetService.beforeUpdateEntity(entity, new EstadisticaTaulaWidget(), null))
+                .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    @DisplayName("beforeDelete: verifica permisos d'eliminació per al widget")
+    void beforeDelete_verificaPermisosDisseny() {
+        EstadisticaTaulaWidgetEntity entity = new EstadisticaTaulaWidgetEntity();
+        entity.setId(1L);
+
+        estadisticaTaulaWidgetService.beforeDelete(entity, null);
+
+        verify(dashboardPermisosHelper).checkCanDeleteWidget(eq(entity), any());
+    }
+
+    @Test
+    @DisplayName("beforeDelete: llança AccessDeniedException si no té permisos d'eliminació")
+    void beforeDelete_quanSensePermisos_llancaAccessDeniedException() {
+        EstadisticaTaulaWidgetEntity entity = new EstadisticaTaulaWidgetEntity();
+        entity.setId(1L);
+        doThrow(new AccessDeniedException("Sense permisos"))
+                .when(dashboardPermisosHelper).checkCanDeleteWidget(eq(entity), any());
+
+        assertThatThrownBy(() -> estadisticaTaulaWidgetService.beforeDelete(entity, null))
+                .isInstanceOf(AccessDeniedException.class);
     }
 }

@@ -22,7 +22,13 @@ public interface IndicadorRepository extends BaseRepository<IndicadorEntity, Lon
 
     Optional<IndicadorEntity> findByCodiAndEntornAppId(String codi, Long entornAppId);
 
+    Optional<IndicadorEntity> findByNomAndEntornAppId(String nom, Long entornAppId);
+
     List<IndicadorEntity> findByEntornAppId(Long entornAppId);
+
+    @Modifying
+    @Query("UPDATE IndicadorEntity i SET i.indicadorComptadorPerMitjana = null WHERE i.entornAppId = :entornAppId")
+    void clearCompactacioByEntornAppId(@Param("entornAppId") Long entornAppId);
 
     @Modifying
     @Query("DELETE FROM IndicadorEntity i WHERE i.entornAppId = :entornAppId")

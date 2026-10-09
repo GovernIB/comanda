@@ -53,7 +53,7 @@ Modificar la secció `<subsystem xmlns="urn:jboss:domain:datasources:5.0">` del 
                     </security>
                     <pool>
                         <min-pool-size>1</min-pool-size>
-                        <max-pool-size>10</max-pool-size>
+                        <max-pool-size>50</max-pool-size>
                         <prefill>true</prefill>
                     </pool>
                 </datasource>

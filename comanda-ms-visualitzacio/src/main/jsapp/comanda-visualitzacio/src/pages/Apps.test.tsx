@@ -6,6 +6,8 @@ import Apps, { AppForm } from './Apps';
 const mocks = vi.hoisted(() => ({
     useParamsMock: vi.fn(),
     temporalMessageShowMock: vi.fn(),
+    messageDialogShowMock: vi.fn(),
+    indicadorArtifactActionMock: vi.fn(),
     refreshMock: vi.fn(),
     artifactActionMock: vi.fn(),
     artifactReportMock: vi.fn(),
@@ -14,7 +16,11 @@ const mocks = vi.hoisted(() => ({
     appPermissionShowMock: vi.fn(),
     iniciaDescargaJSONMock: vi.fn(),
     dialogShowMock: vi.fn(),
+    dialogActionShowMock: vi.fn(),
     dialogComponentMock: 'dialog-component',
+    isUserAdminMock: vi.fn(() => true),
+    readOnlyGestorMock: vi.fn(() => false),
+    lastRowAdditionalActions: [] as any[],
     useFormContextValue: {
         data: {},
         apiRef: { current: { setFieldValue: vi.fn() } },
@@ -42,6 +48,37 @@ const mocks = vi.hoisted(() => ({
                     action: {
                         export: 'Exportar',
                         import: 'Importar',
+                        netejaEstadistica: 'Neteja estadístiques',
+                        sincronitzarCataleg: 'Sincronitzar catàleg',
+                    },
+                    sincronitzarCataleg: {
+                        title: 'Sincronitzar catàleg',
+                        confirm: 'Segur que voleu sincronitzar?',
+                        success: 'Catàleg sincronitzat correctament',
+                    },
+                    netejaEstadistica: {
+                        label: 'Neteja estadístiques',
+                        dialogTitle: 'Reset estadístiques',
+                        alertTitle: 'Atenció global',
+                        alertDades: 'Esborrarà dades',
+                        alertCataleg: 'Esborrarà catàleg',
+                        alertWidgets: 'Esborrarà widgets',
+                        alertBackupTip: 'Exportar recomanat',
+                        abastOptions: {
+                            nomesDades: 'Només dades',
+                            dadesICataleg: 'Dades i catàleg',
+                        },
+                        fields: {
+                            abast: 'Abast',
+                            esborrarWidgets: 'Esborrar widgets',
+                            confirmoPerdua: 'Confirmo pèrdua total',
+                        },
+                        validation: {
+                            confirmoRequired: 'Cal confirmar',
+                        },
+                        confirmButton: 'Reset complet',
+                        cancelButton: 'Cancel·lar',
+                        success: 'Reset sol·licitat',
                     },
                     import: {
                         success: 'Importació correcta',
@@ -88,6 +125,29 @@ const mocks = vi.hoisted(() => ({
                             desactivar: 'Desactivar',
                             ok: 'Canvi correcte',
                         },
+                        netejaEstadistica: {
+                            label: 'Esborrar dades estadístiques',
+                            dialogTitle: 'Esborrar dades estadístiques',
+                            alertTitle: 'Atenció: Operació irreversible',
+                            alertDades: 'Esborrarà totes les dades estadístiques',
+                            alertScopeInfo: 'Per esborrar catàleg, anar a App',
+                            fields: {
+                                esborrarCatalegDisabled: 'Esborrar catàleg (desactivat)',
+                                confirmoPerdua: 'Confirmo pèrdua',
+                            },
+                            validation: {
+                                confirmoRequired: 'Cal confirmar',
+                            },
+                            confirmButton: 'Esborrar dades',
+                            cancelButton: 'Cancel·lar',
+                            success: 'Neteja sol·licitada correctament',
+                        },
+                        sincronitzarCataleg: {
+                            label: 'Sincronitzar catàleg entorn',
+                            title: 'Sincronitzar catàleg',
+                            confirm: 'Segur que voleu sincronitzar entorn?',
+                            success: 'Catàleg sincronitzat correctament',
+                        },
                     },
                 },
             },
@@ -107,8 +167,18 @@ vi.mock('react-router-dom', () => ({
 }));
 
 vi.mock('reactlib', () => ({
-    FormField: ({ name, label, componentProps }: { name: string; label?: string, componentProps?: any }) => (
-        <div data-testid={`field-${name}`}>{label ?? name}{componentProps?.slotProps?.input?.endAdornment}</div>
+    FormField: ({ name, label, componentProps, disabled, onChange }: { name: string; label?: string; componentProps?: any; disabled?: boolean; onChange?: any }) => (
+        <div data-testid={`field-${name}`} aria-disabled={disabled ? 'true' : undefined}>
+            {label ?? name}
+            {componentProps?.slotProps?.input?.endAdornment}
+            {onChange && (
+                <button
+                    type="button"
+                    data-testid={`change-${name}`}
+                    onClick={() => onChange('NOMES_DADES')}
+                />
+            )}
+        </div>
     ),
     FormPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     MuiActionReportButton: ({
@@ -140,6 +210,7 @@ vi.mock('reactlib', () => ({
         toolbarElementsWithPositions?: Array<{ element: React.ReactNode }>;
         popupEditFormContent?: React.ReactNode;
     }) => {
+        mocks.lastRowAdditionalActions = rowAdditionalActions ?? [];
         const isAppList = title === 'Aplicacions';
         const mockRow = isAppList
             ? { id: 12, nom: 'Comanda', activa: true, numPermisos: 2 }
@@ -219,7 +290,9 @@ vi.mock('reactlib', () => ({
     },
     useBaseAppContext: () => ({
         temporalMessageShow: mocks.temporalMessageShowMock,
+        messageDialogShow: mocks.messageDialogShowMock,
     }),
+    useConfirmDialogButtons: () => [{ value: false, text: 'Cancel·lar' }, { value: true, text: 'Confirmar' }],
     useFormContext: () => mocks.useFormContextValue,
     useMuiDataGridApiRef: () => ({
         current: {
@@ -232,12 +305,29 @@ vi.mock('reactlib', () => ({
                 artifactAction: mocks.artifactActionMock,
             };
         }
+        if (resourceName === 'indicador') {
+            return {
+                artifactAction: mocks.indicadorArtifactActionMock,
+            };
+        }
         return {
             artifactReport: mocks.artifactReportMock,
         };
     },
     useCloseDialogButtons: () => [{ value: false, text: 'Tancar', componentProps: { variant: 'contained' } }],
     useMuiContentDialog: () => [mocks.dialogShowMock, mocks.dialogComponentMock],
+    useMuiFormDialogApiRef: () => ({
+        current: {
+            show: mocks.dialogActionShowMock,
+            close: vi.fn(),
+        },
+    }),
+}));
+
+vi.mock('../components/FormActionDialog.tsx', () => ({
+    default: ({ children }: { children: React.ReactNode }) => (
+        <div data-testid="form-action-dialog">{children}</div>
+    ),
 }));
 
 vi.mock('../../lib/util/reactNodePosition.ts', () => ({}));
@@ -287,11 +377,11 @@ vi.mock('../components/PageTitle.tsx', () => ({
 }));
 
 vi.mock('../hooks/useReadOnlyGestor.ts', () => ({
-    default: () => false,
+    default: () => mocks.readOnlyGestorMock(),
 }));
 
 vi.mock('../components/UserContext.ts', () => ({
-    useIsUserAdmin: () => true,
+    useIsUserAdmin: () => mocks.isUserAdminMock(),
 }));
 
 vi.mock('@mui/material', async (importOriginal) => {
@@ -339,6 +429,9 @@ vi.mock('../util/exceptionUtils.ts', () => ({
 describe('AppForm', () => {
     afterEach(() => {
         vi.clearAllMocks();
+        mocks.isUserAdminMock.mockReturnValue(true);
+        mocks.readOnlyGestorMock.mockReturnValue(false);
+        mocks.lastRowAdditionalActions = [];
         mocks.useFormContextValue = {
             data: {},
             apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
@@ -488,6 +581,122 @@ describe('AppForm', () => {
                 'error'
             );
         });
+    });
+
+    it('AppForm_quanEsRenderitza_mostraLAccioNetejaEstadisticaIExecutaShowAlClicar', () => {
+        mocks.useParamsMock.mockReturnValue({ id: '12' });
+
+        render(<AppForm />);
+
+        const netejaButton = screen.getByText('Esborrar dades estadístiques');
+        expect(netejaButton).toBeInTheDocument();
+
+        fireEvent.click(netejaButton);
+
+        expect(mocks.dialogActionShowMock).toHaveBeenCalledWith(undefined, {
+            confirmoPerdua: false,
+            esborrarCatalegDisabled: false,
+            entornDescripcio: 'PRO',
+        });
+    });
+
+    it('AppForm_quanNoEsAdmin_amagaLAccioNetejaEstadistica', () => {
+        mocks.useParamsMock.mockReturnValue({ id: '12' });
+        mocks.isUserAdminMock.mockReturnValue(false);
+
+        render(<AppForm />);
+
+        const action = mocks.lastRowAdditionalActions.find(
+            (a: any) => a?.label === 'Esborrar dades estadístiques'
+        );
+        expect(action).toBeDefined();
+        expect(action.hidden()).toBe(true);
+    });
+
+    it('AppForm_quanEsGestorReadOnly_amagaLAccioNetejaEstadistica', () => {
+        mocks.useParamsMock.mockReturnValue({ id: '12' });
+        mocks.readOnlyGestorMock.mockReturnValue(true);
+
+        render(<AppForm />);
+
+        const action = mocks.lastRowAdditionalActions.find(
+            (a: any) => a?.label === 'Esborrar dades estadístiques'
+        );
+        expect(action).toBeDefined();
+        expect(action.hidden()).toBe(true);
+    });
+
+    it('AppForm_quanEsRenderitzaElFormulariNeteja_mostraCampConfirmacioICampDesactivatCataleg', () => {
+        mocks.useParamsMock.mockReturnValue({ id: '12' });
+
+        render(<AppForm />);
+
+        expect(screen.getByTestId('form-action-dialog')).toBeInTheDocument();
+        expect(screen.getByTestId('field-confirmoPerdua')).toBeInTheDocument();
+        const disabledField = screen.getByTestId('field-esborrarCatalegDisabled');
+        expect(disabledField).toBeInTheDocument();
+        expect(disabledField).toHaveAttribute('aria-disabled', 'true');
+        expect(screen.queryByTestId('field-abast')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('field-esborrarWidgets')).not.toBeInTheDocument();
+    });
+
+    it('AppForm_quanEsPremSincronitzarCatalegEntorn_mostraConfirmacioIExecutaAccio', async () => {
+        mocks.useParamsMock.mockReturnValue({ id: '12' });
+        mocks.messageDialogShowMock.mockResolvedValue(true);
+        mocks.indicadorArtifactActionMock.mockResolvedValue({ success: true, message: 'Sincronitzat' });
+
+        render(<AppForm />);
+
+        const syncButton = screen.getByRole('button', { name: 'Sincronitzar catàleg entorn' });
+        fireEvent.click(syncButton);
+
+        await waitFor(() => {
+            expect(mocks.messageDialogShowMock).toHaveBeenCalled();
+            expect(mocks.indicadorArtifactActionMock).toHaveBeenCalledWith(null, {
+                code: 'sincronitzar_cataleg',
+                data: { entornAppId: undefined },
+            });
+            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Sincronitzat', 'success');
+        });
+    });
+
+    it('AppForm_quanEntornNoEsActiu_amagaSincronitzarCatalegEntorn', () => {
+        mocks.useParamsMock.mockReturnValue({ id: '12' });
+
+        render(<AppForm />);
+
+        const action = mocks.lastRowAdditionalActions.find(
+            (a: any) => a?.action === 'sincronitzar_cataleg'
+        );
+        expect(action).toBeDefined();
+        expect(action.hidden({ activa: true })).toBe(false);
+        expect(action.hidden({ activa: false })).toBe(true);
+    });
+
+    it('AppForm_quanNoEsAdmin_amagaSincronitzarCatalegEntorn', () => {
+        mocks.useParamsMock.mockReturnValue({ id: '12' });
+        mocks.isUserAdminMock.mockReturnValue(false);
+
+        render(<AppForm />);
+
+        const action = mocks.lastRowAdditionalActions.find(
+            (a: any) => a?.action === 'sincronitzar_cataleg'
+        );
+        expect(action).toBeDefined();
+        expect(action.hidden({ activa: true })).toBe(true);
+    });
+
+    it('AppForm_quanEsGestorReadOnly_amagaSincronitzarCatalegEntorn', () => {
+        mocks.useParamsMock.mockReturnValue({ id: '12' });
+        mocks.readOnlyGestorMock.mockReturnValue(true);
+
+        render(<AppForm />);
+
+        const action = mocks.lastRowAdditionalActions.find(
+            (a: any) => a?.action === 'sincronitzar_cataleg'
+        );
+        expect(action).toBeDefined();
+        expect(action.hidden({ activa: true })).toBe(true);
     });
 });
 
@@ -695,6 +904,125 @@ describe('Apps', () => {
         render(<Apps />);
 
         expect(screen.getByLabelText('Sense logotip')).toBeInTheDocument();
+    });
+
+    it('Apps_quanEsRenderitza_mostraLAccioNetejaEstadisticaIExecutaShowAlClicar', () => {
+        mocks.useParamsMock.mockReturnValue({ id: undefined });
+
+        render(<Apps />);
+
+        const netejaButton = screen.getByRole('button', { name: 'Neteja estadístiques' });
+        expect(netejaButton).toBeInTheDocument();
+
+        fireEvent.click(netejaButton);
+
+        expect(mocks.dialogActionShowMock).toHaveBeenCalledWith(12, {
+            abast: 'NOMES_DADES',
+            esborrarWidgets: false,
+            confirmoPerdua: false,
+            appNom: 'Comanda',
+        });
+    });
+
+    it('Apps_quanNoEsAdmin_amagaLAccioNetejaEstadistica', () => {
+        mocks.useParamsMock.mockReturnValue({ id: undefined });
+        mocks.isUserAdminMock.mockReturnValue(false);
+
+        render(<Apps />);
+
+        const action = mocks.lastRowAdditionalActions.find(
+            (a: any) => a?.label === 'Neteja estadístiques'
+        );
+        expect(action).toBeDefined();
+        expect(action.hidden()).toBe(true);
+    });
+
+    it('Apps_quanEsGestorReadOnly_amagaLAccioNetejaEstadistica', () => {
+        mocks.useParamsMock.mockReturnValue({ id: undefined });
+        mocks.readOnlyGestorMock.mockReturnValue(true);
+
+        render(<Apps />);
+
+        const action = mocks.lastRowAdditionalActions.find(
+            (a: any) => a?.label === 'Neteja estadístiques'
+        );
+        expect(action).toBeDefined();
+        expect(action.hidden()).toBe(true);
+    });
+
+    it('Apps_quanEsRenderitzaElFormulariNetejaGlobal_mostraCampsSegonsAbast', () => {
+        mocks.useParamsMock.mockReturnValue({ id: undefined });
+
+        render(<Apps />);
+
+        expect(screen.getByTestId('form-action-dialog')).toBeInTheDocument();
+        expect(screen.getByTestId('field-abast')).toBeInTheDocument();
+        expect(screen.getByTestId('field-confirmoPerdua')).toBeInTheDocument();
+        expect(screen.queryByTestId('field-esborrarWidgets')).not.toBeInTheDocument();
+    });
+
+    it('Apps_quanAbastEsCataleg_mostraCampEsborrarWidgetsIRestableixAlCanviar', () => {
+        mocks.useParamsMock.mockReturnValue({ id: undefined });
+        mocks.useFormContextValue = {
+            data: { abast: 'DADES_I_CATALEG' },
+            apiRef: { current: { setFieldValue: mocks.setFieldValueMock } },
+            fieldErrors: [],
+        };
+
+        render(<Apps />);
+
+        expect(screen.getByTestId('field-esborrarWidgets')).toBeInTheDocument();
+
+        const abastChangeBtn = screen.getByTestId('change-abast');
+        fireEvent.click(abastChangeBtn);
+
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('esborrarWidgets', false);
+    });
+
+    it('Apps_quanEsPremSincronitzarCatalegApp_mostraConfirmacioIExecutaAccio', async () => {
+        mocks.useParamsMock.mockReturnValue({ id: undefined });
+        mocks.messageDialogShowMock.mockResolvedValue(true);
+        mocks.indicadorArtifactActionMock.mockResolvedValue({ success: true, message: 'Sincronitzat app' });
+
+        render(<Apps />);
+
+        const syncButton = screen.getByRole('button', { name: 'Sincronitzar catàleg' });
+        fireEvent.click(syncButton);
+
+        await waitFor(() => {
+            expect(mocks.messageDialogShowMock).toHaveBeenCalled();
+            expect(mocks.indicadorArtifactActionMock).toHaveBeenCalledWith(null, {
+                code: 'sincronitzar_cataleg',
+                data: { appId: 12 },
+            });
+            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Sincronitzat app', 'success');
+        });
+    });
+
+    it('Apps_quanNoEsAdmin_amagaLAccioSincronitzarCataleg', () => {
+        mocks.useParamsMock.mockReturnValue({ id: undefined });
+        mocks.isUserAdminMock.mockReturnValue(false);
+
+        render(<Apps />);
+
+        const action = mocks.lastRowAdditionalActions.find(
+            (a: any) => a?.action === 'sincronitzar_cataleg'
+        );
+        expect(action).toBeDefined();
+        expect(action.hidden()).toBe(true);
+    });
+
+    it('Apps_quanEsGestorReadOnly_amagaLAccioSincronitzarCataleg', () => {
+        mocks.useParamsMock.mockReturnValue({ id: undefined });
+        mocks.readOnlyGestorMock.mockReturnValue(true);
+
+        render(<Apps />);
+
+        const action = mocks.lastRowAdditionalActions.find(
+            (a: any) => a?.action === 'sincronitzar_cataleg'
+        );
+        expect(action).toBeDefined();
+        expect(action.hidden()).toBe(true);
     });
 });
 
