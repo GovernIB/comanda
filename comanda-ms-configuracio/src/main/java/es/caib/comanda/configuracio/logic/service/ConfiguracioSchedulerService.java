@@ -2,8 +2,8 @@ package es.caib.comanda.configuracio.logic.service;
 
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
+import es.caib.comanda.configuracio.logic.helper.EntornAppHistHelper;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
-import es.caib.comanda.configuracio.persist.repository.EntornAppHistRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import es.caib.comanda.ms.logic.helper.SchedulerTaskRegistryService;
@@ -28,7 +28,7 @@ public class ConfiguracioSchedulerService {
     private static final String TASK_ID_HIST = "CONFIGURACIO_HIST_NETEJA";
 
     private final EntornAppRepository entornAppRepository;
-    private final EntornAppHistRepository entornAppHistRepository;
+    private final EntornAppHistHelper entornAppHistHelper;
     private final AppInfoHelper appInfoHelper;
     private final ParametresHelper parametresHelper;
     private final TaskExecutor configuracioWorkerExecutor;
@@ -41,13 +41,13 @@ public class ConfiguracioSchedulerService {
 
     public ConfiguracioSchedulerService(
             EntornAppRepository entornAppRepository,
-            EntornAppHistRepository entornAppHistRepository,
+            EntornAppHistHelper entornAppHistHelper,
             AppInfoHelper appInfoHelper,
             ParametresHelper parametresHelper,
             @Qualifier("configuracioWorkerExecutor") TaskExecutor configuracioWorkerExecutor,
             SchedulerTaskRegistryService schedulerTaskRegistry) {
         this.entornAppRepository = entornAppRepository;
-        this.entornAppHistRepository = entornAppHistRepository;
+        this.entornAppHistHelper = entornAppHistHelper;
         this.appInfoHelper = appInfoHelper;
         this.parametresHelper = parametresHelper;
         this.configuracioWorkerExecutor = configuracioWorkerExecutor;
@@ -125,7 +125,7 @@ public class ConfiguracioSchedulerService {
             Integer retencioDiesHistoric = parametresHelper.getParametreEnter(BaseConfig.PROP_CONFIG_ENTORN_APP_HIST_RETENCIO_DIES, 30);
             if (retencioDiesHistoric != null && retencioDiesHistoric > 0) {
                 LocalDateTime menysRetencioHistoric = LocalDateTime.now().minusDays(retencioDiesHistoric.longValue());
-                long eliminats = entornAppHistRepository.deleteByDataBefore(menysRetencioHistoric);
+                int eliminats = entornAppHistHelper.deleteHistoryBeforeDate(menysRetencioHistoric);
                 log.info("Neteja d'entornAppHist finalitzada. Eliminats {} registres anteriors a {}", eliminats, menysRetencioHistoric);
             }
             schedulerTaskRegistry.recordSuccess(TASK_ID_HIST);

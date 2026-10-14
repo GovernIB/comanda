@@ -1,12 +1,12 @@
 package es.caib.comanda.ms.configuracio.service;
 
 import es.caib.comanda.configuracio.logic.helper.AppInfoHelper;
+import es.caib.comanda.configuracio.logic.helper.EntornAppHistHelper;
 import es.caib.comanda.configuracio.logic.service.ConfiguracioSchedulerService;
 import es.caib.comanda.ms.logic.helper.SchedulerTaskRegistryService;
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornEntity;
-import es.caib.comanda.configuracio.persist.repository.EntornAppHistRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +31,7 @@ public class ConfiguracioSchedulerServiceTest {
     @Mock
     private EntornAppRepository entornAppRepository;
     @Mock
-    private EntornAppHistRepository entornAppHistRepository;
+    private EntornAppHistHelper entornAppHistHelper;
     @Mock
     private AppInfoHelper appInfoHelper;
     @Mock
@@ -49,7 +49,7 @@ public class ConfiguracioSchedulerServiceTest {
     void setUp() {
         service = new ConfiguracioSchedulerService(
                 entornAppRepository,
-                entornAppHistRepository,
+                entornAppHistHelper,
                 appInfoHelper,
                 parametresHelper,
                 configuracioWorkerExecutor,
