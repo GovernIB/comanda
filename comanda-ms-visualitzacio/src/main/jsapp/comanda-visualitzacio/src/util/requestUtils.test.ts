@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { buildHref, findOptions } from './requestUtils';
 
 const { getEnvApiUrlMock } = vi.hoisted(() => ({
     getEnvApiUrlMock: vi.fn(),
@@ -7,8 +8,6 @@ const { getEnvApiUrlMock } = vi.hoisted(() => ({
 vi.mock('./envUtils.ts', () => ({
     getEnvApiUrl: getEnvApiUrlMock,
 }));
-
-import { buildHref, findOptions } from './requestUtils';
 
 describe('findOptions', () => {
     it('findOptions_quanLaConsultaRetornaFiles_mapejaIdIDescription', async () => {

@@ -33,7 +33,7 @@ interface DbOverview {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const formatBytes = (bytes: number): string => {
+export const formatBytes = (bytes: number): string => {
     if (bytes === 0) return '0 B';
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -41,10 +41,10 @@ const formatBytes = (bytes: number): string => {
     return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
 };
 
-const formatNumber = (n: number): string =>
+export const formatNumber = (n: number): string =>
     n.toLocaleString('ca-ES');
 
-const pctColor = (pct: number): 'success' | 'warning' | 'error' => {
+export const pctColor = (pct: number): 'success' | 'warning' | 'error' => {
     if (pct >= 90) return 'error';
     if (pct >= 75) return 'warning';
     return 'success';

@@ -3,7 +3,7 @@ import { useResourceApiService } from 'reactlib';
 
 const MONITOR_DB_ACTIU_CODE = 'es.caib.comanda.monitor.db.actiu';
 
-const resolveBooleanParamValue = (param: any) => {
+export const resolveBooleanParamValue = (param: any) => {
     if (typeof param?.valorBoolean === 'boolean') {
         return param.valorBoolean;
     }

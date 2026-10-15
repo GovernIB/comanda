@@ -31,7 +31,7 @@ const UoAclEntryForm: React.FC = () => {
     </Grid>;
 }
 
-const EntitatOrganigrama = ({entitatId, codi, reloadToken, permisos}:{entitatId:any, codi:string, reloadToken:number, permisos?: (id:any, row:any) => void}) => {
+export const EntitatOrganigrama = ({entitatId, codi, reloadToken, permisos}:{entitatId:any, codi:string, reloadToken:number, permisos?: (id:any, row:any) => void}) => {
     const { t } = useTranslation();
     const [unitats, setUnitats] = useState<any[] | undefined>();
     const [loading, setLoading] = useState<boolean>(true);

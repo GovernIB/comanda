@@ -145,7 +145,7 @@ const ParametreRow: React.FC<{
     );
 };
 
-const groupBySubGrup = (items: Array<Record<string, unknown>>): Map<string, Array<Record<string, unknown>>> => {
+export const groupBySubGrup = (items: Array<Record<string, unknown>>): Map<string, Array<Record<string, unknown>>> => {
     const map = new Map<string, Array<Record<string, unknown>>>();
     items.forEach((item) => {
         const key = (item.subGrup as string) ?? '';

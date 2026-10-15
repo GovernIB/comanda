@@ -8,7 +8,7 @@ type GrupTree = Map<string, string[]>;
 const makeGrupId = (grup: string) => `g:${grup}`;
 const makeSubGrupId = (grup: string, subGrup: string) => `sg:${grup}:${subGrup}`;
 
-const parseItemId = (id: string): { grup: string; subGrup: string | null } | null => {
+export const parseItemId = (id: string): { grup: string; subGrup: string | null } | null => {
     if (id.startsWith('sg:')) {
         const rest = id.substring(3);
         const idx = rest.indexOf(':');
@@ -21,7 +21,7 @@ const parseItemId = (id: string): { grup: string; subGrup: string | null } | nul
     return null;
 };
 
-const isSelectionValid = (itemId: string, tree: GrupTree): boolean => {
+export const isSelectionValid = (itemId: string, tree: GrupTree): boolean => {
     const parsed = parseItemId(itemId);
     if (!parsed) return false;
     if (!tree.has(parsed.grup)) return false;
@@ -31,7 +31,7 @@ const isSelectionValid = (itemId: string, tree: GrupTree): boolean => {
     return true;
 };
 
-const buildGrupTree = (rows: Array<{ grup?: string; subGrup?: string }>): GrupTree => {
+export const buildGrupTree = (rows: Array<{ grup?: string; subGrup?: string }>): GrupTree => {
     const tree: GrupTree = new Map();
     rows.forEach((p) => {
         if (!p.grup) return;
