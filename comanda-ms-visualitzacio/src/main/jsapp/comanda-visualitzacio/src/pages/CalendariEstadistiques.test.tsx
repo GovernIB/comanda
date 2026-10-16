@@ -1243,4 +1243,63 @@ describe('useEntornAppData', () => {
             expect(result.current).toEqual([]);
         });
     });
+
+    it('CalendariEstadistiques_quanPollingRecuperaDies_actualitzaDatesAmbDadesIBuidesIErrors', async () => {
+        mocks.entornAppFindMock.mockResolvedValue({
+            rows: [{ id: 7, app: { description: 'App Demo' }, entorn: { description: 'PRO' } }],
+        });
+        mocks.fetReportMock.mockImplementation((_id: unknown, args: { code: string }) => {
+            if (args.code === 'dates_disponibles') {
+                return Promise.resolve([]);
+            }
+            if (args.code === 'processos_baixa_prioritat') {
+                return Promise.resolve([
+                    {
+                        id: 'proc-1',
+                        entornAppId: 7,
+                        dataInici: '2026-03-01',
+                        dataFi: '2026-03-05',
+                        estat: 'EN_EXECUCIO',
+                        totalDies: 5,
+                        diesProcessats: 3,
+                        diesAmbDades: 1,
+                        diesAmbErrors: 1,
+                        percentatge: 60,
+                        diesAmbDadesLlista: ['2026-03-05'],
+                        diesSenseDadesLlista: ['2026-03-04'],
+                        diesAmbErrorLlista: ['2026-03-03'],
+                    },
+                ]);
+            }
+            return Promise.resolve([]);
+        });
+        mocks.dimensioFindMock.mockResolvedValue({ rows: [] });
+        mocks.indicadorFindMock.mockResolvedValue({ rows: [] });
+        mocks.useCalendarEventsMock.mockReturnValue([]);
+
+        render(
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <CalendariEstadistiques />
+            </LocalizationProvider>
+        );
+
+        await screen.findByRole('option', { name: 'App Demo - PRO' });
+
+        fireEvent.change(screen.getByLabelText('Seleccionar entorn app'), {
+            target: { value: '7' },
+        });
+
+        await waitFor(() => {
+            const lastCall = mocks.useCalendarEventsMock.mock.calls.at(-1)?.[0];
+            expect(lastCall?.datesAmbDades).toContain('2026-03-05');
+            expect(lastCall?.emptyDates).toContain('2026-03-04');
+            expect(lastCall?.errors.some((e: any) => e.date === '2026-03-03')).toBe(true);
+            expect(lastCall?.backgroundProcessingDates).toEqual(
+                expect.arrayContaining(['2026-03-01', '2026-03-02'])
+            );
+            expect(lastCall?.backgroundProcessingDates).not.toContain('2026-03-03');
+            expect(lastCall?.backgroundProcessingDates).not.toContain('2026-03-04');
+            expect(lastCall?.backgroundProcessingDates).not.toContain('2026-03-05');
+        });
+    });
 });

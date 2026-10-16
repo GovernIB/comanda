@@ -171,4 +171,53 @@ describe('useCalendarEvents', () => {
             })
         );
     });
+
+    it('useCalendarEvents_quanUnaDataTeDadesBuidesEncaraQueEstiguiEnSegonPla_prioritzaDadesBuides', () => {
+        const { result } = renderHook(() =>
+            useCalendarEvents({
+                currentViewMonth: 0,
+                currentViewYear: 2025,
+                entornAppId: 7,
+                datesAmbDades: [],
+                emptyDates: ['2025-01-15'],
+                loadingDates: [],
+                backgroundProcessingDates: ['2025-01-15'],
+                errors: [],
+                datesDisponiblesError: false,
+            })
+        );
+
+        const events = result.current.filter(event => event.date === '2025-01-15');
+        expect(events).toHaveLength(2);
+        expect(events[0]).toEqual(
+            expect.objectContaining({
+                title: 'Dades buides',
+                backgroundColor: '#f6af2a',
+            })
+        );
+    });
+
+    it('useCalendarEvents_quanUnaDataTeErrorEncaraQueEstiguiEnSegonPla_prioritzaError', () => {
+        const { result } = renderHook(() =>
+            useCalendarEvents({
+                currentViewMonth: 0,
+                currentViewYear: 2025,
+                entornAppId: 7,
+                datesAmbDades: [],
+                emptyDates: [],
+                loadingDates: [],
+                backgroundProcessingDates: ['2025-01-15'],
+                errors: [{ date: '2025-01-15', message: 'Error' }],
+                datesDisponiblesError: false,
+            })
+        );
+
+        const events = result.current.filter(event => event.date === '2025-01-15');
+        expect(events).toHaveLength(2);
+        expect(events[0]).toEqual(
+            expect.objectContaining({
+                extendedProps: expect.objectContaining({ hasError: true }),
+            })
+        );
+    });
 });

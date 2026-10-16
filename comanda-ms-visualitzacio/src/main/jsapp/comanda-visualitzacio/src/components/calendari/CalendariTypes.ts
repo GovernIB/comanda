@@ -37,6 +37,9 @@ export interface ProcesBaixaPrioritat {
     percentatge: number;
     diaActual?: string;
     missatge?: string;
+    diesAmbDadesLlista?: string[];
+    diesSenseDadesLlista?: string[];
+    diesAmbErrorLlista?: string[];
 }
 
 export interface Temps {

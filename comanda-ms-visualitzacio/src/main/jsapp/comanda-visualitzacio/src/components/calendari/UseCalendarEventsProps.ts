@@ -68,7 +68,7 @@ export const useCalendarEvents = ({
       }
 
       // Background processing
-      if (isBackgroundProcessing && !hasDades) {
+      if (isBackgroundProcessing && !hasDades && !hasEmptyDades && !hasError) {
         return [
           {
             title: t($ => $.calendari.processant_segon_pla),
