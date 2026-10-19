@@ -126,6 +126,10 @@ interface ConflictGroupMeta {
     items: { index: number; conflict: Conflicte }[];
 }
 
+const supportsOverwrite = (tipo?: string) => {
+    return tipo === 'IndicadorExport' || tipo === 'PlantillaExport' || tipo === 'PaletaExport';
+};
+
 const groupConflicts = (conflicts: Conflicte[], t: TFunction): ConflictGroupMeta[] => {
     const knownTypes = [
         { tipo: 'DashboardExport', getLabel: () => t($ => $.page.dashboards.action.import.groups.dashboard), icon: 'dashboard' },
@@ -300,7 +304,9 @@ const ConflictsTreeViewItemChild = React.memo(
                                                 ? ['CREAR_AMB_ALTRE_NOM']
                                                 : conflict.tipo === 'DashboardExport'
                                                     ? ['EMPRAR_EXISTENT', 'SOBRESCRIURE']
-                                                    : ['SOBRESCRIURE']
+                                                    : conflict.tipo === 'PlantillaExport' || conflict.tipo === 'PaletaExport'
+                                                        ? []
+                                                        : ['SOBRESCRIURE']
                                         }
                                         required
                                     />
@@ -453,10 +459,30 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean; onReanalyze
     const [selectedItems, setSelectedItems] = React.useState<string[]>([]);
     const [isWarningExpanded, setIsWarningExpanded] = React.useState(false);
 
+    const hasPlantillaConflict = React.useMemo(() => {
+        return conflicts?.some(c => c.tipo === 'PlantillaExport' && !c.bloquejant) ?? false;
+    }, [conflicts]);
+
+    const hasPlantillaWithChanges = React.useMemo(() => {
+        return conflicts?.some(
+            c => c.tipo === 'PlantillaExport' && !c.bloquejant && (c.overwrite === 'CREAR_AMB_ALTRE_NOM' || c.overwrite === 'SOBRESCRIURE')
+        ) ?? false;
+    }, [conflicts]);
+
+    const showPaletes = !hasPlantillaConflict || hasPlantillaWithChanges;
+
     const groups = React.useMemo(() => {
         if (!conflicts || conflicts.length === 0) return [];
         return groupConflicts(conflicts, t);
     }, [conflicts, t]);
+
+    const visibleGroups = React.useMemo(() => {
+        if (!groups) return [];
+        if (!showPaletes) {
+            return groups.filter(g => g.tipo !== 'PaletaExport');
+        }
+        return groups;
+    }, [groups, showPaletes]);
 
     const hasBlockingConflicts = React.useMemo(() => {
         return conflicts?.some(c => c.bloquejant) ?? false;
@@ -466,19 +492,36 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean; onReanalyze
         return (conflicts ?? []).filter(c => !c.bloquejant);
     }, [conflicts]);
 
+    const visibleNonBlockingConflicts = React.useMemo(() => {
+        return (conflicts ?? []).filter(c => !c.bloquejant && (showPaletes || c.tipo !== 'PaletaExport'));
+    }, [conflicts, showPaletes]);
+
     const selectedIndices = React.useMemo(() => {
         if (!conflicts) return [];
         return conflicts
             .map((c, i) => ({ c, i }))
-            .filter(({ c, i }) => !c.bloquejant && selectedItems.includes(`conflict-${i}`))
+            .filter(({ c, i }) => !c.bloquejant && (showPaletes || c.tipo !== 'PaletaExport') && selectedItems.includes(`conflict-${i}`))
             .map(({ i }) => i);
-    }, [conflicts, selectedItems]);
+    }, [conflicts, selectedItems, showPaletes]);
 
     React.useEffect(() => {
         if (!conflicts || conflicts.length === 0) {
             setSelectedItems([]);
         }
     }, [conflicts]);
+
+    React.useEffect(() => {
+        if (!showPaletes) {
+            setSelectedItems(prev => prev.filter(id => {
+                if (id === 'group-PaletaExport') return false;
+                if (id.startsWith('conflict-')) {
+                    const idx = parseInt(id.replace('conflict-', ''), 10);
+                    return conflicts?.[idx]?.tipo !== 'PaletaExport';
+                }
+                return true;
+            }));
+        }
+    }, [showPaletes, conflicts]);
 
     const updateConflict = React.useCallback((index: number, changes: Partial<Conflicte>) => {
         if (!conflicts) return;
@@ -489,7 +532,7 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean; onReanalyze
     const handleSelectAll = () => {
         if (!conflicts) return;
         const allIds: string[] = [];
-        groups.forEach((g) => {
+        visibleGroups.forEach((g) => {
             const hasNonBlocking = g.items.some(item => !item.conflict.bloquejant);
             if (hasNonBlocking) {
                 allIds.push(`group-${g.tipo}`);
@@ -534,7 +577,7 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean; onReanalyze
     const handleBulkOverwrite = () => {
         if (selectedIndices.length === 0 || !conflicts) return;
         const updated = conflicts.map((c, i) => {
-            if (!selectedIndices.includes(i) || c.bloquejant || c.tipo !== 'IndicadorExport') return c;
+            if (!selectedIndices.includes(i) || c.bloquejant || !supportsOverwrite(c.tipo)) return c;
             return {
                 ...c,
                 overwrite: 'SOBRESCRIURE',
@@ -576,11 +619,11 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean; onReanalyze
     }, [selectedConflicts.length, hasEligibleCreateWithAnotherName, hasIneligibleCreateWithAnotherName]);
 
     const hasEligibleOverwrite = React.useMemo(() => {
-        return selectedConflicts.some(c => c.tipo === 'IndicadorExport');
+        return selectedConflicts.some(c => supportsOverwrite(c.tipo));
     }, [selectedConflicts]);
 
     const hasIneligibleOverwrite = React.useMemo(() => {
-        return selectedConflicts.some(c => c.tipo !== 'IndicadorExport');
+        return selectedConflicts.some(c => !supportsOverwrite(c.tipo));
     }, [selectedConflicts]);
 
     const isMixedOverwrite = React.useMemo(() => {
@@ -590,16 +633,16 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean; onReanalyze
     const hasMixedSelection = isMixedUseExisting || isMixedCreateWithAnotherName || isMixedOverwrite;
 
     const hasExistingItems = React.useMemo(() => {
-        return conflicts?.some((c) => !c.bloquejant && (c.overwrite === 'EMPRAR_EXISTENT' || !c.overwrite)) ?? false;
-    }, [conflicts]);
+        return (conflicts ?? []).some((c) => !c.bloquejant && (showPaletes || c.tipo !== 'PaletaExport') && (c.overwrite === 'EMPRAR_EXISTENT' || !c.overwrite));
+    }, [conflicts, showPaletes]);
 
     const hasNonIndicadorConflicts = React.useMemo(() => {
-        return nonBlockingConflicts.some(c => c.tipo !== 'IndicadorExport');
-    }, [nonBlockingConflicts]);
+        return visibleNonBlockingConflicts.some(c => c.tipo !== 'IndicadorExport');
+    }, [visibleNonBlockingConflicts]);
 
-    const hasIndicadorConflicts = React.useMemo(() => {
-        return nonBlockingConflicts.some(c => c.tipo === 'IndicadorExport');
-    }, [nonBlockingConflicts]);
+    const hasOverwriteConflicts = React.useMemo(() => {
+        return visibleNonBlockingConflicts.some(c => supportsOverwrite(c.tipo));
+    }, [visibleNonBlockingConflicts]);
 
     if (!hasFile && !isAnalyzing) {
         return null;
@@ -718,7 +761,7 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean; onReanalyze
                             size="small"
                             variant="text"
                             onClick={handleSelectAll}
-                            disabled={selectedIndices.length === nonBlockingConflicts.length || nonBlockingConflicts.length === 0}
+                            disabled={selectedIndices.length === visibleNonBlockingConflicts.length || visibleNonBlockingConflicts.length === 0}
                         >
                             {t($ => $.page.dashboards.action.import.bulkActions.selectAll)}
                         </Button>
@@ -752,7 +795,7 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean; onReanalyze
                                 {t($ => $.page.dashboards.action.import.bulkActions.createWithAnotherName)}
                             </Button>
                         )}
-                        {hasIndicadorConflicts && (
+                        {hasOverwriteConflicts && (
                             <Button
                                 size="small"
                                 variant="outlined"
@@ -781,7 +824,7 @@ const DashboardImportConflictsForm: React.FC<{ isAnalyzing: boolean; onReanalyze
             )}
 
             <ConflictsTreeView
-                groups={groups}
+                groups={visibleGroups}
                 selectedItems={selectedItems}
                 setSelectedItems={setSelectedItems}
                 fieldOverwrite={fieldOverwrite}

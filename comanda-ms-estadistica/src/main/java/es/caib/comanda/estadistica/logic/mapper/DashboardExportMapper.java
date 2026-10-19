@@ -44,7 +44,7 @@ public interface DashboardExportMapper {
      * Converteix un DashboardEntity a un DashboardExport.
      * Els camps amb el mateix nom es mapegen automàticament.
      * La llista d'items es mapeja utilitzant el mètode toDashboardItemExport.
-     * 
+     *
      * @param dashboardEntity El dashboard entity a convertir
      * @return El DashboardExport resultant
      */
@@ -93,16 +93,49 @@ public interface DashboardExportMapper {
     @Named("toColorsExport")
     default String toColorsExport(List<PaletaColorEntity> colors) {
         if (colors == null || colors.isEmpty()) return null;
-//        colors.sort(e -> e.getPosicio());
         return colors.stream()
+                .sorted(java.util.Comparator.comparing(c -> c.getPosicio() == null ? Integer.MAX_VALUE : c.getPosicio()))
                 .map(PaletaColorEntity::getValor)
                 .collect(Collectors.joining(","));
     }
-    
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "nom", ignore = true)
+    @Mapping(target = "v", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "lastModifiedBy", ignore = true)
+    @Mapping(target = "lastModifiedDate", ignore = true)
+    @Mapping(target = "paletteGroups", ignore = true)
+    @Mapping(target = "styleProperties", ignore = true)
+    void updatePlantillaEntityFromEntity(@MappingTarget PlantillaEntity target, PlantillaEntity source);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "nom", ignore = true)
+    @Mapping(target = "v", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "lastModifiedBy", ignore = true)
+    @Mapping(target = "lastModifiedDate", ignore = true)
+    @Mapping(target = "colors", ignore = true)
+    void updatePaletaEntityFromEntity(@MappingTarget PaletaEntity target, PaletaEntity source);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "v", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "lastModifiedBy", ignore = true)
+    @Mapping(target = "lastModifiedDate", ignore = true)
+    @Mapping(target = "plantilla", ignore = true)
+    void updateWidgetStylePropertyEntityFromEntity(@MappingTarget WidgetStylePropertyEntity target, WidgetStylePropertyEntity source);
+
     /**
      * Converteix un DashboardItemEntity a un DashboardItemExport.
      * Els camps amb el mateix nom es mapegen automàticament.
-     * 
+     *
      * @param dashboardItemEntity El DashboardItemEntity a convertir
      * @return El DashboardItemExport resultant
      */
@@ -119,10 +152,10 @@ public interface DashboardExportMapper {
     @SubclassMapping(source = EstadisticaGraficWidgetEntity.class, target = EstadisticaGraficWidgetExport.class)
     @SubclassMapping(source = EstadisticaTaulaWidgetEntity.class, target = EstadisticaTaulaWidgetExport.class)
     EstadisticaWidgetExport toWidgetExport(EstadisticaWidgetEntity widget);
-    
+
     /**
      * Converteix un EstadisticaWidgetEntity a un EstadisticaWidgetExport i emplena els atributsVisuals.
-     * 
+     *
      * @param widget El widget entity a convertir
      * @param atributsVisualsHelper Helper per obtenir els atributs visuals
      * @return El EstadisticaWidgetExport resultant amb els atributs visuals emplenats
@@ -132,9 +165,9 @@ public interface DashboardExportMapper {
         if (widget == null) {
             return null;
         }
-        
+
         EstadisticaWidgetExport result = toWidgetExport(widget);
-        
+
         if (result instanceof EstadisticaSimpleWidgetExport) {
             ((EstadisticaSimpleWidgetExport) result).setAtributsVisuals(
                 (es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple) atributsVisualsHelper.getAtributsVisuals(widget)
@@ -158,7 +191,7 @@ public interface DashboardExportMapper {
                     ((EstadisticaTaulaWidgetEntity) widget).getDimensioAgrupacio().getCodi());
             result.setTipus(WidgetTipus.TAULA);
         }
-        
+
         return result;
     }
 

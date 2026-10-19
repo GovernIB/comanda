@@ -499,7 +499,7 @@ const translationCa = {
                     button: "Importar",
                     conflictsTitle: "Conflictes",
                     success: "Tauler importat correctament",
-                    dashboardConflicts: "Ja existeixen elements amb aquests noms. Indica què s'ha de fer amb cadascun:",
+                    dashboardConflicts: "Ja existeixen elements amb aquests noms i/o la seva configuració no coincideix amb l'importada. Indica què s'ha de fer amb cadascun:",
                     analyzing: "Analitzant el fitxer i verificant possibles conflictes...",
                     noConflicts: "No s'ha detectat cap conflicte.",
                     importing: "Important tauler de control i recursos associats...",

@@ -499,7 +499,7 @@ const translationEs: translationResourcesType = {
                     button: "Importar",
                     conflictsTitle: "Conflictos",
                     success: "Tablero importado correctamente",
-                    dashboardConflicts: "Ya existen elementos con estos nombres. Indica qué hacer con cada uno:",
+                    dashboardConflicts: "Ya existen elementos con estos nombres y/o su configuración no coincide con la importada. Indica qué hacer con cada uno:",
                     analyzing: "Analizando el archivo y verificando posibles conflictos...",
                     noConflicts: "No se ha detectado ningún conflicto.",
                     importing: "Importando tablero de control y recursos asociados...",

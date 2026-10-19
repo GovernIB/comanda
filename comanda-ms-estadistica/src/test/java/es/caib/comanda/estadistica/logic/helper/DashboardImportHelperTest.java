@@ -16,10 +16,15 @@ import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
+import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
+import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteRole;
+import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
+import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleValueType;
 import es.caib.comanda.estadistica.persist.entity.paleta.PaletaColorEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.PaletaEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaGrupPaletesEntity;
+import es.caib.comanda.estadistica.persist.entity.paleta.WidgetStylePropertyEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaGraficWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
@@ -33,15 +38,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapperImpl;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -54,7 +64,7 @@ class DashboardImportHelperTest {
 
     @Mock private EstadisticaClientHelper estadisticaClientHelper;
     @Mock private AtributsVisualsHelper atributsVisualsHelper;
-    @Mock private DashboardExportMapper dashboardExportMapper;
+    @Spy private DashboardExportMapper dashboardExportMapper = new DashboardExportMapperImpl();
     @Mock private DashboardRepository dashboardRepository;
     @Mock private DashboardTitolRepository dashboardTitolRepository;
     @Mock private DashboardItemRepository dashboardItemRepository;
@@ -67,6 +77,10 @@ class DashboardImportHelperTest {
     @Mock private IndicadorExportHelper indicadorExportHelper;
     @Mock private DashboardFiltreRepository dashboardFiltreRepository;
     @Mock private javax.validation.Validator validator;
+    @Mock private PaletaColorRepository paletaColorRepository;
+    @Mock private DashboardTemplatePaletteGroupRepository dashboardTemplatePaletteGroupRepository;
+    @Mock private WidgetStylePropertyRepository widgetStylePropertyRepository;
+    @Mock private EstadisticaWidgetHelper estadisticaWidgetHelper;
     @Mock private I18nUtil i18nUtil;
     @Mock private ApplicationContext applicationContext;
 
@@ -604,6 +618,161 @@ class DashboardImportHelperTest {
         verify(plantillaRepository, never()).save(any());
     }
 
+    @Test
+    @DisplayName("importPlantilla: sobreescriu plantilla existent quan conflicte és SOBRESCRIURE")
+    void importPlantilla_quanConflicteSobreescriure_llavorsSobreescriuPlantillaISincronitzaTot() {
+        // Arrange
+        PlantillaEntity plantilla = new PlantillaEntity();
+        plantilla.setNom("Plantilla Test");
+        plantilla.setMostrarVora(true);
+        plantilla.setAmpleVora(4);
+        plantilla.setMidaFontTitol("24px");
+
+        PlantillaGrupPaletesEntity group = new PlantillaGrupPaletesEntity();
+        group.setGroupType(PaletteGroupType.LIGHT);
+        PaletaEntity wp = new PaletaEntity();
+        wp.setNom("WPal");
+        PaletaEntity cp = new PaletaEntity();
+        cp.setNom("CPal");
+        group.setWidgetPalette(wp);
+        group.setChartPalette(cp);
+        plantilla.setPaletteGroups(Collections.singletonList(group));
+
+        WidgetStylePropertyEntity prop = new WidgetStylePropertyEntity();
+        prop.setScope(WidgetStyleScope.COMMON);
+        prop.setPropertyName("color");
+        prop.setValueType(WidgetStyleValueType.COLOR);
+        prop.setScalarValue("#111111");
+        plantilla.setStyleProperties(Collections.singletonList(prop));
+
+        Conflict conflict = new Conflict("Plantilla Test", PlantillaExport.class.getSimpleName());
+        conflict.setOverwrite(OverwriteEnum.SOBRESCRIURE);
+
+        PlantillaEntity existing = new PlantillaEntity();
+        existing.setId(10L);
+        existing.setNom("Plantilla Test");
+        existing.setMostrarVora(false);
+        existing.setAmpleVora(1);
+
+        PlantillaGrupPaletesEntity oldGroup = new PlantillaGrupPaletesEntity();
+        oldGroup.setId(101L);
+        oldGroup.setGroupType(PaletteGroupType.DARK);
+        oldGroup.setPlantilla(existing);
+
+        WidgetStylePropertyEntity oldProp = new WidgetStylePropertyEntity();
+        oldProp.setId(201L);
+        oldProp.setScope(WidgetStyleScope.COMMON);
+        oldProp.setPropertyName("oldColor");
+        oldProp.setPlantilla(existing);
+
+        when(plantillaRepository.findByNom("Plantilla Test")).thenReturn(Optional.of(existing));
+        when(dashboardTemplatePaletteGroupRepository.findByPlantillaId(10L)).thenReturn(new ArrayList<>(Collections.singletonList(oldGroup)));
+        when(widgetStylePropertyRepository.findByPlantillaId(10L)).thenReturn(new ArrayList<>(Collections.singletonList(oldProp)));
+        when(plantillaRepository.save(existing)).thenAnswer(inv -> inv.getArgument(0));
+
+        // Act
+        PlantillaEntity result = (PlantillaEntity) ReflectionTestUtils.invokeMethod(
+                dashboardImportHelper, "importPlantilla", plantilla, Collections.singletonList(conflict));
+
+        // Assert
+        assertThat(result).isSameAs(existing);
+        assertThat(result.getMostrarVora()).isTrue();
+        assertThat(result.getAmpleVora()).isEqualTo(4);
+        assertThat(result.getMidaFontTitol()).isEqualTo("24px");
+
+        // Grups: eliminació de l'antic i guardat del nou
+        verify(dashboardTemplatePaletteGroupRepository).deleteAll(argThat(it -> {
+            List<PlantillaGrupPaletesEntity> list = StreamSupport.stream(it.spliterator(), false).collect(Collectors.toList());
+            return list.size() == 1 && list.contains(oldGroup);
+        }));
+        verify(dashboardTemplatePaletteGroupRepository).saveAll(argThat(it -> {
+            List<PlantillaGrupPaletesEntity> list = StreamSupport.stream(it.spliterator(), false).collect(Collectors.toList());
+            return list.size() == 1 && list.get(0).getGroupType() == PaletteGroupType.LIGHT;
+        }));
+
+        // Propietats: eliminació de l'antiga i guardat de la nova
+        verify(widgetStylePropertyRepository).deleteAll(argThat(it -> {
+            List<WidgetStylePropertyEntity> list = StreamSupport.stream(it.spliterator(), false).collect(Collectors.toList());
+            return list.size() == 1 && list.contains(oldProp);
+        }));
+        verify(widgetStylePropertyRepository).saveAll(argThat(it -> {
+            List<WidgetStylePropertyEntity> list = StreamSupport.stream(it.spliterator(), false).collect(Collectors.toList());
+            return list.size() == 1 && "color".equals(list.get(0).getPropertyName());
+        }));
+
+        verify(plantillaRepository).save(existing);
+        verify(estadisticaWidgetHelper).clearDashboardWidgetCacheByPlantilla(10L);
+    }
+
+    @Test
+    @DisplayName("importPaleta: sobreescriu paleta existent quan conflicte és SOBRESCRIURE")
+    void importPaleta_quanConflicteSobreescriure_llavorsSobreescriuPaletaISincronitzaColors() {
+        // Arrange
+        PaletaEntity paleta = new PaletaEntity();
+        paleta.setNom("Paleta Test");
+        paleta.setDescripcio("Nova Descripció");
+
+        PaletaColorEntity c0 = new PaletaColorEntity();
+        c0.setPosicio(0);
+        c0.setValor("#000000");
+
+        PaletaColorEntity c1 = new PaletaColorEntity();
+        c1.setPosicio(1);
+        c1.setValor("#FFFFFF");
+
+        paleta.setColors(Arrays.asList(c0, c1));
+
+        Conflict conflict = new Conflict("Paleta Test", PaletaExport.class.getSimpleName());
+        conflict.setOverwrite(OverwriteEnum.SOBRESCRIURE);
+
+        PaletaEntity existing = new PaletaEntity();
+        existing.setId(50L);
+        existing.setNom("Paleta Test");
+        existing.setDescripcio("Vella Descripció");
+
+        PaletaColorEntity oldC0 = new PaletaColorEntity();
+        oldC0.setId(501L);
+        oldC0.setPosicio(0);
+        oldC0.setValor("#111111");
+
+        PaletaColorEntity oldC2 = new PaletaColorEntity();
+        oldC2.setId(502L);
+        oldC2.setPosicio(2);
+        oldC2.setValor("#222222");
+
+        when(paletaRepository.findByNom("Paleta Test")).thenReturn(Optional.of(existing));
+        when(paletaColorRepository.findByPaletaId(50L)).thenReturn(new ArrayList<>(Arrays.asList(oldC0, oldC2)));
+        when(paletaRepository.save(existing)).thenAnswer(inv -> inv.getArgument(0));
+
+        PlantillaEntity plantillaRelacionada = new PlantillaEntity();
+        plantillaRelacionada.setId(99L);
+        PlantillaGrupPaletesEntity groupUsingPalette = new PlantillaGrupPaletesEntity();
+        groupUsingPalette.setPlantilla(plantillaRelacionada);
+        when(dashboardTemplatePaletteGroupRepository.findByWidgetPaletteIdOrChartPaletteId(50L, 50L))
+                .thenReturn(Collections.singletonList(groupUsingPalette));
+
+        // Act
+        PaletaEntity result = (PaletaEntity) ReflectionTestUtils.invokeMethod(
+                dashboardImportHelper, "importPaleta", paleta, Collections.singletonList(conflict));
+
+        // Assert
+        assertThat(result).isSameAs(existing);
+        assertThat(result.getDescripcio()).isEqualTo("Nova Descripció");
+
+        // El color en pos 0 s'ha actualitzat mantenint la mateixa instància (id 501), pos 1 és nou, pos 2 s'esborra
+        verify(paletaColorRepository).deleteAll(argThat(it -> {
+            List<PaletaColorEntity> list = StreamSupport.stream(it.spliterator(), false).collect(Collectors.toList());
+            return list.size() == 1 && list.contains(oldC2);
+        }));
+        verify(paletaColorRepository).saveAll(argThat(it -> {
+            List<PaletaColorEntity> l = StreamSupport.stream(it.spliterator(), false).collect(Collectors.toList());
+            return l.size() == 2 && "#000000".equals(l.get(0).getValor()) && "#FFFFFF".equals(l.get(1).getValor());
+        }));
+
+        verify(paletaRepository).save(existing);
+        verify(estadisticaWidgetHelper).clearDashboardWidgetCacheByPlantilla(99L);
+    }
+
     // ========================================================================
     // 5. TESTOS CRÍTICS PER PUJAR LA COBERTURA > 80%
     // ========================================================================
@@ -731,8 +900,17 @@ class DashboardImportHelperTest {
 
         when(dashboardRepository.findByTitol("Dash Test")).thenReturn(new DashboardEntity());
         when(estadisticaWidgetRepository.findByAppIdAndTitol(2L, "Widget Test")).thenReturn(new EstadisticaSimpleWidgetEntity());
-        when(plantillaRepository.findByNom("Plantilla Titol")).thenReturn(Optional.of(new PlantillaEntity()));
-        when(plantillaRepository.findByNom("Plantilla Dash")).thenReturn(Optional.of(new PlantillaEntity()));
+
+        WidgetStylePropertyEntity diffProp = new WidgetStylePropertyEntity();
+        diffProp.setScope(WidgetStyleScope.COMMON);
+        diffProp.setPropertyName("colorFons");
+        PlantillaEntity dbPlantillaTitol = new PlantillaEntity();
+        dbPlantillaTitol.setStyleProperties(List.of(diffProp));
+        PlantillaEntity dbPlantillaDash = new PlantillaEntity();
+        dbPlantillaDash.setStyleProperties(List.of(diffProp));
+
+        when(plantillaRepository.findByNom("Plantilla Titol")).thenReturn(Optional.of(dbPlantillaTitol));
+        when(plantillaRepository.findByNom("Plantilla Dash")).thenReturn(Optional.of(dbPlantillaDash));
         lenient().when(paletaRepository.findByNom(any())).thenReturn(Optional.of(new PaletaEntity()));
 
         when(estadisticaClientHelper.entornByCodi("ENT")).thenReturn(entorn);
@@ -804,8 +982,10 @@ class DashboardImportHelperTest {
 
         PaletaExport paleta1 = new PaletaExport();
         paleta1.setNom("Paleta Widget");
+        paleta1.setColors("#fff");
         PaletaExport paleta2 = new PaletaExport();
         paleta2.setNom("Paleta Chart");
+        paleta2.setColors("#000");
 
         PlantillaGrupPaletesExport grup = new PlantillaGrupPaletesExport();
         grup.setWidgetPalette(paleta1);
@@ -814,8 +994,19 @@ class DashboardImportHelperTest {
 
         List<Conflict> conflicts = new ArrayList<>();
 
+        PaletaEntity dbPaleta1 = new PaletaEntity();
+        dbPaleta1.setNom("Paleta Widget");
+        PaletaColorEntity c1 = new PaletaColorEntity(); c1.setPosicio(0); c1.setValor("#111");
+        dbPaleta1.setColors(List.of(c1));
+
+        PaletaEntity dbPaleta2 = new PaletaEntity();
+        dbPaleta2.setNom("Paleta Chart");
+        PaletaColorEntity c2 = new PaletaColorEntity(); c2.setPosicio(0); c2.setValor("#222");
+        dbPaleta2.setColors(List.of(c2));
+
         when(plantillaRepository.findByNom(any())).thenReturn(Optional.of(new PlantillaEntity()));
-        lenient().when(paletaRepository.findByNom(any())).thenReturn(Optional.of(new PaletaEntity()));
+        when(paletaRepository.findByNom("Paleta Widget")).thenReturn(Optional.of(dbPaleta1));
+        when(paletaRepository.findByNom("Paleta Chart")).thenReturn(Optional.of(dbPaleta2));
 
         // Act
         ReflectionTestUtils.invokeMethod(dashboardImportHelper, "checkPlantillaConflicts", plantilla, conflicts);
@@ -1331,4 +1522,357 @@ class DashboardImportHelperTest {
         verify(dashboardRepository).save(dashboard);
         verify(dashboardFiltreRepository, never()).save(any());
     }
+
+    // ========================================================================
+    // TESTOS PER A DETECCIÓ DE DIFERÈNCIES EN PALETES I PLANTILLES (EN CASCADA)
+    // ========================================================================
+
+    @Test
+    @DisplayName("hasPaletaDifferences: retorna false quan la paleta és idèntica a la BD")
+    void hasPaletaDifferences_quanPaletaIdentica_retornaFalse() {
+        PaletaExport export = PaletaExport.builder()
+                .nom("Paleta Test")
+                .descripcio("Descripció")
+                .colors("#ffffff,#000000,#ff0000")
+                .build();
+
+        PaletaEntity existent = new PaletaEntity();
+        existent.setNom("Paleta Test");
+        existent.setDescripcio("Descripció");
+
+        PaletaColorEntity c0 = new PaletaColorEntity(); c0.setPosicio(0); c0.setValor("#ffffff");
+        PaletaColorEntity c1 = new PaletaColorEntity(); c1.setPosicio(1); c1.setValor("#000000");
+        PaletaColorEntity c2 = new PaletaColorEntity(); c2.setPosicio(2); c2.setValor("#ff0000");
+        existent.setColors(List.of(c0, c1, c2));
+
+        boolean diff = dashboardImportHelper.hasPaletaDifferences(export, existent);
+        assertThat(diff).isFalse();
+    }
+
+    @Test
+    @DisplayName("hasPaletaDifferences: retorna true quan els colors de la paleta difereixen")
+    void hasPaletaDifferences_quanColorsDiferents_retornaTrue() {
+        PaletaExport export = PaletaExport.builder()
+                .nom("Paleta Test")
+                .descripcio("Descripció")
+                .colors("#ffffff,#111111")
+                .build();
+
+        PaletaEntity existent = new PaletaEntity();
+        existent.setNom("Paleta Test");
+        existent.setDescripcio("Descripció");
+
+        PaletaColorEntity c0 = new PaletaColorEntity(); c0.setPosicio(0); c0.setValor("#ffffff");
+        PaletaColorEntity c1 = new PaletaColorEntity(); c1.setPosicio(1); c1.setValor("#000000");
+        existent.setColors(List.of(c0, c1));
+
+        boolean diff = dashboardImportHelper.hasPaletaDifferences(export, existent);
+        assertThat(diff).isTrue();
+    }
+
+    @Test
+    @DisplayName("hasPaletaDifferences: detecta com a diferència quan un camp és null al JSON però té valor a BD")
+    void hasPaletaDifferences_quanJsonAnticAmbCampNull_retornaTrue() {
+        PaletaExport export = PaletaExport.builder()
+                .nom("Paleta Test")
+                .descripcio(null) // JSON antic sense camp descripcio
+                .colors("#ffffff")
+                .build();
+
+        PaletaEntity existent = new PaletaEntity();
+        existent.setNom("Paleta Test");
+        existent.setDescripcio("Descripció existent a BD");
+
+        PaletaColorEntity c0 = new PaletaColorEntity(); c0.setPosicio(0); c0.setValor("#ffffff");
+        existent.setColors(List.of(c0));
+
+        boolean diff = dashboardImportHelper.hasPaletaDifferences(export, existent);
+        assertThat(diff).isTrue();
+    }
+
+    @Test
+    @DisplayName("hasPlantillaDifferences: retorna false quan la plantilla i les seves paletes són idèntiques a la BD")
+    void hasPlantillaDifferences_quanTotIdentic_retornaFalse() {
+        PaletaExport palWidget = PaletaExport.builder().nom("Pal Widget").descripcio("D1").colors("#fff").build();
+        PaletaExport palChart = PaletaExport.builder().nom("Pal Chart").descripcio("D2").colors("#000").build();
+
+        PlantillaGrupPaletesExport grupExport = PlantillaGrupPaletesExport.builder()
+                .groupType(PaletteGroupType.LIGHT)
+                .widgetPalette(palWidget)
+                .chartPalette(palChart)
+                .build();
+
+        WidgetStylePropertyExport propExport = WidgetStylePropertyExport.builder()
+                .scope(WidgetStyleScope.COMMON)
+                .propertyName("colorFons")
+                .valueType(WidgetStyleValueType.COLOR)
+                .paletteRole(PaletteRole.WIDGET)
+                .paletteIndex(0)
+                .defaultProperty(true)
+                .build();
+
+        PlantillaExport plantillaExport = PlantillaExport.builder()
+                .nom("Plantilla Test")
+                .paletteGroups(List.of(grupExport))
+                .styleProperties(List.of(propExport))
+                .build();
+
+        // Entitats BD
+        PaletaEntity dbPalWidget = new PaletaEntity();
+        dbPalWidget.setNom("Pal Widget"); dbPalWidget.setDescripcio("D1");
+        PaletaColorEntity cw = new PaletaColorEntity(); cw.setPosicio(0); cw.setValor("#fff");
+        dbPalWidget.setColors(List.of(cw));
+
+        PaletaEntity dbPalChart = new PaletaEntity();
+        dbPalChart.setNom("Pal Chart"); dbPalChart.setDescripcio("D2");
+        PaletaColorEntity cc = new PaletaColorEntity(); cc.setPosicio(0); cc.setValor("#000");
+        dbPalChart.setColors(List.of(cc));
+
+        when(paletaRepository.findByNom("Pal Widget")).thenReturn(Optional.of(dbPalWidget));
+        when(paletaRepository.findByNom("Pal Chart")).thenReturn(Optional.of(dbPalChart));
+
+        PlantillaEntity dbPlantilla = new PlantillaEntity();
+        dbPlantilla.setNom("Plantilla Test");
+
+        PlantillaGrupPaletesEntity dbGrup = new PlantillaGrupPaletesEntity();
+        dbGrup.setGroupType(PaletteGroupType.LIGHT);
+        dbGrup.setWidgetPalette(dbPalWidget);
+        dbGrup.setChartPalette(dbPalChart);
+        dbPlantilla.setPaletteGroups(List.of(dbGrup));
+
+        WidgetStylePropertyEntity dbProp = new WidgetStylePropertyEntity();
+        dbProp.setScope(WidgetStyleScope.COMMON);
+        dbProp.setPropertyName("colorFons");
+        dbProp.setValueType(WidgetStyleValueType.COLOR);
+        dbProp.setPaletteRole(PaletteRole.WIDGET);
+        dbProp.setPaletteIndex(0);
+        dbProp.setDefaultProperty(true);
+        dbPlantilla.setStyleProperties(List.of(dbProp));
+
+        boolean diff = dashboardImportHelper.hasPlantillaDifferences(plantillaExport, dbPlantilla);
+        assertThat(diff).isFalse();
+    }
+
+    @Test
+    @DisplayName("hasPlantillaDifferences: retorna true en cascada quan la plantilla és idèntica però 1 paleta té diferències")
+    void hasPlantillaDifferences_quanPaletaDiferentEnCascada_retornaTrue() {
+        // La paleta al JSON té color #fff, però a la BD té #111
+        PaletaExport palWidget = PaletaExport.builder().nom("Pal Widget").descripcio("D1").colors("#fff").build();
+        PaletaExport palChart = PaletaExport.builder().nom("Pal Chart").descripcio("D2").colors("#000").build();
+
+        PlantillaGrupPaletesExport grupExport = PlantillaGrupPaletesExport.builder()
+                .groupType(PaletteGroupType.LIGHT)
+                .widgetPalette(palWidget)
+                .chartPalette(palChart)
+                .build();
+
+        PlantillaExport plantillaExport = PlantillaExport.builder()
+                .nom("Plantilla Test")
+                .paletteGroups(List.of(grupExport))
+                .styleProperties(Collections.emptyList())
+                .build();
+
+        PaletaEntity dbPalWidget = new PaletaEntity();
+        dbPalWidget.setNom("Pal Widget"); dbPalWidget.setDescripcio("D1");
+        PaletaColorEntity cw = new PaletaColorEntity(); cw.setPosicio(0); cw.setValor("#111"); // DIFERÈNCIA DE COLOR
+        dbPalWidget.setColors(List.of(cw));
+
+        PaletaEntity dbPalChart = new PaletaEntity();
+        dbPalChart.setNom("Pal Chart"); dbPalChart.setDescripcio("D2");
+        PaletaColorEntity cc = new PaletaColorEntity(); cc.setPosicio(0); cc.setValor("#000");
+        dbPalChart.setColors(List.of(cc));
+
+        when(paletaRepository.findByNom("Pal Widget")).thenReturn(Optional.of(dbPalWidget));
+        lenient().when(paletaRepository.findByNom("Pal Chart")).thenReturn(Optional.of(dbPalChart));
+
+        PlantillaEntity dbPlantilla = new PlantillaEntity();
+        dbPlantilla.setNom("Plantilla Test");
+
+        PlantillaGrupPaletesEntity dbGrup = new PlantillaGrupPaletesEntity();
+        dbGrup.setGroupType(PaletteGroupType.LIGHT);
+        dbGrup.setWidgetPalette(dbPalWidget);
+        dbGrup.setChartPalette(dbPalChart);
+        dbPlantilla.setPaletteGroups(List.of(dbGrup));
+        dbPlantilla.setStyleProperties(Collections.emptyList());
+
+        boolean diff = dashboardImportHelper.hasPlantillaDifferences(plantillaExport, dbPlantilla);
+        assertThat(diff).isTrue();
+    }
+
+    @Test
+    @DisplayName("checkPlantillaConflicts: no afegeix conflicte si la plantilla i les paletes són idèntiques a la BD")
+    void checkPlantillaConflicts_quanIdentiques_noAfegeixConflicte() {
+        PaletaExport palWidget = PaletaExport.builder().nom("Pal Widget").colors("#fff").build();
+        PaletaExport palChart = PaletaExport.builder().nom("Pal Chart").colors("#000").build();
+
+        PlantillaGrupPaletesExport grup = PlantillaGrupPaletesExport.builder()
+                .groupType(PaletteGroupType.LIGHT)
+                .widgetPalette(palWidget)
+                .chartPalette(palChart)
+                .build();
+
+        PlantillaExport plantilla = PlantillaExport.builder()
+                .nom("Plantilla Test")
+                .paletteGroups(List.of(grup))
+                .styleProperties(Collections.emptyList())
+                .build();
+
+        PaletaEntity dbPalWidget = new PaletaEntity();
+        dbPalWidget.setNom("Pal Widget");
+        PaletaColorEntity cw = new PaletaColorEntity(); cw.setPosicio(0); cw.setValor("#fff");
+        dbPalWidget.setColors(List.of(cw));
+
+        PaletaEntity dbPalChart = new PaletaEntity();
+        dbPalChart.setNom("Pal Chart");
+        PaletaColorEntity cc = new PaletaColorEntity(); cc.setPosicio(0); cc.setValor("#000");
+        dbPalChart.setColors(List.of(cc));
+
+        PlantillaEntity dbPlantilla = new PlantillaEntity();
+        dbPlantilla.setNom("Plantilla Test");
+        PlantillaGrupPaletesEntity dbGrup = new PlantillaGrupPaletesEntity();
+        dbGrup.setGroupType(PaletteGroupType.LIGHT);
+        dbGrup.setWidgetPalette(dbPalWidget);
+        dbGrup.setChartPalette(dbPalChart);
+        dbPlantilla.setPaletteGroups(List.of(dbGrup));
+        dbPlantilla.setStyleProperties(Collections.emptyList());
+
+        when(plantillaRepository.findByNom("Plantilla Test")).thenReturn(Optional.of(dbPlantilla));
+        when(paletaRepository.findByNom("Pal Widget")).thenReturn(Optional.of(dbPalWidget));
+        when(paletaRepository.findByNom("Pal Chart")).thenReturn(Optional.of(dbPalChart));
+
+        List<Conflict> conflicts = new ArrayList<>();
+        ReflectionTestUtils.invokeMethod(dashboardImportHelper, "checkPlantillaConflicts", plantilla, conflicts);
+
+        // Ni la plantilla ni les paletes s'han d'afegir com a conflicte perquè són idèntiques
+        assertThat(conflicts).isEmpty();
+    }
+
+    @Test
+    @DisplayName("hasPaletaDifferences: retorna false quan descripció a export és buida i a BD és null")
+    void hasPaletaDifferences_quanDescripcioBuidaINull_retornaFalse() {
+        PaletaExport export = PaletaExport.builder().nom("Pal").descripcio("").colors("#fff").build();
+        PaletaEntity existent = new PaletaEntity();
+        existent.setNom("Pal");
+        existent.setDescripcio(null);
+        PaletaColorEntity c = new PaletaColorEntity(); c.setPosicio(0); c.setValor("#fff");
+        existent.setColors(List.of(c));
+
+        boolean diff = dashboardImportHelper.hasPaletaDifferences(export, existent);
+        assertThat(diff).isFalse();
+    }
+
+    @Test
+    @DisplayName("hasPlantillaDifferences: retorna false quan propietat escalar a export és buida i a BD és null")
+    void hasPlantillaDifferences_quanScalarPropertyBuidaINull_retornaFalse() {
+        WidgetStylePropertyExport propExport = WidgetStylePropertyExport.builder()
+                .scope(WidgetStyleScope.COMMON)
+                .propertyName("text")
+                .valueType(WidgetStyleValueType.TEXT)
+                .scalarValue("")
+                .build();
+
+        PlantillaExport plantillaExport = PlantillaExport.builder()
+                .nom("Plantilla Test")
+                .paletteGroups(Collections.emptyList())
+                .styleProperties(List.of(propExport))
+                .build();
+
+        PlantillaEntity dbPlantilla = new PlantillaEntity();
+        dbPlantilla.setNom("Plantilla Test");
+        dbPlantilla.setPaletteGroups(Collections.emptyList());
+
+        WidgetStylePropertyEntity dbProp = new WidgetStylePropertyEntity();
+        dbProp.setScope(WidgetStyleScope.COMMON);
+        dbProp.setPropertyName("text");
+        dbProp.setValueType(WidgetStyleValueType.TEXT);
+        dbProp.setScalarValue(null);
+        dbPlantilla.setStyleProperties(List.of(dbProp));
+
+        boolean diff = dashboardImportHelper.hasPlantillaDifferences(plantillaExport, dbPlantilla);
+        assertThat(diff).isFalse();
+    }
+
+    @Test
+    @DisplayName("importPlantilla: sobreescriure no esborra propietats escalars no presents a l'export")
+    void importPlantilla_quanSobreescriureAmbSourceNull_mantéPropietatsBD() {
+        PlantillaEntity plantillaSource = new PlantillaEntity();
+        plantillaSource.setNom("Plantilla Test");
+        plantillaSource.setPaletteGroups(Collections.emptyList());
+        plantillaSource.setStyleProperties(Collections.emptyList());
+        // source no té mostrarVora ni ampleVora (són null)
+
+        Conflict conflict = new Conflict("Plantilla Test", PlantillaExport.class.getSimpleName());
+        conflict.setOverwrite(OverwriteEnum.SOBRESCRIURE);
+
+        PlantillaEntity existing = new PlantillaEntity();
+        existing.setId(25L);
+        existing.setNom("Plantilla Test");
+        existing.setMostrarVora(true);
+        existing.setAmpleVora(8);
+
+        when(plantillaRepository.findByNom("Plantilla Test")).thenReturn(Optional.of(existing));
+        when(dashboardTemplatePaletteGroupRepository.findByPlantillaId(25L)).thenReturn(new ArrayList<>());
+        when(widgetStylePropertyRepository.findByPlantillaId(25L)).thenReturn(new ArrayList<>());
+        when(plantillaRepository.save(existing)).thenAnswer(inv -> inv.getArgument(0));
+
+        PlantillaEntity result = (PlantillaEntity) ReflectionTestUtils.invokeMethod(
+                dashboardImportHelper, "importPlantilla", plantillaSource, Collections.singletonList(conflict));
+
+        assertThat(result.getMostrarVora()).isTrue();
+        assertThat(result.getAmpleVora()).isEqualTo(8);
+    }
+
+    @Test
+    @DisplayName("hasPaletaDifferences: retorna false quan els colors només difereixen en majúscules/minúscules")
+    void hasPaletaDifferences_quanColorsCaseInsensitive_retornaFalse() {
+        PaletaExport export = PaletaExport.builder()
+                .nom("Paleta Test")
+                .descripcio("Desc")
+                .colors("#ffffff, #aabbcc")
+                .build();
+
+        PaletaEntity existent = new PaletaEntity();
+        existent.setNom("Paleta Test");
+        existent.setDescripcio("Desc");
+        PaletaColorEntity c0 = new PaletaColorEntity(); c0.setPosicio(0); c0.setValor("#FFFFFF");
+        PaletaColorEntity c1 = new PaletaColorEntity(); c1.setPosicio(1); c1.setValor("#AABBCC");
+        existent.setColors(List.of(c0, c1));
+
+        boolean diff = dashboardImportHelper.hasPaletaDifferences(export, existent);
+        assertThat(diff).isFalse();
+    }
+
+    @Test
+    @DisplayName("syncPlantillaStyleProperties: actualitza propietat existent preservant l'ordre i id")
+    void syncPlantillaStyleProperties_actualitzaPropietatExistent() {
+        PlantillaEntity entity = new PlantillaEntity();
+        entity.setId(10L);
+
+        WidgetStylePropertyEntity existingProp = new WidgetStylePropertyEntity();
+        existingProp.setId(100L);
+        existingProp.setPlantilla(entity);
+        existingProp.setScope(WidgetStyleScope.COMMON);
+        existingProp.setPropertyName("colorFons");
+        existingProp.setValueType(WidgetStyleValueType.COLOR);
+        existingProp.setScalarValue("#111111");
+        existingProp.setOrdre(0);
+
+        when(widgetStylePropertyRepository.findByPlantillaId(10L)).thenReturn(new ArrayList<>(List.of(existingProp)));
+
+        WidgetStylePropertyEntity newProp = new WidgetStylePropertyEntity();
+        newProp.setScope(WidgetStyleScope.COMMON);
+        newProp.setPropertyName("colorFons");
+        newProp.setValueType(WidgetStyleValueType.COLOR);
+        newProp.setScalarValue("#222222"); // Nou valor
+        newProp.setOrdre(0);
+
+        ReflectionTestUtils.invokeMethod(
+                dashboardImportHelper, "syncPlantillaStyleProperties", entity, List.of(newProp));
+
+        assertThat(entity.getStyleProperties()).hasSize(1);
+        WidgetStylePropertyEntity saved = entity.getStyleProperties().get(0);
+        assertThat(saved.getId()).isEqualTo(100L);
+        assertThat(saved.getScalarValue()).isEqualTo("#222222");
+    }
 }
+
