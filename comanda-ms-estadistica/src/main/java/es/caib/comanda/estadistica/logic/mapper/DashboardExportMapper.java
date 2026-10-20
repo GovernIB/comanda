@@ -78,15 +78,15 @@ public interface DashboardExportMapper {
     }
 
     @Mapping(target = "plantilla", source = "plantilla")
-    DashboardTitolEntity toDashboardTitolEntity(DashboardTitolExport export);
+    DashboardTitolExport toDashboardTitolExport(DashboardTitolEntity titolEntity);
 
     DashboardFiltreExport toDashboardFiltreExport(DashboardFiltreEntity filtreEntity);
 
     PlantillaExport toPlantillaExport(PlantillaEntity plantillaEntity);
     @Mapping(target = "ordre", source = "ordre")
-    PlantillaGrupPaletesExport toPlantillaGrupPaletesExport(PlantillaGrupPaletesEntity plantillaEntity);
+    PlantillaGrupPaletesExport toPlantillaGrupPaletesExport(PlantillaGrupPaletesEntity plantillaGrupPaletesEntity);
     @Mapping(target = "colors", source = "colors", qualifiedByName = "toColorsExport")
-    PaletaExport toPaletaExport(PaletaEntity plantillaEntity);
+    PaletaExport toPaletaExport(PaletaEntity paletaEntity);
     WidgetStylePropertyExport toWidgetStylePropertyExport(WidgetStylePropertyEntity widgetStylePropertyEntity);
 
 
@@ -250,7 +250,7 @@ public interface DashboardExportMapper {
                                       @Context DimensioRepository dimensioRepository,
                                       @Context DimensioValorRepository dimensioValorRepository);
 
-    List<DashboardEntity> toDashboardEntity(List<DashboardExport> dashboardEntities,
+    List<DashboardEntity> toDashboardEntity(List<DashboardExport> dashboardExports,
                                             @Context EstadisticaClientHelper estadisticaClientHelper,
                                             @Context AtributsVisualsHelper atributsVisualsHelper,
                                             @Context IndicadorRepository indicadorRepository,
@@ -374,7 +374,7 @@ public interface DashboardExportMapper {
     }
 
     @Mapping(target = "plantilla", source = "plantilla")
-    DashboardTitolExport toDashboardTitolEntity(DashboardTitolEntity export);
+    DashboardTitolEntity toDashboardTitolEntity(DashboardTitolExport export);
 
     @Mapping(target = "dashboard", ignore = true)
     DashboardFiltreEntity toDashboardFiltreEntity(DashboardFiltreExport filtreExport);
