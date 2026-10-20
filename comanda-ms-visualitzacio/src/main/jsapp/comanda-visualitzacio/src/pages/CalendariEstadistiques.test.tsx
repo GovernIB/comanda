@@ -1290,7 +1290,8 @@ describe('useEntornAppData', () => {
         });
 
         await waitFor(() => {
-            const lastCall = mocks.useCalendarEventsMock.mock.calls.at(-1)?.[0];
+            const calls = mocks.useCalendarEventsMock.mock.calls;
+            const lastCall = calls[calls.length - 1]?.[0];
             expect(lastCall?.datesAmbDades).toContain('2026-03-05');
             expect(lastCall?.emptyDates).toContain('2026-03-04');
             expect(lastCall?.errors.some((e: any) => e.date === '2026-03-03')).toBe(true);

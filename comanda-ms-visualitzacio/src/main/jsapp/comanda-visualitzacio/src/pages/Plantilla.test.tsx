@@ -4,10 +4,16 @@ import { Plantilla } from './Plantilla';
 import userEvent from '@testing-library/user-event';
 
 const mocks = vi.hoisted(() => ({
+    isUserAdmin: true,
+    refreshGridMock: vi.fn(),
+    artifactReportMock: vi.fn(),
+    iniciaDescargaJSONMock: vi.fn(),
     useFormContextValue: {
         data: {},
         apiRef: { current: { setFieldValue: vi.fn() } },
         fieldErrors: [],
+        fields: [{ name: 'file' }, { name: 'conflicts' }],
+        dataDispatchAction: vi.fn(),
     } as any,
     muiTheme: {
         palette: {
@@ -51,6 +57,12 @@ vi.mock('reactlib', () => ({
         isReady: true,
         create: mocks.createPaletteMock,
         update: mocks.updatePaletteMock,
+        artifactReport: mocks.artifactReportMock,
+    }),
+    useMuiDataGridApiRef: () => ({
+        current: {
+            refresh: mocks.refreshGridMock,
+        },
     }),
     FormField: ({ name, label, value, onChange, type, required, ...props }: any) => {
         if (type === 'checkbox') {
@@ -61,10 +73,60 @@ vi.mock('reactlib', () => ({
         }
         return <input data-testid={`form-field-${name}`} value={value || ''} onChange={(e) => onChange?.(e.target.value)} {...props} />;
     },
-    MuiDataGrid: ({ popupEditFormContent, toolbarType }: any) => (
-        <div data-testid="mui-data-grid">
-            {toolbarType === 'upper' && <div data-testid="grid-toolbar">Toolbar</div>}
-            {popupEditFormContent}
+    MuiDataGrid: ({ popupEditFormContent, toolbarType, toolbarElementsWithPositions, rowAdditionalActions }: any) => {
+        const mockRow = { id: 1, nom: 'Plantilla 1' };
+        return (
+            <div data-testid="mui-data-grid">
+                {toolbarType === 'upper' && <div data-testid="grid-toolbar">Toolbar</div>}
+                {toolbarElementsWithPositions?.map((item: any) => (
+                    <div key={item.position} data-testid={`toolbar-${item.position}`}>
+                        {item.element}
+                    </div>
+                ))}
+                {popupEditFormContent}
+                {rowAdditionalActions?.map((action: any) => (
+                    <button
+                        key={action.label}
+                        data-testid={`action-${action.report || action.label}`}
+                        onClick={() => action.onClick?.(mockRow.id, mockRow)}
+                        type="button"
+                    >
+                        {action.label}
+                    </button>
+                ))}
+            </div>
+        );
+    },
+}));
+
+vi.mock('../components/UserContext.ts', () => ({
+    useIsUserAdmin: () => mocks.isUserAdmin,
+}));
+
+vi.mock('../components/FormActionDialog.tsx', () => ({
+    default: ({ title, children, apiRef }: any) => {
+        if (apiRef) {
+            apiRef.current = { show: vi.fn() };
+        }
+        return (
+            <div data-testid="form-action-dialog">
+                <h3>{title}</h3>
+                {children}
+            </div>
+        );
+    },
+}));
+
+vi.mock('../util/commonsActions.ts', () => ({
+    iniciaDescargaJSON: (...args: any[]) => mocks.iniciaDescargaJSONMock(...args),
+}));
+
+vi.mock('../components/estadistiques/ImportConflictsForm.tsx', () => ({
+    default: ({ isAnalyzing, onReanalyze, conflictsDescription }: any) => (
+        <div data-testid="import-conflicts-form">
+            {isAnalyzing && <div>Analyzing...</div>}
+            {conflictsDescription && <div>{conflictsDescription}</div>}
+            {onReanalyze && <button onClick={onReanalyze}>Tornar a analitzar</button>}
         </div>
     ),
 }));
@@ -444,5 +506,45 @@ describe('Plantilla', () => {
                 expect.objectContaining({ scope: 'TITOL_1', propertyName: 'mostrarVoraTop', scalarValue: 'true' }),
             ])
         );
+    });
+
+    it('Plantilla_quanUsuariEsAdmin_mostraBotoImportarAlToolbar', () => {
+        mocks.isUserAdmin = true;
+        render(<Plantilla />);
+        expect(screen.getByTestId('toolbar-2')).toBeInTheDocument();
+        expect(screen.getByText('upload')).toBeInTheDocument();
+    });
+
+    it('Plantilla_quanUsuariNoEsAdmin_noMostraBotoImportar', () => {
+        mocks.isUserAdmin = false;
+        render(<Plantilla />);
+        expect(screen.queryByTestId('toolbar-2')).not.toBeInTheDocument();
+        expect(screen.queryByText('upload')).not.toBeInTheDocument();
+        mocks.isUserAdmin = true;
+    });
+
+    it('Plantilla_quanEsPremExportar_cridaArtifactReportIDescarregaJSON', async () => {
+        mocks.artifactReportMock.mockResolvedValueOnce({ fitxer: 'plantilla.json' });
+        render(<Plantilla />);
+
+        const exportButton = screen.getByTestId('action-plantilla_export');
+        fireEvent.click(exportButton);
+
+        expect(mocks.artifactReportMock).toHaveBeenCalledWith(1, {
+            code: 'plantilla_export',
+            fileType: 'JSON',
+        });
+
+        await waitFor(() => {
+            expect(mocks.iniciaDescargaJSONMock).toHaveBeenCalledWith({ fitxer: 'plantilla.json' });
+            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'translated', 'success');
+        });
+    });
+
+    it('Plantilla_quanEsRenderitza_renderitzaElDialegDImportacioIFormulari', () => {
+        render(<Plantilla />);
+        expect(screen.getByTestId('form-action-dialog')).toBeInTheDocument();
+        expect(screen.getByTestId('form-field-file')).toBeInTheDocument();
+        expect(screen.getByTestId('import-conflicts-form')).toBeInTheDocument();
     });
 });

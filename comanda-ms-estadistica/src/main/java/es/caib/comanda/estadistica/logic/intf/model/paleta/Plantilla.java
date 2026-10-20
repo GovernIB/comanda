@@ -1,8 +1,14 @@
 package es.caib.comanda.estadistica.logic.intf.model.paleta;
 
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.TipusGraficEnum;
+import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.estadistica.logic.service.PlantillaServiceImpl;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceArtifact;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
+import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
+import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,9 +27,36 @@ import java.util.Map;
 @AllArgsConstructor
 @ResourceConfig(
         quickFilterFields = { "nom" },
-        descriptionField = "nom"
+        descriptionField = "nom",
+        artifacts = {
+                @ResourceArtifact(
+                        type = ResourceArtifactType.ACTION,
+                        code = Plantilla.PLANTILLA_IMPORT,
+                        formClass = PlantillaServiceImpl.PlantillaImportParams.class,
+                        accessConstraints = {
+                                @ResourceAccessConstraint(
+                                        type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                                        roles = { BaseConfig.ROLE_ADMIN }
+                                )
+                        }
+                ),
+                @ResourceArtifact(
+                        type = ResourceArtifactType.REPORT,
+                        code = Plantilla.PLANTILLA_EXPORT,
+                        requiresId = true,
+                        accessConstraints = {
+                                @ResourceAccessConstraint(
+                                        type = ResourceAccessConstraint.ResourceAccessConstraintType.ROLE,
+                                        roles = { BaseConfig.ROLE_ADMIN }
+                                )
+                        }
+                )
+        }
 )
 public class Plantilla extends BaseResource<Long> {
+
+    public static final String PLANTILLA_EXPORT = "plantilla_export";
+    public static final String PLANTILLA_IMPORT = "plantilla_import";
 
     @NotNull
     @javax.validation.constraints.Size(max = es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity.NOM_MAX_LENGTH)

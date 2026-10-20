@@ -1665,6 +1665,16 @@ const translationCa = {
                 senseColor: "Sense color",
             },
             action: {
+                export: "Exportar plantilla",
+                import: {
+                    label: "Importar plantilla",
+                    title: "Importar plantilla",
+                    button: "Importar",
+                    success: "Plantilla importada correctament",
+                    importing: "Important plantilla i recursos associats...",
+                    conflicts: "Ja existeixen plantilles o paletes amb aquests noms i/o la seva configuració no coincideix amb la importada. Indica què s'ha de fer amb cadascun:",
+                    noPlantilles: "No s'ha trobat cap plantilla al fitxer seleccionat.",
+                },
                 createPalette: "Crear paleta",
                 editPalette: "Editar paleta",
             },

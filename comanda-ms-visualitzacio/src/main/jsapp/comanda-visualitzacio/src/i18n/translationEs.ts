@@ -1665,6 +1665,16 @@ const translationEs: translationResourcesType = {
                 senseColor: "Sin color",
             },
             action: {
+                export: "Exportar plantilla",
+                import: {
+                    label: "Importar plantilla",
+                    title: "Importar plantilla",
+                    button: "Importar",
+                    success: "Plantilla importada correctamente",
+                    importing: "Importando plantilla y recursos asociados...",
+                    conflicts: "Ya existen plantillas o paletas con estos nombres y/o su configuración no coincide con la importada. Indica qué se debe hacer con cada uno:",
+                    noPlantilles: "No se ha encontrado ninguna plantilla en el archivo seleccionado.",
+                },
                 createPalette: "Crear paleta",
                 editPalette: "Editar paleta",
             },

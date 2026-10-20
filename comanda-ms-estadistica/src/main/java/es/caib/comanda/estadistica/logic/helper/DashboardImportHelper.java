@@ -27,6 +27,8 @@ import es.caib.comanda.estadistica.persist.repository.*;
 import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -35,6 +37,7 @@ import org.springframework.util.ReflectionUtils;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -42,6 +45,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -74,6 +78,7 @@ public class DashboardImportHelper {
     private final DashboardTemplatePaletteGroupRepository dashboardTemplatePaletteGroupRepository;
     private final WidgetStylePropertyRepository widgetStylePropertyRepository;
     private final EstadisticaWidgetHelper estadisticaWidgetHelper;
+    private final ObjectMapper objectMapper;
 
     public void validateDashboardExport(List<DashboardExport> dashboards) {
         if (dashboards == null || dashboards.isEmpty()) {
@@ -102,6 +107,128 @@ public class DashboardImportHelper {
                 }
             }
         }
+    }
+
+    public List<PlantillaExport> parsePlantillesJson(String jsonString) throws IOException {
+        if (jsonString == null || jsonString.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        JsonNode root = objectMapper.readTree(jsonString);
+        if (root == null || root.isMissingNode() || root.isNull()) {
+            return Collections.emptyList();
+        }
+        List<JsonNode> nodes = new ArrayList<>();
+        if (root.isArray()) {
+            for (JsonNode elem : root) {
+                if (elem != null && !elem.isNull()) {
+                    nodes.add(elem);
+                }
+            }
+        } else if (root.isObject()) {
+            nodes.add(root);
+        } else {
+            throw new IllegalArgumentException(I18nUtil.getInstance().getI18nMessage(
+                    "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.formatInvalid"));
+        }
+
+        Map<String, PlantillaExport> plantillesMap = new LinkedHashMap<>();
+        List<PlantillaExport> anonymousPlantilles = new ArrayList<>();
+
+        for (JsonNode node : nodes) {
+            if (isDashboardNode(node)) {
+                DashboardExport dashboard = objectMapper.treeToValue(node, DashboardExport.class);
+                if (dashboard != null) {
+                    addPlantillaIfPresent(plantillesMap, anonymousPlantilles, dashboard.getPlantilla());
+                    if (dashboard.getTitols() != null) {
+                        for (DashboardTitolExport titol : dashboard.getTitols()) {
+                            if (titol != null) {
+                                addPlantillaIfPresent(plantillesMap, anonymousPlantilles, titol.getPlantilla());
+                            }
+                        }
+                    }
+                    if (dashboard.getItems() != null) {
+                        for (DashboardItemExport item : dashboard.getItems()) {
+                            if (item != null) {
+                                addPlantillaIfPresent(plantillesMap, anonymousPlantilles, item.getPlantilla());
+                            }
+                        }
+                    }
+                }
+            } else if (node.has("nom")) {
+                PlantillaExport plantilla = objectMapper.treeToValue(node, PlantillaExport.class);
+                addPlantillaIfPresent(plantillesMap, anonymousPlantilles, plantilla);
+            } else {
+                throw new IllegalArgumentException(I18nUtil.getInstance().getI18nMessage(
+                        "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.formatInvalid"));
+            }
+        }
+
+        List<PlantillaExport> result = new ArrayList<>(plantillesMap.values());
+        result.addAll(anonymousPlantilles);
+        return result;
+    }
+
+    private boolean isDashboardNode(JsonNode node) {
+        return node.has("titol") || node.has("items") || node.has("titols") || node.has("filtres");
+    }
+
+    private void addPlantillaIfPresent(Map<String, PlantillaExport> map, List<PlantillaExport> anonymous, PlantillaExport plantilla) {
+        if (plantilla == null) return;
+        if (plantilla.getNom() != null && !plantilla.getNom().trim().isEmpty()) {
+            plantilla.setNom(plantilla.getNom().trim());
+            map.putIfAbsent(plantilla.getNom(), plantilla);
+        } else {
+            anonymous.add(plantilla);
+        }
+    }
+
+    public void validatePlantillaExport(List<PlantillaExport> plantilles) {
+        if (plantilles == null || plantilles.isEmpty()) {
+            throw new IllegalArgumentException(
+                    I18nUtil.getInstance().getI18nMessage(
+                            "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.plantilla.buit"));
+        }
+        for (int i = 0; i < plantilles.size(); i++) {
+            PlantillaExport plantilla = plantilles.get(i);
+            if (validator != null) {
+                Set<ConstraintViolation<PlantillaExport>> violations = validator.validate(plantilla);
+                if (!violations.isEmpty()) {
+                    String errorDetails = violations.stream()
+                            .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                            .sorted()
+                            .collect(Collectors.joining(", "));
+                    String prefix = plantilles.size() > 1
+                            ? I18nUtil.getInstance().getI18nMessage(
+                                    "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.plantilla.prefix",
+                                    (i + 1),
+                                    plantilla.getNom() != null ? " (" + plantilla.getNom() + ")" : "") + ": "
+                            : "";
+                    throw new IllegalArgumentException(prefix + I18nUtil.getInstance().getI18nMessage(
+                            "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.plantilla.dadesInvalides",
+                            errorDetails));
+                }
+            }
+        }
+    }
+
+    public void checkPlantillaConflicts(List<PlantillaExport> plantilles, List<Conflict> conflicts) {
+        if (plantilles == null || plantilles.isEmpty()) return;
+        for (PlantillaExport plantilla : plantilles) {
+            this.checkPlantillaConflicts(plantilla, conflicts);
+        }
+    }
+
+    public List<PlantillaEntity> importPlantillesFromExport(List<PlantillaExport> plantilles, List<Conflict> conflicts) {
+        if (plantilles == null || plantilles.isEmpty()) return Collections.emptyList();
+        List<PlantillaEntity> result = new ArrayList<>();
+        for (PlantillaExport plantillaExport : plantilles) {
+            PlantillaEntity entity = dashboardExportMapper.toPlantillaEntity(plantillaExport);
+            PlantillaEntity imported = this.importPlantilla(entity, conflicts);
+            if (imported != null) {
+                result.add(imported);
+            }
+        }
+        return result;
     }
 
     public List<DashboardEntity> toDashboardEntity(List<DashboardExport> dashboardExportList) {
@@ -288,7 +415,7 @@ public class DashboardImportHelper {
                 conflicts
         );
 
-        if (conflicte != null) {
+        if (conflicte != null && conflicte.getOverwrite() != null) {
             switch (conflicte.getOverwrite()) {
                 case EMPRAR_EXISTENT:
                     return plantillaRepository.findByNom(plantillaEntity.getNom()).get();
@@ -477,7 +604,7 @@ public class DashboardImportHelper {
                 conflicts
         );
 
-        if (conflicte != null) {
+        if (conflicte != null && conflicte.getOverwrite() != null) {
             switch (conflicte.getOverwrite()) {
                 case EMPRAR_EXISTENT:
                     return paletaRepository.findByNom(paletaEntity.getNom()).get();

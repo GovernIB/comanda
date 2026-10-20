@@ -84,6 +84,7 @@ class DashboardImportHelperTest {
     @Mock private EstadisticaWidgetHelper estadisticaWidgetHelper;
     @Mock private I18nUtil i18nUtil;
     @Mock private ApplicationContext applicationContext;
+    @Spy private com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
     @InjectMocks
     private DashboardImportHelper dashboardImportHelper;
@@ -1943,6 +1944,161 @@ class DashboardImportHelperTest {
         assertThat(result).isSameAs(existing);
         assertThat(result.getDescripcio()).isNull();
         verify(paletaRepository).save(argThat(p -> p.getId().equals(60L) && p.getDescripcio() == null));
+    }
+
+    @Test
+    @DisplayName("parsePlantillesJson: processa correctament un objecte JSON directe de plantilla")
+    void parsePlantillesJson_ambObjecteDirecte_retornaPlantilla() throws Exception {
+        String json = "{\"nom\": \"Plantilla Directa\"}";
+
+        List<PlantillaExport> result = dashboardImportHelper.parsePlantillesJson(json);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getNom()).isEqualTo("Plantilla Directa");
+    }
+
+    @Test
+    @DisplayName("parsePlantillesJson: processa correctament una llista JSON directa de plantilles")
+    void parsePlantillesJson_ambLlistaDirecta_retornaPlantilles() throws Exception {
+        String json = "[{\"nom\": \"Plantilla 1\"}, {\"nom\": \"Plantilla 2\"}]";
+
+        List<PlantillaExport> result = dashboardImportHelper.parsePlantillesJson(json);
+
+        assertThat(result).extracting(PlantillaExport::getNom)
+                .containsExactly("Plantilla 1", "Plantilla 2");
+    }
+
+    @Test
+    @DisplayName("parsePlantillesJson: extreu plantilles de dashboard, títols i items deduplicant pel nom")
+    void parsePlantillesJson_ambDashboard_extreuIDeduplicaPlantilles() throws Exception {
+        String json = "{\n" +
+                "  \"titol\": \"Dashboard Test\",\n" +
+                "  \"plantilla\": {\"nom\": \"Plantilla Principal\"},\n" +
+                "  \"titols\": [{\"plantilla\": {\"nom\": \"Plantilla Titol\"}}],\n" +
+                "  \"items\": [\n" +
+                "    {\"plantilla\": {\"nom\": \"Plantilla Principal\"}},\n" +
+                "    {\"plantilla\": {\"nom\": \"Plantilla Item\"}}\n" +
+                "  ]\n" +
+                "}";
+
+        List<PlantillaExport> result = dashboardImportHelper.parsePlantillesJson(json);
+
+        assertThat(result).extracting(PlantillaExport::getNom)
+                .containsExactly("Plantilla Principal", "Plantilla Titol", "Plantilla Item");
+    }
+
+    @Test
+    @DisplayName("parsePlantillesJson: retorna llista buida quan el dashboard no conté plantilles")
+    void parsePlantillesJson_ambDashboardSensePlantilles_retornaLlistaBuida() throws Exception {
+        String json = "{\"titol\": \"Dashboard Sense Plantilla\", \"items\": []}";
+
+        List<PlantillaExport> result = dashboardImportHelper.parsePlantillesJson(json);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("parsePlantillesJson: llança IllegalArgumentException amb format desconegut o sense nom ni camps de dashboard")
+    void parsePlantillesJson_ambFormatErroni_llancaIllegalArgumentException() {
+        String jsonDesconegut = "{\"campDesconegut\": 123}";
+        assertThatThrownBy(() -> dashboardImportHelper.parsePlantillesJson(jsonDesconegut))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        String jsonLiteral = "\"cadena_simple\"";
+        assertThatThrownBy(() -> dashboardImportHelper.parsePlantillesJson(jsonLiteral))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("validatePlantillaExport: llança IllegalArgumentException si la llista és nul·la o buida")
+    void validatePlantillaExport_ambLlistaBuida_llancaExcepcio() {
+        assertThatThrownBy(() -> dashboardImportHelper.validatePlantillaExport(null))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> dashboardImportHelper.validatePlantillaExport(Collections.emptyList()))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("importPlantillesFromExport: gestiona correctament EMPRAR_EXISTENT, SOBRESCRIURE i CREAR_AMB_ALTRE_NOM")
+    void importPlantillesFromExport_gestionaOpcionsConflicte() {
+        PlantillaExport expExistent = new PlantillaExport();
+        expExistent.setNom("Plantilla Existent");
+
+        PlantillaExport expSobrescriure = new PlantillaExport();
+        expSobrescriure.setNom("Plantilla Sobrescriure");
+
+        PlantillaExport expNouNom = new PlantillaExport();
+        expNouNom.setNom("Plantilla Renombrar");
+
+        Conflict cExistent = new Conflict("Plantilla Existent", PlantillaExport.class.getSimpleName());
+        cExistent.setOverwrite(OverwriteEnum.EMPRAR_EXISTENT);
+
+        Conflict cSobrescriure = new Conflict("Plantilla Sobrescriure", PlantillaExport.class.getSimpleName());
+        cSobrescriure.setOverwrite(OverwriteEnum.SOBRESCRIURE);
+
+        Conflict cNouNom = new Conflict("Plantilla Renombrar", PlantillaExport.class.getSimpleName());
+        cNouNom.setOverwrite(OverwriteEnum.CREAR_AMB_ALTRE_NOM);
+        cNouNom.setNouNom("Plantilla Renombrada Nou Nom");
+
+        List<Conflict> conflicts = Arrays.asList(cExistent, cSobrescriure, cNouNom);
+
+        PlantillaEntity existentDB = new PlantillaEntity();
+        existentDB.setId(10L);
+        existentDB.setNom("Plantilla Existent");
+
+        PlantillaEntity existentSobrescriureDB = new PlantillaEntity();
+        existentSobrescriureDB.setId(20L);
+        existentSobrescriureDB.setNom("Plantilla Sobrescriure");
+
+        when(plantillaRepository.findByNom("Plantilla Existent")).thenReturn(Optional.of(existentDB));
+        when(plantillaRepository.findByNom("Plantilla Sobrescriure")).thenReturn(Optional.of(existentSobrescriureDB));
+        when(plantillaRepository.save(existentSobrescriureDB)).thenReturn(existentSobrescriureDB);
+        when(plantillaRepository.findByNom("Plantilla Renombrada Nou Nom")).thenReturn(Optional.empty());
+        when(plantillaRepository.save(argThat(p -> "Plantilla Renombrada Nou Nom".equals(p.getNom()))))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        List<PlantillaExport> plantilles = Arrays.asList(expExistent, expSobrescriure, expNouNom);
+        List<PlantillaEntity> result = dashboardImportHelper.importPlantillesFromExport(plantilles, conflicts);
+
+        assertThat(result).hasSize(3);
+        assertThat(result.get(0)).isSameAs(existentDB);
+        assertThat(result.get(1)).isSameAs(existentSobrescriureDB);
+        assertThat(result.get(2).getNom()).isEqualTo("Plantilla Renombrada Nou Nom");
+    }
+
+    @Test
+    @DisplayName("checkPlantillaConflicts: la versió de llista crida la comprovació per a cada plantilla")
+    void checkPlantillaConflicts_ambLlista_processaTotesLesPlantilles() {
+        PlantillaExport p1 = new PlantillaExport();
+        p1.setNom("P1");
+        p1.setPaletteGroups(Collections.singletonList(new PlantillaGrupPaletesExport()));
+
+        PlantillaExport p2 = new PlantillaExport();
+        p2.setNom("P2");
+
+        PlantillaEntity existentDB = new PlantillaEntity();
+        existentDB.setNom("P1");
+        existentDB.setPaletteGroups(Collections.emptyList());
+
+        when(plantillaRepository.findByNom("P1")).thenReturn(Optional.of(existentDB));
+        when(plantillaRepository.findByNom("P2")).thenReturn(Optional.empty());
+
+        List<Conflict> conflicts = new ArrayList<>();
+        dashboardImportHelper.checkPlantillaConflicts(Arrays.asList(p1, p2), conflicts);
+
+        assertThat(conflicts).hasSize(1);
+        assertThat(conflicts.get(0).getTitol()).isEqualTo("P1");
+    }
+
+    @Test
+    @DisplayName("parsePlantillesJson: retalla espais en blanc als noms de plantilla")
+    void parsePlantillesJson_ambEspaisEnBlanc_retallaElNom() throws Exception {
+        String json = "{\"nom\": \"  Plantilla Amb Espais  \"}";
+
+        List<PlantillaExport> result = dashboardImportHelper.parsePlantillesJson(json);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getNom()).isEqualTo("Plantilla Amb Espais");
     }
 }
 

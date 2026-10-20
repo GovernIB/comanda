@@ -1665,6 +1665,16 @@ const translationEn: translationResourcesType = {
                 senseColor: "No colour",
             },
             action: {
+                export: "Export template",
+                import: {
+                    label: "Import template",
+                    title: "Import template",
+                    button: "Import",
+                    success: "Template imported successfully",
+                    importing: "Importing template and associated resources...",
+                    conflicts: "Templates or palettes with these names already exist and/or their configuration does not match the imported one. Indicate what should be done with each:",
+                    noPlantilles: "No template was found in the selected file.",
+                },
                 createPalette: "Create palette",
                 editPalette: "Edit palette",
             },
