@@ -36,6 +36,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -1873,6 +1874,75 @@ class DashboardImportHelperTest {
         WidgetStylePropertyEntity saved = entity.getStyleProperties().get(0);
         assertThat(saved.getId()).isEqualTo(100L);
         assertThat(saved.getScalarValue()).isEqualTo("#222222");
+    }
+
+    @Test
+    @DisplayName("syncPlantillaStyleProperties: sobreescriu propietats a null quan s'elimina color o valor")
+    void syncPlantillaStyleProperties_quanValorsFontNull_llavorsSobreescriuAmbNull() {
+        PlantillaEntity entity = new PlantillaEntity();
+        entity.setId(10L);
+
+        WidgetStylePropertyEntity existingProp = new WidgetStylePropertyEntity();
+        existingProp.setId(100L);
+        existingProp.setPlantilla(entity);
+        existingProp.setScope(WidgetStyleScope.COMMON);
+        existingProp.setPropertyName("colorFons");
+        existingProp.setValueType(WidgetStyleValueType.COLOR);
+        existingProp.setPaletteRole(PaletteRole.WIDGET);
+        existingProp.setPaletteIndex(0);
+        existingProp.setScalarValue("#111111");
+
+        when(widgetStylePropertyRepository.findByPlantillaId(10L))
+                .thenReturn(new ArrayList<>(List.of(existingProp)));
+
+        WidgetStylePropertyEntity newProp = new WidgetStylePropertyEntity();
+        newProp.setScope(WidgetStyleScope.COMMON);
+        newProp.setPropertyName("colorFons");
+        newProp.setValueType(WidgetStyleValueType.COLOR);
+        newProp.setPaletteRole(null);
+        newProp.setPaletteIndex(null);
+        newProp.setScalarValue(null);
+
+        ReflectionTestUtils.invokeMethod(
+                dashboardImportHelper, "syncPlantillaStyleProperties", entity, List.of(newProp));
+
+        ArgumentCaptor<List<WidgetStylePropertyEntity>> captor = ArgumentCaptor.forClass(List.class);
+        verify(widgetStylePropertyRepository).saveAll(captor.capture());
+        List<WidgetStylePropertyEntity> savedList = captor.getValue();
+        assertThat(savedList).hasSize(1);
+        WidgetStylePropertyEntity savedInDb = savedList.get(0);
+        assertThat(savedInDb.getId()).isEqualTo(100L);
+        assertThat(savedInDb.getPaletteIndex()).isNull();
+        assertThat(savedInDb.getScalarValue()).isNull();
+        assertThat(savedInDb.getPaletteRole()).isNull();
+    }
+
+    @Test
+    @DisplayName("importPaleta: sobreescriu descripcio a null quan el conflicte és SOBRESCRIURE i la font té null")
+    void importPaleta_quanConflicteSobreescriureIDescripcioNull_llavorsSobreescriuDescripcioAmbNull() {
+        PaletaEntity paleta = new PaletaEntity();
+        paleta.setNom("Paleta Test Buidar");
+        paleta.setDescripcio(null);
+        paleta.setColors(Collections.emptyList());
+
+        Conflict conflict = new Conflict("Paleta Test Buidar", PaletaExport.class.getSimpleName());
+        conflict.setOverwrite(OverwriteEnum.SOBRESCRIURE);
+
+        PaletaEntity existing = new PaletaEntity();
+        existing.setId(60L);
+        existing.setNom("Paleta Test Buidar");
+        existing.setDescripcio("Descripció existent que ha de desaparèixer");
+
+        when(paletaRepository.findByNom("Paleta Test Buidar")).thenReturn(Optional.of(existing));
+        when(paletaColorRepository.findByPaletaId(60L)).thenReturn(new ArrayList<>());
+        when(paletaRepository.save(existing)).thenAnswer(inv -> inv.getArgument(0));
+
+        PaletaEntity result = (PaletaEntity) ReflectionTestUtils.invokeMethod(
+                dashboardImportHelper, "importPaleta", paleta, Collections.singletonList(conflict));
+
+        assertThat(result).isSameAs(existing);
+        assertThat(result.getDescripcio()).isNull();
+        verify(paletaRepository).save(argThat(p -> p.getId().equals(60L) && p.getDescripcio() == null));
     }
 }
 

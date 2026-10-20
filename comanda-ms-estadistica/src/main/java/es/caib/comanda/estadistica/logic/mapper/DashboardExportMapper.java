@@ -99,6 +99,13 @@ public interface DashboardExportMapper {
                 .collect(Collectors.joining(","));
     }
 
+    /**
+     * S'utilitza NullValuePropertyMappingStrategy.IGNORE de manera intencionada per preservar
+     * els camps històrics/legacy de configuració de PlantillaEntity (propietats com mostrarVora,
+     * midaFontTitol, heatmapMinValue, etc.) que no formen part del model PlantillaExport.
+     * D'aquesta manera, en sobreescriure una plantilla existent durant una importació, aquests camps
+     * no es buiden a null en cas que la font no els contingui.
+     */
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "nom", ignore = true)
@@ -111,7 +118,6 @@ public interface DashboardExportMapper {
     @Mapping(target = "styleProperties", ignore = true)
     void updatePlantillaEntityFromEntity(@MappingTarget PlantillaEntity target, PlantillaEntity source);
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "nom", ignore = true)
     @Mapping(target = "v", ignore = true)
@@ -122,7 +128,6 @@ public interface DashboardExportMapper {
     @Mapping(target = "colors", ignore = true)
     void updatePaletaEntityFromEntity(@MappingTarget PaletaEntity target, PaletaEntity source);
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "v", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
