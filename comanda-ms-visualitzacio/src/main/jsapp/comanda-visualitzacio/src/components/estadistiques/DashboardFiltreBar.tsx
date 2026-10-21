@@ -175,6 +175,7 @@ export type DashboardFiltreBarProps = {
     /** Id de l'aplicació del dashboard (Dashboard.aplicacio.id); restringeix les opcions dels filtres DIMENSIO
      * als valors del mateix app-entorn que el dashboard (vegeu filterByAppGroupByValor a DimensioValorServiceImpl). */
     aplicacioId: number | string | undefined;
+    wrap?: 'wrap' | 'nowrap';
 };
 
 /**
@@ -184,7 +185,7 @@ export type DashboardFiltreBarProps = {
  * els widgets (vegeu useDashboardWidgets a dashboardRequests.ts). No té padding propi: qui l'incrusta (el
  * contenidor flex de la capçalera) és qui decideix l'espaiat respecte a la resta d'elements.
  */
-const DashboardFiltreBar = ({ filtres, value, onChange, aplicacioId }: DashboardFiltreBarProps) => {
+const DashboardFiltreBar = ({ filtres, value, onChange, aplicacioId, wrap = 'wrap' }: DashboardFiltreBarProps) => {
     const orderedFiltres = useMemo(
         () => [...(filtres ?? [])].sort((a, b) => a.ordre - b.ordre),
         [filtres]
@@ -212,7 +213,7 @@ const DashboardFiltreBar = ({ filtres, value, onChange, aplicacioId }: Dashboard
         <Box
             sx={{
                 display: 'flex',
-                flexWrap: 'wrap',
+                flexWrap: wrap,
                 gap: 2,
                 alignItems: 'center',
             }}

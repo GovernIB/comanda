@@ -61,4 +61,18 @@ describe('DashboardFiltreBar', () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
         expect(mocks.findMock).not.toHaveBeenCalled();
     });
+    it('DashboardFiltreBar_aplicaLaPropietatWrapAlContenidor', () => {
+        const { container } = renderComponent(
+            <DashboardFiltreBar
+                filtres={[dimensioFiltre]}
+                value={{}}
+                onChange={vi.fn()}
+                aplicacioId={undefined}
+                wrap="nowrap"
+            />
+        );
+
+        const flexBox = container.firstChild as HTMLElement;
+        expect(flexBox).toHaveStyle({ flexWrap: 'nowrap' });
+    });
 });

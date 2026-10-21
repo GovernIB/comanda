@@ -413,6 +413,8 @@ const translationEs: translationResourcesType = {
                 selector: {
                     loading: "Cargando...",
                     seeAll: "Ver todos los paneles de control",
+                    listDashboards: "Listar paneles",
+                    favoriteDashboards: "Paneles favoritos",
                 },
                 favorite: {
                     added: "Añadido a favoritos",

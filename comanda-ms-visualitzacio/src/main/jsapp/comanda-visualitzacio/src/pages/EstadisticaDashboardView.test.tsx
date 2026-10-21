@@ -3,54 +3,58 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import EstadisticaDashboardView from './EstadisticaDashboardView';
 
-const mocks = vi.hoisted(() => ({
-    useParamsMock: vi.fn(),
-    navigateMock: vi.fn(),
-    findDashboardMock: vi.fn(),
-    artifactActionMock: vi.fn().mockResolvedValue({}),
-    setItemMock: vi.fn(),
-    removeItemMock: vi.fn(),
-    getItemMock: vi.fn(),
-    tMock: vi.fn((selector: any) =>
-        selector({
-            page: {
-                dashboards: {
-                    title: 'Dashboards',
-                    view: {
-                        largeScreenModeFit: 'Escalar per ajustar-se a la pantalla',
-                        selector: {
-                            loading: 'Carregant...',
-                            seeAll: 'Veure tots els taulers de control',
-                        },
-                        favorite: {
-                            added: 'Afegit a preferits',
-                            removed: 'Eliminat de preferits',
-                        },
-                        columns: {
-                            titol: 'Títol',
-                            descripcio: 'Descripció',
-                            esPreferit: 'Preferit',
-                        },
+const mocks = vi.hoisted(() => {
+    const mockTranslations = {
+        page: {
+            dashboards: {
+                title: 'Dashboards',
+                view: {
+                    largeScreenModeFit: 'Escalar per ajustar-se a la pantalla',
+                    selector: {
+                        loading: 'Carregant...',
+                        seeAll: 'Veure tots els taulers de control',
+                        listDashboards: 'Llistar taulers',
+                        favoriteDashboards: 'Taulers preferits',
                     },
-                    action: {
-                        select: {
-                            title: 'Seleccionar dashboard',
-                        },
+                    favorite: {
+                        added: 'Afegit a preferits',
+                        removed: 'Eliminat de preferits',
                     },
-                    alert: {
-                        tornarTauler: 'Tornar al tauler',
-                        notExists: 'El dashboard no existeix',
-                        carregar: 'No s ha pogut carregar el dashboard',
-                        notDefined: 'No hi ha dashboards definits',
+                    columns: {
+                        titol: 'Títol',
+                        descripcio: 'Descripció',
+                        esPreferit: 'Preferit',
                     },
                 },
+                action: {
+                    select: {
+                        title: 'Seleccionar dashboard',
+                    },
+                },
+                alert: {
+                    tornarTauler: 'Tornar al tauler',
+                    notExists: 'El dashboard no existeix',
+                    carregar: 'No s ha pogut carregar el dashboard',
+                    notDefined: 'No hi ha dashboards definits',
+                },
             },
-        })
-    ),
-    useDashboardMock: vi.fn(),
-    useDashboardWidgetsMock: vi.fn(),
-    useMapDashboardItemsMock: vi.fn(),
-}));
+        },
+    };
+
+    return {
+        useParamsMock: vi.fn(),
+        navigateMock: vi.fn(),
+        findDashboardMock: vi.fn(),
+        artifactActionMock: vi.fn().mockResolvedValue({}),
+        setItemMock: vi.fn(),
+        removeItemMock: vi.fn(),
+        getItemMock: vi.fn(),
+        tMock: vi.fn((selector: (schema: typeof mockTranslations) => string) => selector(mockTranslations)),
+        useDashboardMock: vi.fn(),
+        useDashboardWidgetsMock: vi.fn(),
+        useMapDashboardItemsMock: vi.fn(),
+    };
+});
 
 vi.mock('react-i18next', () => ({
     useTranslation: () => ({
@@ -84,14 +88,22 @@ vi.mock('reactlib', () => ({
     }: {
         title: string;
         filter?: string;
-        onRowClick?: () => void;
+        onRowClick?: (params: { id: string | number; row?: { id?: string | number; titol?: string } }) => void;
         perspectives?: string[];
     }) => (
         <section>
             <h2>{title}</h2>
             {perspectives && <span data-testid="datagrid-perspectives">{perspectives.join(',')}</span>}
             <span data-testid="dashboard-filter">{filter ?? ''}</span>
-            <button type="button" onClick={onRowClick}>
+            <button
+                type="button"
+                onClick={() =>
+                    onRowClick?.({
+                        id: 55,
+                        row: { id: 55, titol: 'Tauler Nou Des Del Dialeg' },
+                    })
+                }
+            >
                 Seleccionar fila
             </button>
         </section>
@@ -317,18 +329,136 @@ describe('EstadisticaDashboardView', () => {
         expect(screen.queryByTestId('entorn-codi')).not.toBeInTheDocument();
     });
 
-    it('EstadisticaDashboardView_quanEsPremElBotoLlista_obreElDialegDeGestio', async () => {
+    it('EstadisticaDashboardView_quanEsPremElBotoMesTaulers_obreElDialegDeGestio', async () => {
         render(<EstadisticaDashboardView />);
 
-        const combobox = screen.getByRole('combobox');
-        fireEvent.mouseDown(combobox);
-        const seeAllOption = await screen.findByRole('option', { name: /Veure tots els taulers de control/i });
-        fireEvent.click(seeAllOption);
+        const moreButton = screen.getByRole('button', { name: 'Llistar taulers' });
+        fireEvent.click(moreButton);
         const dialog = await screen.findByTestId('dialog-select');
 
         expect(dialog).toBeInTheDocument();
         expect(within(dialog).getByRole('heading', { name: 'Dashboards' })).toBeInTheDocument();
         expect(within(dialog).getByTestId('datagrid-perspectives')).toHaveTextContent('PREFERIT_USUARI_ACTUAL');
+    });
+
+    it('EstadisticaDashboardView_mostraElsTaulersFavoritsComAChips', async () => {
+        mocks.findDashboardMock.mockResolvedValue({
+            rows: [
+                { id: 12, titol: 'Dashboard 12' },
+                { id: 20, titol: 'Dashboard 20' },
+            ],
+        });
+
+        render(<EstadisticaDashboardView />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'Dashboard 12' })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'Dashboard 20' })).toBeInTheDocument();
+        });
+
+        const activeChip = screen.getByRole('button', { name: 'Dashboard 12' });
+        expect(activeChip).toHaveAttribute('aria-current', 'page');
+        expect(activeChip).toHaveClass('MuiChip-filledPrimary');
+
+        const inactiveChip = screen.getByRole('button', { name: 'Dashboard 20' });
+        expect(inactiveChip).not.toHaveAttribute('aria-current');
+        expect(inactiveChip).toHaveClass('MuiChip-outlined');
+    });
+
+    it('EstadisticaDashboardView_mostraIconaEstrellaAlsChipsDelsTaulersFavorits', async () => {
+        mocks.findDashboardMock.mockResolvedValue({
+            rows: [
+                { id: 12, titol: 'Dashboard 12' },
+                { id: 20, titol: 'Dashboard 20' },
+            ],
+        });
+
+        render(<EstadisticaDashboardView />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'Dashboard 12' })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'Dashboard 20' })).toBeInTheDocument();
+        });
+
+        const favChip1 = screen.getByRole('button', { name: 'Dashboard 12' });
+        const favChip2 = screen.getByRole('button', { name: 'Dashboard 20' });
+
+        const icon1 = within(favChip1).getByTestId('favorite-chip-icon');
+        const icon2 = within(favChip2).getByTestId('favorite-chip-icon');
+
+        expect(icon1).toBeInTheDocument();
+        expect(icon1).toHaveTextContent('star');
+        expect(icon2).toBeInTheDocument();
+        expect(icon2).toHaveTextContent('star');
+    });
+
+    it('EstadisticaDashboardView_quanElTaulerActualNoEsAlsFavorits_elMostraComAActiu', async () => {
+        mocks.useParamsMock.mockReturnValue({ id: '99' });
+        mocks.useDashboardMock.mockReturnValue({
+            dashboard: { id: 99, titol: 'Tauler no favorit' },
+            loading: false,
+            exception: null,
+        });
+        mocks.findDashboardMock.mockResolvedValue({
+            rows: [{ id: 1, titol: 'Favorit 1' }],
+        });
+
+        render(<EstadisticaDashboardView />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'Tauler no favorit' })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'Favorit 1' })).toBeInTheDocument();
+        });
+
+        const activeChip = screen.getByRole('button', { name: 'Tauler no favorit' });
+        expect(activeChip).toHaveAttribute('aria-current', 'page');
+        expect(activeChip).toHaveClass('MuiChip-filledPrimary');
+        expect(within(activeChip).queryByTestId('favorite-chip-icon')).not.toBeInTheDocument();
+
+        const favChip = screen.getByRole('button', { name: 'Favorit 1' });
+        expect(within(favChip).getByTestId('favorite-chip-icon')).toHaveTextContent('star');
+    });
+
+    it('EstadisticaDashboardView_quanElTaulerActualTeIdZeroINoEsAlsFavorits_elMostraComAActiu', async () => {
+        mocks.useParamsMock.mockReturnValue({ id: '0' });
+        mocks.useDashboardMock.mockReturnValue({
+            dashboard: { id: 0, titol: 'Tauler Id Zero' },
+            loading: false,
+            exception: null,
+        });
+        mocks.findDashboardMock.mockResolvedValue({
+            rows: [{ id: 1, titol: 'Favorit 1' }],
+        });
+
+        render(<EstadisticaDashboardView />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'Tauler Id Zero' })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'Favorit 1' })).toBeInTheDocument();
+        });
+
+        const activeChip = screen.getByRole('button', { name: 'Tauler Id Zero' });
+        expect(activeChip).toHaveAttribute('aria-current', 'page');
+        expect(activeChip).toHaveClass('MuiChip-filledPrimary');
+
+        const moreButton = screen.getByRole('button', { name: 'Llistar taulers' });
+        expect(moreButton).toHaveClass('MuiButton-sizeSmall');
+    });
+
+    it('EstadisticaDashboardView_quanEsClicaUnChip_navegaAlTauler', async () => {
+        mocks.findDashboardMock.mockResolvedValue({
+            rows: [
+                { id: 12, titol: 'Dashboard 12' },
+                { id: 20, titol: 'Dashboard 20' },
+            ],
+        });
+
+        render(<EstadisticaDashboardView />);
+
+        const inactiveChip = await screen.findByRole('button', { name: 'Dashboard 20' });
+        fireEvent.click(inactiveChip);
+
+        expect(mocks.navigateMock).toHaveBeenCalledWith('/estadistiques/20');
     });
 
     it('EstadisticaDashboardView_quanElDashboardNoExisteix_mostraLAlertaIResetejaLaSeleccio', async () => {
@@ -381,5 +511,48 @@ describe('EstadisticaDashboardView', () => {
         await waitFor(() => {
             expect(screen.getByText('No hi ha dashboards definits')).toBeInTheDocument();
         });
+    });
+    it('EstadisticaDashboardView_quanEsCanviaATaulerFavorit_elNouChipNoMostraElTitolDelTaulerAnteriorMentreCarrega', async () => {
+        // Simula estar al tauler 20 mentre el hook useDashboard encara té el tauler 12 en memòria (càrrega pendent).
+        mocks.useParamsMock.mockReturnValue({ id: '20' });
+        mocks.useDashboardMock.mockReturnValue({
+            dashboard: { id: 12, titol: 'Dashboard 12' },
+            loading: true,
+            exception: null,
+        });
+        mocks.findDashboardMock.mockResolvedValue({
+            rows: [
+                { id: 12, titol: 'Dashboard 12' },
+                { id: 20, titol: 'Dashboard 20' },
+            ],
+        });
+
+        render(<EstadisticaDashboardView />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'Dashboard 20' })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'Dashboard 12' })).toBeInTheDocument();
+        });
+
+        const activeChip = screen.getByRole('button', { name: 'Dashboard 20' });
+        expect(activeChip).toHaveAttribute('aria-current', 'page');
+        expect(activeChip).toHaveTextContent('Dashboard 20');
+        expect(activeChip).not.toHaveTextContent('Dashboard 12');
+    });
+
+    it('EstadisticaDashboardView_quanEsSeleccionaUnTaulerDelDialeg_elNouChipMostraElSeuTitolINoElDelTaulerAnterior', async () => {
+        mocks.findDashboardMock.mockResolvedValue({
+            rows: [{ id: 12, titol: 'Dashboard 12' }],
+        });
+
+        render(<EstadisticaDashboardView />);
+
+        const moreButton = screen.getByRole('button', { name: 'Llistar taulers' });
+        fireEvent.click(moreButton);
+
+        const selectRowButton = await screen.findByRole('button', { name: 'Seleccionar fila' });
+        fireEvent.click(selectRowButton);
+
+        expect(mocks.navigateMock).toHaveBeenCalledWith('/estadistiques/55');
     });
 });

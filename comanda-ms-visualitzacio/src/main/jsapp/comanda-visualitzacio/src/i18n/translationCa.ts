@@ -413,6 +413,8 @@ const translationCa = {
                 selector: {
                     loading: "Carregant...",
                     seeAll: "Veure tots els taulers de control",
+                    listDashboards: "Llistar taulers",
+                    favoriteDashboards: "Taulers preferits",
                 },
                 favorite: {
                     added: "Afegit a preferits",

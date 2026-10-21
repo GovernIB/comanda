@@ -413,6 +413,8 @@ const translationEn: translationResourcesType = {
                 selector: {
                     loading: "Loading...",
                     seeAll: "See all dashboards",
+                    listDashboards: "List dashboards",
+                    favoriteDashboards: "Favorite dashboards",
                 },
                 favorite: {
                     added: "Added to favorites",
