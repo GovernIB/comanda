@@ -58,6 +58,7 @@ public abstract class BaseHalFormsConfig {
 	@Lazy
 	@Autowired(required = false)
 	private Set<? extends ReadonlyResourceController<?, ?>> resourceControllers;
+	@Lazy
 	@Autowired
 	private ResourceServiceLocator resourceServiceLocator;
 	@Autowired
