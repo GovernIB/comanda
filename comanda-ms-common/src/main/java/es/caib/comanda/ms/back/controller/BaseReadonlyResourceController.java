@@ -95,7 +95,7 @@ public abstract class BaseReadonlyResourceController<R extends Resource<? extend
 		extends BaseController
 		implements ReadonlyResourceController<R, ID> {
 
-	@Value("${" + BaseConfig.PROP_HTTP_HEADER_ANSWERS + ":Bb-Answers}")
+	@Value("${" + BaseConfig.PROP_HTTP_HEADER_ANSWERS + ":OnChange-Answers}")
 	private String httpHeaderAnswers;
 
 	protected static final HttpMethod FAKE_DEFAULT_TEMPLATE_HTTP_METHOD = HttpMethod.OPTIONS;
