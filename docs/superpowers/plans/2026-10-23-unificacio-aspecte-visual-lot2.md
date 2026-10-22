@@ -21,13 +21,13 @@
   - El treball es fa a la branca `v2-parametres-visuals`, creada a partir de `v2` (`bea8c9e`) en un **worktree a part**, `/home/sionandreu/git/base-react-lot2`.
   - El checkout `/home/sionandreu/git/base-react` té canvis locals d'algú altre (`BaseAppContext.tsx`, `GridPage.tsx`, `Dialog.tsx`, `CLAUDE.md`) i **no es toca**.
 - **base-react, publicació:**
-  - La branca es puja amb `git push -u origin v2-parametres-visuals`.
+  - **No es fa cap `git push`** (ordre de Sion). La branca es queda només en local.
   - No es fusiona amb `v2` i no es canvia la `version` del `package.json`.
 - **comanda, branca:** el treball es fa a la branca `comanda-lot2-visual`, creada a partir de `comanda-dev-libs-update`.
 - **comanda, commits:**
   - Sempre amb rutes explícites: `git commit -- <rutes>`.
   - No s'inclouen mai els canvis locals de l'usuari: `.editorconfig`, `caib-application.properties`, `comanda-ear/*`, `EstadisticaHelper.java`, `docker-compose.yml`, `versions/v.0.1.4/propietats`, `*.pem`, `doc/scripts/`.
-- **Format dels commits:** un per funcionalitat, amb el missatge en català i acabat amb `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
+- **Format dels commits:** un per funcionalitat, amb el missatge en català. **No hi ha d'haver cap línia `Co-Authored-By`, ni cap altra menció a Claude o a la IA** (ordre de Sion).
 - **Personalitzacions de comanda a `lib/` que s'han de conservar** en copiar:
   - `KeycloakAuthProvider` i el seu export a `main.ts`;
   - la navegació real a `ContainerAuthProvider`;
@@ -306,10 +306,10 @@ export const DrassanaFooter: React.FC<{ links?: { label: string; to: string }[] 
 - [ ] **Pas 4:** Executar els tests. Resultat esperat: PASSA.
 - [ ] **Pas 5:** Commit: "Carpeta lot2: Lot2BaseApp i peu de Drassana".
 
-### Tasca 10: pujar la branca de base-react
+### Tasca 10: tancar la branca de base-react (sense push)
 
 - [ ] **Pas 1:** Executar `npm test`, `npx tsc --noEmit -p .`, `npm run lint` i `npm run build` al worktree. Resultat esperat: tot passa.
-- [ ] **Pas 2:** Executar `git push -u origin v2-parametres-visuals`. Anotar el hash del darrer commit com a `LOT2_BASE`; es farà servir a les tasques 11 i 16.
+- [ ] **Pas 2:** **No fer cap push.** Anotar el hash del darrer commit com a `LOT2_BASE`; es farà servir a les tasques 11 i 16.
 
 ---
 
@@ -431,7 +431,7 @@ export const DrassanaFooter: React.FC<{ links?: { label: string; to: string }[] 
    - **Comanda:** com a exemple, amb enllaços als commits de la part B.
 
 - [ ] **Pas 1:** Redactar el document i comprovar que cada fitxer que s'esmenta existeix a la branca indicada (`git -C <repo> ls-tree -r <branca> --name-only | grep`).
-- [ ] **Pas 2:** Fer commit a base-react, "Document de migració a l'aspecte visual Lot2", i `git push`. Fer commit a comanda: "Enllaç al document de migració Lot2".
+- [ ] **Pas 2:** Fer commit a base-react, "Document de migració a l'aspecte visual Lot2", (sense push). Fer commit a comanda: "Enllaç al document de migració Lot2".
 - [ ] **Pas 3:** Si el commit de base-react ha canviat respecte a `LOT2_BASE`, actualitzar el commit de la memòria de sincronització. El document no és dins de `lib/` ni de `src/lot2/`, així que no cal tornar a copiar res.
 
 ### Tasca 17: verificació final
