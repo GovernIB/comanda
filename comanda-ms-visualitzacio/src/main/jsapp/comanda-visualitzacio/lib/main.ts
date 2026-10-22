@@ -62,6 +62,7 @@ export { useFilterContext } from './components/form/FilterContext';
 export { useFilterApiRef, useFilterApiContext } from './components/form/Filter';
 
 export { MuiDetail } from './components/mui/detail/MuiDetail';
+export { useDetailApiRef } from './components/detail/Detail';
 export { DetailField } from './components/detail/DetailField';
 export { useDetailContext } from './components/detail/DetailContext';
 
@@ -80,11 +81,12 @@ export {
     isoDateToDate,
     isoDateTimeToDate,
 } from './util/dateFormat';
-export { parseIsoDuration } from './util/durationFormat';
+export { durationParseIso, durationFormat, durationAddSeconds } from './util/durationFormat';
 export { toolbarBackgroundStyle } from './util/toolbar';
 export { toAbsolutePath } from './util/url';
 export { toBase64 } from './util/files';
 export { useDebounce } from './util/useDebounce';
+export { shallowEqual, deepEqual } from './util/equals';
 export * as springFilterBuilder from './util/springFilterBuilder';
 
 export type { DialogButton } from './components/BaseAppContext';
@@ -98,6 +100,7 @@ export type { FormTabsValue } from './components/mui/form/MuiFormTabs';
 export type { ActionReportCustomButtonProps as MuiActionReportCustomButtonProps } from './components/mui/ActionReportButton';
 export type { FormApi, FormApiRef } from './components/form/FormContext';
 export type { FilterApi, FilterApiRef } from './components/form/FilterContext';
+export type { DetailApi, DetailApiRef } from './components/detail/Detail';
 export type { FormFieldProps, FormFieldCustomProps } from './components/form/FormField';
 export type { DataFormDialogApi as MuiFormDialogApi } from './components/mui/datacommon/DataFormDialog';
 export type { FormSidebarApi as MuiFormSidebarApi } from './components/mui/form/MuiFormSidebar';

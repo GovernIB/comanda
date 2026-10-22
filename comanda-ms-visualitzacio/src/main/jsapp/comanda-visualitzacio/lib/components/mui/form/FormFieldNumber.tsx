@@ -24,6 +24,8 @@ type FormFieldNumberProps = FormFieldCustomProps & {
     suffix?: string;
     /** Indica si s'ha de deshabilitar el debounce amb els valors del camp */
     debounceDisabled?: true;
+    /** Indica si el valor del camp només s'ha de propagar al formulari quan el camp perd el focus */
+    propagateChangesOnBlur?: true;
 };
 
 type CustomProps = {
@@ -161,7 +163,7 @@ const useIsUserTypingRef = (delay: number = 250): [React.RefObject<boolean>, () 
 };
 
 const InnerFormFieldNumberDebounce: React.FC<FormFieldNumberProps> = (props) => {
-    const { value, onChange } = props;
+    const { value, onChange, propagateChangesOnBlur } = props;
     const [localValue, setLocalValue] = React.useState<string | null>(value);
     const changedValue = useDebounce(localValue, undefined, true);
     const [isUserTypingRef, onUserInput] = useIsUserTypingRef();
@@ -171,7 +173,7 @@ const InnerFormFieldNumberDebounce: React.FC<FormFieldNumberProps> = (props) => 
         }
     }, [value]);
     React.useEffect(() => {
-        if (value !== changedValue) {
+        if (!propagateChangesOnBlur && value !== changedValue) {
             onChange?.(changedValue);
         }
     }, [changedValue]);
@@ -196,7 +198,7 @@ const InnerFormFieldNumberDebounce: React.FC<FormFieldNumberProps> = (props) => 
 };
 
 export const FormFieldNumber: React.FC<FormFieldNumberProps> = (props) => {
-    if (!props.debounceDisabled) {
+    if (!props.debounceDisabled || props.propagateChangesOnBlur) {
         return <InnerFormFieldNumberDebounce {...props} />;
     } else {
         return <InnerFormFieldNumber {...props} />;

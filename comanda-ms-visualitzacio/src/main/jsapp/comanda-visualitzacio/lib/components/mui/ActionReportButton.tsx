@@ -8,6 +8,7 @@ import {
     useActionDialogButtons,
     useReportDialogButtons,
     useConfirmDialogButtons,
+    useCloseDialogButtons,
 } from '../AppButtons';
 import { useBaseAppContext, DialogButton } from '../BaseAppContext';
 import { ExportFileType } from '../ResourceApiContext';
@@ -195,9 +196,11 @@ export const useActionReportLogic = (
     dialogAutoSubmit?: boolean
 ): ActionReportLogicResult => {
     const { t, messageDialogShow, temporalMessageShow, saveAs } = useBaseAppContext();
+    const [finished, setFinished] = React.useState<boolean>(false);
     const actionDialogButtons = useActionDialogButtons();
     const reportDialogButtons = useReportDialogButtons();
     const confirmDialogButtons = useConfirmDialogButtons();
+    const closeDialogButtons = useCloseDialogButtons();
     const {
         isReady: apiIsReady,
         artifacts: apiArtifacts,
@@ -212,6 +215,7 @@ export const useActionReportLogic = (
                     code: action,
                     data: { ...formAdditionalDataArg, ...data },
                 };
+                setFinished(false);
                 apiArtifactAction(id, requestArgs)
                     .then((result: any) => {
                         if (onSuccess) {
@@ -220,11 +224,13 @@ export const useActionReportLogic = (
                             temporalMessageShow(null, t('actionreport.action.success'), 'success');
                         }
                         resolve(formDialogResultProcessor?.(result));
+                        setFinished(true);
                     })
                     .catch((error) => {
                         onError?.(error);
                         reject(error);
-                    });
+                    })
+                    .finally(() => setFinished(true));
             } else {
                 console.error("Couldn't exec action without code");
             }
@@ -238,6 +244,7 @@ export const useActionReportLogic = (
                     data: { ...formAdditionalDataArg, ...data },
                     fileType: reportFileType,
                 };
+                setFinished(false);
                 apiArtifactReport(id, requestArgs)
                     .then((result: any) => {
                         saveAs?.(result.blob, result.fileName);
@@ -251,17 +258,21 @@ export const useActionReportLogic = (
                     .catch((error) => {
                         onError?.(error);
                         reject(error);
-                    });
+                    })
+                    .finally(() => setFinished(true));
             } else {
                 console.error("Couldn't generate report without code");
             }
         });
+    const dialogButtons = finished
+        ? closeDialogButtons
+        : (formDialogButtons ??
+          (action ? actionDialogButtons : report ? reportDialogButtons : undefined));
     const [formDialogShow, formDialogComponent, formDialogClose] = useFormDialog(
         resourceName,
         action ? 'ACTION' : report ? 'REPORT' : undefined,
         action ? action : report ? report : undefined,
-        formDialogButtons ??
-            (action ? actionDialogButtons : report ? reportDialogButtons : undefined),
+        dialogButtons,
         action ? execAction : generateReport,
         action ? t('actionreport.action.error') : t('actionreport.report.error'),
         null,
