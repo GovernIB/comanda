@@ -88,37 +88,37 @@ class DimensioServiceImplTest {
     }
 
     // ========================================================================
-    // 1. TESTOS PER A namedFilterToSpecification
+    // 1. TESTOS PER A namedQueryToSpecification
     // ========================================================================
 
     @Test
-    @DisplayName("namedFilterToSpecification: retorna null quan el nom del filtre és null")
-    void namedFilterToSpecification_quanNomEsNull_llavorsRetornaNull() {
+    @DisplayName("namedQueryToSpecification: retorna null quan el nom del filtre és null")
+    void namedQueryToSpecification_quanNomEsNull_llavorsRetornaNull() {
         // Act
-        Specification<DimensioEntity> spec = dimensioService.namedFilterToSpecification(null);
+        Specification<DimensioEntity> spec = dimensioService.namedQueryToSpecification(null);
         // Assert
         assertThat(spec).isNull();
     }
 
     @Test
-    @DisplayName("namedFilterToSpecification: retorna null per a filtres desconeguts")
-    void namedFilterToSpecification_quanFiltreDesconegut_llavorsRetornaNull() {
+    @DisplayName("namedQueryToSpecification: retorna null per a filtres desconeguts")
+    void namedQueryToSpecification_quanFiltreDesconegut_llavorsRetornaNull() {
         // Act
-        Specification<DimensioEntity> spec = dimensioService.namedFilterToSpecification("desconegut");
+        Specification<DimensioEntity> spec = dimensioService.namedQueryToSpecification("desconegut");
         // Assert
         assertThat(spec).isNull();
     }
 
     @Test
-    @DisplayName("namedFilterToSpecification: gestiona el filtre per app correctament")
-    void namedFilterToSpecification_quanFiltreApp_llavorsRetornaSpecification() {
+    @DisplayName("namedQueryToSpecification: gestiona el filtre per app correctament")
+    void namedQueryToSpecification_quanFiltreApp_llavorsRetornaSpecification() {
         // Arrange
         String filterName = Dimensio.NAMED_FILTER_BY_APP_GROUP_BY_NOM + ":1";
         List<Long> ids = Arrays.asList(10L, 20L);
         when(estadisticaClientHelper.getEntornAppsIdByAppId(1L)).thenReturn(ids);
 
         // Act
-        Specification<DimensioEntity> spec = dimensioService.namedFilterToSpecification(filterName);
+        Specification<DimensioEntity> spec = dimensioService.namedQueryToSpecification(filterName);
 
         // Assert
         assertThat(spec).isNotNull();
@@ -126,14 +126,14 @@ class DimensioServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpecification: retorna especificació disjuntiva quan no hi ha entorns")
-    void namedFilterToSpecification_quanSenseEntorns_llavorsRetornaDisjunction() {
+    @DisplayName("namedQueryToSpecification: retorna especificació disjuntiva quan no hi ha entorns")
+    void namedQueryToSpecification_quanSenseEntorns_llavorsRetornaDisjunction() {
         // Arrange
         String filterName = Dimensio.NAMED_FILTER_BY_APP_GROUP_BY_NOM + ":1";
         when(estadisticaClientHelper.getEntornAppsIdByAppId(1L)).thenReturn(Collections.emptyList());
 
         // Act
-        Specification<DimensioEntity> spec = dimensioService.namedFilterToSpecification(filterName);
+        Specification<DimensioEntity> spec = dimensioService.namedQueryToSpecification(filterName);
 
         // Assert
         assertThat(spec).isNotNull();
@@ -141,13 +141,13 @@ class DimensioServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpecification: gestiona filtre sense app id")
-    void namedFilterToSpecification_quanSenseAppId_llavorsRetornaDisjunction() {
+    @DisplayName("namedQueryToSpecification: gestiona filtre sense app id")
+    void namedQueryToSpecification_quanSenseAppId_llavorsRetornaDisjunction() {
         // Arrange
         String filterName = Dimensio.NAMED_FILTER_BY_APP_GROUP_BY_NOM + ":";
 
         // Act
-        Specification<DimensioEntity> spec = dimensioService.namedFilterToSpecification(filterName);
+        Specification<DimensioEntity> spec = dimensioService.namedQueryToSpecification(filterName);
 
         // Assert
         assertThat(spec).isNotNull();
@@ -166,7 +166,7 @@ class DimensioServiceImplTest {
         String[] namedQueries = {"filterByApp:100"};
 
         // Act
-        dimensioService.additionalSpringFilter(currentFilter, namedQueries);
+        dimensioService.additionalSpringFilter(currentFilter, namedQueries, false);
 
         // Assert
         verify(springFilterHelper).filterByApp(eq(100L), anyString());
@@ -176,7 +176,7 @@ class DimensioServiceImplTest {
     @DisplayName("additionalSpringFilter: retorna null quan no hi ha filtres")
     void additionalSpringFilter_quanSenseFiltres_llavorsRetornaNull() {
         // Act
-        String result = dimensioService.additionalSpringFilter("", new String[0]);
+        String result = dimensioService.additionalSpringFilter("", new String[0], false);
 
         // Assert
         assertThat(result).isNull();
@@ -190,7 +190,7 @@ class DimensioServiceImplTest {
         String[] namedQueries = {"filterByApp:100"};
 
         // Act
-        String result = dimensioService.additionalSpringFilter(currentFilter, namedQueries);
+        String result = dimensioService.additionalSpringFilter(currentFilter, namedQueries, false);
 
         // Assert
         assertThat(result).isNotNull();
@@ -201,7 +201,7 @@ class DimensioServiceImplTest {
     @DisplayName("additionalSpringFilter: gestiona correctament quan namedQueries és null")
     void additionalSpringFilter_quanNamedQueriesEsNull_llavorsNoFalla() {
         // Act
-        String result = dimensioService.additionalSpringFilter("codi:'TEST'", null);
+        String result = dimensioService.additionalSpringFilter("codi:'TEST'", null, false);
 
         // Assert
         assertThat(result).isEqualTo("codi : 'TEST'");
@@ -216,7 +216,7 @@ class DimensioServiceImplTest {
         String[] namedQueries = {"altreFiltre:100"};
 
         // Act
-        String result = dimensioService.additionalSpringFilter(currentFilter, namedQueries);
+        String result = dimensioService.additionalSpringFilter(currentFilter, namedQueries, false);
 
         // Assert
         assertThat(result).isEqualTo("codi : 'TEST'");
@@ -232,7 +232,7 @@ class DimensioServiceImplTest {
                 .thenReturn("codi : 'TEST' and entornAppId in (10, 20)");
 
         // Act
-        String result = dimensioService.additionalSpringFilter(currentFilter, null);
+        String result = dimensioService.additionalSpringFilter(currentFilter, null, false);
 
         // Assert
         assertThat(result).isEqualTo("codi : 'TEST' and entornAppId in (10, 20)");

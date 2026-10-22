@@ -231,12 +231,12 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     @Override
     protected String additionalSpringFilter(
         String currentSpringFilter,
-        String[] namedQueries) {
+        String[] namedQueries, boolean isSingleResult) {
         return null;
     }
 
     @Override
-    protected String namedFilterToSpringFilter(String name) {
+    protected String namedQueryToSpringFilter(String name) {
         if (EntornApp.NAMED_FILTER_PERMIS_SALUT.equals(name)) {
             if (authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)
                     || authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)) {
@@ -250,7 +250,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
             }
             return buildAclPermissionsFilter(Collections.singletonList(PermissionEnum.PERM1));
         }
-        return super.namedFilterToSpringFilter(name);
+        return super.namedQueryToSpringFilter(name);
     }
 
     private String buildAclPermissionsFilter(List<PermissionEnum> permissions) {

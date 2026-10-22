@@ -87,12 +87,12 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
     }
 
     @Override
-    protected List<AppEntity> reorderFindLinesWithParent(Serializable parentId) {
+    protected List<AppEntity> reorderFindLinesWithParentAndSorted(Serializable parentId) {
         return appRepository.findAllByOrderByOrdreAsc();
     }
 
     @Override
-    protected String namedFilterToSpringFilter(String name) {
+    protected String namedQueryToSpringFilter(String name) {
         /*
          * App.NAMED_FILTER_PERMIS_SALUT
          * Restringeix les aplicacions a les visibles al dashboard de Salut: les que tenen permís de salut
@@ -112,7 +112,7 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
             }
             return buildAclPermissionsFilter(Collections.singletonList(PermissionEnum.PERM1));
         }
-        return super.namedFilterToSpringFilter(name);
+        return super.namedQueryToSpringFilter(name);
     }
 
     private String buildAclPermissionsFilter(List<PermissionEnum> permissions) {

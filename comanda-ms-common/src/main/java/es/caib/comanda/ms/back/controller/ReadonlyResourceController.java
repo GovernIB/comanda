@@ -24,7 +24,7 @@ import java.io.Serializable;
 public interface ReadonlyResourceController<R extends Resource<? extends Serializable>, ID extends Serializable> {
 
 	/**
-	 * Retorna un recurs donat el seu id.
+	 * Consulta un recurs donat el seu id.
 	 * 
 	 * @param id
 	 *            id de l'element que es vol consultar.
@@ -37,7 +37,7 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 			final String[] perspectives);
 
 	/**
-	 * Consulta paginada de recursos.
+	 * Consulta de múltiples recursos.
 	 * 
 	 * @param quickFilter
 	 *            text per a filtrar en els camps definits com a quickFilter.
@@ -229,7 +229,7 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 *            informació sobre la pagina de resultats que es vol obtenir.
 	 * @return la pàgina amb els resultats de la consulta.
 	 */
-	<RR extends Resource<?>> ResponseEntity<PagedModel<EntityModel<RR>>> artifactFieldOptionsFind(
+	<RR extends Resource<RID>, RID extends Serializable> ResponseEntity<PagedModel<EntityModel<RR>>> artifactFieldOptionsFind(
 			final ResourceArtifactType type,
 			final String code,
 			final String fieldName,
@@ -311,7 +311,7 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 * @throws MethodArgumentNotValidException
 	 *             si es troben errors de validació en els paràmetres.
 	 */
-	ResponseEntity<InputStreamResource> artifactReportGenerate(
+	ResponseEntity<InputStreamResource> artifactReportGenerateId(
 			final ID id,
 			final String code,
 			final ReportFileType fileType,
@@ -340,7 +340,7 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 *            informació sobre la pagina de resultats que es vol obtenir.
 	 * @return la pàgina amb els resultats de la consulta.
 	 */
-	<RR extends Resource<?>> ResponseEntity<PagedModel<EntityModel<RR>>> artifactReportFieldOptionsFind(
+	<RR extends Resource<RID>, RID extends Serializable> ResponseEntity<PagedModel<EntityModel<RR>>> artifactReportFieldOptionsFind(
 			final String code,
 			final String fieldName,
 			final String quickFilter,
@@ -395,7 +395,7 @@ public interface ReadonlyResourceController<R extends Resource<? extends Seriali
 	 *            informació sobre la pagina de resultats que es vol obtenir.
 	 * @return la pàgina amb els resultats de la consulta.
 	 */
-	<RR extends Resource<?>> ResponseEntity<PagedModel<EntityModel<RR>>> artifactFilterFieldOptionsFind(
+	<RR extends Resource<RID>, RID extends Serializable> ResponseEntity<PagedModel<EntityModel<RR>>> artifactFilterFieldOptionsFind(
 			final String code,
 			final String fieldName,
 			final String quickFilter,

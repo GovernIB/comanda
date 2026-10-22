@@ -1,5 +1,7 @@
 package es.caib.comanda.ms.logic.intf.validation;
 
+import es.caib.comanda.base.config.BaseConfig;
+
 import javax.validation.Constraint;
 import javax.validation.Payload;
 import java.lang.annotation.*;
@@ -21,7 +23,7 @@ public @interface CustomValidation {
 	boolean springBean() default false;
 	String[] targetFields() default {};
 
-	String message() default "{es.limit.base.boot.validation.constraints.CustomValidation}";
+	String message() default "{" + BaseConfig.BASE_PACKAGE + ".validation.constraints.CustomValidation}";
 	Class<?>[] groups() default {};
 	Class<? extends Payload>[] payload() default {};
 

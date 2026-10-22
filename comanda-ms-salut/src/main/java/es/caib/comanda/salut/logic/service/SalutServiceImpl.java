@@ -96,7 +96,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
 	@Override
 	protected String additionalSpringFilter(
 			String currentSpringFilter,
-			String[] namedQueries) {
+			String[] namedQueries, boolean isSingleResult) {
 		Set<Long> allowedEntornAppIds = getAllowedEntornAppIds();
 		if (allowedEntornAppIds == null) {
 			return null;

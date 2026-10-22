@@ -5,8 +5,10 @@ import es.caib.comanda.acl.logic.intf.model.AclEntry;
 import es.caib.comanda.acl.logic.intf.model.ResourceType;
 import es.caib.comanda.acl.logic.intf.model.SubjectType;
 import es.caib.comanda.acl.logic.intf.service.AclEntryService;
+import es.caib.comanda.ms.back.util.ResourceServiceLocator;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import es.caib.comanda.ms.logic.intf.permission.ResourcePermissions;
+import es.caib.comanda.ms.logic.intf.service.PermissionEvaluatorService;
 import es.caib.comanda.ms.logic.intf.service.ResourceApiService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,9 +74,12 @@ class AclEntryControllerWebMvcTest {
     @MockBean
     private SmartValidator validator;
 
+    @MockBean
+    private PermissionEvaluatorService permissionEvaluatorService;
+
     @SpringBootConfiguration
     @EnableAutoConfiguration
-    @Import(AclEntryController.class)
+    @Import({AclEntryController.class, ResourceServiceLocator.class})
     static class TestWebMvcApp {
     }
 

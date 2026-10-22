@@ -122,7 +122,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     @Override
     protected String additionalSpringFilter(
         String currentSpringFilter,
-        String[] namedQueries) {
+        String[] namedQueries, boolean isSingleResult) {
         boolean isWrite = namedQueries != null && Arrays.asList(namedQueries).contains("WRITE");
         return dashboardPermisosHelper.buildDashboardFilter(currentSpringFilter, isWrite);
     }
@@ -208,7 +208,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     }
 
     @Override
-    protected String namedFilterToSpringFilter(String name) {
+    protected String namedQueryToSpringFilter(String name) {
         if (Dashboard.NAMED_FILTER_PREFERIT_USUARI_ACTUAL.equals(name)) {
             return "exists(" + DashboardEntity.Fields.preferits + "." + DashboardPreferit.Fields.usuariCodi + ":'" + authenticationHelper.getCurrentUserName() + "')";
         }

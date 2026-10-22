@@ -58,7 +58,6 @@ public class JpaRepositoryLocator implements ApplicationContextAware {
 	}
 
 	private static ApplicationContext applicationContext;
-
 	public static JpaRepositoryLocator getInstance() {
 		return applicationContext.getBean(JpaRepositoryLocator.class);
 	}

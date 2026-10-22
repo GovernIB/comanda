@@ -884,7 +884,7 @@ class DashboardServiceImplTest {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
         String currentFilter = "nom:'test'";
 
-        String result = ReflectionTestUtils.invokeMethod(dashboardService, "additionalSpringFilter", currentFilter, new String[]{});
+        String result = ReflectionTestUtils.invokeMethod(dashboardService, "additionalSpringFilter", currentFilter, new String[]{}, false);
 
         assertThat(result).isEqualTo(currentFilter);
     }
@@ -896,7 +896,7 @@ class DashboardServiceImplTest {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(true);
         String currentFilter = "nom:'test'";
 
-        String result = ReflectionTestUtils.invokeMethod(dashboardService, "additionalSpringFilter", currentFilter, new String[]{});
+        String result = ReflectionTestUtils.invokeMethod(dashboardService, "additionalSpringFilter", currentFilter, new String[]{}, false);
 
         assertThat(result).isEqualTo(currentFilter);
     }
@@ -918,7 +918,7 @@ class DashboardServiceImplTest {
             mockedStatic.when(() -> SpringFilterHelper.or(any(), any(), any())).thenReturn("");
             mockedStatic.when(() -> SpringFilterHelper.and(eq("current"), eq("id:0"))).thenReturn("current AND id:0");
 
-            String result = ReflectionTestUtils.invokeMethod(dashboardService, "additionalSpringFilter", "current", new String[]{});
+            String result = ReflectionTestUtils.invokeMethod(dashboardService, "additionalSpringFilter", "current", new String[]{}, false);
 
             assertThat(result).isEqualTo("current AND id:0");
             verify(aclServiceClient, times(3)).findIdsWithAnyPermission(any(), any(), any(), any(), any());

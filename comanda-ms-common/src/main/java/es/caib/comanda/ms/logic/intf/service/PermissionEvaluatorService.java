@@ -22,7 +22,8 @@ public interface PermissionEvaluatorService extends PermissionEvaluator {
 		ACTION,
 		REPORT,
 		OPTIONS,
-		FIELDDOWNLOAD
+		FIELDDOWNLOAD,
+		SYNC
 	}
 
 }

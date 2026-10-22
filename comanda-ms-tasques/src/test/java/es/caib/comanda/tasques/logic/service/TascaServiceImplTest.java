@@ -292,7 +292,7 @@ class TascaServiceImplTest {
         when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{ROLE_ADMIN});
 
         // Act
-        Specification<TascaEntity> spec = tascaService.additionalSpecification(null);
+        Specification<TascaEntity> spec = tascaService.additionalSpecification(null, false);
 
         // Assert
         assertThat(spec).isNull();
@@ -306,7 +306,7 @@ class TascaServiceImplTest {
         when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(roles);
 
         // Act
-        Specification<TascaEntity> spec = tascaService.additionalSpecification(null);
+        Specification<TascaEntity> spec = tascaService.additionalSpecification(null, false);
 
         // Assert
         assertThat(spec).isNotNull();

@@ -130,7 +130,7 @@ class DashboardTitolServiceImplTest {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
 
         // Act
-        String result = dashboardTitolService.additionalSpringFilter(currentFilter, new String[0]);
+        String result = dashboardTitolService.additionalSpringFilter(currentFilter, new String[0], false);
 
         // Assert
         assertThat(result).isEqualTo(currentFilter);
@@ -146,7 +146,7 @@ class DashboardTitolServiceImplTest {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(true);
 
         // Act
-        String result = dashboardTitolService.additionalSpringFilter(currentFilter, new String[0]);
+        String result = dashboardTitolService.additionalSpringFilter(currentFilter, new String[0], false);
 
         // Assert
         assertThat(result).isEqualTo(currentFilter);
@@ -166,7 +166,7 @@ class DashboardTitolServiceImplTest {
             .thenReturn(ResponseEntity.ok(permisos));
 
         // Act
-        String result = dashboardTitolService.additionalSpringFilter(currentFilter, new String[0]);
+        String result = dashboardTitolService.additionalSpringFilter(currentFilter, new String[0], false);
 
         // Assert
         assertThat(result).contains(currentFilter);
@@ -188,7 +188,7 @@ class DashboardTitolServiceImplTest {
             .thenReturn(ResponseEntity.ok(Collections.emptySet()));
 
         // Act
-        String result = dashboardTitolService.additionalSpringFilter(currentFilter, new String[0]);
+        String result = dashboardTitolService.additionalSpringFilter(currentFilter, new String[0], false);
 
         // Assert
         // SpringFilterHelper.or de nulls retorna null o buit, i la lògica aplica "id:0"

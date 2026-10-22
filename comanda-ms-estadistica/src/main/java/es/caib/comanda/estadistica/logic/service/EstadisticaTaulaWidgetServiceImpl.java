@@ -48,13 +48,13 @@ public class EstadisticaTaulaWidgetServiceImpl extends BaseMutableResourceServic
     @Override
     protected String additionalSpringFilter(
         String currentSpringFilter,
-        String[] namedQueries) {
+        String[] namedQueries, boolean isSingleResult) {
         return dashboardPermisosHelper.buildWidgetFilter(currentSpringFilter, namedQueries);
     }
 
     @Override
-    protected Specification<EstadisticaTaulaWidgetEntity> namedFilterToSpecification(String name) {
-        return estadisticaWidgetHelper.namedFilterToSpecification(name);
+    protected Specification<EstadisticaTaulaWidgetEntity> namedQueryToSpecification(String name) {
+        return estadisticaWidgetHelper.namedQueryToSpecification(name);
     }
 
     @Override

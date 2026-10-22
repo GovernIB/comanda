@@ -39,7 +39,7 @@ public class UsuariServiceImpl extends BaseMutableResourceService<Usuari, Long, 
     }
 
 	@Override
-	protected String additionalSpringFilter(String currentSpringFilter, String[] namedQueries) {
+	protected String additionalSpringFilter(String currentSpringFilter, String[] namedQueries, boolean isSingleResult) {
 		List<Filter> filters = new ArrayList<>();
 		if (currentSpringFilter != null && !currentSpringFilter.isEmpty()) {
 			filters.add(Filter.parse(currentSpringFilter));

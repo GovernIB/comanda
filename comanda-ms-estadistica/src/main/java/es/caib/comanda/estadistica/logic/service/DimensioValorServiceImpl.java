@@ -74,7 +74,7 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
     }
 
     @Override
-    protected Specification<DimensioValorEntity> namedFilterToSpecification(String name) {
+    protected Specification<DimensioValorEntity> namedQueryToSpecification(String name) {
         if (name != null && name.startsWith(DimensioValor.NAMED_FILTER_BY_APP_GROUP_BY_VALOR)) {
             List<Long> idsEntornApp = null;
             String[] parts = name.split(":", 2);
@@ -148,7 +148,7 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
     }
 
     @Override
-    protected String additionalSpringFilter(String currentSpringFilter, String[] namedQueries) {
+    protected String additionalSpringFilter(String currentSpringFilter, String[] namedQueries, boolean isSingleResult) {
         List<Filter> filters = new ArrayList<>();
         if (currentSpringFilter != null && !currentSpringFilter.isEmpty()) {
             filters.add(Filter.parse(currentSpringFilter));
@@ -179,7 +179,7 @@ public class DimensioValorServiceImpl extends BaseMutableResourceService<Dimensi
      * Per a ORGAN_GESTOR contempla la jerarquia de descendents i la propagació des d'Entitat.
      */
     @Override
-    protected Specification<DimensioValorEntity> additionalSpecification(String[] namedQueries) {
+    protected Specification<DimensioValorEntity> additionalSpecification(String[] namedQueries, boolean isSingleResult) {
         List<EntitatEntity> entitatsPermeses = dashboardSeguretatHelper.resoldreEntitatsPermeses();
         List<String> codisOrgansPermesos = dashboardSeguretatHelper.resoldreCodisOrgansPermesos();
         if (entitatsPermeses == null && codisOrgansPermesos == null) {

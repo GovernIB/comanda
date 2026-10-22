@@ -120,7 +120,7 @@ class DashboardItemServiceImplTest {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
 
         // Act
-        String result = dashboardItemService.additionalSpringFilter("filtreBase", new String[0]);
+        String result = dashboardItemService.additionalSpringFilter("filtreBase", new String[0], false);
 
         // Assert
         assertThat(result).isEqualTo("filtreBase");
@@ -135,7 +135,7 @@ class DashboardItemServiceImplTest {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(true);
 
         // Act
-        String result = dashboardItemService.additionalSpringFilter("filtreBase", new String[0]);
+        String result = dashboardItemService.additionalSpringFilter("filtreBase", new String[0], false);
 
         // Assert
         assertThat(result).isEqualTo("filtreBase");
@@ -153,7 +153,7 @@ class DashboardItemServiceImplTest {
             .thenReturn(ResponseEntity.ok(permisos));
 
         // Act
-        String result = dashboardItemService.additionalSpringFilter("base", new String[0]);
+        String result = dashboardItemService.additionalSpringFilter("base", new String[0], false);
 
         // Assert
         assertThat(result).contains("base");
@@ -183,7 +183,7 @@ class DashboardItemServiceImplTest {
         when(estadisticaClientHelper.entornAppFindById(100L)).thenReturn(ea);
 
         // Act
-        String result = dashboardItemService.additionalSpringFilter("base", new String[0]);
+        String result = dashboardItemService.additionalSpringFilter("base", new String[0], false);
 
         // Assert
         assertThat(result).contains("(widget.appId:10 and entornId:20)");
@@ -200,7 +200,7 @@ class DashboardItemServiceImplTest {
             .thenReturn(ResponseEntity.ok(Collections.emptySet()));
 
         // Act
-        String result = dashboardItemService.additionalSpringFilter("base", new String[0]);
+        String result = dashboardItemService.additionalSpringFilter("base", new String[0], false);
 
         // Assert
         assertThat(result).isEqualTo("base and id:0");

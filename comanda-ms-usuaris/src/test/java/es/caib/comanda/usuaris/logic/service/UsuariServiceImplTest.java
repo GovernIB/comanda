@@ -61,7 +61,7 @@ class UsuariServiceImplTest {
         when(authenticationHelper.getCurrentUserName()).thenReturn("usuariActual");
 
         // Act
-        String result = usuariService.additionalSpringFilter(currentFilter, new String[0]);
+        String result = usuariService.additionalSpringFilter(currentFilter, new String[0], false);
 
         // Assert
         assertThat(result).isNotNull();
@@ -77,7 +77,7 @@ class UsuariServiceImplTest {
         when(authenticationHelper.getCurrentUserName()).thenReturn("usuariActual");
 
         // Act
-        String result = usuariService.additionalSpringFilter(null, new String[0]);
+        String result = usuariService.additionalSpringFilter(null, new String[0], false);
 
         // Assert
         assertThat(result).isNotNull();

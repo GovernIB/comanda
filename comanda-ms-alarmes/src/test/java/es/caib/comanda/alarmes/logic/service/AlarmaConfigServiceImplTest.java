@@ -90,7 +90,7 @@ class AlarmaConfigServiceImplTest {
     @DisplayName("additionalSpringFilter retorna filtre base per a administrador")
     void additionalSpringFilter_quanAdmin_retornaFiltreBase() {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
-        assertThat(alarmaConfigService.additionalSpringFilter("", new String[0])).isEqualTo("esborrat:false");
+        assertThat(alarmaConfigService.additionalSpringFilter("", new String[0], false)).isEqualTo("esborrat:false");
     }
 
     @Test
@@ -98,7 +98,7 @@ class AlarmaConfigServiceImplTest {
     void additionalSpringFilter_quanUsuari_retornaFiltreRestringit() {
         when(authenticationHelper.getCurrentUserName()).thenReturn(CURRENT_USER);
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
-        assertThat(alarmaConfigService.additionalSpringFilter("", new String[0]))
+        assertThat(alarmaConfigService.additionalSpringFilter("", new String[0], false))
             .isEqualTo("esborrat:false and createdBy:'" + CURRENT_USER + "'");
     }
 
@@ -549,19 +549,19 @@ class AlarmaConfigServiceImplTest {
     }
 
     @Test
-    @DisplayName("reorderFindLinesWithParent: retorna llista d'admin quan la fila actual és d'admin")
+    @DisplayName("reorderFindLinesWithParentAndSorted: retorna llista d'admin quan la fila actual és d'admin")
     void reorderFindLinesWithParent_quanFilaActualEsAdmin_llavorsRetornaLlistaAdmin() {
         AlarmaConfigEntity currentRow = new AlarmaConfigEntity();
         currentRow.setAdmin(true);
         currentRow.setEntornAppId(10L);
         when(alarmaConfigRepository.findById(1L)).thenReturn(Optional.of(currentRow));
 
-        alarmaConfigService.reorderFindLinesWithParent(1L);
+        alarmaConfigService.reorderFindLinesWithParentAndSorted(1L);
         verify(alarmaConfigRepository).findByEntornAppIdAndEsborratFalseAndAdminTrueOrderByOrdre(10L);
     }
 
     @Test
-    @DisplayName("reorderFindLinesWithParent: retorna llista d'usuari quan la fila actual no és d'admin")
+    @DisplayName("reorderFindLinesWithParentAndSorted: retorna llista d'usuari quan la fila actual no és d'admin")
     void reorderFindLinesWithParent_quanFilaActualNoEsAdmin_llavorsRetornaLlistaUsuari() {
         AlarmaConfigEntity currentRow = new AlarmaConfigEntity();
         currentRow.setAdmin(false);
@@ -569,12 +569,12 @@ class AlarmaConfigServiceImplTest {
         currentRow.setCreatedBy("user1");
         when(alarmaConfigRepository.findById(1L)).thenReturn(Optional.of(currentRow));
 
-        alarmaConfigService.reorderFindLinesWithParent(1L);
+        alarmaConfigService.reorderFindLinesWithParentAndSorted(1L);
         verify(alarmaConfigRepository).findByEntornAppIdAndEsborratFalseAndAdminFalseAndCreatedByOrderByOrdre(10L, "user1");
     }
 
     @Test
-    @DisplayName("reorderFindLinesWithParent: utilitza ThreadLocal quan selfId és null (creació)")
+    @DisplayName("reorderFindLinesWithParentAndSorted: utilitza ThreadLocal quan selfId és null (creació)")
     void reorderFindLinesWithParent_quanSelfIdEsNull_llavorsUtilitzaThreadLocal() {
         AlarmaConfigEntity currentRow = new AlarmaConfigEntity();
         currentRow.setAdmin(false);
@@ -582,7 +582,7 @@ class AlarmaConfigServiceImplTest {
         ThreadLocalUtil.setAttribute(ThreadLocalUtil.REORDER_ADDITIONAL_PROPS_KEY, currentRow);
         when(authenticationHelper.getCurrentUserName()).thenReturn("user1");
 
-        alarmaConfigService.reorderFindLinesWithParent(null);
+        alarmaConfigService.reorderFindLinesWithParentAndSorted(null);
         verify(alarmaConfigRepository).findByEntornAppIdAndEsborratFalseAndAdminFalseAndCreatedByOrderByOrdre(10L, "user1");
         ThreadLocalUtil.setAttribute(ThreadLocalUtil.REORDER_ADDITIONAL_PROPS_KEY, null); // Cleanup
     }

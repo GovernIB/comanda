@@ -104,7 +104,7 @@ public class DashboardFiltreServiceImpl extends BaseMutableResourceService<Dashb
     @Override
     protected String additionalSpringFilter(
         String currentSpringFilter,
-        String[] namedQueries) {
+        String[] namedQueries, boolean isSingleResult) {
         return dashboardPermisosHelper.buildDashboardChildFilter(currentSpringFilter, DashboardFiltre.Fields.dashboard);
     }
 

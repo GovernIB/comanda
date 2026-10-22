@@ -20,7 +20,7 @@ public @interface ResourceAccessConstraint {
 	String[] roles() default {};
 	PermissionEnum[] grantedPermissions() default {};
 
-	public enum ResourceAccessConstraintType {
+	enum ResourceAccessConstraintType {
 		PERMIT_ALL,
 		AUTHENTICATED,
 		ROLE,

@@ -1,6 +1,7 @@
 package es.caib.comanda.ms.logic.helper;
 
 import es.caib.comanda.ms.back.config.WebSecurityConfig;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,6 +22,16 @@ import java.util.Objects;
  */
 @Component
 public class AuthenticationHelper {
+
+    /**
+     * Detecta si hi ha un usuari autenticat.
+     *
+     * @return true si hi ha un usuari autenticat i false en cas contrari.
+     */
+    public boolean isAuthenticated() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return !(auth instanceof AnonymousAuthenticationToken);
+    }
 
 	/**
 	 * Retorna el nom de l'usuari actual.

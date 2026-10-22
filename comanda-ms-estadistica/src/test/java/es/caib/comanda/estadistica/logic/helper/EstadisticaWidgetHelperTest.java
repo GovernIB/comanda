@@ -394,21 +394,21 @@ class EstadisticaWidgetHelperTest {
     }
 
     // ========================================================================
-    // 7. TESTOS PER A namedFilterToSpecification i notInDashboard
+    // 7. TESTOS PER A namedQueryToSpecification i notInDashboard
     // ========================================================================
 
     @Test
-    @DisplayName("namedFilterToSpecification: retorna null quan el filtre és null o no coincideix")
-    void namedFilterToSpecification_quanFiltreEsNullONoCoincideix_llavorsRetornaNull() {
-        assertThat(estadisticaWidgetHelper.namedFilterToSpecification(null)).isNull();
-        assertThat(estadisticaWidgetHelper.namedFilterToSpecification("altreFiltre:1")).isNull();
-        assertThat(estadisticaWidgetHelper.namedFilterToSpecification(WidgetBaseResource.FILTER_NOT_IN_DASHBOARD_NAMEDFILTER + "invalid")).isNull();
+    @DisplayName("namedQueryToSpecification: retorna null quan el filtre és null o no coincideix")
+    void namedQueryToSpecification_quanFiltreEsNullONoCoincideix_llavorsRetornaNull() {
+        assertThat(estadisticaWidgetHelper.namedQueryToSpecification(null)).isNull();
+        assertThat(estadisticaWidgetHelper.namedQueryToSpecification("altreFiltre:1")).isNull();
+        assertThat(estadisticaWidgetHelper.namedQueryToSpecification(WidgetBaseResource.FILTER_NOT_IN_DASHBOARD_NAMEDFILTER + "invalid")).isNull();
     }
 
     @Test
-    @DisplayName("namedFilterToSpecification: retorna Specification quan és filterNotInDashboard")
-    void namedFilterToSpecification_quanEsFiltreDashboard_llavorsRetornaSpecification() {
-        Specification<EstadisticaSimpleWidgetEntity> spec1 = estadisticaWidgetHelper.namedFilterToSpecification(WidgetBaseResource.FILTER_NOT_IN_DASHBOARD_NAMEDFILTER + "10");
+    @DisplayName("namedQueryToSpecification: retorna Specification quan és filterNotInDashboard")
+    void namedQueryToSpecification_quanEsFiltreDashboard_llavorsRetornaSpecification() {
+        Specification<EstadisticaSimpleWidgetEntity> spec1 = estadisticaWidgetHelper.namedQueryToSpecification(WidgetBaseResource.FILTER_NOT_IN_DASHBOARD_NAMEDFILTER + "10");
         assertThat(spec1).isNotNull();
     }
 

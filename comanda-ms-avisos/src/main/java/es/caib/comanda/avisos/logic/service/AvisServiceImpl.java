@@ -137,7 +137,7 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
     }
 
     @Override
-    protected String namedFilterToSpringFilter(String name) {
+    protected String namedQueryToSpringFilter(String name) {
         if (Avis.NAMED_FILTER_AVIS_NO_LLEGIT.equals(name)){
             String userName = authenticationHelper.getCurrentUserName();
             return "not(exists(" + AvisEntity.Fields.avisLlegits + "." + AvisLlegitEntity.Fields.usuari + ":'" + userName + "'))";
@@ -146,7 +146,7 @@ public class AvisServiceImpl extends BaseMutableResourceService<Avis, Long, Avis
     }
 
     @Override
-    protected Specification<AvisEntity> additionalSpecification(String[] namedQueries) {
+    protected Specification<AvisEntity> additionalSpecification(String[] namedQueries, boolean isSingleResult) {
         String userName = authenticationHelper.getCurrentUserName();
         String[] roles = authenticationHelper.getCurrentUserRealmRoles();
 

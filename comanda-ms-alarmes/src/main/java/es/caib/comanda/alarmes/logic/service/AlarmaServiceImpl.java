@@ -177,7 +177,7 @@ public class AlarmaServiceImpl extends BaseMutableResourceService<Alarma, Long, 
 	@Override
 	protected String additionalSpringFilter(
 			String currentSpringFilter,
-			String[] namedQueries) {
+			String[] namedQueries, boolean isSingleResult) {
 		String currentUser = authenticationHelper.getCurrentUserName();
 		boolean isAdmin = authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN);
 		if (!isAdmin) {

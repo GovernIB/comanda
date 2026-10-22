@@ -303,7 +303,7 @@ class DashboardFiltreServiceImplTest {
         when(dashboardPermisosHelper.buildDashboardChildFilter("base", DashboardFiltre.Fields.dashboard))
             .thenReturn("base and (dashboard.appId:10 or dashboard.id:1)");
 
-        String result = service.additionalSpringFilter("base", new String[0]);
+        String result = service.additionalSpringFilter("base", new String[0], false);
 
         assertThat(result).isEqualTo("base and (dashboard.appId:10 or dashboard.id:1)");
         verify(dashboardPermisosHelper).buildDashboardChildFilter("base", DashboardFiltre.Fields.dashboard);

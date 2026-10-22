@@ -75,7 +75,7 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
     }
 
     @Override
-    protected Specification<DimensioEntity> namedFilterToSpecification(String name) {
+    protected Specification<DimensioEntity> namedQueryToSpecification(String name) {
         if (name != null && name.startsWith(Dimensio.NAMED_FILTER_BY_APP_GROUP_BY_NOM)) {
             List<Long> idsEntornApp = null;
             String[] parts = name.split(":", 2);
@@ -110,7 +110,7 @@ public class DimensioServiceImpl extends BaseMutableResourceService<Dimensio, Lo
     }
 
     @Override
-    protected String additionalSpringFilter(String currentSpringFilter, String[] namedQueries) {
+    protected String additionalSpringFilter(String currentSpringFilter, String[] namedQueries, boolean isSingleResult) {
         List<Filter> filters = new ArrayList<>();
         if (currentSpringFilter != null && !currentSpringFilter.isEmpty()) {
             filters.add(Filter.parse(currentSpringFilter));

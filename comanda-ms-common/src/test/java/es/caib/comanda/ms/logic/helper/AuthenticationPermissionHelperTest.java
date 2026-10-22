@@ -6,6 +6,7 @@ import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
+import es.caib.comanda.ms.logic.intf.service.PermissionEvaluatorService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.acls.domain.BasePermission;
@@ -54,8 +55,8 @@ class AuthenticationPermissionHelperTest {
         ReflectionTestUtils.setField(helper, "authenticationHelper", new AuthenticationHelper());
         SecurityContextHolder.getContext().setAuthentication(auth);
 
-        assertThat(helper.checkResourcePermission(auth, null, AnnotatedResource.class.getName(), (BasePermission)BasePermission.READ)).isTrue();
-        assertThat(helper.checkResourcePermission(auth, null, "not.found.Clazz", (BasePermission)BasePermission.READ)).isFalse();
+        assertThat(helper.checkResourcePermission(auth, null, AnnotatedResource.class.getName(), PermissionEvaluatorService.RestApiOperation.GET_ONE, new BasePermission[] { (BasePermission)BasePermission.READ }, PermissionMatchType.ANY)).isTrue();
+        assertThat(helper.checkResourcePermission(auth, null, "not.found.Clazz", PermissionEvaluatorService.RestApiOperation.GET_ONE, new BasePermission[] { (BasePermission)BasePermission.READ }, PermissionMatchType.ANY)).isFalse();
         assertThat(helper.checkResourceArtifactPermission(AnnotatedResource.class, ResourceArtifactType.ACTION, "RUN")).isTrue();
         assertThat(helper.checkResourceArtifactPermission(AnnotatedResource.class, ResourceArtifactType.ACTION, "MISS")).isFalse();
     }
@@ -65,7 +66,7 @@ class AuthenticationPermissionHelperTest {
         // Valida el comportament per defecte del helper concret quan no s'ha sobreescrit.
         PermissionHelper helper = new PermissionHelper();
         Authentication auth = mock(Authentication.class);
-        assertThat((Boolean) ReflectionTestUtils.invokeMethod(helper, "checkCustomResourceAccessConstraint", auth, AnnotatedResource.class, null, (BasePermission)BasePermission.READ)).isEqualTo(false);
+        assertThat((Boolean) ReflectionTestUtils.invokeMethod(helper, "checkCustomResourceAccessConstraint", auth, 1L, AnnotatedResource.class, null, PermissionEvaluatorService.RestApiOperation.GET_ONE, new BasePermission[] { (BasePermission)BasePermission.READ })).isEqualTo(false);
         assertThat((Boolean) ReflectionTestUtils.invokeMethod(helper, "checkCustomResourceArtifactAccessConstraint", auth, AnnotatedResource.class, ResourceArtifactType.ACTION, "X", null)).isEqualTo(false);
     }
 
@@ -91,7 +92,7 @@ class AuthenticationPermissionHelperTest {
 
     static class TestPermissionHelper extends BasePermissionHelper {
         @Override
-        protected boolean checkCustomResourceAccessConstraint(Authentication auth, Class<?> resourceClass, ResourceAccessConstraint resourceAccessConstraint, BasePermission permission) {
+        protected boolean checkCustomResourceAccessConstraint(Authentication auth, java.io.Serializable resourceId, Class<?> resourceClass, ResourceAccessConstraint resourceAccessConstraint, PermissionEvaluatorService.RestApiOperation restapiOperation, BasePermission[] permissions) {
             return false;
         }
 

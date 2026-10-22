@@ -67,7 +67,7 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
     }
 
     @Override
-    protected String additionalSpringFilter(String currentSpringFilter, String[] namedQueries) {
+    protected String additionalSpringFilter(String currentSpringFilter, String[] namedQueries, boolean isSingleResult) {
         String baseFilter = "esborrat:false";
         String currentUser = authenticationHelper.getCurrentUserName();
         boolean isAdmin = authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN);
@@ -267,14 +267,14 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
 	// menys quan no es tracta d'una alarma d'administrador, en aquell cas
 	// l'ordenació és individual de cada entornApp però global per a tots els administradors.
 	@Override
-	protected List<AlarmaConfigEntity> reorderFindLinesWithParent(Serializable selfIdSerializable) {
+	protected List<AlarmaConfigEntity> reorderFindLinesWithParentAndSorted(Serializable selfIdSerializable) {
         boolean isCurrentRowAdmin;
         Long currentRowEntornAppId;
         String currentRowCreatedBy;
 
 		if (selfIdSerializable != null) {
 			// El parentId fa referència al mateix AlarmaConfigEntity per a poder
-			// recuperar la row actual al mètode reorderFindLinesWithParent
+			// recuperar la row actual al mètode reorderFindLinesWithParentAndSorted
 			Long selfId = (Long) selfIdSerializable;
             AlarmaConfigEntity currentRow = alarmaConfigRepository.findById(selfId).orElseThrow();
 			isCurrentRowAdmin = currentRow.isAdmin();

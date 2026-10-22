@@ -334,28 +334,28 @@ class EstadisticaTaulaWidgetServiceImplTest {
         String[] namedQueries = new String[]{WidgetBaseResource.FILTER_BY_ENTORN_NAMEDFILTER + "1"};
         when(dashboardPermisosHelper.buildWidgetFilter("original", namedQueries)).thenReturn("filtrat");
 
-        String result = estadisticaTaulaWidgetService.additionalSpringFilter("original", namedQueries);
+        String result = estadisticaTaulaWidgetService.additionalSpringFilter("original", namedQueries, false);
 
         assertThat(result).isEqualTo("filtrat");
         verify(dashboardPermisosHelper).buildWidgetFilter("original", namedQueries);
     }
 
     // ========================================================================
-    // 7. TESTOS PER A namedFilterToSpecification
+    // 7. TESTOS PER A namedQueryToSpecification
     // ========================================================================
 
     @Test
-    @DisplayName("namedFilterToSpecification: delega en EstadisticaWidgetHelper.namedFilterToSpecification")
+    @DisplayName("namedQueryToSpecification: delega en EstadisticaWidgetHelper.namedQueryToSpecification")
     @SuppressWarnings({"rawtypes", "unchecked"})
-    void namedFilterToSpecification_delegaEnEstadisticaWidgetHelper() {
+    void namedQueryToSpecification_delegaEnEstadisticaWidgetHelper() {
         String namedFilter = WidgetBaseResource.FILTER_NOT_IN_DASHBOARD_NAMEDFILTER + "10";
         org.springframework.data.jpa.domain.Specification mockSpec = org.mockito.Mockito.mock(org.springframework.data.jpa.domain.Specification.class);
-        org.mockito.Mockito.doReturn(mockSpec).when(estadisticaWidgetHelper).namedFilterToSpecification(namedFilter);
+        org.mockito.Mockito.doReturn(mockSpec).when(estadisticaWidgetHelper).namedQueryToSpecification(namedFilter);
 
-        org.springframework.data.jpa.domain.Specification<EstadisticaTaulaWidgetEntity> result = estadisticaTaulaWidgetService.namedFilterToSpecification(namedFilter);
+        org.springframework.data.jpa.domain.Specification<EstadisticaTaulaWidgetEntity> result = estadisticaTaulaWidgetService.namedQueryToSpecification(namedFilter);
 
         assertThat(result).isSameAs(mockSpec);
-        verify(estadisticaWidgetHelper).namedFilterToSpecification(namedFilter);
+        verify(estadisticaWidgetHelper).namedQueryToSpecification(namedFilter);
     }
 
     // ========================================================================

@@ -1,5 +1,7 @@
 package es.caib.comanda.ms.logic.intf.validation;
 
+import javax.validation.ConstraintValidatorContext;
+
 /**
  * Interfície per a validacions personalitzades.
  *
@@ -9,10 +11,10 @@ package es.caib.comanda.ms.logic.intf.validation;
  */
 public interface CustomValidator<T> {
 
-	boolean validate(T value);
+	boolean validate(T value, ConstraintValidatorContext context);
 
-	default String getMessage() {
-		return "{" + this.getClass().getName() + "}";
+	default String getFieldMessage() {
+		return "{" + this.getClass().getName() + ".fieldMessage}";
 	}
 
 }

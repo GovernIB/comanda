@@ -120,7 +120,7 @@ class SalutServiceImplTest {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
 
         // Act
-        String result = salutService.additionalSpringFilter("filter", new String[0]);
+        String result = salutService.additionalSpringFilter("filter", new String[0], false);
 
         // Assert
         assertThat(result).isNull();
@@ -135,7 +135,7 @@ class SalutServiceImplTest {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(true);
 
         // Act
-        String result = salutService.additionalSpringFilter("filter", new String[0]);
+        String result = salutService.additionalSpringFilter("filter", new String[0], false);
 
         // Assert
         assertThat(result).isNull();
@@ -151,7 +151,7 @@ class SalutServiceImplTest {
             .thenReturn(ResponseEntity.ok(Collections.emptySet()));
 
         // Act
-        String result = salutService.additionalSpringFilter("filter", new String[0]);
+        String result = salutService.additionalSpringFilter("filter", new String[0], false);
 
         // Assert
         assertThat(result).isEqualTo("entornAppId:0");
@@ -175,7 +175,7 @@ class SalutServiceImplTest {
         when(salutClientHelper.entornAppFindByActivaTrue("app.id:1")).thenReturn(List.of(entornApp));
 
         // Act
-        String result = salutService.additionalSpringFilter("filter", new String[0]);
+        String result = salutService.additionalSpringFilter("filter", new String[0], false);
 
         // Assert
         assertThat(result).isEqualTo("entornAppId:10");

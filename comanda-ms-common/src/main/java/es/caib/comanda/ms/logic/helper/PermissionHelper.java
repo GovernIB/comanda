@@ -2,9 +2,12 @@ package es.caib.comanda.ms.logic.helper;
 
 import es.caib.comanda.ms.logic.intf.annotation.ResourceAccessConstraint;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
+import es.caib.comanda.ms.logic.intf.service.PermissionEvaluatorService;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+
+import java.io.Serializable;
 
 /**
  * Mètodes per a la comprovació de permisos.
@@ -14,14 +17,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class PermissionHelper extends BasePermissionHelper {
 
-    @Override
-    protected boolean checkCustomResourceAccessConstraint(
-            Authentication auth,
-            Class<?> resourceClass,
-            ResourceAccessConstraint resourceAccessConstraint,
-            BasePermission permission) {
-        return false;
-    }
+	@Override
+	protected boolean checkCustomResourceAccessConstraint(
+			Authentication auth,
+			Serializable resourceId,
+			Class<?> resourceClass,
+			ResourceAccessConstraint resourceAccessConstraint,
+			PermissionEvaluatorService.RestApiOperation restapiOperation,
+			BasePermission[] permissions) {
+		return false;
+	}
 
     @Override
     protected boolean checkCustomResourceArtifactAccessConstraint(

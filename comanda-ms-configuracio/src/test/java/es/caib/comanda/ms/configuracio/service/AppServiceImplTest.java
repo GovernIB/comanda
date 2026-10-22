@@ -79,7 +79,7 @@ public class AppServiceImplTest {
         }
 
         public String exposedNamedFilterToSpringFilter(String name) {
-            return super.namedFilterToSpringFilter(name);
+            return super.namedQueryToSpringFilter(name);
         }
 
         @Override
@@ -272,8 +272,8 @@ public class AppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: retorna null quan l'usuari és ADMIN")
-    void namedFilterToSpringFilter_quanEsAdmin_llavorsRetornaNull() {
+    @DisplayName("namedQueryToSpringFilter: retorna null quan l'usuari és ADMIN")
+    void namedQueryToSpringFilter_quanEsAdmin_llavorsRetornaNull() {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
 
         String result = appService.exposedNamedFilterToSpringFilter(App.NAMED_FILTER_PERMIS_SALUT);
@@ -284,8 +284,8 @@ public class AppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: retorna null quan l'usuari és CONSULTA")
-    void namedFilterToSpringFilter_quanEsConsulta_llavorsRetornaNull() {
+    @DisplayName("namedQueryToSpringFilter: retorna null quan l'usuari és CONSULTA")
+    void namedQueryToSpringFilter_quanEsConsulta_llavorsRetornaNull() {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(true);
 
@@ -297,8 +297,8 @@ public class AppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: retorna les apps amb permís directe")
-    void namedFilterToSpringFilter_quanTePermisosApp_llavorsRetornaFiltreApp() {
+    @DisplayName("namedQueryToSpringFilter: retorna les apps amb permís directe")
+    void namedQueryToSpringFilter_quanTePermisosApp_llavorsRetornaFiltreApp() {
         mockUsuariSenseRols();
         mockAllowedIds(ResourceType.APP, Set.of(1L, 2L));
         mockAllowedIds(ResourceType.ENTORN_APP, Collections.emptySet());
@@ -310,8 +310,8 @@ public class AppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: resol les apps dels entorns-app amb permís")
-    void namedFilterToSpringFilter_quanTePermisosEntornApp_llavorsRetornaLesSevesApps() {
+    @DisplayName("namedQueryToSpringFilter: resol les apps dels entorns-app amb permís")
+    void namedQueryToSpringFilter_quanTePermisosEntornApp_llavorsRetornaLesSevesApps() {
         mockUsuariSenseRols();
         mockAllowedIds(ResourceType.APP, Collections.emptySet());
         mockAllowedIds(ResourceType.ENTORN_APP, Set.of(5L));
@@ -323,8 +323,8 @@ public class AppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: combina i desduplica els permisos d'App i d'EntornApp")
-    void namedFilterToSpringFilter_quanTeAmbdosPermisos_llavorsRetornaFiltreCombinat() {
+    @DisplayName("namedQueryToSpringFilter: combina i desduplica els permisos d'App i d'EntornApp")
+    void namedQueryToSpringFilter_quanTeAmbdosPermisos_llavorsRetornaFiltreCombinat() {
         mockUsuariSenseRols();
         mockAllowedIds(ResourceType.APP, Set.of(1L));
         mockAllowedIds(ResourceType.ENTORN_APP, Set.of(5L, 6L));
@@ -336,8 +336,8 @@ public class AppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: no retorna cap app quan no hi ha permisos")
-    void namedFilterToSpringFilter_quanNoTeCapPermis_llavorsNoRetornaCapApp() {
+    @DisplayName("namedQueryToSpringFilter: no retorna cap app quan no hi ha permisos")
+    void namedQueryToSpringFilter_quanNoTeCapPermis_llavorsNoRetornaCapApp() {
         mockUsuariSenseRols();
         mockAllowedIds(ResourceType.APP, Collections.emptySet());
         mockAllowedIds(ResourceType.ENTORN_APP, Collections.emptySet());
@@ -349,8 +349,8 @@ public class AppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: permis_disseny retorna null quan l'usuari és ADMIN")
-    void namedFilterToSpringFilter_quanPermisDissenyIAdmin_llavorsRetornaNull() {
+    @DisplayName("namedQueryToSpringFilter: permis_disseny retorna null quan l'usuari és ADMIN")
+    void namedQueryToSpringFilter_quanPermisDissenyIAdmin_llavorsRetornaNull() {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
 
         String result = appService.exposedNamedFilterToSpringFilter(App.NAMED_FILTER_PERMIS_DISSENY);
@@ -361,8 +361,8 @@ public class AppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: permis_disseny no retorna null per a CONSULTA si no té permisos")
-    void namedFilterToSpringFilter_quanPermisDissenyIConsultaSensePermisos_llavorsRetornaIdZero() {
+    @DisplayName("namedQueryToSpringFilter: permis_disseny no retorna null per a CONSULTA si no té permisos")
+    void namedQueryToSpringFilter_quanPermisDissenyIConsultaSensePermisos_llavorsRetornaIdZero() {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
         when(authenticationHelper.getCurrentUserName()).thenReturn("user1");
         when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"COM_CONSULTA"});
@@ -378,8 +378,8 @@ public class AppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: permis_disseny retorna les apps amb permís directe")
-    void namedFilterToSpringFilter_quanPermisDissenyAmbPermisApp_llavorsRetornaFiltreApp() {
+    @DisplayName("namedQueryToSpringFilter: permis_disseny retorna les apps amb permís directe")
+    void namedQueryToSpringFilter_quanPermisDissenyAmbPermisApp_llavorsRetornaFiltreApp() {
         mockUsuariSenseRols();
         mockAllowedIds(ResourceType.APP, PermissionEnum.PERM1, Set.of(10L, 20L));
         mockAllowedIds(ResourceType.ENTORN_APP, PermissionEnum.PERM1, Collections.emptySet());
@@ -391,8 +391,8 @@ public class AppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: permis_disseny resol les apps dels entorns-app amb permís")
-    void namedFilterToSpringFilter_quanPermisDissenyAmbPermisEntornApp_llavorsRetornaLesSevesApps() {
+    @DisplayName("namedQueryToSpringFilter: permis_disseny resol les apps dels entorns-app amb permís")
+    void namedQueryToSpringFilter_quanPermisDissenyAmbPermisEntornApp_llavorsRetornaLesSevesApps() {
         mockUsuariSenseRols();
         mockAllowedIds(ResourceType.APP, PermissionEnum.PERM1, Collections.emptySet());
         mockAllowedIds(ResourceType.ENTORN_APP, PermissionEnum.PERM1, Set.of(50L));
@@ -404,8 +404,8 @@ public class AppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: delega els filtres desconeguts a la implementació base")
-    void namedFilterToSpringFilter_quanElFiltreEsDesconegut_llavorsDelegaALaBase() {
+    @DisplayName("namedQueryToSpringFilter: delega els filtres desconeguts a la implementació base")
+    void namedQueryToSpringFilter_quanElFiltreEsDesconegut_llavorsDelegaALaBase() {
         assertNull(appService.exposedNamedFilterToSpringFilter("filtre_inexistent"));
 
         verifyNoInteractions(aclServiceClient);
