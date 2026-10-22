@@ -74,7 +74,7 @@ public class AlarmaConfigEntity extends BaseAuditableEntity<AlarmaConfig> implem
 	}
 
 	// El parentId fa referència al mateix AlarmaConfigEntity per a poder
-	// recuperar la row actual al mètode reorderFindLinesWithParent
+	// recuperar la row actual al mètode reorderFindLinesWithParentAndSorted
 	@Override
 	public Long getOrderParentId() {
 		// S'assumeix que no s'usarà la reordenació per canviar de entornApp, ja que baseboot fa una

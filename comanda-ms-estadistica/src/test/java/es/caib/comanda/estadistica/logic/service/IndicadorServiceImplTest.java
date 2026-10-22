@@ -85,21 +85,21 @@ class IndicadorServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpecification retorna null per a filtres desconeguts")
-    void namedFilterToSpecification_quanFiltreDesconegut_retornaNull() {
-        assertThat(indicadorService.namedFilterToSpecification("desconegut")).isNull();
+    @DisplayName("namedQueryToSpecification retorna null per a filtres desconeguts")
+    void namedQueryToSpecification_quanFiltreDesconegut_retornaNull() {
+        assertThat(indicadorService.namedQueryToSpecification("desconegut")).isNull();
     }
 
     @Test
-    @DisplayName("namedFilterToSpecification gestiona el filtre per app correctament")
-    void namedFilterToSpecification_quanFiltreApp_retornaSpecification() {
+    @DisplayName("namedQueryToSpecification gestiona el filtre per app correctament")
+    void namedQueryToSpecification_quanFiltreApp_retornaSpecification() {
         // Arrange
         String filterName = Indicador.NAMED_FILTER_BY_APP_GROUP_BY_NOM + ":1";
         List<Long> ids = List.of(10L, 20L);
         when(estadisticaClientHelper.getEntornAppsIdByAppId(1L)).thenReturn(ids);
 
         // Act
-        Specification<IndicadorEntity> spec = indicadorService.namedFilterToSpecification(filterName);
+        Specification<IndicadorEntity> spec = indicadorService.namedQueryToSpecification(filterName);
 
         // Assert
         assertThat(spec).isNotNull();
@@ -118,7 +118,7 @@ class IndicadorServiceImplTest {
         // Donat que Filter és una classe externa complexa, ens centrem en que es crida el helper.
 
         // Act
-        indicadorService.additionalSpringFilter(currentFilter, namedQueries);
+        indicadorService.additionalSpringFilter(currentFilter, namedQueries, false);
 
         // Assert
         verify(springFilterHelper).filterByApp(eq(100L), anyString());
@@ -378,7 +378,7 @@ class IndicadorServiceImplTest {
                 .thenReturn("codi : 'IND1' and entornAppId in (10, 20)");
 
         // Act
-        String result = indicadorService.additionalSpringFilter(currentFilter, null);
+        String result = indicadorService.additionalSpringFilter(currentFilter, null, false);
 
         // Assert
         assertThat(result).isEqualTo("codi : 'IND1' and entornAppId in (10, 20)");

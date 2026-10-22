@@ -70,39 +70,39 @@ class DimensioValorServiceImplTest {
     }
 
     // ========================================================================
-    // 1. TESTOS PER A namedFilterToSpecification
+    // 1. TESTOS PER A namedQueryToSpecification
     // ========================================================================
 
     @Test
-    @DisplayName("namedFilterToSpecification: retorna null quan el nom del filtre és null")
-    void namedFilterToSpecification_quanNomEsNull_llavorsRetornaNull() {
+    @DisplayName("namedQueryToSpecification: retorna null quan el nom del filtre és null")
+    void namedQueryToSpecification_quanNomEsNull_llavorsRetornaNull() {
         // Act
-        Specification<DimensioValorEntity> spec = dimensioValorService.namedFilterToSpecification(null);
+        Specification<DimensioValorEntity> spec = dimensioValorService.namedQueryToSpecification(null);
 
         // Assert
         assertThat(spec).isNull();
     }
 
     @Test
-    @DisplayName("namedFilterToSpecification: retorna null per a filtres desconeguts")
-    void namedFilterToSpecification_quanFiltreDesconegut_llavorsRetornaNull() {
+    @DisplayName("namedQueryToSpecification: retorna null per a filtres desconeguts")
+    void namedQueryToSpecification_quanFiltreDesconegut_llavorsRetornaNull() {
         // Act
-        Specification<DimensioValorEntity> spec = dimensioValorService.namedFilterToSpecification("desconegut");
+        Specification<DimensioValorEntity> spec = dimensioValorService.namedQueryToSpecification("desconegut");
 
         // Assert
         assertThat(spec).isNull();
     }
 
     @Test
-    @DisplayName("namedFilterToSpecification: gestiona el filtre per app correctament")
-    void namedFilterToSpecification_quanFiltreApp_llavorsRetornaSpecification() {
+    @DisplayName("namedQueryToSpecification: gestiona el filtre per app correctament")
+    void namedQueryToSpecification_quanFiltreApp_llavorsRetornaSpecification() {
         // Arrange
         String filterName = DimensioValor.NAMED_FILTER_BY_APP_GROUP_BY_VALOR + ":1";
         List<Long> ids = Arrays.asList(10L, 20L);
         when(estadisticaClientHelper.getEntornAppsIdByAppId(1L)).thenReturn(ids);
 
         // Act
-        Specification<DimensioValorEntity> spec = dimensioValorService.namedFilterToSpecification(filterName);
+        Specification<DimensioValorEntity> spec = dimensioValorService.namedQueryToSpecification(filterName);
 
         // Assert
         assertThat(spec).isNotNull();
@@ -110,14 +110,14 @@ class DimensioValorServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpecification: retorna especificació disjuntiva quan no hi ha entorns")
-    void namedFilterToSpecification_quanSenseEntorns_llavorsRetornaDisjunction() {
+    @DisplayName("namedQueryToSpecification: retorna especificació disjuntiva quan no hi ha entorns")
+    void namedQueryToSpecification_quanSenseEntorns_llavorsRetornaDisjunction() {
         // Arrange
         String filterName = DimensioValor.NAMED_FILTER_BY_APP_GROUP_BY_VALOR + ":1";
         when(estadisticaClientHelper.getEntornAppsIdByAppId(1L)).thenReturn(Collections.emptyList());
 
         // Act
-        Specification<DimensioValorEntity> spec = dimensioValorService.namedFilterToSpecification(filterName);
+        Specification<DimensioValorEntity> spec = dimensioValorService.namedQueryToSpecification(filterName);
 
         // Assert
         assertThat(spec).isNotNull();
@@ -125,13 +125,13 @@ class DimensioValorServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpecification: gestiona filtre sense app id")
-    void namedFilterToSpecification_quanSenseAppId_llavorsRetornaDisjunction() {
+    @DisplayName("namedQueryToSpecification: gestiona filtre sense app id")
+    void namedQueryToSpecification_quanSenseAppId_llavorsRetornaDisjunction() {
         // Arrange
         String filterName = DimensioValor.NAMED_FILTER_BY_APP_GROUP_BY_VALOR + ":";
 
         // Act
-        Specification<DimensioValorEntity> spec = dimensioValorService.namedFilterToSpecification(filterName);
+        Specification<DimensioValorEntity> spec = dimensioValorService.namedQueryToSpecification(filterName);
 
         // Assert
         assertThat(spec).isNotNull();
@@ -139,26 +139,26 @@ class DimensioValorServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpecification: gestiona el filtre per UO nom correctament")
-    void namedFilterToSpecification_quanFiltreUoNom_llavorsRetornaSpecification() {
+    @DisplayName("namedQueryToSpecification: gestiona el filtre per UO nom correctament")
+    void namedQueryToSpecification_quanFiltreUoNom_llavorsRetornaSpecification() {
         // Arrange
         String filterName = DimensioValor.NAMED_FILTER_BY_UO_NOM + ":test";
 
         // Act
-        Specification<DimensioValorEntity> spec = dimensioValorService.namedFilterToSpecification(filterName);
+        Specification<DimensioValorEntity> spec = dimensioValorService.namedQueryToSpecification(filterName);
 
         // Assert
         assertThat(spec).isNotNull();
     }
 
     @Test
-    @DisplayName("namedFilterToSpecification: retorna conjunció quan el terme de cerca UO és buit")
-    void namedFilterToSpecification_quanTermUoBuit_llavorsRetornaConjunction() {
+    @DisplayName("namedQueryToSpecification: retorna conjunció quan el terme de cerca UO és buit")
+    void namedQueryToSpecification_quanTermUoBuit_llavorsRetornaConjunction() {
         // Arrange
         String filterName = DimensioValor.NAMED_FILTER_BY_UO_NOM + ":";
 
         // Act
-        Specification<DimensioValorEntity> spec = dimensioValorService.namedFilterToSpecification(filterName);
+        Specification<DimensioValorEntity> spec = dimensioValorService.namedQueryToSpecification(filterName);
 
         // Assert
         assertThat(spec).isNotNull();
@@ -188,7 +188,7 @@ class DimensioValorServiceImplTest {
         String[] namedQueries = {"filterByApp:100"};
 
         // Act
-        dimensioValorService.additionalSpringFilter(currentFilter, namedQueries);
+        dimensioValorService.additionalSpringFilter(currentFilter, namedQueries, false);
 
         // Assert
         verify(springFilterHelper).filterByApp(eq(100L), anyString());
@@ -198,7 +198,7 @@ class DimensioValorServiceImplTest {
     @DisplayName("additionalSpringFilter: retorna null quan no hi ha filtres")
     void additionalSpringFilter_quanSenseFiltres_llavorsRetornaNull() {
         // Act
-        String result = dimensioValorService.additionalSpringFilter("", new String[0]);
+        String result = dimensioValorService.additionalSpringFilter("", new String[0], false);
 
         // Assert
         assertThat(result).isNull();
@@ -212,7 +212,7 @@ class DimensioValorServiceImplTest {
         String[] namedQueries = {"filterByApp:100"};
 
         // Act
-        String result = dimensioValorService.additionalSpringFilter(currentFilter, namedQueries);
+        String result = dimensioValorService.additionalSpringFilter(currentFilter, namedQueries, false);
 
         // Assert
         assertThat(result).isNotNull();
@@ -223,7 +223,7 @@ class DimensioValorServiceImplTest {
     @DisplayName("additionalSpringFilter: gestiona correctament quan currentSpringFilter i namedQueries són null")
     void additionalSpringFilter_quanFiltresSonNull_llavorsRetornaNull() {
         // Act
-        String result = dimensioValorService.additionalSpringFilter(null, null);
+        String result = dimensioValorService.additionalSpringFilter(null, null, false);
 
         // Assert
         assertThat(result).isNull();
@@ -238,7 +238,7 @@ class DimensioValorServiceImplTest {
         String[] namedQueries = {"altreFiltre:100"};
 
         // Act
-        String result = dimensioValorService.additionalSpringFilter(currentFilter, namedQueries);
+        String result = dimensioValorService.additionalSpringFilter(currentFilter, namedQueries, false);
 
         // Assert
         assertThat(result).isEqualTo("valor : 'TEST'");
@@ -254,7 +254,7 @@ class DimensioValorServiceImplTest {
                 .thenReturn("valor : 'TEST' and dimensio.entornAppId in (1, 2)");
 
         // Act
-        String result = dimensioValorService.additionalSpringFilter(currentFilter, null);
+        String result = dimensioValorService.additionalSpringFilter(currentFilter, null, false);
 
         // Assert
         assertThat(result).isEqualTo("valor : 'TEST' and dimensio.entornAppId in (1, 2)");
@@ -269,7 +269,7 @@ class DimensioValorServiceImplTest {
         when(dashboardSeguretatHelper.resoldreCodisOrgansPermesos()).thenReturn(null);
 
         // Act
-        Specification<DimensioValorEntity> spec = dimensioValorService.additionalSpecification(null);
+        Specification<DimensioValorEntity> spec = dimensioValorService.additionalSpecification(null, false);
 
         // Assert
         assertThat(spec).isNull();
@@ -286,7 +286,7 @@ class DimensioValorServiceImplTest {
         when(dashboardSeguretatHelper.resoldreCodisOrgansPermesos()).thenReturn(List.of("ORG1"));
 
         // Act
-        Specification<DimensioValorEntity> spec = dimensioValorService.additionalSpecification(null);
+        Specification<DimensioValorEntity> spec = dimensioValorService.additionalSpecification(null, false);
 
         // Assert
         assertThat(spec).isNotNull();
@@ -304,7 +304,7 @@ class DimensioValorServiceImplTest {
         when(dashboardSeguretatHelper.resoldreEntitatsPermeses()).thenReturn(Collections.emptyList());
         when(dashboardSeguretatHelper.resoldreCodisOrgansPermesos()).thenReturn(moltsOrgans);
 
-        Specification<DimensioValorEntity> spec = dimensioValorService.additionalSpecification(null);
+        Specification<DimensioValorEntity> spec = dimensioValorService.additionalSpecification(null, false);
         assertThat(spec).isNotNull();
 
         // Mocks Criteria
@@ -333,7 +333,7 @@ class DimensioValorServiceImplTest {
         when(dashboardSeguretatHelper.resoldreEntitatsPermeses()).thenReturn(Collections.emptyList());
         when(dashboardSeguretatHelper.resoldreCodisOrgansPermesos()).thenReturn(Collections.emptyList());
 
-        Specification<DimensioValorEntity> spec = dimensioValorService.additionalSpecification(null);
+        Specification<DimensioValorEntity> spec = dimensioValorService.additionalSpecification(null, false);
         assertThat(spec).isNotNull();
 
         Root<DimensioValorEntity> root = mock(Root.class);
@@ -355,7 +355,7 @@ class DimensioValorServiceImplTest {
         when(dashboardPermisosHelper.buildEntornAppFilterForProperty(isNull(), eq("dimensio.entornAppId")))
                 .thenReturn("dimensio.entornAppId:5");
 
-        String result = dimensioValorService.additionalSpringFilter(null, null);
+        String result = dimensioValorService.additionalSpringFilter(null, null, false);
 
         assertThat(result).isEqualTo("dimensio.entornAppId:5");
     }

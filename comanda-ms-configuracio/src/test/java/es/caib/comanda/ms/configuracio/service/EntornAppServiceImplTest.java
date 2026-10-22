@@ -103,11 +103,11 @@ public class EntornAppServiceImplTest {
         }
 
         public String exposedAdditionalSpringFilter() {
-            return super.additionalSpringFilter(null, null);
+            return super.additionalSpringFilter(null, null, false);
         }
 
         public String exposedNamedFilterToSpringFilter(String name) {
-            return super.namedFilterToSpringFilter(name);
+            return super.namedQueryToSpringFilter(name);
         }
     }
 
@@ -602,8 +602,8 @@ public class EntornAppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: retorna null quan l'usuari és ADMIN")
-    void namedFilterToSpringFilter_quanEsAdmin_llavorsRetornaNull() {
+    @DisplayName("namedQueryToSpringFilter: retorna null quan l'usuari és ADMIN")
+    void namedQueryToSpringFilter_quanEsAdmin_llavorsRetornaNull() {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
 
         String result = entornAppService.exposedNamedFilterToSpringFilter(EntornApp.NAMED_FILTER_PERMIS_SALUT);
@@ -613,8 +613,8 @@ public class EntornAppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: retorna null quan l'usuari és CONSULTA")
-    void namedFilterToSpringFilter_quanEsConsulta_llavorsRetornaNull() {
+    @DisplayName("namedQueryToSpringFilter: retorna null quan l'usuari és CONSULTA")
+    void namedQueryToSpringFilter_quanEsConsulta_llavorsRetornaNull() {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(true);
 
@@ -625,8 +625,8 @@ public class EntornAppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: retorna filtre app.id quan té permisos d'App")
-    void namedFilterToSpringFilter_quanTePermisosApp_llavorsRetornaFiltreApp() {
+    @DisplayName("namedQueryToSpringFilter: retorna filtre app.id quan té permisos d'App")
+    void namedQueryToSpringFilter_quanTePermisosApp_llavorsRetornaFiltreApp() {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
         when(authenticationHelper.getCurrentUserName()).thenReturn("user1");
@@ -644,8 +644,8 @@ public class EntornAppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: retorna filtre id quan té permisos d'EntornApp")
-    void namedFilterToSpringFilter_quanTePermisosEntornApp_llavorsRetornaFiltreEntornApp() {
+    @DisplayName("namedQueryToSpringFilter: retorna filtre id quan té permisos d'EntornApp")
+    void namedQueryToSpringFilter_quanTePermisosEntornApp_llavorsRetornaFiltreEntornApp() {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
         when(authenticationHelper.getCurrentUserName()).thenReturn("user1");
@@ -663,8 +663,8 @@ public class EntornAppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: retorna filtre combinat quan té permisos d'App i d'EntornApp")
-    void namedFilterToSpringFilter_quanTeAmbdosPermisos_llavorsRetornaFiltreCombinat() {
+    @DisplayName("namedQueryToSpringFilter: retorna filtre combinat quan té permisos d'App i d'EntornApp")
+    void namedQueryToSpringFilter_quanTeAmbdosPermisos_llavorsRetornaFiltreCombinat() {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
         when(authenticationHelper.getCurrentUserName()).thenReturn("user1");
@@ -682,8 +682,8 @@ public class EntornAppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: retorna id:0 quan no té cap permís")
-    void namedFilterToSpringFilter_quanNoTePermisos_llavorsRetornaIdZero() {
+    @DisplayName("namedQueryToSpringFilter: retorna id:0 quan no té cap permís")
+    void namedQueryToSpringFilter_quanNoTePermisos_llavorsRetornaIdZero() {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_CONSULTA)).thenReturn(false);
         when(authenticationHelper.getCurrentUserName()).thenReturn("user1");
@@ -701,8 +701,8 @@ public class EntornAppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: permis_disseny retorna null quan l'usuari és ADMIN")
-    void namedFilterToSpringFilter_quanPermisDissenyIAdmin_llavorsRetornaNull() {
+    @DisplayName("namedQueryToSpringFilter: permis_disseny retorna null quan l'usuari és ADMIN")
+    void namedQueryToSpringFilter_quanPermisDissenyIAdmin_llavorsRetornaNull() {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
 
         String result = entornAppService.exposedNamedFilterToSpringFilter(EntornApp.NAMED_FILTER_PERMIS_DISSENY);
@@ -712,8 +712,8 @@ public class EntornAppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: permis_disseny no retorna null per a CONSULTA si no té permisos")
-    void namedFilterToSpringFilter_quanPermisDissenyIConsultaSensePermisos_llavorsRetornaIdZero() {
+    @DisplayName("namedQueryToSpringFilter: permis_disseny no retorna null per a CONSULTA si no té permisos")
+    void namedQueryToSpringFilter_quanPermisDissenyIConsultaSensePermisos_llavorsRetornaIdZero() {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
         when(authenticationHelper.getCurrentUserName()).thenReturn("consulta1");
         when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"COM_CONSULTA"});
@@ -730,8 +730,8 @@ public class EntornAppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: permis_disseny retorna filtre app.id quan té PERM1 d'App")
-    void namedFilterToSpringFilter_quanPermisDissenyAmbPermisApp_llavorsRetornaFiltreApp() {
+    @DisplayName("namedQueryToSpringFilter: permis_disseny retorna filtre app.id quan té PERM1 d'App")
+    void namedQueryToSpringFilter_quanPermisDissenyAmbPermisApp_llavorsRetornaFiltreApp() {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
         when(authenticationHelper.getCurrentUserName()).thenReturn("user1");
         when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"COM_USER"});
@@ -748,8 +748,8 @@ public class EntornAppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: permis_disseny retorna filtre id quan té PERM1 d'EntornApp")
-    void namedFilterToSpringFilter_quanPermisDissenyAmbPermisEntornApp_llavorsRetornaFiltreEntornApp() {
+    @DisplayName("namedQueryToSpringFilter: permis_disseny retorna filtre id quan té PERM1 d'EntornApp")
+    void namedQueryToSpringFilter_quanPermisDissenyAmbPermisEntornApp_llavorsRetornaFiltreEntornApp() {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
         when(authenticationHelper.getCurrentUserName()).thenReturn("user1");
         when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{"COM_USER"});
@@ -766,8 +766,8 @@ public class EntornAppServiceImplTest {
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: retorna null per a filtres desconeguts")
-    void namedFilterToSpringFilter_quanFiltreDesconegut_llavorsRetornaNull() {
+    @DisplayName("namedQueryToSpringFilter: retorna null per a filtres desconeguts")
+    void namedQueryToSpringFilter_quanFiltreDesconegut_llavorsRetornaNull() {
         String result = entornAppService.exposedNamedFilterToSpringFilter("FILTRE_DESCONEGUT");
 
         assertNull(result);

@@ -40,13 +40,13 @@ public class FilterSpecification<T> extends com.turkraft.springfilter.boot.Filte
 				j,
 				getPayload()) : null;
 		} else {
-			predicate = (Predicate) ExpressionGenerator.run(
-				getFilter(),
-				root,
-				query,
-				criteriaBuilder,
-				j,
-				getPayload());
+			predicate = (Predicate)ExpressionGenerator.run(
+					getFilter(),
+					root,
+					query,
+					criteriaBuilder,
+					j,
+					getPayload());
 		}
 		return predicate;
 	}

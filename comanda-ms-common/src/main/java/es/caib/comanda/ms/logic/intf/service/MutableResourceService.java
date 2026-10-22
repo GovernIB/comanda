@@ -114,6 +114,17 @@ public interface MutableResourceService<R extends Resource<? extends Serializabl
 			Map<String, AnswerRequiredException.AnswerValue> answers) throws ResourceFieldNotFoundException, AnswerRequiredException;
 
 	/**
+	 * Sincronitza un recurs (si no existeix el crea i si ja existeix el modifica).
+	 *
+	 * @param resource
+	 *            informació del recurs.
+	 * @return el recurs resultant de la sincronització o null si no hi ha cap recurs resultant.
+	 * @throws ResourceNotSyncedException
+	 *             si no s'ha pogut sincronitzar el recurs especificat.
+	 */
+	R sync(R resource) throws ResourceNotSyncedException;
+
+	/**
 	 * Executa l'acció amb el codi especificat.
 	 *
 	 * @param id

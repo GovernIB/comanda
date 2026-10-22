@@ -62,19 +62,19 @@ class CustomValidationValidatorTest {
 
     public static class AlwaysTrueValidator implements CustomValidator<Object> {
         @Override
-        public boolean validate(Object value) {
+        public boolean validate(Object value, ConstraintValidatorContext context) {
             return true;
         }
 
         @Override
-        public String getMessage() {
+        public String getFieldMessage() {
             return "local-message";
         }
     }
 
     public static class AlwaysFalseValidator implements CustomValidator<Object> {
         @Override
-        public boolean validate(Object value) {
+        public boolean validate(Object value, ConstraintValidatorContext context) {
             return false;
         }
     }

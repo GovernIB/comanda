@@ -1,6 +1,7 @@
 package es.caib.comanda.ms.logic.service;
 
 import es.caib.comanda.ms.logic.helper.PermissionHelper;
+import es.caib.comanda.ms.logic.helper.PermissionMatchType;
 import es.caib.comanda.ms.logic.intf.exception.UnknownPermissionException;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.service.PermissionEvaluatorService;
@@ -17,6 +18,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.AdditionalMatchers.aryEq;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -39,7 +41,13 @@ class PermissionAndResourceApiServiceTest {
         ReflectionTestUtils.setField(service, "permissionHelper", permissionHelper);
 
         Authentication auth = mock(Authentication.class);
-        when(permissionHelper.checkResourcePermission(auth, 1L, TestResource.class.getName(), (BasePermission)BasePermission.READ)).thenReturn(true);
+        when(permissionHelper.checkResourcePermission(
+                eq(auth),
+                eq(1L),
+                eq(TestResource.class.getName()),
+                eq(PermissionEvaluatorService.RestApiOperation.GET_ONE),
+                aryEq(new BasePermission[] { (BasePermission)BasePermission.READ }),
+                eq(PermissionMatchType.ANY))).thenReturn(true);
         boolean allowedRead = service.hasPermission(auth, 1L, TestResource.class.getName(), PermissionEvaluatorService.RestApiOperation.GET_ONE);
         assertThat(allowedRead).isTrue();
 
@@ -74,17 +82,17 @@ class PermissionAndResourceApiServiceTest {
         List<Class<? extends es.caib.comanda.ms.logic.intf.model.Resource<?>>> allowed = service.resourceFindAllowed();
         assertThat(allowed).containsExactly(TestResource.class);
 
-        when(permissionHelper.checkResourcePermission(2L, TestResource.class.getName(), (BasePermission)BasePermission.READ)).thenReturn(true);
-        when(permissionHelper.checkResourcePermission(2L, TestResource.class.getName(), (BasePermission)BasePermission.WRITE)).thenReturn(false);
-        when(permissionHelper.checkResourcePermission(2L, TestResource.class.getName(), (BasePermission)BasePermission.CREATE)).thenReturn(true);
-        when(permissionHelper.checkResourcePermission(2L, TestResource.class.getName(), (BasePermission)BasePermission.DELETE)).thenReturn(false);
+        when(permissionHelper.checkResourcePermission(eq(2L), eq(TestResource.class.getName()), aryEq(new BasePermission[] { (BasePermission)BasePermission.READ }))).thenReturn(true);
+        when(permissionHelper.checkResourcePermission(eq(2L), eq(TestResource.class.getName()), aryEq(new BasePermission[] { (BasePermission)BasePermission.WRITE }))).thenReturn(false);
+        when(permissionHelper.checkResourcePermission(eq(2L), eq(TestResource.class.getName()), aryEq(new BasePermission[] { (BasePermission)BasePermission.CREATE }))).thenReturn(true);
+        when(permissionHelper.checkResourcePermission(eq(2L), eq(TestResource.class.getName()), aryEq(new BasePermission[] { (BasePermission)BasePermission.DELETE }))).thenReturn(false);
 
         var p = service.permissionsCurrentUser(TestResource.class, 2L);
         assertThat(p.isReadGranted()).isTrue();
         assertThat(p.isWriteGranted()).isFalse();
         assertThat(p.isCreateGranted()).isTrue();
         assertThat(p.isDeleteGranted()).isFalse();
-        verify(permissionHelper, times(4)).checkResourcePermission(eq(2L), eq(TestResource.class.getName()), any());
+        verify(permissionHelper, times(4)).checkResourcePermission(eq(2L), eq(TestResource.class.getName()), any(BasePermission[].class));
     }
 
     static class TestResource extends BaseResource<Long> {}

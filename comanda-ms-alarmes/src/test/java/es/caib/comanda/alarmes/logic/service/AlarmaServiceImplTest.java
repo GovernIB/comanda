@@ -259,7 +259,7 @@ class AlarmaServiceImplTest {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(false);
 
         // Act
-        String result = alarmaService.additionalSpringFilter("", new String[0]);
+        String result = alarmaService.additionalSpringFilter("", new String[0], false);
 
         // Assert
         assertThat(result).contains("alarmaConfig.admin:false");
@@ -274,7 +274,7 @@ class AlarmaServiceImplTest {
         when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
 
         // Act
-        String result = alarmaService.additionalSpringFilter("", new String[0]);
+        String result = alarmaService.additionalSpringFilter("", new String[0], false);
 
         // Assert
         assertThat(result).contains("alarmaConfig.admin:true");

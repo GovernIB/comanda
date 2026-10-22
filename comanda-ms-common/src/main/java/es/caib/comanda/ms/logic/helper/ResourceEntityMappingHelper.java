@@ -1,6 +1,7 @@
 package es.caib.comanda.ms.logic.helper;
 
 import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig;
+import es.caib.comanda.ms.logic.intf.exception.ObjectMappingException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.model.FileReference;
 import es.caib.comanda.ms.logic.intf.model.Resource;
@@ -37,6 +38,7 @@ public class ResourceEntityMappingHelper {
 			Class<E> entityClass,
 			Map<String, Persistable<?>> referencedEntities) throws ResourceNotCreatedException {
 		Method builderMethod = ReflectionUtils.findMethod(entityClass, "builder");
+		E entity;
 		if (builderMethod != null) {
 			Object builderInstance = ReflectionUtils.invokeMethod(builderMethod, null);
 			Class<?> builderReturnType = builderMethod.getReturnType();
@@ -60,24 +62,12 @@ public class ResourceEntityMappingHelper {
 				}
 			}
 			// Es crida el mètode build per a crear la instància de l'entitat
-			E entity = (E)ReflectionUtils.invokeMethod(
+			entity = (E)ReflectionUtils.invokeMethod(
 					ReflectionUtils.findMethod(builderReturnType, "build"),
 					builderInstance);
-			// Només inicialitza el camp id si la pk te un valor diferent a null
-			if (pkFromResource != null) {
-				Field idField = ReflectionUtils.findField(entityClass, "id");
-				if (idField != null) {
-					idField.setAccessible(true);
-					ReflectionUtils.setField(
-							idField,
-							entity,
-							pkFromResource);
-				}
-			}
-			return entity;
 		} else {
 			try {
-				return entityClass.getConstructor().newInstance();
+				entity = entityClass.getConstructor().newInstance();
 			} catch (Exception ex) {
 				throw new ResourceNotCreatedException(
 						resource.getClass(),
@@ -85,6 +75,18 @@ public class ResourceEntityMappingHelper {
 						ex);
 			}
 		}
+		// Només inicialitza el camp id si la pk te un valor diferent a null
+		if (pkFromResource != null) {
+			Field idField = ReflectionUtils.findField(entityClass, "id");
+			if (idField != null) {
+				idField.setAccessible(true);
+				ReflectionUtils.setField(
+						idField,
+						entity,
+						pkFromResource);
+			}
+		}
+		return entity;
 	}
 
 	public <E extends ResourceEntity<R, ?>, R extends Resource<?>> void updateEntityWithResource(
@@ -93,11 +95,10 @@ public class ResourceEntityMappingHelper {
 			Map<String, Persistable<?>> referencedEntities) {
 		Set<String> ignoredFieldNames = new HashSet<>();
 		addResourceConfigIgnoredFields(resource.getClass(), ignoredFieldNames);
-		// Actualitza els camps de l'entitat que son de tipus Persistable o byte[]
+		// Actualitza els camps de l'entitat que son de tipus Persistable, FileReference o Collection
 		ReflectionUtils.doWithFields(entity.getClass(), field -> {
-			// Es modifica el valor de cada camp de l'entitat que és de tipus de Persistable
-			// amb la referencia especificada al resource.
 			if (Persistable.class.isAssignableFrom(field.getType()) && referencedEntities != null) {
+				// Es modifica el valor dels camps de tipus de Persistable amb la referencia especificada al resource.
 				Persistable<?> referencedEntity = referencedEntities.get(field.getName());
 				String setMethodName = "set" + TypeUtil.getMethodSuffixFromField(field);
 				Method setMethod = ReflectionUtils.findMethod(
@@ -111,13 +112,17 @@ public class ResourceEntityMappingHelper {
 							referencedEntity);
 				}
 				ignoredFieldNames.add(field.getName());
-			}
-			if (FileReference.class.isAssignableFrom(field.getType())) {
+			} else if (FileReference.class.isAssignableFrom(field.getType())) {
+				// Es modifica el valor dels camps de tipus de FileReference amb el contingut de l'arxiu.
 				setFileReferenceFieldValue(field, entity);
 				ignoredFieldNames.add(field.getName());
+			} else if (Collection.class.isAssignableFrom(field.getType())) {
+				// Ignora els camps de tipus Collection.
+				ignoredFieldNames.add(field.getName());
 			}
-		});
-		// Actualitza els demés camps de l'entitat
+		}, field -> !field.getName().equals("id"));
+		// Actualitza els demés camps de l'entitat, evitant que l'id de l'entitat es sobreescrigui amb el del resource
+		ignoredFieldNames.add("id");
 		objectMappingHelper.map(
 				resource,
 				entity,
@@ -130,6 +135,15 @@ public class ResourceEntityMappingHelper {
 			String... ignoredFields) {
 		Set<String> ignoredFieldNames = new HashSet<>(Arrays.asList(ignoredFields));
 		addResourceConfigIgnoredFields(resourceClass, ignoredFieldNames);
+		if (entity instanceof org.hibernate.proxy.HibernateProxy) {
+			// This mapper relies on direct field access and does not support Hibernate proxies.
+			// A proxy may be returned when the entity has previously been loaded lazily.
+			// Check your Service overrides for calls to JPA that may be returning lazy-loaded references.
+			throw new ObjectMappingException(
+				entity.getClass(),
+				resourceClass,
+				"Trying to convert an entity to a resource and the entity is of type HibernateProxy");
+		}
 		return objectMappingHelper.newInstanceMap(
 				entity,
 				resourceClass,

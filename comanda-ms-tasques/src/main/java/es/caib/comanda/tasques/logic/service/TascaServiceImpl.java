@@ -127,7 +127,7 @@ public class TascaServiceImpl extends BaseMutableResourceService<Tasca, Long, Ta
     }
 
     @Override
-    protected Specification<TascaEntity> additionalSpecification(String[] namedQueries) {
+    protected Specification<TascaEntity> additionalSpecification(String[] namedQueries, boolean isSingleResult) {
         String userName = authenticationHelper.getCurrentUserName();
         String[] roles = authenticationHelper.getCurrentUserRealmRoles();
 

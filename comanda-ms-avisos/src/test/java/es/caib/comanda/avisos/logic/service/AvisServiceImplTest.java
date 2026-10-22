@@ -245,23 +245,23 @@ class AvisServiceImplTest {
     // ========================================================================
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: retorna el filtre correcte per a AVIS_NO_LLEGIT")
-    void namedFilterToSpringFilter_quanEsAvisNoLlegit_llavorsRetornaFiltre() {
+    @DisplayName("namedQueryToSpringFilter: retorna el filtre correcte per a AVIS_NO_LLEGIT")
+    void namedQueryToSpringFilter_quanEsAvisNoLlegit_llavorsRetornaFiltre() {
         // Arrange
         when(authenticationHelper.getCurrentUserName()).thenReturn("usuari1");
 
         // Act
-        String result = avisService.namedFilterToSpringFilter(Avis.NAMED_FILTER_AVIS_NO_LLEGIT);
+        String result = avisService.namedQueryToSpringFilter(Avis.NAMED_FILTER_AVIS_NO_LLEGIT);
 
         // Assert
         assertThat(result).contains("not(exists(avisLlegits.usuari:'usuari1'))");
     }
 
     @Test
-    @DisplayName("namedFilterToSpringFilter: retorna null per a filtres desconeguts")
-    void namedFilterToSpringFilter_quanFiltreDesconegut_llavorsRetornaNull() {
+    @DisplayName("namedQueryToSpringFilter: retorna null per a filtres desconeguts")
+    void namedQueryToSpringFilter_quanFiltreDesconegut_llavorsRetornaNull() {
         // Act
-        String result = avisService.namedFilterToSpringFilter("FILTRE_DESCONEGUT");
+        String result = avisService.namedQueryToSpringFilter("FILTRE_DESCONEGUT");
 
         // Assert
         assertThat(result).isNull();
@@ -274,7 +274,7 @@ class AvisServiceImplTest {
         when(authenticationHelper.getCurrentUserRealmRoles()).thenReturn(new String[]{ROLE_ADMIN});
 
         // Act
-        Specification<AvisEntity> spec = avisService.additionalSpecification(null);
+        Specification<AvisEntity> spec = avisService.additionalSpecification(null, false);
 
         // Assert
         assertThat(spec).isNull();
@@ -288,7 +288,7 @@ class AvisServiceImplTest {
         when(authenticationHelper.getCurrentUserName()).thenReturn("usuari_test");
 
         // Act
-        Specification<AvisEntity> spec = avisService.additionalSpecification(null);
+        Specification<AvisEntity> spec = avisService.additionalSpecification(null, false);
 
         // Assert
         assertThat(spec).isNotNull();

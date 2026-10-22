@@ -3,9 +3,7 @@ package es.caib.comanda.ms.back.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import es.caib.comanda.ms.logic.intf.exception.ArtifactNotFoundException;
-import es.caib.comanda.ms.logic.intf.model.FieldOption;
-import es.caib.comanda.ms.logic.intf.model.OnChangeEvent;
-import es.caib.comanda.ms.logic.intf.model.Resource;
+import es.caib.comanda.ms.logic.intf.model.*;
 import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -13,7 +11,9 @@ import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.RequestBody;
 
+import javax.validation.Valid;
 import java.io.Serializable;
 
 /**
@@ -105,6 +105,32 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 			final OnChangeEvent<ID> onChangeEvent) throws JsonProcessingException;
 
 	/**
+	 * Sincronitza un recurs (si no existeix el crea i si ja existeix el modifica).
+	 *
+	 * @param jsonNode
+	 *            camps del recurs a sincronitzar.
+	 * @return el recurs resultant de la sincronització
+	 * @throws JsonProcessingException
+	 *            si es produeixen errors al parsejar els camps.
+	 */
+	ResponseEntity<EntityModel<R>> sync(
+			@RequestBody
+			final JsonNode jsonNode) throws JsonProcessingException;
+
+
+	/**
+	 * Executa accions sobre múltiples recursos (PATCH, ACTION, DELETE).
+	 *
+	 * @param bulkRequest
+	 *            paràmetres de l'execució múltiple.
+	 * @return el resultat de l'execució (conté informació de l'execució sobre cada recurs).
+	 */
+	ResponseEntity<BulkResponse<ID>> bulk(
+			@Valid
+			@RequestBody
+			final BulkRequest<ID> bulkRequest);
+
+	/**
 	 * Consulta paginada de les opcions disponibles per a emplenar un camp de tipus ResourceReference.
 	 *
 	 * @param <RR>
@@ -123,7 +149,7 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 *            informació sobre la pagina de resultats que es vol obtenir.
 	 * @return la pàgina amb els resultats de la consulta.
 	 */
-	<RR extends Resource<?>> ResponseEntity<PagedModel<EntityModel<RR>>> fieldOptionsFind(
+	<RR extends Resource<RID>, RID extends Serializable> ResponseEntity<PagedModel<EntityModel<RR>>> fieldOptionsFind(
 			final String fieldName,
 			final String quickFilter,
 			final String filter,
@@ -215,7 +241,7 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 * @throws MethodArgumentNotValidException
 	 *             si es troben errors de validació en els paràmetres.
 	 */
-	ResponseEntity<?> artifactActionExec(
+	ResponseEntity<?> artifactActionExecId(
 			final ID id,
 			final String code,
 			final JsonNode params,
@@ -243,7 +269,7 @@ public interface MutableResourceController<R extends Resource<? extends Serializ
 	 *            informació sobre la pagina de resultats que es vol obtenir.
 	 * @return la pàgina amb els resultats de la consulta.
 	 */
-	<RR extends Resource<?>> ResponseEntity<PagedModel<EntityModel<RR>>> artifactActionFieldOptionsFind(
+	<RR extends Resource<RID>, RID extends Serializable> ResponseEntity<PagedModel<EntityModel<RR>>> artifactActionFieldOptionsFind(
 			final String code,
 			final String fieldName,
 			final String quickFilter,

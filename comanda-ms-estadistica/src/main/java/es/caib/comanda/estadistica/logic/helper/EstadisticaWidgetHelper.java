@@ -138,7 +138,7 @@ public class EstadisticaWidgetHelper {
     }
 
     @SuppressWarnings("rawtypes")
-    public <E extends EstadisticaWidgetEntity> Specification<E> namedFilterToSpecification(String name) {
+    public <E extends EstadisticaWidgetEntity> Specification<E> namedQueryToSpecification(String name) {
         if (name == null) return null;
         if (name.startsWith(WidgetBaseResource.FILTER_NOT_IN_DASHBOARD_NAMEDFILTER)) {
             try {

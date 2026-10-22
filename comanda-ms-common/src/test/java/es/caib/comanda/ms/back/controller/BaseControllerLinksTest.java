@@ -261,7 +261,7 @@ class BaseControllerLinksTest {
         @Override public Class<LinkResource> getResourceClass() { return LinkResource.class; }
 
         List<Link> callBuildSingleResourceLinks(Long id, ResourcePermissions permissions) {
-            return super.buildSingleResourceLinks(id, null, true, null, permissions);
+            return super.buildSingleResourceLinks(id, null, null, null, permissions, true, true, true);
         }
 
         List<Link> callBuildResourceCollectionLinks(org.springframework.data.domain.Pageable pageable, Page<?> page, ResourcePermissions permissions) {
@@ -294,7 +294,7 @@ class BaseControllerLinksTest {
         @Override public Class<LinkResource> getResourceClass() { return LinkResource.class; }
 
         List<Link> callBuildSingleResourceLinks(Long id, ResourcePermissions permissions) {
-            return super.buildSingleResourceLinks(id, null, true, null, permissions);
+            return super.buildSingleResourceLinks(id, null, null, null, permissions, true, true, true);
         }
 
         List<Link> callBuildResourceCollectionLinks(org.springframework.data.domain.Pageable pageable, Page<?> page, ResourcePermissions permissions) {
@@ -310,7 +310,7 @@ class BaseControllerLinksTest {
         }
 
         <T extends es.caib.comanda.ms.logic.intf.model.Resource<?>> void callValidateResource(T resource, BeanPropertyBindingResult bindingResult) throws MethodArgumentNotValidException {
-            super.validateResource(resource, bindingResult, 0);
+            super.validateResource(resource, 0, bindingResult);
         }
     }
 }

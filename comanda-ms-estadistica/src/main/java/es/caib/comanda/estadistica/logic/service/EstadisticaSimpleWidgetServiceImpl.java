@@ -44,13 +44,13 @@ public class EstadisticaSimpleWidgetServiceImpl extends BaseMutableResourceServi
     @Override
     protected String additionalSpringFilter(
         String currentSpringFilter,
-        String[] namedQueries) {
+        String[] namedQueries, boolean isSingleResult) {
         return dashboardPermisosHelper.buildWidgetFilter(currentSpringFilter, namedQueries);
     }
 
     @Override
-    protected Specification<EstadisticaSimpleWidgetEntity> namedFilterToSpecification(String name) {
-        return estadisticaWidgetHelper.namedFilterToSpecification(name);
+    protected Specification<EstadisticaSimpleWidgetEntity> namedQueryToSpecification(String name) {
+        return estadisticaWidgetHelper.namedQueryToSpecification(name);
     }
 
     @Override

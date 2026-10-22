@@ -19,14 +19,18 @@ import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.query.criteria.internal.path.PluralAttributePath;
 import org.hibernate.query.criteria.internal.path.SingularAttributePath;
 import org.springframework.core.GenericTypeResolver;
+import org.springframework.core.ResolvableType;
 import org.springframework.data.domain.Persistable;
 import org.springframework.util.ReflectionUtils;
 
 import javax.persistence.criteria.*;
 import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.BiFunction;
 
@@ -126,11 +130,46 @@ public class ExpressionGenerator extends com.turkraft.springfilter.parser.genera
 				return getCriteriaBuilder().literal(value);
 			}
 		} else {
-			Object value = StringConverter.convert(ctx.getText(), expectedInputType);
+			Object value = convertInput(ctx.getText(), expectedInputType);
 			if (value == null) {
 				throw new InternalFilterException("The input '" + StringConverter.cleanStringInput(ctx.getText()) + "' could not be converted to " + expectedInputType);
 			}
 			return getCriteriaBuilder().literal(processInputValue(ctx, value));
+		}
+	}
+
+	/**
+	 * Converteix el valor d'un filtre al tipus esperat. Afegeix el suport per als camps de tipus Duration, que
+	 * Spring Filter no suporta. El valor es pot especificar amb format ISO-8601 (per exemple 'PT8H' o 'PT7H45M'),
+	 * que és el format recomanat, o amb un número, que s'interpreta com a segons (com fa Jackson per defecte quan
+	 * serialitza les durades com a números). Per exemple: duration > 0 o duration > 28800 (8 hores).
+	 *
+	 * @param input el valor del filtre.
+	 * @param expectedInputType el tipus esperat.
+	 * @return el valor convertit o null si no s'ha pogut convertir.
+	 */
+	private static Object convertInput(String input, Class<?> expectedInputType) {
+		if (Duration.class.isAssignableFrom(expectedInputType)) {
+			String cleanInput = StringConverter.cleanStringInput(input);
+			BigDecimal seconds = parseSeconds(cleanInput);
+			if (seconds != null) {
+				return Duration.ofNanos(seconds.movePointRight(9).longValue());
+			}
+			try {
+				return Duration.parse(cleanInput);
+			} catch (DateTimeParseException ex) {
+				throw new InternalFilterException("The input '" + cleanInput + "' could not be parsed to Duration (ISO-8601 format, e.g. 'PT8H', or number of seconds expected)");
+			}
+		} else {
+			return StringConverter.convert(input, expectedInputType);
+		}
+	}
+
+	private static BigDecimal parseSeconds(String input) {
+		try {
+			return new BigDecimal(input);
+		} catch (NumberFormatException ex) {
+			return null;
 		}
 	}
 
@@ -207,18 +246,30 @@ public class ExpressionGenerator extends com.turkraft.springfilter.parser.genera
 		Map<String, Join<?, ?>> joins,
 		Object payload) {
 		String path = ctx.getParent().getChild(0).getText();
-		Expression<?> databasePath;
+		Class<?> pathJavaType;
 		if ("id".equals(path)) {
-			databasePath = root;
+			pathJavaType = root.getJavaType();
 		} else {
-			databasePath = getDatabasePath(
-				root,
-				joins,
-				payload,
-				path.substring(0, path.length() - ".id".length()),
-				ExpressionGeneratorParameters.FILTERING_AUTHORIZATION);
+			Expression<?> databasePath = getDatabasePath(
+					root,
+					joins,
+					payload,
+					path.substring(0, path.length() - ".id".length()),
+					ExpressionGeneratorParameters.FILTERING_AUTHORIZATION);
+			pathJavaType = databasePath.getJavaType();
+			if (Collection.class.isAssignableFrom(pathJavaType)) {
+				String fieldName = path.substring(0, path.length() - ".id".length());
+				Field collectionField = Objects.requireNonNull(ReflectionUtils.findField(root.getJavaType(), fieldName));
+				pathJavaType = ResolvableType.forField(collectionField).getGeneric(0).resolve();
+			}
 		}
-		return GenericTypeResolver.resolveTypeArguments(databasePath.getJavaType(), Persistable.class)[0];
+		if (Persistable.class.isAssignableFrom(Objects.requireNonNull(pathJavaType))) {
+			return Objects.requireNonNull(GenericTypeResolver.resolveTypeArguments(
+					pathJavaType,
+					Persistable.class))[0];
+		} else {
+			throw new InternalFilterException("Couldn't determine type for pk path " + path);
+		}
 	}
 
 	private static Object processInputValue(

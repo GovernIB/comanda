@@ -47,7 +47,7 @@ public class DashboardTitolServiceImpl extends BaseMutableResourceService<Dashbo
     @Override
     protected String additionalSpringFilter(
         String currentSpringFilter,
-        String[] namedQueries) {
+        String[] namedQueries, boolean isSingleResult) {
         return dashboardPermisosHelper.buildDashboardChildFilter(currentSpringFilter, DashboardTitol.Fields.dashboard);
     }
 

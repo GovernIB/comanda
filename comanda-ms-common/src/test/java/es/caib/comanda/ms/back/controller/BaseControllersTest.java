@@ -18,7 +18,7 @@ import es.caib.comanda.ms.logic.intf.permission.ResourcePermissions;
 import es.caib.comanda.ms.logic.intf.service.MutableResourceService;
 import es.caib.comanda.ms.logic.intf.service.ReadonlyResourceService;
 import es.caib.comanda.ms.logic.intf.service.ResourceApiService;
-import es.caib.comanda.ms.logic.intf.service.ResourceServiceLocator;
+import es.caib.comanda.ms.back.util.ResourceServiceLocator;
 import es.caib.comanda.ms.logic.intf.util.JsonUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -57,7 +57,6 @@ class BaseControllersTest {
     @AfterEach
     void clearRequestContext() {
         RequestContextHolder.resetRequestAttributes();
-        ReflectionTestUtils.setField(ResourceServiceLocator.class, "applicationContext", null);
     }
 
     @Test
@@ -203,7 +202,7 @@ class BaseControllersTest {
 
         ResourceArtifact reportArtifact = new ResourceArtifact(ResourceArtifactType.REPORT, "REP", true, TestResource.class);
         when(service.fieldDownload(eq(7L), eq("doc"), any()))
-                .thenReturn(new DownloadableFile("doc.txt", "text/plain", "file".getBytes(StandardCharsets.UTF_8)));
+                .thenReturn(java.util.Optional.of(new DownloadableFile("doc.txt", "text/plain", "file".getBytes(StandardCharsets.UTF_8))));
         when(service.artifactFindAll(null)).thenReturn(List.of(reportArtifact));
         when(service.artifactGetOne(ResourceArtifactType.REPORT, "REP")).thenReturn(reportArtifact);
 
@@ -339,7 +338,7 @@ class BaseControllersTest {
         OptionValueResource item = new OptionValueResource();
         item.setId(3L);
         item.setLabel("Etiqueta");
-        installResourceLocator(new OptionValueReadonlyService(item));
+        installResourceLocator(controller, new OptionValueReadonlyService(item));
 
         var reportFindResponse = controller.artifactReportFieldOptionsFind(
                 "REP_OPTIONS",
@@ -424,7 +423,7 @@ class BaseControllersTest {
         assertThat(enumOneResponse.getBody()).isNotNull();
         assertThat(enumOneResponse.getBody().getContent().getValue()).isEqualTo("DONE");
 
-        var actionResponse = controller.artifactActionExec(
+        var actionResponse = controller.artifactActionExecId(
                 12L,
                 "RUN",
                 new ObjectMapper().createObjectNode().put("name", "param"),
@@ -441,12 +440,10 @@ class BaseControllersTest {
         jsonUtil.setApplicationContext(applicationContext);
     }
 
-    private static void installResourceLocator(OptionValueReadonlyService optionService) {
+    private static void installResourceLocator(BaseReadonlyResourceController<?, ?> controller, OptionValueReadonlyService optionService) {
         ResourceServiceLocator locator = new ResourceServiceLocator();
-        ReflectionTestUtils.setField(locator, "resourceServices", List.of(optionService));
-        ApplicationContext applicationContext = Mockito.mock(ApplicationContext.class);
-        when(applicationContext.getBean(ResourceServiceLocator.class)).thenReturn(locator);
-        locator.setApplicationContext(applicationContext);
+        ReflectionTestUtils.setField(locator, "readonlyResourceServices", List.of(optionService));
+        ReflectionTestUtils.setField(controller, BaseReadonlyResourceController.class, "resourceServiceLocator", locator, ResourceServiceLocator.class);
     }
 
     @SuppressWarnings("unchecked")
@@ -496,7 +493,7 @@ class BaseControllersTest {
         }
 
         @Override
-        protected List<Link> buildSingleResourceLinks(Serializable id, String[] perspective, boolean withDownloadLink, Link singleResourceSelfLink, ResourcePermissions resourcePermissions) {
+        protected List<Link> buildSingleResourceLinks(Serializable id, String[] perspective, Link singleResourceSelfLink, List<ResourceArtifact> artifactsAll, ResourcePermissions resourcePermissions, boolean withDownloadLink, boolean withEditLinksInputAndOutput, boolean withArtifactLinks) {
             return List.of(Link.of("/test/" + id).withSelfRel());
         }
 
@@ -518,7 +515,7 @@ class BaseControllersTest {
         }
 
         @Override
-        protected List<Link> buildSingleResourceLinks(Serializable id, String[] perspective, boolean withDownloadLink, Link singleResourceSelfLink, ResourcePermissions resourcePermissions) {
+        protected List<Link> buildSingleResourceLinks(Serializable id, String[] perspective, Link singleResourceSelfLink, List<ResourceArtifact> artifactsAll, ResourcePermissions resourcePermissions, boolean withDownloadLink, boolean withEditLinksInputAndOutput, boolean withArtifactLinks) {
             return List.of(Link.of("/test/" + id).withSelfRel());
         }
 
@@ -578,7 +575,7 @@ class BaseControllersTest {
         }
 
         @Override
-        public DownloadableFile fieldDownload(Long id, String fieldName, java.io.OutputStream out) {
+        public java.util.Optional<DownloadableFile> fieldDownload(Long id, String fieldName, java.io.OutputStream out) {
             throw new UnsupportedOperationException();
         }
 

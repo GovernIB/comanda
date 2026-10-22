@@ -91,8 +91,9 @@ class BaseResourceServicesTest {
         ReadonlyEntity entity = entity(7L, "doc");
         when(repository.findOne(any(Specification.class))).thenReturn(Optional.of(entity));
 
-        DownloadableFile downloadableFile = service.fieldDownload(7L, "attachment", OutputStream.nullOutputStream());
-        assertThat(downloadableFile.getName()).isEqualTo("attachment.txt");
+        Optional<DownloadableFile> downloadableFile = service.fieldDownload(7L, "attachment", OutputStream.nullOutputStream());
+        assertThat(downloadableFile).isPresent();
+        assertThat(downloadableFile.get().getName()).isEqualTo("attachment.txt");
 
         List<es.caib.comanda.ms.logic.intf.model.ResourceArtifact> artifacts = service.artifactFindAll(null);
         assertThat(artifacts).extracting(es.caib.comanda.ms.logic.intf.model.ResourceArtifact::getCode)
@@ -232,7 +233,7 @@ class BaseResourceServicesTest {
         service.reorderableLines = new ArrayList<>(List.of(first, second));
 
         MutableEntity inserted = mutableEntity(3L, "c", null);
-        boolean reordered = service.callReorder(inserted, 15L, null, true, false);
+        boolean reordered = service.callReorder(inserted, null, 15L, null, false);
         assertThat(reordered).isTrue();
         assertThat(first.getOrder()).isEqualTo(10L);
         assertThat(inserted.getOrder()).isEqualTo(20L);
@@ -243,11 +244,35 @@ class BaseResourceServicesTest {
                 .isInstanceOf(ResourceAlreadyExistsException.class);
     }
 
+    @Test
+    void mutableService_reorderMoureAvallIAmunt_ocupaLaPosicioDemanada() {
+        // En moure una entitat cap avall ha de quedar a la posició demanada (no a l'anterior) i en
+        // moure-la cap amunt s'ha d'inserir abans de l'entitat que ocupava aquesta posició.
+        TestMutableService service = new TestMutableService();
+        MutableEntity a = mutableEntity(1L, "a", 10L);
+        MutableEntity b = mutableEntity(2L, "b", 20L);
+        MutableEntity c = mutableEntity(3L, "c", 30L);
+        service.reorderableLines = new ArrayList<>(List.of(a, b, c));
+
+        boolean reordered = service.callReorder(a, 10L, 30L, null, false);
+        assertThat(reordered).isTrue();
+        assertThat(b.getOrder()).isEqualTo(10L);
+        assertThat(c.getOrder()).isEqualTo(20L);
+        assertThat(a.getOrder()).isEqualTo(30L);
+
+        service.reorderableLines = new ArrayList<>(List.of(b, c, a));
+        reordered = service.callReorder(a, 30L, 10L, null, false);
+        assertThat(reordered).isTrue();
+        assertThat(a.getOrder()).isEqualTo(10L);
+        assertThat(b.getOrder()).isEqualTo(20L);
+        assertThat(c.getOrder()).isEqualTo(30L);
+    }
+
     private static BasePermissionHelper allowAllPermissions() {
         BasePermissionHelper permissionHelper = mock(BasePermissionHelper.class);
         when(permissionHelper.checkResourceArtifactPermission(any(), any(), any())).thenReturn(true);
         when(permissionHelper.checkResourcePermission(any(), any(), any())).thenReturn(true);
-        when(permissionHelper.checkResourcePermission(any(), any(), any(), any())).thenReturn(true);
+        when(permissionHelper.checkResourcePermission(any(), any(), any(), any(), any(), any())).thenReturn(true);
         return permissionHelper;
     }
 
@@ -447,7 +472,7 @@ class BaseResourceServicesTest {
                 }
             });
             register("attachment", (FieldDownloader<ReadonlyEntity>) (entity, fieldName, out) ->
-                    new DownloadableFile("attachment.txt", "text/plain", "file".getBytes(StandardCharsets.UTF_8)));
+                    Optional.of(new DownloadableFile("attachment.txt", "text/plain", "file".getBytes(StandardCharsets.UTF_8))));
         }
     }
 
@@ -484,12 +509,12 @@ class BaseResourceServicesTest {
             });
         }
 
-        boolean callReorder(MutableEntity entity, Long sequenceForEntity, Long previousParentId, boolean sameSequenceInsertBefore, boolean isDelete) {
-            return reorderIfReorderable(entity, sequenceForEntity, previousParentId, sameSequenceInsertBefore, isDelete);
+        boolean callReorder(MutableEntity entity, Long previousSequence, Long newSequence, Long previousParentId, boolean isDelete) {
+            return reorderIfReorderable(entity, previousSequence, newSequence, previousParentId, isDelete);
         }
 
         @Override
-        protected List<MutableEntity> reorderFindLinesWithParent(Serializable parentId) {
+        protected List<MutableEntity> reorderFindLinesWithParentAndSorted(Serializable parentId) {
             return reorderableLines;
         }
 
@@ -504,8 +529,8 @@ class BaseResourceServicesTest {
         private final List<String> deletedNames = new ArrayList<>();
 
         @Override
-        public FileReference read(MutableEntity entity, String fieldName) {
-            return new FileReference("existing.txt", "z".getBytes(StandardCharsets.UTF_8), "text/plain", 1);
+        public Optional<FileReference> read(MutableEntity entity, String fieldName, boolean isDownload) {
+            return Optional.of(new FileReference("existing.txt", "z".getBytes(StandardCharsets.UTF_8), "text/plain", 1));
         }
 
         @Override

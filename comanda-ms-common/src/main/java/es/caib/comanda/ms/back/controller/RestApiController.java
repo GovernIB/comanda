@@ -61,19 +61,20 @@ public class RestApiController {
 	private boolean isBaseControllerAllowed(
 			BaseController baseController,
 			List<Class<? extends Resource<?>>> allowedResourceClasses) {
-		if (baseController instanceof ReadonlyResourceController) {
-			Class<?> controllerResourceClass = TypeUtil.getArgumentClassFromGenericSuperclass(
-					baseController.getClass(),
-					ReadonlyResourceController.class,
-					0);
-			return allowedResourceClasses.contains(controllerResourceClass);
-		} else {
-			if (!baseController.isPublic()) {
+		if (!baseController.isPublic()) {
+			if (baseController instanceof ReadonlyResourceController) {
+				Class<?> controllerResourceClass = TypeUtil.getArgumentClassFromGenericSuperclass(
+						baseController.getClass(),
+						ReadonlyResourceController.class,
+						0);
+				return allowedResourceClasses.contains(controllerResourceClass);
+			} else {
 				Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 				return auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken);
-			} else {
-				return true;
 			}
+		} else {
+			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+			return auth instanceof AnonymousAuthenticationToken;
 		}
 	}
 

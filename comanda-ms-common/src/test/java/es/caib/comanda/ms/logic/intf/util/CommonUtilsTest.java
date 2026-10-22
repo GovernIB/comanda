@@ -2,6 +2,7 @@ package es.caib.comanda.ms.logic.intf.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import es.caib.comanda.ms.back.util.HalFormsUtil;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
 import es.caib.comanda.ms.logic.intf.exception.CompositePkParsingException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceFieldNotFoundException;

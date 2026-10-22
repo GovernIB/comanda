@@ -51,6 +51,7 @@ class BaseHalFormsAndExpressionGeneratorTest {
         // Comprova que la configuració HAL-FORMS resol opcions inline d'enums i el camp prompt correcte.
         installI18nUtil();
         TestHalFormsConfig config = new TestHalFormsConfig();
+        ReflectionTestUtils.setField(config, BaseHalFormsConfig.class, "objectMapper", new com.fasterxml.jackson.databind.ObjectMapper(), com.fasterxml.jackson.databind.ObjectMapper.class);
 
         Field statusField = HalResource.class.getDeclaredField("status");
         BaseHalFormsConfig.FieldOption[] options = ReflectionTestUtils.invokeMethod(config, "getInlineOptionsEnumConstants", statusField);

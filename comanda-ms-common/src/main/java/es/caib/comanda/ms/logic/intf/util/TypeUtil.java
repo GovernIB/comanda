@@ -30,7 +30,7 @@ public class TypeUtil {
 			int index) {
 		return (Class<R>)Objects.requireNonNull(
 				GenericTypeResolver.resolveTypeArguments(
-						clazz,
+						ClassUtils.getUserClass(clazz),
 						superClass != null ? superClass : clazz))[index];
 	}
 	public static <R> Class<R> getArgumentClassFromGenericSuperclass(Class<?> clazz, int index) {

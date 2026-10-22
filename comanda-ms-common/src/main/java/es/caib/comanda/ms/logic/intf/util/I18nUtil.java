@@ -41,8 +41,8 @@ public class I18nUtil implements ApplicationContextAware {
 		} catch (NoSuchMessageException ex) {
 			try {
 				Class<?> fieldType;
-				if (field.getType().isArray()) {
-					fieldType = field.getType().getComponentType();
+				if (TypeUtil.isMultipleFieldType(field)) {
+					fieldType = TypeUtil.getMultipleFieldType(field);
 				} else {
 					fieldType = field.getType();
 				}

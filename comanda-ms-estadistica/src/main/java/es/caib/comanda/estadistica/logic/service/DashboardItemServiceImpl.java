@@ -79,7 +79,7 @@ public class DashboardItemServiceImpl extends BaseMutableResourceService<Dashboa
     @Override
     protected String additionalSpringFilter(
         String currentSpringFilter,
-        String[] namedQueries) {
+        String[] namedQueries, boolean isSingleResult) {
         return dashboardPermisosHelper.buildDashboardItemFilter(currentSpringFilter);
     }
 

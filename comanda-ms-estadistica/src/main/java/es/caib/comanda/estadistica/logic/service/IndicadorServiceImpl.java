@@ -72,7 +72,7 @@ public class IndicadorServiceImpl extends BaseMutableResourceService<Indicador, 
     }
 
 	@Override
-	protected Specification<IndicadorEntity> namedFilterToSpecification(String name) {
+	protected Specification<IndicadorEntity> namedQueryToSpecification(String name) {
 		if (name != null && name.startsWith(Indicador.NAMED_FILTER_BY_APP_GROUP_BY_NOM)) {
             List<Long> idsEntornApp = null;
             String[] parts = name.split(":", 2);
@@ -106,7 +106,7 @@ public class IndicadorServiceImpl extends BaseMutableResourceService<Indicador, 
 	}
 
     @Override
-    protected String additionalSpringFilter(String currentSpringFilter, String[] namedQueries) {
+    protected String additionalSpringFilter(String currentSpringFilter, String[] namedQueries, boolean isSingleResult) {
         List<Filter> filters = new ArrayList<>();
         if (currentSpringFilter != null && !currentSpringFilter.isEmpty()) {
             filters.add(Filter.parse(currentSpringFilter));
