@@ -1,7 +1,14 @@
 import MuiToolbar from '@mui/material/Toolbar';
 import {
-    Alert, Box, Button, Icon, ToggleButton, Tooltip, Typography,
-    Select, MenuItem, IconButton, Divider, ListItemIcon, ListItemText
+    Alert,
+    Box,
+    Button,
+    Chip,
+    Icon,
+    IconButton,
+    ToggleButton,
+    Tooltip,
+    useMediaQuery,
 } from '@mui/material';
 import {
     DashboardReactGridLayout,
@@ -33,6 +40,13 @@ const LAST_VIEWED_STORAGE_KEY = 'lastViewedDashboardId';
 const LARGE_SCREEN_MODE_STORAGE_KEY = 'comanda.dashboardView.largeScreenMode';
 const NO_DASHBOARD_FOUND = 'NO_DASHBOARD_FOUND';
 
+interface DashboardFavoriteItem {
+    id: number | string;
+    titol: string;
+    descripcio?: string;
+    esPreferit?: boolean;
+}
+
 interface DashboardPreferitToggleProps {
     dashboardId: number | string;
     isPreferit: boolean;
@@ -56,8 +70,8 @@ const DashboardPreferitToggle: React.FC<DashboardPreferitToggleProps> = ({ dashb
                 'success'
             );
             onRefresh?.();
-        } catch (error: any) {
-            temporalMessageShow(null, error.message || 'Error', 'error');
+        } catch (error: unknown) {
+            temporalMessageShow(null, (error as Error)?.message || 'Error', 'error');
         } finally {
             setLoading(false);
         }
@@ -77,13 +91,13 @@ const DashboardPreferitToggle: React.FC<DashboardPreferitToggleProps> = ({ dashb
 
 function useDashboardFavorites() {
     const { isReady: apiIsReady, find: findDashboards } = useResourceApiService('dashboard');
-    const [favorites, setFavorites] = useState<any[]>([]);
+    const [favorites, setFavorites] = useState<DashboardFavoriteItem[]>([]);
 
     const refreshFavorites = useCallback(async () => {
         if (!apiIsReady) return;
         try {
             const response = await findDashboards({ namedQueries: ['preferit'], size: 100 });
-            setFavorites(response.rows || []);
+            setFavorites((response.rows as DashboardFavoriteItem[]) || []);
         } catch (error) {
             console.error('Error loading favorites', error);
         }
@@ -99,77 +113,128 @@ function useDashboardFavorites() {
 function useDashboardSelector(
     currentDashboardId: string | number | null,
     currentDashboardTitol: string | undefined,
-    favorites: any[],
-    onSeeAll: () => void
+    favorites: DashboardFavoriteItem[],
+    onSeeAll: () => void,
+    onSelectDashboard?: (id: string | number, titol?: string) => void
 ) {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
     const options = useMemo(() => {
-        const currentIsInFavs = favorites.some((d: any) => String(d.id) === String(currentDashboardId));
-        if (!currentIsInFavs && currentDashboardTitol && currentDashboardId) {
-            return [{ id: currentDashboardId, titol: currentDashboardTitol }, ...favorites];
+        if (currentDashboardId == null || currentDashboardId === '') return favorites;
+        const currentIsInFavs = favorites.some((d) => String(d.id) === String(currentDashboardId));
+        if (!currentIsInFavs) {
+            return [
+                {
+                    id: currentDashboardId,
+                    titol: currentDashboardTitol || t($ => $.page.dashboards.view.selector.loading),
+                },
+                ...favorites,
+            ];
         }
         return favorites;
-    }, [favorites, currentDashboardId, currentDashboardTitol]);
-
-    const handleSelectChange = (event: any) => {
-        const selectedId = event.target.value;
-        if (selectedId === '__VIEW_ALL__') {
-            onSeeAll();
-        } else if (!!selectedId) {
-            navigate(`/${ESTADISTIQUES_PATH}/${selectedId}`);
-        }
-    };
+    }, [favorites, currentDashboardId, currentDashboardTitol, t]);
 
     return (
-        <Select
-            value={currentDashboardId || ''}
-            onChange={handleSelectChange}
-            displayEmpty
-            renderValue={(selected) => {
-                if (!selected) return t($ => $.page.dashboards.view.selector.loading);
-                const selectedDash = options.find((d: any) => String(d.id) === String(selected));
-                return (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Icon fontSize="small" color="primary">dashboard</Icon>
-                        <Typography sx={{ textTransform: 'none', fontWeight: 500 }}>
-                            {selectedDash ? selectedDash.titol : currentDashboardTitol}
-                        </Typography>
-                    </Box>
-                );
-            }}
+        <Box
             sx={{
-                height: 45,
-                minWidth: 350,
-                backgroundColor: 'background.paper',
-                borderRadius: 1,
-                boxShadow: 1
-            }}
-            MenuProps={{
-                PaperProps: { sx: { maxHeight: 400 } }
+                display: 'flex',
+                alignItems: 'center',
+                flex: '1 1 auto',
+                flexWrap: 'nowrap',
+                minWidth: 280,
+                gap: 1,
+                overflow: 'hidden',
+                py: 0.5,
             }}
         >
-            {options.map((dash) => (
-                <MenuItem key={dash.id} value={dash.id}>
-                    {dash.titol}
-                </MenuItem>
-            ))}
-            <Divider sx={{ my: 1 }} />
-            <MenuItem value="__VIEW_ALL__">
-                <ListItemIcon>
-                    <Icon fontSize="small" color="primary">list</Icon>
-                </ListItemIcon>
-                <ListItemText
-                    primary={t($ => $.page.dashboards.view.selector.seeAll)}
-                    primaryTypographyProps={{ fontWeight: 600, color: 'primary.main' }}
-                />
-            </MenuItem>
-        </Select>
+            <Tooltip title={t($ => $.page.dashboards.view.selector.seeAll)}>
+                <Button
+                    size="small"
+                    variant="outlined"
+                    color="primary"
+                    startIcon={
+                        <Icon fontSize="small">
+                            list
+                        </Icon>
+                    }
+                    aria-label={t($ => $.page.dashboards.view.selector.listDashboards)}
+                    onClick={onSeeAll}
+                    sx={{
+                        height: 32,
+                        flexShrink: 0,
+                        whiteSpace: 'nowrap',
+                        backgroundColor: 'background.paper',
+                        fontWeight: 600,
+                        boxShadow: 1,
+                        '&:hover': {
+                            backgroundColor: 'action.hover',
+                        },
+                    }}
+                >
+                    {t($ => $.page.dashboards.view.selector.listDashboards)}
+                </Button>
+            </Tooltip>
+
+            {options.map(dash => {
+                const isSelected =
+                    currentDashboardId != null &&
+                    String(dash.id) === String(currentDashboardId);
+                const titol =
+                    isSelected && currentDashboardTitol
+                        ? currentDashboardTitol
+                        : dash.titol || String(dash.id);
+                const isFavorite =
+                    favorites.some((fav) => String(fav.id) === String(dash.id)) ||
+                    Boolean((dash as { esPreferit?: boolean }).esPreferit);
+                return (
+                    <Tooltip key={dash.id} title={titol}>
+                        <Chip
+                            icon={
+                                isFavorite ? (
+                                    <Icon
+                                        fontSize="small"
+                                        color="warning"
+                                        aria-hidden="true"
+                                        data-testid="favorite-chip-icon"
+                                    >
+                                        star
+                                    </Icon>
+                                ) : undefined
+                            }
+                            label={titol}
+                            onClick={() => {
+                                onSelectDashboard?.(dash.id, dash.titol);
+                                navigate(`/${ESTADISTIQUES_PATH}/${dash.id}`);
+                            }}
+                            color={isSelected ? 'primary' : 'default'}
+                            variant={isSelected ? 'filled' : 'outlined'}
+                            clickable
+                            aria-current={isSelected ? 'page' : undefined}
+                            sx={{
+                                maxWidth: 200,
+                                flexShrink: 0,
+                                cursor: 'pointer',
+                                fontWeight: isSelected ? 600 : 400,
+                                backgroundColor: isSelected ? undefined : 'background.paper',
+                                '& .MuiChip-label': {
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                },
+                            }}
+                        />
+                    </Tooltip>
+                );
+            })}
+        </Box>
     );
 }
 
-function useDashboardManagerDialog(refreshFavorites: () => void) {
+function useDashboardManagerDialog(
+    refreshFavorites: () => void,
+    onSelectDashboard?: (id: string | number, titol?: string) => void
+) {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const [open, setOpen] = useState(false);
@@ -188,17 +253,18 @@ function useDashboardManagerDialog(refreshFavorites: () => void) {
             headerName: t($ => $.page.dashboards.view.columns.esPreferit),
             sortable: false,
             flex: 0.5,
-            renderCell: (params: any) => (
+            renderCell: (params: { id: string | number; row: { esPreferit?: boolean } }) => (
                 <DashboardPreferitToggle
                     dashboardId={params.id}
-                    isPreferit={params.row.esPreferit}
+                    isPreferit={Boolean(params.row.esPreferit)}
                     onRefresh={refreshGrid}
                 />
             ),
         },
     ], [t, refreshGrid]);
 
-    const handleRowClick = (params: any) => {
+    const handleRowClick = (params: { id: string | number; row?: { titol?: string } }) => {
+        onSelectDashboard?.(params.id, params.row?.titol);
         navigate(`/${ESTADISTIQUES_PATH}/${params.id}`);
         setOpen(false);
     };
@@ -225,13 +291,15 @@ function useDashboardManagerDialog(refreshFavorites: () => void) {
         </Dialog>
     );
 
-    return { dialog, openDialog: () => setOpen(true) };
+    const openDialog = useCallback(() => setOpen(true), []);
+    return { dialog, openDialog };
 }
 
 const EstadisticaDashboardView = () => {
     const { t } = useTranslation();
     const theme = useTheme();
     const temaFosc = theme.palette.mode === 'dark';
+    const isSmallScreen = useMediaQuery(theme.breakpoints.down('lg'));
     const routeParams = useParams();
     const [firstDashboard, setFirstDashboard] = useState<Record<string, unknown> | string | null>(null);
     const idFromFirstDashboard: string | null =
@@ -256,10 +324,37 @@ const EstadisticaDashboardView = () => {
     const mappedDashboardItems = useMapDashboardItems(dashboardWidgets);
     const navigate = useNavigate();
     const { favorites, refreshFavorites } = useDashboardFavorites();
-    const { dialog: managerDialog, openDialog: openManagerDialog } = useDashboardManagerDialog(refreshFavorites);
-    const dashboardSelector = useDashboardSelector(dashboardId, dashboard?.titol, favorites, openManagerDialog);
 
-    const loading = loadingDashboard || loadingWidgetPositions || loadingEntornCodi;
+    const [knownDashboardTitles, setKnownDashboardTitles] = useState<Record<string, string>>({});
+    const handleSelectDashboard = useCallback((id: string | number, titol?: string) => {
+        if (titol) {
+            setKnownDashboardTitles((prev) => ({ ...prev, [String(id)]: titol }));
+        }
+    }, []);
+
+    const isCurrentDashboardLoaded =
+        dashboard?.id != null && String(dashboard.id) === String(dashboardId);
+    const currentDashboardTitol = isCurrentDashboardLoaded
+        ? dashboard.titol
+        : (dashboardId != null ? knownDashboardTitles[String(dashboardId)] : undefined);
+
+    const { dialog: managerDialog, openDialog: openManagerDialog } = useDashboardManagerDialog(
+        refreshFavorites,
+        handleSelectDashboard
+    );
+    const dashboardSelector = useDashboardSelector(
+        dashboardId,
+        currentDashboardTitol,
+        favorites,
+        openManagerDialog,
+        handleSelectDashboard
+    );
+
+    const loading =
+        loadingDashboard ||
+        loadingWidgetPositions ||
+        loadingEntornCodi ||
+        (dashboardId != null && !isCurrentDashboardLoaded);
 
     useEffect(() => {
         if (apiDashboardIsReady && dashboardIdFromRouteAndLocalStorage == null && firstDashboard == null) {
@@ -305,33 +400,26 @@ const EstadisticaDashboardView = () => {
                             sx={{
                                 width: '100%',
                                 display: 'flex',
-                                flexWrap: 'wrap',
+                                flexWrap: isSmallScreen ? 'wrap' : 'nowrap',
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
                                 rowGap: 1,
+                                columnGap: 2,
                                 px: 2,
+                                pt: 2,
+                                pb: 1,
                                 ml: 0, mr: 0, mt: 0,
                                 backgroundColor: (theme) =>
                                     theme.palette.mode === 'dark' ? theme.palette.grey['900'] : theme.palette.grey['200'],
                             }}
                         >
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                {dashboardSelector}
-                                {/* <Tooltip title={t($ => $.page.dashboards.view.selector.seeAll)}>
-                                    <IconButton
-                                        color="primary"
-                                        onClick={openManagerDialog}
-                                        sx={{ backgroundColor: 'background.paper', boxShadow: 1, '&:hover': { backgroundColor: 'action.hover' } }}
-                                    >
-                                        <Icon>list</Icon>
-                                    </IconButton>
-                                </Tooltip> */}
-                            </Box>
+                            {dashboardSelector}
                             <DashboardFiltreBar
-                                filtres={dashboard?.filtres}
+                                filtres={isCurrentDashboardLoaded ? dashboard?.filtres : undefined}
                                 value={filtreSeleccio}
                                 onChange={setFiltreSeleccio}
-                                aplicacioId={dashboard?.aplicacio?.id}
+                                aplicacioId={isCurrentDashboardLoaded ? dashboard?.aplicacio?.id : undefined}
+                                wrap={isSmallScreen ? 'wrap' : 'nowrap'}
                             />
                             <Tooltip title={t($ => $.page.dashboards.view.largeScreenModeFit)}>
                                 <ToggleButton
@@ -350,7 +438,7 @@ const EstadisticaDashboardView = () => {
                     </Box>
                 }
             >
-                {dashboardWidgets && (
+                {isCurrentDashboardLoaded && dashboardWidgets && (
                     <DashboardReactGridLayout
                         dashboardId={dashboard.id}
                         editable={false}

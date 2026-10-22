@@ -423,7 +423,7 @@ describe('EstadisticaDashboards', () => {
             { tipo: 'DashboardExport', titol: 'Dashboard 1' },
             { tipo: 'EstadisticaWidgetExport', titol: 'Widget 1' },
             { tipo: 'IndicadorExport', titol: 'Indicador 1' },
-            { tipo: 'PlantillaExport', titol: 'Plantilla 1' },
+            { tipo: 'PlantillaExport', titol: 'Plantilla 1', overwrite: 'CREAR_AMB_ALTRE_NOM' },
             { tipo: 'PaletaExport', titol: 'Paleta 1' },
         ];
 
@@ -786,6 +786,83 @@ describe('EstadisticaDashboards', () => {
 
         const overwriteField = screen.getByTestId('field-conflicts[0].overwrite');
         expect(overwriteField).toHaveAttribute('data-hidden-enum-values', 'SOBRESCRIURE');
+    });
+
+    it('EstadisticaDashboards_quanConflicteEsPlantillaOPaleta_noOcultaSobrescriure', () => {
+        mocks.formContextData.conflicts = [
+            {
+                tipo: 'PlantillaExport',
+                titol: 'Plantilla 1',
+                overwrite: 'SOBRESCRIURE',
+            },
+            {
+                tipo: 'PaletaExport',
+                titol: 'Paleta 1',
+                overwrite: 'SOBRESCRIURE',
+            },
+        ];
+
+        render(<EstadisticaDashboards />);
+
+        const overwritePlantilla = screen.getByTestId('field-conflicts[0].overwrite');
+        expect(overwritePlantilla).toHaveAttribute('data-hidden-enum-values', '');
+
+        const overwritePaleta = screen.getByTestId('field-conflicts[1].overwrite');
+        expect(overwritePaleta).toHaveAttribute('data-hidden-enum-values', '');
+    });
+
+    it('EstadisticaDashboards_quanPlantillaNoAplicaCanvis_ocultaElMenuDeConflictesDePaletes', () => {
+        mocks.formContextData.conflicts = [
+            { tipo: 'PlantillaExport', titol: 'Plantilla 1', overwrite: 'EMPRAR_EXISTENT' },
+            { tipo: 'PaletaExport', titol: 'Paleta 1' },
+        ];
+
+        const { rerender } = render(<EstadisticaDashboards />);
+
+        // Paletes no s'ha de mostrar quan plantilla té EMPRAR_EXISTENT
+        expect(screen.queryByText('Paletes')).not.toBeInTheDocument();
+        expect(screen.queryByText('Paleta 1')).not.toBeInTheDocument();
+
+        // Quan es canvia a CREAR_AMB_ALTRE_NOM, es mostra
+        mocks.formContextData.conflicts = [
+            { tipo: 'PlantillaExport', titol: 'Plantilla 1', overwrite: 'CREAR_AMB_ALTRE_NOM' },
+            { tipo: 'PaletaExport', titol: 'Paleta 1' },
+        ];
+        rerender(<EstadisticaDashboards />);
+
+        expect(screen.getByText('Paletes')).toBeInTheDocument();
+        expect(screen.getByText('Paleta 1')).toBeInTheDocument();
+
+        // Quan es canvia a SOBRESCRIURE, també es mostra
+        mocks.formContextData.conflicts = [
+            { tipo: 'PlantillaExport', titol: 'Plantilla 1', overwrite: 'SOBRESCRIURE' },
+            { tipo: 'PaletaExport', titol: 'Paleta 1' },
+        ];
+        rerender(<EstadisticaDashboards />);
+
+        expect(screen.getByText('Paletes')).toBeInTheDocument();
+        expect(screen.getByText('Paleta 1')).toBeInTheDocument();
+    });
+
+    it('EstadisticaDashboards_quanHiHaPlantillesOPaletesAmbSobrescriure_mostraBotoSobrescriureIActualitzaMassivament', () => {
+        mocks.formContextData.conflicts = [
+            { tipo: 'PlantillaExport', titol: 'Plantilla 1', overwrite: 'SOBRESCRIURE' },
+            { tipo: 'PaletaExport', titol: 'Paleta 1', overwrite: undefined },
+        ];
+
+        render(<EstadisticaDashboards />);
+
+        const selectAllButton = screen.getByRole('button', { name: 'Seleccionar-ho tot' });
+        fireEvent.click(selectAllButton);
+
+        const bulkOverwriteBtn = screen.getByRole('button', { name: /Sobrescriure/i });
+        expect(bulkOverwriteBtn).not.toBeDisabled();
+        fireEvent.click(bulkOverwriteBtn);
+
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('conflicts', [
+            { tipo: 'PlantillaExport', titol: 'Plantilla 1', overwrite: 'SOBRESCRIURE' },
+            { tipo: 'PaletaExport', titol: 'Paleta 1', overwrite: 'SOBRESCRIURE' },
+        ]);
     });
 
     it('EstadisticaDashboards_quanHiHaIndicadors_mostraBotoSobrescriureIActualitzaConflictesMassivament', () => {

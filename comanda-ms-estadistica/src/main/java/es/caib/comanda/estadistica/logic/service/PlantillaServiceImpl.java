@@ -1,33 +1,52 @@
 package es.caib.comanda.estadistica.logic.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import es.caib.comanda.estadistica.logic.helper.DashboardImportHelper;
 import es.caib.comanda.estadistica.logic.helper.EstadisticaWidgetHelper;
 import es.caib.comanda.estadistica.logic.helper.PaletaHelper;
-import es.caib.comanda.estadistica.logic.intf.model.paleta.DashboardTemplatePaletteGroup;
-import es.caib.comanda.estadistica.logic.intf.model.paleta.Paleta;
-import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletaColor;
-import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
-import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteRole;
-import es.caib.comanda.estadistica.logic.intf.model.paleta.Plantilla;
-import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleProperty;
-import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleScope;
-import es.caib.comanda.estadistica.logic.intf.model.paleta.WidgetStyleValueType;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.OverwriteEnum;
+import es.caib.comanda.estadistica.logic.intf.model.export.PlantillaExport;
+import es.caib.comanda.estadistica.logic.intf.model.paleta.*;
 import es.caib.comanda.estadistica.logic.intf.service.PlantillaService;
-import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaGrupPaletesEntity;
+import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
+import es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.Conflict;
 import es.caib.comanda.estadistica.persist.entity.paleta.PaletaEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
+import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaGrupPaletesEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.WidgetStylePropertyEntity;
 import es.caib.comanda.estadistica.persist.repository.DashboardTemplatePaletteGroupRepository;
 import es.caib.comanda.estadistica.persist.repository.PaletaRepository;
 import es.caib.comanda.estadistica.persist.repository.WidgetStylePropertyRepository;
+import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
+import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
+import es.caib.comanda.ms.logic.intf.exception.ReportGenerationException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
+import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
+import es.caib.comanda.ms.logic.intf.model.FileReference;
+import es.caib.comanda.ms.logic.intf.model.ReportFileType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
+import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -44,6 +63,15 @@ public class PlantillaServiceImpl extends BaseMutableResourceService<Plantilla, 
     private final DashboardTemplatePaletteGroupRepository DashboardTemplatePaletteGroupRepository;
     private final WidgetStylePropertyRepository widgetStylePropertyRepository;
     private final EstadisticaWidgetHelper estadisticaWidgetHelper;
+    private final DashboardImportHelper dashboardImportHelper;
+    private final DashboardExportMapper dashboardExportMapper;
+    private final ObjectMapper objectMapper;
+
+    @PostConstruct
+    public void init() {
+        register(Plantilla.PLANTILLA_EXPORT, new PlantillaExportReportGenerator());
+        register(Plantilla.PLANTILLA_IMPORT, new PlantillaImportActionExecutor());
+    }
 
     @Override
     protected void beforeCreateSave(PlantillaEntity entity, Plantilla resource, Map<String, AnswerRequiredException.AnswerValue> answers) {
@@ -667,5 +695,196 @@ public class PlantillaServiceImpl extends BaseMutableResourceService<Plantilla, 
             return String.valueOf(palette.getId());
         }
         return palette.getNom();
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @FieldNameConstants
+    public static class PlantillaImportParams implements Serializable {
+        @NotNull
+        @ResourceField(onChangeActive = true)
+        private FileReference file;
+        @Valid
+        private List<Conflict> conflicts;
+
+        private String nouNom;
+        private OverwriteEnum overwrite;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PlantillaImportResult implements Serializable {
+        private List<Plantilla> plantilles;
+    }
+
+    public class PlantillaExportReportGenerator implements ReportGenerator<PlantillaEntity, Serializable, PlantillaExport> {
+        @Override
+        public List<PlantillaExport> generateData(String code, PlantillaEntity entity, Serializable params) throws ReportGenerationException {
+            List<PlantillaExport> result = new ArrayList<>();
+            if (entity != null) {
+                PlantillaExport export = dashboardExportMapper.toPlantillaExport(entity);
+                result.add(export);
+            } else {
+                List<PlantillaEntity> entities = entityRepository.findAll(toFindProcessedSpecification(null, null, null));
+                if (entities != null) {
+                    for (PlantillaEntity e : entities) {
+                        result.add(dashboardExportMapper.toPlantillaExport(e));
+                    }
+                }
+            }
+            return result;
+        }
+
+        @Override
+        public DownloadableFile generateFile(String code, List<?> data, ReportFileType fileType, OutputStream out) {
+            try {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                objectMapper.writerWithDefaultPrettyPrinter().writeValue(baos, data);
+                byte[] content = baos.toByteArray();
+                out.write(content);
+
+                String exportFileName = "plantilles.json";
+                try {
+                    if (data != null && data.size() == 1 && data.get(0) instanceof PlantillaExport) {
+                        String nom = ((PlantillaExport) data.get(0)).getNom();
+                        if (nom != null && !nom.trim().isEmpty()) {
+                            exportFileName = sanitizeFilename(nom.trim()) + ".json";
+                        }
+                    }
+                } catch (Exception ex) {
+                    log.error("Error generant el nom del fitxer d'exportació de Plantilles", ex);
+                }
+
+                return new DownloadableFile(exportFileName, "application/json", content);
+            } catch (IOException e) {
+                log.error("Error generating JSON file", e);
+                return null;
+            }
+        }
+
+        private String sanitizeFilename(String filename) {
+            if (filename == null) {
+                return "plantilla";
+            }
+            String normalized = java.text.Normalizer.normalize(filename, java.text.Normalizer.Form.NFD);
+            String withoutDiacritics = normalized.replaceAll("\\p{M}", "");
+            String sanitized = withoutDiacritics.replaceAll("[^a-zA-Z0-9 _().-]", "_");
+            sanitized = sanitized.replaceAll("_{2,}", "_").replaceAll(" {2,}", " ");
+            sanitized = sanitized.replaceAll("^[._\\-\\s]+|[._\\-\\s]+$", "").trim();
+            return sanitized.isEmpty() ? "plantilla" : sanitized;
+        }
+
+        @Override
+        public void onChange(Serializable id, Serializable previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, Serializable target) {
+        }
+    }
+
+    public class PlantillaImportActionExecutor implements ActionExecutor<PlantillaEntity, PlantillaImportParams, PlantillaImportResult> {
+
+        @Override
+        public PlantillaImportResult exec(String code, PlantillaEntity entity, PlantillaImportParams params) {
+            try {
+                if (params == null || params.getFile() == null || params.getFile().getContent() == null) {
+                    throw new IllegalArgumentException(
+                            I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.PlantillaServiceImpl.error.fitxerRequerit"));
+                }
+
+                String jsonString = new String(params.getFile().getContent(), StandardCharsets.UTF_8);
+                List<PlantillaExport> plantilles = dashboardImportHelper.parsePlantillesJson(jsonString);
+
+                dashboardImportHelper.validatePlantillaExport(plantilles);
+
+                List<Conflict> conflicts = params.getConflicts() != null ? params.getConflicts() : Collections.emptyList();
+                if (conflicts.stream().anyMatch(Conflict::isBloquejant)) {
+                    throw new ActionExecutionException(
+                            Plantilla.class,
+                            null,
+                            code,
+                            I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.PlantillaServiceImpl.error.conflictesBloquejants"));
+                }
+
+                List<PlantillaEntity> importedEntities = dashboardImportHelper.importPlantillesFromExport(plantilles, conflicts);
+                List<Plantilla> importedResources = (importedEntities != null && resourceEntityMappingHelper != null)
+                        ? importedEntities.stream().filter(Objects::nonNull).map(PlantillaServiceImpl.this::entityToResource).collect(Collectors.toList())
+                        : Collections.emptyList();
+                return new PlantillaImportResult(importedResources);
+            } catch (AccessDeniedException | ActionExecutionException e) {
+                throw e;
+            } catch (IllegalArgumentException e) {
+                log.warn("Validation error importing plantilles from JSON: {}", e.getMessage());
+                throw new ActionExecutionException(
+                        Plantilla.class,
+                        null,
+                        code,
+                        e.getMessage());
+            } catch (Exception e) {
+                log.error("Error importing plantilles from JSON", e);
+                throw new ActionExecutionException(
+                        Plantilla.class,
+                        null,
+                        code,
+                        e.getMessage());
+            }
+        }
+
+        @Override
+        public void onChange(Serializable id, PlantillaImportParams previous, String fieldName, Object fieldValue, Map<String, AnswerRequiredException.AnswerValue> answers, String[] previousFieldNames, PlantillaImportParams target) {
+            if (PlantillaImportParams.Fields.file.equals(fieldName)) {
+                FileReference file = (FileReference) fieldValue;
+                if (file == null || file.getContent() == null) {
+                    target.setConflicts(new ArrayList<>());
+                    return;
+                }
+                try {
+                    String jsonString = new String(file.getContent(), StandardCharsets.UTF_8);
+                    List<PlantillaExport> plantilles = dashboardImportHelper.parsePlantillesJson(jsonString);
+
+                    dashboardImportHelper.validatePlantillaExport(plantilles);
+
+                    List<Conflict> plantillaConflicts = new ArrayList<>();
+                    dashboardImportHelper.checkPlantillaConflicts(plantilles, plantillaConflicts);
+
+                    // Preservar les eleccions prèvies de l'usuari (overwrite, nouNom) si n'hi havia
+                    if (previous != null && previous.getConflicts() != null && !previous.getConflicts().isEmpty()) {
+                        for (Conflict newC : plantillaConflicts) {
+                            if (!newC.isBloquejant()) {
+                                previous.getConflicts().stream()
+                                        .filter(prevC -> !prevC.isBloquejant()
+                                                && Objects.equals(newC.getTipo(), prevC.getTipo())
+                                                && Objects.equals(newC.getTitol(), prevC.getTitol()))
+                                        .findFirst()
+                                        .ifPresent(prevC -> {
+                                            if (prevC.getOverwrite() != null) {
+                                                newC.setOverwrite(prevC.getOverwrite());
+                                            }
+                                            if (prevC.getNouNom() != null) {
+                                                newC.setNouNom(prevC.getNouNom());
+                                            }
+                                        });
+                            }
+                        }
+                    }
+
+                    target.setConflicts(plantillaConflicts);
+                } catch (Exception e) {
+                    log.warn("Error analitzant el fitxer de plantilles", e);
+                    List<Conflict> errorConflicts = new ArrayList<>();
+                    Conflict blocking = new Conflict(
+                            file.getName() != null && !file.getName().isBlank() ? file.getName() : "Fitxer",
+                            PlantillaExport.class.getSimpleName());
+                    blocking.setBloquejant(true);
+                    blocking.setMissatgeError(e.getMessage() != null && !e.getMessage().isBlank()
+                            ? e.getMessage()
+                            : I18nUtil.getInstance().getI18nMessage(
+                                    "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.formatInvalid"));
+                    errorConflicts.add(blocking);
+                    target.setConflicts(errorConflicts);
+                }
+            }
+        }
     }
 }

@@ -33,11 +33,14 @@ import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardPreferitEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
+import es.caib.comanda.estadistica.logic.helper.EstadisticaWidgetHelper;
+import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.DashboardItemRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardPreferitRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardRepository;
 import es.caib.comanda.estadistica.persist.repository.DashboardTitolRepository;
+import es.caib.comanda.estadistica.persist.repository.EstadisticaWidgetRepository;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
 import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
@@ -101,6 +104,8 @@ class DashboardServiceImplTest {
     @Mock private ApplicationContext applicationContext;
     @Mock private I18nUtil i18nUtil;
     @Mock private es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper resourceEntityMappingHelper;
+    @Mock private EstadisticaWidgetRepository estadisticaWidgetRepository;
+    @Mock private EstadisticaWidgetHelper estadisticaWidgetHelper;
 
     @InjectMocks
     private DashboardServiceImpl dashboardService;
@@ -1556,6 +1561,239 @@ class DashboardServiceImplTest {
 
         assertThatThrownBy(() -> executor.exec(Dashboard.DASHBOARD_IMPORT, new DashboardEntity(), params))
                 .isInstanceOf(AccessDeniedException.class);
+    }
+
+    // ========================================================================
+    // TESTOS PER A afterDelete (NETEJA DE WIDGETS ORFES)
+    // ========================================================================
+
+    @Test
+    @DisplayName("afterDelete: quan el dashboard no té items, no fa res i no falla")
+    void afterDelete_quanDashboardSenseItems_noFaRes() {
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setId(1L);
+        dashboard.setItems(Collections.emptyList());
+
+        ReflectionTestUtils.invokeMethod(dashboardService, "afterDelete", dashboard, Collections.emptyMap());
+
+        verify(dashboardItemRepository, never()).findByWidgetId(anyLong());
+        verify(estadisticaWidgetRepository, never()).delete(any());
+        verify(estadisticaWidgetHelper, never()).clearDashboardWidgetCache(anyLong());
+        verify(estadisticaWidgetHelper, never()).clearDashboardWidgetCacheByWidget(anyLong());
+    }
+
+    @Test
+    @DisplayName("afterDelete: quan el dashboard té items nulls, no fa res")
+    void afterDelete_quanDashboardItemsNull_noFaRes() {
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setId(1L);
+        dashboard.setItems(null);
+
+        ReflectionTestUtils.invokeMethod(dashboardService, "afterDelete", dashboard, Collections.emptyMap());
+
+        verify(dashboardItemRepository, never()).findByWidgetId(anyLong());
+        verify(estadisticaWidgetRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("afterDelete: quan els widgets només s'usen a aquest dashboard, esborra els widgets orfes")
+    void afterDelete_quanWidgetsNomesSUtilitzenAAquestDashboard_esborraTotsElsWidgets() {
+        Long dashboardId = 1L;
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setId(dashboardId);
+
+        EstadisticaSimpleWidgetEntity widget1 = new EstadisticaSimpleWidgetEntity();
+        widget1.setId(101L);
+        EstadisticaSimpleWidgetEntity widget2 = new EstadisticaSimpleWidgetEntity();
+        widget2.setId(102L);
+
+        DashboardItemEntity item1 = new DashboardItemEntity();
+        item1.setId(11L);
+        item1.setDashboard(dashboard);
+        item1.setWidget(widget1);
+
+        DashboardItemEntity item2 = new DashboardItemEntity();
+        item2.setId(12L);
+        item2.setDashboard(dashboard);
+        item2.setWidget(widget2);
+
+        dashboard.setItems(List.of(item1, item2));
+
+        when(dashboardItemRepository.findByWidgetId(101L)).thenReturn(Collections.emptyList());
+        when(dashboardItemRepository.findByWidgetId(102L)).thenReturn(List.of(item2));
+        when(estadisticaWidgetRepository.findById(101L)).thenReturn(Optional.of(widget1));
+        when(estadisticaWidgetRepository.findById(102L)).thenReturn(Optional.of(widget2));
+
+        ReflectionTestUtils.invokeMethod(dashboardService, "afterDelete", dashboard, Collections.emptyMap());
+
+        verify(estadisticaWidgetHelper).clearDashboardWidgetCache(11L);
+        verify(estadisticaWidgetHelper).clearDashboardWidgetCache(12L);
+        verify(estadisticaWidgetHelper).clearDashboardWidgetCacheByWidget(101L);
+        verify(estadisticaWidgetHelper).clearDashboardWidgetCacheByWidget(102L);
+        verify(estadisticaWidgetRepository).delete(widget1);
+        verify(estadisticaWidgetRepository).delete(widget2);
+        verify(estadisticaWidgetRepository, times(2)).flush();
+    }
+
+    @Test
+    @DisplayName("afterDelete: quan els widgets s'utilitzen en altres dashboards, no els esborra")
+    void afterDelete_quanWidgetsSUtilitzenAAltresDashboards_noEsborraElsWidgets() {
+        Long dashboardId = 1L;
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setId(dashboardId);
+
+        EstadisticaSimpleWidgetEntity widget1 = new EstadisticaSimpleWidgetEntity();
+        widget1.setId(101L);
+
+        DashboardItemEntity item1 = new DashboardItemEntity();
+        item1.setId(11L);
+        item1.setDashboard(dashboard);
+        item1.setWidget(widget1);
+
+        dashboard.setItems(List.of(item1));
+
+        DashboardEntity altreDashboard = new DashboardEntity();
+        altreDashboard.setId(2L);
+        DashboardItemEntity itemAltre = new DashboardItemEntity();
+        itemAltre.setId(21L);
+        itemAltre.setDashboard(altreDashboard);
+        itemAltre.setWidget(widget1);
+
+        when(dashboardItemRepository.findByWidgetId(101L)).thenReturn(List.of(item1, itemAltre));
+
+        ReflectionTestUtils.invokeMethod(dashboardService, "afterDelete", dashboard, Collections.emptyMap());
+
+        verify(estadisticaWidgetHelper).clearDashboardWidgetCache(11L);
+        verify(estadisticaWidgetHelper, never()).clearDashboardWidgetCacheByWidget(101L);
+        verify(estadisticaWidgetRepository, never()).delete(any());
+        verify(estadisticaWidgetRepository, never()).flush();
+    }
+
+    @Test
+    @DisplayName("afterDelete: quan el mateix widget és usat en múltiples items del mateix dashboard, s'esborra un sol cop")
+    void afterDelete_quanMateixWidgetUsatEnMultiplesItemsDelMateixDashboard_esborraWidgetUnSolCop() {
+        Long dashboardId = 1L;
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setId(dashboardId);
+
+        EstadisticaSimpleWidgetEntity widget1 = new EstadisticaSimpleWidgetEntity();
+        widget1.setId(101L);
+
+        DashboardItemEntity item1 = new DashboardItemEntity();
+        item1.setId(11L);
+        item1.setDashboard(dashboard);
+        item1.setWidget(widget1);
+
+        DashboardItemEntity item2 = new DashboardItemEntity();
+        item2.setId(12L);
+        item2.setDashboard(dashboard);
+        item2.setWidget(widget1);
+
+        dashboard.setItems(List.of(item1, item2));
+
+        when(dashboardItemRepository.findByWidgetId(101L)).thenReturn(List.of(item1, item2));
+        when(estadisticaWidgetRepository.findById(101L)).thenReturn(Optional.of(widget1));
+
+        ReflectionTestUtils.invokeMethod(dashboardService, "afterDelete", dashboard, Collections.emptyMap());
+
+        verify(estadisticaWidgetHelper).clearDashboardWidgetCache(11L);
+        verify(estadisticaWidgetHelper).clearDashboardWidgetCache(12L);
+        verify(estadisticaWidgetHelper, times(1)).clearDashboardWidgetCacheByWidget(101L);
+        verify(estadisticaWidgetRepository, times(1)).delete(widget1);
+        verify(estadisticaWidgetRepository, times(1)).flush();
+    }
+
+    @Test
+    @DisplayName("afterDelete: quan alguns widgets són orfes i altres s'usen a altres llocs, només esborra els orfes")
+    void afterDelete_quanAlgunsWidgetsSonOrfesIAltresCompartits_nomesEsborraElsOrfes() {
+        Long dashboardId = 1L;
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setId(dashboardId);
+
+        EstadisticaSimpleWidgetEntity widgetOrfe = new EstadisticaSimpleWidgetEntity();
+        widgetOrfe.setId(101L);
+        EstadisticaSimpleWidgetEntity widgetCompartit = new EstadisticaSimpleWidgetEntity();
+        widgetCompartit.setId(102L);
+
+        DashboardItemEntity item1 = new DashboardItemEntity();
+        item1.setId(11L);
+        item1.setDashboard(dashboard);
+        item1.setWidget(widgetOrfe);
+
+        DashboardItemEntity item2 = new DashboardItemEntity();
+        item2.setId(12L);
+        item2.setDashboard(dashboard);
+        item2.setWidget(widgetCompartit);
+
+        dashboard.setItems(List.of(item1, item2));
+
+        DashboardEntity altreDashboard = new DashboardEntity();
+        altreDashboard.setId(99L);
+        DashboardItemEntity itemAltre = new DashboardItemEntity();
+        itemAltre.setId(991L);
+        itemAltre.setDashboard(altreDashboard);
+        itemAltre.setWidget(widgetCompartit);
+
+        when(dashboardItemRepository.findByWidgetId(101L)).thenReturn(Collections.emptyList());
+        when(dashboardItemRepository.findByWidgetId(102L)).thenReturn(List.of(item2, itemAltre));
+        when(estadisticaWidgetRepository.findById(101L)).thenReturn(Optional.of(widgetOrfe));
+
+        ReflectionTestUtils.invokeMethod(dashboardService, "afterDelete", dashboard, Collections.emptyMap());
+
+        verify(estadisticaWidgetHelper).clearDashboardWidgetCache(11L);
+        verify(estadisticaWidgetHelper).clearDashboardWidgetCache(12L);
+        verify(estadisticaWidgetHelper, times(1)).clearDashboardWidgetCacheByWidget(101L);
+        verify(estadisticaWidgetHelper, never()).clearDashboardWidgetCacheByWidget(102L);
+        verify(estadisticaWidgetRepository, times(1)).delete(widgetOrfe);
+        verify(estadisticaWidgetRepository, never()).delete(widgetCompartit);
+        verify(estadisticaWidgetRepository, times(1)).flush();
+    }
+
+    @Test
+    @DisplayName("afterDelete: quan un item té widget null, no fa res i no falla")
+    void afterDelete_quanItemSenseWidget_noFalla() {
+        Long dashboardId = 1L;
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setId(dashboardId);
+
+        DashboardItemEntity item1 = new DashboardItemEntity();
+        item1.setId(11L);
+        item1.setDashboard(dashboard);
+        item1.setWidget(null);
+
+        dashboard.setItems(List.of(item1));
+
+        ReflectionTestUtils.invokeMethod(dashboardService, "afterDelete", dashboard, Collections.emptyMap());
+
+        verify(estadisticaWidgetHelper).clearDashboardWidgetCache(11L);
+        verify(dashboardItemRepository, never()).findByWidgetId(anyLong());
+        verify(estadisticaWidgetRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("beforeDelete: inicialitza items i widgets del dashboard si estan presents")
+    void beforeDelete_quanHiHaItems_inicialitzaWidgets() {
+        Long dashboardId = 1L;
+        DashboardEntity dashboard = new DashboardEntity();
+        dashboard.setId(dashboardId);
+        dashboard.setAppId(10L);
+        dashboard.setEntornId(20L);
+
+        EstadisticaSimpleWidgetEntity widget = new EstadisticaSimpleWidgetEntity();
+        widget.setId(101L);
+
+        DashboardItemEntity item = new DashboardItemEntity();
+        item.setId(11L);
+        item.setDashboard(dashboard);
+        item.setWidget(widget);
+
+        dashboard.setItems(List.of(item));
+
+        when(authenticationHelper.isCurrentUserInRole(BaseConfig.ROLE_ADMIN)).thenReturn(true);
+
+        ReflectionTestUtils.invokeMethod(dashboardService, "beforeDelete", dashboard, Collections.emptyMap());
+
+        verify(dashboardPermisosHelper).checkCanDeleteDashboard(eq(10L), eq(20L), any());
     }
 
 }

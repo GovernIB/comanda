@@ -204,21 +204,26 @@ public class ProcesBaixaPrioritatService {
                 String dataFormatada = data.format(FORMATTER_DD_MM_YYYY);
                 String estadisticaUrl = entornApp.getEstadisticaUrl() + "/of/" + dataFormatada;
 
+                String dataIso = data.format(FORMATTER_YYYY_MM_DD);
                 try {
                     log.debug("Procés {}: obtenint dia {}", proces.getId(), dataFormatada);
                     FetObtenirResponse response = estadisticaHelper.getEstadisticaDadesAmbUrl(entornApp, estadisticaUrl, false);
                     if (response != null && Boolean.TRUE.equals(response.getSuccess())) {
-                        String dataIso = data.format(FORMATTER_YYYY_MM_DD);
                         boolean hasData = response.getDiesAmbDades() != null && Boolean.TRUE.equals(response.getDiesAmbDades().get(dataIso));
                         if (hasData) {
                             proces.setDiesAmbDades(proces.getDiesAmbDades() + 1);
+                            proces.getDiesAmbDadesLlista().add(dataIso);
+                        } else {
+                            proces.getDiesSenseDadesLlista().add(dataIso);
                         }
                     } else {
                         proces.setDiesAmbErrors(proces.getDiesAmbErrors() + 1);
+                        proces.getDiesAmbErrorLlista().add(dataIso);
                     }
                 } catch (Exception ex) {
                     log.warn("Procés {}: error en obtenir dades del dia {}: {}", proces.getId(), dataFormatada, ex.getMessage());
                     proces.setDiesAmbErrors(proces.getDiesAmbErrors() + 1);
+                    proces.getDiesAmbErrorLlista().add(dataIso);
                 }
 
                 proces.setDiesProcessats(proces.getDiesProcessats() + 1);

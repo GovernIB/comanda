@@ -24,18 +24,30 @@ import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaSimpleWidget
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaTaulaWidgetEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.EstadisticaWidgetEntity;
 import es.caib.comanda.estadistica.persist.repository.*;
+import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteGroupType;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ReflectionUtils;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -62,6 +74,11 @@ public class DashboardImportHelper {
     private final IndicadorExportHelper indicadorExportHelper;
     private final DashboardFiltreRepository dashboardFiltreRepository;
     private final Validator validator;
+    private final PaletaColorRepository paletaColorRepository;
+    private final DashboardTemplatePaletteGroupRepository dashboardTemplatePaletteGroupRepository;
+    private final WidgetStylePropertyRepository widgetStylePropertyRepository;
+    private final EstadisticaWidgetHelper estadisticaWidgetHelper;
+    private final ObjectMapper objectMapper;
 
     public void validateDashboardExport(List<DashboardExport> dashboards) {
         if (dashboards == null || dashboards.isEmpty()) {
@@ -90,6 +107,128 @@ public class DashboardImportHelper {
                 }
             }
         }
+    }
+
+    public List<PlantillaExport> parsePlantillesJson(String jsonString) throws IOException {
+        if (jsonString == null || jsonString.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        JsonNode root = objectMapper.readTree(jsonString);
+        if (root == null || root.isMissingNode() || root.isNull()) {
+            return Collections.emptyList();
+        }
+        List<JsonNode> nodes = new ArrayList<>();
+        if (root.isArray()) {
+            for (JsonNode elem : root) {
+                if (elem != null && !elem.isNull()) {
+                    nodes.add(elem);
+                }
+            }
+        } else if (root.isObject()) {
+            nodes.add(root);
+        } else {
+            throw new IllegalArgumentException(I18nUtil.getInstance().getI18nMessage(
+                    "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.formatInvalid"));
+        }
+
+        Map<String, PlantillaExport> plantillesMap = new LinkedHashMap<>();
+        List<PlantillaExport> anonymousPlantilles = new ArrayList<>();
+
+        for (JsonNode node : nodes) {
+            if (isDashboardNode(node)) {
+                DashboardExport dashboard = objectMapper.treeToValue(node, DashboardExport.class);
+                if (dashboard != null) {
+                    addPlantillaIfPresent(plantillesMap, anonymousPlantilles, dashboard.getPlantilla());
+                    if (dashboard.getTitols() != null) {
+                        for (DashboardTitolExport titol : dashboard.getTitols()) {
+                            if (titol != null) {
+                                addPlantillaIfPresent(plantillesMap, anonymousPlantilles, titol.getPlantilla());
+                            }
+                        }
+                    }
+                    if (dashboard.getItems() != null) {
+                        for (DashboardItemExport item : dashboard.getItems()) {
+                            if (item != null) {
+                                addPlantillaIfPresent(plantillesMap, anonymousPlantilles, item.getPlantilla());
+                            }
+                        }
+                    }
+                }
+            } else if (node.has("nom")) {
+                PlantillaExport plantilla = objectMapper.treeToValue(node, PlantillaExport.class);
+                addPlantillaIfPresent(plantillesMap, anonymousPlantilles, plantilla);
+            } else {
+                throw new IllegalArgumentException(I18nUtil.getInstance().getI18nMessage(
+                        "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.formatInvalid"));
+            }
+        }
+
+        List<PlantillaExport> result = new ArrayList<>(plantillesMap.values());
+        result.addAll(anonymousPlantilles);
+        return result;
+    }
+
+    private boolean isDashboardNode(JsonNode node) {
+        return node.has("titol") || node.has("items") || node.has("titols") || node.has("filtres");
+    }
+
+    private void addPlantillaIfPresent(Map<String, PlantillaExport> map, List<PlantillaExport> anonymous, PlantillaExport plantilla) {
+        if (plantilla == null) return;
+        if (plantilla.getNom() != null && !plantilla.getNom().trim().isEmpty()) {
+            plantilla.setNom(plantilla.getNom().trim());
+            map.putIfAbsent(plantilla.getNom(), plantilla);
+        } else {
+            anonymous.add(plantilla);
+        }
+    }
+
+    public void validatePlantillaExport(List<PlantillaExport> plantilles) {
+        if (plantilles == null || plantilles.isEmpty()) {
+            throw new IllegalArgumentException(
+                    I18nUtil.getInstance().getI18nMessage(
+                            "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.plantilla.buit"));
+        }
+        for (int i = 0; i < plantilles.size(); i++) {
+            PlantillaExport plantilla = plantilles.get(i);
+            if (validator != null) {
+                Set<ConstraintViolation<PlantillaExport>> violations = validator.validate(plantilla);
+                if (!violations.isEmpty()) {
+                    String errorDetails = violations.stream()
+                            .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                            .sorted()
+                            .collect(Collectors.joining(", "));
+                    String prefix = plantilles.size() > 1
+                            ? I18nUtil.getInstance().getI18nMessage(
+                                    "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.plantilla.prefix",
+                                    (i + 1),
+                                    plantilla.getNom() != null ? " (" + plantilla.getNom() + ")" : "") + ": "
+                            : "";
+                    throw new IllegalArgumentException(prefix + I18nUtil.getInstance().getI18nMessage(
+                            "es.caib.comanda.estadistica.logic.helper.DashboardImportHelper.error.plantilla.dadesInvalides",
+                            errorDetails));
+                }
+            }
+        }
+    }
+
+    public void checkPlantillaConflicts(List<PlantillaExport> plantilles, List<Conflict> conflicts) {
+        if (plantilles == null || plantilles.isEmpty()) return;
+        for (PlantillaExport plantilla : plantilles) {
+            this.checkPlantillaConflicts(plantilla, conflicts);
+        }
+    }
+
+    public List<PlantillaEntity> importPlantillesFromExport(List<PlantillaExport> plantilles, List<Conflict> conflicts) {
+        if (plantilles == null || plantilles.isEmpty()) return Collections.emptyList();
+        List<PlantillaEntity> result = new ArrayList<>();
+        for (PlantillaExport plantillaExport : plantilles) {
+            PlantillaEntity entity = dashboardExportMapper.toPlantillaEntity(plantillaExport);
+            PlantillaEntity imported = this.importPlantilla(entity, conflicts);
+            if (imported != null) {
+                result.add(imported);
+            }
+        }
+        return result;
     }
 
     public List<DashboardEntity> toDashboardEntity(List<DashboardExport> dashboardExportList) {
@@ -276,10 +415,23 @@ public class DashboardImportHelper {
                 conflicts
         );
 
-        if (conflicte != null) {
+        if (conflicte != null && conflicte.getOverwrite() != null) {
             switch (conflicte.getOverwrite()) {
                 case EMPRAR_EXISTENT:
                     return plantillaRepository.findByNom(plantillaEntity.getNom()).get();
+                case SOBRESCRIURE:
+                    PlantillaEntity existent = plantillaRepository.findByNom(plantillaEntity.getNom()).orElse(null);
+                    if (existent != null) {
+                        dashboardExportMapper.updatePlantillaEntityFromEntity(existent, plantillaEntity);
+                        this.syncPlantillaPaletteGroups(existent, plantillaEntity.getPaletteGroups(), conflicts);
+                        this.syncPlantillaStyleProperties(existent, plantillaEntity.getStyleProperties());
+                        PlantillaEntity saved = plantillaRepository.save(existent);
+                        if (saved.getId() != null) {
+                            estadisticaWidgetHelper.clearDashboardWidgetCacheByPlantilla(saved.getId());
+                        }
+                        return saved;
+                    }
+                    break;
                 case CREAR_AMB_ALTRE_NOM:
                     String nom;
                     if (conflicte.getNouNom() != null && !conflicte.getNouNom().isBlank()) {
@@ -309,6 +461,108 @@ public class DashboardImportHelper {
         plantillaRepository.save(plantillaEntity);
 
         return plantillaEntity;
+    }
+
+    private void syncPlantillaPaletteGroups(
+            PlantillaEntity entity,
+            List<PlantillaGrupPaletesEntity> groups,
+            List<Conflict> conflicts) {
+        if (groups == null) {
+            groups = Collections.emptyList();
+        }
+        List<PlantillaGrupPaletesEntity> existingGroups = entity.getId() != null
+                ? dashboardTemplatePaletteGroupRepository.findByPlantillaId(entity.getId())
+                : Collections.emptyList();
+        Map<PaletteGroupType, PlantillaGrupPaletesEntity> existingByType = existingGroups != null
+                ? existingGroups.stream()
+                        .filter(g -> g.getGroupType() != null)
+                        .collect(Collectors.toMap(PlantillaGrupPaletesEntity::getGroupType, g -> g, (a, b) -> a))
+                : new HashMap<>();
+
+        List<PlantillaGrupPaletesEntity> toKeep = new ArrayList<>();
+        for (int i = 0; i < groups.size(); i++) {
+            PlantillaGrupPaletesEntity group = groups.get(i);
+            if (group == null || group.getGroupType() == null) {
+                continue;
+            }
+            PaletteGroupType groupType = group.getGroupType();
+            PlantillaGrupPaletesEntity groupEntity;
+            if (existingByType.containsKey(groupType)) {
+                groupEntity = existingByType.get(groupType);
+                existingByType.remove(groupType);
+            } else {
+                groupEntity = new PlantillaGrupPaletesEntity();
+                groupEntity.setPlantilla(entity);
+                groupEntity.setGroupType(groupType);
+            }
+            groupEntity.setWidgetPalette(this.importPaleta(group.getWidgetPalette(), conflicts));
+            groupEntity.setChartPalette(this.importPaleta(group.getChartPalette(), conflicts));
+            groupEntity.setOrdre(group.getOrdre() != null ? group.getOrdre() : i);
+            toKeep.add(groupEntity);
+        }
+
+        List<PlantillaGrupPaletesEntity> toDelete = new ArrayList<>(existingByType.values());
+        if (!toDelete.isEmpty()) {
+            dashboardTemplatePaletteGroupRepository.deleteAll(toDelete);
+        }
+        if (!toKeep.isEmpty()) {
+            dashboardTemplatePaletteGroupRepository.saveAll(toKeep);
+        }
+        entity.setPaletteGroups(toKeep);
+    }
+
+    private void syncPlantillaStyleProperties(
+            PlantillaEntity entity,
+            List<WidgetStylePropertyEntity> properties) {
+        if (properties == null) {
+            properties = Collections.emptyList();
+        }
+        List<WidgetStylePropertyEntity> existingProperties = entity.getId() != null
+                ? widgetStylePropertyRepository.findByPlantillaId(entity.getId())
+                : Collections.emptyList();
+        Map<String, WidgetStylePropertyEntity> existingByKey = existingProperties != null
+                ? existingProperties.stream()
+                        .filter(p -> p.getScope() != null && p.getPropertyName() != null)
+                        .collect(Collectors.toMap(p -> p.getScope() + ":" + p.getPropertyName(), p -> p, (a, b) -> a))
+                : new HashMap<>();
+
+        List<WidgetStylePropertyEntity> toKeep = new ArrayList<>();
+        for (int i = 0; i < properties.size(); i++) {
+            WidgetStylePropertyEntity property = properties.get(i);
+            if (property == null || property.getScope() == null || property.getPropertyName() == null) {
+                continue;
+            }
+            String key = property.getScope() + ":" + property.getPropertyName();
+            WidgetStylePropertyEntity propertyEntity;
+            if (existingByKey.containsKey(key)) {
+                propertyEntity = existingByKey.get(key);
+                existingByKey.remove(key);
+            } else {
+                propertyEntity = new WidgetStylePropertyEntity();
+                propertyEntity.setPlantilla(entity);
+                propertyEntity.setScope(property.getScope());
+                propertyEntity.setPropertyName(property.getPropertyName());
+            }
+            dashboardExportMapper.updateWidgetStylePropertyEntityFromEntity(propertyEntity, property);
+            if (property.getDefaultProperty() != null) {
+                propertyEntity.setDefaultProperty(property.getDefaultProperty());
+            } else if (propertyEntity.getDefaultProperty() == null) {
+                propertyEntity.setDefaultProperty(false);
+            }
+            if (propertyEntity.getOrdre() == null) {
+                propertyEntity.setOrdre(property.getOrdre() != null ? property.getOrdre() : i);
+            }
+            toKeep.add(propertyEntity);
+        }
+
+        List<WidgetStylePropertyEntity> toDelete = new ArrayList<>(existingByKey.values());
+        if (!toDelete.isEmpty()) {
+            widgetStylePropertyRepository.deleteAll(toDelete);
+        }
+        if (!toKeep.isEmpty()) {
+            widgetStylePropertyRepository.saveAll(toKeep);
+        }
+        entity.setStyleProperties(toKeep);
     }
 
     private List<WidgetStylePropertyEntity> importWidgetStyleProperty(List<WidgetStylePropertyEntity> widgetStylePropertyEntityList, PlantillaEntity plantillaEntity, List<Conflict> conflicts) {
@@ -350,10 +604,28 @@ public class DashboardImportHelper {
                 conflicts
         );
 
-        if (conflicte != null) {
+        if (conflicte != null && conflicte.getOverwrite() != null) {
             switch (conflicte.getOverwrite()) {
                 case EMPRAR_EXISTENT:
                     return paletaRepository.findByNom(paletaEntity.getNom()).get();
+                case SOBRESCRIURE:
+                    PaletaEntity existent = paletaRepository.findByNom(paletaEntity.getNom()).orElse(null);
+                    if (existent != null) {
+                        dashboardExportMapper.updatePaletaEntityFromEntity(existent, paletaEntity);
+                        this.syncPaletaColors(existent, paletaEntity.getColors());
+                        PaletaEntity saved = paletaRepository.save(existent);
+                        if (saved.getId() != null) {
+                            dashboardTemplatePaletteGroupRepository.findByWidgetPaletteIdOrChartPaletteId(saved.getId(), saved.getId()).stream()
+                                    .map(PlantillaGrupPaletesEntity::getPlantilla)
+                                    .filter(Objects::nonNull)
+                                    .map(PlantillaEntity::getId)
+                                    .filter(Objects::nonNull)
+                                    .distinct()
+                                    .forEach(estadisticaWidgetHelper::clearDashboardWidgetCacheByPlantilla);
+                        }
+                        return saved;
+                    }
+                    break;
                 case CREAR_AMB_ALTRE_NOM:
                     String nom;
                     if (conflicte.getNouNom() != null && !conflicte.getNouNom().isBlank()) {
@@ -376,12 +648,59 @@ public class DashboardImportHelper {
             PaletaEntity existent = paletaRepository.findByNom(paletaEntity.getNom()).orElse(null);
             if (existent != null) return existent;
         }
-//        PaletaColorEntity
+
         this.importPaletaColor(paletaEntity.getColors(), paletaEntity);
 
         paletaRepository.save(paletaEntity);
 
         return paletaEntity;
+    }
+
+    private void syncPaletaColors(PaletaEntity entity, List<PaletaColorEntity> colors) {
+        if (colors == null) {
+            colors = Collections.emptyList();
+        }
+        List<PaletaColorEntity> normalizedColors = colors.stream()
+                .filter(c -> c != null && c.getValor() != null)
+                .sorted(Comparator.comparing(c -> c.getPosicio() == null ? Integer.MAX_VALUE : c.getPosicio()))
+                .collect(Collectors.toList());
+        for (int i = 0; i < normalizedColors.size(); i++) {
+            normalizedColors.get(i).setPosicio(i);
+        }
+
+        List<PaletaColorEntity> existingColors = entity.getId() != null
+                ? paletaColorRepository.findByPaletaId(entity.getId())
+                : Collections.emptyList();
+        Map<Integer, PaletaColorEntity> existingByPosicio = existingColors != null
+                ? existingColors.stream()
+                        .filter(c -> c.getPosicio() != null)
+                        .collect(Collectors.toMap(PaletaColorEntity::getPosicio, c -> c))
+                : new HashMap<>();
+
+        List<PaletaColorEntity> toKeep = new ArrayList<>();
+        for (int pos = 0; pos < normalizedColors.size(); pos++) {
+            PaletaColorEntity colorResource = normalizedColors.get(pos);
+            PaletaColorEntity colorEntity;
+            if (existingByPosicio.containsKey(pos)) {
+                colorEntity = existingByPosicio.get(pos);
+                existingByPosicio.remove(pos);
+            } else {
+                colorEntity = new PaletaColorEntity();
+                colorEntity.setPaleta(entity);
+                colorEntity.setPosicio(pos);
+            }
+            colorEntity.setValor(colorResource.getValor());
+            toKeep.add(colorEntity);
+        }
+
+        List<PaletaColorEntity> toDelete = new ArrayList<>(existingByPosicio.values());
+        if (!toDelete.isEmpty()) {
+            paletaColorRepository.deleteAll(toDelete);
+        }
+        if (!toKeep.isEmpty()) {
+            paletaColorRepository.saveAll(toKeep);
+        }
+        entity.setColors(toKeep);
     }
 
     private List<PaletaColorEntity> importPaletaColor(List<PaletaColorEntity> paletaColorEntityList, PaletaEntity paletaEntity) {
@@ -574,9 +893,13 @@ public class DashboardImportHelper {
 
     private void checkPlantillaConflicts(PlantillaExport plantillaExport,
                                         List<Conflict> conflicts) {
-        if (plantillaExport == null) return;
+        if (plantillaExport == null || plantillaExport.getNom() == null) return;
 
-        this.addConflict(plantillaExport.getNom(), null, PlantillaExport.class.getSimpleName(), conflicts);
+        PlantillaEntity existentPlantilla = plantillaRepository.findByNom(plantillaExport.getNom()).orElse(null);
+        if (existentPlantilla != null && this.hasPlantillaDifferences(plantillaExport, existentPlantilla)) {
+            this.addConflict(plantillaExport.getNom(), null, PlantillaExport.class.getSimpleName(), conflicts);
+        }
+
         if (plantillaExport.getPaletteGroups() != null) {
             for (PlantillaGrupPaletesExport group : plantillaExport.getPaletteGroups()) {
                 if (group != null) {
@@ -589,8 +912,226 @@ public class DashboardImportHelper {
 
     private void checkPaletaConflicts(PaletaExport paletaExport,
                                         List<Conflict> conflicts) {
-        if (paletaExport == null) return;
-        this.addConflict(paletaExport.getNom(), null, PaletaExport.class.getSimpleName(), conflicts);
+        if (paletaExport == null || paletaExport.getNom() == null) return;
+        PaletaEntity existentPaleta = paletaRepository.findByNom(paletaExport.getNom()).orElse(null);
+        if (existentPaleta != null && this.hasPaletaDifferences(paletaExport, existentPaleta)) {
+            this.addConflict(paletaExport.getNom(), null, PaletaExport.class.getSimpleName(), conflicts);
+        }
+    }
+
+    public boolean hasPaletaDifferences(PaletaExport export, PaletaEntity existent) {
+        if (export == null || existent == null) {
+            return false;
+        }
+
+        PaletaExport existentDto = dashboardExportMapper.toPaletaExport(existent);
+        if (existentDto == null) {
+            return true;
+        }
+
+        for (Field exportField : PaletaExport.class.getDeclaredFields()) {
+            if (Modifier.isStatic(exportField.getModifiers()) || exportField.isSynthetic()) {
+                continue;
+            }
+            // Els colors es comproven més abaix. El nom no es té en compte en comparar el contingut.
+            if ("colors".equals(exportField.getName()) || "nom".equals(exportField.getName())) {
+                continue;
+            }
+
+            ReflectionUtils.makeAccessible(exportField);
+            Object exportVal = ReflectionUtils.getField(exportField, export);
+            Object existentVal = ReflectionUtils.getField(exportField, existentDto);
+
+            if (exportVal instanceof String || existentVal instanceof String) {
+                String s1 = exportVal != null ? ((String) exportVal).trim() : null;
+                String s2 = existentVal != null ? ((String) existentVal).trim() : null;
+                if ((s1 == null || s1.isEmpty()) && (s2 == null || s2.isEmpty())) {
+                    continue;
+                }
+                if (!Objects.equals(s1, s2)) {
+                    return true;
+                }
+            } else if (!Objects.equals(exportVal, existentVal)) {
+                return true;
+            }
+        }
+
+        List<String> exportColors = this.normalizeColors(export.getColors());
+        List<String> dbColors = this.normalizeColors(existentDto.getColors());
+
+        return !exportColors.equals(dbColors);
+    }
+
+    private List<String> normalizeColors(String colors) {
+        if (colors == null || colors.isBlank()) {
+            return Collections.emptyList();
+        }
+        return Arrays.stream(colors.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(s -> s.toUpperCase(Locale.ROOT))
+                .collect(Collectors.toList());
+    }
+
+    public boolean hasPlantillaDifferences(PlantillaExport export, PlantillaEntity existent) {
+        if (export == null || existent == null) {
+            return false;
+        }
+
+        PlantillaExport existentDto = dashboardExportMapper.toPlantillaExport(existent);
+        if (existentDto == null) {
+            return true;
+        }
+
+        for (Field exportField : PlantillaExport.class.getDeclaredFields()) {
+            if (Modifier.isStatic(exportField.getModifiers()) || exportField.isSynthetic()) {
+                continue;
+            }
+            // Nom no es té en compte. paletteGroups i styleProperties es comproven més abaix.
+            if ("paletteGroups".equals(exportField.getName()) || "styleProperties".equals(exportField.getName()) || "nom".equals(exportField.getName())) {
+                continue;
+            }
+
+            ReflectionUtils.makeAccessible(exportField);
+            Object exportVal = ReflectionUtils.getField(exportField, export);
+            Object existentVal = ReflectionUtils.getField(exportField, existentDto);
+
+            if (exportVal instanceof String || existentVal instanceof String) {
+                String s1 = exportVal != null ? ((String) exportVal).trim() : null;
+                String s2 = existentVal != null ? ((String) existentVal).trim() : null;
+                if ((s1 == null || s1.isEmpty()) && (s2 == null || s2.isEmpty())) {
+                    continue;
+                }
+                if (!Objects.equals(s1, s2)) {
+                    return true;
+                }
+            } else if (!Objects.equals(exportVal, existentVal)) {
+                return true;
+            }
+        }
+
+        if (export.getPaletteGroups() != null) {
+            for (PlantillaGrupPaletesExport group : export.getPaletteGroups()) {
+                if (group != null) {
+                    if (group.getWidgetPalette() != null && group.getWidgetPalette().getNom() != null) {
+                        PaletaEntity existentPaleta = paletaRepository.findByNom(group.getWidgetPalette().getNom()).orElse(null);
+                        if (existentPaleta != null && this.hasPaletaDifferences(group.getWidgetPalette(), existentPaleta)) {
+                            return true;
+                        }
+                    }
+                    if (group.getChartPalette() != null && group.getChartPalette().getNom() != null) {
+                        PaletaEntity existentPaleta = paletaRepository.findByNom(group.getChartPalette().getNom()).orElse(null);
+                        if (existentPaleta != null && this.hasPaletaDifferences(group.getChartPalette(), existentPaleta)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        List<PlantillaGrupPaletesExport> exportGroups = export.getPaletteGroups();
+        List<PlantillaGrupPaletesExport> dbGroups = existentDto.getPaletteGroups();
+        boolean exportGroupsEmpty = exportGroups == null || exportGroups.isEmpty();
+        boolean dbGroupsEmpty = dbGroups == null || dbGroups.isEmpty();
+        if (exportGroupsEmpty != dbGroupsEmpty) {
+            return true;
+        }
+        if (!exportGroupsEmpty) {
+            Map<PaletteGroupType, PlantillaGrupPaletesExport> exportGroupsByType = exportGroups.stream()
+                    .filter(g -> g.getGroupType() != null)
+                    .collect(Collectors.toMap(PlantillaGrupPaletesExport::getGroupType, g -> g, (a, b) -> a));
+
+            Map<PaletteGroupType, PlantillaGrupPaletesExport> dbGroupsByType = dbGroups.stream()
+                    .filter(g -> g.getGroupType() != null)
+                    .collect(Collectors.toMap(PlantillaGrupPaletesExport::getGroupType, g -> g, (a, b) -> a));
+
+            if (!exportGroupsByType.keySet().equals(dbGroupsByType.keySet())) {
+                return true;
+            }
+
+            for (PaletteGroupType type : exportGroupsByType.keySet()) {
+                PlantillaGrupPaletesExport eg = exportGroupsByType.get(type);
+                PlantillaGrupPaletesExport dg = dbGroupsByType.get(type);
+                String egWidgetNom = eg.getWidgetPalette() != null ? eg.getWidgetPalette().getNom() : null;
+                String dgWidgetNom = dg.getWidgetPalette() != null ? dg.getWidgetPalette().getNom() : null;
+                if (!Objects.equals(egWidgetNom, dgWidgetNom)) {
+                    return true;
+                }
+                String egChartNom = eg.getChartPalette() != null ? eg.getChartPalette().getNom() : null;
+                String dgChartNom = dg.getChartPalette() != null ? dg.getChartPalette().getNom() : null;
+                if (!Objects.equals(egChartNom, dgChartNom)) {
+                    return true;
+                }
+            }
+        }
+
+        List<WidgetStylePropertyExport> exportProps = export.getStyleProperties();
+        List<WidgetStylePropertyExport> dbProps = existentDto.getStyleProperties();
+        boolean exportPropsEmpty = exportProps == null || exportProps.isEmpty();
+        boolean dbPropsEmpty = dbProps == null || dbProps.isEmpty();
+        if (exportPropsEmpty != dbPropsEmpty) {
+            return true;
+        }
+        if (!exportPropsEmpty) {
+            Map<String, WidgetStylePropertyExport> exportPropsByKey = exportProps.stream()
+                    .filter(p -> p.getScope() != null && p.getPropertyName() != null)
+                    .collect(Collectors.toMap(p -> p.getScope() + ":" + p.getPropertyName(), p -> p, (a, b) -> a));
+
+            Map<String, WidgetStylePropertyExport> dbPropsByKey = dbProps.stream()
+                    .filter(p -> p.getScope() != null && p.getPropertyName() != null)
+                    .collect(Collectors.toMap(p -> p.getScope() + ":" + p.getPropertyName(), p -> p, (a, b) -> a));
+
+            if (!exportPropsByKey.keySet().equals(dbPropsByKey.keySet())) {
+                return true;
+            }
+
+            for (String key : exportPropsByKey.keySet()) {
+                WidgetStylePropertyExport ep = exportPropsByKey.get(key);
+                WidgetStylePropertyExport dp = dbPropsByKey.get(key);
+                if (this.hasStylePropertyDifferences(ep, dp)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private boolean hasStylePropertyDifferences(WidgetStylePropertyExport exportProp, WidgetStylePropertyExport dbProp) {
+        if (exportProp == null || dbProp == null) {
+            return (exportProp != null) || (dbProp != null);
+        }
+
+        for (Field exportField : WidgetStylePropertyExport.class.getDeclaredFields()) {
+            if (Modifier.isStatic(exportField.getModifiers()) || exportField.isSynthetic()) {
+                continue;
+            }
+            if ("ordre".equals(exportField.getName())) {
+                continue;
+            }
+
+            ReflectionUtils.makeAccessible(exportField);
+            Object exportVal = ReflectionUtils.getField(exportField, exportProp);
+            Object dbVal = ReflectionUtils.getField(exportField, dbProp);
+
+            if ("defaultProperty".equals(exportField.getName())) {
+                if (Boolean.TRUE.equals(exportVal) != Boolean.TRUE.equals(dbVal)) {
+                    return true;
+                }
+            } else if (exportVal instanceof String || dbVal instanceof String) {
+                String s1 = exportVal != null ? ((String) exportVal).trim() : null;
+                String s2 = dbVal != null ? ((String) dbVal).trim() : null;
+                if ((s1 == null || s1.isEmpty()) && (s2 == null || s2.isEmpty())) {
+                    continue;
+                }
+                if (!Objects.equals(s1, s2)) {
+                    return true;
+                }
+            } else if (!Objects.equals(exportVal, dbVal)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void addConflict(String nom, Long appId, String tipus, List<Conflict> conflicts) {

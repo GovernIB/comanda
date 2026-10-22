@@ -44,7 +44,7 @@ public interface DashboardExportMapper {
      * Converteix un DashboardEntity a un DashboardExport.
      * Els camps amb el mateix nom es mapegen automàticament.
      * La llista d'items es mapeja utilitzant el mètode toDashboardItemExport.
-     * 
+     *
      * @param dashboardEntity El dashboard entity a convertir
      * @return El DashboardExport resultant
      */
@@ -78,31 +78,69 @@ public interface DashboardExportMapper {
     }
 
     @Mapping(target = "plantilla", source = "plantilla")
-    DashboardTitolEntity toDashboardTitolEntity(DashboardTitolExport export);
+    DashboardTitolExport toDashboardTitolExport(DashboardTitolEntity titolEntity);
 
     DashboardFiltreExport toDashboardFiltreExport(DashboardFiltreEntity filtreEntity);
 
     PlantillaExport toPlantillaExport(PlantillaEntity plantillaEntity);
     @Mapping(target = "ordre", source = "ordre")
-    PlantillaGrupPaletesExport toPlantillaGrupPaletesExport(PlantillaGrupPaletesEntity plantillaEntity);
+    PlantillaGrupPaletesExport toPlantillaGrupPaletesExport(PlantillaGrupPaletesEntity plantillaGrupPaletesEntity);
     @Mapping(target = "colors", source = "colors", qualifiedByName = "toColorsExport")
-    PaletaExport toPaletaExport(PaletaEntity plantillaEntity);
+    PaletaExport toPaletaExport(PaletaEntity paletaEntity);
     WidgetStylePropertyExport toWidgetStylePropertyExport(WidgetStylePropertyEntity widgetStylePropertyEntity);
 
 
     @Named("toColorsExport")
     default String toColorsExport(List<PaletaColorEntity> colors) {
         if (colors == null || colors.isEmpty()) return null;
-//        colors.sort(e -> e.getPosicio());
         return colors.stream()
+                .sorted(java.util.Comparator.comparing(c -> c.getPosicio() == null ? Integer.MAX_VALUE : c.getPosicio()))
                 .map(PaletaColorEntity::getValor)
                 .collect(Collectors.joining(","));
     }
-    
+
+    /**
+     * S'utilitza NullValuePropertyMappingStrategy.IGNORE de manera intencionada per preservar
+     * els camps històrics/legacy de configuració de PlantillaEntity (propietats com mostrarVora,
+     * midaFontTitol, heatmapMinValue, etc.) que no formen part del model PlantillaExport.
+     * D'aquesta manera, en sobreescriure una plantilla existent durant una importació, aquests camps
+     * no es buiden a null en cas que la font no els contingui.
+     */
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "nom", ignore = true)
+    @Mapping(target = "v", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "lastModifiedBy", ignore = true)
+    @Mapping(target = "lastModifiedDate", ignore = true)
+    @Mapping(target = "paletteGroups", ignore = true)
+    @Mapping(target = "styleProperties", ignore = true)
+    void updatePlantillaEntityFromEntity(@MappingTarget PlantillaEntity target, PlantillaEntity source);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "nom", ignore = true)
+    @Mapping(target = "v", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "lastModifiedBy", ignore = true)
+    @Mapping(target = "lastModifiedDate", ignore = true)
+    @Mapping(target = "colors", ignore = true)
+    void updatePaletaEntityFromEntity(@MappingTarget PaletaEntity target, PaletaEntity source);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "v", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "lastModifiedBy", ignore = true)
+    @Mapping(target = "lastModifiedDate", ignore = true)
+    @Mapping(target = "plantilla", ignore = true)
+    void updateWidgetStylePropertyEntityFromEntity(@MappingTarget WidgetStylePropertyEntity target, WidgetStylePropertyEntity source);
+
     /**
      * Converteix un DashboardItemEntity a un DashboardItemExport.
      * Els camps amb el mateix nom es mapegen automàticament.
-     * 
+     *
      * @param dashboardItemEntity El DashboardItemEntity a convertir
      * @return El DashboardItemExport resultant
      */
@@ -119,10 +157,10 @@ public interface DashboardExportMapper {
     @SubclassMapping(source = EstadisticaGraficWidgetEntity.class, target = EstadisticaGraficWidgetExport.class)
     @SubclassMapping(source = EstadisticaTaulaWidgetEntity.class, target = EstadisticaTaulaWidgetExport.class)
     EstadisticaWidgetExport toWidgetExport(EstadisticaWidgetEntity widget);
-    
+
     /**
      * Converteix un EstadisticaWidgetEntity a un EstadisticaWidgetExport i emplena els atributsVisuals.
-     * 
+     *
      * @param widget El widget entity a convertir
      * @param atributsVisualsHelper Helper per obtenir els atributs visuals
      * @return El EstadisticaWidgetExport resultant amb els atributs visuals emplenats
@@ -132,9 +170,9 @@ public interface DashboardExportMapper {
         if (widget == null) {
             return null;
         }
-        
+
         EstadisticaWidgetExport result = toWidgetExport(widget);
-        
+
         if (result instanceof EstadisticaSimpleWidgetExport) {
             ((EstadisticaSimpleWidgetExport) result).setAtributsVisuals(
                 (es.caib.comanda.estadistica.logic.intf.model.atributsvisuals.AtributsVisualsSimple) atributsVisualsHelper.getAtributsVisuals(widget)
@@ -158,7 +196,7 @@ public interface DashboardExportMapper {
                     ((EstadisticaTaulaWidgetEntity) widget).getDimensioAgrupacio().getCodi());
             result.setTipus(WidgetTipus.TAULA);
         }
-        
+
         return result;
     }
 
@@ -217,7 +255,7 @@ public interface DashboardExportMapper {
                                       @Context DimensioRepository dimensioRepository,
                                       @Context DimensioValorRepository dimensioValorRepository);
 
-    List<DashboardEntity> toDashboardEntity(List<DashboardExport> dashboardEntities,
+    List<DashboardEntity> toDashboardEntity(List<DashboardExport> dashboardExports,
                                             @Context EstadisticaClientHelper estadisticaClientHelper,
                                             @Context AtributsVisualsHelper atributsVisualsHelper,
                                             @Context IndicadorRepository indicadorRepository,
@@ -341,7 +379,7 @@ public interface DashboardExportMapper {
     }
 
     @Mapping(target = "plantilla", source = "plantilla")
-    DashboardTitolExport toDashboardTitolEntity(DashboardTitolEntity export);
+    DashboardTitolEntity toDashboardTitolEntity(DashboardTitolExport export);
 
     @Mapping(target = "dashboard", ignore = true)
     DashboardFiltreEntity toDashboardFiltreEntity(DashboardFiltreExport filtreExport);

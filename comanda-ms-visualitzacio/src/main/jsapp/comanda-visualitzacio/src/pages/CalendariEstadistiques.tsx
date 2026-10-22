@@ -410,7 +410,44 @@ const CalendariEstadistiques: React.FC = () => {
                 null,
                 { code: 'processos_baixa_prioritat', data: params }
             )) as ProcesBaixaPrioritat[];
-            setProcessos(Array.isArray(data) ? data : []);
+            const llista = Array.isArray(data) ? data : [];
+            setProcessos(llista);
+
+            if (entornAppId !== '') {
+                const processosEntorn = llista.filter(p => String(p.entornAppId) === String(entornAppId));
+                if (processosEntorn.length > 0) {
+                    const dadesNoves: string[] = [];
+                    const buidesNoves: string[] = [];
+                    const errorsNous: string[] = [];
+                    processosEntorn.forEach(p => {
+                        if (p.diesAmbDadesLlista) dadesNoves.push(...p.diesAmbDadesLlista);
+                        if (p.diesSenseDadesLlista) buidesNoves.push(...p.diesSenseDadesLlista);
+                        if (p.diesAmbErrorLlista) errorsNous.push(...p.diesAmbErrorLlista);
+                    });
+
+                    if (dadesNoves.length > 0) {
+                        setDatesAmbDades(prev => Array.from(new Set([...prev, ...dadesNoves])));
+                    }
+                    if (buidesNoves.length > 0) {
+                        setEmptyDates(prev => Array.from(new Set([...prev, ...buidesNoves])));
+                    }
+                    if (errorsNous.length > 0) {
+                        setErrors(prev => {
+                            const map = new Map<string, ErrorInfo>();
+                            prev.forEach(e => map.set(e.date, e));
+                            errorsNous.forEach(d => {
+                                if (!map.has(d)) {
+                                    map.set(d, {
+                                        date: d,
+                                        message: t($ => $.calendari.error_processar_dades_dia)
+                                    });
+                                }
+                            });
+                            return Array.from(map.values());
+                        });
+                    }
+                }
+            }
         } catch (error: any) {
             console.error('Error en carregar processos de baixa prioritat:', error);
         } finally {
@@ -418,7 +455,7 @@ const CalendariEstadistiques: React.FC = () => {
                 setIsLoadingProcessos(false);
             }
         }
-    }, [apiReport, entornAppId, mostrarTotsProcessos]);
+    }, [apiReport, entornAppId, mostrarTotsProcessos, t]);
 
     const handleCancelProces = useCallback(async (id: string): Promise<boolean> => {
         try {
@@ -457,10 +494,18 @@ const CalendariEstadistiques: React.FC = () => {
         processos
             .filter(p => (p.estat === 'EN_EXECUCIO' || p.estat === 'PENDENT') && String(p.entornAppId) === String(entornAppId))
             .forEach(p => {
+                const finishedDates = new Set([
+                    ...(p.diesAmbDadesLlista || []),
+                    ...(p.diesSenseDadesLlista || []),
+                    ...(p.diesAmbErrorLlista || [])
+                ]);
                 let curr = dayjs(p.dataInici);
                 const end = dayjs(p.dataFi);
                 while (curr.isBefore(end) || curr.isSame(end, 'day')) {
-                    datesSet.add(curr.format('YYYY-MM-DD'));
+                    const dStr = curr.format('YYYY-MM-DD');
+                    if (!finishedDates.has(dStr)) {
+                        datesSet.add(dStr);
+                    }
                     curr = curr.add(1, 'day');
                 }
             });

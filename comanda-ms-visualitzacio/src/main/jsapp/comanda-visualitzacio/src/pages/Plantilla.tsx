@@ -1,10 +1,12 @@
 import {
     Autocomplete,
+    Backdrop,
     Box,
     Button,
     ButtonGroup,
     Checkbox,
     Chip,
+    CircularProgress,
     Dialog,
     DialogActions,
     DialogContent,
@@ -13,6 +15,7 @@ import {
     FormControl,
     FormControlLabel,
     Grid,
+    Icon,
     IconButton,
     InputLabel,
     MenuItem,
@@ -28,7 +31,21 @@ import {
 } from "@mui/material";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import EditIcon from "@mui/icons-material/Edit";
-import {FormField, MuiDataGrid, useBaseAppContext, useFormContext, useResourceApiService} from "reactlib";
+import {
+    FormField,
+    MuiDataGrid,
+    useBaseAppContext,
+    useFormContext,
+    useResourceApiService,
+    useMuiDataGridApiRef,
+    DialogButton,
+    MuiFormDialogApi,
+} from "reactlib";
+import { FormFieldDataActionType } from "../../lib/components/form/FormContext.tsx";
+import { iniciaDescargaJSON } from "../util/commonsActions.ts";
+import FormActionDialog from "../components/FormActionDialog.tsx";
+import { useIsUserAdmin } from "../components/UserContext.ts";
+import ImportConflictsForm from "../components/estadistiques/ImportConflictsForm.tsx";
 import SimpleWidgetVisualization from "../components/estadistiques/SimpleWidgetVisualization.tsx";
 import TaulaWidgetVisualization from "../components/estadistiques/TaulaWidgetVisualization.tsx";
 import GraficWidgetVisualization from "../components/estadistiques/GraficWidgetVisualization.tsx";
@@ -1923,6 +1940,140 @@ const PlantillaForm = () => {
     );
 };
 
+const PlantillaImportFormContent: React.FC = () => {
+    const { t } = useTranslation();
+    const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+    const { apiRef, data, fields, dataDispatchAction } = useFormContext();
+
+    const handleFileChange = (fileValue: any) => {
+        if (!fileValue) {
+            setIsAnalyzing(false);
+            apiRef.current?.setFieldValue('conflicts', undefined);
+        } else {
+            setIsAnalyzing(true);
+            apiRef.current?.setFieldValue('conflicts', undefined);
+        }
+    };
+
+    const handleReanalyze = React.useCallback(() => {
+        if (!data?.file) return;
+        setIsAnalyzing(true);
+        const fileField = fields?.find((f: any) => f.name === 'file');
+        dataDispatchAction?.({
+            type: FormFieldDataActionType.FIELD_CHANGE,
+            payload: { fieldName: 'file', field: fileField, value: data.file },
+        });
+    }, [data?.file, fields, dataDispatchAction]);
+
+    React.useEffect(() => {
+        if (data?.conflicts !== undefined) {
+            setIsAnalyzing(false);
+        }
+    }, [data]);
+
+    return (
+        <Grid container spacing={2}>
+            <Grid size={12}>
+                <FormField name="file" type={"file"} onChange={handleFileChange} />
+            </Grid>
+            <Grid size={12}>
+                <ImportConflictsForm
+                    isAnalyzing={isAnalyzing}
+                    onReanalyze={handleReanalyze}
+                    conflictsDescription={t($ => $.page.plantilla.action.import.conflicts)}
+                />
+            </Grid>
+        </Grid>
+    );
+};
+
+const useImportPlantillaAction = (refresh?: () => void) => {
+    const { t } = useTranslation();
+    const apiRef = React.useRef<MuiFormDialogApi>(null);
+    const { temporalMessageShow } = useBaseAppContext();
+    const handleShow = (): void => {
+        apiRef.current?.show?.(undefined);
+    };
+    const onSuccess = (): void => {
+        refresh?.();
+        temporalMessageShow(null, t($ => $.page.plantilla.action.import.success), 'success');
+    };
+
+    const importLoading = (
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, my: 4 }}>
+            <CircularProgress size={48} />
+            <Typography variant="h6" color="text.primary">
+                {t($ => $.page.plantilla.action.import.importing)}
+            </Typography>
+        </Box>
+    );
+
+    const importDialogButtons: DialogButton[] = React.useMemo(
+        () => [
+            {
+                value: false,
+                text: t($ => $.common.cancel),
+                componentProps: { variant: 'outlined' },
+            },
+            {
+                value: true,
+                text: t($ => $.page.plantilla.action.import.button),
+                icon: 'file_upload',
+                componentProps: { variant: 'contained' },
+            },
+        ],
+        [t]
+    );
+
+    const formulario = (
+        <FormActionDialog
+            resourceName={"plantilla"}
+            action={"plantilla_import"}
+            apiRef={apiRef}
+            title={t($ => $.page.plantilla.action.import.title)}
+            onSuccess={onSuccess}
+            initialOnChange={false}
+            formDialogLoading={importLoading}
+            formDialogButtons={importDialogButtons}
+        >
+            <PlantillaImportFormContent />
+        </FormActionDialog>
+    );
+
+    return {
+        handleShow,
+        content: formulario,
+    };
+};
+
+const useActions = () => {
+    const { artifactReport: apiReport } = useResourceApiService('plantilla');
+    const { temporalMessageShow } = useBaseAppContext();
+    const { t } = useTranslation();
+    const [exporting, setExporting] = React.useState(false);
+
+    const report = (id: any, code: any, mssg: any, fileType: any) => {
+        setExporting(true);
+        apiReport(id, { code, fileType })
+            .then((result) => {
+                iniciaDescargaJSON(result);
+                temporalMessageShow(null, mssg, 'success');
+            })
+            .catch((error) => {
+                temporalMessageShow(null, error.message, 'error');
+            })
+            .finally(() => {
+                setExporting(false);
+            });
+    };
+    const plantillaExport = (id: any) => report(id, 'plantilla_export', t($ => $.page.plantilla.action.export), 'JSON');
+
+    return {
+        plantillaExport,
+        exporting,
+    };
+};
+
 const columns = [
     {
         field: "nom",
@@ -1930,62 +2081,112 @@ const columns = [
     },
 ];
 
-export const Plantilla = () => (
-    <Box sx={{height: "100%"}}>
-        <MuiDataGrid
-            resourceName="plantilla"
-            columns={columns}
-            toolbarType="upper"
-            popupEditCreateActive
-            popupEditActive
-            popupEditFormContent={<PlantillaForm/>}
-            popupEditFormDialogComponentProps={{
-                fullWidth: true,
-                maxWidth: "xl",
-                PaperProps: {
-                    sx: {
-                        bgcolor: "var(--plantilla-bg, background.paper)",
-                        color: "var(--plantilla-text, text.primary)",
-                        border: "1px solid",
-                        borderColor: "var(--plantilla-border, divider)",
-                        "& .MuiDialogTitle-root": {
+export const Plantilla = () => {
+    const { t } = useTranslation();
+    const gridApiRef = useMuiDataGridApiRef();
+    const isUserAdmin = useIsUserAdmin();
+    const refresh = () => {
+        gridApiRef?.current?.refresh?.();
+    };
+    const { plantillaExport, exporting } = useActions();
+    const { handleShow: showImport, content: contentImport } = useImportPlantillaAction(refresh);
+
+    return (
+        <Box sx={{ height: "100%" }}>
+            {exporting && (
+                <Backdrop
+                    open={exporting}
+                    sx={{
+                        color: 'common.white',
+                        zIndex: (theme) => theme.zIndex.drawer + 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2,
+                    }}
+                >
+                    <CircularProgress color="inherit" />
+                    <Typography variant="h6">{t($ => $.page.plantilla.action.export)}</Typography>
+                </Backdrop>
+            )}
+            <MuiDataGrid
+                apiRef={gridApiRef}
+                resourceName="plantilla"
+                columns={columns}
+                toolbarType="upper"
+                popupEditCreateActive
+                popupEditActive
+                popupEditFormContent={<PlantillaForm />}
+                popupEditFormDialogComponentProps={{
+                    fullWidth: true,
+                    maxWidth: "xl",
+                    PaperProps: {
+                        sx: {
                             bgcolor: "var(--plantilla-bg, background.paper)",
                             color: "var(--plantilla-text, text.primary)",
-                            borderBottom: "1px solid",
+                            border: "1px solid",
                             borderColor: "var(--plantilla-border, divider)",
-                        },
-                        "& .MuiDialogContent-root": {
-                            bgcolor: "var(--plantilla-bg, background.paper)",
-                            color: "var(--plantilla-text, text.primary)",
-                        },
-                        "& .MuiDialogActions-root": {
-                            bgcolor: "var(--plantilla-bg, background.paper)",
-                            borderTop: "1px solid",
-                            borderColor: "var(--plantilla-border, divider)",
-                        },
-                        "& .MuiDialogActions-root .MuiButton-contained": {
-                            bgcolor: "var(--plantilla-accent)",
-                            color: "var(--plantilla-accent-text)",
-                        },
-                        "& .MuiDialogActions-root .MuiButton-contained:hover": {
-                            bgcolor: "var(--plantilla-accent)",
-                        },
-                        "& .MuiDialogActions-root .MuiButton-outlined": {
-                            borderColor: "var(--plantilla-accent)",
-                            color: "var(--plantilla-accent)",
-                        },
-                        "& .MuiDialogActions-root .MuiButton-text": {
-                            color: "var(--plantilla-text)",
+                            "& .MuiDialogTitle-root": {
+                                bgcolor: "var(--plantilla-bg, background.paper)",
+                                color: "var(--plantilla-text, text.primary)",
+                                borderBottom: "1px solid",
+                                borderColor: "var(--plantilla-border, divider)",
+                            },
+                            "& .MuiDialogContent-root": {
+                                bgcolor: "var(--plantilla-bg, background.paper)",
+                                color: "var(--plantilla-text, text.primary)",
+                            },
+                            "& .MuiDialogActions-root": {
+                                bgcolor: "var(--plantilla-bg, background.paper)",
+                                borderTop: "1px solid",
+                                borderColor: "var(--plantilla-border, divider)",
+                            },
+                            "& .MuiDialogActions-root .MuiButton-contained": {
+                                bgcolor: "var(--plantilla-accent)",
+                                color: "var(--plantilla-accent-text)",
+                            },
+                            "& .MuiDialogActions-root .MuiButton-contained:hover": {
+                                bgcolor: "var(--plantilla-accent)",
+                            },
+                            "& .MuiDialogActions-root .MuiButton-outlined": {
+                                borderColor: "var(--plantilla-accent)",
+                                color: "var(--plantilla-accent)",
+                            },
+                            "& .MuiDialogActions-root .MuiButton-text": {
+                                color: "var(--plantilla-text)",
+                            },
                         },
                     },
-                },
-            }}
-            formAdditionalData={(row: Record<string, unknown> | null | undefined) => ({
-                ...(!row?.id ? templateDefaults() : {}),
-                tipusGrafic: row?.tipusGrafic || "BAR_CHART",
-            })}
-        />
-    </Box>
-);
+                }}
+                formAdditionalData={(row: Record<string, unknown> | null | undefined) => ({
+                    ...(!row?.id ? templateDefaults() : {}),
+                    tipusGrafic: row?.tipusGrafic || "BAR_CHART",
+                })}
+                toolbarElementsWithPositions={isUserAdmin ? [
+                    {
+                        position: 2,
+                        element: (
+                            <IconButton
+                                title={t($ => $.page.plantilla.action.import.label)}
+                                onClick={showImport}
+                            >
+                                <Icon>upload</Icon>
+                            </IconButton>
+                        ),
+                    },
+                ] : []}
+                rowAdditionalActions={[
+                    {
+                        label: t($ => $.page.plantilla.action.export),
+                        icon: 'download',
+                        showInMenu: true,
+                        report: 'plantilla_export',
+                        onClick: plantillaExport,
+                    },
+                ]}
+            />
+            {contentImport}
+        </Box>
+    );
+};
 
 export default Plantilla;

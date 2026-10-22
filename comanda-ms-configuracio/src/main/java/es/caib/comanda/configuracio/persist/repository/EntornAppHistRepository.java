@@ -18,6 +18,6 @@ public interface EntornAppHistRepository extends BaseRepository<EntornAppHistEnt
     List<EntornAppHistEntity> findByEntornAppOrderByDataDesc(EntornAppEntity entornApp);
 
     @Modifying
-    long deleteByDataBefore(LocalDateTime data);
+    int deleteByDataBefore(LocalDateTime data);
 
 }

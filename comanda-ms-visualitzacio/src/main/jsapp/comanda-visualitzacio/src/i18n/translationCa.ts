@@ -436,6 +436,8 @@ const translationCa = {
                 selector: {
                     loading: "Carregant...",
                     seeAll: "Veure tots els taulers de control",
+                    listDashboards: "Llistar taulers",
+                    favoriteDashboards: "Taulers preferits",
                 },
                 favorite: {
                     added: "Afegit a preferits",
@@ -522,7 +524,7 @@ const translationCa = {
                     button: "Importar",
                     conflictsTitle: "Conflictes",
                     success: "Tauler importat correctament",
-                    dashboardConflicts: "Ja existeixen elements amb aquests noms. Indica què s'ha de fer amb cadascun:",
+                    dashboardConflicts: "Ja existeixen elements amb aquests noms i/o la seva configuració no coincideix amb l'importada. Indica què s'ha de fer amb cadascun:",
                     analyzing: "Analitzant el fitxer i verificant possibles conflictes...",
                     noConflicts: "No s'ha detectat cap conflicte.",
                     importing: "Important tauler de control i recursos associats...",
@@ -1688,6 +1690,16 @@ const translationCa = {
                 senseColor: "Sense color",
             },
             action: {
+                export: "Exportar plantilla",
+                import: {
+                    label: "Importar plantilla",
+                    title: "Importar plantilla",
+                    button: "Importar",
+                    success: "Plantilla importada correctament",
+                    importing: "Important plantilla i recursos associats...",
+                    conflicts: "Ja existeixen plantilles o paletes amb aquests noms i/o la seva configuració no coincideix amb la importada. Indica què s'ha de fer amb cadascun:",
+                    noPlantilles: "No s'ha trobat cap plantilla al fitxer seleccionat.",
+                },
                 createPalette: "Crear paleta",
                 editPalette: "Editar paleta",
             },

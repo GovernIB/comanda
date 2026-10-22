@@ -436,6 +436,8 @@ const translationEs: translationResourcesType = {
                 selector: {
                     loading: "Cargando...",
                     seeAll: "Ver todos los paneles de control",
+                    listDashboards: "Listar paneles",
+                    favoriteDashboards: "Paneles favoritos",
                 },
                 favorite: {
                     added: "Añadido a favoritos",
@@ -522,7 +524,7 @@ const translationEs: translationResourcesType = {
                     button: "Importar",
                     conflictsTitle: "Conflictos",
                     success: "Tablero importado correctamente",
-                    dashboardConflicts: "Ya existen elementos con estos nombres. Indica qué hacer con cada uno:",
+                    dashboardConflicts: "Ya existen elementos con estos nombres y/o su configuración no coincide con la importada. Indica qué hacer con cada uno:",
                     analyzing: "Analizando el archivo y verificando posibles conflictos...",
                     noConflicts: "No se ha detectado ningún conflicto.",
                     importing: "Importando tablero de control y recursos asociados...",
@@ -1688,6 +1690,16 @@ const translationEs: translationResourcesType = {
                 senseColor: "Sin color",
             },
             action: {
+                export: "Exportar plantilla",
+                import: {
+                    label: "Importar plantilla",
+                    title: "Importar plantilla",
+                    button: "Importar",
+                    success: "Plantilla importada correctamente",
+                    importing: "Importando plantilla y recursos asociados...",
+                    conflicts: "Ya existen plantillas o paletas con estos nombres y/o su configuración no coincide con la importada. Indica qué se debe hacer con cada uno:",
+                    noPlantilles: "No se ha encontrado ninguna plantilla en el archivo seleccionado.",
+                },
                 createPalette: "Crear paleta",
                 editPalette: "Editar paleta",
             },

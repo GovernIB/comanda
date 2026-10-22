@@ -4,6 +4,8 @@ import es.caib.comanda.estadistica.logic.helper.DashboardImportHelper;
 import es.caib.comanda.estadistica.logic.intf.model.enumerats.OverwriteEnum;
 import es.caib.comanda.estadistica.logic.intf.model.export.DashboardExport;
 import es.caib.comanda.estadistica.logic.intf.model.export.IndicadorExport;
+import es.caib.comanda.estadistica.logic.intf.model.export.PaletaExport;
+import es.caib.comanda.estadistica.logic.intf.model.export.PlantillaExport;
 import es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.Conflict;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +53,9 @@ public class ValidConflictValidator implements ConstraintValidator<ValidConflict
                         .addNode(Conflict.Fields.overwrite)
                         .addConstraintViolation();
             }
+        } else if (PlantillaExport.class.getSimpleName().equals(conflict.getTipo())
+                || PaletaExport.class.getSimpleName().equals(conflict.getTipo())) {
+            // Plantilla i Paleta admeten EMPRAR_EXISTENT, CREAR_AMB_ALTRE_NOM i SOBRESCRIURE
         } else {
             if (OverwriteEnum.SOBRESCRIURE.equals(conflict.getOverwrite())) {
                 valid = false;

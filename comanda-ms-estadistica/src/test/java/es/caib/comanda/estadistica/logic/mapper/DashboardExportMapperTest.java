@@ -16,7 +16,11 @@ import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.DimensioValorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorEntity;
 import es.caib.comanda.estadistica.persist.entity.estadistiques.IndicadorTaulaEntity;
+import es.caib.comanda.estadistica.logic.intf.model.paleta.PaletteRole;
+import es.caib.comanda.estadistica.persist.entity.paleta.PaletaColorEntity;
+import es.caib.comanda.estadistica.persist.entity.paleta.PaletaEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
+import es.caib.comanda.estadistica.persist.entity.paleta.WidgetStylePropertyEntity;
 import es.caib.comanda.estadistica.persist.entity.widget.*;
 import es.caib.comanda.estadistica.persist.repository.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,10 +31,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -741,5 +747,126 @@ class DashboardExportMapperTest {
         assertEquals("DIM001", result.getFiltres().get(0).getDimensioCodi());
         assertEquals(es.caib.comanda.estadistica.logic.intf.model.dashboard.DashboardFiltreTipus.PERIODE, result.getFiltres().get(1).getTipus());
         assertNull(result.getFiltres().get(1).getDimensioCodi());
+    }
+
+    @Test
+    void updateWidgetStylePropertyEntityFromEntity_quanValorsFontNull_llavorsSobreescriuDestiAmbNull() {
+        LocalDateTime createdDate = LocalDateTime.of(2026, 1, 1, 10, 0);
+        LocalDateTime lastModDate = LocalDateTime.of(2026, 1, 2, 10, 0);
+
+        PlantillaEntity plantilla = new PlantillaEntity();
+        plantilla.setId(10L);
+
+        WidgetStylePropertyEntity target = new WidgetStylePropertyEntity();
+        target.setId(100L);
+        ReflectionTestUtils.setField(target, "v", 1L);
+        target.setPaletteIndex(2);
+        target.setScalarValue("#112233");
+        target.setPaletteRole(PaletteRole.WIDGET);
+        target.setPlantilla(plantilla);
+        target.updateCreated("user1", createdDate);
+        target.updateLastModified("user1", lastModDate);
+
+        WidgetStylePropertyEntity source = new WidgetStylePropertyEntity();
+        source.setId(200L);
+        ReflectionTestUtils.setField(source, "v", 2L);
+        source.setPaletteIndex(null);
+        source.setScalarValue(null);
+        source.setPaletteRole(null);
+        source.setPlantilla(null);
+        source.updateCreated("user2", createdDate.plusDays(1));
+        source.updateLastModified("user2", lastModDate.plusDays(1));
+
+        mapper.updateWidgetStylePropertyEntityFromEntity(target, source);
+
+        assertThat(target.getId()).isEqualTo(100L);
+        assertThat(ReflectionTestUtils.getField(target, "v")).isEqualTo(1L);
+        assertThat(target.getPlantilla()).isSameAs(plantilla);
+        assertThat(target.getCreatedBy()).isEqualTo("user1");
+        assertThat(target.getCreatedDate()).isEqualTo(createdDate);
+        assertThat(target.getLastModifiedBy()).isEqualTo("user1");
+        assertThat(target.getLastModifiedDate()).isEqualTo(lastModDate);
+        assertThat(target.getPaletteIndex()).isNull();
+        assertThat(target.getScalarValue()).isNull();
+        assertThat(target.getPaletteRole()).isNull();
+    }
+
+    @Test
+    void updatePaletaEntityFromEntity_quanDescripcioNull_llavorsSobreescriuDestiAmbNull() {
+        LocalDateTime createdDate = LocalDateTime.of(2026, 1, 1, 10, 0);
+        LocalDateTime lastModDate = LocalDateTime.of(2026, 1, 2, 10, 0);
+
+        PaletaColorEntity color = new PaletaColorEntity();
+        color.setPosicio(0);
+        color.setValor("#FFFFFF");
+        List<PaletaColorEntity> colors = List.of(color);
+
+        PaletaEntity target = new PaletaEntity();
+        target.setId(50L);
+        ReflectionTestUtils.setField(target, "v", 1L);
+        target.setNom("Paleta 1");
+        target.setDescripcio("Descripció antiga");
+        target.updateCreated("user1", createdDate);
+        target.updateLastModified("user1", lastModDate);
+        target.setColors(colors);
+
+        PaletaEntity source = new PaletaEntity();
+        source.setId(99L);
+        ReflectionTestUtils.setField(source, "v", 2L);
+        source.setNom("Paleta Modificada");
+        source.setDescripcio(null);
+        source.updateCreated("user2", createdDate.plusDays(1));
+        source.updateLastModified("user2", lastModDate.plusDays(1));
+        source.setColors(null);
+
+        mapper.updatePaletaEntityFromEntity(target, source);
+
+        assertThat(target.getId()).isEqualTo(50L);
+        assertThat(ReflectionTestUtils.getField(target, "v")).isEqualTo(1L);
+        assertThat(target.getNom()).isEqualTo("Paleta 1");
+        assertThat(target.getDescripcio()).isNull();
+        assertThat(target.getCreatedBy()).isEqualTo("user1");
+        assertThat(target.getCreatedDate()).isEqualTo(createdDate);
+        assertThat(target.getLastModifiedBy()).isEqualTo("user1");
+        assertThat(target.getLastModifiedDate()).isEqualTo(lastModDate);
+        assertThat(target.getColors()).isSameAs(colors);
+    }
+
+    @Test
+    void updatePlantillaEntityFromEntity_quanFontNull_llavorsPreservaCampsHistorics() {
+        PlantillaEntity target = new PlantillaEntity();
+        target.setId(10L);
+        target.setNom("Plantilla Existent");
+        target.setMostrarVora(true);
+        target.setAmpleVora(2);
+        target.setMidaFontTitol("16");
+        target.setHeatmapMinValue(0);
+        target.setHeatmapMaxValue(100);
+        target.setInnerRadius(50);
+        target.setPieShowLabels(true);
+
+        PlantillaEntity source = new PlantillaEntity();
+        source.setId(20L);
+        source.setNom("Plantilla Nova");
+        source.setMostrarVora(null);
+        source.setAmpleVora(null);
+        source.setMidaFontTitol(null);
+        source.setHeatmapMinValue(null);
+        source.setHeatmapMaxValue(null);
+        source.setInnerRadius(null);
+        source.setPieShowLabels(null);
+
+        mapper.updatePlantillaEntityFromEntity(target, source);
+
+        // Els camps històrics no s'han d'haver esborrat a null gràcies a IGNORE
+        assertThat(target.getId()).isEqualTo(10L);
+        assertThat(target.getNom()).isEqualTo("Plantilla Existent");
+        assertThat(target.getMostrarVora()).isTrue();
+        assertThat(target.getAmpleVora()).isEqualTo(2);
+        assertThat(target.getMidaFontTitol()).isEqualTo("16");
+        assertThat(target.getHeatmapMinValue()).isEqualTo(0);
+        assertThat(target.getHeatmapMaxValue()).isEqualTo(100);
+        assertThat(target.getInnerRadius()).isEqualTo(50);
+        assertThat(target.getPieShowLabels()).isTrue();
     }
 }

@@ -21,6 +21,7 @@ import es.caib.comanda.estadistica.logic.intf.validation.ValidConflict;
 import es.caib.comanda.estadistica.logic.mapper.DashboardClonerMapper;
 import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardEntity;
+import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardItemEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardPreferitEntity;
 import es.caib.comanda.estadistica.persist.entity.dashboard.DashboardTitolEntity;
 import es.caib.comanda.estadistica.persist.entity.paleta.PlantillaEntity;
@@ -90,6 +91,7 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     private final AuthenticationHelper authenticationHelper;
     private final DashboardPermisosHelper dashboardPermisosHelper;
     private final DashboardItemTitolHelper dashboardItemTitolHelper;
+    private final EstadisticaWidgetHelper estadisticaWidgetHelper;
 
     @Getter
     @Setter
@@ -151,6 +153,53 @@ public class DashboardServiceImpl extends BaseMutableResourceService<Dashboard, 
     @Override
     protected void beforeDelete(DashboardEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
         dashboardPermisosHelper.checkCanDeleteDashboard(entity.getAppId(), entity.getEntornId(), I18nUtil.getInstance().getI18nMessage("es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.permisos.eliminar"));
+        // Força la càrrega (lazy loading) de la col·lecció d'items i dels proxies dels seus widgets
+        // associats mentre l'entitat està activa a la sessió de persistència i abans que s'apliqui l'esborrat en
+        // cascada (CascadeType.REMOVE). D'aquesta manera, a l'afterDelete es podrà accedir amb seguretat a
+        // item.getWidget().getId() per determinar quins widgets queden orfes i han de ser eliminats.
+        if (entity.getItems() != null) {
+            entity.getItems().forEach(item -> {
+                if (item.getWidget() != null) {
+                    item.getWidget().getId();
+                }
+            });
+        }
+    }
+
+    @Override
+    protected void afterDelete(DashboardEntity entity, Map<String, AnswerRequiredException.AnswerValue> answers) {
+        super.afterDelete(entity, answers);
+        if (entity.getItems() != null && !entity.getItems().isEmpty()) {
+            Set<Long> deletedItemIds = new HashSet<>();
+            Set<Long> widgetIds = new LinkedHashSet<>();
+
+            for (DashboardItemEntity item : entity.getItems()) {
+                if (item.getId() != null) {
+                    deletedItemIds.add(item.getId());
+                    estadisticaWidgetHelper.clearDashboardWidgetCache(item.getId());
+                }
+                if (item.getWidget() != null && item.getWidget().getId() != null) {
+                    widgetIds.add(item.getWidget().getId());
+                }
+            }
+
+            for (Long widgetId : widgetIds) {
+                List<DashboardItemEntity> remainingItems = dashboardItemRepository.findByWidgetId(widgetId);
+                boolean usedElsewhere = remainingItems != null && remainingItems.stream()
+                        .anyMatch(item -> (item.getDashboard() == null || !Objects.equals(item.getDashboard().getId(), entity.getId()))
+                                && !deletedItemIds.contains(item.getId()));
+                if (!usedElsewhere) {
+                    log.debug("El widget {} només s'utilitzava al dashboard {}. Eliminant el widget definitivament.", widgetId, entity.getId());
+                    estadisticaWidgetHelper.clearDashboardWidgetCacheByWidget(widgetId);
+                    estadisticaWidgetRepository.findById(widgetId).ifPresent(widget -> {
+                        estadisticaWidgetRepository.delete(widget);
+                        estadisticaWidgetRepository.flush();
+                    });
+                } else {
+                    log.debug("El widget {} encara s'utilitza a altres elements de dashboard. No s'elimina.", widgetId);
+                }
+            }
+        }
     }
 
     @Override

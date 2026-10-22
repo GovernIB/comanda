@@ -379,4 +379,51 @@ class ProcesBaixaPrioritatServiceTest {
         assertThat(proces.getMissatge()).isEqualTo("Procés cancel·lat per l'usuari");
         verify(estadisticaHelper, never()).getEstadisticaDadesAmbUrl(any(), anyString(), anyBoolean());
     }
+
+    @Test
+    @DisplayName("executarProces: classifica correctament els dies amb dades, buits i amb error")
+    void executarProces_classificaCorrectamentDiesAmbDadesBuitsIErrors() {
+        when(estadisticaClientHelper.entornAppFindById(10L)).thenReturn(entornApp);
+
+        FetObtenirResponse resAmbDades = FetObtenirResponse.builder()
+                .success(true)
+                .diesAmbDades(Map.of("2026-03-01", true))
+                .build();
+        FetObtenirResponse resSenseDades = FetObtenirResponse.builder()
+                .success(true)
+                .diesAmbDades(Map.of("2026-03-02", false))
+                .build();
+        FetObtenirResponse resError = FetObtenirResponse.builder()
+                .success(false)
+                .message("Error HTTP 500")
+                .build();
+
+        when(estadisticaHelper.getEstadisticaDadesAmbUrl(eq(entornApp), contains("01-03-2026"), eq(false)))
+                .thenReturn(resAmbDades);
+        when(estadisticaHelper.getEstadisticaDadesAmbUrl(eq(entornApp), contains("02-03-2026"), eq(false)))
+                .thenReturn(resSenseDades);
+        when(estadisticaHelper.getEstadisticaDadesAmbUrl(eq(entornApp), contains("03-03-2026"), eq(false)))
+                .thenReturn(resError);
+
+        ProcesBaixaPrioritat proces = ProcesBaixaPrioritat.builder()
+                .id("test-classificacio")
+                .entornAppId(10L)
+                .dataInici(LocalDate.of(2026, 3, 1))
+                .dataFi(LocalDate.of(2026, 3, 3))
+                .totalDies(3)
+                .build();
+
+        service.executarProces(proces, List.of(
+                LocalDate.of(2026, 3, 1),
+                LocalDate.of(2026, 3, 2),
+                LocalDate.of(2026, 3, 3)));
+
+        assertThat(proces.getDiesAmbDadesLlista()).containsExactly("2026-03-01");
+        assertThat(proces.getDiesSenseDadesLlista()).containsExactly("2026-03-02");
+        assertThat(proces.getDiesAmbErrorLlista()).containsExactly("2026-03-03");
+        assertThat(proces.getDiesAmbDades()).isEqualTo(1);
+        assertThat(proces.getDiesAmbErrors()).isEqualTo(1);
+        assertThat(proces.getDiesProcessats()).isEqualTo(3);
+        assertThat(proces.getEstat()).isEqualTo(ProcesBaixaPrioritat.ESTAT_FINALITZAT);
+    }
 }

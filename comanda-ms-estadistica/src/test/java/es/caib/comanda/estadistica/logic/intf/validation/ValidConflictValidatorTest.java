@@ -30,7 +30,10 @@ class ValidConflictValidatorTest {
     private DashboardImportHelper dashboardImportHelper;
 
     @Mock
-    private MessageSource messageSource;
+    private org.springframework.context.ApplicationContext applicationContext;
+
+    @Mock
+    private I18nUtil i18nUtil;
 
     @Mock
     private ConstraintValidatorContext context;
@@ -46,8 +49,10 @@ class ValidConflictValidatorTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(I18nUtil.getInstance(), "messageSource", messageSource);
-        lenient().when(messageSource.getMessage(anyString(), any(), anyString(), any())).thenAnswer(i -> i.getArgument(0));
+        ReflectionTestUtils.setField(I18nUtil.class, "applicationContext", applicationContext);
+        lenient().when(applicationContext.getBean(I18nUtil.class)).thenReturn(i18nUtil);
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(i -> i.getArgument(0));
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(i -> i.getArgument(0));
 
         lenient().when(context.buildConstraintViolationWithTemplate(anyString())).thenReturn(builder);
         lenient().when(builder.addNode(anyString())).thenReturn(nodeBuilder);
@@ -125,7 +130,29 @@ class ValidConflictValidatorTest {
     }
 
     @Test
-    @DisplayName("isValid: retorna false quan element que no és IndicadorExport té SOBRESCRIURE")
+    @DisplayName("isValid: retorna true quan PlantillaExport té SOBRESCRIURE")
+    void isValid_quanPlantillaExportTeSobrescriure_retornaTrue() {
+        Conflict conflict = new Conflict("Plantilla1", "PlantillaExport");
+        conflict.setOverwrite(OverwriteEnum.SOBRESCRIURE);
+
+        boolean result = validator.isValid(conflict, context);
+
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("isValid: retorna true quan PaletaExport té SOBRESCRIURE")
+    void isValid_quanPaletaExportTeSobrescriure_retornaTrue() {
+        Conflict conflict = new Conflict("Paleta1", "PaletaExport");
+        conflict.setOverwrite(OverwriteEnum.SOBRESCRIURE);
+
+        boolean result = validator.isValid(conflict, context);
+
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("isValid: retorna false quan element no permès (Widget o Dashboard) té SOBRESCRIURE")
     void isValid_quanNoIndicadorExportTeSobrescriure_retornaFalse() {
         Conflict widgetConflict = new Conflict("Widget1", "EstadisticaWidgetExport");
         widgetConflict.setOverwrite(OverwriteEnum.SOBRESCRIURE);

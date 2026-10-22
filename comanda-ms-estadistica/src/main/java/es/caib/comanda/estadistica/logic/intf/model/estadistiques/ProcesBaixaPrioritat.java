@@ -10,6 +10,8 @@ import lombok.Setter;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Representa un procés de recuperació de dades estadístiques en segon pla de baixa prioritat.
@@ -49,6 +51,13 @@ public class ProcesBaixaPrioritat implements Serializable {
     private volatile int percentatge;
     private volatile LocalDate diaActual;
     private volatile String missatge;
+
+    @Builder.Default
+    private List<String> diesAmbDadesLlista = new CopyOnWriteArrayList<>();
+    @Builder.Default
+    private List<String> diesSenseDadesLlista = new CopyOnWriteArrayList<>();
+    @Builder.Default
+    private List<String> diesAmbErrorLlista = new CopyOnWriteArrayList<>();
 
     @JsonIgnore
     private transient volatile boolean cancelled;

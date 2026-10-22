@@ -436,6 +436,8 @@ const translationEn: translationResourcesType = {
                 selector: {
                     loading: "Loading...",
                     seeAll: "See all dashboards",
+                    listDashboards: "List dashboards",
+                    favoriteDashboards: "Favorite dashboards",
                 },
                 favorite: {
                     added: "Added to favorites",
@@ -522,7 +524,7 @@ const translationEn: translationResourcesType = {
                     button: "Import",
                     conflictsTitle: "Conflicts",
                     success: "Dashboard imported successfully",
-                    dashboardConflicts: "Elements with these names already exist. Indicate what to do with each one:",
+                    dashboardConflicts: "Elements with these names already exist and/or their configuration does not match the imported one. Indicate what to do with each one:",
                     analyzing: "Analyzing the file and checking for potential conflicts...",
                     noConflicts: "No conflicts detected.",
                     importing: "Importing dashboard and associated resources...",
@@ -1688,6 +1690,16 @@ const translationEn: translationResourcesType = {
                 senseColor: "No colour",
             },
             action: {
+                export: "Export template",
+                import: {
+                    label: "Import template",
+                    title: "Import template",
+                    button: "Import",
+                    success: "Template imported successfully",
+                    importing: "Importing template and associated resources...",
+                    conflicts: "Templates or palettes with these names already exist and/or their configuration does not match the imported one. Indicate what should be done with each:",
+                    noPlantilles: "No template was found in the selected file.",
+                },
                 createPalette: "Create palette",
                 editPalette: "Edit palette",
             },

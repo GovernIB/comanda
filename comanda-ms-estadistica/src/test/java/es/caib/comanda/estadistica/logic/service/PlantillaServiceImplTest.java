@@ -19,8 +19,25 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import es.caib.comanda.estadistica.logic.helper.DashboardImportHelper;
+import es.caib.comanda.estadistica.logic.mapper.DashboardExportMapper;
+import es.caib.comanda.estadistica.logic.intf.model.enumerats.OverwriteEnum;
+import es.caib.comanda.estadistica.logic.intf.model.export.PlantillaExport;
+import es.caib.comanda.estadistica.logic.service.DashboardServiceImpl.Conflict;
+import es.caib.comanda.estadistica.logic.service.PlantillaServiceImpl.PlantillaImportParams;
+import es.caib.comanda.estadistica.logic.service.PlantillaServiceImpl.PlantillaImportResult;
+import es.caib.comanda.ms.logic.service.BaseMutableResourceService.ActionExecutor;
+import es.caib.comanda.ms.logic.intf.exception.ActionExecutionException;
+import es.caib.comanda.ms.logic.intf.model.DownloadableFile;
+import es.caib.comanda.ms.logic.intf.model.FileReference;
+import es.caib.comanda.ms.logic.intf.model.ReportFileType;
+import es.caib.comanda.ms.logic.service.BaseReadonlyResourceService.ReportGenerator;
+import org.springframework.test.util.ReflectionTestUtils;
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.*;
@@ -37,6 +54,9 @@ class PlantillaServiceImplTest {
     @Mock private DashboardTemplatePaletteGroupRepository paletteGroupRepository;
     @Mock private WidgetStylePropertyRepository stylePropertyRepository;
     @Mock private EstadisticaWidgetHelper estadisticaWidgetHelper;
+    @Mock private DashboardImportHelper dashboardImportHelper;
+    @Mock private DashboardExportMapper dashboardExportMapper;
+    @Spy private com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
     @InjectMocks private PlantillaServiceImpl plantillaService;
 
@@ -432,5 +452,185 @@ class PlantillaServiceImplTest {
             if (e.getCause() instanceof RuntimeException) throw (RuntimeException) e.getCause();
             throw new RuntimeException("Error invocant validateTemplate", e);
         }
+    }
+
+    // ========================================================================
+    // TESTS IMPORT / EXPORT
+    // ========================================================================
+
+    @Test
+    @DisplayName("init: registra els artifacts d'exportació i importació")
+    void init_registraArtifacts() {
+        plantillaService.init();
+
+        Map<?, ?> reportMap = (Map<?, ?>) ReflectionTestUtils.getField(plantillaService, "reportGeneratorMap");
+        assertThat(reportMap.containsKey(Plantilla.PLANTILLA_EXPORT)).isTrue();
+
+        Map<?, ?> actionMap = (Map<?, ?>) ReflectionTestUtils.getField(plantillaService, "actionExecutorMap");
+        assertThat(actionMap.containsKey(Plantilla.PLANTILLA_IMPORT)).isTrue();
+    }
+
+    @Test
+    @DisplayName("PlantillaExportReportGenerator: generateData converteix entitat a PlantillaExport")
+    void exportReportGenerator_generateData_ambEntitat() throws Exception {
+        PlantillaServiceImpl.PlantillaExportReportGenerator reportGen =
+                plantillaService.new PlantillaExportReportGenerator();
+
+        PlantillaExport expected = new PlantillaExport();
+        expected.setNom("Plantilla Test");
+        when(dashboardExportMapper.toPlantillaExport(plantillaEntity)).thenReturn(expected);
+
+        List<PlantillaExport> data = reportGen.generateData(Plantilla.PLANTILLA_EXPORT, plantillaEntity, null);
+
+        assertThat(data).containsExactly(expected);
+        verify(dashboardExportMapper).toPlantillaExport(plantillaEntity);
+    }
+
+    @Test
+    @DisplayName("PlantillaExportReportGenerator: generateFile genera fitxer JSON amb nom sanititzat")
+    void exportReportGenerator_generateFile_generaFitxerJson() throws Exception {
+        PlantillaServiceImpl.PlantillaExportReportGenerator reportGen =
+                plantillaService.new PlantillaExportReportGenerator();
+
+        PlantillaExport export = new PlantillaExport();
+        export.setNom("Plantilla Única / Test");
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        DownloadableFile file = reportGen.generateFile(Plantilla.PLANTILLA_EXPORT, Collections.singletonList(export), ReportFileType.JSON, out);
+
+        assertThat(file).isNotNull();
+        assertThat(file.getContentType()).isEqualTo("application/json");
+        assertThat(file.getName()).isEqualTo("Plantilla Unica _ Test.json");
+        assertThat(out.size()).isGreaterThan(0);
+    }
+
+    @Test
+    @DisplayName("PlantillaImportActionExecutor: onChange analitza el fitxer i calcula els conflictes")
+    void importActionExecutor_onChange_calculaConflictes() throws Exception {
+        PlantillaServiceImpl.PlantillaImportActionExecutor actionExec =
+                plantillaService.new PlantillaImportActionExecutor();
+
+        FileReference file = new FileReference();
+        ReflectionTestUtils.setField(file, "content", "{\"nom\": \"P1\"}".getBytes(StandardCharsets.UTF_8));
+
+        PlantillaImportParams target = new PlantillaImportParams();
+        PlantillaExport p1 = new PlantillaExport();
+        p1.setNom("P1");
+
+        when(dashboardImportHelper.parsePlantillesJson(anyString())).thenReturn(Collections.singletonList(p1));
+        doAnswer(inv -> {
+            @SuppressWarnings("unchecked")
+            List<Conflict> conflicts = inv.getArgument(1);
+            conflicts.add(new Conflict("P1", PlantillaExport.class.getSimpleName()));
+            return null;
+        }).when(dashboardImportHelper).checkPlantillaConflicts(eq(Collections.singletonList(p1)), any());
+
+        actionExec.onChange(null, null, PlantillaImportParams.Fields.file, file, null, null, target);
+
+        assertThat(target.getConflicts()).hasSize(1);
+        assertThat(target.getConflicts().get(0).getTitol()).isEqualTo("P1");
+    }
+
+    @Test
+    @DisplayName("PlantillaImportActionExecutor: exec importa les plantilles correctament")
+    void importActionExecutor_exec_importaPlantilles() throws Exception {
+        PlantillaServiceImpl.PlantillaImportActionExecutor actionExec =
+                plantillaService.new PlantillaImportActionExecutor();
+
+        FileReference file = new FileReference();
+        ReflectionTestUtils.setField(file, "content", "{\"nom\": \"P1\"}".getBytes(StandardCharsets.UTF_8));
+
+        PlantillaImportParams params = new PlantillaImportParams();
+        params.setFile(file);
+
+        PlantillaExport p1 = new PlantillaExport();
+        p1.setNom("P1");
+
+        PlantillaEntity entity1 = new PlantillaEntity();
+        entity1.setId(100L);
+        entity1.setNom("P1");
+
+        when(dashboardImportHelper.parsePlantillesJson(anyString())).thenReturn(Collections.singletonList(p1));
+        when(dashboardImportHelper.importPlantillesFromExport(eq(Collections.singletonList(p1)), any()))
+                .thenReturn(Collections.singletonList(entity1));
+
+        PlantillaImportResult result = actionExec.exec(Plantilla.PLANTILLA_IMPORT, null, params);
+
+        assertThat(result).isNotNull();
+        verify(dashboardImportHelper).validatePlantillaExport(Collections.singletonList(p1));
+        verify(dashboardImportHelper).importPlantillesFromExport(eq(Collections.singletonList(p1)), any());
+    }
+
+    @Test
+    @DisplayName("PlantillaImportActionExecutor: exec llança ActionExecutionException si hi ha conflictes bloquejants")
+    void importActionExecutor_exec_ambConflictesBloquejants_llancaExcepcio() throws Exception {
+        PlantillaServiceImpl.PlantillaImportActionExecutor actionExec =
+                plantillaService.new PlantillaImportActionExecutor();
+
+        FileReference file = new FileReference();
+        ReflectionTestUtils.setField(file, "content", "{\"nom\": \"P1\"}".getBytes(StandardCharsets.UTF_8));
+
+        Conflict blockingConflict = new Conflict("P1", PlantillaExport.class.getSimpleName());
+        blockingConflict.setBloquejant(true);
+
+        PlantillaImportParams params = new PlantillaImportParams();
+        params.setFile(file);
+        params.setConflicts(Collections.singletonList(blockingConflict));
+
+        PlantillaExport p1 = new PlantillaExport();
+        p1.setNom("P1");
+        when(dashboardImportHelper.parsePlantillesJson(anyString())).thenReturn(Collections.singletonList(p1));
+
+        assertThatThrownBy(() -> actionExec.exec(Plantilla.PLANTILLA_IMPORT, null, params))
+                .isInstanceOf(ActionExecutionException.class);
+    }
+
+    @Test
+    @DisplayName("PlantillaImportActionExecutor: onChange afegeix conflicte bloquejant si el fitxer no conté plantilles")
+    void importActionExecutor_onChange_sensePlantilles_afegeixConflicteBloquejant() throws Exception {
+        PlantillaServiceImpl.PlantillaImportActionExecutor actionExec =
+                plantillaService.new PlantillaImportActionExecutor();
+
+        FileReference file = new FileReference();
+        ReflectionTestUtils.setField(file, "content", "{}".getBytes(StandardCharsets.UTF_8));
+        ReflectionTestUtils.setField(file, "name", "buit.json");
+
+        PlantillaImportParams target = new PlantillaImportParams();
+
+        when(dashboardImportHelper.parsePlantillesJson(anyString())).thenReturn(Collections.emptyList());
+        doThrow(new IllegalArgumentException("El fitxer no conté cap plantilla per importar."))
+                .when(dashboardImportHelper).validatePlantillaExport(Collections.emptyList());
+
+        actionExec.onChange(null, null, PlantillaImportParams.Fields.file, file, null, null, target);
+
+        assertThat(target.getConflicts()).hasSize(1);
+        Conflict c = target.getConflicts().get(0);
+        assertThat(c.isBloquejant()).isTrue();
+        assertThat(c.getMissatgeError()).isEqualTo("El fitxer no conté cap plantilla per importar.");
+        assertThat(c.getTitol()).isEqualTo("buit.json");
+    }
+
+    @Test
+    @DisplayName("PlantillaImportActionExecutor: onChange afegeix conflicte bloquejant si el fitxer JSON té format invàlid")
+    void importActionExecutor_onChange_formatInvalid_afegeixConflicteBloquejant() throws Exception {
+        PlantillaServiceImpl.PlantillaImportActionExecutor actionExec =
+                plantillaService.new PlantillaImportActionExecutor();
+
+        FileReference file = new FileReference();
+        ReflectionTestUtils.setField(file, "content", "invalid json".getBytes(StandardCharsets.UTF_8));
+        ReflectionTestUtils.setField(file, "name", "corrupte.json");
+
+        PlantillaImportParams target = new PlantillaImportParams();
+
+        when(dashboardImportHelper.parsePlantillesJson(anyString()))
+                .thenThrow(new IllegalArgumentException("Format JSON no reconegut"));
+
+        actionExec.onChange(null, null, PlantillaImportParams.Fields.file, file, null, null, target);
+
+        assertThat(target.getConflicts()).hasSize(1);
+        Conflict c = target.getConflicts().get(0);
+        assertThat(c.isBloquejant()).isTrue();
+        assertThat(c.getMissatgeError()).isEqualTo("Format JSON no reconegut");
+        assertThat(c.getTitol()).isEqualTo("corrupte.json");
     }
 }
