@@ -31,7 +31,6 @@ import { ESTADISTIQUES_PATH } from '../AppRoutes.tsx';
 import { useTranslation } from "react-i18next";
 import PageTitle from '../components/PageTitle.tsx';
 import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
-import { FooterHeightPlaceholder } from '../components/ComandaFooter.tsx';
 import { useEntornCodi } from '../components/estadistiques/dashboardPlantillaHook.ts';
 import DashboardFiltreBar from '../components/estadistiques/DashboardFiltreBar.tsx';
 import { DashboardFiltreSeleccio } from '../types/dashboardFiltre.model.ts';
@@ -449,7 +448,6 @@ const EstadisticaDashboardView = () => {
                         largeScreenMode={largeScreenMode}
                     />
                 )}
-                <FooterHeightPlaceholder />
             </BasePage>
         </>
     );

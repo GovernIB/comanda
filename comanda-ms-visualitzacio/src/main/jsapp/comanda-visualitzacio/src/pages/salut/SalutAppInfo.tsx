@@ -55,7 +55,6 @@ import ResponsiveCardTable from '../../components/salut/ResponsiveCardTable';
 import { MUI_AXIS_WORKAROUND_HEIGHT } from '../../util/muiWorkarounds';
 import { PreselectLogsViewer } from './LogsViewer';
 import PageTitle from '../../components/PageTitle.tsx';
-import { FooterHeightPlaceholder } from '../../components/ComandaFooter.tsx';
 import { useIsUserAdmin } from '../../components/UserContext.ts';
 
 const AppInfo: React.FC<{
@@ -1363,12 +1362,7 @@ function TabSalutCurrentApp<T>({
                 refreshInfoLoading={refreshInfoLoading}
                 otherProps={childrenTabOtherProps}
             />
-            {overflowingContent && (
-                <>
-                    <Box sx={{ pb: tabContentPaddingAmount }} />
-                    <FooterHeightPlaceholder />
-                </>
-            )}
+            {overflowingContent && <Box sx={{ pb: tabContentPaddingAmount }} />}
         </>
     );
 }

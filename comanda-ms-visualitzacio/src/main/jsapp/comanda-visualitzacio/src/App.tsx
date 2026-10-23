@@ -274,7 +274,8 @@ export const App: React.FC = () => {
     return (
         <BaseApp
             code="com"
-            logo={darkThemeActive ? logoDark : logo}
+            logo={logo}
+            logoDark={logoDark}
             logoStyle={{
                 '& img': { height: '38px', width: '115px' },
                 pl: 2,
@@ -303,8 +304,8 @@ export const App: React.FC = () => {
             menuEntries={caibMenuEntries}
             menuAppearance={menuAppearance}
             appbarBackgroundColor={appbarBackgroundColor}
+            // L'alçada de la capçalera (74px) i el padding esquerre els fixa Lot2BaseApp.
             appbarStyle={{
-                cssText: `min-height: ${APPBAR_HEIGHT} !important`,
                 color: appbarBackgroundColor ? theme.palette.getContrastText(appbarBackgroundColor) : undefined,
             }}
             // appbarBackgroundImg={headerBackground}

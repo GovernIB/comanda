@@ -14,7 +14,6 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import {
     DefaultMuiComponentProps,
     MenuEntry,
-    MuiBaseApp,
     useBaseAppContext,
     useResourceApiContext,
     useMuiFormDialogApiRef,
@@ -28,9 +27,9 @@ import RoleSelector from './RoleSelector';
 import i18n from '../i18n/i18n';
 import 'dayjs/locale/ca';
 import 'dayjs/locale/es';
-import { Theme, useTheme } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 import { ROLE_ADMIN } from './UserProvider.tsx';
-import ComandaFooter, { comandaFooterHeight } from './ComandaFooter.tsx';
+import { DrassanaFooter, Lot2BaseApp, type Lot2MenuAppearance } from '../lot2';
 import ListItemText from "@mui/material/ListItemText";
 import {formatDate} from "../util/dateUtils.ts";
 import MenuItem from '@mui/material/MenuItem';
@@ -50,7 +49,9 @@ export type HeaderBackgroundModuleItem = {
 
 export type BaseAppProps = React.PropsWithChildren & {
     code: string;
-    logo?: string;
+    logo: string;
+    /** Logo de la capçalera per als temes foscos. Per defecte, `logo`. */
+    logoDark?: string;
     logoStyle?: any;
     title: string | React.ReactElement;
     version: string;
@@ -61,7 +62,7 @@ export type BaseAppProps = React.PropsWithChildren & {
     appbarBackgroundColor?: string;
     appbarBackgroundImg?: string;
     appbarStyle?: any;
-    menuAppearance?: 'theme' | 'inverse' | 'footer';
+    menuAppearance?: Lot2MenuAppearance;
     defaultMuiComponentProps?: DefaultMuiComponentProps;
 };
 
@@ -159,61 +160,11 @@ const useI18n = () => {
     }
 }
 
-type MenuColorSet = {
-    background: string;
-    textPrimary: string;
-    textSecondary: string;
-    divider: string;
-    accent: string;
-    selectedBackground: string;
-    hoverBackground: string;
-};
-
-const getMenuColorSet = (
-    theme: Theme,
-    appearance: 'theme' | 'inverse' | 'footer',
-): MenuColorSet | undefined => {
-    // `theme` no sobreescriu colors: el menú reutilitza directament la paleta activa de MUI.
-    if (appearance === 'footer') {
-        return {
-            background: '#5F5D5D',
-            textPrimary: '#F6F6F6',
-            textSecondary: '#E5E5E5',
-            divider: '#807D7D',
-            accent: '#FFFFFF',
-            selectedBackground: 'rgba(255, 255, 255, 0.12)',
-            hoverBackground: 'rgba(255, 255, 255, 0.08)',
-        };
-    }
-    if (appearance !== 'inverse') {
-        return undefined;
-    }
-    if (theme.palette.mode === 'dark') {
-        return {
-            background: '#FFFFFF',
-            textPrimary: '#1F2937',
-            textSecondary: '#4B5563',
-            divider: '#D1D5DB',
-            accent: '#1976D2',
-            selectedBackground: 'rgba(25, 118, 210, 0.12)',
-            hoverBackground: 'rgba(0, 0, 0, 0.04)',
-        };
-    }
-    return {
-        background: '#1E293B',
-        textPrimary: '#F8FAFC',
-        textSecondary: '#CBD5E1',
-        divider: '#475569',
-        accent: '#60A5FA',
-        selectedBackground: 'rgba(96, 165, 250, 0.18)',
-        hoverBackground: 'rgba(255, 255, 255, 0.08)',
-    };
-};
-
 export const BaseApp: React.FC<BaseAppProps> = (props) => {
     const {
         code,
         logo,
+        logoDark,
         logoStyle,
         title,
         version,
@@ -230,7 +181,6 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
-    const theme = useTheme();
     const baseAppMenuEntries = menuEntries;
     const { user, currentRole } = useUserContext();
     const userDialogApiRef = useMuiFormDialogApiRef();
@@ -285,11 +235,12 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
             ></Divider>,
           ]
         : [];
-    const baseAppElement = <MuiBaseApp
+    return <Lot2BaseApp
         code={code}
         headerTitle={title}
         headerVersion={version}
-        headerLogo={logo}
+        logo={logo}
+        logoDark={logoDark}
         headerLogoStyle={logoStyle}
         headerAppbarBackgroundColor={appbarBackgroundColor}
         headerAppbarBackgroundImg={appbarBackgroundImg}
@@ -308,8 +259,17 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
             <RoleSelector key="roleSelector" />,
         ]}
         headerAuthBadgeIcon={currentRole === ROLE_ADMIN ? 'settings' : undefined}
-        footer={<ComandaFooter />}
-        footerHeight={comandaFooterHeight}
+        menuAppearance={menuAppearance}
+        footer={
+            <DrassanaFooter
+                title="COMANDA"
+                revisionLabel={t($ => $.components.footer.revisio)}
+                links={[
+                    { label: t($ => $.menu.sitemap), to: '/sitemap' },
+                    { label: t($ => $.menu.accessibilitat), to: '/accessibilitat' },
+                ]}
+            />
+        }
         persistentLanguage
         i18nUseTranslation={i18nUseTranslation}
         i18nCurrentLanguage={i18nCurrentLanguage}
@@ -330,46 +290,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         <CustomLocalizationProvider>
             {children}
         </CustomLocalizationProvider>
-    </MuiBaseApp>;
-    const menuColorSet = getMenuColorSet(theme, menuAppearance ?? 'theme');
-    const menuColorSetSx = {
-        '& nav .MuiDrawer-root': {
-            '& .MuiPaper-root, & .MuiList-root': {
-                backgroundColor: menuColorSet?.background,
-                color: menuColorSet?.textPrimary,
-                '& > div .MuiBox-root': {
-                    backgroundColor: menuColorSet?.background,
-                    borderColor: menuColorSet?.divider,
-                },
-                '& > div > .MuiBox-root': {
-                    borderLeft: `1px solid ${menuColorSet?.divider}`,
-                },
-                '& p': {
-                    color: menuColorSet?.textPrimary,
-                },
-                '& h6': {
-                    color: menuColorSet?.accent,
-                },
-            },
-            '& .menu-item-icon': {
-                color: menuColorSet?.textSecondary,
-            },
-            '& .MuiListItemButton-root': {
-                '&.Mui-selected': {
-                    backgroundColor: menuColorSet?.selectedBackground,
-                },
-                '&.Mui-selected:hover': {
-                    backgroundColor: menuColorSet?.selectedBackground,
-                },
-                '&:hover': {
-                    backgroundColor: menuColorSet?.hoverBackground,
-                },
-            },
-        },
-    };
-    return (
-        <Box sx={menuColorSet ? menuColorSetSx : undefined}>{baseAppElement}</Box>
-    );
+    </Lot2BaseApp>;
 }
 
 export default BaseApp;

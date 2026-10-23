@@ -196,7 +196,11 @@ describe('App', () => {
         expect(screen.getByText('KeepAlive mock')).toBeInTheDocument();
         expect(screen.getByText('AppRoutes mock')).toBeInTheDocument();
         expect(props.logo).toBe('logo-clar');
+        expect(props.logoDark).toBe('logo-fosc');
         expect(props.appbarBackgroundColor).toBe('#fff');
+        // L'alçada de la capçalera la fixa lot2 (74px): l'aplicació no la força.
+        expect(props.appbarStyle?.cssText).toBeUndefined();
+        expect(props.appbarStyle?.minHeight).toBeUndefined();
         expect(props.availableLanguages).toEqual(['ca', 'es']);
         expect(props.headerMenuEntries).toBeUndefined();
         expect(props.menuEntries).toHaveLength(6);
@@ -262,7 +266,7 @@ describe('App', () => {
         expect(props.menuEntries).toEqual([]);
     });
 
-    it('App_quanElTemaEsFosc_usaElLogoFoscISenseColorDeFonsFix', () => {
+    it('App_quanElTemaEsFosc_passaElLogoFoscISenseColorDeFonsFix', () => {
         // Comprova que en tema fosc es fa servir el logo alternatiu i no es força el color blanc a l’appbar.
         mocks.useThemeMock.mockReturnValue({
             palette: {
@@ -282,7 +286,9 @@ describe('App', () => {
 
         const props = mocks.baseAppPropsMock.mock.calls[0]?.[0];
 
-        expect(props.logo).toBe('logo-fosc');
+        // Lot2BaseApp tria el logo fosc (logoDark) segons el tema actiu.
+        expect(props.logo).toBe('logo-clar');
+        expect(props.logoDark).toBe('logo-fosc');
         expect(props.appbarBackgroundColor).toBeUndefined();
         expect(props.menuAppearance).toBe('theme');
         expect(props.defaultMuiComponentProps.dataGrid.paginationModel).toBeUndefined();

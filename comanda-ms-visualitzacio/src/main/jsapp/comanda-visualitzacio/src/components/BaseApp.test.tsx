@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import BaseApp from './BaseApp';
@@ -15,16 +15,24 @@ const mocks = vi.hoisted(() => ({
     addResourceBundleMock: vi.fn(),
 }));
 
-vi.mock('reactlib', () => ({
+vi.mock('reactlib', async () => {
+    const React = await import('react');
+    return {
+    BaseAppContext: React.createContext(undefined),
+    toolbarBackgroundStyle: (backgroundColor: string) => ({ backgroundColor }),
     MuiBaseApp: (props: Record<string, unknown>) => {
         mocks.muiBaseAppMock(props);
         return (
             <div data-testid="mui-base-app">
                 <div data-testid="menu-count">{((props.menuEntries as unknown[]) ?? []).length}</div>
+                <div data-testid="header-components">
+                    {props.headerAdditionalComponents as React.ReactNode}
+                </div>
                 <div data-testid="header-auth-components">
                     {props.headerAdditionalAuthComponents as React.ReactNode}
                 </div>
                 {props.children as React.ReactNode}
+                <div data-testid="footer">{props.footer as React.ReactNode}</div>
             </div>
         );
     },
@@ -35,7 +43,8 @@ vi.mock('reactlib', () => ({
             show: vi.fn(),
         },
     }),
-}));
+    };
+});
 
 vi.mock('./UserContext', () => ({
     useUserContext: () => mocks.useUserContextMock(),
@@ -86,10 +95,6 @@ vi.mock('./Alarms', () => ({
     },
 }));
 
-vi.mock('./Footer', () => ({
-    default: () => <div data-testid="footer-component">Footer</div>,
-}));
-
 vi.mock('./SystemTimeDisplay', () => ({
     default: () => <div data-testid="system-time-component">Hora</div>,
 }));
@@ -120,10 +125,6 @@ vi.mock('../i18n/i18n', () => ({
     },
 }));
 
-vi.mock('../assets/drassana.png', () => ({
-    default: '/drassana.png',
-}));
-
 describe('BaseApp', () => {
     afterEach(() => {
         vi.clearAllMocks();
@@ -151,6 +152,7 @@ describe('BaseApp', () => {
             <MemoryRouter initialEntries={['/dashboard']}>
                 <BaseApp
                     code="comanda"
+                    logo="/logo.svg"
                     title="Comanda"
                     version="1.0.0"
                     menuEntries={[
@@ -210,7 +212,7 @@ describe('BaseApp', () => {
 
         render(
             <MemoryRouter initialEntries={['/inici']}>
-                <BaseApp code="comanda" title="Comanda" version="1.0.0" menuEntries={[{ id: 'a', title: 'A', to: '/a', icon: 'info' }]}>
+                <BaseApp code="comanda" title="Comanda" version="1.0.0" logo="/logo.svg" menuEntries={[{ id: 'a', title: 'A', to: '/a', icon: 'info' }]}>
                     <div>Contingut base</div>
                 </BaseApp>
             </MemoryRouter>
@@ -241,10 +243,75 @@ describe('BaseApp', () => {
 
         render(
             <MemoryRouter>
-                <BaseApp code="comanda" title="Comanda" version="1.0.0" />
+                <BaseApp code="comanda" title="Comanda" version="1.0.0" logo="/logo.svg" />
             </MemoryRouter>
         );
 
         expect(screen.getByText('15/05/24 10:30')).toBeInTheDocument();
+    });
+
+    const renderWithAlarmLink = (props: Partial<React.ComponentProps<typeof BaseApp>> = {}) => {
+        mocks.useResourceApiContextMock.mockReturnValue({
+            isReady: true,
+            indexState: { links: { has: vi.fn((rel: string) => rel === 'alarma') } },
+        });
+        mocks.useBaseAppContextMock.mockReturnValue({ currentLanguage: 'ca' });
+        mocks.useUserContextMock.mockReturnValue({ user: { id: 9, idioma: 'CA' }, currentRole: 'COM_ADMIN' });
+        mocks.useMediaQueryMock.mockReturnValue(false);
+        mocks.useTranslationMock.mockReturnValue({ t: () => 'txt' });
+        return render(
+            <MemoryRouter>
+                <BaseApp code="comanda" title="Comanda" version="1.0.0" logo="/logo.svg" {...props} />
+            </MemoryRouter>
+        );
+    };
+
+    it('BaseApp_capcalera_mostraHoraDelSistemaAlarmesISelectorDeRol', () => {
+        renderWithAlarmLink();
+        const header = screen.getByTestId('header-components');
+        expect(within(header).getByTestId('system-time-component')).toBeInTheDocument();
+        expect(within(header).getByTestId('alarms-component')).toBeInTheDocument();
+        expect(
+            within(screen.getByTestId('header-auth-components')).getByTestId('role-selector')
+        ).toBeInTheDocument();
+    });
+
+    it('BaseApp_peu_esElDeDrassanaAmbElTitolElsEnllacosIElLogoDeComanda', () => {
+        renderWithAlarmLink();
+        const footer = screen.getByTestId('footer');
+        expect(within(footer).getByText(/COMANDA/)).toBeInTheDocument();
+        expect(within(footer).getByText(/\|/)).toBeInTheDocument(); // (timestamp | revisió)
+        const hrefs = within(footer).getAllByRole('link').map((a) => a.getAttribute('href'));
+        expect(hrefs).toEqual(['/sitemap', '/accessibilitat']);
+        expect(within(footer).getByAltText('foot_logo')).toBeInTheDocument();
+        expect(mocks.muiBaseAppMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                footerHeight: 36,
+                appearance: expect.objectContaining({ headerHeight: 74 }),
+            })
+        );
+    });
+
+    it('BaseApp_menuAppearanceFooter_passaElsColorsDelMenuDeLot2', () => {
+        renderWithAlarmLink({ menuAppearance: 'footer' });
+        expect(mocks.muiBaseAppMock).toHaveBeenLastCalledWith(
+            expect.objectContaining({
+                appearance: expect.objectContaining({
+                    menuColors: expect.objectContaining({ background: '#5F5D5D' }),
+                }),
+            })
+        );
+    });
+
+    it('BaseApp_mantéLesPropsDeComandaPerAlMuiBaseApp', () => {
+        renderWithAlarmLink();
+        expect(mocks.muiBaseAppMock).toHaveBeenLastCalledWith(
+            expect.objectContaining({
+                headerLogo: '/logo.svg',
+                fixedContentExpandsToAvailableHeightEnabled: true,
+                marginsDisabled: true,
+                formFieldComponents: [expect.objectContaining({ type: 'reference' })],
+            })
+        );
     });
 });
