@@ -34,7 +34,7 @@ vi.mock('reactlib', () => ({
         const sampleRowSuccess = { id: 200 };
         return (
             <section>
-                <h2>{title}</h2>
+                <div>{title}</div>
                 <span data-testid="column-count">{columns.length}</span>
                 <span data-testid="column-header">{columns[1]?.headerName}</span>
                 <span data-testid="value-getter">
@@ -104,13 +104,18 @@ describe('VersionsEntorns', () => {
             ],
         });
 
-        render(<VersionsEntorns />);
+        const { container } = render(<VersionsEntorns />);
 
         await waitFor(() => {
             expect(screen.getByTestId('column-count')).toHaveTextContent('3');
         });
 
-        expect(screen.getByRole('heading', { level: 1, name: 'Versions per entorn' })).toBeInTheDocument();
+        // El títol de la graella és un ScreenTitle dins el ScreenFrame de la pàgina.
+        const frame = container.querySelector('.screen-frame');
+        expect(frame).not.toBeNull();
+        const screenTitle = (frame as HTMLElement).querySelector('.screen-title');
+        expect(screenTitle).not.toBeNull();
+        expect(screenTitle).toHaveTextContent('Versions per entorn');
         expect(screen.getByTestId('column-header')).toHaveTextContent('PRO (Producció)');
         expect(screen.getByTestId('value-getter')).toHaveTextContent('1.2.0');
         expect(screen.getByTestId('rendered-chip')).toHaveTextContent('1.2.0');

@@ -17,6 +17,9 @@ import IconButton from "@mui/material/IconButton";
 import Icon from "@mui/material/Icon";
 import Badge from "@mui/material/Badge";
 import EntitatRefreshUOProgressDialog from "../components/EntitatRefreshUOProgressDialog.tsx";
+import { ScreenFrame } from '../lot2';
+import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
+import { screenIcons } from '../util/screenIcons.ts';
 
 const EntitatsFrom = () => {
     const {data} = useFormContext()
@@ -52,6 +55,7 @@ const columns: MuiDataGridColDef[] = [
 
 const Entitats = () => {
     const { t } = useTranslation();
+    const screenGridProps = useScreenGridProps(screenIcons.entitat, t($ => $.page.entitats.title));
 
     const additionalColumns:any = useMemo(() => [
         ...columns,
@@ -144,33 +148,34 @@ const Entitats = () => {
     return (
         <>
             <PageTitle title={t($ => $.page.entitats.title)} />
-            <MuiDataGrid
-                apiRef={gridApiRef}
-                title={t($ => $.page.entitats.title)}
-                resourceName="entitat"
-                columns={additionalColumns}
-                perspectives={['PERMIS_NUM']}
-                toolbarType="upper"
-                popupEditCreateActive
-                popupEditActive
-                popupEditFormContent={<EntitatsFrom/>}
-                paginationActive
-                rowAdditionalActions={[
-                    {
-                        label: t($ => $.page.entitats.action.refreshUO.label),
-                        icon: 'refresh',
-                        showInMenu: true,
-                        action: 'REFRESH_UO',
-                        onClick: refreshUO,
-                    },
-                    {
-                        label: t($ => $.page.entitats.action.organigrama.label),
-                        icon: 'list',
-                        showInMenu: true,
-                        onClick: (id, row) => handleOpen(id, row.codiDir3),
-                    },
-                ]}
-            />
+            <ScreenFrame>
+                <MuiDataGrid
+                    apiRef={gridApiRef}
+                    {...screenGridProps}
+                    resourceName="entitat"
+                    columns={additionalColumns}
+                    perspectives={['PERMIS_NUM']}
+                    popupEditCreateActive
+                    popupEditActive
+                    popupEditFormContent={<EntitatsFrom/>}
+                    paginationActive
+                    rowAdditionalActions={[
+                        {
+                            label: t($ => $.page.entitats.action.refreshUO.label),
+                            icon: 'refresh',
+                            showInMenu: true,
+                            action: 'REFRESH_UO',
+                            onClick: refreshUO,
+                        },
+                        {
+                            label: t($ => $.page.entitats.action.organigrama.label),
+                            icon: 'list',
+                            showInMenu: true,
+                            onClick: (id, row) => handleOpen(id, row.codiDir3),
+                        },
+                    ]}
+                />
+            </ScreenFrame>
             {dialog}
             {permissionComponent}
             <EntitatRefreshUOProgressDialog

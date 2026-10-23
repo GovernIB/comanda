@@ -77,7 +77,7 @@ vi.mock('reactlib', () => ({
         const mockRow = { id: 15, codi: 'E1', codiDir3: 'D3', numPermisos: 2 };
         return (
             <section>
-                <h2>{title}</h2>
+                <div>{title}</div>
                 <div data-testid="columns">{columns.map((c) => c.field).join(',')}</div>
 
                 {columns?.map((col) => {
@@ -214,6 +214,17 @@ describe('Entitats', () => {
     afterEach(() => {
         vi.clearAllMocks();
         mocks.unitatOnEntryChanged.current = undefined;
+    });
+
+    it('Entitats_quanEsRenderitza_mostraElTitolDinsElScreenFrame', () => {
+        // El títol de la graella principal és un ScreenTitle dins el ScreenFrame de la pàgina.
+        const { container } = render(<Entitats />);
+
+        const frame = container.querySelector('.screen-frame');
+        expect(frame).not.toBeNull();
+        const screenTitle = (frame as HTMLElement).querySelector('.screen-title');
+        expect(screenTitle).not.toBeNull();
+        expect(screenTitle).toHaveTextContent('Entitats');
     });
 
     it('Entitats_quanEsRenderitza_mostraElTitolLesColumnesILesAccions', () => {

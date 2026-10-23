@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
     isUserAdminMock: vi.fn(() => true),
     readOnlyGestorMock: vi.fn(() => false),
     lastRowAdditionalActions: [] as any[],
+    lastAppsGridProps: {} as Record<string, unknown>,
     useFormContextValue: {
         data: {},
         apiRef: { current: { setFieldValue: vi.fn() } },
@@ -40,6 +41,7 @@ const mocks = vi.hoisted(() => ({
             page: {
                 apps: {
                     title: 'Aplicacions',
+                    toolbarCreateLabel: 'Nova aplicació',
                     logoAlt: 'Logotip',
                     noLogo: 'Sense logotip',
                     general: 'General',
@@ -204,22 +206,27 @@ vi.mock('reactlib', () => ({
         rowAdditionalActions,
         toolbarElementsWithPositions,
         popupEditFormContent,
+        toolbarCreateLabel,
     }: {
-        title: string;
+        toolbarCreateLabel?: string;
+        title: React.ReactNode;
         columns?: Array<{ field: string; renderCell?: (params: any) => React.ReactNode }>;
         rowAdditionalActions?: Array<{ label: string; onClick?: (id?: unknown, row?: any) => void }>;
         toolbarElementsWithPositions?: Array<{ element: React.ReactNode }>;
         popupEditFormContent?: React.ReactNode;
     }) => {
         mocks.lastRowAdditionalActions = rowAdditionalActions ?? [];
-        const isAppList = title === 'Aplicacions';
+        // El títol de la graella és un ScreenTitle (element): se'n llegeix el text de la prop `title`.
+        const titleText = typeof title === 'string' ? title : (title as { props?: { title?: string } } | null)?.props?.title;
+        const isAppList = titleText === 'Aplicacions';
+        if (isAppList) mocks.lastAppsGridProps = { toolbarCreateLabel };
         const mockRow = isAppList
             ? { id: 12, nom: 'Comanda', activa: true, numPermisos: 2 }
             : { id: undefined, entorn: { description: 'PRO' }, activa: false, numPermisos: 1 };
 
         return (
             <section>
-                <h2>{title}</h2>
+                <div>{title}</div>
                 {columns?.map((col) => {
                     if (col.renderCell) {
                         return (
@@ -733,7 +740,15 @@ describe('Apps', () => {
     it('Apps_quanEsRenderitza_mostraLaGraellaAmbLesAccionsDimportacioIExportacio', () => {
         mocks.useParamsMock.mockReturnValue({ id: undefined });
 
-        render(<Apps />);
+        const { container } = render(<Apps />);
+
+        // El títol de la graella és un ScreenTitle dins el ScreenFrame de la pàgina.
+        const frame = container.querySelector('.screen-frame');
+        expect(frame).not.toBeNull();
+        const screenTitle = (frame as HTMLElement).querySelector('.screen-title');
+        expect(screenTitle).not.toBeNull();
+        expect(screenTitle).toHaveTextContent('Aplicacions');
+        expect(mocks.lastAppsGridProps.toolbarCreateLabel).toBe('Nova aplicació');
 
         expect(screen.getByTestId('page-title')).toHaveTextContent('Aplicacions');
         expect(screen.getByRole('heading', { name: 'Aplicacions' })).toBeInTheDocument();

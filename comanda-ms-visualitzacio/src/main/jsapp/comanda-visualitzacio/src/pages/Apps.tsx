@@ -66,6 +66,8 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import {useMemo} from "react";
 import Badge from "@mui/material/Badge";
 import Icon from "@mui/material/Icon";
+import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
+import { screenIcons } from '../util/screenIcons.ts';
 
 const PingUrlActionResponse = z.object({
     success: z.boolean(),
@@ -972,6 +974,7 @@ const AppsAclEntryForm: React.FC = () => {
 
 const Apps: React.FC = () => {
     const { t } = useTranslation();
+    const screenGridProps = useScreenGridProps(screenIcons.apps, t($ => $.page.apps.title));
     const { temporalMessageShow, messageDialogShow } = useBaseAppContext();
     const navigate = useNavigate();
     const gridApiRef = useMuiDataGridApiRef();
@@ -1120,23 +1123,25 @@ const Apps: React.FC = () => {
     return (
         <>
             <PageTitle title={t($ => $.page.apps.title)} />
-            <MuiDataGrid
-                apiRef={gridApiRef}
-                title={t($ => $.page.apps.title)}
-                resourceName="app"
-                columns={additionalColumns}
-                perspectives={['PERMIS_NUM']}
-                toolbarType="upper"
-                paginationActive
-                //readOnly
-                toolbarCreateLink="form"
-                rowUpdateLink="form/{{id}}"
-                rowAdditionalActions={appActions}
-                toolbarElementsWithPositions={toolbarElementsWithPositions}
-                rowHideUpdateButton={gestorReadOnly}
-                rowHideDeleteButton={gestorReadOnly}
-                {...(!gestorReadOnly ? dataGridProps : {})}
-            />
+            <ScreenFrame>
+                <MuiDataGrid
+                    toolbarCreateLabel={t($ => $.page.apps.toolbarCreateLabel)}
+                    apiRef={gridApiRef}
+                    {...screenGridProps}
+                    resourceName="app"
+                    columns={additionalColumns}
+                    perspectives={['PERMIS_NUM']}
+                    paginationActive
+                    //readOnly
+                    toolbarCreateLink="form"
+                    rowUpdateLink="form/{{id}}"
+                    rowAdditionalActions={appActions}
+                    toolbarElementsWithPositions={toolbarElementsWithPositions}
+                    rowHideUpdateButton={gestorReadOnly}
+                    rowHideDeleteButton={gestorReadOnly}
+                    {...(!gestorReadOnly ? dataGridProps : {})}
+                />
+            </ScreenFrame>
             {appPermissionComponent}
             {netejaAppDialogComponent}
         </>

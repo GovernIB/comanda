@@ -4,6 +4,9 @@ import { MuiDataGrid, MuiDataGridColDef, useResourceApiService } from 'reactlib'
 import { Chip, Skeleton, Stack, Tooltip } from '@mui/material';
 import PageTitle from '../components/PageTitle.tsx';
 import { truncateHashRevisio } from './salut/dataFetching.ts';
+import { ScreenFrame } from '../lot2';
+import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
+import { screenIcons } from '../util/screenIcons.ts';
 
 const toSortedVersions = (versions: string[]) =>
     versions
@@ -34,6 +37,7 @@ const toSortedVersions = (versions: string[]) =>
 
 const Entorns: React.FC = () => {
     const { t } = useTranslation();
+    const screenGridProps = useScreenGridProps(screenIcons.versions, t($ => $.page.versionsEntorns.title));
     const { isReady: entornApiIsReady, find: entornApiFind } = useResourceApiService('entorn');
     const [entorns, setEntorns] = React.useState<Array<{ id: number | string; codi: string; nom: string }>>();
     React.useEffect(() => {
@@ -115,16 +119,17 @@ const Entorns: React.FC = () => {
     return (
         <>
             <PageTitle title={t($ => $.page.versionsEntorns.title)} />
-            <MuiDataGrid
-                title={t($ => $.page.versionsEntorns.title)}
-                resourceName="app"
-                columns={columns}
-                namedQueries={['permis_salut']}
-                readOnly
-                toolbarType="upper"
-                paginationActive
-                toolbarHideRefresh
-            />
+            <ScreenFrame>
+                <MuiDataGrid
+                    {...screenGridProps}
+                    resourceName="app"
+                    columns={columns}
+                    namedQueries={['permis_salut']}
+                    readOnly
+                    paginationActive
+                    toolbarHideRefresh
+                />
+            </ScreenFrame>
         </>
     );
 };

@@ -9,9 +9,13 @@ import BlockIcon from '@mui/icons-material/Block';
 import LogoUpload from "../components/LogoUpload.tsx";
 import PageTitle from '../components/PageTitle.tsx';
 import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
+import { ScreenFrame } from '../lot2';
+import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
+import { screenIcons } from '../util/screenIcons.ts';
 
 const Integracions: React.FC = () => {
     const { t } = useTranslation();
+    const screenGridProps = useScreenGridProps(screenIcons.integracio, t($ => $.page.integracions.title));
     const readOnlyGestor = useReadOnlyGestor();
     const columns = [
         {
@@ -45,24 +49,25 @@ const Integracions: React.FC = () => {
     return (
         <>
             <PageTitle title={t($ => $.page.integracions.title)} />
-            <MuiDataGrid
-                title={t($ => $.page.integracions.title)}
-                resourceName="integracio"
-                columns={columns}
-                toolbarType="upper"
-                paginationActive
-                popupEditActive
-                toolbarHideCreate
-                rowHideDeleteButton
-                rowHideUpdateButton={readOnlyGestor}
-                popupEditFormContent={
-                    <Grid container spacing={2}>
-                        <Grid size={12}><FormField name="codi" disabled={true} /></Grid>
-                        <Grid size={12}><FormField name="nom" disabled={true} /></Grid>
-                        <Grid size={12}><LogoUpload name="logo" /></Grid>
-                    </Grid>
-                }
-            />
+            <ScreenFrame>
+                <MuiDataGrid
+                    {...screenGridProps}
+                    resourceName="integracio"
+                    columns={columns}
+                    paginationActive
+                    popupEditActive
+                    toolbarHideCreate
+                    rowHideDeleteButton
+                    rowHideUpdateButton={readOnlyGestor}
+                    popupEditFormContent={
+                        <Grid container spacing={2}>
+                            <Grid size={12}><FormField name="codi" disabled={true} /></Grid>
+                            <Grid size={12}><FormField name="nom" disabled={true} /></Grid>
+                            <Grid size={12}><LogoUpload name="logo" /></Grid>
+                        </Grid>
+                    }
+                />
+            </ScreenFrame>
         </>
     );
 };

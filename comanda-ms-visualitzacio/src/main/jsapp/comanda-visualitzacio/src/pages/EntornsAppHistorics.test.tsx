@@ -34,8 +34,9 @@ vi.mock('./salut/dataFetching.ts', () => ({
 }));
 
 vi.mock('reactlib', () => ({
-    MuiDataGrid: ({ columns, toolbarAdditionalRow }: any) => (
+    MuiDataGrid: ({ title, columns, toolbarAdditionalRow }: any) => (
         <div data-testid="data-grid">
+            {title}
             <div data-testid="columns-data">
                 {JSON.stringify(columns.map((c: any) => ({ field: c.field, headerName: c.headerName })))}
             </div>
@@ -90,7 +91,14 @@ describe('EntornAppHist', () => {
     });
 
     it('EntornAppHist_columnaEntornApp_formatejaCorrectamentElValor', async () => {
-        render(<EntornAppHist />);
+        const { container } = render(<EntornAppHist />);
+
+        // El títol de la graella és un ScreenTitle dins el ScreenFrame de la pàgina.
+        const frame = container.querySelector('.screen-frame');
+        expect(frame).not.toBeNull();
+        const screenTitle = (frame as HTMLElement).querySelector('.screen-title');
+        expect(screenTitle).not.toBeNull();
+        expect(screenTitle).toHaveTextContent('history');
 
         await waitFor(() => {
             expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();

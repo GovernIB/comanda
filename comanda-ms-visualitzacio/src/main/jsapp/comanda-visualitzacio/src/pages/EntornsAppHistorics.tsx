@@ -13,6 +13,9 @@ import {
 } from 'reactlib';
 import PageTitle from '../components/PageTitle.tsx';
 import { truncateHashRevisio } from './salut/dataFetching.ts';
+import { ScreenFrame } from '../lot2';
+import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
+import { screenIcons } from '../util/screenIcons.ts';
 
 type EntornAppHistFilterProps = {
     onSpringFilterChange: (springFilter?: string) => void;
@@ -101,6 +104,7 @@ const EntornAppHistFilter: React.FC<EntornAppHistFilterProps> = ({ onSpringFilte
 
 const EntornAppHist: React.FC = () => {
     const { t } = useTranslation();
+    const screenGridProps = useScreenGridProps(screenIcons.historic, t($ => $.page.entornAppHist.title));
     const [filter, setFilter] = React.useState<string | undefined>();
     const columns: MuiDataGridColDef[] = React.useMemo(() => ([
         {
@@ -147,18 +151,19 @@ const EntornAppHist: React.FC = () => {
     return (
         <>
             <PageTitle title={t($ => $.page.entornAppHist.title)} />
-            <MuiDataGrid
-                title={t($ => $.page.entornAppHist.title)}
-                resourceName="entornAppHist"
-                columns={columns}
-                toolbarType="upper"
-                toolbarAdditionalRow={
-                    <EntornAppHistFilter onSpringFilterChange={setFilter} />
-                }
-                filter={filter}
-                paginationActive
-                readOnly
-            />
+            <ScreenFrame>
+                <MuiDataGrid
+                    {...screenGridProps}
+                    resourceName="entornAppHist"
+                    columns={columns}
+                    toolbarAdditionalRow={
+                        <EntornAppHistFilter onSpringFilterChange={setFilter} />
+                    }
+                    filter={filter}
+                    paginationActive
+                    readOnly
+                />
+            </ScreenFrame>
         </>
     );
 };

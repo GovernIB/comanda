@@ -34,7 +34,7 @@ vi.mock('reactlib', () => ({
         popupEditFormContent?: React.ReactNode;
     }) => (
         <section>
-            <h2>{title}</h2>
+            <div>{title}</div>
             <div data-testid="columns">{columns.map((column) => column.field).join(',')}</div>
             {toolbarElementsWithPositions?.map((entry, index) => (
                 <div key={index}>{entry.element}</div>
@@ -62,6 +62,17 @@ vi.mock('../hooks/useReadOnlyGestor.ts', () => ({
 describe('Entorns', () => {
     afterEach(() => {
         vi.clearAllMocks();
+    });
+
+    it('Entorns_quanEsRenderitza_mostraElTitolDinsElScreenFrame', () => {
+        // El títol de la graella principal és un ScreenTitle dins el ScreenFrame de la pàgina.
+        const { container } = render(<Entorns />);
+
+        const frame = container.querySelector('.screen-frame');
+        expect(frame).not.toBeNull();
+        const screenTitle = (frame as HTMLElement).querySelector('.screen-title');
+        expect(screenTitle).not.toBeNull();
+        expect(screenTitle).toHaveTextContent('Entorns');
     });
 
     it('Entorns_quanEsRenderitza_mostraLaGraellaIElFormulariBasic', () => {
