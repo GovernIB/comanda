@@ -197,6 +197,7 @@ vi.mock('reactlib', async () => {
         },
 
         useCloseDialogButtons: () => <button>Tancar</button>,
+        useFilterApiContext: () => ({ current: { clear: mocks.clearMock } }),
         useFilterApiRef: () => ({
             current: {
                 clear: mocks.clearMock,
@@ -260,6 +261,18 @@ describe('translateEnumValue', () => {
     });
 });
 
+// Els botons i el recompte de filtres de lot2 demanen els textos a l'espai de noms `lot2`: es fixen aquí.
+vi.mock('../lot2/i18n', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('../lot2/i18n')>()),
+    useLot2Translation: () => ({
+        t: (key: string, options?: { count?: number }) => {
+            if (key === 'neteja') return 'Netejar';
+            if (key === 'obrirFiltreAvancat') return 'Més camps';
+            return options?.count != null ? `${key}:${options.count}` : key;
+        },
+    }),
+}));
+
 describe('Monitors', () => {
     afterEach(() => {
         vi.clearAllMocks();
@@ -283,7 +296,7 @@ describe('Monitors', () => {
         expect(screen.getByTestId('field-codi')).toBeInTheDocument();
         expect(screen.getByTestId('field-dataDesde')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Netejar' })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Més camps' })).toBeInTheDocument();
+        expect(screen.getByTitle('Més camps')).toBeInTheDocument();
         expect(screen.getByRole('tab', { name: 'Salut' })).toBeInTheDocument();
         expect(screen.getByRole('tab', { name: 'EMAIL' })).toBeInTheDocument();
         expect(screen.getByTestId('url-header')).toHaveTextContent('URL');
@@ -295,7 +308,18 @@ describe('Monitors', () => {
         render(<Monitors />);
 
         fireEvent.click(screen.getByRole('button', { name: 'Netejar' }));
-        expect(mocks.clearMock).toHaveBeenCalled();
+        // El botó buida els dos filtres (el d'entorn-app i el de monitor).
+        expect(mocks.clearMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('Monitors_quanEsSeleccionenAppIEntorn_elRecompteEsLaSumaDelsFiltresAplicats', () => {
+        // FilterCount suma l'app i l'entorn seleccionats (el filtre de monitor no té cap terme).
+        const { container } = render(<Monitors />);
+
+        fireEvent.click(screen.getByTestId('select-app'));
+        fireEvent.click(screen.getByTestId('select-entorn'));
+
+        expect(container.querySelector('.screen-title')).toHaveTextContent('filtresAplicats:2');
     });
 
     it('Monitors_quanCanviaLaPestanya_actualitzaElFiltreStaticIObreElDetall', () => {

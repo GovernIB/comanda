@@ -17,13 +17,16 @@ import {
 import { GridRenderCellParams } from '@mui/x-data-grid';
 import { ContentDetail } from '../components/ContentDetail';
 import { StacktraceBlock } from '../components/RickTextDetail';
-import { Tabs, Tab, Chip, Box, Icon, IconButton, Button, CircularProgress } from '@mui/material';
+import { Tabs, Tab, Chip, Box, Icon, Button, CircularProgress } from '@mui/material';
 import useTranslationStringKey from '../hooks/useTranslationStringKey';
 import PageTitle from '../components/PageTitle.tsx';
 import { getErrorMessage } from '../util/exceptionUtils.ts';
-import { ScreenFrame } from '../lot2';
+import { FilterAdvancedButton, FilterCount, ScreenFrame } from '../lot2';
 import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
 import { screenIcons } from '../util/screenIcons.ts';
+import FilterClearAllButton from '../components/FilterClearAllButton.tsx';
+import useAppliedSpringFilter from '../hooks/useAppliedSpringFilter.ts';
+import { sumSpringFilterTerms } from '../util/springFilterSum.ts';
 
 const moduleOptions = [
     { value: 'SALUT', labelKey: 'page.monitors.modulEnum.salut' },
@@ -192,13 +195,14 @@ type MonitorFilterProps = {
 }
 
 const MonitorFilter: React.FC<MonitorFilterProps> = ({ onAppChange, onEntornChange }) => {
-    const { t } = useTranslation();
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const entornAppFilterApiRef = useFilterApiRef();
     const monitorFilterApiRef = useFilterApiRef();
+    // Filtres aplicats, per al recompte de la barra de títol: app, entorn i el filtre de monitor
+    const [appId, setAppId] = React.useState<number | undefined>();
+    const [entornId, setEntornId] = React.useState<number | undefined>();
+    const { appliedSpringFilter, handleSpringFilterChange } = useAppliedSpringFilter();
     const clear = () => {
-        entornAppFilterApiRef.current?.clear();
-        monitorFilterApiRef.current?.clear();
         setTimeout(() => {
             onAppChange?.(undefined);
             onEntornChange?.(undefined);
@@ -209,6 +213,8 @@ const MonitorFilter: React.FC<MonitorFilterProps> = ({ onAppChange, onEntornChan
         const entornId = data?.entorn?.id;
         monitorFilterApiRef.current?.setFieldValue('appId', appId);
         monitorFilterApiRef.current?.setFieldValue('entornId', entornId);
+        setAppId(appId);
+        setEntornId(entornId);
         onAppChange?.(appId);
         onEntornChange?.(entornId);
         return '';
@@ -251,24 +257,17 @@ const MonitorFilter: React.FC<MonitorFilterProps> = ({ onAppChange, onEntornChan
                     width: { xs: '100%', sm: 'auto' },
                     mt: { xs: 1, sm: 0 },
                 }}>
-                    <IconButton
-                        onClick={clear}
-                        title={t($ => $.components.clear)}
-                        sx={{ mr: 1 }}>
-                        <Icon>filter_alt_off</Icon>
-                    </IconButton>
-                    <IconButton
-                        onClick={() => setMoreFields((mf) => !mf)}
-                        title={t($ => $.page.monitors.filter.more)}>
-                        <Icon>filter_list</Icon>
-                    </IconButton>
+                    <FilterClearAllButton otherFilterApiRefs={[monitorFilterApiRef]} onClear={clear} />
+                    <FilterAdvancedButton open={moreFields} onClick={() => setMoreFields((mf) => !mf)} />
                 </Box>
             </Box>
+            <FilterCount springFilter={sumSpringFilterTerms(appId ? 'appId:1' : undefined, entornId ? 'entornId:1' : undefined, appliedSpringFilter)} />
         </MuiFilter>
         <MuiFilter
             resourceName="monitor"
             code="FILTER"
             springFilterBuilder={monitorSpringFilterBuilder}
+            onSpringFilterChange={handleSpringFilterChange}
             apiRef={monitorFilterApiRef}
             commonFieldComponentProps={{ size: 'small' }}
             componentProps={{

@@ -15,7 +15,6 @@ import {
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Icon from '@mui/material/Icon';
-import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import {countLeaves, useTreeData} from '../hooks/treeData';
 import { formatEndOfDay, formatStartOfDay } from '../util/dateUtils.ts';
@@ -34,9 +33,11 @@ import { useGetColorByAvisTipus, AvisTipusEnum } from '../types/salut.model.tsx'
 import { ROLE_ADMIN } from '../components/UserProvider.tsx';
 import { DataCommonAdditionalAction } from '../../lib/components/mui/datacommon/MuiDataCommon.tsx';
 import {useEffect, useMemo, useRef} from "react";
-import { ScreenFrame } from '../lot2';
+import { FilterAdvancedButton, FilterCount, ScreenFrame } from '../lot2';
 import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
 import { screenIcons } from '../util/screenIcons.ts';
+import FilterClearAllButton from '../components/FilterClearAllButton.tsx';
+import { sumSpringFilterTerms } from '../util/springFilterSum.ts';
 
 const AvisTipusChip = (props: { tipus?: AvisTipusEnum }) => {
     const { tipus } = props;
@@ -200,9 +201,8 @@ const avisFilterBuilder = (data: any, currentUserCodi: string | null) => springF
     data?.avisPropi && currentUserCodi && springFilterBuilder.eq('responsable', `'${currentUserCodi}'`),
 )
 
-const AvisFilter = (props: { onEntornAppFilterDataChange: (data: Record<string, unknown>) => void, onExpandedFilterDataChange: (data: Record<string, unknown>) => void }) => {
-    const { onEntornAppFilterDataChange, onExpandedFilterDataChange } = props;
-    const { t } = useTranslation();
+const AvisFilter = (props: { onEntornAppFilterDataChange: (data: Record<string, unknown>) => void, onExpandedFilterDataChange: (data: Record<string, unknown>) => void, appliedSpringFilter?: string }) => {
+    const { onEntornAppFilterDataChange, onExpandedFilterDataChange, appliedSpringFilter } = props;
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const appEntornFilterApiRef = useFilterApiRef();
     const moreFilterApiRef = useFilterApiRef();
@@ -212,12 +212,6 @@ const AvisFilter = (props: { onEntornAppFilterDataChange: (data: Record<string, 
     const moreFilterInitialData = {
         noLlegit: true,
     };
-    const netejar = () => {
-        appEntornFilterApiRef?.current?.clear();
-        moreFilterApiRef?.current?.clear();
-    }
-
-
     return (
         <>
             <MuiFilter
@@ -251,19 +245,11 @@ const AvisFilter = (props: { onEntornAppFilterDataChange: (data: Record<string, 
                     }}>
                         {/*<NoLlegitFilterButton />*/}
                         <OwnAvisFilterButton />
-                        <IconButton
-                            onClick={netejar}
-                            title={t($ => $.components.clear)}
-                            sx={{ mr: 1 }}>
-                            <Icon>filter_alt_off</Icon>
-                        </IconButton>
-                        <IconButton
-                            onClick={() => setMoreFields((mf) => !mf)}
-                            title={t($ => $.page.avisos.filter.more)}>
-                            <Icon>filter_list</Icon>
-                        </IconButton>
+                        <FilterClearAllButton otherFilterApiRefs={[moreFilterApiRef]} />
+                        <FilterAdvancedButton open={moreFields} onClick={() => setMoreFields((mf) => !mf)} />
                     </Box>
                 </Box>
+                <FilterCount springFilter={appliedSpringFilter} />
             </MuiFilter>
             <MuiFilter
                 initialData={moreFilterInitialData}
@@ -493,6 +479,10 @@ const Avis = () => {
     }, [t, tLib, marcarLlegit, marcarNoLlegit, isAdmin, actionIsReady]);
     const filterElement = (
         <AvisFilter
+            appliedSpringFilter={sumSpringFilterTerms(
+                avisFilterBuilder(filterData?.entornAppFilter ?? {}, currentUserCodi ?? null),
+                avisFilterBuilder(filterData?.expandedFilter ?? {}, currentUserCodi ?? null),
+            )}
             onEntornAppFilterDataChange={data =>
                 setFilterData(prevState => ({ ...prevState, entornAppFilter: data }))
             }

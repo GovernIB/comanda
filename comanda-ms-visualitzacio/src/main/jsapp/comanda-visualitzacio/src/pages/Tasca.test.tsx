@@ -135,10 +135,17 @@ vi.mock('reactlib', () => ({
             </section>
         );
     },
-    MuiFilter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    MuiFilter: ({ children, resourceName, onDataChange }: { children: React.ReactNode; resourceName?: string; onDataChange?: (data: Record<string, unknown>) => void }) => (
+        <div>
+            <button type="button" onClick={() => onDataChange?.(resourceName === 'entornApp' ? { app: { id: 1 } } : { nom: 'a', tipus: 'b' })}>
+                aplica-{resourceName}
+            </button>
+            {children}
+        </div>
+    ),
     FormField: ({ name }: { name: string }) => <div data-testid={`field-${name}`}>{name}</div>,
     springFilterBuilder: {
-        and: (...parts: Array<string | undefined | false | null>) => parts.filter(Boolean).join(' && '),
+        and: (...parts: Array<string | undefined | false | null>) => parts.filter((part) => Boolean(part) && !String(part).includes('undefined')).join(' and '),
         eq: (field: string, value: unknown) => `${field}=${String(value)}`,
         like: (field: string, value: unknown) => `${field}~${String(value)}`,
         gte: (field: string, value: unknown) => `${field}>=${String(value)}`,
@@ -157,6 +164,7 @@ vi.mock('reactlib', () => ({
         },
         data: tascaFormData,
     }),
+    useFilterApiContext: () => ({ current: { clear: mocks.clearAppEntornMock } }),
     useFilterApiRef: () => {
         const call = mocks.filterApiRefCallMock.mock.calls.length;
         mocks.filterApiRefCallMock();
@@ -233,6 +241,18 @@ vi.mock('../types/salut.model.tsx', () => ({
 vi.mock('../../lib/components/mui/datacommon/MuiDataCommon.tsx', () => ({}));
 vi.mock('../components/UserProvider.tsx', () => ({ ROLE_ADMIN: 'ADMIN' }));
 
+// Els botons i el recompte de filtres de lot2 demanen els textos a l'espai de noms `lot2`: es fixen aquí.
+vi.mock('../lot2/i18n', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('../lot2/i18n')>()),
+    useLot2Translation: () => ({
+        t: (key: string, options?: { count?: number }) => {
+            if (key === 'neteja') return 'Netejar';
+            if (key === 'obrirFiltreAvancat') return 'Més filtres';
+            return options?.count != null ? `${key}:${options.count}` : key;
+        },
+    }),
+}));
+
 describe('Tasca', () => {
     afterEach(() => {
         vi.clearAllMocks();
@@ -307,5 +327,15 @@ describe('Tasca', () => {
 
         expect(mocks.clearAppEntornMock).toHaveBeenCalled();
         expect(mocks.clearMoreMock).toHaveBeenCalled();
+    });
+
+    it('Tasca_quanEsAplicaranElsDosFiltres_elRecompteEsLaSumaDelsTermes', () => {
+        // FilterCount mostra la SUMA dels termes aplicats pels dos filtres (1 de l'entorn-app i 2 de l'ampliat).
+        const { container } = render(<Tasca />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'aplica-entornApp' }));
+        fireEvent.click(screen.getByRole('button', { name: 'aplica-tasca' }));
+
+        expect(container.querySelector('.screen-title')).toHaveTextContent('filtresAplicats:3');
     });
 });
