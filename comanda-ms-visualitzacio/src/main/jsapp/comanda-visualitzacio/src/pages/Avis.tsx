@@ -34,6 +34,9 @@ import { useGetColorByAvisTipus, AvisTipusEnum } from '../types/salut.model.tsx'
 import { ROLE_ADMIN } from '../components/UserProvider.tsx';
 import { DataCommonAdditionalAction } from '../../lib/components/mui/datacommon/MuiDataCommon.tsx';
 import {useEffect, useMemo, useRef} from "react";
+import { ScreenFrame } from '../lot2';
+import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
+import { screenIcons } from '../util/screenIcons.ts';
 
 const AvisTipusChip = (props: { tipus?: AvisTipusEnum }) => {
     const { tipus } = props;
@@ -315,6 +318,7 @@ const INVALID_ENTORNAPP = "INVALID_ENTORNAPP";
 
 const Avis = () => {
     const { t } = useTranslation();
+    const screenGridProps = useScreenGridProps(screenIcons.avis, t($ => $.menu.avis));
     const { t: tLib } = useBaseAppContext();
     const { currentRole, user } = useUserContext();
     const currentUserCodi = user?.codi;
@@ -530,39 +534,40 @@ const Avis = () => {
     return (
         <Box sx={{ height: '100%' }}>
             <PageTitle title={t($ => $.menu.avis)} />
-            <MuiDataGrid
-                apiRef={apiRef}
-                title={t($ => $.menu.avis)}
-                resourceName="avis"
-                columns={columns}
-                perspectives={dataGridPerspectives}
-                datagridApiRef={gridApiRef}
-                sortModel={dataGridSortModel}
-                filter={filter}
-                namedQueries={noLlegit?['avis_no_llegit']:[]}
-                readOnly
-                toolbarType="upper"
-                toolbarHideQuickFilter
-                toolbarElementsWithPositions={toolbarAdditionalActions}
-                toolbarAdditionalRow={filterElement}
-                rowAdditionalActions={actions}
-                // autoFindDisabled no es pot usar si el filtre està buit, ja que només es farà una única petició inicial i aquesta serà cancelada pel autoFindDisabled
-                autoFindDisabled={!(isFilterDataReady && !filter.length)}
-                // s'usa loading per a que el grid no es mostri buit fins que no s'ha fet la primera petició
-                loading
-                {...treeDataGridProps}
-                initialState={{
-                    columns: {
-                        columnVisibilityModel: {
-                            entorn: false,
+            <ScreenFrame>
+                <MuiDataGrid
+                    apiRef={apiRef}
+                    {...screenGridProps}
+                    resourceName="avis"
+                    columns={columns}
+                    perspectives={dataGridPerspectives}
+                    datagridApiRef={gridApiRef}
+                    sortModel={dataGridSortModel}
+                    filter={filter}
+                    namedQueries={noLlegit?['avis_no_llegit']:[]}
+                    readOnly
+                    toolbarHideQuickFilter
+                    toolbarElementsWithPositions={toolbarAdditionalActions}
+                    toolbarAdditionalRow={filterElement}
+                    rowAdditionalActions={actions}
+                    // autoFindDisabled no es pot usar si el filtre està buit, ja que només es farà una única petició inicial i aquesta serà cancelada pel autoFindDisabled
+                    autoFindDisabled={!(isFilterDataReady && !filter.length)}
+                    // s'usa loading per a que el grid no es mostri buit fins que no s'ha fet la primera petició
+                    loading
+                    {...treeDataGridProps}
+                    initialState={{
+                        columns: {
+                            columnVisibilityModel: {
+                                entorn: false,
+                            },
                         },
-                    },
-                }}
-                selectionActive
-                onRowSelectionModelChange={(rowSelectionModel: { ids?: Iterable<string | number> }) => {
-                    selectedRows.current = Array.from(rowSelectionModel?.ids ?? [])
-                }}
-            />
+                    }}
+                    selectionActive
+                    onRowSelectionModelChange={(rowSelectionModel: { ids?: Iterable<string | number> }) => {
+                        selectedRows.current = Array.from(rowSelectionModel?.ids ?? [])
+                    }}
+                />
+            </ScreenFrame>
         </Box>
     );
 }

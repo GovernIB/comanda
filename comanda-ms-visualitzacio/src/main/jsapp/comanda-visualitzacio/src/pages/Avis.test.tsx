@@ -95,7 +95,7 @@ vi.mock('reactlib', () => ({
         filter?: string;
     }) => (
         <section>
-            <h2>{title}</h2>
+            <div>{title}</div>
             <div data-testid="filter-value">{filter ?? ''}</div>
             <div data-testid="columns">{columns.map((column) => column.field).join(',')}</div>
             <div data-testid="tipus-cell">
@@ -232,7 +232,14 @@ describe('Avis', () => {
 
     it('Avis_quanEsRenderitza_mostraLaGraellaElsXipsIElFiltreInicial', () => {
         // Comprova que la pàgina d'avisos mostra les columnes base, el filtre i els xips de tipus/global.
-        render(<Avis />);
+        const { container } = render(<Avis />);
+
+        // El títol de la graella és un ScreenTitle dins el ScreenFrame de la pàgina.
+        const frame = container.querySelector('.screen-frame');
+        expect(frame).not.toBeNull();
+        const screenTitle = (frame as HTMLElement).querySelector('.screen-title');
+        expect(screenTitle).not.toBeNull();
+        expect(screenTitle).toHaveTextContent('Avisos');
 
         expect(screen.getByTestId('page-title')).toHaveTextContent('Avisos');
         expect(screen.getByRole('heading', { name: 'Avisos' })).toBeInTheDocument();

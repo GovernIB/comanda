@@ -106,7 +106,7 @@ vi.mock('reactlib', () => ({
         columns: Array<{ field: string; renderCell?: (params: any) => React.ReactNode }>;
     }) => (
         <section>
-            <h2>{title}</h2>
+            <div>{title}</div>
             <div data-testid="filter-value">{filter}</div>
             <div data-testid="toolbar-container">
                 {toolbarElementsWithPositions?.map((entry: any, index: number) => (
@@ -147,7 +147,14 @@ describe('Alarmes', () => {
     });
 
     it('Alarmes_quanEsRenderitza_mostraElFiltreInicialIElDialegDaccio', () => {
-        render(<Alarmes />);
+        const { container } = render(<Alarmes />);
+
+        // El títol de la graella és un ScreenTitle dins el ScreenFrame de la pàgina.
+        const frame = container.querySelector('.screen-frame');
+        expect(frame).not.toBeNull();
+        const screenTitle = (frame as HTMLElement).querySelector('.screen-title');
+        expect(screenTitle).not.toBeNull();
+        expect(screenTitle).toHaveTextContent('Alarmes');
 
         expect(screen.getByRole('heading', { name: 'Alarmes' })).toBeInTheDocument();
         expect(screen.getByTestId('filter-value')).toHaveTextContent("estat:'ACTIVA'");

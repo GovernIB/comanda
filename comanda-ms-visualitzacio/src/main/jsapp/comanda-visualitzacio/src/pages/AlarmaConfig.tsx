@@ -47,6 +47,9 @@ import {useMemo} from "react";
 import { IntegracionsSubsistemesContextsPerspective, PERSPECTIVE_ENTORN_APP_INTEGRACIONS_SUBSISTEMES_CONTEXTS } from './salut/dataFetching.ts';
 import { EntornAppModel } from '../types/app.model.tsx';
 import PageTitle from "../components/PageTitle.tsx";
+import { ScreenFrame } from '../lot2';
+import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
+import { screenIcons } from '../util/screenIcons.ts';
 
 type RuleScope = 'APLICACIO' | 'SUBSISTEMA' | 'INTEGRACIO' | 'SISTEMA';
 type RuleMetric = 'ESTAT' | 'LATENCIA' | 'CARREGA_MITJANA_SISTEMA' | 'MEMORIA_DISPONIBLE' | 'ESPAI_DISC_LLIURE';
@@ -977,6 +980,7 @@ const AlarmaConfig: React.FC<{
     onAdd?: () => void;
 }> = ({ filterBy, dialogMode, onEdit, onAdd }) => {
     const { t } = useTranslation();
+    const screenGridProps = useScreenGridProps(screenIcons.alarma, t($ => $.page.alarmaConfig.title));
     const apiRef = useMuiDataGridApiRef();
     const gridApiRef = useGridApiRef();
     const [userFilter, setUserFilter] = React.useState<string | undefined>();
@@ -1225,16 +1229,19 @@ const AlarmaConfig: React.FC<{
         ) : springFilterBuilder.eq('admin', true),
     );
 
+    // Com a pàgina porta marc i barra de títol; en mode diàleg és una graella sense més.
+    const Frame = dialogMode ? React.Fragment : ScreenFrame;
     return (<Box sx={{ height: '100%', overflowY: 'auto', }}>
         <PageTitle title={t(($) => $.page.alarma.snackbar.title)} />
+        <Frame>
         <MuiDataGrid
             apiRef={apiRef}
             datagridApiRef={gridApiRef}
-            title={t($ => $.page.alarmaConfig.title)}
+            {...(dialogMode ? { title: t($ => $.page.alarmaConfig.title), toolbarType: 'upper' as const } : screenGridProps)}
+            {...(dialogMode ? {} : { toolbarCreateLabel: t($ => $.page.alarmaConfig.toolbarCreateLabel) })}
             resourceName="alarmaConfig"
             perspectives={perspectives}
             columns={columns}
-            toolbarType="upper"
             rowAdditionalActions={actions}
             toolbarAdditionalRow={filterElement}
             toolbarElementsWithPositions={toolbarElementsWithPositions}
@@ -1244,7 +1251,7 @@ const AlarmaConfig: React.FC<{
             popupEditFormDialogResourceTitle={t($ => $.page.alarmaConfig.resourceTitle)}
             popupEditFormDialogComponentProps={{ fullWidth: true, maxWidth: 'lg' }}
             disableColumnSorting
-            autoHeight
+            autoHeight={dialogMode || undefined}
             rowHideDeleteButton
             rowHideUpdateButton={row => dialogMode || hideDeleteForRow(row)}
             toolbarHideCreate={dialogMode || undefined}
@@ -1252,6 +1259,7 @@ const AlarmaConfig: React.FC<{
             {...treeDataGridProps}
             {...reorderingDataGridProps}
         />
+        </Frame>
         {!dialogMode && isCurrentUserAdmin && adminView && showUsersAlarms && otherUsers.length > 0 && (
             <Box sx={{ mt: 2, pb: 2, px: 2 }}>
                 <Typography variant="h6" sx={{ mb: 1 }}>

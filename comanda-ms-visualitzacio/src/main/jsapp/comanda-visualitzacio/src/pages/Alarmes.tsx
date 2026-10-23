@@ -11,6 +11,9 @@ import {
 } from 'reactlib';
 import { DEFAULT_ROW_SELECTION } from '../../lib/components/mui/datagrid/DataGridContext';
 import { useGridApiRef } from '@mui/x-data-grid-pro';
+import { ScreenFrame } from '../lot2';
+import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
+import { screenIcons } from '../util/screenIcons.ts';
 
 const AlarmaEsborrarMultipleActionButton = ({ onSuccess }: { onSuccess?: () => void }) => {
     const { selection, apiRef } = useMuiDataGridContext();
@@ -47,6 +50,7 @@ const AlarmaEsborrarMultipleActionButton = ({ onSuccess }: { onSuccess?: () => v
 
 const Alarmes: React.FC<{ filterBy?: { entornAppId?: number | string }; }> = ({ filterBy }) => {
     const { t } = useTranslation();
+    const screenGridProps = useScreenGridProps(screenIcons.alarma, t($ => $.menu.alarmes));
     const [showOnlyActive, setShowOnlyActive] = React.useState<boolean>(true);
     const gridApiRef = useMuiDataGridApiRef();
     const datagridApiRef = useGridApiRef();
@@ -137,22 +141,26 @@ const Alarmes: React.FC<{ filterBy?: { entornAppId?: number | string }; }> = ({ 
         filterBy?.entornAppId ? `entornAppId:${filterBy.entornAppId}` : "",
     );
 
+    // Com a pàgina porta marc i barra de títol; encastada (amb filterBy) és una graella sense més.
+    const standalone = filterBy == null;
+    const Frame = standalone ? ScreenFrame : React.Fragment;
     return (<>{actionEsborrarInitialized && actionReactivarInitialized && <>
+                <Frame>
                 <MuiDataGrid
-                    title={t($ => $.menu.alarmes)}
+                    {...(standalone ? screenGridProps : { title: t($ => $.menu.alarmes), toolbarType: 'upper' as const })}
                     resourceName="alarma"
                     columns={dataGridColumns}
                     paginationActive
                     readOnly
                     apiRef={gridApiRef}
                     datagridApiRef={datagridApiRef}
-                    toolbarType="upper"
                     toolbarElementsWithPositions={toolbarElementsWithPositions}
                     filter={filter}
                     sortModel={[{ field: 'dataActivacio', sort: 'desc' }]}
                     rowAdditionalActions={rowAdditionalActions}
                     selectionActive
                 />
+                </Frame>
                 {formEsborrarDialogComponent}
                 {formReactivarDialogComponent}
             </>}</>);

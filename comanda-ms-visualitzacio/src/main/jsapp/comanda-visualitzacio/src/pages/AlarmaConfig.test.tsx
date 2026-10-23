@@ -35,6 +35,7 @@ const mocks = vi.hoisted(() => ({
                 },
                 alarmaConfig: {
                     title: 'Configuració d alarmes',
+                    toolbarCreateLabel: 'Nova alarma',
                     update: 'Editar configuració',
                     create: 'Crear configuració',
                     condicio: {
@@ -198,7 +199,7 @@ vi.mock('reactlib', async (importOriginal) => {
                     <button onClick={handleDialogClose}>dialog-close</button>
                 </div>
             )}
-            <h2>{title}</h2>
+            <div>{title}</div>
             <div data-testid="filter-value">{filter ?? ''}</div>
             {toolbarAdditionalRow}
             {toolbarElementsWithPositions?.map((item, index) => (
@@ -460,7 +461,16 @@ describe('AlarmaConfig', () => {
 
     it('AlarmaConfig_quanEsRenderitza_mostraElGridIElFiltreInicialDeLusuari', async () => {
         // Comprova que la pàgina arrenca filtrant per l'usuari actual i mostra el toggle de Mostrar només les meves alarmes.
-        render(<AlarmaConfig />);
+        const { container } = render(<AlarmaConfig />);
+        await screen.findByRole('heading', { name: 'Configuració d alarmes' });
+
+        // El títol de la graella és un ScreenTitle dins el ScreenFrame de la pàgina.
+        const frame = container.querySelector('.screen-frame');
+        expect(frame).not.toBeNull();
+        const screenTitle = (frame as HTMLElement).querySelector('.screen-title');
+        expect(screenTitle).not.toBeNull();
+        expect(screenTitle).toHaveTextContent('Configuració d alarmes');
+        expect(mocks.lastGridProps.toolbarCreateLabel).toBe('Nova alarma');
 
         await waitFor(() => {
             expect(screen.getByRole('heading', { name: 'Configuració d alarmes' })).toBeInTheDocument();
