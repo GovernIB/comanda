@@ -39,6 +39,9 @@ import {
 } from '../types/salut.model.tsx';
 import { DataCommonAdditionalAction } from '../../lib/components/mui/datacommon/MuiDataCommon.tsx';
 import { ROLE_ADMIN } from '../components/UserProvider.tsx';
+import { ScreenFrame } from '../lot2';
+import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
+import { screenIcons } from '../util/screenIcons.ts';
 
 const TascaPrioritatChip = (props: { prioritat?: TascaPrioritatEnum }) => {
     const { prioritat } = props;
@@ -396,6 +399,7 @@ const INVALID_ENTORNAPP = "INVALID_ENTORNAPP";
 
 const Tasca = () => {
     const { t } = useTranslation();
+    const screenGridProps = useScreenGridProps(screenIcons.tasca, t($ => $.menu.tasca));
     const { t: tLib } = useBaseAppContext();
     const { currentRole, user } = useUserContext();
     const currentUserCodi = user?.codi;
@@ -545,33 +549,34 @@ const Tasca = () => {
     return (
         <Box sx={{ height: '100%' }}>
             <PageTitle title={t($ => $.menu.tasca)} />
-            <MuiDataGrid
-                title={t($ => $.menu.tasca)}
-                datagridApiRef={gridApiRef}
-                resourceName="tasca"
-                columns={columns}
-                perspectives={dataGridPerspectives}
-                sortModel={dataGridSortModel}
-                filter={filter}
-                readOnly
-                toolbarType="upper"
-                toolbarHideQuickFilter
-                toolbarElementsWithPositions={[{ position: 1, element: treeViewSwitch }]}
-                toolbarAdditionalRow={filterElement}
-                rowAdditionalActions={rowAdditionalActions}
-                // autoFindDisabled no es pot usar si el filtre està buit, ja que només es farà una única petició inicial i aquesta serà cancelada pel autoFindDisabled
-                autoFindDisabled={!(isFilterDataReady && !filter.length)}
-                // s'usa loading per a que el grid no es mostri buit fins que no s'ha fet la primera petició
-                loading
-                {...treeDataGridProps}
-                initialState={{
-                    columns: {
-                        columnVisibilityModel: {
-                            entorn: false,
+            <ScreenFrame>
+                <MuiDataGrid
+                    {...screenGridProps}
+                    datagridApiRef={gridApiRef}
+                    resourceName="tasca"
+                    columns={columns}
+                    perspectives={dataGridPerspectives}
+                    sortModel={dataGridSortModel}
+                    filter={filter}
+                    readOnly
+                    toolbarHideQuickFilter
+                    toolbarElementsWithPositions={[{ position: 1, element: treeViewSwitch }]}
+                    toolbarAdditionalRow={filterElement}
+                    rowAdditionalActions={rowAdditionalActions}
+                    // autoFindDisabled no es pot usar si el filtre està buit, ja que només es farà una única petició inicial i aquesta serà cancelada pel autoFindDisabled
+                    autoFindDisabled={!(isFilterDataReady && !filter.length)}
+                    // s'usa loading per a que el grid no es mostri buit fins que no s'ha fet la primera petició
+                    loading
+                    {...treeDataGridProps}
+                    initialState={{
+                        columns: {
+                            columnVisibilityModel: {
+                                entorn: false,
+                            },
                         },
-                    },
-                }}
-            />
+                    }}
+                />
+            </ScreenFrame>
         </Box>
     );
 }

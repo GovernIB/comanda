@@ -2,9 +2,10 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Box, Tab, Tabs, Alert, Chip, Tooltip,
-    IconButton, Icon, Typography, Paper, Toolbar,
+    IconButton, Icon, Typography, Paper,
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import { ScreenFrame } from '../lot2';
+import { screenIcons } from '../util/screenIcons.ts';
 import Grid from '@mui/material/Grid';
 import { GridRenderCellParams } from '@mui/x-data-grid';
 import {
@@ -507,8 +508,6 @@ const MonitorDb: React.FC = () => {
     const { t } = useTranslation();
     const { getToken } = useAuthContext();
     const { apiUrl } = useResourceApiContext();
-    const theme = useTheme();
-    const toolbarBg = theme.palette.mode === 'light' ? theme.palette.grey[200] : theme.palette.grey[900];
 
     const [tab, setTab] = React.useState(0);
     const [overview, setOverview] = React.useState<DbOverview | null>(null);
@@ -539,25 +538,24 @@ const MonitorDb: React.FC = () => {
     return (
         <>
             <PageTitle title={t($ => $.page.monitorDb.title)} />
-            <Toolbar
-                disableGutters
-                sx={{ width: '100%', px: 2, backgroundColor: toolbarBg, mb: 2 }}
+            <ScreenFrame
+                icon={screenIcons.monitorDb}
+                title={t($ => $.page.monitorDb.title)}
+                actions={<>
+                    {lastUpdate && (
+                        <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
+                            {t($ => $.page.monitorDb.lastUpdate)}: {lastUpdate}
+                        </Typography>
+                    )}
+                    <Tooltip title={t($ => $.page.monitorDb.refresh)}>
+                        <span>
+                            <IconButton onClick={() => void fetchOverview()} size="small">
+                                <Icon>refresh</Icon>
+                            </IconButton>
+                        </span>
+                    </Tooltip>
+                </>}
             >
-                <Typography variant="h6">{t($ => $.page.monitorDb.title)}</Typography>
-                <Box sx={{ flexGrow: 1 }} />
-                {lastUpdate && (
-                    <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
-                        {t($ => $.page.monitorDb.lastUpdate)}: {lastUpdate}
-                    </Typography>
-                )}
-                <Tooltip title={t($ => $.page.monitorDb.refresh)}>
-                    <span>
-                        <IconButton onClick={() => void fetchOverview()} size="small">
-                            <Icon>refresh</Icon>
-                        </IconButton>
-                    </span>
-                </Tooltip>
-            </Toolbar>
 
             {overviewError && (
                 <Alert severity="error" sx={{ mb: 2 }}>{overviewError}</Alert>
@@ -584,6 +582,7 @@ const MonitorDb: React.FC = () => {
             {tab === 3 && <Box sx={{ mx: 2, pb: 4 }}><TabTopSql /></Box>}
             {tab === 4 && <Box sx={{ mx: 2, pb: 4 }}><TabBloquejos /></Box>}
             {tab === 5 && <Box sx={{ mx: 2, pb: 4 }}><TabIndexos /></Box>}
+            </ScreenFrame>
         </>
     );
 };

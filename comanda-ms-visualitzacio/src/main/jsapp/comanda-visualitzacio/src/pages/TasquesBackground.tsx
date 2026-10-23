@@ -10,9 +10,13 @@ import {
 } from 'reactlib';
 import { ResourceApiError } from '../../lib/components/ResourceApiProvider.tsx';
 import PageTitle from '../components/PageTitle.tsx';
+import { ScreenFrame } from '../lot2';
+import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
+import { screenIcons } from '../util/screenIcons.ts';
 
 const TasquesBackground: React.FC = () => {
     const { t } = useTranslation();
+    const screenGridProps = useScreenGridProps(screenIcons.tasquesBackground, t($ => $.page.tasquesBackground.title));
     const { isReady: apiIsReady, delete: apiDelete } =
         useResourceApiService('tascaBackground');
     const gridApiRef = useMuiDataGridApiRef();
@@ -85,24 +89,25 @@ const TasquesBackground: React.FC = () => {
     return (
         <>
             <PageTitle title={t($ => $.page.tasquesBackground.title)} />
-            <MuiDataGrid
-                apiRef={gridApiRef}
-                title={t($ => $.page.tasquesBackground.title)}
-                resourceName="tascaBackground"
-                columns={columns}
-                toolbarType="upper"
-                paginationActive
-                toolbarHideCreate
-                rowHideUpdateButton
-                rowHideDeleteButton
-                rowAdditionalActions={[
-                    {
-                        label: t($ => $.page.tasquesBackground.reiniciar.label),
-                        icon: 'replay',
-                        onClick: onReiniciarClick,
-                    },
-                ]}
-            />
+            <ScreenFrame>
+                <MuiDataGrid
+                    apiRef={gridApiRef}
+                    {...screenGridProps}
+                    resourceName="tascaBackground"
+                    columns={columns}
+                    paginationActive
+                    toolbarHideCreate
+                    rowHideUpdateButton
+                    rowHideDeleteButton
+                    rowAdditionalActions={[
+                        {
+                            label: t($ => $.page.tasquesBackground.reiniciar.label),
+                            icon: 'replay',
+                            onClick: onReiniciarClick,
+                        },
+                    ]}
+                />
+            </ScreenFrame>
         </>
     );
 };

@@ -21,6 +21,9 @@ import { Tabs, Tab, Chip, Box, Icon, IconButton, Button, CircularProgress } from
 import useTranslationStringKey from '../hooks/useTranslationStringKey';
 import PageTitle from '../components/PageTitle.tsx';
 import { getErrorMessage } from '../util/exceptionUtils.ts';
+import { ScreenFrame } from '../lot2';
+import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
+import { screenIcons } from '../util/screenIcons.ts';
 
 const moduleOptions = [
     { value: 'SALUT', labelKey: 'page.monitors.modulEnum.salut' },
@@ -287,6 +290,7 @@ const dataGridPerspectives = ['ENTORN_APP'];
 
 const Monitors: React.FC = () => {
     const { t } = useTranslation();
+    const screenGridProps = useScreenGridProps(screenIcons.monitor, t($ => $.page.monitors.title));
     const { t : tKey } = useTranslationStringKey();
     const closeDialogButton = useCloseDialogButtons();
     const [selectedModule, setSelectedModule] = React.useState<string>('SALUT');
@@ -357,24 +361,25 @@ const Monitors: React.FC = () => {
     return (
         <>
             <PageTitle title={t($ => $.page.monitors.title)} />
-            <MuiDataGrid
-                title={t($ => $.page.monitors.title)}
-                toolbarAdditionalRow={
-                    <> <MonitorFilter
-                        onAppChange={handleFilterAppChange}
-                        onEntornChange={handleFilterEntornChange} />
-                    <TabMonitor selectedModule={selectedModule} handleTabChange={handleTabChange} /> </>
-                }
-                resourceName="monitor"
-                columns={columns}
-                perspectives={dataGridPerspectives}
-                toolbarType="upper"
-                paginationActive
-                readOnly
-                onRowClick={(params) => showDetail(params.row)}
-                fixedFilter={currentFixedFilter}
-                namedQueries={namedQueries}
-            />
+            <ScreenFrame>
+                <MuiDataGrid
+                    {...screenGridProps}
+                    toolbarAdditionalRow={
+                        <> <MonitorFilter
+                            onAppChange={handleFilterAppChange}
+                            onEntornChange={handleFilterEntornChange} />
+                        <TabMonitor selectedModule={selectedModule} handleTabChange={handleTabChange} /> </>
+                    }
+                    resourceName="monitor"
+                    columns={columns}
+                    perspectives={dataGridPerspectives}
+                    paginationActive
+                    readOnly
+                    onRowClick={(params) => showDetail(params.row)}
+                    fixedFilter={currentFixedFilter}
+                    namedQueries={namedQueries}
+                />
+            </ScreenFrame>
             {detailDialogComponent}
         </>
     );

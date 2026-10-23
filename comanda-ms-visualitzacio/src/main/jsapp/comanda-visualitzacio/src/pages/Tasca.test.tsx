@@ -108,7 +108,7 @@ vi.mock('reactlib', () => ({
         const dataCaducitatColumn = columns.find((column) => column.field === 'dataCaducitat');
         return (
             <section>
-                <h2>{title}</h2>
+                <div>{title}</div>
                 <div data-testid="filter-value">{filter ?? ''}</div>
                 <div data-testid="columns">{columns.map((column) => column.field).join(',')}</div>
                 <div data-testid="treepath-value">
@@ -244,7 +244,14 @@ describe('Tasca', () => {
 
     it('Tasca_quanEsRenderitza_mostraLesColumnesElsXipsIElFiltreInicial', () => {
         // Comprova que la pàgina mostra les columnes principals, els xips d'estat/prioritat/caducitat i l'estat inicial de cerca.
-        render(<Tasca />);
+        const { container } = render(<Tasca />);
+
+        // El títol de la graella és un ScreenTitle dins el ScreenFrame de la pàgina.
+        const frame = container.querySelector('.screen-frame');
+        expect(frame).not.toBeNull();
+        const screenTitle = (frame as HTMLElement).querySelector('.screen-title');
+        expect(screenTitle).not.toBeNull();
+        expect(screenTitle).toHaveTextContent('Tasques');
 
         expect(screen.getByTestId('page-title')).toHaveTextContent('Tasques');
         expect(screen.getByRole('heading', { name: 'Tasques' })).toBeInTheDocument();

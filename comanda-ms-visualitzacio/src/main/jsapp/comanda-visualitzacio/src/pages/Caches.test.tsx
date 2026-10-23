@@ -62,7 +62,7 @@ vi.mock('reactlib', () => ({
         toolbarElementsWithPositions?: Array<{ element: React.ReactNode }>;
     }) => (
         <section>
-            <h2>{title}</h2>
+            <div>{title}</div>
             <button onClick={() => rowAdditionalActions?.[0]?.onClick('cache-1')}>
                 {rowAdditionalActions?.[0]?.label}
             </button>
@@ -88,6 +88,17 @@ describe('Caches', () => {
 
     afterEach(() => {
         vi.clearAllMocks();
+    });
+
+    it('Caches_quanEsRenderitza_mostraElTitolDinsElScreenFrame', () => {
+        // El títol de la graella principal és un ScreenTitle dins el ScreenFrame de la pàgina.
+        const { container } = render(<Caches />);
+
+        const frame = container.querySelector('.screen-frame');
+        expect(frame).not.toBeNull();
+        const screenTitle = (frame as HTMLElement).querySelector('.screen-title');
+        expect(screenTitle).not.toBeNull();
+        expect(screenTitle).toHaveTextContent('Cachés');
     });
 
     it('Caches_quanEsRenderitza_mostraLaGraellaIAccioGlobalDeBuidat', () => {

@@ -12,9 +12,13 @@ import Icon from "@mui/material/Icon";
 import IconButton from "@mui/material/IconButton";
 import {ReactElementWithPosition} from "../../lib/util/reactNodePosition.ts";
 import PageTitle from '../components/PageTitle.tsx';
+import { ScreenFrame } from '../lot2';
+import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
+import { screenIcons } from '../util/screenIcons.ts';
 
 const Caches: React.FC = () => {
     const { t } = useTranslation();
+    const screenGridProps = useScreenGridProps(screenIcons.cache, t($ => $.page.caches.title));
     const { isReady: apiIsReady, delete: apiDelete } =
         useResourceApiService('comandaCache');
     const gridApiRef = useMuiDataGridApiRef();
@@ -101,26 +105,27 @@ const Caches: React.FC = () => {
     return (
         <>
             <PageTitle title={t($ => $.page.caches.title)} />
-            <MuiDataGrid
-                apiRef={gridApiRef}
-                title={t($ => $.page.caches.title)}
-                resourceName="comandaCache"
-                columns={columns}
-                toolbarType="upper"
-                paginationActive
-                toolbarHideCreate
-                rowHideUpdateButton
-                rowHideDeleteButton
-                rowAdditionalActions={[
-                    {
-                        label: t($ => $.page.caches.buidar.label),
-                        icon: 'delete',
-                        onClick: onDeleteClick,
-                    },
-                ]}
-                rowActionsColumnProps={{ width: 10 }}
-                toolbarElementsWithPositions={toolbarElementsWithPositions}
-            />
+            <ScreenFrame>
+                <MuiDataGrid
+                    apiRef={gridApiRef}
+                    {...screenGridProps}
+                    resourceName="comandaCache"
+                    columns={columns}
+                    paginationActive
+                    toolbarHideCreate
+                    rowHideUpdateButton
+                    rowHideDeleteButton
+                    rowAdditionalActions={[
+                        {
+                            label: t($ => $.page.caches.buidar.label),
+                            icon: 'delete',
+                            onClick: onDeleteClick,
+                        },
+                    ]}
+                    rowActionsColumnProps={{ width: 10 }}
+                    toolbarElementsWithPositions={toolbarElementsWithPositions}
+                />
+            </ScreenFrame>
         </>
     );
 }

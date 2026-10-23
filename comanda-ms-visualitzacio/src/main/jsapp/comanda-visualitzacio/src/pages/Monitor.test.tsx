@@ -111,7 +111,7 @@ vi.mock('reactlib', async () => {
             const estatColumn = columns?.find(col => col.field === 'estat');
             return (
                 <section>
-                    <h2>{title}</h2>
+                    <div>{title}</div>
                     <div data-testid="fixed-filter">{fixedFilter}</div>
                     <div>{toolbarAdditionalRow}</div>
                     {columns?.map((col) => (
@@ -268,7 +268,14 @@ describe('Monitors', () => {
 
     it('Monitors_quanEsRenderitza_mostraElFiltreInicialITotsElsControlsPrincipals', () => {
         // Comprova que la pàgina arrenca al mòdul de salut i mostra el filtre, els camps i les pestanyes principals.
-        render(<Monitors />);
+        const { container } = render(<Monitors />);
+
+        // El títol de la graella és un ScreenTitle dins el ScreenFrame de la pàgina.
+        const frame = container.querySelector('.screen-frame');
+        expect(frame).not.toBeNull();
+        const screenTitle = (frame as HTMLElement).querySelector('.screen-title');
+        expect(screenTitle).not.toBeNull();
+        expect(screenTitle).toHaveTextContent('Monitor');
 
         expect(screen.getByTestId('page-title')).toHaveTextContent('Monitor');
         expect(screen.getByRole('heading', { name: 'Monitor' })).toBeInTheDocument();
