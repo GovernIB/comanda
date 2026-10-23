@@ -73,10 +73,11 @@ vi.mock('reactlib', () => ({
         }
         return <input data-testid={`form-field-${name}`} value={value || ''} onChange={(e) => onChange?.(e.target.value)} {...props} />;
     },
-    MuiDataGrid: ({ popupEditFormContent, toolbarType, toolbarElementsWithPositions, rowAdditionalActions }: any) => {
+    MuiDataGrid: ({ title, popupEditFormContent, toolbarType, toolbarElementsWithPositions, rowAdditionalActions }: any) => {
         const mockRow = { id: 1, nom: 'Plantilla 1' };
         return (
             <div data-testid="mui-data-grid">
+                {title}
                 {toolbarType === 'upper' && <div data-testid="grid-toolbar">Toolbar</div>}
                 {toolbarElementsWithPositions?.map((item: any) => (
                     <div key={item.position} data-testid={`toolbar-${item.position}`}>
@@ -206,7 +207,14 @@ describe('Plantilla', () => {
     });
 
     it('renderiza el MuiDataGrid con el formulario de edición', () => {
-        render(<Plantilla />);
+        const { container } = render(<Plantilla />);
+
+        // El títol de la graella és un ScreenTitle dins el ScreenFrame de la pàgina.
+        const frame = container.querySelector('.screen-frame');
+        expect(frame).not.toBeNull();
+        const screenTitle = (frame as HTMLElement).querySelector('.screen-title');
+        expect(screenTitle).not.toBeNull();
+        expect(screenTitle).toHaveTextContent('palettetranslated');
         expect(screen.getByTestId('mui-data-grid')).toBeInTheDocument();
         expect(screen.getByTestId('grid-toolbar')).toBeInTheDocument();
     });

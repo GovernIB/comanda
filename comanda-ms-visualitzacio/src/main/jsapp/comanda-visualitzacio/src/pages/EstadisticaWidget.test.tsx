@@ -52,7 +52,7 @@ vi.mock('reactlib', () => ({
         popupEditFormDialogResourceTitle: string;
     }) => (
         <section>
-            <h2>{title}</h2>
+            <div>{title}</div>
             <span>{resourceName}</span>
             <span>{popupEditFormDialogResourceTitle}</span>
         </section>
@@ -82,7 +82,14 @@ describe('EstadisticaWidget', () => {
 
     it('EstadisticaWidget_quanCanviaDeTab_mostraLaGraellaDelTipusSeleccionat', () => {
         // Comprova que la pàgina alterna entre widgets simples, gràfics i de taula segons la pestanya activa.
-        render(<EstadisticaWidget />);
+        const { container } = render(<EstadisticaWidget />);
+
+        // El títol de la graella és un ScreenTitle dins el ScreenFrame de la pàgina.
+        const frame = container.querySelector('.screen-frame');
+        expect(frame).not.toBeNull();
+        const screenTitle = (frame as HTMLElement).querySelector('.screen-title');
+        expect(screenTitle).not.toBeNull();
+        expect(screenTitle).toHaveTextContent('Widgets simples');
 
         expect(screen.getByRole('heading', { name: 'Widgets' })).toBeInTheDocument();
         expect(screen.getByRole('heading', { name: 'Widgets simples' })).toBeInTheDocument();

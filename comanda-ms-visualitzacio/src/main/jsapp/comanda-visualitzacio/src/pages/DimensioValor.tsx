@@ -22,6 +22,9 @@ import {
 import PageTitle from '../components/PageTitle.tsx';
 import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
 import { useOrganigramaDialog } from '../components/EntitatOrganigrama.tsx';
+import { ScreenFrame } from '../lot2';
+import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
+import { screenIcons } from '../util/screenIcons.ts';
 
 const UO_ESTATS = ['V', 'E', 'A', 'T'];
 
@@ -274,6 +277,7 @@ const DimensioValor: React.FC = () => {
     }, [quickfilter]);
 
     const gridTitle = t($ => $.page.dimensions.valuesTitle, { nom: dimension?.nom ?? dimension?.description ?? '' });
+    const screenGridProps = useScreenGridProps(screenIcons.dimensio, gridTitle);
 
     const gridApiRef = useMuiDataGridApiRef();
     const refresh = () => {
@@ -310,65 +314,66 @@ const DimensioValor: React.FC = () => {
     return (
         <>
             <PageTitle title={gridTitle} />
-            <MuiDataGrid
-                apiRef={gridApiRef}
-                title={gridTitle}
-                resourceName="dimensioValor"
-                columns={columns}
-                toolbarType="upper"
-                paginationActive
-                toolbarHideQuickFilter
-                toolbarAdditionalRow={filterElement}
-                toolbarElementsWithPositions={toolbarElementsWithPositions}
-                toolbarHideCreate
-                fixedFilter={fixedFilter}
-                namedQueries={namedQueries}
-                popupEditActive={false}
-                rowHideDeleteButton={gestorReadOnly}
-                rowAdditionalActions={[
-                    {
-                        label: t($ => $.page.dimensions.action.sincronitzar.label),
-                        icon: 'refresh',
-                        showInMenu: false,
-                        action: 'UO_DIR3',
-                        onClick: (id) => {
-                            apiAction(id, {code: 'UO_DIR3'})
-                                .then(() => {
-                                    refresh()
-                                    temporalMessageShow(null, t($ => $.page.dimensions.action.sincronitzar.ok), 'success')
-                                })
-                                .catch(error => temporalMessageShow(null, error.message, 'error'))
+            <ScreenFrame>
+                <MuiDataGrid
+                    apiRef={gridApiRef}
+                    {...screenGridProps}
+                    resourceName="dimensioValor"
+                    columns={columns}
+                    paginationActive
+                    toolbarHideQuickFilter
+                    toolbarAdditionalRow={filterElement}
+                    toolbarElementsWithPositions={toolbarElementsWithPositions}
+                    toolbarHideCreate
+                    fixedFilter={fixedFilter}
+                    namedQueries={namedQueries}
+                    popupEditActive={false}
+                    rowHideDeleteButton={gestorReadOnly}
+                    rowAdditionalActions={[
+                        {
+                            label: t($ => $.page.dimensions.action.sincronitzar.label),
+                            icon: 'refresh',
+                            showInMenu: false,
+                            action: 'UO_DIR3',
+                            onClick: (id) => {
+                                apiAction(id, {code: 'UO_DIR3'})
+                                    .then(() => {
+                                        refresh()
+                                        temporalMessageShow(null, t($ => $.page.dimensions.action.sincronitzar.ok), 'success')
+                                    })
+                                    .catch(error => temporalMessageShow(null, error.message, 'error'))
+                            },
+                            hidden: !dimension?.tipus || (dimension?.tipus != 'ORGAN_GESTOR' && dimension?.tipus != 'CONSELLERIA')
                         },
-                        hidden: !dimension?.tipus || (dimension?.tipus != 'ORGAN_GESTOR' && dimension?.tipus != 'CONSELLERIA')
-                    },
-                    {
-                        label: t($ => $.page.dimensions.action.editar.label),
-                        icon: 'edit',
-                        showInMenu: false,
-                        onClick: handleEditaOpen,
-                        // Per a dimensions ENTITAT, l'edició directa només té sentit quan el mapeig és MANUAL:
-                        // amb CODI/CODI_DIR3/NOM l'entitat es resol/crea automàticament a partir del valor.
-                        hidden: dimension?.tipus !== 'ENTITAT' || dimension?.entitatValorTipus !== 'MANUAL'
-                    },
-                    {
-                        label: t($ => $.page.entitats.action.refreshUO.label),
-                        icon: 'refresh',
-                        showInMenu: true,
-                        // No especifiquem "action" aquí: REFRESH_UO és una acció registrada al recurs 'entitat',
-                        // no a 'dimensioValor' (el resourceName d'aquest MuiDataGrid), i MuiDataGrid amagaria
-                        // l'entrada silenciosament en comprovar-la contra els artifacts equivocats.
-                        onClick: refreshUOEntitat,
-                        hidden: dimension?.tipus !== 'ENTITAT'
-                    },
-                    {
-                        label: t($ => $.page.entitats.action.organigrama.label),
-                        icon: 'list',
-                        showInMenu: true,
-                        onClick: showOrganigrama,
-                        hidden: dimension?.tipus !== 'ENTITAT'
-                    }
-                ]}
-            />
+                        {
+                            label: t($ => $.page.dimensions.action.editar.label),
+                            icon: 'edit',
+                            showInMenu: false,
+                            onClick: handleEditaOpen,
+                            // Per a dimensions ENTITAT, l'edició directa només té sentit quan el mapeig és MANUAL:
+                            // amb CODI/CODI_DIR3/NOM l'entitat es resol/crea automàticament a partir del valor.
+                            hidden: dimension?.tipus !== 'ENTITAT' || dimension?.entitatValorTipus !== 'MANUAL'
+                        },
+                        {
+                            label: t($ => $.page.entitats.action.refreshUO.label),
+                            icon: 'refresh',
+                            showInMenu: true,
+                            // No especifiquem "action" aquí: REFRESH_UO és una acció registrada al recurs 'entitat',
+                            // no a 'dimensioValor' (el resourceName d'aquest MuiDataGrid), i MuiDataGrid amagaria
+                            // l'entrada silenciosament en comprovar-la contra els artifacts equivocats.
+                            onClick: refreshUOEntitat,
+                            hidden: dimension?.tipus !== 'ENTITAT'
+                        },
+                        {
+                            label: t($ => $.page.entitats.action.organigrama.label),
+                            icon: 'list',
+                            showInMenu: true,
+                            onClick: showOrganigrama,
+                            hidden: dimension?.tipus !== 'ENTITAT'
+                        }
+                    ]}
+                />
+            </ScreenFrame>
             {editaDialog}
             {organigramaDialog}
         </>

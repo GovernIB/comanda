@@ -36,6 +36,9 @@ import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
 import { useIsUserAdmin } from '../components/UserContext.ts';
 import { findOptions } from '../util/requestUtils.ts';
 import type { MuiFormDialogApi } from 'reactlib';
+import { ScreenFrame } from '../lot2';
+import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
+import { screenIcons } from '../util/screenIcons.ts';
 
 const IndicadorsFilter = (props: { onSpringFilterChange: (springFilter?: string) => void; onRefresh?: () => void }) => {
     const { onSpringFilterChange, onRefresh } = props;
@@ -405,6 +408,7 @@ const useCopiarIndicadorEntornAction = (refresh?: () => void) => {
 
 const Indicadors: React.FC = () => {
     const { t } = useTranslation();
+    const screenGridProps = useScreenGridProps(screenIcons.indicador, t($ => $.page.indicadors.title));
     const gestorReadOnly = useReadOnlyGestor();
     const { temporalMessageShow } = useBaseAppContext();
     const [filter, setFilter] = React.useState<string | undefined>(springFilterBuilder.eq('entornAppId', 0));
@@ -580,49 +584,50 @@ const Indicadors: React.FC = () => {
     return (
         <>
             <PageTitle title={t($ => $.page.indicadors.title)} />
-            <MuiDataGrid
-                apiRef={gridApiRef}
-                title={t($ => $.page.indicadors.title)}
-                resourceName="indicador"
-                columns={columns}
-                toolbarType="upper"
-                paginationActive
-                toolbarHideQuickFilter
-                toolbarAdditionalRow={filterElement}
-                filter={filter}
-                popupEditActive
-                toolbarHideCreate
-                rowHideDeleteButton={gestorReadOnly}
-                popupEditFormContent={<IndicadorForm />}
-                toolbarElementsWithPositions={[
-                    {
-                        position: 2,
-                        element: (
-                            <IconButton
-                                title={t($ => $.page.indicadors.action.createFormula)}
-                                onClick={openCreateFormula}>
-                                <Icon>add</Icon>
-                            </IconButton>
-                        ),
-                    },
-                ]}
-                rowAdditionalActions={[
-                    {
-                        label: t($ => $.page.indicadors.action.editFormula),
-                        icon: 'functions',
-                        showInMenu: true,
-                        onClick: (id: any) => openEditFormula(id),
-                        hidden: (row: any) => row?.tipus !== 'FORMULA',
-                    },
-                    {
-                        label: t($ => $.page.indicadors.action.copiarEntorn),
-                        icon: 'content_copy',
-                        showInMenu: true,
-                        onClick: (id: any, row: any) => openCopiarEntorn(id, row),
-                        hidden: (row: any) => row?.tipus !== 'FORMULA',
-                    },
-                ]}
-            />
+            <ScreenFrame>
+                <MuiDataGrid
+                    apiRef={gridApiRef}
+                    {...screenGridProps}
+                    resourceName="indicador"
+                    columns={columns}
+                    paginationActive
+                    toolbarHideQuickFilter
+                    toolbarAdditionalRow={filterElement}
+                    filter={filter}
+                    popupEditActive
+                    toolbarHideCreate
+                    rowHideDeleteButton={gestorReadOnly}
+                    popupEditFormContent={<IndicadorForm />}
+                    toolbarElementsWithPositions={[
+                        {
+                            position: 2,
+                            element: (
+                                <IconButton
+                                    title={t($ => $.page.indicadors.action.createFormula)}
+                                    onClick={openCreateFormula}>
+                                    <Icon>add</Icon>
+                                </IconButton>
+                            ),
+                        },
+                    ]}
+                    rowAdditionalActions={[
+                        {
+                            label: t($ => $.page.indicadors.action.editFormula),
+                            icon: 'functions',
+                            showInMenu: true,
+                            onClick: (id: any) => openEditFormula(id),
+                            hidden: (row: any) => row?.tipus !== 'FORMULA',
+                        },
+                        {
+                            label: t($ => $.page.indicadors.action.copiarEntorn),
+                            icon: 'content_copy',
+                            showInMenu: true,
+                            onClick: (id: any, row: any) => openCopiarEntorn(id, row),
+                            hidden: (row: any) => row?.tipus !== 'FORMULA',
+                        },
+                    ]}
+                />
+            </ScreenFrame>
             <MuiFormDialog
                 resourceName="indicador"
                 apiRef={formulaDialogApiRef}

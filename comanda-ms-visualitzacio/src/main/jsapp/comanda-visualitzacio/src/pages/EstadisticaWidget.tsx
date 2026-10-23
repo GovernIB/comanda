@@ -8,6 +8,11 @@ import EstadisticaSimpleWidgetForm  from "../components/estadistiques/Estadistic
 import EstadisticaGraficWidgetForm  from "../components/estadistiques/EstadisticaGraficWidgetForm";
 import EstadisticaTaulaWidgetForm  from "../components/estadistiques/EstadisticaTaulaWidgetForm";
 import PageTitle from '../components/PageTitle.tsx';
+import { ScreenFrame } from '../lot2';
+import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
+import { screenIcons } from '../util/screenIcons.ts';
+
+
 
 const columns = [
     {
@@ -28,52 +33,58 @@ const defaultPopupEditFormDialogComponentProps = { fullWidth: true, maxWidth: 'x
 
 const EstadisticaSimpleWidgetGrid: React.FC = () => {
     const { t } = useTranslation();
+    const screenGridProps = useScreenGridProps(screenIcons.widget, t($ => $.page.widget.simple.title));
     return (
-        <MuiDataGrid
-            title={t($ => $.page.widget.simple.title)}
-            resourceName="estadisticaSimpleWidget"
-            columns={columns}
-            toolbarType="upper"
-            paginationActive
-            popupEditActive
-            popupEditFormContent={<EstadisticaSimpleWidgetForm />}
-            popupEditFormDialogResourceTitle={t($ => $.page.widget.simple.resourceTitle)}
-            popupEditFormDialogComponentProps={defaultPopupEditFormDialogComponentProps}
-        />
+        <ScreenFrame>
+            <MuiDataGrid
+                {...screenGridProps}
+                resourceName="estadisticaSimpleWidget"
+                columns={columns}
+                paginationActive
+                popupEditActive
+                popupEditFormContent={<EstadisticaSimpleWidgetForm />}
+                popupEditFormDialogResourceTitle={t($ => $.page.widget.simple.resourceTitle)}
+                popupEditFormDialogComponentProps={defaultPopupEditFormDialogComponentProps}
+            />
+        </ScreenFrame>
     );
 };
 
 const EstadisticaGraficWidgetGrid: React.FC = () => {
     const { t } = useTranslation();
+    const screenGridProps = useScreenGridProps(screenIcons.widget, t($ => $.page.widget.grafic.title));
     return (
-        <MuiDataGrid
-            title={t($ => $.page.widget.grafic.title)}
-            resourceName="estadisticaGraficWidget"
-            columns={columns}
-            toolbarType="upper"
-            paginationActive
-            popupEditActive
-            popupEditFormContent={<EstadisticaGraficWidgetForm/>}
-            popupEditFormDialogResourceTitle={t($ => $.page.widget.grafic.resourceTitle)}
-                popupEditFormDialogComponentProps={defaultPopupEditFormDialogComponentProps}
-        />
+        <ScreenFrame>
+            <MuiDataGrid
+                {...screenGridProps}
+                resourceName="estadisticaGraficWidget"
+                columns={columns}
+                paginationActive
+                popupEditActive
+                popupEditFormContent={<EstadisticaGraficWidgetForm/>}
+                popupEditFormDialogResourceTitle={t($ => $.page.widget.grafic.resourceTitle)}
+                    popupEditFormDialogComponentProps={defaultPopupEditFormDialogComponentProps}
+            />
+        </ScreenFrame>
     );
 }
 
 const EstadisticaTaulaWidgetGrid: React.FC = () => {
     const { t } = useTranslation();
+    const screenGridProps = useScreenGridProps(screenIcons.widget, t($ => $.page.widget.taula.title));
     return (
-        <MuiDataGrid
-            title={t($ => $.page.widget.taula.title)}
-            resourceName="estadisticaTaulaWidget"
-            columns={columns}
-            toolbarType="upper"
-            paginationActive
-            popupEditActive
-            popupEditFormContent={<EstadisticaTaulaWidgetForm />}
-            popupEditFormDialogResourceTitle={t($ => $.page.widget.taula.resourceTitle)}
-            popupEditFormDialogComponentProps={defaultPopupEditFormDialogComponentProps}
-        />
+        <ScreenFrame>
+            <MuiDataGrid
+                {...screenGridProps}
+                resourceName="estadisticaTaulaWidget"
+                columns={columns}
+                paginationActive
+                popupEditActive
+                popupEditFormContent={<EstadisticaTaulaWidgetForm />}
+                popupEditFormDialogResourceTitle={t($ => $.page.widget.taula.resourceTitle)}
+                popupEditFormDialogComponentProps={defaultPopupEditFormDialogComponentProps}
+            />
+        </ScreenFrame>
     );
 };
 

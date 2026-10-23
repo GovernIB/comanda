@@ -28,6 +28,9 @@ import {useAclCustomPermissionManager} from "../components/AclPermissionManager.
 import {useMemo} from "react";
 import {useIsUserAdmin, useIsUserUsuari} from "../components/UserContext.ts";
 import Badge from "@mui/material/Badge";
+import { ScreenFrame } from '../lot2';
+import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
+import { screenIcons } from '../util/screenIcons.ts';
 
 const EstadisticaDashboardForm: React.FC = () => {
     const { data } = useFormContext();
@@ -267,6 +270,7 @@ const AclEntryForm: React.FC = () => {
 
 const EstadisticaDashboards: React.FC = () => {
     const { t } = useTranslation();
+    const screenGridProps = useScreenGridProps(screenIcons.dashboard, t($ => $.page.dashboards.title));
     const gridApiRef = useMuiDataGridApiRef();
     const isUserAdmin =  useIsUserAdmin()
     const isUserUsuari =  useIsUserUsuari()
@@ -339,57 +343,58 @@ const EstadisticaDashboards: React.FC = () => {
                     <Typography variant="h6">{t($ => $.page.dashboards.action.export)}</Typography>
                 </Backdrop>
             )}
-            <MuiDataGrid
-                title={t($ => $.page.dashboards.title)}
-                resourceName="dashboard"
-                columns={additionalColumns}
-                apiRef={gridApiRef}
-                perspectives={['PERMIS_NUM']}
-                toolbarType="upper"
-                namedQueries={['WRITE']}
-                paginationActive
-                rowHideUpdateButton
-                popupEditActive
-                popupEditFormContent={<EstadisticaDashboardForm/>}
-                toolbarElementsWithPositions={isUserAdmin ?[
-                    {
-                        position: 2,
-                        element: <IconButton
-                            title={t($ => $.page.dashboards.action.import.label)}
-                            onClick={showImport}
-                        >
-                            <Icon>upload</Icon>
-                        </IconButton>
-                    }
-                ] :[]}
-                rowAdditionalActions={[
-                    {
-                        label: t($ => $.page.dashboards.edit),
-                        icon: 'edit',
-                        clickShowUpdateDialog: true,
-                    },
-                    {
-                        label: t($ => $.page.dashboards.dashboardView),
-                        icon: 'dashboard',
-                        showInMenu: false,
-                        linkTo: '{{id}}',
-                    },
-                    {
-                        label: t($ => $.page.dashboards.action.export),
-                        icon: 'download',
-                        showInMenu: true,
-                        report: 'dashboard_export',
-                        onClick: dashboardExport,
-                    },
-                    {
-                        label: t($ => $.page.dashboards.cloneDashboard.title),
-                        icon: 'file_copy',
-                        showInMenu: true,
-                        action: "clone_dashboard",
-                        onClick: showCloneDashboard,
-                    },
-                ]}
-            />
+            <ScreenFrame>
+                <MuiDataGrid
+                    {...screenGridProps}
+                    resourceName="dashboard"
+                    columns={additionalColumns}
+                    apiRef={gridApiRef}
+                    perspectives={['PERMIS_NUM']}
+                    namedQueries={['WRITE']}
+                    paginationActive
+                    rowHideUpdateButton
+                    popupEditActive
+                    popupEditFormContent={<EstadisticaDashboardForm/>}
+                    toolbarElementsWithPositions={isUserAdmin ?[
+                        {
+                            position: 2,
+                            element: <IconButton
+                                title={t($ => $.page.dashboards.action.import.label)}
+                                onClick={showImport}
+                            >
+                                <Icon>upload</Icon>
+                            </IconButton>
+                        }
+                    ] :[]}
+                    rowAdditionalActions={[
+                        {
+                            label: t($ => $.page.dashboards.edit),
+                            icon: 'edit',
+                            clickShowUpdateDialog: true,
+                        },
+                        {
+                            label: t($ => $.page.dashboards.dashboardView),
+                            icon: 'dashboard',
+                            showInMenu: false,
+                            linkTo: '{{id}}',
+                        },
+                        {
+                            label: t($ => $.page.dashboards.action.export),
+                            icon: 'download',
+                            showInMenu: true,
+                            report: 'dashboard_export',
+                            onClick: dashboardExport,
+                        },
+                        {
+                            label: t($ => $.page.dashboards.cloneDashboard.title),
+                            icon: 'file_copy',
+                            showInMenu: true,
+                            action: "clone_dashboard",
+                            onClick: showCloneDashboard,
+                        },
+                    ]}
+                />
+            </ScreenFrame>
             {contentCloneDashboard}
             {contentImport}
             {permissionComponent}

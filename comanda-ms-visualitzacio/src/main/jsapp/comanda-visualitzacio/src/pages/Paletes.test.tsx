@@ -30,7 +30,8 @@ vi.mock('reactlib', () => ({
         paginationActive,
         title
     }: any) => (
-        <div data-testid="mui-data-grid" data-resource={resourceName} data-title={title}>
+        <div data-testid="mui-data-grid" data-resource={resourceName} data-title={typeof title === 'string' ? title : undefined}>
+            <div>{title}</div>
             {toolbarType === 'upper' && <div data-testid="grid-toolbar">Toolbar</div>}
             {paginationActive && <div data-testid="grid-pagination">Pagination</div>}
             {columns?.map((col: any) => (
@@ -100,8 +101,12 @@ describe('Paletes', () => {
     });
 
     it('renderitza la pàgina amb el títol i la taula de paletes', () => {
-        render(<Paletes />);
+        const { container } = render(<Paletes />);
         expect(screen.getByTestId('page-title')).toHaveTextContent('Paleta');
+        // El títol de la graella és un ScreenTitle dins el ScreenFrame de la pàgina.
+        const frame = container.querySelector('.screen-frame');
+        expect(frame).not.toBeNull();
+        expect((frame as HTMLElement).querySelector('.screen-title')).toHaveTextContent('Paleta');
         expect(screen.getByTestId('mui-data-grid')).toBeInTheDocument();
         expect(screen.getByTestId('mui-data-grid')).toHaveAttribute('data-resource', 'paleta');
     });

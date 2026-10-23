@@ -107,7 +107,7 @@ vi.mock('reactlib', () => ({
         rowAdditionalActions?: Array<{ label: string; onClick?: (id: string) => void; hidden?: boolean; action?: string }>;
     }) => (
         <section>
-            <h2>{title}</h2>
+            <div>{title}</div>
             <div data-testid="fixed-filter">{fixedFilter}</div>
             <div data-testid="columns">{columns.map((column) => column.field).join(',')}</div>
             <div data-testid="hide-delete">{String(rowHideDeleteButton)}</div>
@@ -231,11 +231,18 @@ describe('DimensioValor', () => {
     });
 
     it('DimensioValor_quanEsCarregaLaDimensio_mostraElTitolIElFiltreStatic', async () => {
-        render(<DimensioValor />);
+        const { container } = render(<DimensioValor />);
 
         await waitFor(() => {
             expect(screen.getByRole('heading', { name: 'Valors dimensió Dimensió prova' })).toBeInTheDocument();
         });
+
+        // El títol de la graella és un ScreenTitle dins el ScreenFrame de la pàgina.
+        const frame = container.querySelector('.screen-frame');
+        expect(frame).not.toBeNull();
+        const screenTitle = (frame as HTMLElement).querySelector('.screen-title');
+        expect(screenTitle).not.toBeNull();
+        expect(screenTitle).toHaveTextContent('Valors dimensió Dimensió prova');
 
         expect(screen.getByTestId('page-title')).toHaveTextContent('Valors dimensió Dimensió prova');
         expect(screen.getByTestId('fixed-filter')).toHaveTextContent('dimensio.id=15');

@@ -88,7 +88,7 @@ vi.mock('reactlib', () => ({
         const mockRow = { id: '15', entornAppId: 99, tipus: mocks.mockRowTipus };
         return (
             <section>
-                <h2>{title}</h2>
+                <div>{title}</div>
                 <div data-testid="filter-value">{filter}</div>
                 <div data-testid="columns">{columns.map((column) => column.field).join(',')}</div>
                 <div data-testid="row-link">{rowAdditionalActions?.find(a => a.linkTo)?.linkTo}</div>
@@ -248,7 +248,14 @@ describe('Dimensions', () => {
     });
 
     it('Dimensions_quanEsRenderitza_mostraElGridElFiltreIElLinkAlsValors', async () => {
-        render(<Dimensions />);
+        const { container } = render(<Dimensions />);
+
+        // El títol de la graella és un ScreenTitle dins el ScreenFrame de la pàgina.
+        const frame = container.querySelector('.screen-frame');
+        expect(frame).not.toBeNull();
+        const screenTitle = (frame as HTMLElement).querySelector('.screen-title');
+        expect(screenTitle).not.toBeNull();
+        expect(screenTitle).toHaveTextContent('Dimensions');
 
         await waitFor(() => {
             expect(mocks.findMock).toHaveBeenCalled();

@@ -99,7 +99,7 @@ vi.mock('reactlib', () => ({
         mocks.rowAdditionalActionsCapture = rowAdditionalActions;
         return (
             <section>
-                <h2>{title}</h2>
+                <div>{title}</div>
                 <div data-testid="filter-value">{filter}</div>
                 <div data-testid="columns">{columns.map((column) => column.field).join(',')}</div>
                 <div data-testid="hide-delete">{String(rowHideDeleteButton)}</div>
@@ -259,7 +259,14 @@ describe('Indicadors', () => {
 
     it('Indicadors_quanEsRenderitza_mostraLaGraellaElFiltreIElFormulariCondicional', async () => {
         // Comprova que la pàgina mostra les columnes, el filtre inicial i el camp avançat quan la compactació és per mitjana.
-        render(<Indicadors />);
+        const { container } = render(<Indicadors />);
+
+        // El títol de la graella és un ScreenTitle dins el ScreenFrame de la pàgina.
+        const frame = container.querySelector('.screen-frame');
+        expect(frame).not.toBeNull();
+        const screenTitle = (frame as HTMLElement).querySelector('.screen-title');
+        expect(screenTitle).not.toBeNull();
+        expect(screenTitle).toHaveTextContent('Indicadors');
 
         await waitFor(() => {
             expect(mocks.entornAppFindMock).toHaveBeenCalled();

@@ -64,6 +64,9 @@ import {
     PaletteTheme,
     useGetPaletteDialogTitle
 } from "../components/PaletteFormContent.tsx";
+import { ScreenFrame } from '../lot2';
+import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
+import { screenIcons } from '../util/screenIcons.ts';
 
 type PaletteGroupType = "LIGHT" | "LIGHT_HIGHLIGHTED" | "DARK" | "DARK_HIGHLIGHTED";
 type PaletteRole = "WIDGET" | "CHART";
@@ -2083,6 +2086,7 @@ const columns = [
 
 export const Plantilla = () => {
     const { t } = useTranslation();
+    const screenGridProps = useScreenGridProps(screenIcons.plantilla, t($ => $.menu.plantilla));
     const gridApiRef = useMuiDataGridApiRef();
     const isUserAdmin = useIsUserAdmin();
     const refresh = () => {
@@ -2108,82 +2112,84 @@ export const Plantilla = () => {
                     <Typography variant="h6">{t($ => $.page.plantilla.action.export)}</Typography>
                 </Backdrop>
             )}
-            <MuiDataGrid
-                apiRef={gridApiRef}
-                resourceName="plantilla"
-                columns={columns}
-                toolbarType="upper"
-                popupEditCreateActive
-                popupEditActive
-                popupEditFormContent={<PlantillaForm />}
-                popupEditFormDialogComponentProps={{
-                    fullWidth: true,
-                    maxWidth: "xl",
-                    PaperProps: {
-                        sx: {
-                            bgcolor: "var(--plantilla-bg, background.paper)",
-                            color: "var(--plantilla-text, text.primary)",
-                            border: "1px solid",
-                            borderColor: "var(--plantilla-border, divider)",
-                            "& .MuiDialogTitle-root": {
+            <ScreenFrame>
+                <MuiDataGrid
+                    apiRef={gridApiRef}
+                    {...screenGridProps}
+                    resourceName="plantilla"
+                    columns={columns}
+                    popupEditCreateActive
+                    popupEditActive
+                    popupEditFormContent={<PlantillaForm />}
+                    popupEditFormDialogComponentProps={{
+                        fullWidth: true,
+                        maxWidth: "xl",
+                        PaperProps: {
+                            sx: {
                                 bgcolor: "var(--plantilla-bg, background.paper)",
                                 color: "var(--plantilla-text, text.primary)",
-                                borderBottom: "1px solid",
+                                border: "1px solid",
                                 borderColor: "var(--plantilla-border, divider)",
-                            },
-                            "& .MuiDialogContent-root": {
-                                bgcolor: "var(--plantilla-bg, background.paper)",
-                                color: "var(--plantilla-text, text.primary)",
-                            },
-                            "& .MuiDialogActions-root": {
-                                bgcolor: "var(--plantilla-bg, background.paper)",
-                                borderTop: "1px solid",
-                                borderColor: "var(--plantilla-border, divider)",
-                            },
-                            "& .MuiDialogActions-root .MuiButton-contained": {
-                                bgcolor: "var(--plantilla-accent)",
-                                color: "var(--plantilla-accent-text)",
-                            },
-                            "& .MuiDialogActions-root .MuiButton-contained:hover": {
-                                bgcolor: "var(--plantilla-accent)",
-                            },
-                            "& .MuiDialogActions-root .MuiButton-outlined": {
-                                borderColor: "var(--plantilla-accent)",
-                                color: "var(--plantilla-accent)",
-                            },
-                            "& .MuiDialogActions-root .MuiButton-text": {
-                                color: "var(--plantilla-text)",
+                                "& .MuiDialogTitle-root": {
+                                    bgcolor: "var(--plantilla-bg, background.paper)",
+                                    color: "var(--plantilla-text, text.primary)",
+                                    borderBottom: "1px solid",
+                                    borderColor: "var(--plantilla-border, divider)",
+                                },
+                                "& .MuiDialogContent-root": {
+                                    bgcolor: "var(--plantilla-bg, background.paper)",
+                                    color: "var(--plantilla-text, text.primary)",
+                                },
+                                "& .MuiDialogActions-root": {
+                                    bgcolor: "var(--plantilla-bg, background.paper)",
+                                    borderTop: "1px solid",
+                                    borderColor: "var(--plantilla-border, divider)",
+                                },
+                                "& .MuiDialogActions-root .MuiButton-contained": {
+                                    bgcolor: "var(--plantilla-accent)",
+                                    color: "var(--plantilla-accent-text)",
+                                },
+                                "& .MuiDialogActions-root .MuiButton-contained:hover": {
+                                    bgcolor: "var(--plantilla-accent)",
+                                },
+                                "& .MuiDialogActions-root .MuiButton-outlined": {
+                                    borderColor: "var(--plantilla-accent)",
+                                    color: "var(--plantilla-accent)",
+                                },
+                                "& .MuiDialogActions-root .MuiButton-text": {
+                                    color: "var(--plantilla-text)",
+                                },
                             },
                         },
-                    },
-                }}
-                formAdditionalData={(row: Record<string, unknown> | null | undefined) => ({
-                    ...(!row?.id ? templateDefaults() : {}),
-                    tipusGrafic: row?.tipusGrafic || "BAR_CHART",
-                })}
-                toolbarElementsWithPositions={isUserAdmin ? [
-                    {
-                        position: 2,
-                        element: (
-                            <IconButton
-                                title={t($ => $.page.plantilla.action.import.label)}
-                                onClick={showImport}
-                            >
-                                <Icon>upload</Icon>
-                            </IconButton>
-                        ),
-                    },
-                ] : []}
-                rowAdditionalActions={[
-                    {
-                        label: t($ => $.page.plantilla.action.export),
-                        icon: 'download',
-                        showInMenu: true,
-                        report: 'plantilla_export',
-                        onClick: plantillaExport,
-                    },
-                ]}
-            />
+                    }}
+                    formAdditionalData={(row: Record<string, unknown> | null | undefined) => ({
+                        ...(!row?.id ? templateDefaults() : {}),
+                        tipusGrafic: row?.tipusGrafic || "BAR_CHART",
+                    })}
+                    toolbarElementsWithPositions={isUserAdmin ? [
+                        {
+                            position: 2,
+                            element: (
+                                <IconButton
+                                    title={t($ => $.page.plantilla.action.import.label)}
+                                    onClick={showImport}
+                                >
+                                    <Icon>upload</Icon>
+                                </IconButton>
+                            ),
+                        },
+                    ] : []}
+                    rowAdditionalActions={[
+                        {
+                            label: t($ => $.page.plantilla.action.export),
+                            icon: 'download',
+                            showInMenu: true,
+                            report: 'plantilla_export',
+                            onClick: plantillaExport,
+                        },
+                    ]}
+                />
+            </ScreenFrame>
             {contentImport}
         </Box>
     );

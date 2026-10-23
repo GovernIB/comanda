@@ -20,6 +20,9 @@ import PageTitle from '../components/PageTitle.tsx';
 import FormActionDialog from "../components/FormActionDialog.tsx";
 import DimensioFetConsProgressDialog from "../components/DimensioFetConsProgressDialog.tsx";
 import { useIsUserAdmin } from '../components/UserContext.ts';
+import { ScreenFrame } from '../lot2';
+import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
+import { screenIcons } from '../util/screenIcons.ts';
 
 const EntitatValorTipusField: React.FC = () => {
     const { t } = useTranslation();
@@ -226,6 +229,7 @@ const DimensionsFilter = (props: DimensionsFilterProps) => {
 
 const Dimensions: React.FC = () => {
     const { t } = useTranslation();
+    const screenGridProps = useScreenGridProps(screenIcons.dimensio, t($ => $.page.dimensions.title));
     const [filter, setFilter] = React.useState<string | undefined>(springFilterBuilder.eq('entornAppId', 0));
 
     const { artifactAction: apiAction } = useResourceApiService('dimensio');
@@ -302,62 +306,63 @@ const Dimensions: React.FC = () => {
     return (
         <>
             <PageTitle title={t($ => $.page.dimensions.title)} />
-            <MuiDataGrid
-                apiRef={gridApiRef}
-                title={t($ => $.page.dimensions.title)}
-                resourceName="dimensio"
-                columns={columns}
-                toolbarType="upper"
-                paginationActive
-                toolbarHideQuickFilter
-                toolbarAdditionalRow={filterElement}
-                filter={filter}
-                persistentStateActive
-                persistentStateKey="dimensio"
-                persistentStateClearPageSortPropsOnTopLevelRouteChange
-                rowAdditionalActions={[
-                    {
-                        label: t($ => $.page.dimensions.action.refreshCons.label),
-                        icon: 'refresh',
-                        showInMenu: true,
-                        action: 'FET_CONS',
-                        onClick: addConstToFet,
-                        hidden: (row) => row?.tipus != 'ORGAN_GESTOR'
-                    },
-                    {
-                        label: t($ => $.page.dimensions.action.changeTipus.label),
-                        icon: 'check_box_outline_blank',
-                        showInMenu: true,
-                        action: 'CHANGE_TIPUS',
-                        onClick: handleShow,
-                        // La dimensió CONSELLERIA es genera automàticament (des de FET_CONS) i no s'ha de poder
-                        // configurar manualment.
-                        hidden: (row) => row?.tipus === 'CONSELLERIA',
-                    },
-                    {
-                        label: t($ => $.page.dimensions.action.desmarcar.label),
-                        icon: 'check_box',
-                        showInMenu: true,
-                        action: 'CHANGE_TIPUS',
-                        onClick: clearTipus,
-                        hidden: (row) => !row?.tipus || row?.tipus === 'CONSELLERIA',
-                    },
-                    {
-                        label: t($ => $.page.dimensions.action.updateEntitats.label),
-                        icon: 'sync',
-                        showInMenu: true,
-                        action: 'UPDATE_ENTITATS',
-                        onClick: updateEntitats,
-                        hidden: (row) => row?.tipus != 'ENTITAT'
-                    },
-                    {
-                        label: t($ => $.page.dimensions.values),
-                        icon: 'list',
-                        linkTo: 'valor/{{id}}'
-                    }
-                ]}
-                readOnly
-            />
+            <ScreenFrame>
+                <MuiDataGrid
+                    apiRef={gridApiRef}
+                    {...screenGridProps}
+                    resourceName="dimensio"
+                    columns={columns}
+                    paginationActive
+                    toolbarHideQuickFilter
+                    toolbarAdditionalRow={filterElement}
+                    filter={filter}
+                    persistentStateActive
+                    persistentStateKey="dimensio"
+                    persistentStateClearPageSortPropsOnTopLevelRouteChange
+                    rowAdditionalActions={[
+                        {
+                            label: t($ => $.page.dimensions.action.refreshCons.label),
+                            icon: 'refresh',
+                            showInMenu: true,
+                            action: 'FET_CONS',
+                            onClick: addConstToFet,
+                            hidden: (row) => row?.tipus != 'ORGAN_GESTOR'
+                        },
+                        {
+                            label: t($ => $.page.dimensions.action.changeTipus.label),
+                            icon: 'check_box_outline_blank',
+                            showInMenu: true,
+                            action: 'CHANGE_TIPUS',
+                            onClick: handleShow,
+                            // La dimensió CONSELLERIA es genera automàticament (des de FET_CONS) i no s'ha de poder
+                            // configurar manualment.
+                            hidden: (row) => row?.tipus === 'CONSELLERIA',
+                        },
+                        {
+                            label: t($ => $.page.dimensions.action.desmarcar.label),
+                            icon: 'check_box',
+                            showInMenu: true,
+                            action: 'CHANGE_TIPUS',
+                            onClick: clearTipus,
+                            hidden: (row) => !row?.tipus || row?.tipus === 'CONSELLERIA',
+                        },
+                        {
+                            label: t($ => $.page.dimensions.action.updateEntitats.label),
+                            icon: 'sync',
+                            showInMenu: true,
+                            action: 'UPDATE_ENTITATS',
+                            onClick: updateEntitats,
+                            hidden: (row) => row?.tipus != 'ENTITAT'
+                        },
+                        {
+                            label: t($ => $.page.dimensions.values),
+                            icon: 'list',
+                            linkTo: 'valor/{{id}}'
+                        }
+                    ]}
+                    readOnly
+                />
+            </ScreenFrame>
             {content}
             <DimensioFetConsProgressDialog
                 open={fetConsProgressId != null}

@@ -4,6 +4,9 @@ import {MuiDataGrid, useFormContext} from "reactlib";
 import PageTitle from "../components/PageTitle.tsx";
 import {useTranslation} from "react-i18next";
 import { normalizeColors, PaletteColor, PaletteData, PaletteFormContent } from "../components/PaletteFormContent.tsx";
+import { ScreenFrame } from '../lot2';
+import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
+import { screenIcons } from '../util/screenIcons.ts';
 
 
 const defaultColors: PaletteColor[] = [
@@ -47,6 +50,7 @@ const PaletaForm = () => {
 
 const Paletes = () => {
     const {t} = useTranslation();
+    const screenGridProps = useScreenGridProps(screenIcons.paleta, t($ => $.menu.paleta));
 
     const columns = React.useMemo(() => [
         {
@@ -69,19 +73,20 @@ const Paletes = () => {
     return (
         <>
             <PageTitle title={t($ => $.menu.paleta)} />
-            <MuiDataGrid
-                title={t($ => $.menu.paleta)}
-                resourceName="paleta"
-                columns={columns}
-                toolbarType="upper"
-                paginationActive
-                popupEditCreateActive
-                popupEditActive
-                popupEditFormContent={<PaletaForm />}
-                popupEditFormDialogResourceTitle={t($ => $.menu.paleta)}
-                popupEditFormDialogComponentProps={{fullWidth: true, maxWidth: "md"}}
-                formAdditionalData={(row: { id?: unknown }) => !row?.id ? {colors: defaultColors} : {}}
-            />
+            <ScreenFrame>
+                <MuiDataGrid
+                    {...screenGridProps}
+                    resourceName="paleta"
+                    columns={columns}
+                    paginationActive
+                    popupEditCreateActive
+                    popupEditActive
+                    popupEditFormContent={<PaletaForm />}
+                    popupEditFormDialogResourceTitle={t($ => $.menu.paleta)}
+                    popupEditFormDialogComponentProps={{fullWidth: true, maxWidth: "md"}}
+                    formAdditionalData={(row: { id?: unknown }) => !row?.id ? {colors: defaultColors} : {}}
+                />
+            </ScreenFrame>
         </>
     );
 };

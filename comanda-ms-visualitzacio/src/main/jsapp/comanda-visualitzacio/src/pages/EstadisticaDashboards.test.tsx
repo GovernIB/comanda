@@ -191,7 +191,7 @@ vi.mock('reactlib', () => ({
         const mockRow = { id: 9, titol: 'Dashboard Test', numPermisos: 2 };
         return (
             <section>
-                <h2>{title}</h2>
+                <div>{title}</div>
 
                 {columns?.map((col) => {
                     if (col.renderCell) {
@@ -287,9 +287,12 @@ describe('EstadisticaDashboards', () => {
     });
 
     it('EstadisticaDashboards_quanEsRenderitza_mostraLesAccionsIElDialegDeClonat', () => {
-        render(<EstadisticaDashboards />);
+        const { container } = render(<EstadisticaDashboards />);
 
-        expect(screen.getByRole('heading', { level: 1, name: 'Dashboards' })).toBeInTheDocument();
+        // El títol de la graella és un ScreenTitle dins el ScreenFrame de la pàgina.
+        const frame = container.querySelector('.screen-frame');
+        expect(frame).not.toBeNull();
+        expect((frame as HTMLElement).querySelector('.screen-title')).toHaveTextContent('Dashboards');
         expect(screen.getByRole('button', { name: 'Editar' })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Veure dashboard' })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Exportar' })).toBeInTheDocument();
