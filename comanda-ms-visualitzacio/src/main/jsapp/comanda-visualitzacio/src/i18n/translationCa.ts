@@ -632,6 +632,7 @@ const translationCa = {
         },
         alarmaConfig: {
             title: "Configuració d'alarmes",
+            toolbarCreateLabel: "Nova alarma",
             create: "Crear configuració d'alarma",
             update: "Modificar configuració d'alarma",
             resourceTitle: "configuració d'alarma",
@@ -729,6 +730,7 @@ const translationCa = {
         },
         apps: {
             title: "Aplicacions",
+            toolbarCreateLabel: "Nova aplicació",
             logoAlt: "Logotip",
             noLogo: "Sense logotip",
             create: "Crear aplicació",

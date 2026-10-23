@@ -632,6 +632,7 @@ const translationEs: translationResourcesType = {
         },
         alarmaConfig: {
             title: "Configuración de alarmas",
+            toolbarCreateLabel: "Nueva alarma",
             create: "Crear configuración de alarma",
             update: "Modificar configuración de alarma",
             resourceTitle: "configuración de alarma",
@@ -729,6 +730,7 @@ const translationEs: translationResourcesType = {
         },
         apps: {
             title: "Aplicaciones",
+            toolbarCreateLabel: "Nueva aplicación",
             logoAlt: "Logotipo",
             noLogo: "Sin logotipo",
             create: "Crear aplicación",
