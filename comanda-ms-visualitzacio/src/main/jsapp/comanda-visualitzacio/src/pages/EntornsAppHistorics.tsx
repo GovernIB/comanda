@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
-import { Box, Chip, Icon, IconButton, Stack, Tooltip } from '@mui/material';
+import { Box, Chip, Stack, Tooltip } from '@mui/material';
 import {
     MuiDataGrid,
     MuiFilter,
@@ -16,18 +16,20 @@ import { truncateHashRevisio } from './salut/dataFetching.ts';
 import { ScreenFrame } from '../lot2';
 import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
 import { screenIcons } from '../util/screenIcons.ts';
+import { FilterAdvancedButton, FilterClearButton, FilterCount } from '../lot2';
 
 type EntornAppHistFilterProps = {
     onSpringFilterChange: (springFilter?: string) => void;
 };
 
 const EntornAppHistFilter: React.FC<EntornAppHistFilterProps> = ({ onSpringFilterChange }) => {
-    const { t } = useTranslation();
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const filterApiRef = useFilterApiRef();
-
-    const netejar = () => {
-        filterApiRef.current?.clear();
+    // Últim Spring Filter aplicat, per al recompte de filtres de la barra de títol (FilterCount)
+    const [appliedSpringFilter, setAppliedSpringFilter] = React.useState<string | undefined>();
+    const handleSpringFilterChange = (springFilter?: string) => {
+        setAppliedSpringFilter(springFilter);
+        onSpringFilterChange?.(springFilter);
     };
 
     const springFilterBuilder = (data: any): string => {
@@ -49,7 +51,7 @@ const EntornAppHistFilter: React.FC<EntornAppHistFilterProps> = ({ onSpringFilte
             code="entornAppHist_filter"
             detached
             commonFieldComponentProps={{ size: 'small' }}
-            onSpringFilterChange={onSpringFilterChange}
+            onSpringFilterChange={handleSpringFilterChange}
             springFilterBuilder={springFilterBuilder}
         >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -86,18 +88,11 @@ const EntornAppHistFilter: React.FC<EntornAppHistFilterProps> = ({ onSpringFilte
                     )}
                 </Grid>
                 <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-                    <IconButton onClick={netejar} title={t($ => $.components.clear)}>
-                        <Icon>filter_alt_off</Icon>
-                    </IconButton>
-                    <IconButton
-                        onClick={() => setMoreFields(mf => !mf)}
-                        title={t($ => $.page.entornAppHist.filter.more)}
-                        color={moreFields ? 'primary' : 'default'}
-                    >
-                        <Icon>filter_list</Icon>
-                    </IconButton>
+                    <FilterClearButton />
+                    <FilterAdvancedButton open={moreFields} onClick={() => setMoreFields(mf => !mf)} />
                 </Box>
             </Box>
+            <FilterCount springFilter={appliedSpringFilter} />
         </MuiFilter>
     );
 };

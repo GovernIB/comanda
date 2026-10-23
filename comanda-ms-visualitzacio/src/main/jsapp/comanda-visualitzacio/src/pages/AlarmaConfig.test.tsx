@@ -303,6 +303,7 @@ vi.mock('reactlib', async (importOriginal) => {
         },
     }),
     useMuiDataGridProps: (props: any) => props,
+    useFilterApiContext: () => ({ current: { clear: vi.fn() } }),
     useFilterApiRef: () => ({
         current: {
             clear: vi.fn(),
@@ -324,6 +325,12 @@ vi.mock('../components/UserContext', () => ({
 
 vi.mock('../components/CenteredCircularProgress.tsx', () => ({
     default: () => <div>Carregant configuració</div>,
+}));
+
+// Els botons de filtre de lot2 demanen els textos a l'espai de noms `lot2`: es fixen aquí.
+vi.mock('../lot2/i18n', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('../lot2/i18n')>()),
+    useLot2Translation: () => ({ t: (key: string) => (key === 'neteja' ? 'Netejar' : key) }),
 }));
 
 describe('EntornAppSelector', () => {

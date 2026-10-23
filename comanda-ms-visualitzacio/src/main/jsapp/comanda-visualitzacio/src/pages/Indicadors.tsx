@@ -39,6 +39,7 @@ import type { MuiFormDialogApi } from 'reactlib';
 import { ScreenFrame } from '../lot2';
 import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
 import { screenIcons } from '../util/screenIcons.ts';
+import { FilterClearButton, FilterCount } from '../lot2';
 
 const IndicadorsFilter = (props: { onSpringFilterChange: (springFilter?: string) => void; onRefresh?: () => void }) => {
     const { onSpringFilterChange, onRefresh } = props;
@@ -46,6 +47,12 @@ const IndicadorsFilter = (props: { onSpringFilterChange: (springFilter?: string)
     const { isReady: entornAppApiIsReady, find: entornAppGetAll } = useResourceApiService('entornApp');
     const { artifactAction: indicadorApiAction } = useResourceApiService('indicador');
     const filterApiRef = useFilterApiRef();
+    // Últim Spring Filter aplicat, per al recompte de filtres de la barra de títol (FilterCount)
+    const [appliedSpringFilter, setAppliedSpringFilter] = React.useState<string | undefined>();
+    const handleSpringFilterChange = (springFilter?: string) => {
+        setAppliedSpringFilter(springFilter);
+        onSpringFilterChange?.(springFilter);
+    };
     const isCurrentUserAdmin = useIsUserAdmin();
     const { temporalMessageShow, messageDialogShow } = useBaseAppContext();
     const confirmDialogButtons = useConfirmDialogButtons();
@@ -66,11 +73,6 @@ const IndicadorsFilter = (props: { onSpringFilterChange: (springFilter?: string)
             });
         }
     }, [entornAppApiIsReady, entornAppGetAll]);
-
-    const netejar = () => {
-        filterApiRef?.current?.clear();
-        setSelectedEntornAppId(null);
-    };
 
     const handleSincronitzar = () => {
         if (!selectedEntornAppId) return;
@@ -104,7 +106,7 @@ const IndicadorsFilter = (props: { onSpringFilterChange: (springFilter?: string)
             resourceName="indicador"
             code="indicadorFilter"
             commonFieldComponentProps={{ size: 'small' }}
-            onSpringFilterChange={onSpringFilterChange}
+            onSpringFilterChange={handleSpringFilterChange}
             springFilterBuilder={data => {
                 const eaId = data?.entornApp?.id ?? data?.entornApp ?? null;
                 setSelectedEntornAppId(eaId);
@@ -151,13 +153,9 @@ const IndicadorsFilter = (props: { onSpringFilterChange: (springFilter?: string)
                         <Icon>sync</Icon>
                     </IconButton>
                 )}
-                <IconButton
-                    onClick={netejar}
-                    title={t($ => $.components.clear)}
-                    sx={{ mr: 1 }}>
-                    <Icon>filter_alt_off</Icon>
-                </IconButton>
+                <FilterClearButton />
             </Box>
+            <FilterCount springFilter={appliedSpringFilter} />
         </MuiFilter>
     );
 };

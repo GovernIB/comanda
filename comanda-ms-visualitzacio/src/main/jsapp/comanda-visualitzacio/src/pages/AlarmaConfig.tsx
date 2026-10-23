@@ -50,6 +50,7 @@ import PageTitle from "../components/PageTitle.tsx";
 import { ScreenFrame } from '../lot2';
 import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
 import { screenIcons } from '../util/screenIcons.ts';
+import { FilterAdvancedButton, FilterClearButton, FilterCount } from '../lot2';
 
 type RuleScope = 'APLICACIO' | 'SUBSISTEMA' | 'INTEGRACIO' | 'SISTEMA';
 type RuleMetric = 'ESTAT' | 'LATENCIA' | 'CARREGA_MITJANA_SISTEMA' | 'MEMORIA_DISPONIBLE' | 'ESPAI_DISC_LLIURE';
@@ -745,10 +746,12 @@ const AlarmaConfigFilter = (props: AlarmaConfigFilterProps) => {
     const isCurrentUserAdmin = useIsUserAdmin();
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const filterApiRef = useFilterApiRef();
-    const netejar = () => {
-        filterApiRef.current?.clear();
+    // Últim Spring Filter aplicat, per al recompte de filtres de la barra de títol (FilterCount)
+    const [appliedSpringFilter, setAppliedSpringFilter] = React.useState<string | undefined>();
+    const handleSpringFilterChange = (springFilter?: string) => {
+        setAppliedSpringFilter(springFilter);
+        onSpringFilterChange?.(springFilter);
     };
-
     if (!user) {
         return null;
     }
@@ -760,7 +763,7 @@ const AlarmaConfigFilter = (props: AlarmaConfigFilterProps) => {
             code="alarmaConfig_filter"
             detached
             commonFieldComponentProps={{ size: 'small' }}
-            onSpringFilterChange={onSpringFilterChange}
+            onSpringFilterChange={handleSpringFilterChange}
             springFilterBuilder={data => {
                 return springFilterBuilder.and(
                     data?.entornApp && springFilterBuilder.eq('entornAppId', data?.entornApp?.id ?? data?.entornApp),
@@ -800,17 +803,11 @@ const AlarmaConfigFilter = (props: AlarmaConfigFilterProps) => {
                     </>}
                 </Grid>
                 <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-                    <IconButton onClick={netejar} title={t($ => $.components.clear)}>
-                        <Icon>filter_alt_off</Icon>
-                    </IconButton>
-                    {isCurrentUserAdmin && <IconButton
-                        onClick={() => setMoreFields(mf => !mf)}
-                        title={t($ => $.page.alarmaConfig.filter.more)}
-                        color={moreFields ? 'primary' : 'default'}>
-                        <Icon>filter_list</Icon>
-                    </IconButton>}
+                    <FilterClearButton />
+                    {isCurrentUserAdmin && <FilterAdvancedButton open={moreFields} onClick={() => setMoreFields(mf => !mf)} />}
                 </Box>
             </Box>
+            <FilterCount springFilter={appliedSpringFilter} />
         </MuiFilter>
     );
 };

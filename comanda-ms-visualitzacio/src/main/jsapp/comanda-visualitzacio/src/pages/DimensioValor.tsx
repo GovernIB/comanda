@@ -25,6 +25,7 @@ import { useOrganigramaDialog } from '../components/EntitatOrganigrama.tsx';
 import { ScreenFrame } from '../lot2';
 import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
 import { screenIcons } from '../util/screenIcons.ts';
+import { FilterClearButton, FilterCount } from '../lot2';
 
 const UO_ESTATS = ['V', 'E', 'A', 'T'];
 
@@ -187,11 +188,12 @@ const useEditVinculatDialog = (dimension: any, refresh?: () => void) => {
 };
 
 const DimensioValorFilter: React.FC<{ onSpringFilterChange?: (f?: string) => void; onDataChange?: (f?: any) => void }> = ({ onSpringFilterChange, onDataChange }) => {
-    const { t } = useTranslation();
     const filterApiRef = useFilterApiRef();
-
-    const netejar = () => {
-        filterApiRef?.current?.clear();
+    // Últim Spring Filter aplicat, per al recompte de filtres de la barra de títol (FilterCount)
+    const [appliedSpringFilter, setAppliedSpringFilter] = React.useState<string | undefined>();
+    const handleSpringFilterChange = (springFilter?: string) => {
+        setAppliedSpringFilter(springFilter);
+        onSpringFilterChange?.(springFilter);
     };
 
     return (
@@ -200,7 +202,7 @@ const DimensioValorFilter: React.FC<{ onSpringFilterChange?: (f?: string) => voi
             resourceName="dimensioValor"
             code="dimensioValorFilter"
             commonFieldComponentProps={{ size: 'small' }}
-            onSpringFilterChange={onSpringFilterChange}
+            onSpringFilterChange={handleSpringFilterChange}
             springFilterBuilder={(data) => {
                 onDataChange?.(data)
                 return springFilterBuilder.and(
@@ -216,10 +218,9 @@ const DimensioValorFilter: React.FC<{ onSpringFilterChange?: (f?: string) => voi
                     {/*<Grid size={{ xs: 12, md: 4 }}><FormField name={'agrupable'} type={'checkbox'} /></Grid>*/}
                     {/*<Grid size={{ xs: 12, md: 4 }}><FormField name={'valorAgrupacio'} /></Grid>*/}
                 </Grid>
-                <IconButton onClick={netejar} title={t($ => $.components.clear)} sx={{ mr: 1 }}>
-                    <Icon>filter_alt_off</Icon>
-                </IconButton>
+                <FilterClearButton />
             </Box>
+            <FilterCount springFilter={appliedSpringFilter} />
         </MuiFilter>
     );
 };

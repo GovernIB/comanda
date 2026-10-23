@@ -54,6 +54,7 @@ vi.mock('reactlib', () => ({
     ),
     MuiFilter: ({ children }: { children: React.ReactNode }) => <div data-testid="mui-filter">{children}</div>,
     FormField: ({ name }: { name: string }) => <div data-testid={`field-${name}`} />,
+    useFilterApiContext: () => ({ current: { clear: vi.fn() } }),
     useFilterApiRef: () => ({ current: { clear: vi.fn() } }),
     useFormApiRef: () => ({ current: { setFieldValue: vi.fn() } }),
     springFilterBuilder: {
@@ -68,6 +69,12 @@ vi.mock('reactlib', () => ({
 
 vi.mock('../components/PageTitle.tsx', () => ({
     default: ({ title }: { title: string }) => <h1 data-testid="page-title">{title}</h1>,
+}));
+
+// Els botons de filtre de lot2 demanen els textos a l'espai de noms `lot2`: es fixen aquí.
+vi.mock('../lot2/i18n', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('../lot2/i18n')>()),
+    useLot2Translation: () => ({ t: (key: string) => (key === 'neteja' ? 'Netejar' : key) }),
 }));
 
 describe('EntornAppHist', () => {

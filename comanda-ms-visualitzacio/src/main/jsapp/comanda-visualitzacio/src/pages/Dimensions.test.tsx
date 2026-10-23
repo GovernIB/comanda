@@ -118,13 +118,16 @@ vi.mock('reactlib', () => ({
                     persistentStateActive,
                     persistentStateKey,
                     springFilterBuilder,
+                    onSpringFilterChange,
                 }: {
         children: React.ReactNode;
+        onSpringFilterChange?: (filter?: string) => void;
         persistentStateActive?: boolean;
         persistentStateKey?: string;
         springFilterBuilder?: (data: any) => string;
     }) => (
         <div>
+            <button type="button" onClick={() => onSpringFilterChange?.('a:1 and b:2')}>aplica-filtre</button>
             <div
                 data-testid="filter-persistent-state"
                 data-active={String(!!persistentStateActive)}
@@ -160,6 +163,7 @@ vi.mock('reactlib', () => ({
         like: (field: string, value: unknown) => `${field}~${String(value)}`,
         and: (...parts: Array<string | undefined | false>) => parts.filter(Boolean).join(' && '),
     },
+    useFilterApiContext: () => ({ current: { clear: mocks.clearMock } }),
     useFilterApiRef: () => ({
         current: {
             clear: mocks.clearMock,
@@ -231,6 +235,12 @@ vi.mock('../components/DimensioFetConsProgressDialog.tsx', () => ({
     ),
 }));
 
+// Els botons de filtre de lot2 demanen els textos a l'espai de noms `lot2`: es fixen aquí.
+vi.mock('../lot2/i18n', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('../lot2/i18n')>()),
+    useLot2Translation: () => ({ t: (key: string) => (key === 'neteja' ? 'Netejar' : key) }),
+}));
+
 describe('Dimensions', () => {
     beforeEach(() => {
         vi.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -298,6 +308,19 @@ describe('Dimensions', () => {
         await waitFor(() => {
             expect(document.body.getAttribute('data-dimension-options')).toContain('Dimensió entorn');
         });
+    });
+
+    it('Dimensions_quanEsAplicaUnFiltre_mostraElRecompteDeFiltresAlTitol', async () => {
+        // FilterCount pinta el recompte de filtres aplicats al títol de la pantalla (ScreenTitle).
+        const { container } = render(<Dimensions />);
+        await waitFor(() => {
+            expect(mocks.findMock).toHaveBeenCalled();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: 'aplica-filtre' }));
+
+        const screenTitle = container.querySelector('.screen-title');
+        expect(screenTitle).toHaveTextContent('filtresAplicats');
     });
 
     it('Dimensions_quanEsPremNetejar_esborraElFiltreActiu', async () => {

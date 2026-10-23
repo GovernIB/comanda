@@ -23,6 +23,7 @@ import { useIsUserAdmin } from '../components/UserContext.ts';
 import { ScreenFrame } from '../lot2';
 import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
 import { screenIcons } from '../util/screenIcons.ts';
+import { FilterClearButton, FilterCount } from '../lot2';
 
 const EntitatValorTipusField: React.FC = () => {
     const { t } = useTranslation();
@@ -106,6 +107,12 @@ const DimensionsFilter = (props: DimensionsFilterProps) => {
     const { isReady: entornAppApiIsReady, find: entornAppGetAll } = useResourceApiService('entornApp');
     const { artifactAction: indicadorApiAction } = useResourceApiService('indicador');
     const filterApiRef = useFilterApiRef();
+    // Últim Spring Filter aplicat, per al recompte de filtres de la barra de títol (FilterCount)
+    const [appliedSpringFilter, setAppliedSpringFilter] = React.useState<string | undefined>();
+    const handleSpringFilterChange = (springFilter?: string) => {
+        setAppliedSpringFilter(springFilter);
+        onSpringFilterChange?.(springFilter);
+    };
     const isCurrentUserAdmin = useIsUserAdmin();
     const { temporalMessageShow, messageDialogShow } = useBaseAppContext();
     const confirmDialogButtons = useConfirmDialogButtons();
@@ -127,11 +134,6 @@ const DimensionsFilter = (props: DimensionsFilterProps) => {
             });
         }
     }, [entornAppApiIsReady, entornAppGetAll]);
-
-    const netejar = () => {
-        filterApiRef?.current?.clear();
-        setSelectedEntornAppId(null);
-    };
 
     const handleSincronitzar = () => {
         if (!selectedEntornAppId) return;
@@ -169,7 +171,7 @@ const DimensionsFilter = (props: DimensionsFilterProps) => {
             persistentStateActive
             persistentStateKey="dimensioFilter"
             commonFieldComponentProps={{ size: 'small' }}
-            onSpringFilterChange={onSpringFilterChange}
+            onSpringFilterChange={handleSpringFilterChange}
             springFilterBuilder={data => {
                 const eaId = data?.entornApp?.id ?? data?.entornApp ?? null;
                 setSelectedEntornAppId(eaId);
@@ -216,13 +218,9 @@ const DimensionsFilter = (props: DimensionsFilterProps) => {
                         <Icon>sync</Icon>
                     </IconButton>
                 )}
-                <IconButton
-                    onClick={netejar}
-                    title={t($ => $.components.clear)}
-                    sx={{ mr: 1 }}>
-                    <Icon>filter_alt_off</Icon>
-                </IconButton>
+                <FilterClearButton />
             </Box>
+            <FilterCount springFilter={appliedSpringFilter} />
         </MuiFilter>
     );
 };
