@@ -49,7 +49,34 @@ Branca `comanda-lot2-visual`, creada a partir de `comanda-dev-libs-update`.
 | `9af3d4b3` | AlarmaConfig i widgets: contingut dins el ScreenFrame i botó de crear fórmula amb text |
 | `ffe9e4b7` | Marc lot2 a les pàgines amb disseny propi i neteja d'alçades fixes |
 | `0289dddc` | Correccions del marc lot2: selector d'agrupació de salut, alertes dins el marc i títol únic a accessibilitat |
+| `4e92935d` | lot2: menú del tema sense selectors d'estructura (còpia de base-react 7f51df8) |
+| `1623ad44` | AlarmaConfig: sense l'acció Detalls nova a les files i test de tancament del diàleg real |
 
 Helpers de comanda proposats per passar a `lot2` (vegeu l'apartat «Propostes per a lot2» del document):
 `src/hooks/useScreenGridProps.tsx`, `src/hooks/useAppliedSpringFilter.ts`,
 `src/components/FilterClearAllButton.tsx` i `src/util/springFilterSum.ts`.
+
+## Comprovació visual pendent
+
+Encara no s'ha revisat en un navegador. Abans de fusionar, cal fer aquesta comprovació:
+
+**Com executar:** a FRONT, `npm run dev` (Vite) amb un backend local arrencat i el proxy/Keycloak configurats; entrar amb un usuari admin. Canviar tema (clar/fosc/Dracula) des de les preferències d'usuari i el mode de menú (theme/inverse/footer) des de la configuració del menú. Repetir cada punt en els 3 temes; els modes de menú només cal revisar-los on s'indica.
+- Per defecte: tots els temes (CLAR, OBSCUR, DRACULA) i menú `theme`; a més, una passada amb `inverse` i `footer` a Salut, Dashboards i Parametres, amb menú plegat i desplegat.
+- **Salut, selector d'agrupació:** l'opció seleccionada ha de veure's emplenada amb el color primari i la resta amb contorn i fons de paper. Revisar els 3 temes, i canviar d'opció (aplicació, entorn, cap, versions). Revisar també `inverse` i `footer`.
+- **Salut, detall `/salut/:id`:** botó enrere, estat, pestanyes i scroll intern. Temes: CLAR i DRACULA.
+- **Editor de dashboards, panell lateral:** plegat i desplegat; el llenç ha d'omplir l'alçada, sense doble scroll. Interruptor clar/fosc del disseny. Temes: tots tres, menú `theme`.
+- **Vista de dashboard, dues barres apilades:** la barra de títol del marc («Dashboards») i, a sota, la toolbar grisa amb el selector. Comprovar que no queda massa feixuc, el color de fons del dashboard i que ocupa l'alçada. Temes: CLAR i OBSCUR.
+- **Calendari, overlay de càrrega:** el `global-loading-overlay` és `position: fixed`: comprovar que dins la Card (`overflow: hidden`) no es retalla i que cobreix la pantalla. Comprovar també que el calendari omple l'alçada. Temes: CLAR i OBSCUR.
+- **DimensioValor:** barra de títol, graella i filtres. Tots els temes.
+- **NotFound** (ruta inexistent), **Sitemap**, **Accessibilitat** (un sol títol visible, ca i es), **Parametres** (filtre i dos panells), **Broker** i **cua de missatges**. CLAR i DRACULA.
+- **Resta d'elements assenyalats abans:**
+  - contrast de l'accent de Dracula (3.60:1 sobre `#303341`) a icones, títols i barra de títol;
+  - diàleg d'AlarmaConfig (mida `lg` i selector d'entorn);
+  - barra de títol enganxada d'AppForm en fer scroll;
+  - pestanyes d'EstadisticaWidget;
+  - recompte del doble filtre de Monitor;
+  - espaiat del peu respecte de Notib.
+- **Pantalla estreta (< 768px):** menú plegat i barres de títol sense desbordar (Salut, Dashboards, Calendari).
+- **Menú plegat: obrir el submenú flotant d'un grup (Monitorització, Configuració) en tots tres modes de menú** (`theme`, `inverse`, `footer`): el panell ha de sortir sencer, sense tallar, a la dreta del menú plegat i sota la capçalera.
+- **Icones del menú plegat centrades amb el botó hamburguesa** (i, amb el menú obert, les icones de nivell 0 a la mateixa columna).
+- **Icones de submenú amb el menú obert i al panell flotant:** comprovar que no queden desplaçades uns 7px a l'esquerra respecte de Notib.
