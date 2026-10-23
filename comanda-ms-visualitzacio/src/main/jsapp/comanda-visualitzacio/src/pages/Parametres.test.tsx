@@ -65,6 +65,15 @@ describe('Parametres', () => {
         expect(screen.getByTestId('parametres-items')).toBeInTheDocument();
     });
 
+    it('Parametres_quanEsRenderitza_mostraElTitolIElContingutDinsDelMarc', () => {
+        render(<Parametres />);
+
+        const frame = document.querySelector('.screen-frame') as HTMLElement;
+        expect(frame).not.toBeNull();
+        expect(frame.querySelector('h1')).toHaveTextContent('Paràmetres');
+        expect(frame).toContainElement(screen.getByTestId('parametres-grups'));
+    });
+
     it('Parametres_quanEsRenderitza_mostraElCampDeCerca', () => {
         render(<Parametres />);
 

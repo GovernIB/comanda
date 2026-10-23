@@ -245,6 +245,18 @@ describe('QueueMessages', () => {
         expect(screen.getByTestId('grid-columns')).toHaveTextContent('6');
     });
 
+    it('QueueMessages_quanLaCarregaEsCorrecta_mostraElTitolDinsDelMarcDePantalla', async () => {
+        render(<QueueMessages />);
+
+        await waitFor(() => {
+            expect(screen.getByText('Detall de la cua')).toBeInTheDocument();
+        });
+        const frame = document.querySelector('.screen-frame') as HTMLElement;
+        expect(frame).not.toBeNull();
+        expect(frame.querySelector('h1')).toHaveTextContent('Cua queue-a');
+        expect(frame).toContainElement(screen.getByText('Detall de la cua'));
+    });
+
     it('QueueMessages_quanEsFaClickAUnMissatge_obreElDialegDeDetall', async () => {
         // Verifica que clicar una fila reutilitza el diàleg de contingut per mostrar el detall del missatge.
         render(<QueueMessages />);

@@ -353,7 +353,7 @@ vi.mock('../components/estadistiques/DashboardReactGridLayout.tsx', async () => 
 });
 
 vi.mock('../components/PageTitle.tsx', () => ({
-    default: ({ title }: { title: string }) => <h1>{title}</h1>,
+    default: ({ title }: { title: string }) => <div data-testid="page-title">{title}</div>,
 }));
 
 vi.mock('../components/CenteredCircularProgress.tsx', () => ({
@@ -506,12 +506,26 @@ describe('EstadisticaDashboardEdit', () => {
             expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
         });
 
-        expect(screen.getByRole('heading', { name: 'Dashboards' })).toBeInTheDocument();
+        expect(screen.getByTestId('page-title')).toHaveTextContent('Dashboards');
         expect(screen.getByText('Dashboard 12')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Crear component' })).toBeInTheDocument();
         // Al disseny sempre s'aprofita tot l'ample disponible del canvas (a diferència de la visualització,
         // on l'usuari pot triar veure'l a mida real de disseny centrat, vegeu EstadisticaDashboardView).
         expect(screen.getByTestId('dashboard-large-screen-mode')).toHaveTextContent('fit');
+    });
+
+    it('EstadisticaDashboardEdit_quanHiHaDashboard_mostraElTitolIElContingutDinsDelMarc', async () => {
+        // Comprova que l'editor va dins el marc lot2, amb la barra de títol de la pantalla.
+        render(<EstadisticaDashboardEdit />);
+
+        await waitFor(() => {
+            expect(screen.getByText('DashboardGrid 12 true')).toBeInTheDocument();
+        });
+
+        const frame = document.querySelector('.screen-frame') as HTMLElement;
+        expect(frame).not.toBeNull();
+        expect(frame.querySelector('h1')).toHaveTextContent('Dashboards');
+        expect(frame).toContainElement(screen.getByText('DashboardGrid 12 true'));
     });
 
     it('EstadisticaDashboardEdit_enSeleccionarMultiplesElements_esMostraComASeleccioMultipleAlPanell', async () => {

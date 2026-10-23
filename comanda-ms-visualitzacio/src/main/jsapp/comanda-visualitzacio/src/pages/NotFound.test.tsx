@@ -8,12 +8,6 @@ const mocks = vi.hoisted(() => ({
     ),
 }));
 
-vi.mock('reactlib', () => ({
-    BasePage: ({ children }: { children: React.ReactNode }) => (
-        <div data-testid="base-page">{children}</div>
-    ),
-}));
-
 vi.mock('react-i18next', () => ({
     useTranslation: () => ({
         t: mocks.tMock,
@@ -21,11 +15,19 @@ vi.mock('react-i18next', () => ({
 }));
 
 describe('NotFound', () => {
-    it('NotFound_quanEsRenderitza_mostraElMissatgeDerrorDinsLaPaginaBase', () => {
-        // Comprova que la pàgina de no trobat presenta el text traduït dins l’estructura base.
+    it('NotFound_quanEsRenderitza_mostraElMissatgeDerror', () => {
+        // Comprova que la pàgina de no trobat presenta el text traduït en pantalla.
         render(<NotFound />);
 
-        expect(screen.getByTestId('base-page')).toBeInTheDocument();
         expect(screen.getByText('Pàgina no trobada')).toBeInTheDocument();
+    });
+
+    it('NotFound_quanEsRenderitza_mostraElMissatgeDinsDelMarcDePantalla', () => {
+        // Comprova que el missatge queda dins el marc lot2 de la pantalla.
+        render(<NotFound />);
+
+        const frame = document.querySelector('.screen-frame') as HTMLElement;
+        expect(frame).not.toBeNull();
+        expect(frame).toHaveTextContent('Pàgina no trobada');
     });
 });

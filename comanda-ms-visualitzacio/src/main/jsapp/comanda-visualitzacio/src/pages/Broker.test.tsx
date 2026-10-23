@@ -139,6 +139,18 @@ describe('Broker', () => {
         expect(screen.getByText('STARTED')).toBeInTheDocument();
     });
 
+    it('Broker_quanLaCarregaEsCorrecta_mostraElTitolDinsDelMarcDePantalla', async () => {
+        render(<Broker />);
+
+        await waitFor(() => {
+            expect(screen.getByText('queue-a')).toBeInTheDocument();
+        });
+        const frame = document.querySelector('.screen-frame') as HTMLElement;
+        expect(frame).not.toBeNull();
+        expect(frame.querySelector('h1')).toHaveTextContent('Broker');
+        expect(frame).toContainElement(screen.getByText('queue-a'));
+    });
+
     it('Broker_quanEsPremVeureMissatges_navegaALaRutaDeLaCua', async () => {
         // Verifica que el botó de cada targeta navega al detall de missatges de la cua corresponent.
         render(<Broker />);

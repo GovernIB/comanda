@@ -47,6 +47,8 @@ import AddIcon from '@mui/icons-material/Add';
 import Icon from '@mui/material/Icon';
 import IconButton from '@mui/material/IconButton';
 import PageTitle from '../components/PageTitle.tsx';
+import { ScreenFrame } from '../lot2';
+import { screenIcons } from '../util/screenIcons.ts';
 import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
 import {SimpleTreeView, TreeItem} from "@mui/x-tree-view";
 import Divider from "@mui/material/Divider";
@@ -472,10 +474,11 @@ const EstadisticaDashboardEdit: React.FC = () => {
     }
 
     return (
+        <ScreenFrame icon={screenIcons.dashboard} title={t($ => $.page.dashboards.title)}>
         <ThemeProvider theme={designDarkMode ? darkTheme : lightTheme}>
         <Box sx={{
             flex: 1,
-            height: '100%',
+            minHeight: 0,
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
@@ -686,6 +689,7 @@ const EstadisticaDashboardEdit: React.FC = () => {
             </>)}
         </Box>
         </ThemeProvider>
+        </ScreenFrame>
     );
 };
 

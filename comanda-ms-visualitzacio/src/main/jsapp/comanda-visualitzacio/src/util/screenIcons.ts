@@ -29,4 +29,6 @@ export const screenIcons = {
     widget: 'widgets',
     historic: 'history',
     versions: 'layers',
+    sitemap: 'account_tree',
+    accessibilitat: 'info',
 } as const;

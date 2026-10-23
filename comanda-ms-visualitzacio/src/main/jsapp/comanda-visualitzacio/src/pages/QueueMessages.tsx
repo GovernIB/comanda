@@ -25,6 +25,8 @@ import {
 import { useResourceApiContext } from '../../lib/components/ResourceApiContext';
 import { buildHref } from '../util/requestUtils.ts';
 import { DataGridPro } from '@mui/x-data-grid-pro';
+import { ScreenFrame } from '../lot2';
+import { screenIcons } from '../util/screenIcons.ts';
 import PageTitle from '../components/PageTitle.tsx';
 
 // Types for queue and message data
@@ -377,7 +379,7 @@ const QueueMessages: React.FC = () => {
     return (
         <>
             <PageTitle title={pageTitle} />
-            <Box sx={{ p: 2 }}>
+            <ScreenFrame icon={screenIcons.broker} title={pageTitle} padded>
                 {/* Breadcrumbs navigation */}
                 <Breadcrumbs aria-label={t($ => $.common.breadcrumb)} sx={{ mb: 2 }}>
                     <Link color="inherit" onClick={handleBackToBroker} sx={{ cursor: 'pointer' }}>
@@ -385,10 +387,6 @@ const QueueMessages: React.FC = () => {
                     </Link>
                     <Typography color="text.primary">{queueName}</Typography>
                 </Breadcrumbs>
-
-                <Typography variant="h4" component="h1" gutterBottom>
-                    {pageTitle}
-                </Typography>
 
                 {/* Queue details */}
                 {queueInfo && (
@@ -455,7 +453,7 @@ const QueueMessages: React.FC = () => {
 
                 {/* Message details dialog */}
                 {messageDialogComponent}
-            </Box>
+            </ScreenFrame>
         </>
     );
 };

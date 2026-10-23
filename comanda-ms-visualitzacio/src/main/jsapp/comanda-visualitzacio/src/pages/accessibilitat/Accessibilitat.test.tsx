@@ -77,6 +77,16 @@ describe('Accessibilitat', () => {
             'https://comanda.test/'
         );
     });
+    it('Accessibilitat_quanEsRenderitza_mostraElTitolDinsDelMarcDePantalla', () => {
+        // Comprova que el títol de la pàgina és la barra de títol del marc lot2.
+        mocks.useBaseAppContextMock.mockReturnValue({ currentLanguage: 'ca' });
+        render(<Accessibilitat />);
+
+        const frame = document.querySelector('.screen-frame') as HTMLElement;
+        expect(frame).not.toBeNull();
+        expect(frame.querySelector('h1')).toHaveTextContent('Accessibilitat');
+    });
+
 });
 
 describe('Accessibilitat llengües', () => {

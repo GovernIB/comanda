@@ -6,6 +6,8 @@ import { ContentDetail } from '../components/ContentDetail';
 import { Chip, Box, Button, Typography, Paper, Card, CardContent, CardActions } from '@mui/material';
 import { useResourceApiContext } from '../../lib/components/ResourceApiContext';
 import { buildHref } from '../util/requestUtils.ts';
+import { ScreenFrame } from '../lot2';
+import { screenIcons } from '../util/screenIcons.ts';
 import PageTitle from '../components/PageTitle.tsx';
 
 // Types for broker data
@@ -210,11 +212,7 @@ const Broker: React.FC = () => {
     return (
         <>
             <PageTitle title={t($ => $.page.broker.title)} />
-            <Box sx={{ p: 2, pb: 6 }}>
-                <Typography variant="h4" component="h1" gutterBottom>
-                    {t($ => $.page.broker.title)}
-                </Typography>
-
+            <ScreenFrame icon={screenIcons.broker} title={t($ => $.page.broker.title)} padded>
                 {brokerInfo && (
                     <Paper sx={{ p: 2, mb: 4 }}>
                         <BrokerDetails data={brokerInfo} />
@@ -226,7 +224,7 @@ const Broker: React.FC = () => {
                 </Typography>
 
                 <QueueList queues={queues} />
-            </Box>
+            </ScreenFrame>
         </>
     );
 };

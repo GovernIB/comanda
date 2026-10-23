@@ -75,6 +75,15 @@ describe('Sitemap', () => {
         );
     });
 
+    it('Sitemap_quanEsRenderitza_mostraElTitolDinsDelMarcDePantalla', () => {
+        // Comprova que el títol de la pàgina és la barra de títol del marc lot2.
+        render(<MemoryRouter><Sitemap /></MemoryRouter>);
+
+        const frame = document.querySelector('.screen-frame') as HTMLElement;
+        expect(frame).not.toBeNull();
+        expect(frame.querySelector('h1')).toHaveTextContent('Mapa del lloc');
+    });
+
     it('Sitemap_quanTeEntradesAmbFills_lesMostraCorrectament', () => {
         vi.mocked(useAppEntries).mockReturnValue({
             caibMenuEntries: [

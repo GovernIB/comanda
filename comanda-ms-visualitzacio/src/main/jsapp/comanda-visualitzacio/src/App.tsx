@@ -17,8 +17,8 @@ import notNull from './util/arrayUtils';
 import { MenuEstil } from './types/usuari.model.tsx';
 import {useResourceApiContext} from "reactlib";
 import { screenIcons } from './util/screenIcons.ts';
+import { LOGO_HEIGHT } from './lot2/layout.ts';
 
-const APPBAR_HEIGHT = '64px';
 
 const filterEntriesByResources = (menuEntries: MenuEntryWithResource[], resourceNames?:string[]): MenuEntryWithResource[] => {
     if (!resourceNames) return menuEntries;
@@ -295,7 +295,7 @@ export const App: React.FC = () => {
                     }}
                 >
                     <ComandaLogo
-                        style={{ height: APPBAR_HEIGHT, verticalAlign: 'middle' }}
+                        style={{ height: LOGO_HEIGHT + 'px', verticalAlign: 'middle' }}
                         title={t($ => $.app.logoTitle)}
                     />
                 </Box>

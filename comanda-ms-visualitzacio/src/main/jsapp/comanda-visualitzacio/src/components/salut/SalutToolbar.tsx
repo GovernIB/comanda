@@ -29,6 +29,8 @@ import Grid from '@mui/material/Grid';
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import { SalutEstatEnum, useSalutEstatTranslation } from '../../types/salut.model';
+import { ScreenTitle, titleBarSx } from '../../lot2';
+import { screenIcons } from '../../util/screenIcons.ts';
 import VersionsEntorns from '../../pages/VersionsEntorns';
 import EntornAppHist from '../../pages/EntornsAppHistorics';
 
@@ -649,12 +651,10 @@ export const SalutToolbar: React.FC<SalutToolbarProps> = React.memo((props) => {
     return (
         <>
             <Toolbar
-                title={title}
+                title={<ScreenTitle icon={screenIcons.salut} title={title} />}
                 elementsWithPositions={toolbarElementsWithPositions}
                 upperToolbar
-                sx={{
-                    backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey['900'] : theme.palette.grey['200'],
-                }}
+                sx={titleBarSx(theme)}
             />
             {dialog}
             <MuiDialog

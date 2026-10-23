@@ -585,7 +585,8 @@ export const DashboardReactGridLayout: React.FC<DashboardReactGridLayoutProps> =
                 sx={{
                     position: 'relative',
                     width: '100%',
-                    minHeight: 'calc(100vh - 196px)',
+                    // Ocupa tota l'alçada disponible del contenidor (el marc de la pantalla), sense alçades fixes.
+                    minHeight: '100%',
                     // Sense color configurat al dashboard, s'ha de reflectir igualment el tema actiu
                     // (clar/fosc) en lloc de quedar transparent i mostrar el fons real de l'aplicació.
                     backgroundColor: backgroundColor || 'background.default',

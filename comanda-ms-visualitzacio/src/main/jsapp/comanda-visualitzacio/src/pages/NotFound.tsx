@@ -1,21 +1,21 @@
 import { useTranslation } from 'react-i18next';
 import { Box, Typography } from '@mui/material';
-import { BasePage } from 'reactlib';
+import { ScreenFrame } from '../lot2';
 
 const NotFound: React.FC = () => {
     const { t } = useTranslation();
     return (
-        <BasePage>
+        <ScreenFrame>
             <Box
                 sx={{
+                    flex: 1,
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    minHeight: 'calc(100vh - 72px)',
                 }}>
                 <Typography variant="h2">{t($ => $.page.notFound)}</Typography>
             </Box>
-        </BasePage>
+        </ScreenFrame>
     );
 }
 

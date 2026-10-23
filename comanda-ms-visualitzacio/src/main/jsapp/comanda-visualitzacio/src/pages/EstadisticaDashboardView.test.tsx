@@ -171,7 +171,7 @@ vi.mock('../AppRoutes.tsx', () => ({
 }));
 
 vi.mock('../components/PageTitle.tsx', () => ({
-    default: ({ title }: { title: string }) => <h1>{title}</h1>,
+    default: ({ title }: { title: string }) => <div data-testid="page-title">{title}</div>,
 }));
 
 vi.mock('../components/CenteredCircularProgress.tsx', () => ({
@@ -226,13 +226,33 @@ describe('EstadisticaDashboardView', () => {
         render(<EstadisticaDashboardView />);
 
         await waitFor(() => {
-            expect(screen.getByRole('heading', { name: 'Dashboards' })).toBeInTheDocument();
+            expect(screen.getByTestId('page-title')).toHaveTextContent('Dashboards');
         });
 
         expect(screen.getByText('Dashboard 12')).toBeInTheDocument();
         expect(screen.getByText('Grid 12 (1)')).toBeInTheDocument();
         expect(screen.getByTestId('entorn-codi')).toHaveTextContent('ENT-5');
         expect(mocks.setItemMock).toHaveBeenCalledWith('lastViewedDashboardId', '12');
+    });
+
+    it('EstadisticaDashboardView_quanHiHaDashboard_mostraElTitolIElContingutDinsDelMarc', async () => {
+        // Comprova que la visualització va dins el marc lot2, amb la barra de títol de la pantalla.
+        mocks.useDashboardMock.mockReturnValue({
+            dashboard: { id: 12, titol: 'Dashboard 12', entorn: { id: 5 } },
+            loading: false,
+            exception: null,
+        });
+
+        render(<EstadisticaDashboardView />);
+
+        await waitFor(() => {
+            expect(screen.getByText('Grid 12 (1)')).toBeInTheDocument();
+        });
+
+        const frame = document.querySelector('.screen-frame') as HTMLElement;
+        expect(frame).not.toBeNull();
+        expect(frame.querySelector('h1')).toHaveTextContent('Dashboards');
+        expect(frame).toContainElement(screen.getByText('Grid 12 (1)'));
     });
 
     it('EstadisticaDashboardView_perDefecte_usaElModeEscalatPerAjustarSe', async () => {
@@ -286,7 +306,7 @@ describe('EstadisticaDashboardView', () => {
         render(<EstadisticaDashboardView />);
 
         await waitFor(() => {
-            expect(screen.getByRole('heading', { name: 'Dashboards' })).toBeInTheDocument();
+            expect(screen.getByTestId('page-title')).toHaveTextContent('Dashboards');
         });
 
         expect(screen.getByTestId('background-color')).toHaveTextContent('#abcdef');
@@ -307,7 +327,7 @@ describe('EstadisticaDashboardView', () => {
         );
 
         await waitFor(() => {
-            expect(screen.getByRole('heading', { name: 'Dashboards' })).toBeInTheDocument();
+            expect(screen.getByTestId('page-title')).toHaveTextContent('Dashboards');
         });
 
         expect(screen.getByTestId('background-color')).toHaveTextContent('#111111');

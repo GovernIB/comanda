@@ -263,6 +263,20 @@ describe('Salut', () => {
         );
     });
 
+    it('Salut_quanNoHiHaRutaDapp_mostraLaToolbarIElLlistatDinsDelMarc', async () => {
+        // Comprova que la vista de salut va dins el marc lot2.
+        render(<Salut />);
+
+        await waitFor(() => {
+            expect(screen.getByText(/SalutLlistat/)).toBeInTheDocument();
+        });
+
+        const frame = document.querySelector('.screen-frame') as HTMLElement;
+        expect(frame).not.toBeNull();
+        expect(frame).toContainElement(screen.getByTestId('salut-toolbar'));
+        expect(frame).toContainElement(screen.getByText(/SalutLlistat/));
+    });
+
     it('Salut_quanNoHiHaEntornAppsPerUnaApp_mostraElGrupPerIndicarQueNoEstaDesplegat', async () => {
         // Verifica que si una aplicació no té cap entorn-app assignat, es genera el grup igualment
         mocks.findEntornAppMock.mockResolvedValue({

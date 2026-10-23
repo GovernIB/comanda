@@ -3,6 +3,8 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Box, Typography, List, ListItem, ListItemText, Link, Divider, Icon } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import PageTitle from '../components/PageTitle.tsx';
+import { ScreenFrame } from '../lot2';
+import { screenIcons } from '../util/screenIcons.ts';
 import {useAppEntries} from "../App.tsx"
 import {MenuEntry} from "reactlib";
 
@@ -38,12 +40,9 @@ const Sitemap: React.FC = () => {
     },[caibMenuEntries, t])
 
     return (
-        <Box sx={{ maxWidth: 600, mx: 'auto', p: 3 }}>
+        <ScreenFrame icon={screenIcons.sitemap} title={t($ => $.page.sitemap.title)} padded>
+        <Box sx={{ maxWidth: 600, mx: 'auto', width: '100%' }}>
             <PageTitle title={t($ => $.page.sitemap.title)} />
-            <Typography variant="h4" component="h1" gutterBottom>
-                {t($ => $.page.sitemap.title)}
-            </Typography>
-
             <Typography variant="body1" color="text.secondary" gutterBottom>
                 {t($ => $.page.sitemap.subtitle)}
             </Typography>
@@ -56,6 +55,7 @@ const Sitemap: React.FC = () => {
                 ))}
             </List>
         </Box>
+        </ScreenFrame>
     );
 };
 

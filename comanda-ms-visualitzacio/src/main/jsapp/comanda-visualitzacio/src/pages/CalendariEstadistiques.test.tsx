@@ -505,6 +505,18 @@ it('CalendariEstadistiques_quanNoHiHaEntornSeleccionat_mostraMissatgeAjudaIAmaga
         expect(screen.queryByRole('button', { name: 'Carregar interval' })).not.toBeInTheDocument();
     });
 
+    it('CalendariEstadistiques_quanEsRenderitza_mostraLaBarraDeTitolDinsDelMarc', async () => {
+        // Comprova que el calendari va dins el marc lot2 i que la barra d'eines mostra el títol de la pantalla.
+        mocks.entornAppFindMock.mockResolvedValue({ rows: [] });
+
+        render(<CalendariEstadistiques />);
+
+        const frame = document.querySelector('.screen-frame') as HTMLElement;
+        expect(frame).not.toBeNull();
+        expect(frame.querySelector('h1')).toHaveTextContent('Calendari');
+        expect(frame).toContainElement(screen.getByLabelText('Seleccionar entorn app'));
+    });
+
     it('CalendariEstadistiques_quanEsPremUnDiaAmbDades_obriElDialegDelDia', async () => {
         // Comprova que el clic sobre un dia amb dades demana el detall i obri el diàleg del dia.
         mocks.entornAppFindMock.mockResolvedValue({

@@ -1259,28 +1259,28 @@ const AlarmaConfig: React.FC<{
         <PageTitle title={t(($) => $.page.alarma.snackbar.title)} />
         <ScreenFrame>
             {grid}
-        {isCurrentUserAdmin && adminView && showUsersAlarms && otherUsers.length > 0 && (
-            <Box sx={{ mt: 2, pb: 2, px: 2 }}>
-                <Typography variant="h6" sx={{ mb: 1 }}>
-                    {t($ => $.page.alarma.userSection.header)}
-                </Typography>
-                {otherUsers.map((userDataReduced) => (
-                    <Accordion key={userDataReduced.codi} disableGutters>
-                        <AccordionSummary expandIcon={<Icon>expand_more</Icon>}>
-                            <Typography>{t($ => $.page.alarma.userSection.userTitle, { username: userDataReduced?.nom })}</Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            <AlarmaConfigUsuariGrid
-                                username={userDataReduced.codi}
-                                entornApps={entornApps ?? []}
-                                filterBy={filterBy}
-                                userFilter={userFilter}
-                            />
-                        </AccordionDetails>
-                    </Accordion>
-                ))}
-            </Box>
-        )}
+            {isCurrentUserAdmin && adminView && showUsersAlarms && otherUsers.length > 0 && (
+                <Box sx={{ mt: 2, pb: 2, px: 2 }}>
+                    <Typography variant="h6" sx={{ mb: 1 }}>
+                        {t($ => $.page.alarma.userSection.header)}
+                    </Typography>
+                    {otherUsers.map((userDataReduced) => (
+                        <Accordion key={userDataReduced.codi} disableGutters>
+                            <AccordionSummary expandIcon={<Icon>expand_more</Icon>}>
+                                <Typography>{t($ => $.page.alarma.userSection.userTitle, { username: userDataReduced?.nom })}</Typography>
+                            </AccordionSummary>
+                            <AccordionDetails>
+                                <AlarmaConfigUsuariGrid
+                                    username={userDataReduced.codi}
+                                    entornApps={entornApps ?? []}
+                                    filterBy={filterBy}
+                                    userFilter={userFilter}
+                                />
+                            </AccordionDetails>
+                        </Accordion>
+                    ))}
+                </Box>
+            )}
         </ScreenFrame>
     </>);
 }

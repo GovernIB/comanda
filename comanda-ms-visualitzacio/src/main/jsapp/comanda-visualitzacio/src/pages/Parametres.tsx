@@ -6,6 +6,8 @@ import InputAdornment from '@mui/material/InputAdornment';
 import Icon from '@mui/material/Icon';
 import IconButton from '@mui/material/IconButton';
 import { useDebounce } from 'reactlib';
+import { ScreenFrame } from '../lot2';
+import { screenIcons } from '../util/screenIcons.ts';
 import PageTitle from '../components/PageTitle.tsx';
 import { ParametresGrups } from './parametres/ParametresGrups';
 import { ParametresItems } from './parametres/ParametresItems';
@@ -59,11 +61,13 @@ const Parametres: React.FC = () => {
     return (
         <>
             <PageTitle title={t($ => $.page.parametres.title)} />
+            <ScreenFrame icon={screenIcons.parametre} title={t($ => $.page.parametres.title)}>
             <Box
                 sx={{
                     display: 'flex',
                     flexDirection: 'column',
-                    height: '100%',
+                    flex: 1,
+                    minHeight: 0,
                     overflow: 'hidden',
                 }}
             >
@@ -111,6 +115,7 @@ const Parametres: React.FC = () => {
                     </Box>
                 </Box>
             </Box>
+            </ScreenFrame>
         </>
     );
 };

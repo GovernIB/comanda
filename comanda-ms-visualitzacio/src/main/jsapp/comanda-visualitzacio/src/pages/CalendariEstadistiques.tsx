@@ -39,6 +39,8 @@ import CalendariDadesDialog from '../components/calendari/CalendariDadesDialog.t
 import CalendariProcessosDialog from '../components/calendari/CalendariProcessosDialog.tsx';
 import { EntornAppModel } from '../types/app.model';
 import PageTitle from '../components/PageTitle.tsx';
+import { ScreenFrame, ScreenTitle, titleBarSx } from '../lot2';
+import { screenIcons } from '../util/screenIcons.ts';
 import { StacktraceBlock } from '../components/RickTextDetail.tsx';
 
 export const CalendarStatusButton: React.FC<CalendarStatusButtonProps> = ({
@@ -133,6 +135,7 @@ export function useEntornAppData(apiReady: boolean, getAll: any) {
 
 const CalendariEstadistiques: React.FC = () => {
     const { t } = useTranslation();
+    const theme = useTheme();
     const { currentLanguage } = useBaseAppContext();
     const [dataInici, setDataInici] = useState<Dayjs | null>(null);
     const [dataFi, setDataFi] = useState<Dayjs | null>(null);
@@ -655,6 +658,7 @@ const CalendariEstadistiques: React.FC = () => {
     return (
         <>
             <PageTitle title={t($ => $.menu.calendari)} />
+            <ScreenFrame>
             {/* Global loading overlay */}
             {globalLoading && (
                 <Box className="global-loading-overlay">
@@ -665,7 +669,9 @@ const CalendariEstadistiques: React.FC = () => {
                 </Box>
             )}
             <Toolbar
-                title={t($ => $.menu.calendari)} upperToolbar
+                title={<ScreenTitle icon={screenIcons.calendari} title={t($ => $.menu.calendari)} />}
+                upperToolbar
+                sx={titleBarSx(theme)}
                 elementsWithPositions={[
                     {
                         position: 2,
@@ -716,7 +722,8 @@ const CalendariEstadistiques: React.FC = () => {
             <Box
                 sx={{
                     padding: '16px 24px',
-                    height: 'calc(100vh - 160px)',
+                    flex: 1,
+                    minHeight: 0,
                     '& .fc-header-toolbar': {
                         display: 'flex !important',
                         justifyContent: 'space-between !important',
@@ -1007,6 +1014,7 @@ const CalendariEstadistiques: React.FC = () => {
                 mostrarTots={mostrarTotsProcessos}
                 onMostrarTotsChange={setMostrarTotsProcessos}
             />
+            </ScreenFrame>
             {component}
         </>
     );

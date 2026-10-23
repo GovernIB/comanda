@@ -32,6 +32,7 @@ import { SalutField } from '../../components/salut/SalutChipTooltip';
 import { useAppInfoData } from './dataFetching';
 import { Box } from '@mui/material';
 import PageTitle from '../../components/PageTitle';
+import { ScreenFrame } from '../../lot2';
 import VersionsEntorns from '../VersionsEntorns.tsx';
 
 // es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem
@@ -667,11 +668,13 @@ const Salut: FunctionComponent = () => {
         : null;
 
     return (
+        <ScreenFrame>
         <Box
             sx={{
                 display: 'flex',
                 flexDirection: 'column',
-                height: '100%',
+                flex: 1,
+                minHeight: 0,
             }}
         >
             <SalutToolbar
@@ -709,6 +712,7 @@ const Salut: FunctionComponent = () => {
                 />
             )}
         </Box>
+        </ScreenFrame>
     );
 };
 export default Salut;

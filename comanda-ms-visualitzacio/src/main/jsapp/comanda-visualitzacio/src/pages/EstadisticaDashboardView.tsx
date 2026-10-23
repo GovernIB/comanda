@@ -16,7 +16,6 @@ import {
     useStoredLargeScreenMode,
 } from '../components/estadistiques/DashboardReactGridLayout.tsx';
 import {
-    BasePage,
     useResourceApiService,
     useMuiDataGridApiRef,
     useBaseAppContext,
@@ -30,6 +29,8 @@ import Dialog from '../../lib/components/mui/Dialog.tsx';
 import { ESTADISTIQUES_PATH } from '../AppRoutes.tsx';
 import { useTranslation } from "react-i18next";
 import PageTitle from '../components/PageTitle.tsx';
+import { ScreenFrame } from '../lot2';
+import { screenIcons } from '../util/screenIcons.ts';
 import CenteredCircularProgress from '../components/CenteredCircularProgress.tsx';
 import { useEntornCodi } from '../components/estadistiques/dashboardPlantillaHook.ts';
 import DashboardFiltreBar from '../components/estadistiques/DashboardFiltreBar.tsx';
@@ -391,9 +392,8 @@ const EstadisticaDashboardView = () => {
             <PageTitle title={t($ => $.page.dashboards.title)} />
             {managerDialog}
             {loading ? <CenteredCircularProgress /> : null}
-            <BasePage
-                toolbar={
-                    <Box sx={{ width: '100%' }}>
+            <ScreenFrame icon={screenIcons.dashboard} title={t($ => $.page.dashboards.title)}>
+                <Box sx={{ width: '100%' }}>
                         <MuiToolbar
                             disableGutters
                             sx={{
@@ -434,9 +434,8 @@ const EstadisticaDashboardView = () => {
                                 </ToggleButton>
                             </Tooltip>
                         </MuiToolbar>
-                    </Box>
-                }
-            >
+                </Box>
+                <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: '16px', boxSizing: 'border-box' }}>
                 {isCurrentDashboardLoaded && dashboardWidgets && (
                     <DashboardReactGridLayout
                         dashboardId={dashboard.id}
@@ -448,7 +447,8 @@ const EstadisticaDashboardView = () => {
                         largeScreenMode={largeScreenMode}
                     />
                 )}
-            </BasePage>
+                </Box>
+            </ScreenFrame>
         </>
     );
 };

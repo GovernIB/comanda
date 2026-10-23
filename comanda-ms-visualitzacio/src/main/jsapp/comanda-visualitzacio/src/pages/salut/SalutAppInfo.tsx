@@ -1315,8 +1315,8 @@ const tabContentPaddingAmount = 2;
  * Accepta una sèrie de props, gestiona els casos d'error i renderitza el component childrenTabComponent
  * amb les props validades per a la interfície SalutAppInfoTabProps i a més passa sense tractar
  * les props especificades al genèric T.
- * També accepta overflowingContent per a ajustar la altura a l'espai ocupat pel footer i assegurar
- * que el padding del tabContent s'aplica correctament.
+ * També accepta overflowingContent per a afegir un padding inferior al final del contingut de la
+ * pestanya, de manera que el darrer element no quedi enganxat a la vora del marc.
  */
 function TabSalutCurrentApp<T>({
     salutCurrentApp,
