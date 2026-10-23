@@ -1,10 +1,11 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import Apps, { AppForm } from './Apps';
 
 const mocks = vi.hoisted(() => ({
     useParamsMock: vi.fn(),
+    lastFormProps: {} as Record<string, unknown>,
     temporalMessageShowMock: vi.fn(),
     messageDialogShowMock: vi.fn(),
     indicadorArtifactActionMock: vi.fn(),
@@ -247,23 +248,20 @@ vi.mock('reactlib', () => ({
             </section>
         );
     },
-    MuiForm: ({
-        title,
-        children,
-        goBackLink,
-        onDataChange,
-    }: {
-        title: string;
+    MuiForm: (props: {
+        title: React.ReactNode;
         children: React.ReactNode;
         goBackLink: string;
         onDataChange?: (data: any) => void;
     }) => {
+        const { title, children, goBackLink, onDataChange } = props;
+        mocks.lastFormProps = props;
         React.useEffect(() => {
             onDataChange?.({ nom: 'Comanda' });
         }, [onDataChange]);
         return (
             <form data-back-link={goBackLink}>
-                <h1>{title}</h1>
+                <div data-testid="form-title">{title}</div>
                 {children}
             </form>
         );
@@ -455,6 +453,27 @@ describe('AppForm', () => {
         expect(screen.getByText('Desactivar')).toBeInTheDocument();
 
         expect(screen.getByText('Gestor permisos ENTORN_APP')).toBeInTheDocument();
+    });
+
+    it('AppForm mostra el títol dins la barra sticky', () => {
+        // AppForm és complex (pestanyes i subtaula d'entorns): es queda com a pàgina dins un ScreenFrame,
+        // amb el ScreenTitle com a title del MuiForm. La barra d'eines del MuiForm és la barra de títol
+        // sticky que hi posen les props per defecte de lot2 (lot2DefaultMuiComponentProps.form).
+        mocks.useParamsMock.mockReturnValue({ id: '12' });
+
+        const { container } = render(<AppForm />);
+
+        const frame = container.querySelector('.screen-frame');
+        expect(frame).not.toBeNull();
+        const toolbarTitle = screen.getByTestId('form-title');
+        expect(frame).toContainElement(toolbarTitle);
+        const screenTitle = toolbarTitle.querySelector('.screen-title');
+        expect(screenTitle).not.toBeNull();
+        expect(screenTitle).toHaveTextContent('apps');
+        expect(within(screenTitle as HTMLElement).getByRole('heading', { level: 1 })).toHaveTextContent('Editar aplicació (Comanda)');
+        // No es trepitgen les props per defecte que fan la barra sticky.
+        expect(mocks.lastFormProps.toolbarSx).toBeUndefined();
+        expect(mocks.lastFormProps.marginsSx).toBeUndefined();
     });
 
     it('AppForm_quanEsRenderitzaPerCrear_mostraElsCampsPrincipals', () => {

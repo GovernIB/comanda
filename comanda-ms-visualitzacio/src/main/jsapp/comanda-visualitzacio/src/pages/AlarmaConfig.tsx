@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
 import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
@@ -447,45 +446,40 @@ const AlarmaConfigReglaField: React.FC<{
 };
 
 
-export const AlarmaConfigForm: React.FC<{
-    entornAppId?: number | string;
-    dialogMode?: boolean;
-    dialogModeOnGoBack?: () => void;
-    id?: number | string,
-    hideToolbarSave?: boolean;
+/**
+ * Camps del formulari de configuració d'alarma. Llegeix les dades del formulari que l'envolta (el MuiForm
+ * d'AlarmaConfigForm o el FormDialog de la graella), de manera que es pot fer servir com a
+ * `popupEditFormContent`.
+ */
+export const AlarmaConfigFormContent: React.FC<{
+    hideEntornAppSelector?: boolean;
     readOnly?: boolean;
-}> = ({ id: idProp, entornAppId: entornAppIdProp, dialogMode, dialogModeOnGoBack, hideToolbarSave, readOnly }) => {
+}> = ({ hideEntornAppSelector, readOnly }) => {
     const { t } = useTranslation();
-    const { t: tLib } = useBaseAppContext();
-    const { id: idFromPath } = useParams();
-    const id = idProp ?? idFromPath;
-    const formApiRef = useFormApiRef();
+    const { id, isReady, data, fieldErrors, apiRef: formApiRef } = useFormContext();
     const { isReady: entornAppApiReady, getOne: getEntornApp } = useResourceApiService('entornApp');
-    const [entornAppId, setEntornAppId] = React.useState<any>();
-    const [validationErrors, setValidationErrors] = React.useState<any>();
+    const entornAppId = data?.entornAppId;
     const [periodeShow, setPeriodeShow] = React.useState<boolean>();
     const [periodeInactiuShow, setPeriodeInactiuShow] = React.useState<boolean>();
     const [entornAppDetail, setEntornAppDetail] = React.useState<EntornAppModel & IntegracionsSubsistemesContextsPerspective>();
     const isCurrentUserAdmin = useIsUserAdmin();
-    const handleDataChange = (data: any) => {
-        setEntornAppId(data?.entornAppId);
+    React.useEffect(() => {
+        if (!isReady) return;
         if (periodeShow === undefined) {
-            const ps = data?.periodeValor != null || data?.periodeUnitat != null;
-            setPeriodeShow(ps);
+            setPeriodeShow(data?.periodeValor != null || data?.periodeUnitat != null);
         }
         if (periodeInactiuShow === undefined) {
-            const ps = data?.inactiuDesde != null || data?.inactiuFins != null;
-            setPeriodeInactiuShow(ps);
+            setPeriodeInactiuShow(data?.inactiuDesde != null || data?.inactiuFins != null);
         }
-    }
-    const handleValidationErrorsChange = (_id: any, validationErrors?: any[]) => {
-        const entornAppValidationError = validationErrors?.find(e => e.field === 'entornAppId');
-        setValidationErrors(entornAppValidationError ? [{
+    }, [isReady, data, periodeShow, periodeInactiuShow]);
+    const validationErrors = React.useMemo(() => {
+        const entornAppValidationError = fieldErrors?.find(e => e.field === 'entornAppId');
+        return entornAppValidationError ? [{
             field: 'entornApp',
             code: entornAppValidationError.code,
             message: entornAppValidationError.message,
-        }] : null);
-    }
+        }] : null;
+    }, [fieldErrors]);
     const handleEntornAppChange = (entornApp: any) => {
         formApiRef.current?.setFieldValue('entornAppId', entornApp?.id);
     }
@@ -505,8 +499,6 @@ export const AlarmaConfigForm: React.FC<{
             formApiRef.current?.setFieldValue('inactiuFins', null);
         }
     }
-    const titlePage = readOnly ? t($ =>$.page.alarmaConfig.view) :
-        id ? t($ =>$.page.alarmaConfig.update) : t($ =>$.page.alarmaConfig.create);
 
     React.useEffect(() => {
         if (!entornAppApiReady || !entornAppId) {
@@ -538,21 +530,114 @@ export const AlarmaConfigForm: React.FC<{
         [entornAppDetail]
     );
 
-    // const {goBack} = useBaseAppContext();
-    // const afterDelete = () => {
-    //     goBack("/alarma")
-    // }
+    return (
+        <Grid container spacing={2} sx={{ pb: 6 }}>
+            {!hideEntornAppSelector &&
+                <Grid size={3}>
+                    <EntornAppSelector
+                        id={entornAppId}
+                        onEntornAppChange={handleEntornAppChange}
+                        validationErrors={validationErrors}
+                        disabled={!!id || readOnly}
+                    />
+                </Grid>
+            }
+            <Grid size={hideEntornAppSelector ? 12 : 9}>
+                <FormField name="nom" readOnly={readOnly}
+                    componentProps={{ title: t($ => $.page.alarmaConfig.nomHelperText) }}
+                />
+            </Grid>
+            <Grid size={12}>
+                <AlarmaConfigReglaField subsystemOptions={subsystemOptions} integrationOptions={integrationOptions} readOnly={readOnly} />
+            </Grid>
+            <Grid size={12}>
+                <FormField name="missatge" readOnly={readOnly}/>
+            </Grid>
+            <Grid size={6}>
+                <FormField name="aturarAvaluacioPosteriors" readOnly={readOnly}/>
+            </Grid>
+            <Grid size={6}>
+                <FormField name="notificacioFinalitzada" readOnly={readOnly}/>
+            </Grid>
+            {isCurrentUserAdmin && (<AlarmaConfigAdminAndCorreuGenericCheckbox disabled={!!id || readOnly}/>)}
+            <Grid size={6}>
+                <FormControlLabel
+                    control={<Switch size="small" checked={periodeShow ?? false} onChange={handlePeriodeShowChange} disabled={readOnly}/>}
+                    label={t($ => $.page.alarmaConfig.periode.switch)}
+                    sx={{ ml: 1 }} />
+            </Grid>
+            {periodeShow && <Grid size={12}>
+                <Card variant="outlined">
+                    <CardHeader
+                        title={t($ => $.page.alarmaConfig.periode.title)}
+                        subheader={t($ => $.page.alarmaConfig.periode.subtitle)}
+                        slotProps={{
+                            title: { variant: 'h6' },
+                            subheader: { variant: 'subtitle2', sx: { color: 'text.secondary' } }
+                        }}
+                        sx={{ mb: -2 }} />
+                    <CardContent>
+                        <Grid container spacing={1}>
+                            <Grid size={3}>
+                                <FormField name="periodeValor" readOnly={readOnly}/>
+                            </Grid>
+                            <Grid size={9}>
+                                <FormField name="periodeUnitat" readOnly={readOnly}/>
+                            </Grid>
+                        </Grid>
+                    </CardContent>
+                </Card>
+            </Grid>}
+            <Grid size={6}>
+                <FormControlLabel
+                    control={<Switch size="small" checked={periodeInactiuShow ?? false} onChange={handlePeriodeInactiuShowChange} disabled={readOnly}/>}
+                    label={t($ => $.page.alarmaConfig.periodeInactiu.switch)}
+                    sx={{ ml: 1 }} />
+            </Grid>
+            {periodeInactiuShow && <Grid size={12}>
+                <Card variant="outlined">
+                    <CardHeader
+                        title={t($ => $.page.alarmaConfig.periodeInactiu.title)}
+                        subheader={t($ => $.page.alarmaConfig.periodeInactiu.subtitle)}
+                        slotProps={{
+                            title: { variant: 'h6' },
+                            subheader: { variant: 'subtitle2', sx: { color: 'text.secondary' } }
+                        }}
+                        sx={{ mb: -2 }} />
+                    <CardContent>
+                        <Grid container spacing={1}>
+                            <Grid size={6}>
+                                <FormField name="inactiuDesde" readOnly={readOnly}/>
+                            </Grid>
+                            <Grid size={6}>
+                                <FormField name="inactiuFins" readOnly={readOnly}/>
+                            </Grid>
+                        </Grid>
+                    </CardContent>
+                </Card>
+            </Grid>}
+        </Grid>
+    );
+}
 
-    // const {apiIsReady, apiDelete, tLib} = useAlarmaConfigAction(afterDelete)
-    // // const elementsWithPositions = React.useMemo(() => [
-    // //     {
-    // //         position: 3,
-    // //         element: toToolbarIcon('delete', {
-    // //             title: tLib('form.delete.title'),
-    // //             onClick: () => apiDelete(id),
-    // //         }),
-    // //     }
-    // // ], [apiIsReady, tLib]);
+/**
+ * Formulari de configuració d'alarma amb el seu propi MuiForm, per als diàlegs que no són de la graella
+ * principal (AlarmaConfigDialog de salut i la consulta de les alarmes d'altres usuaris). La graella
+ * principal obre el formulari com a modal (popupEditFormContent).
+ */
+export const AlarmaConfigForm: React.FC<{
+    entornAppId?: number | string;
+    dialogMode?: boolean;
+    dialogModeOnGoBack?: () => void;
+    id?: number | string,
+    hideToolbarSave?: boolean;
+    readOnly?: boolean;
+}> = ({ id, entornAppId: entornAppIdProp, dialogMode, dialogModeOnGoBack, hideToolbarSave, readOnly }) => {
+    const { t } = useTranslation();
+    const { t: tLib } = useBaseAppContext();
+    const formApiRef = useFormApiRef();
+    const titlePage = readOnly ? t($ =>$.page.alarmaConfig.view) :
+        id ? t($ =>$.page.alarmaConfig.update) : t($ =>$.page.alarmaConfig.create);
 
     const dialogModeProps: Partial<MuiFormProps> = dialogMode
         ? {
@@ -599,101 +684,11 @@ export const AlarmaConfigForm: React.FC<{
                 id={id}
                 title={titlePage}
                 resourceName="alarmaConfig"
-                goBackLink="/alarma"
-                createLink="form/{{id}}"
                 apiRef={formApiRef}
-                onDataChange={handleDataChange}
                 hiddenDeleteButton
-                // toolbarElementsWithPositions={elementsWithPositions}
-                onValidationErrorsChange={handleValidationErrorsChange}
                 {...dialogModeProps}
             >
-                <Grid container spacing={2} sx={{ pb: 6 }}>
-                    {!dialogMode &&
-                        <Grid size={3}>
-                            <EntornAppSelector
-                                id={entornAppId}
-                                onEntornAppChange={handleEntornAppChange}
-                                validationErrors={validationErrors}
-                                disabled={!!id || readOnly}
-                            />
-                        </Grid>
-                    }
-                    <Grid size={dialogMode ? 12 : 9}>
-                        <FormField name="nom" readOnly={readOnly}
-                            componentProps={{ title: t($ => $.page.alarmaConfig.nomHelperText) }}
-                        />
-                    </Grid>
-                    <Grid size={12}>
-                        <AlarmaConfigReglaField subsystemOptions={subsystemOptions} integrationOptions={integrationOptions} readOnly={readOnly} />
-                    </Grid>
-                    <Grid size={12}>
-                        <FormField name="missatge" readOnly={readOnly}/>
-                    </Grid>
-                    <Grid size={6}>
-                        <FormField name="aturarAvaluacioPosteriors" readOnly={readOnly}/>
-                    </Grid>
-                    <Grid size={6}>
-                        <FormField name="notificacioFinalitzada" readOnly={readOnly}/>
-                    </Grid>
-                    {isCurrentUserAdmin && (<AlarmaConfigAdminAndCorreuGenericCheckbox disabled={!!id || readOnly}/>)}
-                    <Grid size={6}>
-                        <FormControlLabel
-                            control={<Switch size="small" checked={periodeShow ?? false} onChange={handlePeriodeShowChange} disabled={readOnly}/>}
-                            label={t($ => $.page.alarmaConfig.periode.switch)}
-                            sx={{ ml: 1 }} />
-                    </Grid>
-                    {periodeShow && <Grid size={12}>
-                        <Card variant="outlined">
-                            <CardHeader
-                                title={t($ => $.page.alarmaConfig.periode.title)}
-                                subheader={t($ => $.page.alarmaConfig.periode.subtitle)}
-                                slotProps={{
-                                    title: { variant: 'h6' },
-                                    subheader: { variant: 'subtitle2', sx: { color: 'text.secondary' } }
-                                }}
-                                sx={{ mb: -2 }} />
-                            <CardContent>
-                                <Grid container spacing={1}>
-                                    <Grid size={3}>
-                                        <FormField name="periodeValor" readOnly={readOnly}/>
-                                    </Grid>
-                                    <Grid size={9}>
-                                        <FormField name="periodeUnitat" readOnly={readOnly}/>
-                                    </Grid>
-                                </Grid>
-                            </CardContent>
-                        </Card>
-                    </Grid>}
-                    <Grid size={6}>
-                        <FormControlLabel
-                            control={<Switch size="small" checked={periodeInactiuShow ?? false} onChange={handlePeriodeInactiuShowChange} disabled={readOnly}/>}
-                            label={t($ => $.page.alarmaConfig.periodeInactiu.switch)}
-                            sx={{ ml: 1 }} />
-                    </Grid>
-                    {periodeInactiuShow && <Grid size={12}>
-                        <Card variant="outlined">
-                            <CardHeader
-                                title={t($ => $.page.alarmaConfig.periodeInactiu.title)}
-                                subheader={t($ => $.page.alarmaConfig.periodeInactiu.subtitle)}
-                                slotProps={{
-                                    title: { variant: 'h6' },
-                                    subheader: { variant: 'subtitle2', sx: { color: 'text.secondary' } }
-                                }}
-                                sx={{ mb: -2 }} />
-                            <CardContent>
-                                <Grid container spacing={1}>
-                                    <Grid size={6}>
-                                        <FormField name="inactiuDesde" readOnly={readOnly}/>
-                                    </Grid>
-                                    <Grid size={6}>
-                                        <FormField name="inactiuFins" readOnly={readOnly}/>
-                                    </Grid>
-                                </Grid>
-                            </CardContent>
-                        </Card>
-                    </Grid>}
-                </Grid>
+                <AlarmaConfigFormContent hideEntornAppSelector={dialogMode} readOnly={readOnly} />
             </MuiForm>
         </>
     );
@@ -1244,8 +1239,10 @@ const AlarmaConfig: React.FC<{
             toolbarAdditionalRow={filterElement}
             toolbarElementsWithPositions={toolbarElementsWithPositions}
             filter={currentFilter}
-            toolbarCreateLink="form"
-            rowUpdateLink="form/{{id}}"
+            popupEditActive
+            popupEditFormContent={<AlarmaConfigFormContent />}
+            popupEditFormDialogResourceTitle={t($ => $.page.alarmaConfig.resourceTitle)}
+            popupEditFormDialogComponentProps={{ fullWidth: true, maxWidth: 'lg' }}
             disableColumnSorting
             autoHeight
             rowHideDeleteButton

@@ -367,6 +367,21 @@ describe('AppRoutes', () => {
         expect(screen.getByText('Plantilla page')).toBeInTheDocument();
     });
 
+    it.each(['/alarma/form', '/alarma/form/3'])('%s ja no té ruta (el formulari d\'alarma és un modal)', (path) => {
+        mocks.useUserContextMock.mockReturnValue({ user: { id: 1 } });
+        mocks.useIsUserAdminMock.mockReturnValue(true);
+        mocks.useIsUserConsultaMock.mockReturnValue(false);
+        mocks.useIsUserUsuariMock.mockReturnValue(false);
+        render(
+            <MemoryRouter initialEntries={[path]}>
+                <AppRoutes />
+            </MemoryRouter>
+        );
+
+        expect(screen.getByText('NotFound page')).toBeInTheDocument();
+        expect(screen.queryByText('AlarmaConfigForm page')).not.toBeInTheDocument();
+    });
+
     it('AppRoutes_quanLaRutaNoExisteix_mostraLaPagina404', () => {
         // Verifica que qualsevol ruta desconeguda cau al component de not found.
         mocks.useUserContextMock.mockReturnValue({ user: { id: 1 } });

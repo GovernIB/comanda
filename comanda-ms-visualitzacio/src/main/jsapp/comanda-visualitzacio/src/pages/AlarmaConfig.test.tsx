@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import AlarmaConfig, { AlarmaConfigForm, EntornAppSelector } from './AlarmaConfig';
 import { MuiDataGridColDef } from 'reactlib';
@@ -104,7 +104,32 @@ const mocks = vi.hoisted(() => ({
     getOneEntornAppMock: vi.fn(),
     findEntornAppsMock: vi.fn(),
     getOneAlarmaConfigMock: vi.fn(),
+    navigateMock: vi.fn(),
+    confirmMock: vi.fn(() => true),
+    lastGridProps: {} as Record<string, unknown>,
 }));
+
+// Dades del formulari tal com les veu el contingut (context del MuiForm o del FormDialog de la graella).
+const formData = {
+    entornAppId: 7,
+    tipus: 'APP_LATENCIA',
+    periodeValor: 5,
+    periodeUnitat: 'MINUTS',
+    inactiuDesde: '01:00:00',
+    inactiuFins: '03:00:00',
+    admin: false,
+    regla: {
+        tipusNode: 'GRUP',
+        operador: 'AND',
+        fills: [{
+            tipusNode: 'CONDICIO',
+            ambit: 'APLICACIO',
+            metrica: 'ESTAT',
+            comparador: 'EN',
+            valorsText: ['DOWN']
+        }]
+    }
+};
 
 vi.mock('react-i18next', () => ({
     useTranslation: () => ({
@@ -116,6 +141,7 @@ vi.mock('react-router-dom', () => ({
     useParams: () => ({
         id: '44',
     }),
+    useNavigate: () => mocks.navigateMock,
 }));
 
 vi.mock('reactlib', async (importOriginal) => {
@@ -124,22 +150,54 @@ vi.mock('reactlib', async (importOriginal) => {
     return {
     ...original,
     FormPage: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    MuiDataGrid: ({
-        title,
-        filter,
-        toolbarAdditionalRow,
-        toolbarElementsWithPositions,
-        rowAdditionalActions,
-        columns,
-    }: {
+    MuiDataGrid: (props: {
         title: string;
         filter?: string;
         toolbarAdditionalRow?: React.ReactNode;
         toolbarElementsWithPositions?: Array<{ element: React.ReactNode; position: string }>;
         rowAdditionalActions?: Array<{ label: string; onClick?: (id: unknown) => void }>;
         columns?: MuiDataGridColDef[];
-    }) => (
+        toolbarCreateLink?: string;
+        popupEditActive?: boolean;
+        popupEditFormContent?: React.ReactElement;
+        popupEditFormDialogOnClose?: (reason?: string) => boolean;
+    }) => {
+        const {
+            title,
+            filter,
+            toolbarAdditionalRow,
+            toolbarElementsWithPositions,
+            rowAdditionalActions,
+            columns,
+            toolbarCreateLink,
+            popupEditActive,
+            popupEditFormContent,
+            popupEditFormDialogOnClose,
+        } = props;
+        mocks.lastGridProps = props;
+        const [dialogOpen, setDialogOpen] = React.useState(false);
+        // Mateix contracte que la llibreria: amb toolbarCreateLink el botó de crear navega; amb
+        // popupEditActive obre el FormDialog, que es tanca si popupEditFormDialogOnClose no ho impedeix.
+        const handleCreate = () => {
+            if (toolbarCreateLink) {
+                mocks.navigateMock(toolbarCreateLink);
+            } else if (popupEditActive) {
+                setDialogOpen(true);
+            }
+        };
+        const handleDialogClose = () => {
+            const doClose = popupEditFormDialogOnClose != null ? popupEditFormDialogOnClose('escapeKeyDown') : true;
+            if (doClose) setDialogOpen(false);
+        };
+        return (
         <section>
+            <button onClick={handleCreate}>grid-create</button>
+            {dialogOpen && (
+                <div role="dialog">
+                    {popupEditFormContent}
+                    <button onClick={handleDialogClose}>dialog-close</button>
+                </div>
+            )}
             <h2>{title}</h2>
             <div data-testid="filter-value">{filter ?? ''}</div>
             {toolbarAdditionalRow}
@@ -157,50 +215,20 @@ vi.mock('reactlib', async (importOriginal) => {
                 {rowAdditionalActions?.[0]?.label}
             </button>
         </section>
-    ),
+        );
+    },
     MuiForm: ({
         title,
         children,
-        onDataChange,
-        onValidationErrorsChange,
     }: {
         title: string;
         children: React.ReactNode;
-        onDataChange?: (data: any) => void;
-        onValidationErrorsChange?: (id: any, errors?: any[]) => void;
-    }) => {
-        React.useEffect(() => {
-            onDataChange?.({
-                entornAppId: 7,
-                tipus: 'APP_LATENCIA',
-                periodeValor: 5,
-                periodeUnitat: 'MINUTS',
-                inactiuDesde: '01:00:00',
-                inactiuFins: '03:00:00',
-                admin: false,
-                regla: {
-                    tipusNode: 'GRUP',
-                    operador: 'AND',
-                    fills: [{
-                        tipusNode: 'CONDICIO',
-                        ambit: 'APLICACIO',
-                        metrica: 'ESTAT',
-                        comparador: 'EN',
-                        valorsText: ['DOWN']
-                    }]
-                }
-            });
-            onValidationErrorsChange?.(null, [
-                { field: 'entornAppId', code: 'NotNull', message: 'Obligatori' },
-            ]);
-        }, []);
-        return (
-            <form>
-                <h2>{title}</h2>
-                {children}
-            </form>
-        );
-    },
+    }) => (
+        <form>
+            <h2>{title}</h2>
+            {children}
+        </form>
+    ),
     MuiFilter: ({
         children,
         onDataChange,
@@ -230,19 +258,10 @@ vi.mock('reactlib', async (importOriginal) => {
         <div data-testid={`field-${name}`}>{`${name}:${String(disabled ?? false)}`}</div>
     ),
     useFormContext: () => ({
-        data: {
-            regla: {
-                tipusNode: 'GRUP',
-                operador: 'AND',
-                fills: [{
-                    tipusNode: 'CONDICIO',
-                    ambit: 'APLICACIO',
-                    metrica: 'ESTAT',
-                    comparador: 'EN',
-                    valorsText: ['DOWN']
-                }]
-            }
-        },
+        id: '44',
+        isReady: true,
+        data: formData,
+        fieldErrors: [{ field: 'entornAppId', code: 'NotNull', message: 'Obligatori' }],
         apiRef: {
             current: {
                 setFieldValue: mocks.setFieldValueMock,
@@ -353,7 +372,7 @@ describe('AlarmaConfigForm', () => {
 
     it('AlarmaConfigForm_quanRepDadesDeLatencia_mostraLEditorDeReglesIAvisos', async () => {
         // Verifica que el formulari mostra el nou editor de regles, els avisos i el bloc de període quan hi ha dades associades.
-        render(<AlarmaConfigForm />);
+        render(<AlarmaConfigForm id="44" />);
 
         await waitFor(() => {
             expect(screen.getByRole('heading', { name: 'Editar configuració' })).toBeInTheDocument();
@@ -367,7 +386,7 @@ describe('AlarmaConfigForm', () => {
 
     it('AlarmaConfigForm_quanCanviaLEntorn_actualitzaLEntornAppIdAlFormulariExtern', async () => {
         // Comprova que el selector d'entorn propaga l'identificador seleccionat al formulari principal.
-        render(<AlarmaConfigForm />);
+        render(<AlarmaConfigForm id="44" />);
 
         await waitFor(() => {
             expect(mocks.setFieldValueMock).toHaveBeenCalledWith('entornAppId', 9);
@@ -375,7 +394,7 @@ describe('AlarmaConfigForm', () => {
     });
 
     it('AlarmaConfigForm_quanEsDesactivaElToggleDePeriode_esborraElsValorsDelsCampsPeriode', async () => {
-        render(<AlarmaConfigForm />);
+        render(<AlarmaConfigForm id="44" />);
 
         await waitFor(() => {
             expect(screen.getByRole('heading', { name: 'Editar configuració' })).toBeInTheDocument();
@@ -391,7 +410,7 @@ describe('AlarmaConfigForm', () => {
     });
 
     it('AlarmaConfigForm_quanEsDesactivaElToggleDePeriodeInactiu_esborraElsValorsDelsCampsInactiu', async () => {
-        render(<AlarmaConfigForm />);
+        render(<AlarmaConfigForm id="44" />);
 
         await waitFor(() => {
             expect(screen.getByRole('heading', { name: 'Editar configuració' })).toBeInTheDocument();
@@ -407,7 +426,7 @@ describe('AlarmaConfigForm', () => {
     });
 
     it('AlarmaConfigForm_quanEsRenderitza_mostraAmbdosTogglesDePeriode', async () => {
-        render(<AlarmaConfigForm />);
+        render(<AlarmaConfigForm id="44" />);
 
         await waitFor(() => {
             expect(screen.getByLabelText(/Configurar període$/)).toBeInTheDocument();
@@ -496,5 +515,49 @@ describe('AlarmaConfig', () => {
         });
         fireEvent.click(screen.getByTitle('Mostrar només les meves alarmes'));
         expect(screen.getByTitle("Mostra només les alarmes d'administrador")).toBeInTheDocument();
+    });
+});
+
+describe('AlarmaConfig en modal', () => {
+    beforeEach(() => {
+        mocks.findEntornAppsMock.mockResolvedValue({ rows: [{ id: 1, entornAppDescription: 'Entorn 1' }] });
+        mocks.getOneEntornAppMock.mockResolvedValue({ id: 7, entornAppDescription: 'Entorn 7' });
+        vi.stubGlobal('confirm', mocks.confirmMock);
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+        vi.clearAllMocks();
+    });
+
+    it('crear una alarma obre un diàleg i no navega', async () => {
+        render(<AlarmaConfig />);
+        await screen.findByRole('heading', { name: 'Configuració d alarmes' });
+
+        fireEvent.click(screen.getByRole('button', { name: 'grid-create' }));
+
+        const dialog = await screen.findByRole('dialog');
+        expect(within(dialog).getByTestId('field-nom')).toBeInTheDocument();
+        expect(dialog).toHaveTextContent('Condició');
+        expect(mocks.navigateMock).not.toHaveBeenCalled();
+        expect(mocks.lastGridProps.toolbarCreateLink).toBeUndefined();
+        expect(mocks.lastGridProps.rowUpdateLink).toBeUndefined();
+    });
+
+    it('tancar el diàleg amb canvis el tanca sense demanar confirmació (comportament de FormDialog)', async () => {
+        // El FormDialog de base-react no té avís de canvis pendents en tancar (el FormBlocker de la
+        // pàgina només actua en navegar). Aquest test fixa el comportament actual; l'avís queda pendent.
+        render(<AlarmaConfig />);
+        await screen.findByRole('heading', { name: 'Configuració d alarmes' });
+        fireEvent.click(screen.getByRole('button', { name: 'grid-create' }));
+        await screen.findByRole('dialog');
+
+        fireEvent.click(screen.getByRole('button', { name: 'dialog-close' }));
+
+        await waitFor(() => {
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        });
+        expect(mocks.confirmMock).not.toHaveBeenCalled();
+        expect(mocks.lastGridProps.popupEditFormDialogOnClose).toBeUndefined();
     });
 });

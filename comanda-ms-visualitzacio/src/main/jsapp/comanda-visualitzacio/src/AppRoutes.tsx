@@ -24,7 +24,7 @@ import CalendariEstadistiques from './pages/CalendariEstadistiques';
 import Tasca from './pages/Tasca';
 import Avis from './pages/Avis';
 import Alarmes from './pages/Alarmes';
-import AlarmaConfig, { AlarmaConfigForm } from './pages/AlarmaConfig';
+import AlarmaConfig from './pages/AlarmaConfig';
 import Parametres from './pages/Parametres';
 import Paletes from './pages/Paletes';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -211,10 +211,6 @@ const AppRoutes: React.FC = () => {
                 </Route>
                 <Route path="alarma">
                     <Route index element={<AlarmaConfig />} />
-                    <Route path="form">
-                        <Route index element={<AlarmaConfigForm />} />
-                        <Route path=":id" element={<AlarmaConfigForm />} />
-                    </Route>
                 </Route>
                 <Route path="alarmes">
                     <Route index element={<ProtectedRoute resourceName="alarma"><Alarmes /></ProtectedRoute>} />

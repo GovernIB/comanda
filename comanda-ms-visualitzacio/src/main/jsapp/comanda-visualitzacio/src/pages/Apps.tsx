@@ -58,6 +58,7 @@ import { getErrorMessage } from '../util/exceptionUtils.ts';
 import * as z from 'zod';
 import { AppType } from '../models/app.schema';
 import ParameterExistsAdornment from '../components/ParameterExistsAdornment.tsx';
+import { ScreenFrame, formScreenTitle } from '../lot2';
 import Divider from '@mui/material/Divider';
 import InputAdornment from '@mui/material/InputAdornment';
 import Visibility from '@mui/icons-material/Visibility';
@@ -806,50 +807,52 @@ export const AppForm: React.FC = () => {
     const formTitle = id ? (t($ => $.page.apps.update)+` (${appNom})`) : t($ => $.page.apps.create);
 
     return (
-        <MuiForm
-            key={id} // TODO No debería ser necesario, parece un bug de la librería
-            id={id}
-            title={formTitle}
-            resourceName="app"
-            goBackLink="/app"
-            createLink="form/{{id}}"
-            onDataChange={(data) => setAppNom(data?.nom)}
-        >
-            <PageTitle title={formTitle} />
-            <MuiFormTabs tabs={formTabs} tabIndexesWithGrids={[1]}>
-                <MuiFormTabContent index={0} showOnCreate>
-                    <FormPage>
-                        <Grid container spacing={2}>
-                            <Grid size={4}>
-                                <FormField name="codi" />
+        <ScreenFrame>
+            <MuiForm
+                key={id} // TODO No debería ser necesario, parece un bug de la librería
+                id={id}
+                title={formScreenTitle('apps', formTitle)}
+                resourceName="app"
+                goBackLink="/app"
+                createLink="form/{{id}}"
+                onDataChange={(data) => setAppNom(data?.nom)}
+            >
+                <PageTitle title={formTitle} />
+                <MuiFormTabs tabs={formTabs} tabIndexesWithGrids={[1]}>
+                    <MuiFormTabContent index={0} showOnCreate>
+                        <FormPage>
+                            <Grid container spacing={2}>
+                                <Grid size={4}>
+                                    <FormField name="codi" />
+                                </Grid>
+                                <Grid size={8}></Grid>
+                                <Grid size={12}>
+                                    <FormField name="nom" />
+                                </Grid>
+                                <Grid size={12}>
+                                    <FormField name="descripcio" type="textarea" />
+                                </Grid>
+                                <Grid size={12}>
+                                    <LogoUpload
+                                        name="logo"
+                                        editable={!gestorReadOnly}
+                                        // label="Logo"
+                                    />
+                                </Grid>
+                                <Grid size={12}>
+                                    <FormField name="activa" />
+                                </Grid>
                             </Grid>
-                            <Grid size={8}></Grid>
-                            <Grid size={12}>
-                                <FormField name="nom" />
-                            </Grid>
-                            <Grid size={12}>
-                                <FormField name="descripcio" type="textarea" />
-                            </Grid>
-                            <Grid size={12}>
-                                <LogoUpload
-                                    name="logo"
-                                    editable={!gestorReadOnly}
-                                    // label="Logo"
-                                />
-                            </Grid>
-                            <Grid size={12}>
-                                <FormField name="activa" />
-                            </Grid>
-                        </Grid>
-                    </FormPage>
-                </MuiFormTabContent>
-                <MuiFormTabContent
-                    index={1}
-                >
-                    <AppsEntorns appNom={appNom} />
-                </MuiFormTabContent>
-            </MuiFormTabs>
-        </MuiForm>
+                        </FormPage>
+                    </MuiFormTabContent>
+                    <MuiFormTabContent
+                        index={1}
+                    >
+                        <AppsEntorns appNom={appNom} />
+                    </MuiFormTabContent>
+                </MuiFormTabs>
+            </MuiForm>
+        </ScreenFrame>
     );
 };
 

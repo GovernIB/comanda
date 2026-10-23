@@ -634,6 +634,7 @@ const translationEn: translationResourcesType = {
             title: "Alarm configuration",
             create: "Create alarm configuration",
             update: "Edit alarm configuration",
+            resourceTitle: "alarm configuration",
             view: "View alarm configuration",
             nomHelperText: "When an alarm email notification is sent, the name is used to identify the alarm in the email subject.",
             filterWarning: "Cannot reorder alarms when filters are applied",
