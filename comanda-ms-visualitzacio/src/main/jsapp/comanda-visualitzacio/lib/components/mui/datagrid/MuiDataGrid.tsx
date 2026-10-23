@@ -28,6 +28,7 @@ import {
 } from '@mui/x-data-grid-pro';
 import { caES, esES, enUS } from '@mui/x-data-grid/locales';
 import Box from '@mui/material/Box';
+import { SxProps, Theme } from '@mui/material/styles';
 import Icon from '@mui/material/Icon';
 import { capitalize } from '../../../util/text';
 import { useDebounce } from '../../../util/useDebounce';
@@ -170,6 +171,14 @@ export type MuiDataGridProps = {
     toolbarHideQuickFilter?: true;
     /** Adreça que s'ha de mostrar al fer clic sobre el botó de crear una nova fila */
     toolbarCreateLink?: string;
+    /** Aparença del botó de crear de la barra d'eines: icona (per defecte) o botó amb text */
+    toolbarCreateVariant?: 'icon' | 'button';
+    /** Text del botó de crear quan la variant és 'button' (per defecte datacommon.create.label) */
+    toolbarCreateLabel?: string;
+    /** Estils addicionals de la barra d'eines superior (es combinen darrere dels per defecte) */
+    toolbarSx?: SxProps<Theme>;
+    /** Estils dels marges de la graella (substitueixen els per defecte) */
+    marginsSx?: SxProps<Theme>;
     /** Elements addicionals (amb la seva posició) per a la barra d'eines */
     toolbarElementsWithPositions?: ReactElementWithPosition[];
     /** Fila addicional que es col·locarà just a davall la barra d'eines */
@@ -182,6 +191,8 @@ export type MuiDataGridProps = {
     rowDetailLink?: string | ((row: any) => string);
     /** Adreça que s'ha de mostrar al fer clic sobre el botó de modificar una fila */
     rowUpdateLink?: string | ((row: any) => string);
+    /** Indica si el botó de modificar s'ha de mostrar dins el menú de la fila en lloc de com a icona */
+    rowUpdateShowInMenu?: boolean;
     /** Funció que indica si l'enllaç d'una determinada fila està activa */
     isRowLinkActive?: (row: any) => boolean;
     /** Deshabilita el botó d'actualització de cada fila (por ser també una funció que reb la fila i retorna true/false) */
@@ -279,7 +290,7 @@ export type MuiDataGridProps = {
     /** Indica que només s'han de mostrar les vores horitzontals de la graella */
     semiBordered?: true;
     /** Estils addicionals pel contenidor de la graella */
-    sx?: any;
+    sx?: SxProps<Theme>;
     /** Indica si s'han d'imprimir a la consola missatges de depuració */
     debug?: true;
 } & Omit<DataGridProps, 'apiRef'>;
@@ -826,12 +837,17 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         toolbarHideRefresh,
         toolbarHideQuickFilter,
         toolbarCreateLink,
+        toolbarCreateVariant,
+        toolbarCreateLabel,
+        toolbarSx,
+        marginsSx,
         toolbarElementsWithPositions,
         toolbarAdditionalRow,
         toolbarAdditionalRowMinHeight,
         rowLink,
         rowDetailLink,
         rowUpdateLink,
+        rowUpdateShowInMenu,
         isRowLinkActive,
         rowDisableUpdateButton,
         rowDisableDeleteButton,
@@ -1027,6 +1043,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         inlineEditActive || inlineEditUpdateActive ? inlineUpdate : undefined,
         rowDetailLink,
         rowUpdateLink,
+        rowUpdateShowInMenu,
         rowDisableUpdateButton,
         rowDisableDeleteButton,
         rowDisableDetailsButton,
@@ -1053,7 +1070,9 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         refresh,
         onRowCreate,
         onRowUpdate,
-        onRowDelete
+        onRowDelete,
+        toolbarCreateVariant,
+        toolbarCreateLabel
     );
     const processedColumns = useGridColumns(
         columns,
@@ -1097,7 +1116,8 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         ...otherPersistentStateProps
     } = persistentStateProps;
     const isUpperToolbarType = toolbarType === 'upper';
-    const gridMargins = isUpperToolbarType ? { m: 2 } : null;
+    const gridMargins = marginsSx ?? (isUpperToolbarType ? { m: 2 } : null);
+    const gridMarginsArray = Array.isArray(gridMargins) ? gridMargins : [gridMargins];
     const canDeleteAnyRow = rows.some((r) => r['_actions']?.['delete'] != null);
     const quickFilterDebounced = useDebounce(quickFilter);
     React.useEffect(() => {
@@ -1215,7 +1235,8 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         toolbarHideExport,
         toolbarHideRefresh,
         toolbarHideQuickFilter,
-        joinedToolbarElementsWithPositions
+        joinedToolbarElementsWithPositions,
+        toolbarSx
     );
     const getDataGridApi = () => ({
         refresh,
@@ -1384,11 +1405,13 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         onRowContextMenu,
     ]);
     const memoizedSx = React.useMemo(() => {
-        return {
-            height: autoHeight ? 'auto' : undefined,
-            ...gridMargins,
-            ...sx,
-        };
+        return [
+            {
+                height: autoHeight ? 'auto' : undefined,
+            },
+            ...gridMarginsArray,
+            ...(Array.isArray(sx) ? sx : [sx]),
+        ];
     }, [autoHeight, gridMargins, sx]);
     const content = (
         <>
@@ -1396,13 +1419,15 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
             {toolbarAdditionalRow ? (
                 <Box
                     className="toolbarAdditionalRow"
-                    sx={{
-                        ...gridMargins,
-                        mb: 0,
-                        ...(toolbarAdditionalRowMinHeight != null
-                            ? { minHeight: toolbarAdditionalRowMinHeight }
-                            : {}),
-                    }}>
+                    sx={[
+                        ...gridMarginsArray,
+                        {
+                            mb: 0,
+                            ...(toolbarAdditionalRowMinHeight != null
+                                ? { minHeight: toolbarAdditionalRowMinHeight }
+                                : {}),
+                        },
+                    ]}>
                     {toolbarAdditionalRow}
                 </Box>
             ) : null}

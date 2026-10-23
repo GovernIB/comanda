@@ -27,6 +27,7 @@ import {
     DefaultMuiComponentProps,
     MuiBaseAppContext,
     MuiBaseAppContextType,
+    MuiBaseAppAppearance,
 } from './MuiBaseAppContext';
 
 export type MuiBaseAppProps = Omit<BaseAppProps, 'contentComponentSlots'> & {
@@ -53,6 +54,7 @@ export type MuiBaseAppProps = Omit<BaseAppProps, 'contentComponentSlots'> & {
     menuWidth?: number;
     menuPanelWidth?: number;
     defaultMuiComponentProps?: DefaultMuiComponentProps;
+    appearance?: MuiBaseAppAppearance;
 };
 
 const baseFormFieldComponents = [
@@ -225,6 +227,7 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
         formFieldComponents,
         children,
         defaultMuiComponentProps,
+        appearance,
         ...otherProps
     } = props;
     const mergedFormFieldComponents = [...baseFormFieldComponents, ...(formFieldComponents ?? [])];
@@ -261,24 +264,25 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
         defaultMuiComponentProps: {
             ...defaultMuiComponentProps,
         },
+        appearance: appearance ?? {},
     };
     return (
-        <BaseApp
-            code={code}
-            formFieldComponents={mergedFormFieldComponents}
-            detailFieldComponent={MuiDetailField}
-            {...otherProps}
-            contentComponentSlots={{
-                appbar: appbarComponent,
-                footer,
-                menu: menuComponent,
-                offline: offlineComponent,
-            }}>
-            <MuiBaseAppContext.Provider value={muiContext}>
+        <MuiBaseAppContext.Provider value={muiContext}>
+            <BaseApp
+                code={code}
+                formFieldComponents={mergedFormFieldComponents}
+                detailFieldComponent={MuiDetailField}
+                {...otherProps}
+                contentComponentSlots={{
+                    appbar: appbarComponent,
+                    footer,
+                    menu: menuComponent,
+                    offline: offlineComponent,
+                }}>
                 <MuiComponentsConfigurer />
                 {children}
-            </MuiBaseAppContext.Provider>
-        </BaseApp>
+            </BaseApp>
+        </MuiBaseAppContext.Provider>
     );
 };
 

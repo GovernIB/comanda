@@ -50,6 +50,8 @@ export type BaseAppProps = React.PropsWithChildren & {
     contentComponentSlots: ContentComponentSlots;
     fixedContentExpandsToAvailableHeightEnabled?: boolean;
     marginsDisabled?: boolean;
+    contentRootStyle?: React.CSSProperties;
+    contentMainStyle?: React.CSSProperties;
 };
 
 export type BaseAppContentComponentProps = React.PropsWithChildren & {
@@ -62,6 +64,8 @@ export type BaseAppContentComponentProps = React.PropsWithChildren & {
     menuComponent?: React.ReactElement;
     offlineComponent?: React.ReactElement;
     legacyMargins?: boolean;
+    contentRootStyle?: React.CSSProperties;
+    contentMainStyle?: React.CSSProperties;
 };
 
 const useDialog = () => {
@@ -187,6 +191,8 @@ const ContentComponentDefault: React.FC<BaseAppContentComponentProps> = (props) 
         footerComponent,
         menuComponent,
         offlineComponent,
+        contentRootStyle,
+        contentMainStyle,
         children,
     } = props;
     const mainBoxHeight = contentExpandsToAvailableHeight ? '100vh' : undefined;
@@ -197,6 +203,7 @@ const ContentComponentDefault: React.FC<BaseAppContentComponentProps> = (props) 
                 display: 'flex',
                 flexDirection: 'column',
                 height: mainBoxHeight,
+                ...contentRootStyle,
             }}>
             {appbarComponent}
             <div
@@ -211,6 +218,7 @@ const ContentComponentDefault: React.FC<BaseAppContentComponentProps> = (props) 
                         flexGrow: 1,
                         minWidth: 0,
                         ...(!marginsDisabled ? { margin: '16px 24px' } : null),
+                        ...contentMainStyle,
                     }}>
                     {appReady ? childrenOrOfflineComponent : null}
                 </main>
@@ -242,6 +250,8 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
         contentComponentSlots,
         fixedContentExpandsToAvailableHeightEnabled,
         marginsDisabled: marginsDisabledProp,
+        contentRootStyle,
+        contentMainStyle,
         children,
     } = props;
     const { offline } = useResourceApiContext();
@@ -311,7 +321,9 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
                 appbarComponent={contentComponentSlots.appbar}
                 footerComponent={contentComponentSlots.footer}
                 menuComponent={contentComponentSlots.menu}
-                offlineComponent={contentComponentSlots.offline}>
+                offlineComponent={contentComponentSlots.offline}
+                contentRootStyle={contentRootStyle}
+                contentMainStyle={contentMainStyle}>
                 {children}
             </ContentComponentDefault>
         </BaseAppContext.Provider>

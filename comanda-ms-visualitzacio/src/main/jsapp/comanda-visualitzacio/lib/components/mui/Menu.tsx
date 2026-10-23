@@ -11,7 +11,9 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
 import { useBaseAppContext } from '../BaseAppContext';
-import { useSmallScreen, useSmallHeader } from '../../util/useSmallScreen';
+import { MenuColors, useMuiBaseAppAppearance } from './MuiBaseAppContext';
+import { useSmallScreen } from '../../util/useSmallScreen';
+import { useHeaderHeight } from '../../util/useHeaderHeight';
 import { Badge, BadgeProps } from '@mui/material';
 
 export type MenuEntry = {
@@ -74,31 +76,53 @@ const openedMixin = (theme: Theme, width: number | string): CSSObject => ({
 const drawerClosedWidthSmall = (theme: Theme) => `calc(${theme.spacing(6)} + 1px)`;
 const drawerClosedWidthStandard = (theme: Theme) => `calc(${theme.spacing(7)} + 1px)`;
 
-const closedMixin = (theme: Theme): CSSObject => ({
+const closedMixin = (theme: Theme, collapsedWidth?: number): CSSObject => ({
     transition: theme.transitions.create('width', {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
     }),
-    width: drawerClosedWidthSmall(theme),
-    [theme.breakpoints.up('sm')]: {
-        width: drawerClosedWidthStandard(theme),
-    },
+    ...(collapsedWidth != null
+        ? { width: `${collapsedWidth}px` }
+        : {
+              width: drawerClosedWidthSmall(theme),
+              [theme.breakpoints.up('sm')]: {
+                  width: drawerClosedWidthStandard(theme),
+              },
+          }),
+});
+
+const DEFAULT_ICON_SIZE = 20;
+const DEFAULT_SELECTED_COLOR = 'hsl(210, 100%, 60%)';
+
+const paperColorsSx = (colors?: MenuColors): CSSObject => ({
+    ...(colors?.background != null && { backgroundColor: colors.background }),
+    ...(colors?.textPrimary != null && { color: colors.textPrimary }),
 });
 
 const ShrinkableDrawer = styled(Drawer, {
-    shouldForwardProp: (prop) => prop !== 'open' && prop !== 'width',
+    shouldForwardProp: (prop) =>
+        prop !== 'open' && prop !== 'width' && prop !== 'collapsedWidth' && prop !== 'menuColors',
 })(({ theme, open, ...otherProps }) => {
     const width = (otherProps as any)?.['width'];
+    const collapsedWidth = (otherProps as any)?.['collapsedWidth'] as number | undefined;
+    const menuColors = (otherProps as any)?.['menuColors'] as MenuColors | undefined;
     const shrinkableStyles: CSSObject = {
         ...(open && {
             ...openedMixin(theme, width),
             '& .MuiDrawer-paper': openedMixin(theme, width),
         }),
         ...(!open && {
-            ...closedMixin(theme),
-            '& .MuiDrawer-paper': closedMixin(theme),
+            ...closedMixin(theme, collapsedWidth),
+            '& .MuiDrawer-paper': closedMixin(theme, collapsedWidth),
         }),
     };
+    const paperSx = paperColorsSx(menuColors);
+    if (shrinkableStyles['& .MuiDrawer-paper']) {
+        shrinkableStyles['& .MuiDrawer-paper'] = {
+            ...(shrinkableStyles['& .MuiDrawer-paper'] as CSSObject),
+            ...paperSx,
+        };
+    }
     return {
         flexShrink: 0,
         boxSizing: 'border-box',
@@ -106,22 +130,30 @@ const ShrinkableDrawer = styled(Drawer, {
     };
 });
 
-const StyledList = styled(List)<{ component?: React.ElementType }>({
-    '& .MuiListItemIcon-root': {
-        minWidth: 0,
-        marginRight: 16,
-    },
-    '& .MuiListItemText-root': {
-        overflowWrap: 'anywhere',
-    },
-    '& .MuiSvgIcon-root': {
-        fontSize: 20,
-    },
-    paddingTop: 0,
-    paddingBottom: '8px',
-    overflow: 'auto',
-    overflowX: 'hidden',
-});
+const StyledList = styled(List, {
+    shouldForwardProp: (prop) => prop !== 'iconSize' && prop !== 'menuColors',
+})<{ component?: React.ElementType; iconSize?: number; menuColors?: MenuColors }>(
+    ({ iconSize, menuColors }) => ({
+        '& .MuiListItemIcon-root': {
+            minWidth: 0,
+            marginRight: 16,
+        },
+        '& .MuiListItemText-root': {
+            overflowWrap: 'anywhere',
+        },
+        '& .MuiSvgIcon-root': {
+            fontSize: iconSize ?? DEFAULT_ICON_SIZE,
+        },
+        paddingTop: 0,
+        paddingBottom: '8px',
+        overflow: 'auto',
+        overflowX: 'hidden',
+        ...paperColorsSx(menuColors),
+        ...(menuColors?.divider != null && {
+            '& .MuiDivider-root': { borderColor: menuColors.divider },
+        }),
+    })
+);
 
 const COMPACT_PANEL_WIDTH = 250;
 const SUBMENU_TITLE_HEIGHT = 48;
@@ -161,12 +193,31 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
         children,
     } = props;
     const { getLinkComponent } = useBaseAppContext();
+    const {
+        menuCollapsedWidth,
+        menuIconSize,
+        menuSelectedColor = DEFAULT_SELECTED_COLOR,
+        menuSelectedIndicator = 'line',
+        menuColors,
+    } = useMuiBaseAppAppearance();
     const [expanded, setExpanded] = React.useState<boolean>(selected ?? false);
     const itemButtonSx = {
         minHeight: 48,
         justifyContent: !shrink ? 'initial' : 'center',
+        ...(menuColors?.hoverBackground != null && {
+            '&:hover': { backgroundColor: menuColors.hoverBackground },
+        }),
+        ...(menuSelectedIndicator === 'background' &&
+            menuColors?.selectedBackground != null && {
+                '&.Mui-selected, &.Mui-selected:hover': {
+                    backgroundColor: menuColors.selectedBackground,
+                },
+            }),
+        ...(menuColors?.accent != null && {
+            [`&.Mui-selected .${menuItemIconClassName}`]: { color: menuColors.accent },
+        }),
         '&>:before':
-            level > 0 && !shrink
+            level > 0 && !shrink && menuSelectedIndicator === 'line'
                 ? {
                       content: '""',
                       display: 'block',
@@ -177,15 +228,16 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
                       height: '100%',
                       width: '2px',
                       opacity: '1',
-                      background: selected ? 'hsl(210, 100%, 60%)' : 'hsl(215, 15%, 92%)',
+                      background: selected ? menuSelectedColor : 'hsl(215, 15%, 92%)',
                   }
                 : undefined,
     };
     const itemIconSx = {
         minWidth: 0,
-        ml: !shrink ? 1 : -1,
-        mr: !shrink ? 1 : 'auto',
+        ml: !shrink ? 1 : menuCollapsedWidth != null ? 0 : -1,
+        mr: !shrink ? 1 : menuCollapsedWidth != null ? 0 : 'auto',
         justifyContent: 'center',
+        ...(menuColors?.textSecondary != null && { color: menuColors.textSecondary }),
     };
     const itemTextSx = {
         opacity: !shrink ? 1 : 0,
@@ -212,7 +264,11 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
         children != null ? (
             <Icon fontSize={'small'}>{expanded ? 'expand_less' : 'expand_more'}</Icon>
         ) : null;
-    const iconComponent = <Icon fontSize={'small'}>{icon}</Icon>;
+    const iconComponent = (
+        <Icon fontSize={'small'} sx={menuIconSize != null ? { fontSize: menuIconSize } : undefined}>
+            {icon}
+        </Icon>
+    );
     const listItemIconComponent = icon ? (
         <ListItemIcon className={menuItemIconClassName} sx={itemIconSx}>
             {entry.badgeProps ? (
@@ -237,7 +293,12 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
                     onMouseLeave={() => onMenuItemMouseLeave?.(entry)}
                     sx={itemButtonSx}
                     style={{
-                        paddingLeft: shrink ? '40px' : 24 + 16 * level + (level > 0 ? 8 : 0) + 'px',
+                        ...(shrink && menuCollapsedWidth != null && { paddingRight: 0 }),
+                        paddingLeft: shrink
+                            ? menuCollapsedWidth != null
+                                ? 0
+                                : '40px'
+                            : 24 + 16 * level + (level > 0 ? 8 : 0) + 'px',
                     }}>
                     {listItemIconComponent}
                     {!shrink && <ListItemText primary={primary} sx={itemTextSx} />}
@@ -262,8 +323,9 @@ const ListMenuContent: React.FC<ListMenuContentProps> = (props) => {
     } = props;
     const { useLocationPath } = useBaseAppContext();
     const locationPath = useLocationPath();
+    const { menuIconSize, menuColors } = useMuiBaseAppAppearance();
     return (
-        <StyledList>
+        <StyledList iconSize={menuIconSize} menuColors={menuColors}>
             {entries?.map((item, index) => {
                 const selected = isCurrentMenuEntryOrAnyChildrenSelected(item, locationPath);
                 const entryComponent = item.divider ? (
@@ -301,10 +363,12 @@ const ListMenuContent: React.FC<ListMenuContentProps> = (props) => {
 const MenuTitle: React.FC<MenuTitleProps> = (props) => {
     const { title, onClose } = props;
     const theme = useTheme();
+    const { menuColors } = useMuiBaseAppAppearance();
     const handleButtonClick = () => onClose?.();
     return (
         <Box>
-            <ListItemButton sx={{ backgroundColor: theme.palette.grey[200] }}>
+            <ListItemButton
+                sx={{ backgroundColor: menuColors?.background ?? theme.palette.grey[200] }}>
                 <ListItemIcon sx={{ minWidth: '40px' }}>
                     <IconButton size="small" onClick={handleButtonClick}>
                         <Icon fontSize={'small'}>clear</Icon>
@@ -312,7 +376,9 @@ const MenuTitle: React.FC<MenuTitleProps> = (props) => {
                 </ListItemIcon>
                 <ListItemText primary={title} sx={{ '& span': { fontWeight: 'bold' } }} />
             </ListItemButton>
-            <Divider />
+            <Divider
+                sx={menuColors?.divider != null ? { borderColor: menuColors.divider } : undefined}
+            />
         </Box>
     );
 };
@@ -330,16 +396,18 @@ export const Menu: React.FC<MenuProps> = (props) => {
         submenuTitleHeight = SUBMENU_TITLE_HEIGHT,
     } = props;
     const smallScreen = useSmallScreen();
-    const smallHeader = useSmallHeader();
+    const headerHeight = useHeaderHeight();
     const theme = useTheme();
+    const { menuCollapsedWidth, menuColors } = useMuiBaseAppAppearance();
     const [open, setOpen] = React.useState<boolean>(false);
     const [compactPanelEntryId, setCompactPanelEntryId] = React.useState<string | null>(null);
     const closeTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const compactMenuContainerRef = React.useRef<HTMLDivElement | null>(null);
     const compactMode = !smallScreen && !!shrink;
     // El menú compacte no es mostra quan la mida de pantalla és petita
-    const compactMenuWidth = drawerClosedWidthStandard(theme);
-    const topMargin = smallHeader ? theme.spacing(7) : theme.spacing(8);
+    const compactMenuWidth =
+        menuCollapsedWidth != null ? `${menuCollapsedWidth}px` : drawerClosedWidthStandard(theme);
+    const topMargin = `${headerHeight}px`;
     const compactPanelEntry = compactMode
         ? entries?.find((entry) => entry.id === compactPanelEntryId && entry.children?.length)
         : undefined;
@@ -427,9 +495,10 @@ export const Menu: React.FC<MenuProps> = (props) => {
                                 bottom: footerHeight ? `${footerHeight}px` : null,
                                 left: compactMenuWidth,
                                 width: compactPanelWidth,
-                                borderRight: `1px solid ${theme.palette.divider}`,
-                                backgroundColor: theme.palette.background.paper,
-                                color: theme.palette.text.primary,
+                                borderRight: `1px solid ${menuColors?.divider ?? theme.palette.divider}`,
+                                backgroundColor:
+                                    menuColors?.background ?? theme.palette.background.paper,
+                                color: menuColors?.textPrimary ?? theme.palette.text.primary,
                                 overflowY: 'auto',
                                 zIndex: theme.zIndex.drawer + 1,
                             })}>
@@ -437,8 +506,9 @@ export const Menu: React.FC<MenuProps> = (props) => {
                                 sx={(theme) => ({
                                     px: 2,
                                     py: 1.7,
-                                    backgroundColor: theme.palette.background.paper,
-                                    borderBottom: `1px solid ${theme.palette.divider}`,
+                                    backgroundColor:
+                                        menuColors?.background ?? theme.palette.background.paper,
+                                    borderBottom: `1px solid ${menuColors?.divider ?? theme.palette.divider}`,
                                     minHeight: submenuTitleHeight,
                                     overflowWrap: 'anywhere',
                                 })}>
@@ -446,7 +516,7 @@ export const Menu: React.FC<MenuProps> = (props) => {
                                     variant="subtitle1"
                                     sx={() => ({
                                         fontWeight: 700,
-                                        color: theme.palette.primary.light,
+                                        color: menuColors?.accent ?? theme.palette.primary.light,
                                     })}>
                                     {compactPanelEntry.title}
                                 </Typography>
@@ -455,7 +525,7 @@ export const Menu: React.FC<MenuProps> = (props) => {
                                         variant="body2"
                                         sx={{
                                             mt: 0.25,
-                                            color: 'text.secondary',
+                                            color: menuColors?.textSecondary ?? 'text.secondary',
                                             fontSize: '0.6rem',
                                         }}>
                                         {compactPanelEntry.description}
@@ -489,7 +559,10 @@ export const Menu: React.FC<MenuProps> = (props) => {
         </>
     );
     return !smallScreen ? (
-        <ShrinkableDrawer variant={'permanent'} open={!shrink} {...{ width: drawerWidth }}>
+        <ShrinkableDrawer
+            variant={'permanent'}
+            open={!shrink}
+            {...{ width: drawerWidth, collapsedWidth: menuCollapsedWidth, menuColors }}>
             {drawerContent}
         </ShrinkableDrawer>
     ) : (
@@ -502,6 +575,7 @@ export const Menu: React.FC<MenuProps> = (props) => {
                 '& .MuiDrawer-paper': {
                     width: drawerWidth,
                     boxSizing: 'border-box',
+                    ...paperColorsSx(menuColors),
                 },
             }}>
             {drawerContent}

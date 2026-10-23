@@ -1,5 +1,6 @@
 import React from 'react';
 import Box from '@mui/material/Box';
+import { SxProps, Theme } from '@mui/material/styles';
 import Toolbar from '../Toolbar';
 import { toToolbarIcon } from '../ToolbarIcon';
 import {
@@ -16,6 +17,7 @@ type DataToolbarProps = {
     elementsWithPositions?: ReactElementWithPosition[];
     upperToolbar?: boolean;
     error?: any;
+    sx?: SxProps<Theme>;
 };
 
 export const useDataToolbar = (
@@ -31,7 +33,8 @@ export const useDataToolbar = (
     toolbarHideExport?: boolean,
     toolbarHideRefresh?: boolean,
     toolbarHideQuickFilter?: boolean,
-    toolbarElementsWithPositions?: ReactElementWithPosition[]
+    toolbarElementsWithPositions?: ReactElementWithPosition[],
+    toolbarSx?: SxProps<Theme>
 ) => {
     const { t, goBack } = useBaseAppContext();
     const isUpperToolbarType = toolbarType === 'upper';
@@ -79,6 +82,7 @@ export const useDataToolbar = (
         upperToolbar: isUpperToolbarType,
         elementsWithPositions: joinedElementsWithPositions,
         error: apiCurrentError ?? undefined,
+        sx: toolbarSx,
     };
     return !isHiddenToolbarType ? <DataToolbar {...toolbarElementProps} /> : null;
 };
@@ -90,6 +94,7 @@ const DataToolbar: React.FC<DataToolbarProps> = (props) => {
         elementsWithPositions: elementsWithPositionsProp,
         upperToolbar,
         error,
+        sx,
     } = props;
     const { t } = useBaseAppContext();
     const [errorShown, setErrorShown] = React.useState<boolean>(false);
@@ -126,6 +131,7 @@ const DataToolbar: React.FC<DataToolbarProps> = (props) => {
                 elementsWithPositions={elementsWithPositions}
                 upperToolbar={upperToolbar}
                 error={error}
+                sx={sx}
             />
         </Box>
     );

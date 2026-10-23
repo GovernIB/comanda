@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import { Detail, DetailProps } from '../../detail/Detail';
 import { useBaseAppContext } from '../../BaseAppContext';
 import { useMuiBaseAppContext } from '../MuiBaseAppContext';
-import { useSmallHeader } from '../../../util/useSmallScreen';
+import { useHeaderHeight } from '../../../util/useHeaderHeight';
 import { ReactElementWithPosition } from '../../../util/reactNodePosition';
 import { toToolbarIcon } from '../ToolbarIcon';
 import { Toolbar } from '../Toolbar';
@@ -33,7 +33,7 @@ const MuiDetailContent: React.FC<React.PropsWithChildren | any> = (props) => {
         componentProps,
         children,
     } = props;
-    const smallHeader = useSmallHeader();
+    const headerHeight = useHeaderHeight();
     const { t, goBack, anyHistoryEntryExist, contentExpandsToAvailableHeight } =
         useBaseAppContext();
     const backButtonDisabled = !anyHistoryEntryExist() && !goBackLink;
@@ -67,7 +67,7 @@ const MuiDetailContent: React.FC<React.PropsWithChildren | any> = (props) => {
                     upperToolbar
                     sx={{
                         position: 'sticky',
-                        top: smallHeader ? '56px' : '64px',
+                        top: `${headerHeight}px`,
                         zIndex: 10,
                     }}
                 />

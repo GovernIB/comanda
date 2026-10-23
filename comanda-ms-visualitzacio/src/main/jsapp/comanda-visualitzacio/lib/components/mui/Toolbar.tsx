@@ -60,20 +60,22 @@ export const Toolbar: React.FC<ToolbarProps> = (props) => {
         <>
             <MuiToolbar
                 disableGutters
-                sx={{
-                    width: '100%',
-                    display: 'flex',
-                    px: upperToolbar ? 2 : 0,
-                    ml: 0,
-                    mr: 0,
-                    mt: 0,
-                    backgroundColor: error
-                        ? red[100]
-                        : upperToolbar
-                          ? upperToolbarBgColor
-                          : undefined,
-                    ...sxProp,
-                }}>
+                sx={[
+                    {
+                        width: '100%',
+                        display: 'flex',
+                        px: upperToolbar ? 2 : 0,
+                        ml: 0,
+                        mr: 0,
+                        mt: 0,
+                        backgroundColor: error
+                            ? red[100]
+                            : upperToolbar
+                              ? upperToolbarBgColor
+                              : undefined,
+                    },
+                    ...(Array.isArray(sxProp) ? sxProp : [sxProp]),
+                ]}>
                 {joinReactElementsWithReactElementsWithPositions(
                     toolbarElements,
                     elementsWithPositions,

@@ -65,6 +65,7 @@ export type MuiDataListProps = {
     toolbarElementsWithPositions?: ReactElementWithPosition[];
     toolbarAdditionalRow?: React.ReactElement;
     rowUpdateLink?: string;
+    rowUpdateShowInMenu?: boolean;
     rowDetailLink?: string;
     rowDisableUpdateButton?: boolean | ((row: any) => boolean);
     rowDisableDeleteButton?: boolean | ((row: any) => boolean);
@@ -197,6 +198,7 @@ export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
         toolbarElementsWithPositions,
         toolbarAdditionalRow,
         rowUpdateLink,
+        rowUpdateShowInMenu,
         rowDetailLink,
         rowDisableUpdateButton,
         rowDisableDeleteButton,
@@ -266,6 +268,7 @@ export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
         undefined,
         rowDetailLink,
         rowUpdateLink,
+        rowUpdateShowInMenu,
         rowDisableUpdateButton,
         rowDisableDeleteButton,
         rowDisableDetailsButton,

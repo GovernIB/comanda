@@ -13,8 +13,28 @@ export type DefaultMuiComponentProps = {
     detail?: Partial<MuiDetailProps>;
 };
 
+export type MenuColors = {
+    background?: string;
+    textPrimary?: string;
+    textSecondary?: string;
+    divider?: string;
+    accent?: string;
+    selectedBackground?: string;
+    hoverBackground?: string;
+};
+
+export type MuiBaseAppAppearance = {
+    headerHeight?: number;
+    menuCollapsedWidth?: number;
+    menuIconSize?: number;
+    menuSelectedColor?: string;
+    menuSelectedIndicator?: 'line' | 'background' | 'none';
+    menuColors?: MenuColors;
+};
+
 export type MuiBaseAppContextType = {
     defaultMuiComponentProps: DefaultMuiComponentProps;
+    appearance: MuiBaseAppAppearance;
 };
 
 export const MuiBaseAppContext = React.createContext<MuiBaseAppContextType | undefined>(undefined);
@@ -28,6 +48,12 @@ export const useMuiBaseAppContext = () => {
 
 export const useOptionalMuiBaseAppContext = (): MuiBaseAppContextType | undefined => {
     return React.useContext(MuiBaseAppContext);
+};
+
+const EMPTY_APPEARANCE: MuiBaseAppAppearance = {};
+
+export const useMuiBaseAppAppearance = (): MuiBaseAppAppearance => {
+    return React.useContext(MuiBaseAppContext)?.appearance ?? EMPTY_APPEARANCE;
 };
 
 export default MuiBaseAppContext;

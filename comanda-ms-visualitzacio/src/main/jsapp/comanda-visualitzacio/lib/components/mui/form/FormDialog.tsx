@@ -49,7 +49,9 @@ export type UseFormDialogFn = (
     formI18nKeys?: FormI18nKeys,
     closeFn?: (reason?: string) => boolean,
     closeIcon?: boolean,
-    autoSubmit?: boolean
+    autoSubmit?: boolean,
+    extraActions?: React.ReactNode,
+    liveButtons?: DialogButton[]
 ) => [FormDialogShowFn, React.ReactElement, FormDialogCloseFn];
 
 const FormDialogLoading: React.FC = () => {
@@ -74,7 +76,9 @@ export const useFormDialog: UseFormDialogFn = (
     formI18nKeys?: FormI18nKeys,
     closeFn?: (reason?: string) => boolean,
     closeIcon?: boolean,
-    autoSubmit?: boolean
+    autoSubmit?: boolean,
+    extraActions?: React.ReactNode,
+    liveButtons?: DialogButton[]
 ) => {
     const formApiRef = React.useRef<FormApi | any>({});
     const formDialogButtons = useFormDialogButtons();
@@ -103,15 +107,22 @@ export const useFormDialog: UseFormDialogFn = (
         dialogButtons ?? formDialogButtons
     );
     const [loading, setLoading] = React.useState<boolean>();
+    const submittingRef = React.useRef<boolean>(false);
     React.useEffect(() => {
         setButtons(dialogButtons ?? formDialogButtons);
     }, [dialogButtons]);
     const buttonCallback = (value: any) => {
         if (value) {
+            if (submittingRef.current) {
+                // Ja hi ha un enviament en curs: s'evita un doble enviament
+                return;
+            }
             const isCustomSubmit = customSubmit != null;
             const result = isCustomSubmit
                 ? customSubmit(formApiRef.current.getId(), formApiRef.current.getData())
                 : formApiRef.current.save();
+            // Es marca l'enviament quan ja està en marxa: si llança una excepció no queda bloquejat
+            submittingRef.current = true;
             setLoading(true);
             result
                 .then((value: any) => {
@@ -137,7 +148,10 @@ export const useFormDialog: UseFormDialogFn = (
                         formApiRef.current.handleSubmissionErrors(error, customSubmitErrorMessage);
                     }
                 })
-                .finally(() => setLoading(false));
+                .finally(() => {
+                    submittingRef.current = false;
+                    setLoading(false);
+                });
         } else {
             // S'ha fet clic al botó de cancel·lar
             rejectFn?.(undefined);
@@ -175,21 +189,26 @@ export const useFormDialog: UseFormDialogFn = (
         setOpen(true);
         setSubmitReturnedContent(undefined);
         setLoading(undefined);
+        submittingRef.current = false;
         return new Promise<any>((resolve, reject) => {
             setResolveFn(() => resolve);
             setRejectFn(() => reject);
         });
     };
+    // `liveButtons`, si es proporciona, substitueix `buttons` en cada render (a diferència de
+    // `buttons`, que només s'actualitza quan es crida `show()`) — permet canviar el text/estat
+    // dels botons en resposta a l'evolució del diàleg ja obert.
+    const activeButtons = liveButtons ?? buttons;
     // Deshabilita els botons si s'està en estat loading
     const processedButtons = loading
-        ? buttons.map((b) => ({
+        ? activeButtons.map((b) => ({
               ...b,
               componentProps: {
                   ...b.componentProps,
                   disabled: true,
               },
           }))
-        : buttons;
+        : activeButtons;
     const close = () => setOpen(false);
     const dialogComponent = (
         <FormDialog
@@ -212,7 +231,8 @@ export const useFormDialog: UseFormDialogFn = (
             }}
             formI18nKeys={formI18nKeys}
             noForm={submitReturnedContent != null}
-            closeIcon={closeIcon}>
+            closeIcon={closeIcon}
+            extraActions={extraActions}>
             {loading
                 ? (loadingComponent ?? <FormDialogLoading />)
                 : (submitReturnedContent ?? formContent)}

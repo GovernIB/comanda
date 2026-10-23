@@ -76,6 +76,10 @@ export type ActionReportButtonProps = {
     formDialogButtons?: DialogButton[];
     /** Propietats pel component de diàleg */
     formDialogComponentProps?: any;
+    /** Contingut addicional (p. ex. botons) que es mostra a la fila de botons del diàleg, abans dels botons de formDialogButtons */
+    formDialogExtraActions?: React.ReactNode;
+    /** Substitueix `formDialogButtons` en cada render (a diferència d'aquest, que només es té en compte quan s'obre el diàleg) — útil per canviar el text/estat dels botons en resposta a l'evolució d'un diàleg ja obert */
+    formDialogLiveButtons?: DialogButton[];
     /** Funció que processa els resultats d'executar l'artefacte i retorna un element per a mostrar al diàleg com a resultat (només per a artefactes de tipus acció) */
     formDialogResultProcessor?: (result?: any) => React.ReactElement | undefined;
     /** Event que es llença quan l'execució de l'artefacte finalitza sense errors */
@@ -193,7 +197,9 @@ export const useActionReportLogic = (
     onClose?: () => void,
     dialogCloseIcon?: boolean,
     dialogCloseCallback?: (reason?: string) => boolean,
-    dialogAutoSubmit?: boolean
+    dialogAutoSubmit?: boolean,
+    formDialogExtraActions?: React.ReactNode,
+    formDialogLiveButtons?: DialogButton[]
 ): ActionReportLogicResult => {
     const { t, messageDialogShow, temporalMessageShow, saveAs } = useBaseAppContext();
     const [finished, setFinished] = React.useState<boolean>(false);
@@ -285,7 +291,9 @@ export const useActionReportLogic = (
         formI18nKeys,
         dialogCloseCallback,
         dialogCloseIcon ?? false,
-        dialogAutoSubmit
+        dialogAutoSubmit,
+        formDialogExtraActions,
+        formDialogLiveButtons
     );
     const exec = (
         id: any,
@@ -411,6 +419,8 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
         formDialogButtons,
         formDialogComponentProps,
         formDialogResultProcessor,
+        formDialogExtraActions,
+        formDialogLiveButtons,
         onSuccess,
         onError,
         onClose,
@@ -444,7 +454,9 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
         onClose,
         formDialogCloseIcon,
         undefined,
-        dialogAutoSubmit
+        dialogAutoSubmit,
+        formDialogExtraActions,
+        formDialogLiveButtons
     );
     const buttonTitle = title ?? apiLink?.title ?? action ?? report;
     const ButtonComponent =

@@ -19,6 +19,8 @@ export type DialogProps = React.PropsWithChildren & {
     modal?: boolean;
     componentProps?: any;
     ref?: React.RefObject<HTMLDivElement | null>;
+    /** Contingut addicional (p. ex. botons) que es mostra a la fila de botons del diàleg, abans dels `buttons` */
+    extraActions?: React.ReactNode;
 };
 
 export const useContentDialog: (
@@ -134,6 +136,7 @@ export const Dialog: React.FC<DialogProps> = (props) => {
         componentProps,
         ref,
         children,
+        extraActions,
     } = props;
     return (
         <MuiDialog
@@ -161,6 +164,7 @@ export const Dialog: React.FC<DialogProps> = (props) => {
                 <DialogButtons
                     buttons={buttons}
                     handleClose={(value: any) => buttonCallback?.(value)}
+                    extraActions={extraActions}
                 />
             )}
         </MuiDialog>

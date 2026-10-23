@@ -15,7 +15,12 @@ export {
 } from './components/AppButtons';
 
 export { MuiBaseApp } from './components/mui/MuiBaseApp';
-export { MuiBaseAppContext, useMuiBaseAppContext } from './components/mui/MuiBaseAppContext';
+export {
+    MuiBaseAppContext,
+    useMuiBaseAppContext,
+    useMuiBaseAppAppearance,
+} from './components/mui/MuiBaseAppContext';
+export { useHeaderHeight } from './util/useHeaderHeight';
 export { BasePage } from './components/BasePage';
 export { GridPage } from './components/GridPage';
 export { FormPage } from './components/FormPage';
@@ -96,6 +101,7 @@ export type { MuiDataGridApi, MuiDataGridApiRef } from './components/mui/datagri
 export type { DataGridDialogApi as MuiDataGridDialogApi } from './components/mui/datacommon/DataGridDialog';
 export type { DataFormDialogApi as MuiDataFormDialogApi } from './components/mui/datacommon/DataFormDialog';
 export type { MuiFormProps } from './components/mui/form/MuiForm';
+export type { FormFieldRefOptionsResponse } from './components/mui/form/FormFieldReference';
 export type { FormTabsValue } from './components/mui/form/MuiFormTabs';
 export type { ActionReportCustomButtonProps as MuiActionReportCustomButtonProps } from './components/mui/ActionReportButton';
 export type { FormApi, FormApiRef } from './components/form/FormContext';
@@ -104,7 +110,11 @@ export type { DetailApi, DetailApiRef } from './components/detail/Detail';
 export type { FormFieldProps, FormFieldCustomProps } from './components/form/FormField';
 export type { DataFormDialogApi as MuiFormDialogApi } from './components/mui/datacommon/DataFormDialog';
 export type { FormSidebarApi as MuiFormSidebarApi } from './components/mui/form/MuiFormSidebar';
-export type { DefaultMuiComponentProps } from './components/mui/MuiBaseAppContext';
+export type {
+    DefaultMuiComponentProps,
+    MenuColors,
+    MuiBaseAppAppearance,
+} from './components/mui/MuiBaseAppContext';
 export type {
     ResourceApiRequestArgs,
     ResourceApiGetOneArgs,
@@ -124,4 +134,5 @@ export type {
     ResourceApiBlobResponse,
     ResourceApiArtifact,
     ResourceApiBulkResponse,
+    ResourceApiError,
 } from './components/ResourceApiProvider';

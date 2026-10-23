@@ -69,6 +69,7 @@ export const FormIsolatedField: React.FC<FormIsolatedFieldProps> = (props) => {
         fields,
         isLoading: fields == null,
         isReady: fields == null,
+        isSaving: false,
         isSaveActionPresent: false,
         isDeleteActionPresent: false,
         modified: false,

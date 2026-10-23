@@ -1,10 +1,11 @@
 import React from 'react';
 import Box from '@mui/material/Box';
+import { SxProps, Theme } from '@mui/material/styles';
 import { Form, FormProps, useFormApiContext } from '../../form/Form';
 import { useBaseAppContext } from '../../BaseAppContext';
 import { useMuiBaseAppContext } from '../MuiBaseAppContext';
 import { useFormContext } from '../../form/FormContext';
-import { useSmallHeader } from '../../../util/useSmallScreen';
+import { useHeaderHeight } from '../../../util/useHeaderHeight';
 import { ReactElementWithPosition } from '../../../util/reactNodePosition';
 import { toToolbarIcon } from '../ToolbarIcon';
 import { Toolbar } from '../Toolbar';
@@ -12,7 +13,9 @@ import { Toolbar } from '../Toolbar';
 /**
  * Propietats del component MuiForm (també conté les propietats del component Form).
  */
-export type MuiFormProps = FormProps & {
+export type MuiFormProps = Omit<FormProps, 'title'> & {
+    /** Títol de la barra d'eines */
+    title?: string | React.ReactElement;
     /** Subtítol de la barra d'eines */
     toolbarSubtitle?: string;
     /** Elements addicionals (amb la seva posició) per a la barra d'eines */
@@ -27,6 +30,10 @@ export type MuiFormProps = FormProps & {
     hiddenSaveButton?: true;
     /** Indica si el botó d'esborrar ha d'estar ocult */
     hiddenDeleteButton?: true;
+    /** Estils addicionals per a la barra d'eines (es combinen darrere dels per defecte) */
+    toolbarSx?: SxProps<Theme>;
+    /** Estils dels marges del contingut (substitueixen els per defecte) */
+    marginsSx?: SxProps<Theme>;
     /** Propietats del component del formulari */
     componentProps?: any;
 };
@@ -44,14 +51,16 @@ const MuiFormContent: React.FC<React.PropsWithChildren | any> = (props) => {
         hiddenRevertButton,
         hiddenSaveButton,
         hiddenDeleteButton,
+        toolbarSx,
+        marginsSx,
         componentProps,
         children,
     } = props;
-    const smallHeader = useSmallHeader();
+    const headerHeight = useHeaderHeight();
     const formApiRef = useFormApiContext();
     const { t, goBack, anyHistoryEntryExist, contentExpandsToAvailableHeight } =
         useBaseAppContext();
-    const { modified, isSaveActionPresent, isDeleteActionPresent } = useFormContext();
+    const { modified, isSaving, isSaveActionPresent, isDeleteActionPresent } = useFormContext();
     const backButtonDisabled = !anyHistoryEntryExist() && !goBackLink;
     const toolbarNodes: ReactElementWithPosition[] = [];
     !hiddenBackButton &&
@@ -60,7 +69,7 @@ const MuiFormContent: React.FC<React.PropsWithChildren | any> = (props) => {
             element: toToolbarIcon('arrow_back', {
                 title: t('form.goBack.title'),
                 onClick: () => goBack(goBackLink),
-                disabled: backButtonDisabled,
+                disabled: backButtonDisabled || isSaving,
                 sx: { mr: 1 },
             }),
         });
@@ -72,7 +81,7 @@ const MuiFormContent: React.FC<React.PropsWithChildren | any> = (props) => {
             element: toToolbarIcon('undo', {
                 title: t('form.revert.title'),
                 onClick: () => formApiRef.current?.revert(),
-                disabled: !modified,
+                disabled: !modified || isSaving,
             }),
         });
     !hiddenSaveButton &&
@@ -81,7 +90,13 @@ const MuiFormContent: React.FC<React.PropsWithChildren | any> = (props) => {
             position: 2,
             element: toToolbarIcon('save', {
                 title: t(id != null ? 'form.update.title' : 'form.create.title'),
-                onClick: () => formApiRef.current?.save(),
+                // Es rebutja sense motiu si ja s'està desant (o si el formulari ja ha mostrat els
+                // errors); la resta de motius es deixen veure a la consola
+                onClick: () =>
+                    formApiRef.current?.save().catch((reason: any) => {
+                        reason != null && console.error(reason);
+                    }),
+                disabled: isSaving,
             }),
         });
     !hiddenDeleteButton &&
@@ -91,6 +106,7 @@ const MuiFormContent: React.FC<React.PropsWithChildren | any> = (props) => {
             element: toToolbarIcon('delete', {
                 title: t('form.delete.title'),
                 onClick: () => formApiRef.current?.delete(),
+                disabled: isSaving,
             }),
         });
     const outerBoxStyles = contentExpandsToAvailableHeight
@@ -101,7 +117,12 @@ const MuiFormContent: React.FC<React.PropsWithChildren | any> = (props) => {
         : undefined;
     const innerBoxStyles = hiddenToolbar
         ? { mt: 1, ...sx2, ...componentProps?.sx }
-        : { m: 2, mt: 3, ...sx2, ...componentProps?.sx };
+        : marginsSx != null
+          ? [
+              ...(Array.isArray(marginsSx) ? marginsSx : [marginsSx]),
+              { ...sx2, ...componentProps?.sx },
+          ]
+          : { m: 2, mt: 3, ...sx2, ...componentProps?.sx };
     return (
         <Box sx={outerBoxStyles}>
             {!hiddenToolbar && (
@@ -110,11 +131,14 @@ const MuiFormContent: React.FC<React.PropsWithChildren | any> = (props) => {
                     subtitle={toolbarSubtitle}
                     elementsWithPositions={toolbarNodes}
                     upperToolbar
-                    sx={{
-                        position: 'sticky',
-                        top: smallHeader ? '56px' : '64px',
-                        zIndex: 10,
-                    }}
+                    sx={[
+                        {
+                            position: 'sticky',
+                            top: `${headerHeight}px`,
+                            zIndex: 10,
+                        },
+                        ...(Array.isArray(toolbarSx) ? toolbarSx : [toolbarSx]),
+                    ]}
                 />
             )}
             <Box sx={innerBoxStyles}>{children}</Box>
@@ -143,11 +167,13 @@ export const MuiForm: React.FC<MuiFormProps> = (props) => {
         hiddenRevertButton,
         hiddenSaveButton,
         hiddenDeleteButton,
+        toolbarSx,
+        marginsSx,
         componentProps,
         children,
     } = joinedProps;
     return (
-        <Form {...joinedProps}>
+        <Form {...(joinedProps as FormProps)}>
             <MuiFormContent
                 id={id}
                 title={title}
@@ -160,6 +186,8 @@ export const MuiForm: React.FC<MuiFormProps> = (props) => {
                 hiddenRevertButton={hiddenRevertButton}
                 hiddenSaveButton={hiddenSaveButton}
                 hiddenDeleteButton={hiddenDeleteButton}
+                toolbarSx={toolbarSx}
+                marginsSx={marginsSx}
                 componentProps={componentProps}>
                 {children}
             </MuiFormContent>

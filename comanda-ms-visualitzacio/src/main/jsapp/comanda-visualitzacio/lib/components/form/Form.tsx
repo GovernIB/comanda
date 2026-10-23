@@ -291,6 +291,8 @@ export const Form: React.FC<FormProps> = (props) => {
     const confirmDialogButtons = useConfirmDialogButtons();
     const confirmDialogComponentProps = { maxWidth: 'sm', fullWidth: true };
     const [isLoading, setIsLoading] = React.useState<boolean>(true);
+    const [isSaving, setIsSaving] = React.useState<boolean>(false);
+    const isSavingRef = React.useRef<boolean>(false);
     const [modified, setModified] = React.useState<boolean>(false);
     const [externalModified, setExternalModified] = React.useState<boolean>(false);
     const [fields, setFields] = React.useState<any[]>();
@@ -580,7 +582,11 @@ export const Form: React.FC<FormProps> = (props) => {
     };
     const save = () =>
         new Promise<any>((resolve, reject) => {
-            if (resourceType == null) {
+            if (isSavingRef.current) {
+                // Ja hi ha un desat en curs: s'evita un doble enviament (p. ex. clic repetit
+                // al botó de desar o Intro mentre encara s'espera la resposta del servidor).
+                reject();
+            } else if (resourceType == null) {
                 if (avoidSubmitIfAnyValidatorErrors && validatorFieldErrors?.length) {
                     reject(t('form.validate.saveErrors'));
                 } else {
@@ -596,6 +602,10 @@ export const Form: React.FC<FormProps> = (props) => {
                         id != null
                             ? apiUpdate(id, { data: apiSaveData })
                             : apiCreate({ data: apiSaveData });
+                    // El bloqueig es pren quan la petició ja està en marxa: si alguna cosa
+                    // anterior llança una excepció, el formulari no queda bloquejat.
+                    isSavingRef.current = true;
+                    setIsSaving(true);
                     apiSaveAction
                         .then((savedData: any) => {
                             const message =
@@ -632,6 +642,10 @@ export const Form: React.FC<FormProps> = (props) => {
                                     ? t(i18nKeys?.updateError ?? 'form.update.error', { error })
                                     : t(i18nKeys?.createError ?? 'form.create.error', { error });
                             handleSubmissionErrors(error, title, reject);
+                        })
+                        .finally(() => {
+                            isSavingRef.current = false;
+                            setIsSaving(false);
                         });
                 }
             } else {
@@ -817,6 +831,7 @@ export const Form: React.FC<FormProps> = (props) => {
             resourceTypeCode,
             isLoading,
             isReady,
+            isSaving,
             apiActions,
             isSaveActionPresent,
             isDeleteActionPresent,
@@ -839,6 +854,7 @@ export const Form: React.FC<FormProps> = (props) => {
         }),
         [
             isLoading,
+            isSaving,
             apiActions,
             fields,
             fieldErrors,

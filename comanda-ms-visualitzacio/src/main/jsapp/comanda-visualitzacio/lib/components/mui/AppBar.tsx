@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography';
 import AuthButton from './AuthButton';
 import { useOptionalAuthContext } from '../AuthContext';
 import { toolbarBackgroundStyle } from '../../util/toolbar';
+import { useMuiBaseAppAppearance } from './MuiBaseAppContext';
 
 type AppBarProps = {
     title: string | React.ReactElement;
@@ -41,6 +42,7 @@ export const AppBar: React.FC<AppBarProps> = (props) => {
         authCurrentUserCode,
         authCurrentUserName,
     } = props;
+    const { headerHeight } = useMuiBaseAppAppearance();
     const authContext = useOptionalAuthContext();
     const authButton =
         authContext != null ? (
@@ -55,9 +57,11 @@ export const AppBar: React.FC<AppBarProps> = (props) => {
     const backgroundStyle = backgroundColor
         ? toolbarBackgroundStyle(backgroundColor, backgroundImg)
         : {};
+    const heightStyle =
+        headerHeight != null ? { height: headerHeight, minHeight: headerHeight } : {};
     return (
         <MuiAppBar position="sticky" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-            <Toolbar style={{ ...style, ...backgroundStyle }}>
+            <Toolbar style={{ ...heightStyle, ...style, ...backgroundStyle }}>
                 {menuButton}
                 {logo ? (
                     <Box sx={{ mr: 2, pt: 1, pr: 2, cursor: 'pointer', ...logoStyle }}>

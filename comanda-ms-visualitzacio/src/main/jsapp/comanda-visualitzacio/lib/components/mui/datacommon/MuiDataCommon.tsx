@@ -4,6 +4,8 @@ import { ResourceType, ExportFileType } from '../../ResourceApiContext';
 import { FormI18nKeys } from '../../form/Form';
 import { useBaseAppContext, DialogButton } from '../../BaseAppContext';
 import { useConfirmDialogButtons, useCloseDialogButtons } from '../../AppButtons';
+import Button from '@mui/material/Button';
+import Icon from '@mui/material/Icon';
 import { toToolbarIcon } from '../ToolbarIcon';
 import DataFormDialog, { useDataFormDialogApiRef } from './DataFormDialog';
 
@@ -224,6 +226,7 @@ export const useDataCommonEditable = (
     inlineUpdate: ((id: any, row?: any, additionalData?: any) => void) | undefined,
     rowDetailLink: string | ((row: any) => string) | undefined,
     rowUpdateLink: string | ((row: any) => string) | undefined,
+    rowUpdateShowInMenu: boolean | undefined,
     rowDisableUpdateButton: boolean | ((row: any) => boolean) | undefined,
     rowDisableDeleteButton: boolean | ((row: any) => boolean) | undefined,
     rowDisableDetailsButton: boolean | ((row: any) => boolean) | undefined,
@@ -250,9 +253,11 @@ export const useDataCommonEditable = (
     refresh: () => void,
     onCreate: ((row: any) => void) | undefined,
     onUpdate: ((row: any) => void) | undefined,
-    onDelete: ((id: any | any[]) => void) | undefined
+    onDelete: ((id: any | any[]) => void) | undefined,
+    toolbarCreateVariant?: 'icon' | 'button',
+    toolbarCreateLabel?: string
 ) => {
-    const { t, temporalMessageShow, messageDialogShow } = useBaseAppContext();
+    const { t, temporalMessageShow, messageDialogShow, getLinkComponent } = useBaseAppContext();
     const dataFormDialogApiRef = useDataFormDialogApiRef();
     const confirmDialogButtons = useConfirmDialogButtons();
     const closeDialogButtons = useCloseDialogButtons();
@@ -395,18 +400,28 @@ export const useDataCommonEditable = (
         typeof toolbarDisableCreateLink === 'function'
             ? toolbarDisableCreateLink()
             : toolbarDisableCreateLink;
+    const createDisabled = toolbarDisableCreateLinkValue || createLinkConfigError;
     const toolbarAddElement =
-        isCreateLinkPresent && !readOnly
-            ? toToolbarIcon('add', {
-                  title: t('datacommon.create.label'),
-                  linkTo: toolbarCreateLink,
-                  linkState: formAdditionalData
-                      ? { additionalData: formAdditionalData }
-                      : undefined,
-                  onClick: !toolbarCreateLink ? triggerCreate : undefined,
-                  disabled: toolbarDisableCreateLinkValue || createLinkConfigError,
-              })
-            : undefined;
+        isCreateLinkPresent && !readOnly && toolbarCreateVariant === 'button' ? (
+            <Button
+                variant="contained"
+                startIcon={<Icon>add</Icon>}
+                disabled={createDisabled}
+                onClick={!toolbarCreateLink && !createDisabled ? () => triggerCreate() : undefined}
+                {...(toolbarCreateLink && !createDisabled
+                    ? { component: getLinkComponent(), to: toolbarCreateLink }
+                    : null)}>
+                {toolbarCreateLabel ?? t('datacommon.create.label')}
+            </Button>
+        ) : isCreateLinkPresent && !readOnly ? (
+            toToolbarIcon('add', {
+                title: t('datacommon.create.label'),
+                linkTo: toolbarCreateLink,
+                linkState: formAdditionalData ? { additionalData: formAdditionalData } : undefined,
+                onClick: !toolbarCreateLink ? triggerCreate : undefined,
+                disabled: toolbarDisableCreateLinkValue || createLinkConfigError,
+            })
+        ) : undefined;
     const rowEditActions: DataCommonAdditionalAction[] = [];
     const updateLinkConfigError =
         !readOnly && !isPopupEditUpdate && !isInlineEditUpdate && rowUpdateLink == null;
@@ -422,6 +437,7 @@ export const useDataCommonEditable = (
                     : undefined,
             disabled: rowDisableUpdateButton || updateLinkConfigError,
             hidden: rowHideUpdateButton,
+            showInMenu: rowUpdateShowInMenu,
             clickShowUpdateDialog: rowUpdateLink == null,
         });
     !readOnly &&
@@ -447,6 +463,7 @@ export const useDataCommonEditable = (
                     : undefined,
             disabled: rowDisableUpdateButton || updateLinkConfigError,
             hidden: rowHideUpdateButton,
+            showInMenu: rowUpdateShowInMenu,
             clickShowUpdateDialog: rowUpdateLink == null,
         });
     rowDetailLink &&

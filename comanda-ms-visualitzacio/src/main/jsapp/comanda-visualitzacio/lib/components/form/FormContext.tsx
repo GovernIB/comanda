@@ -49,6 +49,7 @@ export type FormContextType = {
     resourceTypeCode?: string;
     isLoading: boolean;
     isReady: boolean;
+    isSaving: boolean;
     apiLinks?: any;
     isSaveActionPresent: boolean;
     isDeleteActionPresent: boolean;
