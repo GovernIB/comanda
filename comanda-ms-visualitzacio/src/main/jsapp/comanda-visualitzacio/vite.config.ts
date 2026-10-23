@@ -37,7 +37,7 @@ export default defineConfig(({ mode }) => {
                 provider: 'v8',
                 reportsDirectory: './coverage',
                 reporter: ['text', 'json', 'json-summary', 'html', 'lcov'],
-                exclude: ['lib/**'],
+                exclude: ['lib/**', 'src/lot2/**'],
             },
         },
     };
