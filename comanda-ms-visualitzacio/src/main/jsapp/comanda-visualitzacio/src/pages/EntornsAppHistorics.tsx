@@ -13,10 +13,10 @@ import {
 } from 'reactlib';
 import PageTitle from '../components/PageTitle.tsx';
 import { truncateHashRevisio } from './salut/dataFetching.ts';
-import { ScreenFrame } from '../lot2';
+import { FilterAdvancedButton, FilterClearButton, FilterCount, ScreenFrame } from '../lot2';
 import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
 import { screenIcons } from '../util/screenIcons.ts';
-import { FilterAdvancedButton, FilterClearButton, FilterCount } from '../lot2';
+import useAppliedSpringFilter from '../hooks/useAppliedSpringFilter.ts';
 
 type EntornAppHistFilterProps = {
     onSpringFilterChange: (springFilter?: string) => void;
@@ -25,12 +25,7 @@ type EntornAppHistFilterProps = {
 const EntornAppHistFilter: React.FC<EntornAppHistFilterProps> = ({ onSpringFilterChange }) => {
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const filterApiRef = useFilterApiRef();
-    // Últim Spring Filter aplicat, per al recompte de filtres de la barra de títol (FilterCount)
-    const [appliedSpringFilter, setAppliedSpringFilter] = React.useState<string | undefined>();
-    const handleSpringFilterChange = (springFilter?: string) => {
-        setAppliedSpringFilter(springFilter);
-        onSpringFilterChange?.(springFilter);
-    };
+    const { appliedSpringFilter, handleSpringFilterChange } = useAppliedSpringFilter(onSpringFilterChange);
 
     const springFilterBuilder = (data: any): string => {
         return builder.and(

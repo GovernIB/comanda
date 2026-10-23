@@ -16,6 +16,7 @@ import useHasDashboardAccess from './hooks/useHasDashboardAccess';
 import notNull from './util/arrayUtils';
 import { MenuEstil } from './types/usuari.model.tsx';
 import {useResourceApiContext} from "reactlib";
+import { screenIcons } from './util/screenIcons.ts';
 
 const APPBAR_HEIGHT = '64px';
 
@@ -69,67 +70,67 @@ export const useAppEntries = () => {
         id: 'salut',
         title: t($ => $.menu.salut),
         to: '/',
-        icon: 'monitor_heart',
+        icon: screenIcons.salut,
         resourceName: 'salut',
     };
     const menuEstadistiques = {
         id: 'estadistiques',
         title: t($ => $.menu.estadistiques),
         to: '/estadistiques',
-        icon: 'bar_chart',
+        icon: screenIcons.estadistiques,
         resourceName: 'dashboard',
     }
     const menuTasca = {
         id: 'tasca',
         title: t($ => $.menu.tasca),
         to: '/tasca',
-        icon: 'assignment',
+        icon: screenIcons.tasca,
         resourceName: 'tasca',
     }
     const menuAvis = {
         id: 'avis',
         title: t($ => $.menu.avis),
         to: '/avis',
-        icon: 'warning',
+        icon: screenIcons.avis,
         resourceName: 'avis',
     }
     const menuMonitoritzacio = {
         id: 'monitoritzacio',
         title: t($ => $.menu.monitoritzacio),
         description: t($ => $.menu.monitoritzacioDescription),
-        icon: 'monitor',
+        icon: screenIcons.monitoritzacio,
         children: [
             {
                 id: 'monitor',
                 title: t($ => $.menu.monitor),
                 to: '/monitor',
-                icon: 'monitor',
+                icon: screenIcons.monitor,
                 resourceName: 'monitor',
             },
             ...(isUserAdmin && monitorDbEnabled ? [{
                 id: 'monitorDb',
                 title: t($ => $.menu.monitorDb),
                 to: '/monitor-db',
-                icon: 'dns',
+                icon: screenIcons.monitorDb,
             }] : []),
             {
                 id: 'cache',
                 title: t($ => $.menu.cache),
                 to: '/cache',
-                icon: 'storage',
+                icon: screenIcons.cache,
                 resourceName: 'comandaCache',
             },
             ...(isUserAdmin ? [{
                 id: 'broker',
                 title: t($ => $.menu.broker),
                 to: '/broker',
-                icon: 'send_time_extension',
+                icon: screenIcons.broker,
             }] : []),
             {
                 id: 'tasquesBackground',
                 title: t($ => $.menu.tasquesBackground),
                 to: '/tasquesBackground',
-                icon: 'schedule',
+                icon: screenIcons.tasquesBackground,
                 resourceName: 'tascaBackground',
             }
         ]
@@ -139,34 +140,34 @@ export const useAppEntries = () => {
         // title: isUserAdmin ? t($ => $.menu.alarmaConfig) : t($ => $.menu.alarmaConfigConsultor),
         title: t($ => $.menu.alarmaConfig),
         to: '/alarma',
-        icon: 'notifications',
+        icon: screenIcons.alarma,
         resourceName: 'alarmaConfig',
     };
     const menuDashboard = {
         id: 'dashboard',
         title: t($ => $.menu.dashboard),
         to: '/dashboard',
-        icon: 'dashboardCustomize',
+        icon: screenIcons.dashboard,
         resourceName: 'dashboard',
     };
     const menuConfiguracio = {
         id: 'configuracio',
         title: t($ => $.menu.configuracio),
         description: t($ => $.menu.configuracioDescription),
-        icon: 'settings',
+        icon: screenIcons.configuracio,
         children: ([
             {
                 id: 'app',
                 title: t($ => $.menu.app),
                 to: '/app',
-                icon: 'apps',
+                icon: screenIcons.apps,
                 resourceName: 'app',
             },
             {
                 id: 'entorn',
                 title: t($ => $.menu.entorn),
                 to: '/entorn',
-                icon: 'layers',
+                icon: screenIcons.entorn,
                 resourceName: 'entorn',
             },
             menuAlarmaConfig,
@@ -174,35 +175,35 @@ export const useAppEntries = () => {
                 id: 'integracio',
                 title: t($ => $.menu.integracio),
                 to: '/integracio',
-                icon: 'integration_instructions',
+                icon: screenIcons.integracio,
                 resourceName: 'integracio',
             },
             statsEnabled ? {
                 id: 'dimensio',
                 title: t($ => $.menu.dimensio),
                 to: '/dimensio',
-                icon: 'category',
+                icon: screenIcons.dimensio,
                 resourceName: 'dimensio',
             } : null,
             statsEnabled ? {
                 id: 'indicador',
                 title: t($ => $.menu.indicador),
                 to: '/indicador',
-                icon: 'insights',
+                icon: screenIcons.indicador,
                 resourceName: 'indicador',
             } : null,
             statsEnabled && isUserAdmin ? {
                 id: 'plantilla',
                 title: t($ => $.menu.plantilla),
                 to: '/plantilla',
-                icon: 'palette',
+                icon: screenIcons.plantilla,
                 resourceName: 'plantilla',
             } : null,
             statsEnabled && isUserAdmin ? {
                 id: 'paleta',
                 title: t($ => $.menu.paleta),
                 to: '/paleta',
-                icon: 'format_color_fill',
+                icon: screenIcons.paleta,
                 resourceName: 'paleta',
             } : null,
             statsEnabled && hasDashboardAccess ? menuDashboard : null,
@@ -210,21 +211,21 @@ export const useAppEntries = () => {
                 id: 'calendari',
                 title: t($ => $.menu.calendari),
                 to: '/calendari',
-                icon: 'calendar_month',
+                icon: screenIcons.calendari,
                 resourceName: 'fet',
             } : null,
             isUserAdmin ? {
                 id: 'parametre',
                 title: t($ => $.menu.parametre),
                 to: '/parametre',
-                icon: 'settings',
+                icon: screenIcons.parametre,
                 resourceName: 'parametre',
             } : null,
             {
                 id: 'entitat',
                 title: t($ => $.page.entitats.title),
                 to: '/entitats',
-                icon: 'all_inbox',
+                icon: screenIcons.entitat,
                 resourceName: 'entitat',
             },
         ].filter(notNull))

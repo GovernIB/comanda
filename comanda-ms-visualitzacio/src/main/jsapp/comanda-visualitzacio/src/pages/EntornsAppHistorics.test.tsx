@@ -105,7 +105,7 @@ describe('EntornAppHist', () => {
         expect(frame).not.toBeNull();
         const screenTitle = (frame as HTMLElement).querySelector('.screen-title');
         expect(screenTitle).not.toBeNull();
-        expect(screenTitle).toHaveTextContent('history');
+        expect(screenTitle?.querySelector('h1')).toHaveTextContent(/^Històric de versions$/);
 
         await waitFor(() => {
             expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();

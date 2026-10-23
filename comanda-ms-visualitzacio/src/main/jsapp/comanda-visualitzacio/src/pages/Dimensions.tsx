@@ -20,10 +20,10 @@ import PageTitle from '../components/PageTitle.tsx';
 import FormActionDialog from "../components/FormActionDialog.tsx";
 import DimensioFetConsProgressDialog from "../components/DimensioFetConsProgressDialog.tsx";
 import { useIsUserAdmin } from '../components/UserContext.ts';
-import { ScreenFrame } from '../lot2';
+import { FilterClearButton, FilterCount, ScreenFrame } from '../lot2';
 import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
 import { screenIcons } from '../util/screenIcons.ts';
-import { FilterClearButton, FilterCount } from '../lot2';
+import useAppliedSpringFilter from '../hooks/useAppliedSpringFilter.ts';
 
 const EntitatValorTipusField: React.FC = () => {
     const { t } = useTranslation();
@@ -107,12 +107,7 @@ const DimensionsFilter = (props: DimensionsFilterProps) => {
     const { isReady: entornAppApiIsReady, find: entornAppGetAll } = useResourceApiService('entornApp');
     const { artifactAction: indicadorApiAction } = useResourceApiService('indicador');
     const filterApiRef = useFilterApiRef();
-    // Últim Spring Filter aplicat, per al recompte de filtres de la barra de títol (FilterCount)
-    const [appliedSpringFilter, setAppliedSpringFilter] = React.useState<string | undefined>();
-    const handleSpringFilterChange = (springFilter?: string) => {
-        setAppliedSpringFilter(springFilter);
-        onSpringFilterChange?.(springFilter);
-    };
+    const { appliedSpringFilter, handleSpringFilterChange } = useAppliedSpringFilter(onSpringFilterChange);
     const isCurrentUserAdmin = useIsUserAdmin();
     const { temporalMessageShow, messageDialogShow } = useBaseAppContext();
     const confirmDialogButtons = useConfirmDialogButtons();

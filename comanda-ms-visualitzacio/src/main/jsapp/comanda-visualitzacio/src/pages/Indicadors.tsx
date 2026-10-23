@@ -36,10 +36,10 @@ import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
 import { useIsUserAdmin } from '../components/UserContext.ts';
 import { findOptions } from '../util/requestUtils.ts';
 import type { MuiFormDialogApi } from 'reactlib';
-import { ScreenFrame } from '../lot2';
+import { FilterClearButton, FilterCount, ScreenFrame } from '../lot2';
 import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
 import { screenIcons } from '../util/screenIcons.ts';
-import { FilterClearButton, FilterCount } from '../lot2';
+import useAppliedSpringFilter from '../hooks/useAppliedSpringFilter.ts';
 
 const IndicadorsFilter = (props: { onSpringFilterChange: (springFilter?: string) => void; onRefresh?: () => void }) => {
     const { onSpringFilterChange, onRefresh } = props;
@@ -47,12 +47,7 @@ const IndicadorsFilter = (props: { onSpringFilterChange: (springFilter?: string)
     const { isReady: entornAppApiIsReady, find: entornAppGetAll } = useResourceApiService('entornApp');
     const { artifactAction: indicadorApiAction } = useResourceApiService('indicador');
     const filterApiRef = useFilterApiRef();
-    // Últim Spring Filter aplicat, per al recompte de filtres de la barra de títol (FilterCount)
-    const [appliedSpringFilter, setAppliedSpringFilter] = React.useState<string | undefined>();
-    const handleSpringFilterChange = (springFilter?: string) => {
-        setAppliedSpringFilter(springFilter);
-        onSpringFilterChange?.(springFilter);
-    };
+    const { appliedSpringFilter, handleSpringFilterChange } = useAppliedSpringFilter(onSpringFilterChange);
     const isCurrentUserAdmin = useIsUserAdmin();
     const { temporalMessageShow, messageDialogShow } = useBaseAppContext();
     const confirmDialogButtons = useConfirmDialogButtons();
@@ -600,11 +595,12 @@ const Indicadors: React.FC = () => {
                         {
                             position: 2,
                             element: (
-                                <IconButton
-                                    title={t($ => $.page.indicadors.action.createFormula)}
+                                <Button
+                                    variant="contained"
+                                    startIcon={<Icon>add</Icon>}
                                     onClick={openCreateFormula}>
-                                    <Icon>add</Icon>
-                                </IconButton>
+                                    {t($ => $.page.indicadors.action.createFormula)}
+                                </Button>
                             ),
                         },
                     ]}

@@ -22,10 +22,10 @@ import {
 import PageTitle from '../components/PageTitle.tsx';
 import useReadOnlyGestor from '../hooks/useReadOnlyGestor.ts';
 import { useOrganigramaDialog } from '../components/EntitatOrganigrama.tsx';
-import { ScreenFrame } from '../lot2';
+import { FilterClearButton, FilterCount, ScreenFrame } from '../lot2';
 import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
 import { screenIcons } from '../util/screenIcons.ts';
-import { FilterClearButton, FilterCount } from '../lot2';
+import useAppliedSpringFilter from '../hooks/useAppliedSpringFilter.ts';
 
 const UO_ESTATS = ['V', 'E', 'A', 'T'];
 
@@ -189,12 +189,7 @@ const useEditVinculatDialog = (dimension: any, refresh?: () => void) => {
 
 const DimensioValorFilter: React.FC<{ onSpringFilterChange?: (f?: string) => void; onDataChange?: (f?: any) => void }> = ({ onSpringFilterChange, onDataChange }) => {
     const filterApiRef = useFilterApiRef();
-    // Últim Spring Filter aplicat, per al recompte de filtres de la barra de títol (FilterCount)
-    const [appliedSpringFilter, setAppliedSpringFilter] = React.useState<string | undefined>();
-    const handleSpringFilterChange = (springFilter?: string) => {
-        setAppliedSpringFilter(springFilter);
-        onSpringFilterChange?.(springFilter);
-    };
+    const { appliedSpringFilter, handleSpringFilterChange } = useAppliedSpringFilter(onSpringFilterChange);
 
     return (
         <MuiFilter
