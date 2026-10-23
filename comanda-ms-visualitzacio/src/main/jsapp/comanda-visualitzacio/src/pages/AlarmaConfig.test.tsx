@@ -106,7 +106,6 @@ const mocks = vi.hoisted(() => ({
     findEntornAppsMock: vi.fn(),
     getOneAlarmaConfigMock: vi.fn(),
     navigateMock: vi.fn(),
-    confirmMock: vi.fn(() => true),
     lastGridProps: {} as Record<string, unknown>,
 }));
 
@@ -541,11 +540,10 @@ describe('AlarmaConfig en modal', () => {
     beforeEach(() => {
         mocks.findEntornAppsMock.mockResolvedValue({ rows: [{ id: 1, entornAppDescription: 'Entorn 1' }] });
         mocks.getOneEntornAppMock.mockResolvedValue({ id: 7, entornAppDescription: 'Entorn 7' });
-        vi.stubGlobal('confirm', mocks.confirmMock);
+        mocks.messageDialogShowMock.mockClear();
     });
 
     afterEach(() => {
-        vi.unstubAllGlobals();
         vi.clearAllMocks();
     });
 
@@ -563,7 +561,7 @@ describe('AlarmaConfig en modal', () => {
         expect(mocks.lastGridProps.rowUpdateLink).toBeUndefined();
     });
 
-    it('tancar el diàleg amb canvis el tanca sense demanar confirmació (comportament de FormDialog)', async () => {
+    it('tancar el diàleg el tanca directament, sense cap missatge de confirmació', async () => {
         // El FormDialog de base-react no té avís de canvis pendents en tancar (el FormBlocker de la
         // pàgina només actua en navegar). Aquest test fixa el comportament actual; l'avís queda pendent.
         render(<AlarmaConfig />);
@@ -576,7 +574,19 @@ describe('AlarmaConfig en modal', () => {
         await waitFor(() => {
             expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
         });
-        expect(mocks.confirmMock).not.toHaveBeenCalled();
+        // Cap gestor de tancament propi que el pugui aturar, i cap diàleg de missatge de la llibreria
         expect(mocks.lastGridProps.popupEditFormDialogOnClose).toBeUndefined();
+        expect(mocks.messageDialogShowMock).not.toHaveBeenCalled();
+    });
+
+    it("les files sense permís de modificar no tenen l'acció Detalls ni Modificar", async () => {
+        render(<AlarmaConfig />);
+        await screen.findByRole('heading', { name: 'Configuració d alarmes' });
+        const hide = mocks.lastGridProps.rowHideUpdateButton as (row: Record<string, unknown>) => boolean;
+
+        // popupEditActive afegeix "Detalls" amb el mateix `hidden` que "Modificar" (rowHideUpdateButton)
+        expect(hide({ id: 1, admin: false, correuGeneric: false, _actions: { update: { href: 'u' } } })).toBe(false);
+        expect(hide({ id: 2, admin: false, correuGeneric: false, _actions: {} })).toBe(true);
+        expect(hide({ id: 3, admin: false, correuGeneric: false })).toBe(true);
     });
 });
