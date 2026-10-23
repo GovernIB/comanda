@@ -3,9 +3,9 @@
  * theme.ts, BaseApp.tsx, DrassanaFooter.tsx i ScreenFrame.tsx hi coincideixin. Els valors derivats es
  * calculen a partir dels base: canviar-ne un es propaga als altres.
  *
- * La llibreria (reactlib) té part d'aquestes mides cablejades (alçada de capçalera de 64px, menú
- * plegat de 57px, icones de 20px...) i no es pot tocar; per això el marc s'ajusta des del tema
- * (veure `MuiDrawer` a theme.ts) i des d'App.tsx.
+ * La llibreria (reactlib) rep les mides del menú i de la capçalera com a paràmetres d'aparença
+ * (`LOT2_APPEARANCE` a menuColors.ts); el tema (`MuiDrawer` a theme.ts) només hi afegeix la columna de
+ * les icones del menú obert.
  */
 
 /** Alçada de la capçalera (px). La llibreria en fa 64. */
@@ -63,13 +63,14 @@ export const MENU_WIDTH_COLLAPSED = 2 * MENU_ICON_COLUMN;
 /**
  * Vora dreta (px) del menú lateral permanent. Dins l'amplada total, així que l'espai útil és un
  * píxel més estret i el centrat de la llibreria deixa la icona plegada mig píxel a l'esquerra de la
- * columna (veure `MuiDrawer` a theme.ts).
+ * columna.
  */
 export const MENU_BORDER_WIDTH = 1;
 
 /**
- * Per sota d'aquesta amplada (px) el menú es considera plegat i se n'amaga el text de les entrades
- * (consulta de contenidor de MuiDrawer a theme.ts). Ha de quedar entre la plegada i l'oberta.
+ * Per sota d'aquesta amplada (px) el menú es considera plegat i el tema no hi retoca la columna de
+ * les icones (consulta de contenidor de MuiDrawer a theme.ts). Ha de quedar entre la plegada i
+ * l'oberta.
  */
 export const MENU_COLLAPSED_BELOW = MENU_WIDTH_COLLAPSED + 36;
 

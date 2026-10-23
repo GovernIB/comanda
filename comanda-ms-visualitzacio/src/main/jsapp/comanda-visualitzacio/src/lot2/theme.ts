@@ -2,15 +2,7 @@ import { createTheme, alpha, darken, lighten, type Theme } from '@mui/material/s
 import type {} from '@mui/x-data-grid-pro/themeAugmentation';
 // `palette.DataGrid` (headerBg) només és a l'augmentació del paquet base de MUI X
 import type {} from '@mui/x-data-grid/themeAugmentation';
-import {
-    HEADER_HEIGHT,
-    ICON_SIZE,
-    MENU_BORDER_WIDTH,
-    MENU_COLLAPSED_BELOW,
-    MENU_ICON_COLUMN,
-    MENU_ITEM_PADDING_LEFT,
-    MENU_WIDTH_COLLAPSED,
-} from './layout';
+import { ICON_SIZE, MENU_COLLAPSED_BELOW, MENU_ICON_COLUMN, MENU_ITEM_PADDING_LEFT } from './layout';
 
 // Estenem les interfícies de MUI per admetre el nou color
 declare module '@mui/material/styles' {
@@ -107,46 +99,25 @@ const baseComponentStyles = {
             }),
         },
     },
-    // Menú lateral. La llibreria en té la geometria cablejada (espaiador superior de 64px, plegat a
-    // 57px, icones de 20px, panell flotant dels submenús a 64px/57px) i no es pot tocar; s'ajusta aquí,
-    // al tema, i no des de BaseApp.tsx, perquè en pantalles estretes la llibreria pinta el menú en un
-    // portal, fora del <nav> i de qualsevol embolcall de l'aplicació: només els overrides de tema hi
-    // arriben. Les mides surten de utils/layout.ts. El color de les entrades segueix a BaseApp.tsx
-    // (depèn del perfil de l'usuari).
+    // Menú lateral. La geometria (capçalera de 74px, menú plegat de 74px, icones de 24px, panell
+    // flotant dels submenús, colors i marca de l'entrada seleccionada) ja la donen els paràmetres
+    // d'aparença de la llibreria (`LOT2_APPEARANCE` i `lot2MenuColors` a menuColors.ts), que també
+    // arriben al menú de pantalla estreta pintat en un portal. Aquí només queda el que la llibreria
+    // encara no té com a paràmetre: la columna de les icones del menú obert.
     MuiDrawer: {
         styleOverrides: {
-            // Menú permanent: la llibreria el plega a 57px i en reserva aquest espai al layout
-            docked: { minWidth: `${MENU_WIDTH_COLLAPSED}px` },
             paper: {
-                minWidth: `${MENU_WIDTH_COLLAPSED}px`,
-                // Cada entrada amaga el text només quan el menú és estret, sense haver de saber-ne
-                // l'estat.
-                containerType: 'inline-size' as const,
-                // El menú ha de començar sota la capçalera, que és més alta que els 64px de la llibreria
-                '& > .MuiBox-root:first-of-type': { marginTop: `${HEADER_HEIGHT}px` },
-                '& .menu-item-icon .MuiIcon-root': { fontSize: `${ICON_SIZE}px` },
-                // Panell flotant amb les entrades d'un submenú quan el menú està plegat: la llibreria
-                // el posa (position: fixed) a 64px de dalt i a 57px de l'esquerra; ha de començar sota
-                // la capçalera i a la vora del menú plegat.
-                '& > div > .MuiBox-root': {
-                    top: `${HEADER_HEIGHT}px`,
-                    left: `${MENU_WIDTH_COLLAPSED}px`,
-                },
-                // Plegat: la llibreria hi centra les icones a `espai útil / 2`, sense dependre de
-                // la mida de la icona, que és la columna menys mig píxel per la vora del menú
-                // (MENU_BORDER_WIDTH). La icona du un marge esquerre de -8px que aquí se li treu
-                // un píxel perquè el centre caigui just a MENU_ICON_COLUMN.
-                [`@container (max-width: ${MENU_COLLAPSED_BELOW}px)`]: {
-                    '& .MuiListItemText-root': { display: 'none' },
-                    '& > div > .MuiList-root > .MuiListItemButton-root > .menu-item-icon': {
-                        marginLeft: `${-8 + MENU_BORDER_WIDTH}px`,
-                    },
-                },
+                // Contenidor de la consulta de mida: la llista i NO el paper. Un contenidor crea un
+                // bloc contenidor per als descendents `position: fixed`, i el panell flotant dels
+                // submenús del menú plegat (germà de la llista dins el paper) quedaria tallat.
+                '& .MuiList-root': { containerType: 'inline-size' as const },
                 // Obert: la llibreria deixa la icona a `padding + marge` (24 + 8 = 32px de vora
-                // esquerra), i amb la mida nova el centre cauria a 44px. Es retoca el marge de les
-                // entrades de nivell 0 perquè el centre sigui a MENU_ICON_COLUMN, com en plegat.
+                // esquerra), i amb la mida nova el centre cauria a 44px. Es retoca el marge perquè el
+                // centre sigui a MENU_ICON_COLUMN, la columna del botó de menú de la capçalera. La
+                // consulta fa que no s'apliqui al menú plegat, on la llibreria ja centra la icona
+                // (`menuCollapsedWidth`). `menu-item-icon` és la classe pública de la icona del menú.
                 [`@container (min-width: ${MENU_COLLAPSED_BELOW + 1}px)`]: {
-                    '& > .MuiList-root > .MuiListItemButton-root > .menu-item-icon': {
+                    '& .menu-item-icon': {
                         marginLeft: `${MENU_ICON_COLUMN - ICON_SIZE / 2 - MENU_ITEM_PADDING_LEFT}px`,
                     },
                 },
@@ -200,14 +171,14 @@ const baseComponentStyles = {
                 // `menu-item-icon` és la classe que la llibreria posa al ListItemIcon del menú
                 '&.Mui-selected .menu-item-icon': { color: accentColor(theme) },
                 // Vora esquerra de l'entrada seleccionada, del color de la barra de títol de les
-                // pantalles (als estils de menú amb colors propis la pren de l'accent, veure BaseApp.tsx).
-                // Un grup desplegat (seguit del bloc amb les seves entrades) no la porta: ja la porta
-                // l'entrada seleccionada de dins.
+                // pantalles. La llibreria no la té com a paràmetre (`menuSelectedIndicator` només
+                // marca amb fons o amb la línia dels submenús).
                 '&.Mui-selected': { boxShadow: `inset 4px 0 0 ${theme.palette.primary.main}` },
+                // ÚNIC selector d'estructura que queda: un grup desplegat (seguit del bloc amb les
+                // seves entrades) no porta la vora, ja la porta l'entrada seleccionada de dins. La
+                // llibreria no marca de cap altra manera que un grup està desplegat; quan ho faci
+                // (classe o paràmetre), s'ha de substituir.
                 '&.Mui-selected:has(+ .MuiBox-root)': { boxShadow: 'none' },
-                // Línia vertical de les entrades dels submenús: la llibreria pinta la de l'entrada
-                // seleccionada d'un blau fix.
-                '&.Mui-selected > ::before': { background: theme.palette.primary.main },
             }),
         },
     },

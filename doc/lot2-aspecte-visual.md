@@ -21,9 +21,9 @@ Branca `comanda-lot2-visual`, creada a partir de `comanda-dev-libs-update`.
 - `lib/`: merge a 3 bandes amb base-react `v2-parametres-visuals` (base anterior `bea8c9e`), conservant les
   personalitzacions de comanda (`KeycloakAuthProvider`, navegació real a `ContainerAuthProvider`, redirecció
   a login i `stackTrace` a `ResourceApiProvider`, alçada textual de `DataGridDialog`/`MuiDataGrid`).
-- `src/lot2/`: còpia literal de la carpeta comuna de base-react (commit `cb7141e`). **No s'edita aquí**:
+- `src/lot2/`: còpia literal de la carpeta comuna de base-react (commit `7f51df8`). **No s'edita aquí**:
   qualsevol canvi es fa a base-react i es torna a copiar. `cb7141e` és la base del proper merge de `lib/` i
-  de `src/lot2/`.
+  `7f51df8` la de `src/lot2/`.
 - Tema rosa fosc (`src/theme.ts`, `createLot2Themes`): `main` `#A8456A`, `dark` `#7A2E4C`, `light` `#cb6c88`,
   `soft` `#FAEFF3`.
 - `src/components/BaseApp.tsx` sobre `Lot2BaseApp`, amb el peu `DrassanaFooter` en lloc de `ComandaFooter`.

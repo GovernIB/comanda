@@ -28,6 +28,42 @@ describe('createLot2Themes', () => {
     });
 });
 
+describe('menú lateral al tema', () => {
+    const themes = createLot2Themes(NOTIB);
+    const drawerPaper = themes.light.components?.MuiDrawer?.styleOverrides?.paper as Record<string, unknown>;
+    const serialize = (value: unknown) => JSON.stringify(value);
+
+    it('el contenidor de la consulta de mida és la llista i no el paper', () => {
+        // Al paper, el contenidor tallaria el panell flotant (position: fixed) dels submenús del menú plegat
+        expect(drawerPaper).not.toHaveProperty('containerType');
+        expect(drawerPaper['& .MuiList-root']).toEqual({ containerType: 'inline-size' });
+    });
+
+    it('MuiDrawer no té selectors d\'estructura del DOM de la llibreria', () => {
+        const drawer = serialize(themes.light.components?.MuiDrawer);
+        expect(drawer).not.toContain(':has(');
+        expect(drawer).not.toContain('> div >');
+        expect(drawer).not.toContain('> .MuiList-root');
+        expect(drawer).not.toContain('first-of-type');
+        // ni el marge de la icona plegada, que ara centra la llibreria (menuCollapsedWidth)
+        expect(drawer).not.toContain('max-width');
+    });
+
+    it("l'única excepció d'estructura és el grup desplegat de MuiListItemButton", () => {
+        const root = themes.light.components?.MuiListItemButton?.styleOverrides?.root as (
+            props: { theme: typeof themes.light }
+        ) => Record<string, unknown>;
+        const keys = Object.keys(root({ theme: themes.light }));
+        expect(keys.filter(k => k.includes(':has('))).toEqual(['&.Mui-selected:has(+ .MuiBox-root)']);
+        expect(keys.some(k => k.includes('::before'))).toBe(false);
+        // Al codi font (els overrides amb funció no es poden serialitzar)
+        const source = readFileSync(join(__dirname, 'theme.ts'), 'utf8');
+        expect(source.match(/'[^'\n]*:has\(/g)).toEqual(["'&.Mui-selected:has("]);
+        expect(source).not.toMatch(/'[^'\n]*> div >/);
+        expect(source).not.toMatch(/'[^'\n]*first-of-type/);
+    });
+});
+
 describe('carpeta lot2', () => {
     const walk = (dir: string): string[] =>
         readdirSync(dir).flatMap(f => {
