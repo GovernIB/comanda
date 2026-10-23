@@ -377,76 +377,86 @@ const EstadisticaDashboardView = () => {
     if (dashboardException) {
         if (dashboardException.status === 404)
             return (
-                <Alert severity="warning" action={<Button onClick={returnToDefaultDashboardAndClear}>{t($ => $.page.dashboards.alert.tornarTauler)}</Button>}>
-                    {t($ => $.page.dashboards.alert.notExists)}
-                </Alert>
+                <ScreenFrame icon={screenIcons.dashboard} title={t($ => $.page.dashboards.title)} padded>
+                    <Alert severity="warning" action={<Button onClick={returnToDefaultDashboardAndClear}>{t($ => $.page.dashboards.alert.tornarTauler)}</Button>}>
+                        {t($ => $.page.dashboards.alert.notExists)}
+                    </Alert>
+                </ScreenFrame>
             );
-        else return <Alert severity="error">{t($ => $.page.dashboards.alert.carregar)}.</Alert>;
+        else return (
+            <ScreenFrame icon={screenIcons.dashboard} title={t($ => $.page.dashboards.title)} padded>
+                <Alert severity="error">{t($ => $.page.dashboards.alert.carregar)}.</Alert>
+            </ScreenFrame>
+        );
     }
 
     if (dashboardId == null && firstDashboard === NO_DASHBOARD_FOUND)
-        return <Alert severity="warning">{t($ => $.page.dashboards.alert.notDefined)}</Alert>;
+        return (
+            <ScreenFrame icon={screenIcons.dashboard} title={t($ => $.page.dashboards.title)} padded>
+                <Alert severity="warning">{t($ => $.page.dashboards.alert.notDefined)}</Alert>
+            </ScreenFrame>
+        );
 
     return (
         <>
             <PageTitle title={t($ => $.page.dashboards.title)} />
             {managerDialog}
-            {loading ? <CenteredCircularProgress /> : null}
             <ScreenFrame icon={screenIcons.dashboard} title={t($ => $.page.dashboards.title)}>
+                {loading ? <CenteredCircularProgress /> : null}
                 <Box sx={{ width: '100%' }}>
-                        <MuiToolbar
-                            disableGutters
-                            sx={{
-                                width: '100%',
-                                display: 'flex',
-                                flexWrap: isSmallScreen ? 'wrap' : 'nowrap',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                rowGap: 1,
-                                columnGap: 2,
-                                px: 2,
-                                pt: 2,
-                                pb: 1,
-                                ml: 0, mr: 0, mt: 0,
-                                backgroundColor: (theme) =>
-                                    theme.palette.mode === 'dark' ? theme.palette.grey['900'] : theme.palette.grey['200'],
-                            }}
-                        >
-                            {dashboardSelector}
-                            <DashboardFiltreBar
-                                filtres={isCurrentDashboardLoaded ? dashboard?.filtres : undefined}
-                                value={filtreSeleccio}
-                                onChange={setFiltreSeleccio}
-                                aplicacioId={isCurrentDashboardLoaded ? dashboard?.aplicacio?.id : undefined}
-                                wrap={isSmallScreen ? 'wrap' : 'nowrap'}
-                            />
-                            <Tooltip title={t($ => $.page.dashboards.view.largeScreenModeFit)}>
-                                <ToggleButton
-                                    value="fit"
-                                    size="small"
-                                    selected={largeScreenMode === 'fit'}
-                                    color="primary"
-                                    onChange={() => setLargeScreenMode(largeScreenMode === 'fit' ? 'centered' : 'fit')}
-                                    aria-label={t($ => $.page.dashboards.view.largeScreenModeFit)}
-                                    sx={{ height: '32px' }}
-                                >
-                                    <Icon fontSize="small">aspect_ratio</Icon>
-                                </ToggleButton>
-                            </Tooltip>
-                        </MuiToolbar>
+                    <MuiToolbar
+                        disableGutters
+                        sx={{
+                            width: '100%',
+                            display: 'flex',
+                            flexWrap: isSmallScreen ? 'wrap' : 'nowrap',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            rowGap: 1,
+                            columnGap: 2,
+                            px: 2,
+                            pt: 2,
+                            pb: 1,
+                            ml: 0, mr: 0, mt: 0,
+                            backgroundColor: (theme) =>
+                                theme.palette.mode === 'dark' ? theme.palette.grey['900'] : theme.palette.grey['200'],
+                        }}
+                    >
+                        {dashboardSelector}
+                        <DashboardFiltreBar
+                            filtres={isCurrentDashboardLoaded ? dashboard?.filtres : undefined}
+                            value={filtreSeleccio}
+                            onChange={setFiltreSeleccio}
+                            aplicacioId={isCurrentDashboardLoaded ? dashboard?.aplicacio?.id : undefined}
+                            wrap={isSmallScreen ? 'wrap' : 'nowrap'}
+                        />
+                        <Tooltip title={t($ => $.page.dashboards.view.largeScreenModeFit)}>
+                            <ToggleButton
+                                value="fit"
+                                size="small"
+                                selected={largeScreenMode === 'fit'}
+                                color="primary"
+                                onChange={() => setLargeScreenMode(largeScreenMode === 'fit' ? 'centered' : 'fit')}
+                                aria-label={t($ => $.page.dashboards.view.largeScreenModeFit)}
+                                sx={{ height: '32px' }}
+                            >
+                                <Icon fontSize="small">aspect_ratio</Icon>
+                            </ToggleButton>
+                        </Tooltip>
+                    </MuiToolbar>
                 </Box>
                 <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: '16px', boxSizing: 'border-box' }}>
-                {isCurrentDashboardLoaded && dashboardWidgets && (
-                    <DashboardReactGridLayout
-                        dashboardId={dashboard.id}
-                        editable={false}
-                        dashboardWidgets={dashboardWidgets}
-                        gridLayoutItems={mappedDashboardItems}
-                        dashboardEntornCodi={dashboardEntornCodi}
-                        backgroundColor={temaFosc ? dashboard.colorFonsFosc : dashboard.colorFonsClar}
-                        largeScreenMode={largeScreenMode}
-                    />
-                )}
+                    {isCurrentDashboardLoaded && dashboardWidgets && (
+                        <DashboardReactGridLayout
+                            dashboardId={dashboard.id}
+                            editable={false}
+                            dashboardWidgets={dashboardWidgets}
+                            gridLayoutItems={mappedDashboardItems}
+                            dashboardEntornCodi={dashboardEntornCodi}
+                            backgroundColor={temaFosc ? dashboard.colorFonsFosc : dashboard.colorFonsClar}
+                            largeScreenMode={largeScreenMode}
+                        />
+                    )}
                 </Box>
             </ScreenFrame>
         </>

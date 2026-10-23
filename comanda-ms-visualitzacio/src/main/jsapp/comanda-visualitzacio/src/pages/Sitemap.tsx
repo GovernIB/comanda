@@ -41,20 +41,20 @@ const Sitemap: React.FC = () => {
 
     return (
         <ScreenFrame icon={screenIcons.sitemap} title={t($ => $.page.sitemap.title)} padded>
-        <Box sx={{ maxWidth: 600, mx: 'auto', width: '100%' }}>
-            <PageTitle title={t($ => $.page.sitemap.title)} />
-            <Typography variant="body1" color="text.secondary" gutterBottom>
-                {t($ => $.page.sitemap.subtitle)}
-            </Typography>
+            <Box sx={{ maxWidth: 600, mx: 'auto', width: '100%' }}>
+                <PageTitle title={t($ => $.page.sitemap.title)} />
+                <Typography variant="body1" color="text.secondary" gutterBottom>
+                    {t($ => $.page.sitemap.subtitle)}
+                </Typography>
 
-            <Divider sx={{ my: 2 }} />
+                <Divider sx={{ my: 2 }} />
 
-            <List>
-                {sitemap.map((site:MenuEntry) => (
-                    <SitemapItem key={site.id} {...site}/>
-                ))}
-            </List>
-        </Box>
+                <List>
+                    {sitemap.map((site:MenuEntry) => (
+                        <SitemapItem key={site.id} {...site}/>
+                    ))}
+                </List>
+            </Box>
         </ScreenFrame>
     );
 };

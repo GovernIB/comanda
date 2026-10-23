@@ -659,361 +659,361 @@ const CalendariEstadistiques: React.FC = () => {
         <>
             <PageTitle title={t($ => $.menu.calendari)} />
             <ScreenFrame>
-            {/* Global loading overlay */}
-            {globalLoading && (
-                <Box className="global-loading-overlay">
-                    <Box className="global-loading-container">
-                        <CircularProgress size={60} />
-                        <Typography sx={{ mt: 2 }}>{t($ => $.calendari.carregant_dades)}</Typography>
+                {/* Global loading overlay */}
+                {globalLoading && (
+                    <Box className="global-loading-overlay">
+                        <Box className="global-loading-container">
+                            <CircularProgress size={60} />
+                            <Typography sx={{ mt: 2 }}>{t($ => $.calendari.carregant_dades)}</Typography>
+                        </Box>
                     </Box>
-                </Box>
-            )}
-            <Toolbar
-                title={<ScreenTitle icon={screenIcons.calendari} title={t($ => $.menu.calendari)} />}
-                upperToolbar
-                sx={titleBarSx(theme)}
-                elementsWithPositions={[
-                    {
-                        position: 2,
-                        element: <FormControl sx={{ minWidth: 300 }}>
-                            <InputLabel size={"small"} id="entorn-app-select-label">{t($ => $.calendari.seleccionar_entorn_app)}</InputLabel>
-                            <Select
-                                labelId="entorn-app-select-label"
-                                value={entornAppId}
-                                size={"small"}
-                                label={t($ => $.calendari.seleccionar_entorn_app)}
-                                onChange={(e) => { handleEntornAppChange(e.target.value as number | '');}}
-                            >
-                                <MenuItem value="">{t($ => $.calendari.seleccionar)}</MenuItem>
-                                {entornApps.map((entornApp) => (
-                                    <MenuItem key={entornApp?.id} value={entornApp?.id}>
-                                        {entornApp?.app?.description} - {entornApp?.entorn?.description}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    },
-                    {
-                        position: 3,
-                        element: (
-                            <Button
-                                variant="outlined"
-                                size="small"
-                                startIcon={<Icon>schedule</Icon>}
-                                onClick={() => setProcessosModalOpen(true)}
-                                data-testid="btn-processos-baixa-prioritat"
-                                sx={{ textTransform: 'none', height: 40 }}
-                            >
-                                {t($ => $.calendari.processos_baixa_prioritat)}
-                                {runningProcessosCount > 0 && (
-                                    <Chip
-                                        size="small"
-                                        color="warning"
-                                        label={runningProcessosCount}
-                                        sx={{ ml: 1, height: 20, fontSize: '0.75rem' }}
-                                    />
-                                )}
-                            </Button>
-                        )
-                    }
-                ]}
-            />
-            {/* Sempre mostrem el calendari, però amb un missatge d'ajuda si no hi ha entorn seleccionat */}
-            <Box
-                sx={{
-                    padding: '16px 24px',
-                    flex: 1,
-                    minHeight: 0,
-                    '& .fc-header-toolbar': {
-                        display: 'flex !important',
-                        justifyContent: 'space-between !important',
-                        alignItems: 'center',
-                    },
-                    /* Alinea el texto del mes en el centro */
-                    '& .fc-toolbar-title': {
-                        textAlign: 'center',
-                    },
-                    /* Asegurar que cada chunk se alinee correctamente */
-                    '& .fc-toolbar-chunk': {
-                        display: 'flex',
-                        alignItems: 'center',
-                        alignSelf: 'center',
-                    },
-                    /* Cuando la pantalla sea estrecha */
-                    '@media (max-width: 768px)': {
-                        '.fc-header-toolbar': {
-                            flexDirection: 'column !important',
-                            alignItems: 'stretch', /* para que ocupen todo el ancho */
-                            gap: '8px', /* separación vertical */
+                )}
+                <Toolbar
+                    title={<ScreenTitle icon={screenIcons.calendari} title={t($ => $.menu.calendari)} />}
+                    upperToolbar
+                    sx={titleBarSx(theme)}
+                    elementsWithPositions={[
+                        {
+                            position: 2,
+                            element: <FormControl sx={{ minWidth: 300 }}>
+                                <InputLabel size={"small"} id="entorn-app-select-label">{t($ => $.calendari.seleccionar_entorn_app)}</InputLabel>
+                                <Select
+                                    labelId="entorn-app-select-label"
+                                    value={entornAppId}
+                                    size={"small"}
+                                    label={t($ => $.calendari.seleccionar_entorn_app)}
+                                    onChange={(e) => { handleEntornAppChange(e.target.value as number | '');}}
+                                >
+                                    <MenuItem value="">{t($ => $.calendari.seleccionar)}</MenuItem>
+                                    {entornApps.map((entornApp) => (
+                                        <MenuItem key={entornApp?.id} value={entornApp?.id}>
+                                            {entornApp?.app?.description} - {entornApp?.entorn?.description}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
                         },
-                        '.fc-toolbar-chunk': {
-                            justifyContent: 'center', /* opcional, centra cada bloque */
+                        {
+                            position: 3,
+                            element: (
+                                <Button
+                                    variant="outlined"
+                                    size="small"
+                                    startIcon={<Icon>schedule</Icon>}
+                                    onClick={() => setProcessosModalOpen(true)}
+                                    data-testid="btn-processos-baixa-prioritat"
+                                    sx={{ textTransform: 'none', height: 40 }}
+                                >
+                                    {t($ => $.calendari.processos_baixa_prioritat)}
+                                    {runningProcessosCount > 0 && (
+                                        <Chip
+                                            size="small"
+                                            color="warning"
+                                            label={runningProcessosCount}
+                                            sx={{ ml: 1, height: 20, fontSize: '0.75rem' }}
+                                        />
+                                    )}
+                                </Button>
+                            )
                         }
-                    }
-                }}
-            >
-            {entornAppId === '' ? (
-                <Box textAlign="center" p={4}>
-                    <Icon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }}>calendar_today</Icon>
-                    <Typography variant="h6" color="text.secondary">
-                        {t($ => $.calendari.seleccionar_entorn_app_primer)}
-                    </Typography>
-                    <Typography variant="body2" color="text.disabled" sx={{ mt: 1 }}>
-                        {t($ => $.calendari.seleccionar_entorn_app_description)}
-                    </Typography>
-                </Box>
-            ) : isLoadingEntorn ? (
-                <Box textAlign="center" p={4}>
-                    <CircularProgress size={48} sx={{ mb: 2, color: 'primary.main' }} />
-                    <Typography variant="h6" color="text.secondary">
-                        {t($ => $.calendari.carregant_entorn_app)}
-                    </Typography>
-                </Box>
-            ) : (
-                <FullCalendar
-                    locale={currentLanguage}
-                    firstDay={1}
-                    plugins={[dayGridPlugin, interactionPlugin]}
-                    themeSystem={'cosmo'}
-                    initialView="dayGridMonth"
-                    height={'100%'}
-                    selectable
-                    dayMaxEventRows={1}
-                    // events={(entornAppId !== '' && !datesDisponiblesError && datesAmbDades.length > 0) ? events.filter(event => event !== null) : []}
-                    events={(entornAppId !== '' && !datesDisponiblesError) ? events.filter(event => event !== null) : []}
-                    eventClick={handleEventClick}
-                    eventContent={(arg) => {
-                        if (arg.event.extendedProps.hasContent) {
-                            return (
-                                <div style={{ position: "absolute", bottom: "-20px", width: "100%", height: "100%" }}>
-                                    <CalendarStatusButton
-                                        hasError={arg.event.extendedProps.hasError}
-                                        esDisponible={arg.event.extendedProps.esDisponible}
-                                        isLoading={arg.event.extendedProps.isLoading}
-                                        isBackgroundProcessing={arg.event.extendedProps.isBackgroundProcessing}
-                                    />
-                                </div>
-                            );
+                    ]}
+                />
+                {/* Sempre mostrem el calendari, però amb un missatge d'ajuda si no hi ha entorn seleccionat */}
+                <Box
+                    sx={{
+                        padding: '16px 24px',
+                        flex: 1,
+                        minHeight: 0,
+                        '& .fc-header-toolbar': {
+                            display: 'flex !important',
+                            justifyContent: 'space-between !important',
+                            alignItems: 'center',
+                        },
+                        /* Alinea el texto del mes en el centro */
+                        '& .fc-toolbar-title': {
+                            textAlign: 'center',
+                        },
+                        /* Asegurar que cada chunk se alinee correctamente */
+                        '& .fc-toolbar-chunk': {
+                            display: 'flex',
+                            alignItems: 'center',
+                            alignSelf: 'center',
+                        },
+                        /* Cuando la pantalla sea estrecha */
+                        '@media (max-width: 768px)': {
+                            '.fc-header-toolbar': {
+                                flexDirection: 'column !important',
+                                alignItems: 'stretch', /* para que ocupen todo el ancho */
+                                gap: '8px', /* separación vertical */
+                            },
+                            '.fc-toolbar-chunk': {
+                                justifyContent: 'center', /* opcional, centra cada bloque */
+                            }
                         }
-                        //If the event has HTML content, render it
-                        if (arg.event.extendedProps.content) {
-                            const htmlContent = document.createElement('div');
-                            htmlContent.innerHTML = arg.event.extendedProps.content;
-                            return { domNodes: [htmlContent] };
-                        }
-                        // For background events without content, display the title
-                        if (arg.event.display === 'background') {
-                            const titleElement = document.createElement('div');
-                            titleElement.innerHTML = arg.event.title;
-                            titleElement.className = 'fc-event-title';
-                            return { domNodes: [titleElement] };
-                        }
-                        // Otherwise, use the default rendering
-                        return null;
                     }}
-                    datesSet={(dateInfo) => {
-                        // When month changes, update the current view month and year
-                        const startDate = dayjs(dateInfo.view.currentStart);
-                        setCurrentViewMonth(startDate.month());
-                        setCurrentViewYear(startDate.year());
-                    }}
-                    customButtons={{
-                        intervalButton: {
-                            text: t($ => $.calendari.carregar_interval),
-                            click: () => {
-                                if (entornAppId === '') {
-                                    alert(t($ => $.calendari.seleccionar_entorn_app_primer));
-                                    return;
-                                }
+                >
+                {entornAppId === '' ? (
+                    <Box textAlign="center" p={4}>
+                        <Icon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }}>calendar_today</Icon>
+                        <Typography variant="h6" color="text.secondary">
+                            {t($ => $.calendari.seleccionar_entorn_app_primer)}
+                        </Typography>
+                        <Typography variant="body2" color="text.disabled" sx={{ mt: 1 }}>
+                            {t($ => $.calendari.seleccionar_entorn_app_description)}
+                        </Typography>
+                    </Box>
+                ) : isLoadingEntorn ? (
+                    <Box textAlign="center" p={4}>
+                        <CircularProgress size={48} sx={{ mb: 2, color: 'primary.main' }} />
+                        <Typography variant="h6" color="text.secondary">
+                            {t($ => $.calendari.carregant_entorn_app)}
+                        </Typography>
+                    </Box>
+                ) : (
+                    <FullCalendar
+                        locale={currentLanguage}
+                        firstDay={1}
+                        plugins={[dayGridPlugin, interactionPlugin]}
+                        themeSystem={'cosmo'}
+                        initialView="dayGridMonth"
+                        height={'100%'}
+                        selectable
+                        dayMaxEventRows={1}
+                        // events={(entornAppId !== '' && !datesDisponiblesError && datesAmbDades.length > 0) ? events.filter(event => event !== null) : []}
+                        events={(entornAppId !== '' && !datesDisponiblesError) ? events.filter(event => event !== null) : []}
+                        eventClick={handleEventClick}
+                        eventContent={(arg) => {
+                            if (arg.event.extendedProps.hasContent) {
+                                return (
+                                    <div style={{ position: "absolute", bottom: "-20px", width: "100%", height: "100%" }}>
+                                        <CalendarStatusButton
+                                            hasError={arg.event.extendedProps.hasError}
+                                            esDisponible={arg.event.extendedProps.esDisponible}
+                                            isLoading={arg.event.extendedProps.isLoading}
+                                            isBackgroundProcessing={arg.event.extendedProps.isBackgroundProcessing}
+                                        />
+                                    </div>
+                                );
+                            }
+                            //If the event has HTML content, render it
+                            if (arg.event.extendedProps.content) {
+                                const htmlContent = document.createElement('div');
+                                htmlContent.innerHTML = arg.event.extendedProps.content;
+                                return { domNodes: [htmlContent] };
+                            }
+                            // For background events without content, display the title
+                            if (arg.event.display === 'background') {
+                                const titleElement = document.createElement('div');
+                                titleElement.innerHTML = arg.event.title;
+                                titleElement.className = 'fc-event-title';
+                                return { domNodes: [titleElement] };
+                            }
+                            // Otherwise, use the default rendering
+                            return null;
+                        }}
+                        datesSet={(dateInfo) => {
+                            // When month changes, update the current view month and year
+                            const startDate = dayjs(dateInfo.view.currentStart);
+                            setCurrentViewMonth(startDate.month());
+                            setCurrentViewYear(startDate.year());
+                        }}
+                        customButtons={{
+                            intervalButton: {
+                                text: t($ => $.calendari.carregar_interval),
+                                click: () => {
+                                    if (entornAppId === '') {
+                                        alert(t($ => $.calendari.seleccionar_entorn_app_primer));
+                                        return;
+                                    }
 
-                                setDataInici(null);
-                                setDataFi(null);
+                                    setDataInici(null);
+                                    setDataFi(null);
+                                    setBaixaPrioritat(false);
+                                    setPausaMs(180000);
+                                    setObrirDialog(true);
+                                }
+                            },
+                            monthButton: {
+                                text: t($ => $.calendari.carregar_mes_actual),
+                                click: () => {
+                                    if (entornAppId === '') {
+                                        alert(t($ => $.calendari.seleccionar_entorn_app_primer));
+                                        return;
+                                    }
+
+                                    const dates = getFirstAndLastDayOfMonth();
+                                    setDataInici(dayjs(dates.firstDay));
+                                    setDataFi(dayjs(dates.lastDay));
+                                    setBaixaPrioritat(true);
+                                    setPausaMs(180000);
+                                    setObrirDialog(true);
+                                }
+                            }
+                        }}
+                        buttonText={{
+                            today: t($ => $.calendari.today),
+                        }}
+                        headerToolbar={{
+                            start: 'prev,next today',
+                            center: 'title',
+                            end: 'monthButton intervalButton'
+                        }}
+                    />)}
+                </Box>
+                {/* Dialog per carregar dades per interval */}
+                <Dialog open={obrirDialog} onClose={() => setObrirDialog(false)}>
+                    <DialogTitle>{t($ => $.calendari.carregar_interval)}</DialogTitle>
+                    <DialogContent>
+                        <Box className="date-picker-container">
+                            <DatePicker
+                                label={t($ => $.calendari.data_inici)}
+                                value={dataInici}
+                                onChange={(newValue) => setDataInici(newValue)}
+                            />
+                            <DatePicker
+                                label={t($ => $.calendari.data_fi)}
+                                value={dataFi}
+                                onChange={(newValue) => setDataFi(newValue)}
+                            />
+                        </Box>
+                        <Box sx={{ mt: 2 }}>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={baixaPrioritat}
+                                        onChange={(e) => setBaixaPrioritat(e.target.checked)}
+                                        inputProps={{ 'data-testid': 'baixa-prioritat-checkbox' } as any}
+                                    />
+                                }
+                                label={t($ => $.calendari.baixa_prioritat)}
+                            />
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 4 }}>
+                                {t($ => $.calendari.baixa_prioritat_descripcio)}
+                            </Typography>
+                            {baixaPrioritat && (
+                                <Box sx={{ mt: 2, ml: 4, p: 1.5, bgcolor: 'action.hover', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+                                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                                        {t($ => $.calendari.velocitat_recuperacio)}
+                                    </Typography>
+                                    <RadioGroup
+                                        value={pausaMs}
+                                        onChange={(e) => setPausaMs(Number(e.target.value))}
+                                        data-testid="pausa-ms-radiogroup"
+                                    >
+                                        <FormControlLabel
+                                            value={600000}
+                                            control={<Radio size="small" color="success" />}
+                                            label={
+                                                <Box sx={{ my: 0.5 }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                        <Chip size="small" color="success" label={t($ => $.calendari.prioritat_baixa)} sx={{ height: 20, fontSize: '0.75rem' }} />
+                                                    </Box>
+                                                    <Typography variant="caption" color="text.secondary" display="block">
+                                                        {t($ => $.calendari.prioritat_baixa_desc)}
+                                                    </Typography>
+                                                </Box>
+                                            }
+                                        />
+                                        <FormControlLabel
+                                            value={180000}
+                                            control={<Radio size="small" color="warning" />}
+                                            label={
+                                                <Box sx={{ my: 0.5 }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                        <Chip size="small" color="warning" label={t($ => $.calendari.prioritat_mitja)} sx={{ height: 20, fontSize: '0.75rem' }} />
+                                                    </Box>
+                                                    <Typography variant="caption" color="text.secondary" display="block">
+                                                        {t($ => $.calendari.prioritat_mitja_desc)}
+                                                    </Typography>
+                                                </Box>
+                                            }
+                                        />
+                                        <FormControlLabel
+                                            value={500}
+                                            control={<Radio size="small" color="error" />}
+                                            label={
+                                                <Box sx={{ my: 0.5 }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                        <Chip size="small" color="error" label={t($ => $.calendari.prioritat_alta)} sx={{ height: 20, fontSize: '0.75rem' }} />
+                                                    </Box>
+                                                    <Typography variant="caption" color="text.secondary" display="block">
+                                                        {t($ => $.calendari.prioritat_alta_desc)}
+                                                    </Typography>
+                                                </Box>
+                                            }
+                                        />
+                                    </RadioGroup>
+                                </Box>
+                            )}
+                        </Box>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => { setObrirDialog(false); setBaixaPrioritat(false); setPausaMs(180000); }}>{t($ => $.calendari.cancelar)}</Button>
+                        <Button
+                            onClick={() => {
+                                if (dataInici && dataFi) {
+                                    const iniciStr = dayjs(dataInici).format('YYYY-MM-DD');
+                                    const fiStr = dayjs(dataFi).format('YYYY-MM-DD');
+                                    carregarIntervalDades(iniciStr, fiStr, baixaPrioritat, pausaMs);
+                                }
                                 setBaixaPrioritat(false);
                                 setPausaMs(180000);
-                                setObrirDialog(true);
-                            }
-                        },
-                        monthButton: {
-                            text: t($ => $.calendari.carregar_mes_actual),
-                            click: () => {
-                                if (entornAppId === '') {
-                                    alert(t($ => $.calendari.seleccionar_entorn_app_primer));
-                                    return;
-                                }
-
-                                const dates = getFirstAndLastDayOfMonth();
-                                setDataInici(dayjs(dates.firstDay));
-                                setDataFi(dayjs(dates.lastDay));
-                                setBaixaPrioritat(true);
-                                setPausaMs(180000);
-                                setObrirDialog(true);
-                            }
-                        }
-                    }}
-                    buttonText={{
-                        today: t($ => $.calendari.today),
-                    }}
-                    headerToolbar={{
-                        start: 'prev,next today',
-                        center: 'title',
-                        end: 'monthButton intervalButton'
-                    }}
-                />)}
-            </Box>
-            {/* Dialog per carregar dades per interval */}
-            <Dialog open={obrirDialog} onClose={() => setObrirDialog(false)}>
-                <DialogTitle>{t($ => $.calendari.carregar_interval)}</DialogTitle>
-                <DialogContent>
-                    <Box className="date-picker-container">
-                        <DatePicker
-                            label={t($ => $.calendari.data_inici)}
-                            value={dataInici}
-                            onChange={(newValue) => setDataInici(newValue)}
-                        />
-                        <DatePicker
-                            label={t($ => $.calendari.data_fi)}
-                            value={dataFi}
-                            onChange={(newValue) => setDataFi(newValue)}
-                        />
-                    </Box>
-                    <Box sx={{ mt: 2 }}>
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={baixaPrioritat}
-                                    onChange={(e) => setBaixaPrioritat(e.target.checked)}
-                                    inputProps={{ 'data-testid': 'baixa-prioritat-checkbox' } as any}
-                                />
-                            }
-                            label={t($ => $.calendari.baixa_prioritat)}
-                        />
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 4 }}>
-                            {t($ => $.calendari.baixa_prioritat_descripcio)}
-                        </Typography>
-                        {baixaPrioritat && (
-                            <Box sx={{ mt: 2, ml: 4, p: 1.5, bgcolor: 'action.hover', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
-                                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                                    {t($ => $.calendari.velocitat_recuperacio)}
+                                setObrirDialog(false);
+                            }}
+                            variant="contained"
+                            disabled={!dataInici || !dataFi || dataFi.isBefore(dataInici)}
+                        >
+                            {t($ => $.calendari.carregar)}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+                {/* Dialog per mostrar errors */}
+                <Dialog open={errorDialogOpen} onClose={() => setErrorDialogOpen(false)} maxWidth="md" fullWidth>
+                    <DialogTitle className="error-dialog-title">
+                        <ErrorIcon color="error" />
+                        {t($ => $.calendari.error_titol)}
+                    </DialogTitle>
+                    <DialogContent>
+                        {currentError && (
+                            <>
+                                <Typography variant="subtitle1" gutterBottom>
+                                    <strong>{t($ => $.calendari.data)}:</strong> {dayjs(currentError.date).format('DD/MM/YYYY')}
                                 </Typography>
-                                <RadioGroup
-                                    value={pausaMs}
-                                    onChange={(e) => setPausaMs(Number(e.target.value))}
-                                    data-testid="pausa-ms-radiogroup"
-                                >
-                                    <FormControlLabel
-                                        value={600000}
-                                        control={<Radio size="small" color="success" />}
-                                        label={
-                                            <Box sx={{ my: 0.5 }}>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                    <Chip size="small" color="success" label={t($ => $.calendari.prioritat_baixa)} sx={{ height: 20, fontSize: '0.75rem' }} />
-                                                </Box>
-                                                <Typography variant="caption" color="text.secondary" display="block">
-                                                    {t($ => $.calendari.prioritat_baixa_desc)}
-                                                </Typography>
-                                            </Box>
-                                        }
+                                <Typography variant="subtitle1" gutterBottom>
+                                    <strong>{t($ => $.calendari.missatge)}:</strong> {currentError.message}
+                                </Typography>
+                                {currentError.trace && (
+                                    <StacktraceBlock
+                                        title={t($ => $.calendari.traca)+":"}
+                                        value={currentError.trace}
                                     />
-                                    <FormControlLabel
-                                        value={180000}
-                                        control={<Radio size="small" color="warning" />}
-                                        label={
-                                            <Box sx={{ my: 0.5 }}>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                    <Chip size="small" color="warning" label={t($ => $.calendari.prioritat_mitja)} sx={{ height: 20, fontSize: '0.75rem' }} />
-                                                </Box>
-                                                <Typography variant="caption" color="text.secondary" display="block">
-                                                    {t($ => $.calendari.prioritat_mitja_desc)}
-                                                </Typography>
-                                            </Box>
-                                        }
-                                    />
-                                    <FormControlLabel
-                                        value={500}
-                                        control={<Radio size="small" color="error" />}
-                                        label={
-                                            <Box sx={{ my: 0.5 }}>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                    <Chip size="small" color="error" label={t($ => $.calendari.prioritat_alta)} sx={{ height: 20, fontSize: '0.75rem' }} />
-                                                </Box>
-                                                <Typography variant="caption" color="text.secondary" display="block">
-                                                    {t($ => $.calendari.prioritat_alta_desc)}
-                                                </Typography>
-                                            </Box>
-                                        }
-                                    />
-                                </RadioGroup>
-                            </Box>
+                                )}
+                            </>
                         )}
-                    </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => { setObrirDialog(false); setBaixaPrioritat(false); setPausaMs(180000); }}>{t($ => $.calendari.cancelar)}</Button>
-                    <Button
-                        onClick={() => {
-                            if (dataInici && dataFi) {
-                                const iniciStr = dayjs(dataInici).format('YYYY-MM-DD');
-                                const fiStr = dayjs(dataFi).format('YYYY-MM-DD');
-                                carregarIntervalDades(iniciStr, fiStr, baixaPrioritat, pausaMs);
-                            }
-                            setBaixaPrioritat(false);
-                            setPausaMs(180000);
-                            setObrirDialog(false);
-                        }}
-                        variant="contained"
-                        disabled={!dataInici || !dataFi || dataFi.isBefore(dataInici)}
-                    >
-                        {t($ => $.calendari.carregar)}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-            {/* Dialog per mostrar errors */}
-            <Dialog open={errorDialogOpen} onClose={() => setErrorDialogOpen(false)} maxWidth="md" fullWidth>
-                <DialogTitle className="error-dialog-title">
-                    <ErrorIcon color="error" />
-                    {t($ => $.calendari.error_titol)}
-                </DialogTitle>
-                <DialogContent>
-                    {currentError && (
-                        <>
-                            <Typography variant="subtitle1" gutterBottom>
-                                <strong>{t($ => $.calendari.data)}:</strong> {dayjs(currentError.date).format('DD/MM/YYYY')}
-                            </Typography>
-                            <Typography variant="subtitle1" gutterBottom>
-                                <strong>{t($ => $.calendari.missatge)}:</strong> {currentError.message}
-                            </Typography>
-                            {currentError.trace && (
-                                <StacktraceBlock
-                                    title={t($ => $.calendari.traca)+":"}
-                                    value={currentError.trace}
-                                />
-                            )}
-                        </>
-                    )}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setErrorDialogOpen(false)}>{t($ => $.calendari.tancar)}</Button>
-                </DialogActions>
-            </Dialog>
-            <CalendariDadesDialog
-                dimensions={dimensions}
-                indicadors={indicadors}
-                currentDadesDia={currentDadesDia}
-                currentDataDia={currentDataDia}
-                dadesDiaModalOpen={dadesDiaModalOpen}
-                setDadesDiaModalOpen={setDadesDiaModalOpen}
-            />
-            <CalendariProcessosDialog
-                open={processosModalOpen}
-                onClose={() => setProcessosModalOpen(false)}
-                processos={processos}
-                isLoading={isLoadingProcessos}
-                onRefresh={() => carregarProcessos(false)}
-                onCancelProces={handleCancelProces}
-                entornAppId={entornAppId}
-                mostrarTots={mostrarTotsProcessos}
-                onMostrarTotsChange={setMostrarTotsProcessos}
-            />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setErrorDialogOpen(false)}>{t($ => $.calendari.tancar)}</Button>
+                    </DialogActions>
+                </Dialog>
+                <CalendariDadesDialog
+                    dimensions={dimensions}
+                    indicadors={indicadors}
+                    currentDadesDia={currentDadesDia}
+                    currentDataDia={currentDataDia}
+                    dadesDiaModalOpen={dadesDiaModalOpen}
+                    setDadesDiaModalOpen={setDadesDiaModalOpen}
+                />
+                <CalendariProcessosDialog
+                    open={processosModalOpen}
+                    onClose={() => setProcessosModalOpen(false)}
+                    processos={processos}
+                    isLoading={isLoadingProcessos}
+                    onRefresh={() => carregarProcessos(false)}
+                    onCancelProces={handleCancelProces}
+                    entornAppId={entornAppId}
+                    mostrarTots={mostrarTotsProcessos}
+                    onMostrarTotsChange={setMostrarTotsProcessos}
+                />
             </ScreenFrame>
             {component}
         </>

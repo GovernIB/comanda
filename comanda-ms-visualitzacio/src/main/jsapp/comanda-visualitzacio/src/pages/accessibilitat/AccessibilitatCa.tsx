@@ -1,7 +1,7 @@
 const AccessibilitatCa = ({ appUrl }: { appUrl?: string }) => (
     <div>
         <div>
-            <h1>DECLARACIÓ D’ACCESSIBILITAT</h1>
+            <h2>DECLARACIÓ D’ACCESSIBILITAT</h2>
 
             <p>
                 El Govern de les Illes Balears s’ha compromès a fer accessible el seu lloc web i
@@ -19,7 +19,7 @@ const AccessibilitatCa = ({ appUrl }: { appUrl?: string }) => (
                 externs.
             </p>
 
-            <h2>Situació de compliment:</h2>
+            <h3>Situació de compliment:</h3>
 
             <p>
                 Aquest lloc web és parcialment conforme amb{' '}
@@ -32,7 +32,7 @@ const AccessibilitatCa = ({ appUrl }: { appUrl?: string }) => (
         </div>
 
         <div>
-            <h2>Contingut no accessible</h2>
+            <h3>Contingut no accessible</h3>
 
             <p>El contingut que es detalla a continuació no és accessible pels motius següents:</p>
 
@@ -89,7 +89,7 @@ const AccessibilitatCa = ({ appUrl }: { appUrl?: string }) => (
         </div>
 
         <div>
-            <h2>Preparació de la present declaració d’accessibilitat</h2>
+            <h3>Preparació de la present declaració d’accessibilitat</h3>
 
             <p>La present declaració va ser preparada el 20 de gener de 2026.</p>
 
@@ -102,7 +102,7 @@ const AccessibilitatCa = ({ appUrl }: { appUrl?: string }) => (
         </div>
 
         <div>
-            <h2>Observacions i dades de contacte</h2>
+            <h3>Observacions i dades de contacte</h3>
 
             <p>
                 El Govern de les Illes Balears pretén continuar millorant i oferir als
@@ -166,7 +166,7 @@ const AccessibilitatCa = ({ appUrl }: { appUrl?: string }) => (
         </div>
 
         <div>
-            <h2>Procediment d’aplicació</h2>
+            <h3>Procediment d’aplicació</h3>
 
             <p>
                 El procediment de reclamació recollit a l’article 13 del RD 1112/2018 va entrar
@@ -195,7 +195,7 @@ const AccessibilitatCa = ({ appUrl }: { appUrl?: string }) => (
         </div>
 
         <div>
-            <h2>Contingut opcional</h2>
+            <h3>Contingut opcional</h3>
 
             <p>La darrera revisió de l’accessibilitat s’ha realitzat el gener de 2026.</p>
 

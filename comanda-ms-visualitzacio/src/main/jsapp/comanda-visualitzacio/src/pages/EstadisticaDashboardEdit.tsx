@@ -465,230 +465,236 @@ const EstadisticaDashboardEdit: React.FC = () => {
     if (dashboardException) {
         if (dashboardException.status === 404) {
             return (
-                <Alert severity="warning" action={<Button onClick={() => navigate(`/${DASHBOARDS_PATH}`)}>{t($ => $.page.dashboards.alert.tornarLlistat)}</Button>}>
-                    {t($ => $.page.dashboards.alert.notExists)}
-                </Alert>
+                <ScreenFrame icon={screenIcons.dashboard} title={t($ => $.page.dashboards.title)} padded>
+                    <Alert severity="warning" action={<Button onClick={() => navigate(`/${DASHBOARDS_PATH}`)}>{t($ => $.page.dashboards.alert.tornarLlistat)}</Button>}>
+                        {t($ => $.page.dashboards.alert.notExists)}
+                    </Alert>
+                </ScreenFrame>
             );
         }
-        return <Alert severity="error">{t($ => $.page.dashboards.alert.carregar)}</Alert>;
+        return (
+            <ScreenFrame icon={screenIcons.dashboard} title={t($ => $.page.dashboards.title)} padded>
+                <Alert severity="error">{t($ => $.page.dashboards.alert.carregar)}</Alert>
+            </ScreenFrame>
+        );
     }
 
     return (
         <ScreenFrame icon={screenIcons.dashboard} title={t($ => $.page.dashboards.title)}>
-        <ThemeProvider theme={designDarkMode ? darkTheme : lightTheme}>
-        <Box sx={{
-            flex: 1,
-            minHeight: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            bgcolor: (theme) => theme.palette.background.default,
-            color: (theme) => theme.palette.text.primary,
-        }}>
-            <PageTitle title={t($ => $.page.dashboards.title)} />
-            {loading ? <CenteredCircularProgress /> : null}
-            {dashboard && (<>
-                <MuiToolbar
-                    data-testid="dashboard-editor-toolbar"
-                    disableGutters
-                    sx={{
-                        width: '100%',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        px: 2,
-                        ml: 0, mr: 0, mt: 0,
-                        bgcolor: (theme) => theme.palette.background.paper,
-                        borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-                    }}
-                >
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <IconButton title={tLib('form.goBack.title')} onClick={() => goBack(`/${DASHBOARDS_PATH}`)}>
-                            <Icon>arrow_back</Icon>
-                        </IconButton>
-                        <Typography sx={{ display: 'inline', mx: 2, fontWeight: 600 }}>
-                            {dashboard.titol}
-                        </Typography>
-                    </Box>
-                    {errorDashboardWidgets?.length ? (
-                        <Box><WidgetsErrorAlert errorWidgets={errorDashboardWidgets} /></Box>
-                    ) : undefined}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Tooltip title={t($ => $.page.dashboards.view.largeScreenModeFit)}>
-                            <ToggleButton
-                                value="fit" size="small" selected={largeScreenMode === 'fit'} color="primary"
-                                onChange={() => setLargeScreenMode(largeScreenMode === 'fit' ? 'centered' : 'fit')}
-                                sx={{ height: '32px' }}
-                            >
-                                <Icon fontSize="small">aspect_ratio</Icon>
-                            </ToggleButton>
-                        </Tooltip>
-                        <Icon fontSize="small" sx={{ color: designDarkMode ? 'text.disabled' : 'warning.main', transition: 'color 0.2s' }}>
-                            light_mode
-                        </Icon>
-                        <IOSSwitch
-                            checked={designDarkMode}
-                            onChange={(_event, checked) => setDesignDarkMode(checked)}
-                            slotProps={{ input: { 'aria-label': t($ => $.page.dashboards.editor.darkModeToggle) } }}
-                        />
-                        <Icon fontSize="small" sx={{ color: designDarkMode ? 'primary.main' : 'text.disabled', transition: 'color 0.2s' }}>
-                            dark_mode
-                        </Icon>
-                        <Button
-                            variant="contained" startIcon={<AddIcon />}
-                            disabled={!apiDashboardItemIsReady || !dashboard}
-                            onClick={() => openWizard(undefined, dashboard?.entorn?.id, dashboard?.aplicacio)}
-                        >
-                            {t($ => $.page.dashboards.action.createComponent.label)}
-                        </Button>
-                    </Box>
-                </MuiToolbar>
-                <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', minHeight: 0 }}>
-                    <Box sx={{ flex: 1, position: 'relative', display: 'flex', minHeight: 0, overflow: 'hidden' }}>
-                        <Box sx={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-                            {apiDashboardItemIsReady && apiDashboardTitolIsReady && dashboardWidgets && (
-                                <DashboardReactGridLayout
-                                    dashboardId={dashboard.id}
-                                    dashboardWidgets={displayedDashboardWidgets}
-                                    gridLayoutItems={mappedDashboardItems}
-                                    onGridLayoutItemsChange={onGridLayoutItemsChange}
-                                    onSelectItem={selectDashboardElement}
-                                    onSelectItems={selectDashboardElements}
-                                    onDeleteItem={handleDeleteItem}
-                                    onDuplicateItem={handleDuplicateItem}
-                                    onClearSelection={() => setEditorSelection({ kind: 'none' })}
-                                    selectedItemId={selectedGridItemId}
-                                    multiSelectedItemIds={multiSelectedGridItemIds}
-                                    dashboardEntornCodi={dashboardEntornCodi}
-                                    backgroundColor={designDarkMode ? dashboard.colorFonsFosc : dashboard.colorFonsClar}
-                                    largeScreenMode={largeScreenMode}
-                                    reservedRightWidth={rightPanelReservedWidth}
-                                    editable
-                                />
-                            )}
+            <ThemeProvider theme={designDarkMode ? darkTheme : lightTheme}>
+            <Box sx={{
+                flex: 1,
+                minHeight: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+                bgcolor: (theme) => theme.palette.background.default,
+                color: (theme) => theme.palette.text.primary,
+            }}>
+                <PageTitle title={t($ => $.page.dashboards.title)} />
+                {loading ? <CenteredCircularProgress /> : null}
+                {dashboard && (<>
+                    <MuiToolbar
+                        data-testid="dashboard-editor-toolbar"
+                        disableGutters
+                        sx={{
+                            width: '100%',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            px: 2,
+                            ml: 0, mr: 0, mt: 0,
+                            bgcolor: (theme) => theme.palette.background.paper,
+                            borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <IconButton title={tLib('form.goBack.title')} onClick={() => goBack(`/${DASHBOARDS_PATH}`)}>
+                                <Icon>arrow_back</Icon>
+                            </IconButton>
+                            <Typography sx={{ display: 'inline', mx: 2, fontWeight: 600 }}>
+                                {dashboard.titol}
+                            </Typography>
                         </Box>
-                        <Box
-                            sx={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                height: '100%',
-                                width: leftPanelCollapsed ? '40px' : `${leftPanelWidth}px`,
-                                display: 'flex',
-                                flexDirection: 'row',
-                                zIndex: 20,
-                                pointerEvents: 'none',
-                            }}
-                        >
-                            {/* Panel content */}
-                            {!leftPanelCollapsed && (
-                                <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', pointerEvents: 'all' }}>
-                                    <SideMenu
-                                        dashboard={dashboard}
-                                        addWidget={addWidget}
-                                        dashboardWidgets={dashboardWidgets}
+                        {errorDashboardWidgets?.length ? (
+                            <Box><WidgetsErrorAlert errorWidgets={errorDashboardWidgets} /></Box>
+                        ) : undefined}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Tooltip title={t($ => $.page.dashboards.view.largeScreenModeFit)}>
+                                <ToggleButton
+                                    value="fit" size="small" selected={largeScreenMode === 'fit'} color="primary"
+                                    onChange={() => setLargeScreenMode(largeScreenMode === 'fit' ? 'centered' : 'fit')}
+                                    sx={{ height: '32px' }}
+                                >
+                                    <Icon fontSize="small">aspect_ratio</Icon>
+                                </ToggleButton>
+                            </Tooltip>
+                            <Icon fontSize="small" sx={{ color: designDarkMode ? 'text.disabled' : 'warning.main', transition: 'color 0.2s' }}>
+                                light_mode
+                            </Icon>
+                            <IOSSwitch
+                                checked={designDarkMode}
+                                onChange={(_event, checked) => setDesignDarkMode(checked)}
+                                slotProps={{ input: { 'aria-label': t($ => $.page.dashboards.editor.darkModeToggle) } }}
+                            />
+                            <Icon fontSize="small" sx={{ color: designDarkMode ? 'primary.main' : 'text.disabled', transition: 'color 0.2s' }}>
+                                dark_mode
+                            </Icon>
+                            <Button
+                                variant="contained" startIcon={<AddIcon />}
+                                disabled={!apiDashboardItemIsReady || !dashboard}
+                                onClick={() => openWizard(undefined, dashboard?.entorn?.id, dashboard?.aplicacio)}
+                            >
+                                {t($ => $.page.dashboards.action.createComponent.label)}
+                            </Button>
+                        </Box>
+                    </MuiToolbar>
+                    <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', minHeight: 0 }}>
+                        <Box sx={{ flex: 1, position: 'relative', display: 'flex', minHeight: 0, overflow: 'hidden' }}>
+                            <Box sx={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+                                {apiDashboardItemIsReady && apiDashboardTitolIsReady && dashboardWidgets && (
+                                    <DashboardReactGridLayout
+                                        dashboardId={dashboard.id}
+                                        dashboardWidgets={displayedDashboardWidgets}
+                                        gridLayoutItems={mappedDashboardItems}
+                                        onGridLayoutItemsChange={onGridLayoutItemsChange}
                                         onSelectItem={selectDashboardElement}
+                                        onSelectItems={selectDashboardElements}
+                                        onDeleteItem={handleDeleteItem}
+                                        onDuplicateItem={handleDuplicateItem}
+                                        onClearSelection={() => setEditorSelection({ kind: 'none' })}
                                         selectedItemId={selectedGridItemId}
-                                        dashboardFiltres={dashboardFiltres}
-                                        onSelectFiltre={selectDashboardFiltre}
-                                        onAddFiltre={addDashboardFiltre}
-                                        selectedFiltreId={selectedFiltreId}
+                                        multiSelectedItemIds={multiSelectedGridItemIds}
+                                        dashboardEntornCodi={dashboardEntornCodi}
+                                        backgroundColor={designDarkMode ? dashboard.colorFonsFosc : dashboard.colorFonsClar}
+                                        largeScreenMode={largeScreenMode}
+                                        reservedRightWidth={rightPanelReservedWidth}
+                                        editable
                                     />
-                                </Box>
-                            )}
+                                )}
+                            </Box>
                             <Box
-                                data-testid="left-panel-resize-handle"
-                                onMouseDown={!leftPanelCollapsed ? handleLeftResizeMouseDown : undefined}
                                 sx={{
-                                    width: leftPanelCollapsed ? '40px' : '10px',
-                                    flexShrink: 0,
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    height: '100%',
+                                    width: leftPanelCollapsed ? '40px' : `${leftPanelWidth}px`,
                                     display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    cursor: leftPanelCollapsed ? 'pointer' : 'ew-resize',
-                                    backgroundColor: 'divider',
-                                    borderRight: '1px solid',
-                                    borderColor: 'divider',
-                                    pointerEvents: 'all',
-                                    ...(!leftPanelCollapsed && {
-                                        '&:hover': { backgroundColor: 'primary.main', opacity: 0.6 },
-                                    }),
+                                    flexDirection: 'row',
+                                    zIndex: 20,
+                                    pointerEvents: 'none',
                                 }}
                             >
-                                <IconButton size="small" onClick={() => setLeftPanelCollapsed(c => !c)}
-                                    title={leftPanelCollapsed ? t($ => $.page.dashboards.editor.expandPanel) : t($ => $.page.dashboards.editor.collapsePanel)}
-                                    sx={leftPanelCollapsed ? { backgroundColor: 'primary.main', color: 'primary.contrastText', boxShadow: 2 } : { backgroundColor: 'background.paper', border: '1px solid', borderColor: 'divider' }}
-                                >
-                                    <Icon sx={{ fontSize: '1rem' }}>{leftPanelCollapsed ? 'chevron_right' : 'chevron_left'}</Icon>
-                                </IconButton>
-                            </Box>
-                        </Box>
-                        <Box sx={{ position: 'absolute', top: 0, right: 0, height: '100%', width: panelCollapsed ? '40px' : `${panelWidth}px`, display: 'flex', flexDirection: 'row', zIndex: 20, pointerEvents: 'none' }}>
-                            <Box
-                                data-testid="right-panel-resize-handle"
-                                onMouseDown={!panelCollapsed ? handleResizeMouseDown : undefined}
-                                sx={{
-                                    width: panelCollapsed ? '40px' : '10px', flexShrink: 0, display: 'flex',
-                                    alignItems: 'center', justifyContent: 'center', cursor: panelCollapsed ? 'pointer' : 'ew-resize',
-                                    backgroundColor: 'divider', borderLeft: '1px solid', borderColor: 'divider', pointerEvents: 'all',
-                                    ...(!panelCollapsed && { '&:hover': { backgroundColor: 'primary.main', opacity: 0.6 } }),
-                                }}
-                            >
-                                <IconButton size="small" onClick={() => setPanelCollapsed(c => !c)}
-                                    sx={panelCollapsed ? { backgroundColor: 'primary.main', color: 'primary.contrastText', boxShadow: 2 } : { backgroundColor: 'background.paper', border: '1px solid', borderColor: 'divider' }}
-                                >
-                                    <Icon sx={{ fontSize: '1rem' }}>{panelCollapsed ? 'chevron_left' : 'chevron_right'}</Icon>
-                                </IconButton>
-                            </Box>
-                            {!panelCollapsed && (
-                                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', pointerEvents: 'all', overflow: 'hidden' }}>
-                                    {/* Un error en el panell no ha de deixar la pantalla en blanc; es reintenta en canviar la selecció. */}
-                                    <ErrorBoundary
-                                        fallbackRender={({ error }) => (
-                                            <SalutErrorBoundaryFallback error={error} message={t($ => $.common.error)} />
-                                        )}
-                                        resetKeys={[editorSelection]}
-                                    >
-                                        <DashboardEditorSidePanel
+                                {/* Panel content */}
+                                {!leftPanelCollapsed && (
+                                    <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', pointerEvents: 'all' }}>
+                                        <SideMenu
                                             dashboard={dashboard}
-                                            dashboardId={dashboardId}
-                                            selection={editorSelection}
-                                            onSelectionChange={setEditorSelection}
+                                            addWidget={addWidget}
+                                            dashboardWidgets={dashboardWidgets}
+                                            onSelectItem={selectDashboardElement}
+                                            selectedItemId={selectedGridItemId}
                                             dashboardFiltres={dashboardFiltres}
-                                            onLiveTitleDataChange={handleLiveTitleDataChange}
-                                            selectedLayoutData={selectedLayoutData}
-                                            onSaved={(dashboardItemId?: any) => {
-                                                if (editorSelection.kind === 'filtre') forceRefreshDashboardFiltres();
-                                                else if (editorSelection.kind === 'none') forceRefreshDashboard();
-                                                else handleWidgetSaved(dashboardItemId);
-                                            }}
-                                            onDeleted={() => {
-                                                const wasFiltre = editorSelection.kind === 'filtre';
-                                                setEditorSelection({ kind: 'none' });
-                                                wasFiltre ? forceRefreshDashboardFiltres() : forceRefreshDashboardWidgets();
-                                            }}
+                                            onSelectFiltre={selectDashboardFiltre}
+                                            onAddFiltre={addDashboardFiltre}
+                                            selectedFiltreId={selectedFiltreId}
                                         />
-                                    </ErrorBoundary>
+                                    </Box>
+                                )}
+                                <Box
+                                    data-testid="left-panel-resize-handle"
+                                    onMouseDown={!leftPanelCollapsed ? handleLeftResizeMouseDown : undefined}
+                                    sx={{
+                                        width: leftPanelCollapsed ? '40px' : '10px',
+                                        flexShrink: 0,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        cursor: leftPanelCollapsed ? 'pointer' : 'ew-resize',
+                                        backgroundColor: 'divider',
+                                        borderRight: '1px solid',
+                                        borderColor: 'divider',
+                                        pointerEvents: 'all',
+                                        ...(!leftPanelCollapsed && {
+                                            '&:hover': { backgroundColor: 'primary.main', opacity: 0.6 },
+                                        }),
+                                    }}
+                                >
+                                    <IconButton size="small" onClick={() => setLeftPanelCollapsed(c => !c)}
+                                        title={leftPanelCollapsed ? t($ => $.page.dashboards.editor.expandPanel) : t($ => $.page.dashboards.editor.collapsePanel)}
+                                        sx={leftPanelCollapsed ? { backgroundColor: 'primary.main', color: 'primary.contrastText', boxShadow: 2 } : { backgroundColor: 'background.paper', border: '1px solid', borderColor: 'divider' }}
+                                    >
+                                        <Icon sx={{ fontSize: '1rem' }}>{leftPanelCollapsed ? 'chevron_right' : 'chevron_left'}</Icon>
+                                    </IconButton>
                                 </Box>
-                            )}
+                            </Box>
+                            <Box sx={{ position: 'absolute', top: 0, right: 0, height: '100%', width: panelCollapsed ? '40px' : `${panelWidth}px`, display: 'flex', flexDirection: 'row', zIndex: 20, pointerEvents: 'none' }}>
+                                <Box
+                                    data-testid="right-panel-resize-handle"
+                                    onMouseDown={!panelCollapsed ? handleResizeMouseDown : undefined}
+                                    sx={{
+                                        width: panelCollapsed ? '40px' : '10px', flexShrink: 0, display: 'flex',
+                                        alignItems: 'center', justifyContent: 'center', cursor: panelCollapsed ? 'pointer' : 'ew-resize',
+                                        backgroundColor: 'divider', borderLeft: '1px solid', borderColor: 'divider', pointerEvents: 'all',
+                                        ...(!panelCollapsed && { '&:hover': { backgroundColor: 'primary.main', opacity: 0.6 } }),
+                                    }}
+                                >
+                                    <IconButton size="small" onClick={() => setPanelCollapsed(c => !c)}
+                                        sx={panelCollapsed ? { backgroundColor: 'primary.main', color: 'primary.contrastText', boxShadow: 2 } : { backgroundColor: 'background.paper', border: '1px solid', borderColor: 'divider' }}
+                                    >
+                                        <Icon sx={{ fontSize: '1rem' }}>{panelCollapsed ? 'chevron_left' : 'chevron_right'}</Icon>
+                                    </IconButton>
+                                </Box>
+                                {!panelCollapsed && (
+                                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', pointerEvents: 'all', overflow: 'hidden' }}>
+                                        {/* Un error en el panell no ha de deixar la pantalla en blanc; es reintenta en canviar la selecció. */}
+                                        <ErrorBoundary
+                                            fallbackRender={({ error }) => (
+                                                <SalutErrorBoundaryFallback error={error} message={t($ => $.common.error)} />
+                                            )}
+                                            resetKeys={[editorSelection]}
+                                        >
+                                            <DashboardEditorSidePanel
+                                                dashboard={dashboard}
+                                                dashboardId={dashboardId}
+                                                selection={editorSelection}
+                                                onSelectionChange={setEditorSelection}
+                                                dashboardFiltres={dashboardFiltres}
+                                                onLiveTitleDataChange={handleLiveTitleDataChange}
+                                                selectedLayoutData={selectedLayoutData}
+                                                onSaved={(dashboardItemId?: any) => {
+                                                    if (editorSelection.kind === 'filtre') forceRefreshDashboardFiltres();
+                                                    else if (editorSelection.kind === 'none') forceRefreshDashboard();
+                                                    else handleWidgetSaved(dashboardItemId);
+                                                }}
+                                                onDeleted={() => {
+                                                    const wasFiltre = editorSelection.kind === 'filtre';
+                                                    setEditorSelection({ kind: 'none' });
+                                                    wasFiltre ? forceRefreshDashboardFiltres() : forceRefreshDashboardWidgets();
+                                                }}
+                                            />
+                                        </ErrorBoundary>
+                                    </Box>
+                                )}
+                            </Box>
                         </Box>
                     </Box>
-                </Box>
-                {wizardState.open && (
-                    <WidgetCreationWizard
-                        key={wizardState.seed}
-                        open={wizardState.open}
-                        dashboard={dashboard}
-                        dashboardId={dashboardId}
-                        initialWidgetType={wizardState.initialWidgetType}
-                        initialEntornId={wizardState.initialEntornId}
-                        initialAplicacio={wizardState.initialAplicacio}
-                        onClose={closeWizard}
-                        onCreated={forceRefreshDashboardWidgets}
-                    />
-                )}
-            </>)}
-        </Box>
-        </ThemeProvider>
+                    {wizardState.open && (
+                        <WidgetCreationWizard
+                            key={wizardState.seed}
+                            open={wizardState.open}
+                            dashboard={dashboard}
+                            dashboardId={dashboardId}
+                            initialWidgetType={wizardState.initialWidgetType}
+                            initialEntornId={wizardState.initialEntornId}
+                            initialAplicacio={wizardState.initialAplicacio}
+                            onClose={closeWizard}
+                            onCreated={forceRefreshDashboardWidgets}
+                        />
+                    )}
+                </>)}
+            </Box>
+            </ThemeProvider>
         </ScreenFrame>
     );
 };

@@ -670,6 +670,9 @@ describe('EstadisticaDashboardEdit', () => {
         render(<EstadisticaDashboardEdit />);
 
         expect(screen.getByText('Error de càrrega')).toBeInTheDocument();
+        // L'error es mostra dins el marc, de manera que la barra de títol es manté.
+        const frame = document.querySelector('.screen-frame') as HTMLElement;
+        expect(frame.querySelector('h1')).toHaveTextContent('Dashboards');
     });
 
     it('EstadisticaDashboardEdit_quanEsPremCrearComponent_obreLAssistentIRefrescaEnCrear', async () => {

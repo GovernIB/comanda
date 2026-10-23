@@ -113,11 +113,21 @@ const GroupForViewSelect = (props: {
                 size="small"
                 disabled={disabled}
                 aria-label={t($ => $.page.salut.groupingSelect.ariaLabel)}
-                sx={{ flexWrap: 'nowrap' }}
+                sx={(theme) => ({
+                    flexWrap: 'nowrap',
+                    // L'opció seleccionada es manté emplenada: més específic que el estil de
+                    // controls de la barra de títol (titleBarControlsSx), que pinta tots els botons iguals.
+                    '& .MuiButton-root.MuiButton-contained': {
+                        backgroundColor: theme.palette.primary.main,
+                        color: theme.palette.primary.contrastText,
+                        '&:hover': { backgroundColor: theme.palette.primary.dark },
+                    },
+                })}
                 variant="outlined"
             >
                 <Button
                     variant={value === GroupingEnum.APPLICATION ? 'contained' : 'outlined'}
+                    aria-pressed={value === GroupingEnum.APPLICATION}
                     onClick={() => onChange(GroupingEnum.APPLICATION)}
                     title={t($ => $.page.salut.groupingSelect.BY_APPLICATION)}
                 >
@@ -125,6 +135,7 @@ const GroupForViewSelect = (props: {
                 </Button>
                 <Button
                     variant={value === GroupingEnum.ENVIRONMENT ? 'contained' : 'outlined'}
+                    aria-pressed={value === GroupingEnum.ENVIRONMENT}
                     onClick={() => onChange(GroupingEnum.ENVIRONMENT)}
                     title={t($ => $.page.salut.groupingSelect.BY_ENVIRONMENT)}
                 >
@@ -132,6 +143,7 @@ const GroupForViewSelect = (props: {
                 </Button>
                 <Button
                     variant={value === GroupingEnum.NONE ? 'contained' : 'outlined'}
+                    aria-pressed={value === GroupingEnum.NONE}
                     onClick={() => onChange(GroupingEnum.NONE)}
                     title={t($ => $.page.salut.groupingSelect.NONE)}
                 >
@@ -139,6 +151,7 @@ const GroupForViewSelect = (props: {
                 </Button>
                 <Button
                     variant={value === GroupingEnum.VERSIONS_ENTORNS ? 'contained' : 'outlined'}
+                    aria-pressed={value === GroupingEnum.VERSIONS_ENTORNS}
                     onClick={() => onChange(GroupingEnum.VERSIONS_ENTORNS)}
                     title={t($ => $.menu.versionsEntorn)}
                 >

@@ -85,6 +85,8 @@ describe('Accessibilitat', () => {
         const frame = document.querySelector('.screen-frame') as HTMLElement;
         expect(frame).not.toBeNull();
         expect(frame.querySelector('h1')).toHaveTextContent('Accessibilitat');
+        // El títol de la barra del marc és l'únic h1: la declaració comença a h2.
+        expect(frame.querySelectorAll('h1')).toHaveLength(1);
     });
 
 });

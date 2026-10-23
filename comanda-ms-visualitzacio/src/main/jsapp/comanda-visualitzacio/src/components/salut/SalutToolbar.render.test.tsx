@@ -118,6 +118,35 @@ describe('SalutToolbar render', () => {
         vi.clearAllMocks();
     });
 
+    it('SalutToolbar_quanHiHaAgrupacio_marcaNomesLOpcioSeleccionadaIlaPintaEmplenada', () => {
+        // Comprova que l'agrupació seleccionada es distingeix de les altres (aria-pressed i fons ple),
+        // tot i l'estil de controls de la barra de títol.
+        render(
+            <SalutToolbar
+                title="Salut"
+                ready={true}
+                groupingActive
+                onRefreshClick={() => undefined}
+                dataRangeDuration="PT15M"
+                setDataRangeDuration={() => undefined}
+                filterData={{}}
+                setFilterData={() => undefined}
+                grouping={GroupingEnum.ENVIRONMENT}
+                setGrouping={() => undefined}
+            />
+        );
+
+        const buttons = screen.getAllByRole('button').filter((b) => b.hasAttribute('aria-pressed'));
+        expect(buttons).toHaveLength(4);
+        const selected = buttons.filter((b) => b.getAttribute('aria-pressed') === 'true');
+        expect(selected).toHaveLength(1);
+        expect(selected[0]).toHaveClass('MuiButton-contained');
+        buttons.filter((b) => b !== selected[0]).forEach((b) => expect(b).toHaveClass('MuiButton-outlined'));
+        expect(getComputedStyle(selected[0]).backgroundColor).not.toBe(
+            getComputedStyle(buttons.find((b) => b !== selected[0])!).backgroundColor
+        );
+    });
+
     it('SalutToolbar_quanEsRenderitza_mostraElTitolElSubtitolIActionsPrincipals', () => {
         // Comprova que la toolbar mostra el títol, el subtítol calculat i les accions bàsiques visibles.
         render(

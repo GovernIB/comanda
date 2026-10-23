@@ -669,49 +669,49 @@ const Salut: FunctionComponent = () => {
 
     return (
         <ScreenFrame>
-        <Box
-            sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                flex: 1,
-                minHeight: 0,
-            }}
-        >
-            <SalutToolbar
-                title={t($ => $.page.salut.title)}
-                ready={salutData.ready}
-                onRefreshClick={refreshAll}
-                appDataLoading={salutData.loading}
-                lastRefresh={salutData.lastRefresh}
-                groupingActive
-                {...toolbarState}
-                {...versionsEntornGroupingToolbarProps}
-                {...appInfoToolbarProps}
-            />
-            <Activity mode={!isAppInfoRouteActive ? 'visible' : 'hidden'}>
-                <Box sx={{ p: 2, flex: 1, overflowY: 'auto', scrollbarGutter: 'stable' }}>
-                    <PageTitle title={t($ => $.page.salut.title)} />
-                    {toolbarState.grouping == 'VERSIONS_ENTORNS' ? <VersionsEntorns /> :
-                    <SalutLlistat
-                        apps={salutData.apps}
-                        entorns={salutData.entorns}
-                        salutGroups={salutData.groups}
-                        agrupacio={salutData.agrupacio}
-                        springFilter={additionalFilter}
-                        grupsDates={salutData.grupsDates}
-                        loading={salutInitialLoading}
-                        {...salutLlistatState}
-                    />}
-                </Box>
-            </Activity>
-            {isAppInfoRouteActive && (
-                <SalutAppInfo
-                    appInfoData={appInfoData}
-                    ready={appInfoData.ready}
-                    grupsDates={salutData.grupsDates}
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    flex: 1,
+                    minHeight: 0,
+                }}
+            >
+                <SalutToolbar
+                    title={t($ => $.page.salut.title)}
+                    ready={salutData.ready}
+                    onRefreshClick={refreshAll}
+                    appDataLoading={salutData.loading}
+                    lastRefresh={salutData.lastRefresh}
+                    groupingActive
+                    {...toolbarState}
+                    {...versionsEntornGroupingToolbarProps}
+                    {...appInfoToolbarProps}
                 />
-            )}
-        </Box>
+                <Activity mode={!isAppInfoRouteActive ? 'visible' : 'hidden'}>
+                    <Box sx={{ p: 2, flex: 1, overflowY: 'auto', scrollbarGutter: 'stable' }}>
+                        <PageTitle title={t($ => $.page.salut.title)} />
+                        {toolbarState.grouping == 'VERSIONS_ENTORNS' ? <VersionsEntorns /> :
+                        <SalutLlistat
+                            apps={salutData.apps}
+                            entorns={salutData.entorns}
+                            salutGroups={salutData.groups}
+                            agrupacio={salutData.agrupacio}
+                            springFilter={additionalFilter}
+                            grupsDates={salutData.grupsDates}
+                            loading={salutInitialLoading}
+                            {...salutLlistatState}
+                        />}
+                    </Box>
+                </Activity>
+                {isAppInfoRouteActive && (
+                    <SalutAppInfo
+                        appInfoData={appInfoData}
+                        ready={appInfoData.ready}
+                        grupsDates={salutData.grupsDates}
+                    />
+                )}
+            </Box>
         </ScreenFrame>
     );
 };

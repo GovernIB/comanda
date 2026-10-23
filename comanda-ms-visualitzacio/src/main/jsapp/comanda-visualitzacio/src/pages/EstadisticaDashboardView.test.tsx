@@ -509,6 +509,9 @@ describe('EstadisticaDashboardView', () => {
         render(<EstadisticaDashboardView />);
 
         expect(screen.getByText(/No s ha pogut carregar el dashboard/i)).toBeInTheDocument();
+        // L'error es mostra dins el marc, de manera que la barra de títol es manté.
+        const frame = document.querySelector('.screen-frame') as HTMLElement;
+        expect(frame.querySelector('h1')).toHaveTextContent('Dashboards');
     });
 
     it('EstadisticaDashboardView_quanNoHiHaIdNiDashboards_mostraLAvísDeBuit', async () => {

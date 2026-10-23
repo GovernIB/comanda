@@ -1,7 +1,7 @@
 const AccesibilidadEs = ({ appUrl }: { appUrl?: string }) => (
     <div>
         <div>
-            <h1>DECLARACIÓN DE ACCESIBILIDAD</h1>
+            <h2>DECLARACIÓN DE ACCESIBILIDAD</h2>
 
             <p>
                 El Govern de les Illes Balears se ha comprometido a hacer accesible su sitio web y
@@ -19,7 +19,7 @@ const AccesibilidadEs = ({ appUrl }: { appUrl?: string }) => (
                 enlaces externos.
             </p>
 
-            <h2>Situación de cumplimiento:</h2>
+            <h3>Situación de cumplimiento:</h3>
 
             <p>
                 Este sitio web es parcialmente conforme con{' '}
@@ -30,7 +30,7 @@ const AccesibilidadEs = ({ appUrl }: { appUrl?: string }) => (
         </div>
 
         <div>
-            <h2>Contenido no accesible</h2>
+            <h3>Contenido no accesible</h3>
 
             <p>El contenido que se recoge a continuación no es accesible por lo siguiente:</p>
 
@@ -84,7 +84,7 @@ const AccesibilidadEs = ({ appUrl }: { appUrl?: string }) => (
         </div>
 
         <div>
-            <h2>Preparación de la presente declaración de accesibilidad</h2>
+            <h3>Preparación de la presente declaración de accesibilidad</h3>
 
             <p>La presente declaración fue preparada el 20 de enero de 2026.</p>
 
@@ -97,7 +97,7 @@ const AccesibilidadEs = ({ appUrl }: { appUrl?: string }) => (
         </div>
 
         <div>
-            <h2>Observaciones y datos de contacto</h2>
+            <h3>Observaciones y datos de contacto</h3>
 
             <p>
                 El Govern de las Illes Balears pretende seguir mejorando y ofrecer a los ciudadanos
@@ -157,7 +157,7 @@ const AccesibilidadEs = ({ appUrl }: { appUrl?: string }) => (
         </div>
 
         <div>
-            <h2>Procedimiento de aplicación</h2>
+            <h3>Procedimiento de aplicación</h3>
 
             <p>
                 El procedimiento de reclamación recogido en el artículo 13 de RD 1112/2018 entró en
@@ -185,7 +185,7 @@ const AccesibilidadEs = ({ appUrl }: { appUrl?: string }) => (
         </div>
 
         <div>
-            <h2>Contenido opcional</h2>
+            <h3>Contenido opcional</h3>
 
             <p>La última revisión de la accesibilidad se ha realizado en enero de 2026.</p>
 

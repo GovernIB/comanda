@@ -62,59 +62,59 @@ const Parametres: React.FC = () => {
         <>
             <PageTitle title={t($ => $.page.parametres.title)} />
             <ScreenFrame icon={screenIcons.parametre} title={t($ => $.page.parametres.title)}>
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    flex: 1,
-                    minHeight: 0,
-                    overflow: 'hidden',
-                }}
-            >
                 <Box
                     sx={{
-                        p: 2,
-                        px: { xs: 2, md: 10 },
-                        flexShrink: 0,
-                        bgcolor: 'background.paper',
-                        borderBottom: '1px solid',
-                        borderColor: 'divider',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        flex: 1,
+                        minHeight: 0,
+                        overflow: 'hidden',
                     }}
                 >
-                    <ParametresQuickFilter onChange={setQuickFilter} />
-                </Box>
-
-                <Box sx={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
                     <Box
                         sx={{
-                            width: { xs: '180px', md: '250px', lg: '350px' },
+                            p: 2,
+                            px: { xs: 2, md: 10 },
                             flexShrink: 0,
-                            height: '100%',
-                            borderRight: '1px solid',
+                            bgcolor: 'background.paper',
+                            borderBottom: '1px solid',
                             borderColor: 'divider',
-                            overflowY: 'auto',
-                            p: 1.5,
                         }}
                     >
-                        <ParametresGrups quickFilter={quickFilter} onChange={handleGroupChange} />
+                        <ParametresQuickFilter onChange={setQuickFilter} />
                     </Box>
 
-                    <Box
-                        sx={{
-                            flexGrow: 1,
-                            overflowY: 'auto',
-                            py: 2,
-                            bgcolor: 'background.default',
-                        }}
-                    >
-                        <ParametresItems
-                            grup={selectedGrup}
-                            subGrup={selectedSubGrup}
-                            quickFilter={quickFilter}
-                        />
+                    <Box sx={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
+                        <Box
+                            sx={{
+                                width: { xs: '180px', md: '250px', lg: '350px' },
+                                flexShrink: 0,
+                                height: '100%',
+                                borderRight: '1px solid',
+                                borderColor: 'divider',
+                                overflowY: 'auto',
+                                p: 1.5,
+                            }}
+                        >
+                            <ParametresGrups quickFilter={quickFilter} onChange={handleGroupChange} />
+                        </Box>
+
+                        <Box
+                            sx={{
+                                flexGrow: 1,
+                                overflowY: 'auto',
+                                py: 2,
+                                bgcolor: 'background.default',
+                            }}
+                        >
+                            <ParametresItems
+                                grup={selectedGrup}
+                                subGrup={selectedSubGrup}
+                                quickFilter={quickFilter}
+                            />
+                        </Box>
                     </Box>
                 </Box>
-            </Box>
             </ScreenFrame>
         </>
     );
