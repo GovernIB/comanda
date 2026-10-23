@@ -47,10 +47,10 @@ import {useMemo} from "react";
 import { IntegracionsSubsistemesContextsPerspective, PERSPECTIVE_ENTORN_APP_INTEGRACIONS_SUBSISTEMES_CONTEXTS } from './salut/dataFetching.ts';
 import { EntornAppModel } from '../types/app.model.tsx';
 import PageTitle from "../components/PageTitle.tsx";
-import { ScreenFrame } from '../lot2';
+import { FilterAdvancedButton, FilterClearButton, FilterCount, ScreenFrame } from '../lot2';
 import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
 import { screenIcons } from '../util/screenIcons.ts';
-import { FilterAdvancedButton, FilterClearButton, FilterCount } from '../lot2';
+import useAppliedSpringFilter from '../hooks/useAppliedSpringFilter.ts';
 
 type RuleScope = 'APLICACIO' | 'SUBSISTEMA' | 'INTEGRACIO' | 'SISTEMA';
 type RuleMetric = 'ESTAT' | 'LATENCIA' | 'CARREGA_MITJANA_SISTEMA' | 'MEMORIA_DISPONIBLE' | 'ESPAI_DISC_LLIURE';
@@ -746,12 +746,7 @@ const AlarmaConfigFilter = (props: AlarmaConfigFilterProps) => {
     const isCurrentUserAdmin = useIsUserAdmin();
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const filterApiRef = useFilterApiRef();
-    // Últim Spring Filter aplicat, per al recompte de filtres de la barra de títol (FilterCount)
-    const [appliedSpringFilter, setAppliedSpringFilter] = React.useState<string | undefined>();
-    const handleSpringFilterChange = (springFilter?: string) => {
-        setAppliedSpringFilter(springFilter);
-        onSpringFilterChange?.(springFilter);
-    };
+    const { appliedSpringFilter, handleSpringFilterChange } = useAppliedSpringFilter(onSpringFilterChange);
     if (!user) {
         return null;
     }
@@ -1227,10 +1222,7 @@ const AlarmaConfig: React.FC<{
     );
 
     // Com a pàgina porta marc i barra de títol; en mode diàleg és una graella sense més.
-    const Frame = dialogMode ? React.Fragment : ScreenFrame;
-    return (<Box sx={{ height: '100%', overflowY: 'auto', }}>
-        <PageTitle title={t(($) => $.page.alarma.snackbar.title)} />
-        <Frame>
+    const grid = (
         <MuiDataGrid
             apiRef={apiRef}
             datagridApiRef={gridApiRef}
@@ -1248,7 +1240,7 @@ const AlarmaConfig: React.FC<{
             popupEditFormDialogResourceTitle={t($ => $.page.alarmaConfig.resourceTitle)}
             popupEditFormDialogComponentProps={{ fullWidth: true, maxWidth: 'lg' }}
             disableColumnSorting
-            autoHeight={dialogMode || undefined}
+            autoHeight
             rowHideDeleteButton
             rowHideUpdateButton={row => dialogMode || hideDeleteForRow(row)}
             toolbarHideCreate={dialogMode || undefined}
@@ -1256,8 +1248,18 @@ const AlarmaConfig: React.FC<{
             {...treeDataGridProps}
             {...reorderingDataGridProps}
         />
-        </Frame>
-        {!dialogMode && isCurrentUserAdmin && adminView && showUsersAlarms && otherUsers.length > 0 && (
+    );
+    if (dialogMode) {
+        return (<Box sx={{ height: '100%', overflowY: 'auto', }}>
+            <PageTitle title={t(($) => $.page.alarma.snackbar.title)} />
+            {grid}
+        </Box>);
+    }
+    return (<>
+        <PageTitle title={t(($) => $.page.alarma.snackbar.title)} />
+        <ScreenFrame>
+            {grid}
+        {isCurrentUserAdmin && adminView && showUsersAlarms && otherUsers.length > 0 && (
             <Box sx={{ mt: 2, pb: 2, px: 2 }}>
                 <Typography variant="h6" sx={{ mb: 1 }}>
                     {t($ => $.page.alarma.userSection.header)}
@@ -1279,7 +1281,8 @@ const AlarmaConfig: React.FC<{
                 ))}
             </Box>
         )}
-    </Box>);
+        </ScreenFrame>
+    </>);
 }
 
 export default AlarmaConfig;

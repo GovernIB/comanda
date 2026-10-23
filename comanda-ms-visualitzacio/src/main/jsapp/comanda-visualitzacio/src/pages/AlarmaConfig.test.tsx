@@ -478,6 +478,8 @@ describe('AlarmaConfig', () => {
         expect(screenTitle).not.toBeNull();
         expect(screenTitle).toHaveTextContent('Configuració d alarmes');
         expect(mocks.lastGridProps.toolbarCreateLabel).toBe('Nova alarma');
+        // La graella conserva l'alçada automàtica d'abans (el contingut del marc fa scroll).
+        expect(mocks.lastGridProps.autoHeight).toBe(true);
 
         await waitFor(() => {
             expect(screen.getByRole('heading', { name: 'Configuració d alarmes' })).toBeInTheDocument();

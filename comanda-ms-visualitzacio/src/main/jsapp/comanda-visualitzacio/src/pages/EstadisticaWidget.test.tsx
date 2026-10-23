@@ -90,6 +90,8 @@ describe('EstadisticaWidget', () => {
         const screenTitle = (frame as HTMLElement).querySelector('.screen-title');
         expect(screenTitle).not.toBeNull();
         expect(screenTitle).toHaveTextContent('Widgets simples');
+        // Les pestanyes són dins el marc: el ScreenFrame és l'arrel de la pàgina.
+        expect(frame).toContainElement(screen.getByRole('tab', { name: 'Simple' }));
 
         expect(screen.getByRole('heading', { name: 'Widgets' })).toBeInTheDocument();
         expect(screen.getByRole('heading', { name: 'Widgets simples' })).toBeInTheDocument();

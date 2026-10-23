@@ -12,8 +12,6 @@ import { ScreenFrame } from '../lot2';
 import useScreenGridProps from '../hooks/useScreenGridProps.tsx';
 import { screenIcons } from '../util/screenIcons.ts';
 
-
-
 const columns = [
     {
         field: 'aplicacio',
@@ -35,18 +33,16 @@ const EstadisticaSimpleWidgetGrid: React.FC = () => {
     const { t } = useTranslation();
     const screenGridProps = useScreenGridProps(screenIcons.widget, t($ => $.page.widget.simple.title));
     return (
-        <ScreenFrame>
-            <MuiDataGrid
-                {...screenGridProps}
-                resourceName="estadisticaSimpleWidget"
-                columns={columns}
-                paginationActive
-                popupEditActive
-                popupEditFormContent={<EstadisticaSimpleWidgetForm />}
-                popupEditFormDialogResourceTitle={t($ => $.page.widget.simple.resourceTitle)}
-                popupEditFormDialogComponentProps={defaultPopupEditFormDialogComponentProps}
-            />
-        </ScreenFrame>
+        <MuiDataGrid
+            {...screenGridProps}
+            resourceName="estadisticaSimpleWidget"
+            columns={columns}
+            paginationActive
+            popupEditActive
+            popupEditFormContent={<EstadisticaSimpleWidgetForm />}
+            popupEditFormDialogResourceTitle={t($ => $.page.widget.simple.resourceTitle)}
+            popupEditFormDialogComponentProps={defaultPopupEditFormDialogComponentProps}
+        />
     );
 };
 
@@ -54,18 +50,16 @@ const EstadisticaGraficWidgetGrid: React.FC = () => {
     const { t } = useTranslation();
     const screenGridProps = useScreenGridProps(screenIcons.widget, t($ => $.page.widget.grafic.title));
     return (
-        <ScreenFrame>
-            <MuiDataGrid
-                {...screenGridProps}
-                resourceName="estadisticaGraficWidget"
-                columns={columns}
-                paginationActive
-                popupEditActive
-                popupEditFormContent={<EstadisticaGraficWidgetForm/>}
-                popupEditFormDialogResourceTitle={t($ => $.page.widget.grafic.resourceTitle)}
-                    popupEditFormDialogComponentProps={defaultPopupEditFormDialogComponentProps}
-            />
-        </ScreenFrame>
+        <MuiDataGrid
+            {...screenGridProps}
+            resourceName="estadisticaGraficWidget"
+            columns={columns}
+            paginationActive
+            popupEditActive
+            popupEditFormContent={<EstadisticaGraficWidgetForm/>}
+            popupEditFormDialogResourceTitle={t($ => $.page.widget.grafic.resourceTitle)}
+                popupEditFormDialogComponentProps={defaultPopupEditFormDialogComponentProps}
+        />
     );
 }
 
@@ -73,18 +67,16 @@ const EstadisticaTaulaWidgetGrid: React.FC = () => {
     const { t } = useTranslation();
     const screenGridProps = useScreenGridProps(screenIcons.widget, t($ => $.page.widget.taula.title));
     return (
-        <ScreenFrame>
-            <MuiDataGrid
-                {...screenGridProps}
-                resourceName="estadisticaTaulaWidget"
-                columns={columns}
-                paginationActive
-                popupEditActive
-                popupEditFormContent={<EstadisticaTaulaWidgetForm />}
-                popupEditFormDialogResourceTitle={t($ => $.page.widget.taula.resourceTitle)}
-                popupEditFormDialogComponentProps={defaultPopupEditFormDialogComponentProps}
-            />
-        </ScreenFrame>
+        <MuiDataGrid
+            {...screenGridProps}
+            resourceName="estadisticaTaulaWidget"
+            columns={columns}
+            paginationActive
+            popupEditActive
+            popupEditFormContent={<EstadisticaTaulaWidgetForm />}
+            popupEditFormDialogResourceTitle={t($ => $.page.widget.taula.resourceTitle)}
+            popupEditFormDialogComponentProps={defaultPopupEditFormDialogComponentProps}
+        />
     );
 };
 
@@ -97,16 +89,18 @@ const EstadisticaWidget: React.FC = () => {
     return (
         <>
             <PageTitle title={t($ => $.page.widget.title)} />
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-                <Tabs value={tab} onChange={handleChange}>
-                    <Tab label={t($ => $.page.widget.simple.tab.title)} />
-                    <Tab label={t($ => $.page.widget.grafic.tab.title)} />
-                    <Tab label={t($ => $.page.widget.taula.tab.title)} />
-                </Tabs>
-            </Box>
-            {tab === 0 && (<EstadisticaSimpleWidgetGrid />)}
-            {tab === 1 && (<EstadisticaGraficWidgetGrid />)}
-            {tab === 2 && (<EstadisticaTaulaWidgetGrid />)}
+            <ScreenFrame>
+                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                    <Tabs value={tab} onChange={handleChange}>
+                        <Tab label={t($ => $.page.widget.simple.tab.title)} />
+                        <Tab label={t($ => $.page.widget.grafic.tab.title)} />
+                        <Tab label={t($ => $.page.widget.taula.tab.title)} />
+                    </Tabs>
+                </Box>
+                {tab === 0 && (<EstadisticaSimpleWidgetGrid />)}
+                {tab === 1 && (<EstadisticaGraficWidgetGrid />)}
+                {tab === 2 && (<EstadisticaTaulaWidgetGrid />)}
+            </ScreenFrame>
         </>
     );
 };
