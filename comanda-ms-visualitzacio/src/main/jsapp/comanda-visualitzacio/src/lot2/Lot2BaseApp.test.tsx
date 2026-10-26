@@ -8,7 +8,16 @@ import { Lot2BaseApp, type Lot2BaseAppProps } from './Lot2BaseApp';
 import { DrassanaFooter } from './DrassanaFooter';
 import { lot2MenuColors, LOT2_APPEARANCE } from './menuColors';
 import { createLot2Themes } from './theme';
-import { APPBAR_PADDING_LEFT, FOOTER_HEIGHT, MAIN_GAP, MAIN_PADDING } from './layout';
+import { lot2HeaderLogoStyle } from './Lot2BaseApp';
+import {
+    APPBAR_PADDING_LEFT,
+    FOOTER_HEIGHT,
+    LOGO_BOX_LEFT,
+    LOGO_SEPARATOR_GAP,
+    MAIN_GAP,
+    MAIN_PADDING,
+    MENU_WIDTH,
+} from './layout';
 
 const themes = createLot2Themes({ main: '#83cb41', dark: '#497e3a', soft: '#F2F9EB' });
 
@@ -26,10 +35,19 @@ const ContextProbe: React.FC = () => {
     return null;
 };
 
+const ReactiveResourceApi: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [currentLanguage, setCurrentLanguage] = React.useState<string | undefined>();
+    const value = React.useMemo(
+        () => ({ ...resourceApiStub, currentLanguage, setCurrentLanguage }),
+        [currentLanguage]
+    );
+    return <ResourceApiContext.Provider value={value}>{children}</ResourceApiContext.Provider>;
+};
+
 const renderApp = (props: Partial<Lot2BaseAppProps> = {}, theme = themes.light) =>
     render(
         <ThemeProvider theme={theme}>
-            <ResourceApiContext.Provider value={resourceApiStub}>
+            <ReactiveResourceApi>
                 <Lot2BaseApp
                     code="test"
                     logo="logo-clar.png"
@@ -44,12 +62,12 @@ const renderApp = (props: Partial<Lot2BaseAppProps> = {}, theme = themes.light) 
                     {...props}>
                     <ContextProbe />
                 </Lot2BaseApp>
-            </ResourceApiContext.Provider>
+            </ReactiveResourceApi>
         </ThemeProvider>
     );
 
 const headerToolbar = () => document.querySelector('header .MuiToolbar-root') as HTMLElement;
-const headerLogo = () => document.querySelector('header img[alt="logo"]') as HTMLImageElement;
+const headerLogo = () => document.querySelector('header img') as HTMLImageElement;
 const mainEl = () => document.querySelector('main') as HTMLElement;
 
 afterEach(() => {
@@ -67,7 +85,7 @@ describe('Lot2BaseApp', () => {
         expect(headerLogo().getAttribute('src')).toBe('logo-clar.png');
         const footer = document.querySelector('footer') as HTMLElement;
         expect(footer).toBeTruthy();
-        expect(footer.querySelector('img[alt="foot_logo"]')).toBeTruthy();
+        expect(footer.querySelector('img[alt="Drassana"]')).toBeTruthy();
         expect(screen.getByText('footer.sitemap')).toHaveAttribute('href', '/sitemap');
         expect(screen.getByText('footer.accessibilitat')).toHaveAttribute('href', '/accessibilitat');
     });
@@ -107,7 +125,7 @@ describe('Lot2BaseApp', () => {
 
     it('sense defaultMuiComponentProps, es fan servir els de lot2', () => {
         renderApp();
-        expect(lastContext.defaultMuiComponentProps.dataGrid.toolbarCreateVariant).toBe('button');
+        expect(lastContext.defaultMuiComponentProps.dataGrid.toolbarCreateVariant).toBe('responsive');
     });
 
     it('el contingut té el padding i el gap de Notib, i els estils de l\'aplicació guanyen', () => {
@@ -129,9 +147,10 @@ describe('Lot2BaseApp', () => {
         renderApp({ menuAppearance: 'inverse', routerUseLocationPath: () => '/a' });
         const icon = document.querySelector('.MuiListItemButton-root.Mui-selected .menu-item-icon') as HTMLElement;
         expect(icon).toBeTruthy();
-        // accent de lot2MenuColors (#83cb41), no el torrat del tema actiu (primary.dark, #497e3a)
-        expect(lot2MenuColors(themes.light, 'inverse').accent).toBe('#83cb41');
-        expect(getComputedStyle(icon).color).toBe('rgb(131, 203, 65)');
+        // accent de lot2MenuColors (el to clar, que té contrast amb el menú fosc), no el torrat del
+        // tema actiu (primary.dark, #497e3a)
+        expect(lot2MenuColors(themes.light, 'inverse').accent).toBe(themes.light.palette.primary.light);
+        expect(getComputedStyle(icon).color).toBe('rgb(168, 218, 122)');
     });
 
     it('el peu per defecte pren el títol de headerTitle si és un text', () => {
@@ -152,7 +171,74 @@ describe('Lot2BaseApp', () => {
     it("footer personalitzat substitueix el de Drassana", () => {
         renderApp({ footer: <div data-testid="peu-propi" /> });
         expect(screen.getByTestId('peu-propi')).toBeInTheDocument();
-        expect(document.querySelector('img[alt="foot_logo"]')).toBeNull();
+        expect(document.querySelector('img[alt="Drassana"]')).toBeNull();
+    });
+});
+
+describe('Lot2BaseApp: idioma, logo de capçalera', () => {
+    afterEach(() => {
+        document.documentElement.removeAttribute('lang');
+    });
+
+    it("sincronitza <html lang> amb l'idioma actual (dos primers caràcters)", () => {
+        const r = renderApp({ i18nCurrentLanguage: 'ca-ES' });
+        expect(document.documentElement.lang).toBe('ca');
+        r.rerender(
+            <ThemeProvider theme={themes.light}>
+                <ReactiveResourceApi>
+                    <Lot2BaseApp
+                        code="test"
+                        logo="logo-clar.png"
+                        headerTitle="Titol"
+                        menuEntries={[]}
+                        i18nUseTranslation={() => ({ t: (k: string) => k })}
+                        i18nCurrentLanguage="es"
+                        routerGoBack={() => {}}
+                        routerNavigate={() => {}}
+                        routerAnyHistoryEntryExist={() => false}
+                        routerUseLocationPath={() => '/'}
+                        linkComponent="a"
+                    />
+                </ReactiveResourceApi>
+            </ThemeProvider>
+        );
+        expect(document.documentElement.lang).toBe('es');
+    });
+
+    it('syncDocumentLang={false} no toca <html lang>', () => {
+        renderApp({ i18nCurrentLanguage: 'en', syncDocumentLang: false });
+        expect(document.documentElement.getAttribute('lang')).toBeNull();
+    });
+
+    it('lot2HeaderLogoStyle fixa amplada, separador i marges', () => {
+        const style: any = lot2HeaderLogoStyle(themes.light);
+        expect(style.width).toBe(MENU_WIDTH - LOGO_BOX_LEFT + 'px');
+        expect(style.borderRight).toBe(`1px solid ${themes.light.palette.divider}`);
+        expect(style.pr).toBe(LOGO_SEPARATOR_GAP + 'px');
+        expect(style.alignSelf).toBe('stretch');
+        expect(style.mr).toBe(0);
+        expect(style.pt).toBe(0);
+        expect(style['& img'].height).toBe('59px');
+    });
+
+    it("el logo de capçalera fa servir l'estil per defecte i l'app hi guanya", () => {
+        const first = renderApp();
+        const box = headerLogo().parentElement as HTMLElement;
+        expect(getComputedStyle(box).width).toBe(MENU_WIDTH - LOGO_BOX_LEFT + 'px');
+        expect(getComputedStyle(box).cursor).not.toBe('pointer');
+        first.unmount();
+        renderApp({ headerLogoStyle: { width: '100px' } });
+        const box2 = headerLogo().parentElement as HTMLElement;
+        expect(getComputedStyle(box2).width).toBe('100px');
+        expect(getComputedStyle(box2).borderRightStyle).toBe('solid');
+    });
+
+    it("l'alt del logo GOIB és per defecte «Govern de les Illes Balears» i es pot canviar", () => {
+        const first = renderApp();
+        expect(document.querySelector('header img')!.getAttribute('alt')).toBe('Govern de les Illes Balears');
+        first.unmount();
+        renderApp({ headerLogoAlt: 'Altre' });
+        expect(document.querySelector('header img')!.getAttribute('alt')).toBe('Altre');
     });
 });
 
@@ -160,21 +246,21 @@ describe('lot2MenuColors', () => {
     it("'theme' no fixa cap color (es fa servir el tema actiu, com TEMA a Notib)", () => {
         expect(lot2MenuColors(themes.light, 'theme')).toEqual({});
     });
-    it("'footer' fa servir el gris del peu i l'accent del color base", () => {
+    it("'footer' fa servir el gris del peu i l'accent blanc", () => {
         const c = lot2MenuColors(themes.light, 'footer');
         expect(c.background).toBe('#5F5D5D');
         expect(c.textPrimary).toBe('#F6F6F6');
         expect(c.textSecondary).toBe('#E5E5E5');
         expect(c.divider).toBe('#807D7D');
-        expect(c.accent).toBe('#83cb41');
-        expect(c.selectedBackground).toBe('rgba(131, 203, 65, 0.25)');
+        expect(c.accent).toBe('#FFFFFF');
+        expect(c.selectedBackground).toBe('rgba(255,255,255,0.12)');
         expect(c.hoverBackground).toBe('rgba(255, 255, 255, 0.08)');
     });
     it("'inverse' pren els colors del tema contrari", () => {
         const fromLight = lot2MenuColors(themes.light, 'inverse');
         expect(fromLight.background).toBe('#121212');
         expect(fromLight.textPrimary).toBe('#fff');
-        expect(fromLight.accent).toBe('#83cb41');
+        expect(fromLight.accent).toBe(themes.light.palette.primary.light);
         expect(fromLight.selectedBackground).toBe('rgba(131, 203, 65, 0.2)');
         const fromDark = lot2MenuColors(themes.dark, 'inverse');
         expect(fromDark.background).toBe('#fff');
@@ -187,6 +273,7 @@ describe('lot2MenuColors', () => {
             menuCollapsedWidth: 74,
             menuIconSize: 24,
             menuSelectedIndicator: 'background',
+            menuListItemSemantics: true,
         });
     });
 });
@@ -206,7 +293,17 @@ describe('DrassanaFooter', () => {
         expect(getComputedStyle(toolbar).minHeight).toBe(FOOTER_HEIGHT + 'px');
         expect(screen.getByText('footer.sitemap')).toHaveAttribute('href', '/sitemap');
         expect(screen.getByText('footer.accessibilitat')).toHaveAttribute('href', '/accessibilitat');
-        expect(container.querySelector('img[alt="foot_logo"]')).toBeTruthy();
+        expect(container.querySelector('img[alt="Drassana"]')).toBeTruthy();
+    });
+
+    it('el logo no té cursor pointer i el span de data i revisió és aria-hidden', () => {
+        const { container } = renderFooter({ title: 'APP' });
+        const logoBox = container.querySelector('img[alt="Drassana"]')!.parentElement as HTMLElement;
+        expect(getComputedStyle(logoBox).cursor).not.toBe('pointer');
+        const span = container.querySelector('span[aria-hidden="true"]') as HTMLElement;
+        expect(span).toBeTruthy();
+        expect(span.textContent).toContain('footer.revisio');
+        expect(span.style.marginLeft).toBe('16px');
     });
 
     it("accepta el títol, els enllaços, l'etiqueta de revisió i els logos de l'aplicació", () => {

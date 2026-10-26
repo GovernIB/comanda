@@ -78,9 +78,24 @@ const scrollbarOverrides = (thumbColor: string) => ({
     html: { scrollbarColor: `${thumbColor} transparent` },
 });
 
+// Autofill de Chrome: sense el fons groc/blau que pinta el navegador (es manté la transparència
+// del camp i el color del cursor).
+const autofillOverrides = {
+    'input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, input:-webkit-autofill:active': {
+        WebkitBoxShadow: '0 0 0 100px transparent inset !important',
+        caretColor: 'inherit !important',
+        transition: 'background-color 5000s ease-in-out 0s !important',
+    },
+};
+
 // Compartit per tots els temes: els overrides reben el `theme` actiu per paràmetre, per tant no cal
 // repetir-los a cada tema.
 const baseComponentStyles = {
+    // Les etiquetes dels botons es mostren tal com són a les traduccions (MUI les posa en majúscules).
+    MuiButton: { styleOverrides: { root: { textTransform: 'none' as const } } },
+    // Separació dels botons dels diàlegs amb `gap` (sense marges entre germans).
+    // `disableSpacing` treu el `marginLeft` que MUI posa entre germans: la separació és només el `gap`.
+    MuiDialogActions: { defaultProps: { disableSpacing: true }, styleOverrides: { root: { gap: '8px' } } },
     MuiTreeItem: {
         styleOverrides: {
             content: ({ theme }: { theme: Theme }) => ({
@@ -161,6 +176,7 @@ const baseComponentStyles = {
     MuiTab: {
         styleOverrides: {
             root: ({ theme }: { theme: Theme }) => ({
+                textTransform: 'none' as const,
                 ...(theme.palette.mode === 'dark' && { '&.Mui-selected': { color: accentColor(theme) } }),
             }),
         },
@@ -199,12 +215,41 @@ export const createLot2Themes = (colors: Lot2Colors): Lot2Themes => {
     const GRID_ROW_SELECTED_DARK = alpha(darken(MAIN, 0.55), 0.8);
     const GRID_ROW_SELECTED_HOVER_DARK = alpha(darken(MAIN, 0.4), 0.9);
 
+    // Retocs comuns als temes foscos (Obscur i Dràcula): contrast del botó `outlined primary`, de la
+    // vora de focus dels camps (WCAG 1.4.11) i de la casella marcada d'una fila seleccionada.
+    const darkContrastOverrides = () => ({
+        MuiButton: {
+            styleOverrides: {
+                root: ({ theme }: { theme: Theme }) => ({
+                    ...baseComponentStyles.MuiButton.styleOverrides.root,
+                    variants: [
+                        {
+                            props: ({ color, variant }: any) => variant === 'outlined' && color === 'primary',
+                            style: { color: theme.palette.text.primary, borderColor: LIGHT },
+                        },
+                    ],
+                }),
+            },
+        },
+        MuiOutlinedInput: {
+            styleOverrides: {
+                root: {
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: LIGHT, borderWidth: '2px' },
+                },
+            },
+        },
+    });
+    const GRID_CHECKED_SELECTED_DARK = {
+        '& .MuiDataGrid-row.Mui-selected .MuiCheckbox-root.Mui-checked': { color: SOFT },
+    };
+
     const LIGHT_CUSTOM_BACKGROUND = '#ffffff';
 
     const lightTheme = createTheme({
         palette: {
             mode: 'light',
-            primary: { main: MAIN, dark: DARK },
+            // `light` també al clar: el menú `inverse` (fosc) el fa servir d'accent
+            primary: { light: LIGHT, main: MAIN, dark: DARK },
             customBackground: LIGHT_CUSTOM_BACKGROUND,
             greyBackground: MAIN,
             primarySoft: SOFT,
@@ -215,6 +260,7 @@ export const createLot2Themes = (colors: Lot2Colors): Lot2Themes => {
             MuiCssBaseline: {
                 styleOverrides: {
                     ...scrollbarOverrides(DARK),
+                    ...autofillOverrides,
                     body: {
                         backgroundColor: LIGHT_CUSTOM_BACKGROUND,
                         backgroundImage: hatchPattern('#e1e1e1'),
@@ -251,15 +297,18 @@ export const createLot2Themes = (colors: Lot2Colors): Lot2Themes => {
             MuiCssBaseline: {
                 styleOverrides: {
                     ...scrollbarOverrides(LIGHT),
+                    ...autofillOverrides,
                     body: {
                         backgroundColor: DARK_CUSTOM_BACKGROUND,
                         backgroundImage: hatchPattern('#2c2c2c'),
                     },
                 },
             },
+            ...darkContrastOverrides(),
             MuiDataGrid: {
                 styleOverrides: {
                     root: {
+                        ...GRID_CHECKED_SELECTED_DARK,
                         '& .MuiDataGrid-row:not(.Mui-selected):hover': {
                             backgroundColor: `${GRID_ROW_HOVER_DARK} !important`,
                         },
@@ -304,31 +353,18 @@ export const createLot2Themes = (colors: Lot2Colors): Lot2Themes => {
             MuiCssBaseline: {
                 styleOverrides: {
                     ...scrollbarOverrides(LIGHT),
+                    ...autofillOverrides,
                     body: {
                         backgroundColor: DRACULA_BACKGROUND,
                         backgroundImage: hatchPattern('#44475a'),
                     },
                 },
             },
-            MuiButton: {
-                styleOverrides: {
-                    root: {
-                        variants: [
-                            {
-                                props: ({ color, variant }: any) =>
-                                    variant === 'outlined' && color === 'primary',
-                                style: {
-                                    color: '#F8F8F2',
-                                    borderColor: LIGHT,
-                                },
-                            },
-                        ],
-                    },
-                },
-            },
+            ...darkContrastOverrides(),
             MuiDataGrid: {
                 styleOverrides: {
                     root: {
+                        ...GRID_CHECKED_SELECTED_DARK,
                         '& .MuiDataGrid-row:not(.Mui-selected):hover': {
                             backgroundColor: `${GRID_ROW_HOVER_DARK} !important`,
                         },

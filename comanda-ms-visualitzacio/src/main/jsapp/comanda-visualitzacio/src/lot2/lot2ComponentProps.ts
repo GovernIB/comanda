@@ -14,15 +14,30 @@ const screenMarginsSx = { m: `${MAIN_PADDING}px` };
  *    el contenidor amb scroll és el ScreenFrame, de manera que s'hi enganxa a dalt de tot (`top: 0`),
  *    damunt de les capçaleres enganxoses de les graelles dels formularis (`zIndex: 3`). Els marges
  *    dels camps passen a MAIN_PADDING;
- *  - graelles: només el botó de crear amb text. La barra de títol i els marges **no** s'apliquen a
+ *  - graelles: botó de crear responsiu (amb text a partir de `md`), títols h2 i formulari emergent
+ *    de mida `md` que no es tanca amb un clic fora.
+ *
+ * El `Lot2BaseApp` els combina amb els de l'aplicació de manera superficial: si l'aplicació passa el
+ * seu propi `popupEditFormDialogComponentProps`, substitueix sencer el de lot2 (perd `fullWidth` i
+ * `maxWidth: 'md'`). L'alçada de 32px de la barra de títol s'aplica a tots els camps outlined que hi
+ * caiguin, no només al filtre ràpid. La barra de títol i els marges **no** s'apliquen a
  *    totes les graelles (subtaules, diàlegs de selecció...): la graella principal d'una pantalla els
  *    activa amb `{...lot2ScreenGridProps(theme)}`.
  */
 export const lot2DefaultMuiComponentProps = (theme: Theme): DefaultMuiComponentProps => ({
     dataGrid: {
-        toolbarCreateVariant: 'button',
+        toolbarCreateVariant: 'responsive',
+        // Els títols de text de la barra d'eines són h2: l'únic h1 de la pantalla és el del ScreenTitle.
+        toolbarTitleComponent: 'h2',
+        // Formulari emergent: un clic fora no el tanca (es perdrien les dades); Escape i la creu sí.
+        popupEditFormDialogOnClose: (reason?: string) => reason !== 'backdropClick',
+        popupEditFormDialogComponentProps: { fullWidth: true, maxWidth: 'md' },
+    },
+    dataList: {
+        toolbarTitleComponent: 'h2',
     },
     form: {
+        toolbarTitleComponent: 'h2',
         toolbarSx: {
             ...titleBarSx(theme),
             top: 0,

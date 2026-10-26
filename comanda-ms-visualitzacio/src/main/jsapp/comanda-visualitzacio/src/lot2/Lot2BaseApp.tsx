@@ -1,9 +1,19 @@
 import React from 'react';
 import { useTheme } from '@mui/material/styles';
-import { MuiBaseApp } from 'reactlib';
+import { BaseAppContext, MuiBaseApp } from 'reactlib';
+import type { Theme } from '@mui/material/styles';
 import type { DefaultMuiComponentProps } from 'reactlib';
 import { DrassanaFooter } from './DrassanaFooter';
-import { APPBAR_PADDING_LEFT, FOOTER_HEIGHT, MAIN_GAP, MAIN_PADDING } from './layout';
+import {
+    APPBAR_PADDING_LEFT,
+    FOOTER_HEIGHT,
+    LOGO_BOX_LEFT,
+    LOGO_HEIGHT,
+    LOGO_SEPARATOR_GAP,
+    MAIN_GAP,
+    MAIN_PADDING,
+    MENU_WIDTH,
+} from './layout';
 import { lot2DefaultMuiComponentProps } from './lot2ComponentProps';
 import { LOT2_APPEARANCE, lot2MenuColors, type Lot2MenuAppearance } from './menuColors';
 
@@ -23,6 +33,38 @@ export type Lot2BaseAppProps = Omit<MuiBaseAppProps, 'appearance' | 'footer' | '
      * (`footer={<DrassanaFooter title="..." />}`). `false` no en mostra cap.
      */
     footer?: React.ReactElement | false;
+    /** Sincronitza `<html lang>` amb l'idioma actual de base-react. Per defecte, `true`. */
+    syncDocumentLang?: boolean;
+};
+
+/**
+ * Estil per defecte del logo de la capçalera (`headerLogoStyle`): caixa d'amplada fixa perquè el
+ * separador vertical caigui sobre la vora dreta del menú obert, amb `LOGO_SEPARATOR_GAP` a l'esquerra
+ * del separador. Substitueix el mr/pt/pr de la llibreria (l'sx s'hi fusiona al final).
+ */
+export const lot2HeaderLogoStyle = (theme: Theme) => ({
+    '& img': { height: LOGO_HEIGHT + 'px', display: 'block' },
+    width: MENU_WIDTH - LOGO_BOX_LEFT + 'px',
+    boxSizing: 'border-box',
+    alignSelf: 'stretch',
+    borderRight: `1px solid ${theme.palette.divider}`,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    cursor: 'default',
+    mr: 0,
+    pt: 0,
+    pl: 0,
+    pr: LOGO_SEPARATOR_GAP + 'px',
+});
+
+/** Posa `<html lang>` a l'idioma actual (dos primers caràcters). Va dins `MuiBaseApp` per llegir el context. */
+const DocumentLangSync: React.FC = () => {
+    const language = React.useContext(BaseAppContext)?.currentLanguage;
+    React.useEffect(() => {
+        if (language) document.documentElement.lang = language.substring(0, 2);
+    }, [language]);
+    return null;
 };
 
 /**
@@ -75,6 +117,9 @@ export const Lot2BaseApp: React.FC<Lot2BaseAppProps> = (props) => {
         contentRootStyle,
         contentMainStyle,
         defaultMuiComponentProps,
+        headerLogoStyle,
+        headerLogoAlt = 'Govern de les Illes Balears',
+        syncDocumentLang = true,
         marginsDisabled = true,
         children,
         ...otherProps
@@ -102,6 +147,8 @@ export const Lot2BaseApp: React.FC<Lot2BaseAppProps> = (props) => {
         <MuiBaseApp
             {...otherProps}
             headerTitle={headerTitle}
+            headerLogoAlt={headerLogoAlt}
+            headerLogoStyle={{ ...lot2HeaderLogoStyle(theme), ...headerLogoStyle }}
             headerLogo={theme.palette.mode === 'dark' && logoDark != null ? logoDark : logo}
             // El botó de menú duu un marge esquerre de -12px: amb aquest padding queda centrat a la
             // columna d'icones del menú plegat.
@@ -113,6 +160,7 @@ export const Lot2BaseApp: React.FC<Lot2BaseAppProps> = (props) => {
             contentMainStyle={{ ...LOT2_CONTENT_MAIN_STYLE, ...contentMainStyle }}
             footer={footerComponent}
             footerHeight={footerComponent != null ? FOOTER_HEIGHT : 0}>
+            {syncDocumentLang && <DocumentLangSync />}
             {children}
         </MuiBaseApp>
     );

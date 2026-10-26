@@ -59,8 +59,10 @@ describe('formScreenTitle', () => {
 describe('lot2DefaultMuiComponentProps', () => {
     const props = lot2DefaultMuiComponentProps(themes.light);
 
-    it('graella: només el botó de crear amb text (la resta és opt-in amb lot2ScreenGridProps)', () => {
-        expect(props.dataGrid).toEqual({ toolbarCreateVariant: 'button' });
+    it('graella: sense barra de títol ni marges (és opt-in amb lot2ScreenGridProps)', () => {
+        expect(props.dataGrid).not.toHaveProperty('toolbarType');
+        expect(props.dataGrid).not.toHaveProperty('toolbarSx');
+        expect(props.dataGrid).not.toHaveProperty('marginsSx');
     });
 
     it('formulari: barra de títol enganxosa i marges de Notib', () => {

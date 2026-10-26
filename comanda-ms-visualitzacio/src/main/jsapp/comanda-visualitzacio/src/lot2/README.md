@@ -18,7 +18,7 @@ Referència: Notib, `notib-back/src/main/reactapp/notib-back/src`, branca `notib
 | Fitxer | Origen |
 | --- | --- |
 | `layout.ts` | `utils/layout.ts` (còpia) |
-| `icons.ts` | `utils/icons.ts`, només les claus comunes |
+| `icons.ts` | `utils/icons.ts`: claus comunes (pantalles, accions, estats, filtre, selecció); `avis` = `campaign` |
 | `theme.ts` | `theme.ts`, parametritzat amb `createLot2Themes(colors)`; `accentColor` i `accentFillColor` iguals |
 | `i18n.ts` | claus `comu.*` de `i18n/translation{Ca,Es}.ts` (i `en`), espai de noms `lot2` |
 | `ScreenFrame.tsx` | `components/ScreenFrame.tsx`, **sense** `screenFrameSx` (selectors `:has(...)` i `LIB_TITLE_TOOLBAR`): ho fa `lot2ComponentProps.ts` |
@@ -27,9 +27,9 @@ Referència: Notib, `notib-back/src/main/reactapp/notib-back/src`, branca `notib
 | `titleBarControlsSx.ts` | `components/titleBarControlsSx.ts` (còpia) + `titleBarSx`, que a Notib era a `ScreenFrame.tsx` |
 | `formScreenTitle.tsx` | `utils/formScreenTitle.tsx`; torna `ReactElement` (MuiForm ja accepta `string \| ReactElement`) |
 | `FilterButtons.tsx` | `components/FilterButtons.tsx`; textos de l'espai de noms `lot2` |
-| `FilterCount.tsx` | `components/FilterCount.tsx`; textos de l'espai de noms `lot2` |
+| `FilterCount.tsx` | `components/FilterCount.tsx` (prop opcional `count?: number \| ((terms) => number)`); textos de l'espai de noms `lot2` |
 | `springFilterCount.ts` | `utils/springFilterCount.ts` (còpia) |
-| `StyledBadge.tsx` | `components/StyledBadge.tsx` (còpia) |
+| `StyledBadge.tsx` | `components/StyledBadge.tsx`; `primary` = `accentFillColor`, text `getContrastText` si no es passa `textcolor` |
 | `lot2ComponentProps.ts` | nou: `lot2DefaultMuiComponentProps(theme)` i `lot2ScreenGridProps(theme)`, substitueixen el CSS de `ScreenFrame` sobre el DOM de la llibreria |
 | `menuColors.ts` | `getMenuColorSet` de `components/BaseApp.tsx` (`TEMA` / `TEMA_INVERTIT` / `PEU` → `theme` / `inverse` / `footer`) com a `lot2MenuColors(theme, appearance)`, i `LOT2_APPEARANCE` (mides de `utils/layout.ts`) |
 | `Lot2BaseApp.tsx` | `components/BaseApp.tsx` + la part de marc d'`App.tsx`: `frameSx` → `contentRootStyle`/`contentMainStyle`, `menuColorSetSx` → `appearance.menuColors`, padding de la capçalera (`APPBAR_PADDING_LEFT`) → `headerAppbarStyle`. Sense i18n, router ni menús propis de Notib: l'aplicació els passa com a props de `MuiBaseApp` |
@@ -73,6 +73,14 @@ Referència: Notib, `notib-back/src/main/reactapp/notib-back/src`, branca `notib
 - El peu per defecte (`<DrassanaFooter />`) pren `headerTitle` com a títol quan és un text. Si
   `headerTitle` és un element, l'aplicació ha de passar el peu amb el títol:
   `footer={<DrassanaFooter title="APP" />}`.
+- `lot2HeaderLogoStyle(theme)` (exportat) és el `headerLogoStyle` per defecte: caixa del logo d'amplada
+  `MENU_WIDTH - LOGO_BOX_LEFT` amb el separador a la vora del menú obert i `LOGO_SEPARATOR_GAP`.
+  El `headerLogoStyle` de l'aplicació es combina a sobre (guanya l'aplicació).
+- `headerLogoAlt` per defecte és `"Govern de les Illes Balears"`.
+- `syncDocumentLang` (per defecte `true`) posa `<html lang>` als dos primers caràcters de l'idioma
+  actual de base-react; `syncDocumentLang={false}` ho desactiva.
+- `DrassanaFooter`: el logo té `alt="Drassana"` (sense `cursor: pointer`) i el text de data i revisió
+  és `aria-hidden`.
 - L'aplicació ha de registrar `lot2Translations` a l'espai de noms `lot2` (textos del peu).
 - Els components de `lot2` tradueixen amb `useLot2Translation()` (de `i18n.ts`), no amb
   `useTranslation('lot2')` directament: així no depenen dels tipus i18next que declari l'aplicació

@@ -56,4 +56,22 @@ describe('FilterCount', () => {
         renderWithI18n(<FilterCount springFilter="a:1" />);
         expect(screen.queryByText(/aplicat/)).toBeNull();
     });
+
+    it('el recompte es pot ajustar amb un nombre o una funció', () => {
+        renderWithI18n(
+            <ScreenFrame icon="home" title="Llistat">
+                <FilterCount springFilter="a:1" count={3} />
+            </ScreenFrame>
+        );
+        expect(screen.getByText(/3 filtres aplicats/)).toBeInTheDocument();
+    });
+
+    it('la funció rep el recompte de termes', () => {
+        renderWithI18n(
+            <ScreenFrame icon="home" title="Llistat">
+                <FilterCount springFilter="a:1 and b:2" count={(terms) => terms + 1} />
+            </ScreenFrame>
+        );
+        expect(screen.getByText(/3 filtres aplicats/)).toBeInTheDocument();
+    });
 });

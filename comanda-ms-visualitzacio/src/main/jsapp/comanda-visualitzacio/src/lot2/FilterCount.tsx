@@ -9,6 +9,12 @@ import { useScreenFrame } from './ScreenFrameContext';
 type FilterCountProps = {
     /** Spring Filter aplicat pel filtre de la pantalla. */
     springFilter?: string;
+    /**
+     * Recompte a mostrar en lloc del calculat: un nombre, o una funció que rep el nombre de termes
+     * calculat del `springFilter` i retorna el que s'ha de mostrar (p. ex. per afegir filtres que no
+     * van al springFilter).
+     */
+    count?: number | ((terms: number) => number);
 };
 
 /**
@@ -17,10 +23,11 @@ type FilterCountProps = {
  * fora d'un ScreenFrame, o sense cap filtre aplicat, no pinta res.
  */
 export const FilterCount: React.FC<FilterCountProps> = (props) => {
-    const { springFilter } = props;
+    const { springFilter, count: countProp } = props;
     const { t } = useLot2Translation();
     const screenFrame = useScreenFrame();
-    const count = countSpringFilterTerms(springFilter);
+    const terms = countSpringFilterTerms(springFilter);
+    const count = typeof countProp === 'function' ? countProp(terms) : (countProp ?? terms);
     if (!count || screenFrame?.infoSlot == null) {
         return null;
     }

@@ -84,6 +84,9 @@ export const titleBarControlsSx = {
     '& .MuiOutlinedInput-root': {
         backgroundColor: (theme: Theme) => theme.palette.background.paper,
         '& fieldset': { borderColor },
+        // Alçada dels botons de la barra (32px)
+        height: 32,
+        '& .MuiOutlinedInput-input': { paddingTop: 0, paddingBottom: 0 },
     },
 } as const;
 
@@ -95,6 +98,12 @@ export const titleBarControlsSx = {
 export const titleBarSx = (theme: Theme) => ({
     minHeight: SCREEN_TITLE_MIN_HEIGHT + 'px',
     boxSizing: 'border-box' as const,
+    // La barra pot passar a dues files en pantalles estretes. No hi ha gap de columna i el separador
+    // `flexGrow` no té amplada, de manera que no genera cap fila buida; el contenidor del títol no
+    // ocupa el 100% (veure Toolbar). Els controls que cauen a la segona fila queden alineats a
+    // l'esquerra (acceptat).
+    flexWrap: 'wrap' as const,
+    rowGap: 1,
     paddingLeft: SCREEN_TITLE_PADDING_X + 'px',
     paddingRight: SCREEN_TITLE_PADDING_X + 'px',
     borderLeft: `4px solid ${theme.palette.primary.main}`,

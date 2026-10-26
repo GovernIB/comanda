@@ -28,4 +28,22 @@ describe('countSpringFilterTerms', () => {
     it('ignora el text dels literals entre cometes', () => {
         expect(countSpringFilterTerms("a~'x and y'")).toBe(1);
     });
+
+    it('ignora les cometes escapades dins dels literals', () => {
+        expect(countSpringFilterTerms("a~'o\\'b' and c:1")).toBe(2);
+        expect(countSpringFilterTerms("a~'x\\' and y'")).toBe(1);
+    });
+
+    it('literal que acaba amb una barra invertida escapada', () => {
+        expect(countSpringFilterTerms("a~'x\\\\' and b:1")).toBe(2);
+    });
+
+    it('cometa sense tancar i barra final solitària', () => {
+        expect(countSpringFilterTerms("a~'x and b:1")).toBe(1);
+        expect(countSpringFilterTerms("a:1 and b~'x\\")).toBe(2);
+    });
+
+    it('un parèntesi dins d\'un literal no trenca els parèntesis exteriors', () => {
+        expect(countSpringFilterTerms("(a~')' and b:1)")).toBe(2);
+    });
 });

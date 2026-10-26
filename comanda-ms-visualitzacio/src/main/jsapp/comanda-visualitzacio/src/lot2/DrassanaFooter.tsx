@@ -117,7 +117,7 @@ export const DrassanaFooter: React.FC<DrassanaFooterProps> = (props) => {
                     color: FOOTER_TEXT_COLOR,
                 }}>
                 {titleWithVersion}
-                <span style={{ color: backgroundColor, marginLeft: '16px' }}>
+                <span aria-hidden="true" style={{ color: backgroundColor, marginLeft: '16px' }}>
                     ({buildTimestamp} | {revisionLabel ?? t('footer.revisio')} {scmRevision})
                 </span>
             </Typography>
@@ -133,8 +133,8 @@ export const DrassanaFooter: React.FC<DrassanaFooterProps> = (props) => {
             ))}
             {children}
             {logos.map((logo, index) => (
-                <Box key={index} sx={{ height: FOOTER_HEIGHT + 'px', cursor: 'pointer' }}>
-                    <img src={logo} alt="foot_logo" style={{ maxHeight: FOOTER_HEIGHT + 'px' }} />
+                <Box key={index} sx={{ height: FOOTER_HEIGHT + 'px' }}>
+                    <img src={logo} alt="Drassana" style={{ maxHeight: FOOTER_HEIGHT + 'px' }} />
                 </Box>
             ))}
         </Toolbar>
