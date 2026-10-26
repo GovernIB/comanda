@@ -21,9 +21,10 @@ Branca `comanda-lot2-visual`, creada a partir de `comanda-dev-libs-update`.
 - `lib/`: merge a 3 bandes amb base-react `v2-parametres-visuals` (base anterior `bea8c9e`), conservant les
   personalitzacions de comanda (`KeycloakAuthProvider`, navegació real a `ContainerAuthProvider`, redirecció
   a login i `stackTrace` a `ResourceApiProvider`, alçada textual de `DataGridDialog`/`MuiDataGrid`).
-- `src/lot2/`: còpia literal de la carpeta comuna de base-react (commit `0901cb3`). **No s'edita aquí**:
-  qualsevol canvi es fa a base-react i es torna a copiar. Bases del proper merge: `lib/` = `0cd9ed5` (només
-  el test de persistència del filtre; l'últim canvi de codi és `9ced90a`) i `src/lot2/` = `0901cb3`.
+- `src/lot2/`: còpia literal de la carpeta comuna de base-react (commit `56b2a4c`). **No s'edita aquí**:
+  qualsevol canvi es fa a base-react i es torna a copiar. Bases del proper merge: `lib/` = `56b2a4c` i
+  `src/lot2/` = `56b2a4c` (correccions de la revisió final: autofill de Chrome, subtítol d'error genèric amb
+  títol element i comentaris).
 - Tema rosa fosc (`src/theme.ts`, `createLot2Themes`): `main` `#A8456A`, `dark` `#7A2E4C`, `light` `#cb6c88`,
   `soft` `#FAEFF3`.
 - `src/components/BaseApp.tsx` sobre `Lot2BaseApp`, amb el peu `DrassanaFooter` en lloc de `ComandaFooter`.
@@ -110,10 +111,13 @@ Encara no s'ha revisat en un navegador. Abans de fusionar, cal fer aquesta compr
   - **Graella amb error d'API** (p. ex. aturant el backend d'una pantalla): la barra té fons rogenc i vora
     esquerra de 4px en color d'error (també al tema fosc), amb el text del subtítol en color normal (no
     vermell). Amb el títol de `ScreenTitle` (element) el títol es manté i el missatge va al subtítol; amb un
-    títol de text, aquest se substitueix pel text genèric d'error. Sense missatge, només la icona d'avís.
+    títol de text, aquest se substitueix pel text genèric d'error. Amb el títol element i un error sense
+    missatge, el subtítol és el text genèric d'error.
   - **Logo de capçalera nou de 59px** (abans 38px) amb el separador sobre la vora del menú obert i alt
     «Govern de les Illes Balears».
-  - **Formulari emergent de mida `md`** (`AlarmaConfigForm`): un clic fora no el tanca; Escape i la creu sí.
+  - **Formulari emergent de les graelles:** un clic fora no el tanca; Escape i la creu sí. Mida `md` de `lot2`
+    a les graelles que no la sobreescriuen (p. ex. `Entorns`); `AlarmaConfig` la sobreescriu amb `lg`.
+  - **Autofill de Chrome als temes fosc i Dràcula:** el text emplenat automàticament es llegeix.
   - Botons sense majúscules; fileres de la graella al tema fosc; badge primari amb contrast (`primary.dark` al clar).
 - **Pantalla estreta (< 768px):** menú plegat i barres de títol sense desbordar (Salut, Dashboards, Calendari).
 - **Menú plegat: obrir el submenú flotant d'un grup (Monitorització, Configuració) en tots tres modes de menú** (`theme`, `inverse`, `footer`): el panell ha de sortir sencer, sense tallar, a la dreta del menú plegat i sota la capçalera.
