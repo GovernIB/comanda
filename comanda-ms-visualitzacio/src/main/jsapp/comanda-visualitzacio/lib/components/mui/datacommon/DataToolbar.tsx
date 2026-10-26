@@ -13,6 +13,7 @@ export type DataToolbarType = 'default' | 'upper' | 'hidden';
 
 type DataToolbarProps = {
     title?: string | React.ReactNode;
+    titleComponent?: React.ElementType;
     subtitle?: string;
     elementsWithPositions?: ReactElementWithPosition[];
     upperToolbar?: boolean;
@@ -34,7 +35,8 @@ export const useDataToolbar = (
     toolbarHideRefresh?: boolean,
     toolbarHideQuickFilter?: boolean,
     toolbarElementsWithPositions?: ReactElementWithPosition[],
-    toolbarSx?: SxProps<Theme>
+    toolbarSx?: SxProps<Theme>,
+    toolbarTitleComponent?: React.ElementType
 ) => {
     const { t, goBack } = useBaseAppContext();
     const isUpperToolbarType = toolbarType === 'upper';
@@ -78,6 +80,7 @@ export const useDataToolbar = (
     );
     const toolbarElementProps = {
         title: !titleDisabled ? title : undefined,
+        titleComponent: toolbarTitleComponent,
         subtitle,
         upperToolbar: isUpperToolbarType,
         elementsWithPositions: joinedElementsWithPositions,
@@ -90,6 +93,7 @@ export const useDataToolbar = (
 const DataToolbar: React.FC<DataToolbarProps> = (props) => {
     const {
         title,
+        titleComponent,
         subtitle,
         elementsWithPositions: elementsWithPositionsProp,
         upperToolbar,
@@ -126,7 +130,12 @@ const DataToolbar: React.FC<DataToolbarProps> = (props) => {
     return (
         <Box sx={{ p: 0 }}>
             <Toolbar
-                title={error && errorShown ? t('datacommon.toolbar.error') : title}
+                title={
+                    error && errorShown && !React.isValidElement(title)
+                        ? t('datacommon.toolbar.error')
+                        : title
+                }
+                titleComponent={titleComponent}
                 subtitle={error && errorShown ? error?.message : subtitle}
                 elementsWithPositions={elementsWithPositions}
                 upperToolbar={upperToolbar}

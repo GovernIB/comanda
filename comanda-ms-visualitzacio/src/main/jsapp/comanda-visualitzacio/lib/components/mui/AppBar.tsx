@@ -12,6 +12,7 @@ type AppBarProps = {
     title: string | React.ReactElement;
     version?: string;
     logo?: string;
+    logoAlt?: string;
     logoStyle?: any;
     menuButton: React.ReactNode;
     additionalToolbarComponents?: React.ReactElement | React.ReactElement[];
@@ -30,6 +31,7 @@ export const AppBar: React.FC<AppBarProps> = (props) => {
         title,
         version,
         logo,
+        logoAlt = 'logo',
         logoStyle,
         menuButton,
         additionalToolbarComponents,
@@ -65,7 +67,7 @@ export const AppBar: React.FC<AppBarProps> = (props) => {
                 {menuButton}
                 {logo ? (
                     <Box sx={{ mr: 2, pt: 1, pr: 2, cursor: 'pointer', ...logoStyle }}>
-                        <img src={logo} alt="logo" />
+                        <img src={logo} alt={logoAlt} />
                     </Box>
                 ) : null}
                 {typeof title === 'string' ? (

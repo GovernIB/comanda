@@ -114,3 +114,34 @@ describe('useFormDialog extraActions i liveButtons', () => {
         window.removeEventListener('error', onError);
     });
 });
+
+describe('useFormDialog dialogButtons passats a show()', () => {
+    const custom: DialogButton[] = [{ value: 'a', text: 'Botó propi' } as DialogButton];
+    const ShowHarness: React.FC<{ tick: number }> = () => {
+        const [show, component] = useFormDialog(
+            'x',
+            undefined,
+            undefined,
+            // Cada pintada genera un array nou
+            [{ value: 'p', text: 'Del pare' } as DialogButton]
+        );
+        React.useEffect(() => {
+            show(1, { dialogButtons: custom }).catch(() => {});
+        }, []);
+        return component;
+    };
+    it('sobreviuen a un re-render del pare amb un array nou', async () => {
+        const wrap = (tick: number) => (
+            <ThemeProvider theme={createTheme()}>
+                <BaseAppContext.Provider value={baseApp}>
+                    <ShowHarness tick={tick} />
+                </BaseAppContext.Provider>
+            </ThemeProvider>
+        );
+        const { rerender } = render(wrap(0));
+        await screen.findByTestId('form');
+        expect(buttonTexts()).toEqual(['Botó propi']);
+        rerender(wrap(1));
+        expect(buttonTexts()).toEqual(['Botó propi']);
+    });
+});

@@ -172,11 +172,13 @@ export type MuiDataGridProps = {
     /** Adreça que s'ha de mostrar al fer clic sobre el botó de crear una nova fila */
     toolbarCreateLink?: string;
     /** Aparença del botó de crear de la barra d'eines: icona (per defecte) o botó amb text */
-    toolbarCreateVariant?: 'icon' | 'button';
+    toolbarCreateVariant?: 'icon' | 'button' | 'responsive';
     /** Text del botó de crear quan la variant és 'button' (per defecte datacommon.create.label) */
     toolbarCreateLabel?: string;
     /** Estils addicionals de la barra d'eines superior (es combinen darrere dels per defecte) */
     toolbarSx?: SxProps<Theme>;
+    /** Element HTML del títol de la barra d'eines (per defecte 'h6') */
+    toolbarTitleComponent?: React.ElementType;
     /** Estils dels marges de la graella (substitueixen els per defecte) */
     marginsSx?: SxProps<Theme>;
     /** Elements addicionals (amb la seva posició) per a la barra d'eines */
@@ -840,6 +842,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         toolbarCreateVariant,
         toolbarCreateLabel,
         toolbarSx,
+        toolbarTitleComponent,
         marginsSx,
         toolbarElementsWithPositions,
         toolbarAdditionalRow,
@@ -1236,7 +1239,8 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         toolbarHideRefresh,
         toolbarHideQuickFilter,
         joinedToolbarElementsWithPositions,
-        toolbarSx
+        toolbarSx,
+        toolbarTitleComponent
     );
     const getDataGridApi = () => ({
         refresh,

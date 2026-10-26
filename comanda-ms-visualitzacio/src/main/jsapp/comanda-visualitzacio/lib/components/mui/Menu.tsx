@@ -323,7 +323,7 @@ const ListMenuContent: React.FC<ListMenuContentProps> = (props) => {
     } = props;
     const { useLocationPath } = useBaseAppContext();
     const locationPath = useLocationPath();
-    const { menuIconSize, menuColors } = useMuiBaseAppAppearance();
+    const { menuIconSize, menuColors, menuListItemSemantics } = useMuiBaseAppAppearance();
     return (
         <StyledList iconSize={menuIconSize} menuColors={menuColors}>
             {entries?.map((item, index) => {
@@ -354,7 +354,14 @@ const ListMenuContent: React.FC<ListMenuContentProps> = (props) => {
                         ) : null}
                     </MenuItem>
                 );
-                return entryComponent;
+                // El botó i la Box dels fills queden germans dins el mateix <li>
+                return menuListItemSemantics ? (
+                    <li key={index} style={{ listStyle: 'none' }}>
+                        {entryComponent}
+                    </li>
+                ) : (
+                    entryComponent
+                );
             })}
         </StyledList>
     );

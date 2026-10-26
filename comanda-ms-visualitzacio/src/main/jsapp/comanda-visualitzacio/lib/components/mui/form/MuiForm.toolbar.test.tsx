@@ -82,4 +82,17 @@ describe("MuiForm barra d'eines i marges", () => {
         expect(getComputedStyle(contentBox()).marginTop).toBe('8px');
         expect(getComputedStyle(toolbar(container)).backgroundColor).toBe('rgba(0, 0, 0, 0)');
     });
+    it('per defecte el títol és un h6', () => {
+        const { container } = renderForm({ title: 'Fitxa' });
+        expect(toolbar(container).querySelector('h6')?.textContent).toBe('Fitxa');
+    });
+    it("toolbarTitleComponent='h2' pinta un h2", () => {
+        const { container } = renderForm({ title: 'Fitxa', toolbarTitleComponent: 'h2' });
+        expect(toolbar(container).querySelector('h6')).toBeNull();
+        expect(toolbar(container).querySelector('h2')?.textContent).toBe('Fitxa');
+    });
+    it('toolbarTitleComponent via defaultMuiComponentProps.form', () => {
+        const { container } = renderForm({ title: 'Fitxa' }, { toolbarTitleComponent: 'h2' });
+        expect(toolbar(container).querySelector('h2')?.textContent).toBe('Fitxa');
+    });
 });

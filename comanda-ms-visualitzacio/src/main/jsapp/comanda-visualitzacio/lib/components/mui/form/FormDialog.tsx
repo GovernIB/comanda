@@ -108,8 +108,12 @@ export const useFormDialog: UseFormDialogFn = (
     );
     const [loading, setLoading] = React.useState<boolean>();
     const submittingRef = React.useRef<boolean>(false);
+    // Indica si la crida activa a show() ha passat dialogButtons propis
+    const showButtonsRef = React.useRef<boolean>(false);
     React.useEffect(() => {
-        setButtons(dialogButtons ?? formDialogButtons);
+        if (!showButtonsRef.current) {
+            setButtons(dialogButtons ?? formDialogButtons);
+        }
     }, [dialogButtons]);
     const buttonCallback = (value: any) => {
         if (value) {
@@ -175,6 +179,7 @@ export const useFormDialog: UseFormDialogFn = (
         setFormContent(args?.formContent ?? defaultFormContent);
         setAdditionalData(args?.additionalData ?? null);
         setInitOnChangeRequest(args?.initOnChangeRequest ?? initOnChangeRequestProp);
+        showButtonsRef.current = args?.dialogButtons != null;
         setButtons(args?.dialogButtons ?? dialogButtons ?? formDialogButtons);
         setDialogComponentProps(
             args?.dialogComponentProps != null

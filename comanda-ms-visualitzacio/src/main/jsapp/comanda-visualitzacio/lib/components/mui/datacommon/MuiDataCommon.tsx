@@ -6,6 +6,8 @@ import { useBaseAppContext, DialogButton } from '../../BaseAppContext';
 import { useConfirmDialogButtons, useCloseDialogButtons } from '../../AppButtons';
 import Button from '@mui/material/Button';
 import Icon from '@mui/material/Icon';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import { toToolbarIcon } from '../ToolbarIcon';
 import DataFormDialog, { useDataFormDialogApiRef } from './DataFormDialog';
 
@@ -254,7 +256,7 @@ export const useDataCommonEditable = (
     onCreate: ((row: any) => void) | undefined,
     onUpdate: ((row: any) => void) | undefined,
     onDelete: ((id: any | any[]) => void) | undefined,
-    toolbarCreateVariant?: 'icon' | 'button',
+    toolbarCreateVariant?: 'icon' | 'button' | 'responsive',
     toolbarCreateLabel?: string
 ) => {
     const { t, temporalMessageShow, messageDialogShow, getLinkComponent } = useBaseAppContext();
@@ -393,6 +395,9 @@ export const useDataCommonEditable = (
                 });
         }
     };
+    const theme = useTheme();
+    const upMd = useMediaQuery(theme.breakpoints.up('md'));
+    const createLabel = toolbarCreateLabel ?? t('datacommon.create.label');
     const isCreateLinkPresent = apiCurrentActions?.['create'] != null;
     const createLinkConfigError =
         !readOnly && !isPopupEditCreate && !isInlineEditCreate && toolbarCreateLink == null;
@@ -402,7 +407,9 @@ export const useDataCommonEditable = (
             : toolbarDisableCreateLink;
     const createDisabled = toolbarDisableCreateLinkValue || createLinkConfigError;
     const toolbarAddElement =
-        isCreateLinkPresent && !readOnly && toolbarCreateVariant === 'button' ? (
+        isCreateLinkPresent &&
+        !readOnly &&
+        (toolbarCreateVariant === 'button' || (toolbarCreateVariant === 'responsive' && upMd)) ? (
             <Button
                 variant="contained"
                 startIcon={<Icon>add</Icon>}
@@ -411,11 +418,14 @@ export const useDataCommonEditable = (
                 {...(toolbarCreateLink && !createDisabled
                     ? { component: getLinkComponent(), to: toolbarCreateLink }
                     : null)}>
-                {toolbarCreateLabel ?? t('datacommon.create.label')}
+                {createLabel}
             </Button>
         ) : isCreateLinkPresent && !readOnly ? (
             toToolbarIcon('add', {
-                title: t('datacommon.create.label'),
+                title:
+                    toolbarCreateVariant === 'responsive'
+                        ? createLabel
+                        : t('datacommon.create.label'),
                 linkTo: toolbarCreateLink,
                 linkState: formAdditionalData ? { additionalData: formAdditionalData } : undefined,
                 onClick: !toolbarCreateLink ? triggerCreate : undefined,

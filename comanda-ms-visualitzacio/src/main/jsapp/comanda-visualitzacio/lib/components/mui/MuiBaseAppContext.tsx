@@ -30,6 +30,8 @@ export type MuiBaseAppAppearance = {
     menuSelectedColor?: string;
     menuSelectedIndicator?: 'line' | 'background' | 'none';
     menuColors?: MenuColors;
+    /** Embolcalla cada entrada del menú amb un <li> i pinta els divisors com a <li> (per defecte false) */
+    menuListItemSemantics?: boolean;
 };
 
 export type MuiBaseAppContextType = {

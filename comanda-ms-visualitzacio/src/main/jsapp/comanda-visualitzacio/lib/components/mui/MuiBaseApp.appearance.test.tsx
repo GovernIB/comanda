@@ -19,7 +19,11 @@ const resourceApiStub: any = {
     getOpenAnswerRequiredDialog: () => undefined,
 };
 
-const renderApp = (appearance?: MuiBaseAppAppearance, extra?: React.ReactNode) =>
+const renderApp = (
+    appearance?: MuiBaseAppAppearance,
+    extra?: React.ReactNode,
+    appProps: Record<string, any> = {}
+) =>
     render(
         <ResourceApiContext.Provider value={resourceApiStub}>
             <MuiBaseApp
@@ -33,7 +37,8 @@ const renderApp = (appearance?: MuiBaseAppAppearance, extra?: React.ReactNode) =
                 routerAnyHistoryEntryExist={() => false}
                 routerUseLocationPath={() => '/'}
                 linkComponent="a"
-                appearance={appearance}>
+                appearance={appearance}
+                {...appProps}>
                 <Probe />
                 {extra}
             </MuiBaseApp>
@@ -84,5 +89,23 @@ describe('MuiBaseApp appearance headerHeight', () => {
         );
         render(<A />);
         expect(screen.getByTestId('a')).toHaveTextContent('{}');
+    });
+});
+
+describe('MuiBaseApp alt del logo de la capçalera', () => {
+    it("per defecte l'alt és 'logo'", () => {
+        mockSmallHeader(false);
+        renderApp(undefined, undefined, { headerLogo: 'logo.png' });
+        expect(document.querySelector('header img')?.getAttribute('alt')).toBe('logo');
+    });
+    it("headerLogoAlt s'aplica a l'alt", () => {
+        mockSmallHeader(false);
+        renderApp(undefined, undefined, {
+            headerLogo: 'logo.png',
+            headerLogoAlt: 'Govern de les Illes Balears',
+        });
+        expect(document.querySelector('header img')?.getAttribute('alt')).toBe(
+            'Govern de les Illes Balears'
+        );
     });
 });

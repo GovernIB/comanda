@@ -34,6 +34,8 @@ export type MuiBaseAppProps = Omit<BaseAppProps, 'contentComponentSlots'> & {
     headerTitle?: string | React.ReactElement;
     headerVersion?: string;
     headerLogo?: string;
+    /** Text alternatiu del logo de la capçalera (per defecte 'logo') */
+    headerLogoAlt?: string;
     headerLogoStyle?: any;
     headerAppbarStyle?: any;
     headerAppbarBackgroundColor?: string;
@@ -205,6 +207,7 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
         headerTitle,
         headerVersion,
         headerLogo,
+        headerLogoAlt,
         headerLogoStyle,
         headerAppbarStyle,
         headerAppbarBackgroundColor,
@@ -246,6 +249,7 @@ export const MuiBaseApp: React.FC<MuiBaseAppProps> = (props) => {
                 title={headerTitle}
                 version={headerVersion}
                 logo={headerLogo}
+                logoAlt={headerLogoAlt}
                 logoStyle={headerLogoStyle}
                 menuButton={!menuShrinkDisabled && menuEntries != null ? menuButton : undefined}
                 additionalToolbarComponents={headerAdditionalComponents}

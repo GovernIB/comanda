@@ -64,6 +64,8 @@ export type MuiDataListProps = {
     toolbarCreateLink?: string;
     toolbarElementsWithPositions?: ReactElementWithPosition[];
     toolbarAdditionalRow?: React.ReactElement;
+    /** Element HTML del títol de la barra d'eines (per defecte 'h6') */
+    toolbarTitleComponent?: React.ElementType;
     rowUpdateLink?: string;
     rowUpdateShowInMenu?: boolean;
     rowDetailLink?: string;
@@ -197,6 +199,7 @@ export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
         toolbarCreateLink,
         toolbarElementsWithPositions,
         toolbarAdditionalRow,
+        toolbarTitleComponent,
         rowUpdateLink,
         rowUpdateShowInMenu,
         rowDetailLink,
@@ -330,7 +333,9 @@ export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
         toolbarHideExport,
         toolbarHideRefresh,
         toolbarHideQuickFilter,
-        joinedElementsWithPositions
+        joinedElementsWithPositions,
+        undefined,
+        toolbarTitleComponent
     );
     return (
         <>

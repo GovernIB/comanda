@@ -22,7 +22,9 @@ export type FilterProps = React.PropsWithChildren & {
     persistentStateActive?: true;
     /** La clau amb la que es desarà l'estat (s'utilitzarà el valor de resourceName si no s'especifica) */
     persistentStateKey?: string;
-    /** El magatzem del navegador que s'utilitzarà per a persistir l'estat (LocalStorage per defecte) */
+    /** Afegeix el codi del filtre a la clau de persistència (false per defecte), per distingir filtres del mateix recurs */
+    persistentStateKeyIncludesCode?: boolean;
+    /** El magatzem del navegador que s'utilitzarà per a persistir l'estat (sessionStorage per defecte) */
     persistentStateStorage?: 'local' | 'session';
     /** Referència a l'api del component */
     apiRef?: FilterApiRef;
@@ -120,6 +122,7 @@ export const Filter: React.FC<FilterProps> = (props) => {
         validationActive,
         persistentStateActive,
         persistentStateKey,
+        persistentStateKeyIncludesCode,
         persistentStateStorage,
         springFilterBuilder,
         initialData: initialDataProp,
@@ -135,7 +138,9 @@ export const Filter: React.FC<FilterProps> = (props) => {
     const { initialData, setInitialData } = usePersistentState(
         persistentStateActive ?? false,
         initialDataProp,
-        persistentStateKey ?? resourceName,
+        persistentStateKeyIncludesCode
+            ? `${persistentStateKey ?? resourceName}:${code}`
+            : (persistentStateKey ?? resourceName),
         persistentStateStorage === 'local'
     );
     const [nextDataChangeAsUncontrolled, setNextDataChangeAsUncontrolled] =

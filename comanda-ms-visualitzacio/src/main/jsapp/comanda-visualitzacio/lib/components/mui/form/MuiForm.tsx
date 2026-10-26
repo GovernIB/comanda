@@ -32,6 +32,8 @@ export type MuiFormProps = Omit<FormProps, 'title'> & {
     hiddenDeleteButton?: true;
     /** Estils addicionals per a la barra d'eines (es combinen darrere dels per defecte) */
     toolbarSx?: SxProps<Theme>;
+    /** Element HTML del títol de la barra d'eines (per defecte 'h6') */
+    toolbarTitleComponent?: React.ElementType;
     /** Estils dels marges del contingut (substitueixen els per defecte) */
     marginsSx?: SxProps<Theme>;
     /** Propietats del component del formulari */
@@ -52,6 +54,7 @@ const MuiFormContent: React.FC<React.PropsWithChildren | any> = (props) => {
         hiddenSaveButton,
         hiddenDeleteButton,
         toolbarSx,
+        toolbarTitleComponent,
         marginsSx,
         componentProps,
         children,
@@ -128,6 +131,7 @@ const MuiFormContent: React.FC<React.PropsWithChildren | any> = (props) => {
             {!hiddenToolbar && (
                 <Toolbar
                     title={title ?? resourceName}
+                    titleComponent={toolbarTitleComponent}
                     subtitle={toolbarSubtitle}
                     elementsWithPositions={toolbarNodes}
                     upperToolbar
@@ -168,6 +172,7 @@ export const MuiForm: React.FC<MuiFormProps> = (props) => {
         hiddenSaveButton,
         hiddenDeleteButton,
         toolbarSx,
+        toolbarTitleComponent,
         marginsSx,
         componentProps,
         children,
@@ -187,6 +192,7 @@ export const MuiForm: React.FC<MuiFormProps> = (props) => {
                 hiddenSaveButton={hiddenSaveButton}
                 hiddenDeleteButton={hiddenDeleteButton}
                 toolbarSx={toolbarSx}
+                toolbarTitleComponent={toolbarTitleComponent}
                 marginsSx={marginsSx}
                 componentProps={componentProps}>
                 {children}

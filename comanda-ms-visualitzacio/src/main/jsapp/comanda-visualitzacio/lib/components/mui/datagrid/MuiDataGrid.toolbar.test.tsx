@@ -1,16 +1,28 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { grey } from '@mui/material/colors';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { BaseAppContext } from '../../BaseAppContext';
 import { MuiBaseAppContext, MuiBaseAppAppearance } from '../MuiBaseAppContext';
+
+const apiState = vi.hoisted(() => ({ error: undefined as Error | undefined }));
+const mediaState = vi.hoisted(() => ({ upMd: true }));
+
+// Es simula useMediaQuery: 'up' retorna upMd i 'down' el contrari.
+vi.mock('@mui/material/useMediaQuery', () => ({
+    default: (query: string) =>
+        typeof query === 'string' && query.includes('min-width')
+            ? mediaState.upMd
+            : !mediaState.upMd,
+}));
 
 // Es simulen l'API de recursos i l'autenticació per renderitzar només la graella.
 vi.mock('../../ResourceApiProvider', () => ({
     useResourceApiService: () => ({
         isReady: true,
         currentActions: { create: {} },
+        currentError: apiState.error,
         currentFields: [],
         find: () => Promise.resolve({ rows: [], page: {} }),
         delete: () => Promise.resolve(),
@@ -45,10 +57,11 @@ const baseApp: any = {
 
 const renderGrid = (
     props: Partial<MuiDataGridProps> = {},
-    defaults: Partial<MuiDataGridProps> = {}
+    defaults: Partial<MuiDataGridProps> = {},
+    theme = createTheme()
 ) =>
     render(
-        <ThemeProvider theme={createTheme()}>
+        <ThemeProvider theme={theme}>
             <BaseAppContext.Provider value={baseApp}>
                 <MuiBaseAppContext.Provider
                     value={{
@@ -129,10 +142,117 @@ describe('MuiDataGrid botó de crear amb text', () => {
     });
 });
 
+describe('MuiDataGrid botó de crear responsiu', () => {
+    afterEach(() => {
+        mediaState.upMd = true;
+    });
+    it('a partir de md mostra el botó amb text', () => {
+        mediaState.upMd = true;
+        renderGrid({ toolbarCreateVariant: 'responsive', toolbarCreateLabel: 'Nova aplicació' });
+        const button = screen.getByRole('button', { name: /Nova aplicació/ });
+        expect(button.className).toContain('MuiButton-contained');
+    });
+    it('per sota de md mostra una icona amb title igual al text', () => {
+        mediaState.upMd = false;
+        renderGrid({ toolbarCreateVariant: 'responsive', toolbarCreateLabel: 'Nova aplicació' });
+        const create = screen.getByTitle('Nova aplicació');
+        expect(create.className).toContain('MuiIconButton-root');
+        expect(screen.queryByText('Nova aplicació')).toBeNull();
+        show.mockClear();
+        fireEvent.click(create);
+        expect(show).toHaveBeenCalledTimes(1);
+    });
+});
+
 describe("MuiDataGrid propietats per defecte de l'aplicació", () => {
     it('toolbarCreateVariant i toolbarCreateLabel via defaultMuiComponentProps.dataGrid', () => {
         renderGrid({}, { toolbarCreateVariant: 'button', toolbarCreateLabel: 'Nou' });
         const button = screen.getByRole('button', { name: /Nou/ });
         expect(button.className).toContain('MuiButton-contained');
+    });
+});
+
+describe("MuiDataGrid barra d'eines en error de l'API", () => {
+    beforeEach(() => {
+        apiState.error = new Error('Error de prova');
+    });
+    afterEach(() => {
+        apiState.error = undefined;
+    });
+    it("amb títol element el manté i mostra l'error al subtítol", async () => {
+        renderGrid({ title: <h1>Pantalla</h1> });
+        expect(await screen.findByText('Error de prova')).toBeTruthy();
+        expect(screen.getByRole('heading', { level: 1, name: 'Pantalla' })).toBeTruthy();
+    });
+    it("amb toolbarSx amb degradat el fons de la barra és el d'error", async () => {
+        const { container } = renderGrid({
+            title: <h1>Pantalla</h1>,
+            toolbarSx: { background: 'linear-gradient(to right, rgb(0, 0, 255), rgb(0, 255, 0))' },
+        });
+        await screen.findByText('Error de prova');
+        const style = getComputedStyle(toolbarEl(container));
+        expect(style.backgroundColor).toBe('rgb(255, 205, 210)');
+        expect(style.backgroundImage).not.toContain('gradient');
+        expect(style.borderLeft).toContain('4px');
+        expect(style.boxSizing).toBe('border-box');
+    });
+    it("al tema fosc el fons d'error és red[900] i el subtítol és text.primary", async () => {
+        const { container } = renderGrid(
+            { title: <h1>Pantalla</h1> },
+            {},
+            createTheme({ palette: { mode: 'dark' } })
+        );
+        const subtitle = await screen.findByText('Error de prova');
+        expect(getComputedStyle(toolbarEl(container)).backgroundColor).toBe('rgb(183, 28, 28)');
+        expect(getComputedStyle(subtitle).color).toBe('rgb(255, 255, 255)');
+    });
+    it("amb títol text es comporta com fins ara: títol substituït pel text d'error", async () => {
+        renderGrid({ title: 'Pantalla' });
+        expect(await screen.findByText('datacommon.toolbar.error')).toBeTruthy();
+        expect(screen.queryByText('Pantalla')).toBeNull();
+        expect(screen.getByText('Error de prova')).toBeTruthy();
+    });
+});
+
+describe('MuiDataGrid fileres parelles amb striped', () => {
+    const evenRowBg = (theme: any) => {
+        const { container } = renderGrid({ striped: true }, {}, theme);
+        const row = gridEl(container).ownerDocument.createElement('div');
+        row.className = `${gridEl(container).className} MuiDataGrid-root`;
+        const inner = document.createElement('div');
+        inner.className = 'MuiDataGrid-row even';
+        row.appendChild(inner);
+        document.body.appendChild(row);
+        const bg = getComputedStyle(inner).backgroundColor;
+        row.remove();
+        return bg;
+    };
+    it('al tema fosc no són #eeeeee', () => {
+        const bg = evenRowBg(createTheme({ palette: { mode: 'dark' } }));
+        expect(bg).not.toBe('rgb(238, 238, 238)');
+        expect(bg).toBe('rgba(255, 255, 255, 0.04)');
+    });
+    it('al tema clar continuen sent grey[200]', () => {
+        expect(evenRowBg(createTheme())).toBe('rgb(238, 238, 238)');
+    });
+});
+
+describe("MuiDataGrid nivell d'encapçalament del títol", () => {
+    it('per defecte el títol és un h6', () => {
+        const { container } = renderGrid({ title: 'Pantalla' });
+        expect(toolbarEl(container).querySelector('h6')?.textContent).toBe('Pantalla');
+    });
+    it("toolbarTitleComponent='h2' pinta un h2", () => {
+        const { container } = renderGrid({ title: 'Pantalla', toolbarTitleComponent: 'h2' });
+        expect(toolbarEl(container).querySelector('h6')).toBeNull();
+        expect(toolbarEl(container).querySelector('h2')?.textContent).toBe('Pantalla');
+    });
+    it('toolbarTitleComponent via defaultMuiComponentProps.dataGrid', () => {
+        const { container } = renderGrid({ title: 'Pantalla' }, { toolbarTitleComponent: 'h2' });
+        expect(toolbarEl(container).querySelector('h2')?.textContent).toBe('Pantalla');
+    });
+    it("amb title='' no hi ha cap encapçalament buit", () => {
+        const { container } = renderGrid({ title: '' });
+        expect(toolbarEl(container).querySelector('h1, h2, h3, h4, h5, h6')).toBeNull();
     });
 });
