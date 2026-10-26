@@ -107,12 +107,14 @@ Encara no s'ha revisat en un navegador. Abans de fusionar, cal fer aquesta compr
   - **Filtre ràpid de 32px:** el camp ha de tenir la mateixa alçada que els botons de la barra de títol.
   - **Menús `footer` i `inverse`:** l'accent (icona de l'entrada seleccionada, títol del panell compacte) ha de
     tenir contrast: blanc al `footer`, to clar o blanc a l'`inverse`. Menú plegat i desplegat.
-  - **Graella amb error d'API** (p. ex. aturant el backend d'una pantalla): la barra manté el títol i mostra
-    l'error en color d'error, també al tema fosc.
+  - **Graella amb error d'API** (p. ex. aturant el backend d'una pantalla): la barra té fons rogenc i vora
+    esquerra de 4px en color d'error (també al tema fosc), amb el text del subtítol en color normal (no
+    vermell). Amb el títol de `ScreenTitle` (element) el títol es manté i el missatge va al subtítol; amb un
+    títol de text, aquest se substitueix pel text genèric d'error. Sense missatge, només la icona d'avís.
   - **Logo de capçalera nou de 59px** (abans 38px) amb el separador sobre la vora del menú obert i alt
     «Govern de les Illes Balears».
   - **Formulari emergent de mida `md`** (`AlarmaConfigForm`): un clic fora no el tanca; Escape i la creu sí.
-  - Botons sense majúscules; fileres de la graella al tema fosc; badge amb contrast.
+  - Botons sense majúscules; fileres de la graella al tema fosc; badge primari amb contrast (`primary.dark` al clar).
 - **Pantalla estreta (< 768px):** menú plegat i barres de títol sense desbordar (Salut, Dashboards, Calendari).
 - **Menú plegat: obrir el submenú flotant d'un grup (Monitorització, Configuració) en tots tres modes de menú** (`theme`, `inverse`, `footer`): el panell ha de sortir sencer, sense tallar, a la dreta del menú plegat i sota la capçalera.
 - **Icones del menú plegat centrades amb el botó hamburguesa** (i, amb el menú obert, les icones de nivell 0 a la mateixa columna).
