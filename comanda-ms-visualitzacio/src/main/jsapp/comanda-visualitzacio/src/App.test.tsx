@@ -289,6 +289,8 @@ describe('App', () => {
         // Lot2BaseApp tria el logo fosc (logoDark) segons el tema actiu.
         expect(props.logo).toBe('logo-clar');
         expect(props.logoDark).toBe('logo-fosc');
+        // L'estil del logo és el per defecte de lot2 (lot2HeaderLogoStyle): l'app no en passa cap.
+        expect(props.logoStyle).toBeUndefined();
         expect(props.appbarBackgroundColor).toBeUndefined();
         expect(props.menuAppearance).toBe('theme');
         expect(props.defaultMuiComponentProps.dataGrid.paginationModel).toBeUndefined();

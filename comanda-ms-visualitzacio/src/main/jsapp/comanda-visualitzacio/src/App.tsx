@@ -277,15 +277,6 @@ export const App: React.FC = () => {
             code="com"
             logo={logo}
             logoDark={logoDark}
-            logoStyle={{
-                '& img': { height: '38px', width: '115px' },
-                pl: 2,
-                pr: 4,
-                mr: 4,
-                borderRightWidth: "1px",
-                borderRightStyle: "solid",
-                borderRightColor: theme.palette.divider,
-            }}
             title={
                 <Box
                     sx={{

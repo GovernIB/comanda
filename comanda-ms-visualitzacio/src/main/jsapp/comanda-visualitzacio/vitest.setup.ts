@@ -31,10 +31,34 @@ class MemoryStorage implements Storage {
     get length(): number {
         return this.store.size;
     }
+
+    has(key: string): boolean {
+        return this.store.has(key);
+    }
+
+    keys(): string[] {
+        return Array.from(this.store.keys());
+    }
 }
 
-const localStorageInstance = new MemoryStorage();
-const sessionStorageInstance = new MemoryStorage();
+// Com el Web Storage real, `Object.keys(sessionStorage)` retorna les claus desades.
+const createStorage = (): Storage => {
+    const storage = new MemoryStorage();
+    return new Proxy(storage, {
+        get: (target, prop, receiver) => {
+            const value = Reflect.get(target, prop, receiver);
+            return typeof value === 'function' ? value.bind(target) : value;
+        },
+        ownKeys: (target) => target.keys(),
+        getOwnPropertyDescriptor: (target, prop) =>
+            typeof prop === 'string' && target.has(prop)
+                ? { value: target.getItem(prop), enumerable: true, configurable: true, writable: true }
+                : undefined,
+    });
+};
+
+const localStorageInstance = createStorage();
+const sessionStorageInstance = createStorage();
 
 const setupStorage = () => {
     Object.defineProperty(globalThis, 'localStorage', {

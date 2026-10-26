@@ -283,7 +283,7 @@ describe('BaseApp', () => {
         expect(within(footer).getByText(/\|/)).toBeInTheDocument(); // (timestamp | revisió)
         const hrefs = within(footer).getAllByRole('link').map((a) => a.getAttribute('href'));
         expect(hrefs).toEqual(['/sitemap', '/accessibilitat']);
-        expect(within(footer).getByAltText('foot_logo')).toBeInTheDocument();
+        expect(within(footer).getByAltText('Drassana')).toBeInTheDocument();
         expect(mocks.muiBaseAppMock).toHaveBeenCalledWith(
             expect.objectContaining({
                 footerHeight: 36,

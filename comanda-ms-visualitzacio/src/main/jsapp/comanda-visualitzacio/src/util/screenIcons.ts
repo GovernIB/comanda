@@ -1,3 +1,5 @@
+import { icons } from '../lot2/icons';
+
 /**
  * Icones (Material Icons) de les pantalles de comanda, per concepte. Són les mateixes que les
  * entrades de menú de `App.tsx`: menú, títol de pantalla i botons del mateix concepte comparteixen icona.
@@ -6,7 +8,7 @@ export const screenIcons = {
     salut: 'monitor_heart',
     estadistiques: 'bar_chart',
     tasca: 'assignment',
-    avis: 'warning',
+    avis: icons.avis,
     monitor: 'monitor',
     monitoritzacio: 'monitor',
     monitorDb: 'dns',
