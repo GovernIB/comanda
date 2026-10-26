@@ -33,7 +33,7 @@ const renderFilters = (extra: any = {}, codes: string[] = ['A', 'B']) =>
     );
 
 const storedKeys = () =>
-    Object.keys(sessionStorage)
+    Array.from({ length: sessionStorage.length }, (_, i) => sessionStorage.key(i) as string)
         .filter((k) => k.includes('_FLT_'))
         .sort();
 
