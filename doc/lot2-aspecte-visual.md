@@ -21,9 +21,9 @@ Branca `comanda-lot2-visual`, creada a partir de `comanda-dev-libs-update`.
 - `lib/`: merge a 3 bandes amb base-react `v2-parametres-visuals` (base anterior `bea8c9e`), conservant les
   personalitzacions de comanda (`KeycloakAuthProvider`, navegació real a `ContainerAuthProvider`, redirecció
   a login i `stackTrace` a `ResourceApiProvider`, alçada textual de `DataGridDialog`/`MuiDataGrid`).
-- `src/lot2/`: còpia literal de la carpeta comuna de base-react (commit `7f51df8`). **No s'edita aquí**:
-  qualsevol canvi es fa a base-react i es torna a copiar. `cb7141e` és la base del proper merge de `lib/` i
-  `7f51df8` la de `src/lot2/`.
+- `src/lot2/`: còpia literal de la carpeta comuna de base-react (commit `0901cb3`). **No s'edita aquí**:
+  qualsevol canvi es fa a base-react i es torna a copiar. Bases del proper merge: `lib/` = `0cd9ed5` (només
+  el test de persistència del filtre; l'últim canvi de codi és `9ced90a`) i `src/lot2/` = `0901cb3`.
 - Tema rosa fosc (`src/theme.ts`, `createLot2Themes`): `main` `#A8456A`, `dark` `#7A2E4C`, `light` `#cb6c88`,
   `soft` `#FAEFF3`.
 - `src/components/BaseApp.tsx` sobre `Lot2BaseApp`, amb el peu `DrassanaFooter` en lloc de `ComandaFooter`.
@@ -52,6 +52,24 @@ Branca `comanda-lot2-visual`, creada a partir de `comanda-dev-libs-update`.
 | `4e92935d` | lot2: menú del tema sense selectors d'estructura (còpia de base-react 7f51df8) |
 | `1623ad44` | AlarmaConfig: sense l'acció Detalls nova a les files i test de tancament del diàleg real |
 
+### Millores de Distribucio i ConCSV (2026-10-26)
+
+Base-react `v2-parametres-visuals`, `fff88af..0cd9ed5` (13 commits): barra d'eines amb error que manté el
+títol, fileres del tema fosc, entrades del menú dins `<li>` (`menuListItemSemantics`), `toolbarTitleComponent`
+(`h2`), `headerLogoAlt`, botó de crear `'responsive'`, `persistentStateKeyIncludesCode`, `textTransform: 'none'`,
+`DialogActions` amb `gap`, colors del menú `footer` i `inverse` amb contrast, formulari emergent `md` que no es
+tanca amb clic fora, barra de títol en dues files, filtre ràpid de 32px, `StyledBadge` amb contrast, icones
+comunes, text «Bàsic», `lang` de `<html>` i estil del logo a `Lot2BaseApp`. Detall a l'apartat 1.2 del
+document de migració. Fora d'abast: `FilterAutoApply`, logout per navegació, títol de la pestanya, botó
+desactivat i alçada mínima de la graella (només si la comprovació visual ho demana) i títol de diàleg en color.
+
+| Commit | Descripció |
+|--------|------------|
+| `d0c7b1cc` | Actualitzar la còpia de base-react (millores de Distribucio i ConCSV) |
+| `cac06a1e` | Actualitzar la carpeta comuna lot2 |
+| `b8d10cc4` | Comanda: adaptar-se a les millores de lot2 (`lang` sincronitzat per `Lot2BaseApp`, `App.tsx` amb `lot2HeaderLogoStyle`, `screenIcons.avis = icons.avis`, `MemoryStorage` enumerable a `vitest.setup.ts`) |
+| `bc2217bc` | Test de persistència del filtre: còpia de base-react sense `Object.keys` de `sessionStorage` |
+
 Helpers de comanda proposats per passar a `lot2` (vegeu l'apartat «Propostes per a lot2» del document):
 `src/hooks/useScreenGridProps.tsx`, `src/hooks/useAppliedSpringFilter.ts`,
 `src/components/FilterClearAllButton.tsx` i `src/util/springFilterSum.ts`.
@@ -76,6 +94,25 @@ Encara no s'ha revisat en un navegador. Abans de fusionar, cal fer aquesta compr
   - pestanyes d'EstadisticaWidget;
   - recompte del doble filtre de Monitor;
   - espaiat del peu respecte de Notib.
+- **Millores de Distribucio i ConCSV (2026-10-26).** Temes CLAR, OBSCUR i DRACULA, tret que s'indiqui:
+  - **Botó desactivat a la barra de títol** (3.b.9): p. ex. el de crear o desar desactivat. Comprovar que no surt
+    amb el gris de MUI damunt del degradat de la barra; si es veu malament, afegir el fons `paper` i la vora a
+    base-react.
+  - **Alçada mínima de la graella en finestres baixes** (3.b.10): reduir l'alçada de la finestra (~500px) amb
+    una graella principal; comprovar que la graella no desapareix i que el marc fa scroll. Si no és així,
+    afegir `SCREEN_GRID_MIN_HEIGHT` a base-react.
+  - **Barra de títol en dues files:** finestra estreta amb títol, filtre i botons; ha de passar a dues files sense
+    fila buida ni desbordament. Els controls de la segona fila queden alineats a l'esquerra (acceptat, confirmar
+    que no es veu malament).
+  - **Filtre ràpid de 32px:** el camp ha de tenir la mateixa alçada que els botons de la barra de títol.
+  - **Menús `footer` i `inverse`:** l'accent (icona de l'entrada seleccionada, títol del panell compacte) ha de
+    tenir contrast: blanc al `footer`, to clar o blanc a l'`inverse`. Menú plegat i desplegat.
+  - **Graella amb error d'API** (p. ex. aturant el backend d'una pantalla): la barra manté el títol i mostra
+    l'error en color d'error, també al tema fosc.
+  - **Logo de capçalera nou de 59px** (abans 38px) amb el separador sobre la vora del menú obert i alt
+    «Govern de les Illes Balears».
+  - **Formulari emergent de mida `md`** (`AlarmaConfigForm`): un clic fora no el tanca; Escape i la creu sí.
+  - Botons sense majúscules; fileres de la graella al tema fosc; badge amb contrast.
 - **Pantalla estreta (< 768px):** menú plegat i barres de títol sense desbordar (Salut, Dashboards, Calendari).
 - **Menú plegat: obrir el submenú flotant d'un grup (Monitorització, Configuració) en tots tres modes de menú** (`theme`, `inverse`, `footer`): el panell ha de sortir sencer, sense tallar, a la dreta del menú plegat i sota la capçalera.
 - **Icones del menú plegat centrades amb el botó hamburguesa** (i, amb el menú obert, les icones de nivell 0 a la mateixa columna).
