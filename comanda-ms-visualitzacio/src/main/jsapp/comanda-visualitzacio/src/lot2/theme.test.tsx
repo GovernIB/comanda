@@ -163,6 +163,18 @@ describe('retocs dels temes', () => {
             expect(o).toContain(NOTIB.soft);
         });
     }
+    for (const nom of ['light', 'dark', 'dracula'] as const) {
+        it(`${nom}: l'autofill de Chrome pinta el text amb el text.primary del tema`, () => {
+            const t = themes[nom];
+            const o = (t.components as any).MuiCssBaseline.styleOverrides;
+            const key = Object.keys(o).find((k) => k.includes('-webkit-autofill'))!;
+            const regla = o[key];
+            expect(regla.WebkitTextFillColor).toBe(`${t.palette.text.primary} !important`);
+            expect(regla.caretColor).toBe(`${t.palette.text.primary} !important`);
+            expect(regla.WebkitBoxShadow).toBeUndefined();
+            expect(regla.transition).toContain('background-color 5000s');
+        });
+    }
     it('el tema clar no té outlined ni focus especials', () => {
         expect(themes.light.components?.MuiOutlinedInput).toBeUndefined();
     });

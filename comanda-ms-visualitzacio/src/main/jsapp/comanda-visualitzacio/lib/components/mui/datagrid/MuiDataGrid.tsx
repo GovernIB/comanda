@@ -171,9 +171,9 @@ export type MuiDataGridProps = {
     toolbarHideQuickFilter?: true;
     /** Adreça que s'ha de mostrar al fer clic sobre el botó de crear una nova fila */
     toolbarCreateLink?: string;
-    /** Aparença del botó de crear de la barra d'eines: icona (per defecte) o botó amb text */
+    /** Aparença del botó de crear de la barra d'eines: icona (per defecte), botó amb text o 'responsive' (botó amb text a partir de md i icona per sota) */
     toolbarCreateVariant?: 'icon' | 'button' | 'responsive';
-    /** Text del botó de crear quan la variant és 'button' (per defecte datacommon.create.label) */
+    /** Text del botó de crear amb la variant 'button' o 'responsive' (a la icona, com a title); per defecte datacommon.create.label */
     toolbarCreateLabel?: string;
     /** Estils addicionals de la barra d'eines superior (es combinen darrere dels per defecte) */
     toolbarSx?: SxProps<Theme>;

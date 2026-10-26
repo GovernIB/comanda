@@ -206,6 +206,12 @@ describe("MuiDataGrid barra d'eines en error de l'API", () => {
         expect(getComputedStyle(toolbarEl(container)).backgroundColor).toBe('rgb(183, 28, 28)');
         expect(getComputedStyle(subtitle).color).toBe('rgb(255, 255, 255)');
     });
+    it("amb títol element i error sense missatge mostra el text d'error genèric al subtítol", async () => {
+        apiState.error = new Error('');
+        renderGrid({ title: <h1>Pantalla</h1> });
+        expect(await screen.findByText('datacommon.toolbar.error')).toBeTruthy();
+        expect(screen.getByRole('heading', { level: 1, name: 'Pantalla' })).toBeTruthy();
+    });
     it("amb títol text es comporta com fins ara: títol substituït pel text d'error", async () => {
         renderGrid({ title: 'Pantalla' });
         expect(await screen.findByText('datacommon.toolbar.error')).toBeTruthy();

@@ -78,15 +78,24 @@ const scrollbarOverrides = (thumbColor: string) => ({
     html: { scrollbarColor: `${thumbColor} transparent` },
 });
 
-// Autofill de Chrome: sense el fons groc/blau que pinta el navegador (es manté la transparència
-// del camp i el color del cursor).
-const autofillOverrides = {
+// Autofill de Chrome. El full d'estil del navegador hi posa un fons blau/groc i `color: FieldText`
+// (negre sense `color-scheme: dark`), que als temes foscos quedaria negre sobre fons fosc.
+// - El fons: la transició llarga el manté transparent, de manera que es veu el del camp.
+// - El text i el cursor: `-webkit-text-fill-color` (que el navegador no fixa i té prioritat sobre
+//   `color`) i `caret-color` amb el `text.primary` del tema.
+const autofillOverrides = (textColor: string) => ({
     'input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, input:-webkit-autofill:active': {
-        WebkitBoxShadow: '0 0 0 100px transparent inset !important',
-        caretColor: 'inherit !important',
+        WebkitTextFillColor: `${textColor} !important`,
+        caretColor: `${textColor} !important`,
         transition: 'background-color 5000s ease-in-out 0s !important',
     },
-};
+});
+
+// `text.primary` per defecte de MUI als temes clar i fosc (el Dràcula el fixa a la paleta). Els tests
+// comproven que coincideixen amb el `palette.text.primary` de cada tema.
+const LIGHT_TEXT_PRIMARY = 'rgba(0, 0, 0, 0.87)';
+const DARK_TEXT_PRIMARY = '#fff';
+const DRACULA_TEXT_PRIMARY = '#F8F8F2';
 
 // Compartit per tots els temes: els overrides reben el `theme` actiu per paràmetre, per tant no cal
 // repetir-los a cada tema.
@@ -260,7 +269,7 @@ export const createLot2Themes = (colors: Lot2Colors): Lot2Themes => {
             MuiCssBaseline: {
                 styleOverrides: {
                     ...scrollbarOverrides(DARK),
-                    ...autofillOverrides,
+                    ...autofillOverrides(LIGHT_TEXT_PRIMARY),
                     body: {
                         backgroundColor: LIGHT_CUSTOM_BACKGROUND,
                         backgroundImage: hatchPattern('#e1e1e1'),
@@ -297,7 +306,7 @@ export const createLot2Themes = (colors: Lot2Colors): Lot2Themes => {
             MuiCssBaseline: {
                 styleOverrides: {
                     ...scrollbarOverrides(LIGHT),
-                    ...autofillOverrides,
+                    ...autofillOverrides(DARK_TEXT_PRIMARY),
                     body: {
                         backgroundColor: DARK_CUSTOM_BACKGROUND,
                         backgroundImage: hatchPattern('#2c2c2c'),
@@ -337,7 +346,7 @@ export const createLot2Themes = (colors: Lot2Colors): Lot2Themes => {
             primary: { light: LIGHT, main: MAIN, dark: DARK },
             secondary: { main: '#F8F8F2' },
             background: { default: DRACULA_BACKGROUND, paper: '#303341' },
-            text: { primary: '#F8F8F2', secondary: '#D6D6C2' },
+            text: { primary: DRACULA_TEXT_PRIMARY, secondary: '#D6D6C2' },
             divider: '#7a7d8b',
             error: { main: '#c62828', contrastText: '#f8f8f2' },
             warning: { main: '#e65100', contrastText: '#f8f8f2' },
@@ -353,7 +362,7 @@ export const createLot2Themes = (colors: Lot2Colors): Lot2Themes => {
             MuiCssBaseline: {
                 styleOverrides: {
                     ...scrollbarOverrides(LIGHT),
-                    ...autofillOverrides,
+                    ...autofillOverrides(DRACULA_TEXT_PRIMARY),
                     body: {
                         backgroundColor: DRACULA_BACKGROUND,
                         backgroundImage: hatchPattern('#44475a'),

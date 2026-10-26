@@ -136,7 +136,12 @@ const DataToolbar: React.FC<DataToolbarProps> = (props) => {
                         : title
                 }
                 titleComponent={titleComponent}
-                subtitle={error && errorShown ? error?.message : subtitle}
+                subtitle={
+                    error && errorShown
+                        ? error?.message ||
+                          (React.isValidElement(title) ? t('datacommon.toolbar.error') : undefined)
+                        : subtitle
+                }
                 elementsWithPositions={elementsWithPositions}
                 upperToolbar={upperToolbar}
                 error={error}

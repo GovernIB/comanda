@@ -8,7 +8,9 @@ import { HEADER_HEIGHT, ICON_SIZE, MENU_WIDTH_COLLAPSED } from './layout';
  *  - `inverse` (TEMA_INVERTIT): pren els colors del tema contrari (clar <-> fosc), de manera que el
  *    menú es veu igual que amb `theme` a l'altre tema;
  *  - `footer` (PEU): sempre el gris fosc del peu de l'aplicació.
- * Tots mantenen l'accent en el color base de l'aplicació.
+ * L'accent: amb `theme` i amb el menú `inverse` clar (tema fosc) és el color base de l'aplicació; amb
+ * el menú `inverse` fosc (tema clar), `primary.light` (o blanc si no arriba a 4.5:1 sobre el fons); amb
+ * `footer`, blanc.
  */
 export type Lot2MenuAppearance = 'theme' | 'inverse' | 'footer';
 
