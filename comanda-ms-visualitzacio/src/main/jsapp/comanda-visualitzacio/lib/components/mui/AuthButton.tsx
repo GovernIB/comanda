@@ -122,6 +122,21 @@ const LoggedInUserButton: React.FC<AuthButtonProps> = (props) => {
     apiRef.current = {
         close: handleMenuClose,
     };
+    // Tanca el menú quan es tria una opció (també les d'un desplegable niat, l'event arriba pel portal), però no
+    // quan es clica un element que conté un control (p. ex. un Select que s'ha d'obrir) o un element informatiu
+    // marcat amb l'atribut data-keep-menu-open (capçalera d'usuari, darrera connexió...). Els components
+    // addicionals també poden tancar-lo explícitament amb useAuthButtonContext().apiRef.current?.close().
+    const handleMenuListClick = (event: React.MouseEvent) => {
+        const item = (event.target as Element).closest?.('.MuiMenuItem-root');
+        if (
+            item &&
+            item.getAttribute('aria-disabled') !== 'true' &&
+            !item.hasAttribute('data-keep-menu-open') &&
+            !item.querySelector('input, textarea, select, [role="combobox"]')
+        ) {
+            handleMenuClose();
+        }
+    };
     const userCode = currentUserCode ?? tokenParsed?.preferred_username;
     const userName = currentUserName ?? tokenParsed?.name;
     return (
@@ -146,9 +161,11 @@ const LoggedInUserButton: React.FC<AuthButtonProps> = (props) => {
                 onClose={() => handleMenuClose()}
                 MenuListProps={{
                     'aria-labelledby': 'auth-button',
+                    onClick: handleMenuListClick,
                 }}>
                 <MenuItem
                     disableRipple
+                    data-keep-menu-open
                     sx={{
                         '&.MuiButtonBase-root:hover': {
                             bgcolor: 'transparent',
