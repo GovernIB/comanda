@@ -1189,7 +1189,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
     toolbarAddElement != null &&
         toolbarGridElementsWithPositions.push({
             position: toolbarNodesPosition,
-            element: !toolbarHideCreate ? toolbarAddElement : <span />,
+            element: !toolbarHideCreate ? toolbarAddElement : <></>,
         });
     toolbarBulkDelete &&
         toolbarGridElementsWithPositions.push({

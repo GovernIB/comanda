@@ -55,6 +55,9 @@ Referència: Notib, `notib-back/src/main/reactapp/notib-back/src`, branca `notib
 
   Les altres graelles (subtaules, diàlegs de selecció, `DataGridDialog`...) mantenen la barra i els
   marges de la llibreria.
+- **Separació:** tots els elements de la barra de títol (botons, botons d'icona, filtre ràpid, selector
+  d'accions massives) queden separats per un sol gap de 8px (`columnGap` de `titleBarSx`); els controls
+  no hi tenen marges propis.
 
 ## Marc de l'aplicació (`Lot2BaseApp`)
 

@@ -114,3 +114,37 @@ describe('lot2DefaultMuiComponentProps', () => {
         expect(LOT2_APPEARANCE.menuListItemSemantics).toBe(true);
     });
 });
+
+describe('barra de títol: separació igual entre els controls', () => {
+    const sx: any = titleBarSx(theme);
+    it('un sol gap de 8px entre els controls (columnGap) i cap marge propi als botons d\'icona', () => {
+        expect(sx.columnGap).toBe(1);
+        expect(sx['& .MuiIconButton-root'].marginLeft).toBeUndefined();
+        expect(sx['& .MuiIconButton-root'].margin).toBe(0);
+        expect(sx['& .MuiTextField-root'].margin).toBe(0);
+    });
+    it('a la graella, la barra té columnGap de 8px i els controls no tenen marges', () => {
+        const { container } = renderGrid({
+            ...lot2ScreenGridProps(theme),
+            toolbarBackButton: true,
+            toolbarHideExport: false,
+            toolbarQuickFilterCollapsible: false,
+        });
+        const toolbar = toolbarEl(container);
+        expect(getComputedStyle(toolbar).columnGap).toBe('8px');
+        const iconButtons = toolbar.querySelectorAll('.MuiIconButton-root');
+        expect(iconButtons.length).toBeGreaterThanOrEqual(3);
+        iconButtons.forEach((b) => {
+            const style = getComputedStyle(b);
+            expect(style.marginLeft).toBe('0px');
+            expect(style.marginRight).toBe('0px');
+        });
+        const quickFilter = toolbar.querySelector('.MuiTextField-root') as HTMLElement;
+        expect(getComputedStyle(quickFilter).marginLeft).toBe('0px');
+    });
+    it('el filtre ràpid plegat tampoc no té marge', () => {
+        const { container } = renderGrid(lot2ScreenGridProps(theme));
+        const search = toolbarEl(container).querySelector('button[aria-label="datacommon.quickfilter.label"]')!;
+        expect(getComputedStyle(search).marginLeft).toBe('0px');
+    });
+});

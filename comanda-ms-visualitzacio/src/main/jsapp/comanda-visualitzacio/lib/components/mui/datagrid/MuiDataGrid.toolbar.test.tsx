@@ -291,3 +291,18 @@ describe('MuiDataGrid filtre ràpid plegable', () => {
         expect((quickFilterInput(container) as HTMLInputElement).value).toBe('abc');
     });
 });
+
+describe("MuiDataGrid barra d'eines: elements buits", () => {
+    it('amb toolbarHideCreate no queda cap element buit a la barra (a part del separador)', () => {
+        const { container } = renderGrid({ toolbarHideCreate: true, title: 'Pantalla' });
+        const empty = Array.from(toolbarEl(container).children).filter(
+            (c) => c.childNodes.length === 0 && (c as HTMLElement).style.flexGrow !== '1'
+        );
+        expect(empty.length).toBe(0);
+    });
+    it('per defecte els botons de la barra mantenen els marges de la llibreria', () => {
+        renderGrid({ toolbarBackButton: true });
+        const back = screen.getByTitle('datacommon.back.label');
+        expect(getComputedStyle(back).marginRight).toBe('8px');
+    });
+});

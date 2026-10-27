@@ -63,7 +63,9 @@ export const titleBarControlsSx = {
         borderColor,
         // borderRadius: '4px',
         padding: '5px',
-        marginLeft: '4px',
+        // Sense marges propis (la llibreria en posa al botó de tornar, a l'avís d'error...): la
+        // separació entre controls és el gap del contenidor (columnGap de la barra de títol).
+        margin: 0,
         '&:hover': { backgroundColor: hoverBackground },
         '&.Mui-disabled': {
             // backgroundColor: (theme: Theme) => theme.palette.background.paper,
@@ -80,6 +82,8 @@ export const titleBarControlsSx = {
     '& .MuiButtonGroup-grouped:not(:last-of-type)': {
         borderRightColor: borderColor,
     },
+    // Filtre ràpid sense el marge esquerre que li posa la llibreria (la separació és el gap).
+    '& .MuiTextField-root': { margin: 0 },
     // Camps de text (filtre ràpid)
     '& .MuiOutlinedInput-root': {
         backgroundColor: (theme: Theme) => theme.palette.background.paper,
@@ -98,12 +102,16 @@ export const titleBarControlsSx = {
 export const titleBarSx = (theme: Theme) => ({
     minHeight: SCREEN_TITLE_MIN_HEIGHT + 'px',
     boxSizing: 'border-box' as const,
-    // La barra pot passar a dues files en pantalles estretes. No hi ha gap de columna i el separador
-    // `flexGrow` no té amplada, de manera que no genera cap fila buida; el contenidor del títol no
-    // ocupa el 100% (veure Toolbar). Els controls que cauen a la segona fila queden alineats a
-    // l'esquerra (acceptat).
+    // La barra pot passar a dues files en pantalles estretes. Entre tots els elements hi ha un sol
+    // gap de 8px (columnGap), sense marges propis als controls (titleBarControlsSx). El separador
+    // `flexGrow` no té amplada: entre el títol i el primer control suma dos gaps, però el separador
+    // creix i aquest espai ja és variable; no genera cap fila buida perquè sempre cap al costat
+    // d'un altre element. El contenidor del títol no ocupa el 100% (veure Toolbar). Els controls que
+    // cauen a la segona fila queden alineats a l'esquerra (acceptat); si el separador també hi cau,
+    // els empeny a la dreta.
     flexWrap: 'wrap' as const,
     rowGap: 1,
+    columnGap: 1,
     paddingLeft: SCREEN_TITLE_PADDING_X + 'px',
     paddingRight: SCREEN_TITLE_PADDING_X + 'px',
     borderLeft: `4px solid ${theme.palette.primary.main}`,

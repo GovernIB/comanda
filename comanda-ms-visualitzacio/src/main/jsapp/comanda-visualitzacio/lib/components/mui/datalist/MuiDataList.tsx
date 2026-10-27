@@ -308,7 +308,7 @@ export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
     toolbarAddElement != null &&
         toolbarListElementsWithPositions.push({
             position: toolbarNodesPosition,
-            element: !toolbarHideCreate ? toolbarAddElement : <span />,
+            element: !toolbarHideCreate ? toolbarAddElement : <></>,
         });
     const toolbarNumElements =
         toolbarNodesPosition +
