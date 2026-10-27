@@ -208,6 +208,7 @@ export const BaseApp: React.FC<BaseAppProps> = (props) => {
               <MenuItem
                   title={t($ => $.menu.user.lastConnection)}
                   disableRipple
+                  data-keep-menu-open
                   sx={{
                       '&.MuiButtonBase-root:hover': {
                           bgcolor: 'transparent',
