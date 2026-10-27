@@ -177,6 +177,8 @@ export type MuiDataGridProps = {
     toolbarCreateVariant?: 'icon' | 'button' | 'responsive';
     /** Text del botó de crear amb la variant 'button' o 'responsive' (a la icona, com a title); per defecte datacommon.create.label */
     toolbarCreateLabel?: string;
+    /** Aparença dels botons de la barra d'eines (tornar, exportar i refrescar): 'icon' (per defecte) o 'button' (botó amb icona i text) */
+    toolbarButtonsVariant?: 'icon' | 'button';
     /** Estils addicionals de la barra d'eines superior (es combinen darrere dels per defecte) */
     toolbarSx?: SxProps<Theme>;
     /** Element HTML del títol de la barra d'eines (per defecte 'h6') */
@@ -844,6 +846,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         toolbarCreateLink,
         toolbarCreateVariant,
         toolbarCreateLabel,
+        toolbarButtonsVariant,
         toolbarSx,
         toolbarTitleComponent,
         marginsSx,
@@ -1244,7 +1247,8 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         toolbarHideQuickFilter,
         joinedToolbarElementsWithPositions,
         toolbarSx,
-        toolbarTitleComponent
+        toolbarTitleComponent,
+        toolbarButtonsVariant
     );
     const getDataGridApi = () => ({
         refresh,

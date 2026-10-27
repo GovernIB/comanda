@@ -58,6 +58,10 @@ Referència: Notib, `notib-back/src/main/reactapp/notib-back/src`, branca `notib
 - **Separació:** tots els elements de la barra de títol (botons, botons d'icona, filtre ràpid, selector
   d'accions massives) queden separats per un sol gap de 8px (`columnGap` de `titleBarSx`); els controls
   no hi tenen marges propis.
+- **Botons amb text:** `lot2` no canvia l'aparença per defecte (icones). Una pantalla pot posar
+  `toolbarButtonsVariant: 'button'` a la graella (tornar, exportar, refrescar) o `variant: 'button'` a un
+  `MuiActionReportButton`: a la barra de títol prenen l'aspecte del botó de crear; amb `'icon'`, el del
+  botó de refrescar.
 
 ## Marc de l'aplicació (`Lot2BaseApp`)
 

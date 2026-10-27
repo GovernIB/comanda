@@ -306,3 +306,24 @@ describe("MuiDataGrid barra d'eines: elements buits", () => {
         expect(getComputedStyle(back).marginRight).toBe('8px');
     });
 });
+
+describe("MuiDataGrid aparença dels botons de la barra d'eines", () => {
+    const labels = ['datacommon.back.label', 'datacommon.export.label', 'datacommon.refresh.label'];
+    it("per defecte tornar, exportar i refrescar són botons d'icona", () => {
+        renderGrid({ toolbarBackButton: true, toolbarHideExport: false });
+        labels.forEach((l) => expect(screen.getByTitle(l).className).toContain('MuiIconButton-root'));
+    });
+    it("toolbarButtonsVariant='button' els pinta com a botons amb text", () => {
+        renderGrid({ toolbarBackButton: true, toolbarHideExport: false, toolbarButtonsVariant: 'button' });
+        labels.forEach((l) => {
+            const button = screen.getByRole('button', { name: new RegExp(l) });
+            expect(button.className).toContain('MuiButton-root');
+            expect(button.className).not.toContain('MuiIconButton-root');
+        });
+    });
+    it('toolbarButtonsVariant via defaultMuiComponentProps.dataGrid', () => {
+        renderGrid({}, { toolbarButtonsVariant: 'button' });
+        const button = screen.getByRole('button', { name: /datacommon.refresh.label/ });
+        expect(button.className).toContain('MuiButton-root');
+    });
+});

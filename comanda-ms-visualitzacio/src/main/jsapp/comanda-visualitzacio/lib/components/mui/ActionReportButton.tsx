@@ -44,6 +44,8 @@ export type ActionReportButtonProps = {
     icon?: any;
     /** Icona per a mostrar a dins el botó */
     buttonIcon?: any;
+    /** Aparença: 'icon' (per defecte: botó d'icona si hi ha `icon`, si no botó de text) o 'button' (botó amb la icona, `icon` o `buttonIcon`, al principi i el títol com a text) */
+    variant?: 'icon' | 'button';
     /** Títol pel botó */
     title?: string;
     /** Indica que l'execució de l'artefacte requereix confirmació de l'usuari (només per a artefactes de tipus acció) */
@@ -402,6 +404,7 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
         id,
         icon,
         buttonIcon,
+        variant,
         title,
         confirm,
         confirmMessage,
@@ -459,8 +462,9 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
         formDialogLiveButtons
     );
     const buttonTitle = title ?? apiLink?.title ?? action ?? report;
+    const iconButton = icon != null && variant !== 'button';
     const ButtonComponent =
-        buttonComponentProp ?? (icon != null ? IconCustomButton : TextCustomButton);
+        buttonComponentProp ?? (iconButton ? IconCustomButton : TextCustomButton);
     const { onClick: onClickFromComponentProps, ...otherButtonComponentProps } =
         buttonComponentProps ?? {};
     const button = (
@@ -471,9 +475,9 @@ export const ActionReportButton: React.FC<ActionReportButtonProps> = (props) => 
                 onClickFromComponentProps?.();
             }}
             title={buttonTitle}
-            icon={icon == null ? buttonIcon : undefined}
+            icon={!iconButton ? (icon ?? buttonIcon) : undefined}
             {...otherButtonComponentProps}>
-            {icon != null && <Icon {...iconComponentProps}>{icon}</Icon>}
+            {iconButton && <Icon {...iconComponentProps}>{icon}</Icon>}
         </ButtonComponent>
     );
     return available ? (

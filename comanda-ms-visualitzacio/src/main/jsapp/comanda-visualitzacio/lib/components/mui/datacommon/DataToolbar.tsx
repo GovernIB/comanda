@@ -36,7 +36,8 @@ export const useDataToolbar = (
     toolbarHideQuickFilter?: boolean,
     toolbarElementsWithPositions?: ReactElementWithPosition[],
     toolbarSx?: SxProps<Theme>,
-    toolbarTitleComponent?: React.ElementType
+    toolbarTitleComponent?: React.ElementType,
+    toolbarButtonsVariant?: 'icon' | 'button'
 ) => {
     const { t, goBack } = useBaseAppContext();
     const isUpperToolbarType = toolbarType === 'upper';
@@ -49,6 +50,7 @@ export const useDataToolbar = (
                 title: t('datacommon.back.label'),
                 onClick: () => goBack(),
                 sx: { mr: 1 },
+                variant: toolbarButtonsVariant,
             }),
         });
     const toolbarNodesPosition = 2;
@@ -58,6 +60,7 @@ export const useDataToolbar = (
             element: toToolbarIcon('file_download', {
                 title: t('datacommon.export.label'),
                 onClick: () => doExport(),
+                variant: toolbarButtonsVariant,
             }),
         });
     !toolbarHideRefresh &&
@@ -66,6 +69,7 @@ export const useDataToolbar = (
             element: toToolbarIcon('refresh', {
                 title: t('datacommon.refresh.label'),
                 onClick: () => doRefresh(),
+                variant: toolbarButtonsVariant,
             }),
         });
     !toolbarHideQuickFilter &&

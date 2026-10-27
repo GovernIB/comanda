@@ -148,3 +148,27 @@ describe('barra de títol: separació igual entre els controls', () => {
         expect(getComputedStyle(search).marginLeft).toBe('0px');
     });
 });
+
+describe('barra de títol: aparença dels botons de la barra', () => {
+    it('lot2 no canvia toolbarButtonsVariant (per defecte, icones)', () => {
+        expect(lot2DefaultMuiComponentProps(theme).dataGrid).not.toHaveProperty('toolbarButtonsVariant');
+        expect(lot2ScreenGridProps(theme)).not.toHaveProperty('toolbarButtonsVariant');
+    });
+    it("'icon': el refrescar té l'aspecte de botó d'icona de la barra (sense vora)", () => {
+        const { container } = renderGrid(lot2ScreenGridProps(theme));
+        const refresh = toolbarEl(container).querySelector('[title="datacommon.refresh.label"]') as HTMLElement;
+        expect(refresh.className).toContain('MuiIconButton-root');
+        expect(getComputedStyle(refresh).padding).toBe('5px');
+    });
+    it("'button': el refrescar té l'aspecte del botó de crear (fons del paper i vora)", () => {
+        const { container } = renderGrid({ ...lot2ScreenGridProps(theme), toolbarButtonsVariant: 'button' });
+        const refresh = Array.from(toolbarEl(container).querySelectorAll('.MuiButton-root')).find((b) =>
+            b.textContent?.includes('datacommon.refresh.label')
+        ) as HTMLElement;
+        const style = getComputedStyle(refresh);
+        expect(style.borderTopStyle).toBe('solid');
+        expect(style.borderTopWidth).toBe('1px');
+        expect(style.backgroundColor).toBe('rgb(255, 255, 255)');
+        expect(style.textTransform).toBe('none');
+    });
+});
