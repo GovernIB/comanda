@@ -21,9 +21,9 @@ Branca `comanda-lot2-visual`, creada a partir de `comanda-dev-libs-update`.
 - `lib/`: merge a 3 bandes amb base-react `v2-parametres-visuals` (base anterior `bea8c9e`), conservant les
   personalitzacions de comanda (`KeycloakAuthProvider`, navegació real a `ContainerAuthProvider`, redirecció
   a login i `stackTrace` a `ResourceApiProvider`, alçada textual de `DataGridDialog`/`MuiDataGrid`).
-- `src/lot2/`: còpia literal de la carpeta comuna de base-react (commit `56b2a4c`). **No s'edita aquí**:
-  qualsevol canvi es fa a base-react i es torna a copiar. Bases del proper merge: `lib/` = `56b2a4c` i
-  `src/lot2/` = `56b2a4c` (correccions de la revisió final: autofill de Chrome, subtítol d'error genèric amb
+- `src/lot2/`: còpia literal de la carpeta comuna de base-react (commit `45faa94`). **No s'edita aquí**:
+  qualsevol canvi es fa a base-react i es torna a copiar. Bases del proper merge: `lib/` = `45faa94` i
+  `src/lot2/` = `45faa94` (correccions de la revisió final: autofill de Chrome, subtítol d'error genèric amb
   títol element i comentaris).
 - Tema rosa fosc (`src/theme.ts`, `createLot2Themes`): `main` `#A8456A`, `dark` `#7A2E4C`, `light` `#cb6c88`,
   `soft` `#FAEFF3`.
@@ -123,3 +123,6 @@ Encara no s'ha revisat en un navegador. Abans de fusionar, cal fer aquesta compr
 - **Menú plegat: obrir el submenú flotant d'un grup (Monitorització, Configuració) en tots tres modes de menú** (`theme`, `inverse`, `footer`): el panell ha de sortir sencer, sense tallar, a la dreta del menú plegat i sota la capçalera.
 - **Icones del menú plegat centrades amb el botó hamburguesa** (i, amb el menú obert, les icones de nivell 0 a la mateixa columna).
 - **Icones de submenú amb el menú obert i al panell flotant:** comprovar que no queden desplaçades uns 7px a l'esquerra respecte de Notib.
+- **Cercador plegable de la barra de títol:** surt com a botó amb la lupa; en clicar-hi s'obre el camp amb el focus; es plega en sortir-ne buit (amb Tab o clicant un altre botó, sense perdre el clic) i amb Escape; si té text queda obert.
+- **Separació entre controls de la barra de títol:** 8px iguals entre botons, botons d'icona, cercador i selector d'accions massives; comprovar també la barra partida en dues files.
+- **Menú d'usuari:** en triar el perfil, un rol del selector o el llapis d'edició el desplegable es tanca; en obrir el selector de rol i en clicar la darrera connexió es manté obert.
