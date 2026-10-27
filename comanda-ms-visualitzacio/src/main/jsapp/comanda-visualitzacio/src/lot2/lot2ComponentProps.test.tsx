@@ -98,6 +98,7 @@ describe('lot2DefaultMuiComponentProps', () => {
         expect(d.dataGrid).toMatchObject({
             toolbarCreateVariant: 'responsive',
             toolbarTitleComponent: 'h2',
+            toolbarQuickFilterCollapsible: true,
             popupEditFormDialogComponentProps: { fullWidth: true, maxWidth: 'md' },
         });
         expect(d.dataGrid!.popupEditFormDialogOnClose!('backdropClick')).toBe(false);

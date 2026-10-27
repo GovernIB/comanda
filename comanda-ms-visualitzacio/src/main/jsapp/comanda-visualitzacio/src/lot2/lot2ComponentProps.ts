@@ -14,8 +14,8 @@ const screenMarginsSx = { m: `${MAIN_PADDING}px` };
  *    el contenidor amb scroll és el ScreenFrame, de manera que s'hi enganxa a dalt de tot (`top: 0`),
  *    damunt de les capçaleres enganxoses de les graelles dels formularis (`zIndex: 3`). Els marges
  *    dels camps passen a MAIN_PADDING;
- *  - graelles: botó de crear responsiu (amb text a partir de `md`), títols h2 i formulari emergent
- *    de mida `md` que no es tanca amb un clic fora.
+ *  - graelles: botó de crear responsiu (amb text a partir de `md`), títols h2, filtre ràpid plegable
+ *    i formulari emergent de mida `md` que no es tanca amb un clic fora.
  *
  * El `Lot2BaseApp` els combina amb els de l'aplicació de manera superficial: si l'aplicació passa el
  * seu propi `popupEditFormDialogComponentProps`, substitueix sencer el de lot2 (perd `fullWidth` i
@@ -29,6 +29,8 @@ export const lot2DefaultMuiComponentProps = (theme: Theme): DefaultMuiComponentP
         toolbarCreateVariant: 'responsive',
         // Els títols de text de la barra d'eines són h2: l'únic h1 de la pantalla és el del ScreenTitle.
         toolbarTitleComponent: 'h2',
+        // Filtre ràpid plegat en una icona de cerca mentre és buit
+        toolbarQuickFilterCollapsible: true,
         // Formulari emergent: un clic fora no el tanca (es perdrien les dades); Escape i la creu sí.
         popupEditFormDialogOnClose: (reason?: string) => reason !== 'backdropClick',
         popupEditFormDialogComponentProps: { fullWidth: true, maxWidth: 'md' },

@@ -262,3 +262,32 @@ describe("MuiDataGrid nivell d'encapçalament del títol", () => {
         expect(toolbarEl(container).querySelector('h1, h2, h3, h4, h5, h6')).toBeNull();
     });
 });
+
+describe('MuiDataGrid filtre ràpid plegable', () => {
+    const quickFilterInput = (c: HTMLElement) =>
+        toolbarEl(c).querySelector('input[aria-label="datacommon.quickfilter.label"]');
+    it('per defecte el filtre ràpid és un camp de text', () => {
+        const { container } = renderGrid();
+        expect(quickFilterInput(container)).not.toBeNull();
+        expect(screen.queryByRole('button', { name: 'datacommon.quickfilter.label' })).toBeNull();
+    });
+    it('toolbarQuickFilterCollapsible mostra el botó de cerca i en fer-hi clic el camp', () => {
+        const { container } = renderGrid({ toolbarQuickFilterCollapsible: true });
+        expect(quickFilterInput(container)).toBeNull();
+        fireEvent.click(screen.getByRole('button', { name: 'datacommon.quickfilter.label' }));
+        expect(quickFilterInput(container)).not.toBeNull();
+        expect(document.activeElement).toBe(quickFilterInput(container));
+    });
+    it('toolbarQuickFilterCollapsible via defaultMuiComponentProps.dataGrid', () => {
+        const { container } = renderGrid({}, { toolbarQuickFilterCollapsible: true });
+        expect(quickFilterInput(container)).toBeNull();
+        expect(screen.getByRole('button', { name: 'datacommon.quickfilter.label' })).toBeTruthy();
+    });
+    it('amb un valor inicial del filtre ràpid comença obert', () => {
+        const { container } = renderGrid({
+            toolbarQuickFilterCollapsible: true,
+            quickFilterInitialValue: 'abc',
+        });
+        expect((quickFilterInput(container) as HTMLInputElement).value).toBe('abc');
+    });
+});

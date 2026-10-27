@@ -61,6 +61,8 @@ export type MuiDataListProps = {
     toolbarHideCreate?: boolean;
     toolbarHideRefresh?: boolean;
     toolbarHideQuickFilter?: boolean;
+    /** Filtre ràpid plegable: buit es mostra com un botó d'icona de cerca que obre el camp (per defecte false) */
+    toolbarQuickFilterCollapsible?: boolean;
     toolbarCreateLink?: string;
     toolbarElementsWithPositions?: ReactElementWithPosition[];
     toolbarAdditionalRow?: React.ReactElement;
@@ -196,6 +198,7 @@ export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
         toolbarHideCreate,
         toolbarHideRefresh,
         toolbarHideQuickFilter,
+        toolbarQuickFilterCollapsible,
         toolbarCreateLink,
         toolbarElementsWithPositions,
         toolbarAdditionalRow,
@@ -326,6 +329,7 @@ export const MuiDataList: React.FC<MuiDataListProps> = (props) => {
         <DataQuickFilter
             value={quickFilter}
             onChange={setQuickFilter}
+            collapsible={toolbarQuickFilterCollapsible}
             sx={{ ml: 1 }} />,
         refresh,
         exportt,

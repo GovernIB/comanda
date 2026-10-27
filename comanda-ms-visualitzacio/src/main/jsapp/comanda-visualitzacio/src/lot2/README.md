@@ -41,7 +41,8 @@ Referència: Notib, `notib-back/src/main/reactapp/notib-back/src`, branca `notib
 
 - **Formularis:** `lot2DefaultMuiComponentProps(theme)` (a `defaultMuiComponentProps` de `MuiBaseApp`)
   pinta la barra d'eines de tots els `MuiForm` com a barra de títol enganxosa, amb marges de 15px.
-- **Graelles:** les props per defecte només hi posen el botó de crear amb text. La barra de títol és
+- **Graelles:** les props per defecte només hi posen el botó de crear amb text i el filtre ràpid
+  plegable (`toolbarQuickFilterCollapsible`: una icona de cerca mentre és buit). La barra de títol és
   **opt-in**: la graella principal de la pantalla, la que porta el `ScreenTitle`, hi afegeix
   `lot2ScreenGridProps(theme)`:
 

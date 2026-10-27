@@ -83,3 +83,24 @@ describe("MuiDataList nivell d'encapçalament del títol", () => {
         expect(toolbarEl(container).querySelector('h2')?.textContent).toBe('Llista');
     });
 });
+
+describe('MuiDataList filtre ràpid plegable', () => {
+    const quickFilterInputs = (c: HTMLElement) =>
+        c.querySelectorAll('input[aria-label="datacommon.quickfilter.label"]');
+    const searchButtons = (c: HTMLElement) =>
+        c.querySelectorAll('button[aria-label="datacommon.quickfilter.label"]');
+    it('per defecte el filtre ràpid és un camp de text', () => {
+        const { container } = renderList();
+        expect(quickFilterInputs(container).length).toBeGreaterThan(0);
+        expect(searchButtons(container).length).toBe(0);
+    });
+    it('toolbarQuickFilterCollapsible mostra el botó de cerca', () => {
+        const { container } = renderList({ toolbarQuickFilterCollapsible: true });
+        expect(quickFilterInputs(container).length).toBe(0);
+        expect(searchButtons(container).length).toBeGreaterThan(0);
+    });
+    it('toolbarQuickFilterCollapsible via defaultMuiComponentProps.dataList', () => {
+        const { container } = renderList({}, { toolbarQuickFilterCollapsible: true });
+        expect(quickFilterInputs(container).length).toBe(0);
+    });
+});

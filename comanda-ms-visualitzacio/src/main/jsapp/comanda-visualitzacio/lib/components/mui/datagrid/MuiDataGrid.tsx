@@ -169,6 +169,8 @@ export type MuiDataGridProps = {
     toolbarHideRefresh?: true;
     /** Oculta el camp de filtre ràpid de la barra d'eines */
     toolbarHideQuickFilter?: true;
+    /** Filtre ràpid plegable: buit es mostra com un botó d'icona de cerca que obre el camp (per defecte false) */
+    toolbarQuickFilterCollapsible?: boolean;
     /** Adreça que s'ha de mostrar al fer clic sobre el botó de crear una nova fila */
     toolbarCreateLink?: string;
     /** Aparença del botó de crear de la barra d'eines: icona (per defecte), botó amb text o 'responsive' (botó amb text a partir de md i icona per sota) */
@@ -838,6 +840,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
         toolbarHideCreate,
         toolbarHideRefresh,
         toolbarHideQuickFilter,
+        toolbarQuickFilterCollapsible,
         toolbarCreateLink,
         toolbarCreateVariant,
         toolbarCreateLabel,
@@ -1229,6 +1232,7 @@ export const MuiDataGrid: React.FC<MuiDataGridProps> = (props) => {
             value={quickFilter}
             onChange={setQuickFilter}
             setFocus={quickFilterSetFocus}
+            collapsible={toolbarQuickFilterCollapsible}
             fullWidth={quickFilterFullWidth}
             sx={{ ml: quickFilterFullWidth ? 0 : 1 }}
         />,
