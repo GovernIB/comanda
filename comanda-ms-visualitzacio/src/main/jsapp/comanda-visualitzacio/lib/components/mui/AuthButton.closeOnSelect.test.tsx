@@ -34,11 +34,11 @@ const RoleSelect: React.FC<{ onChange: (v: string) => void }> = ({ onChange }) =
     );
 };
 
-const renderButton = (additionalComponents: React.ReactElement[]) =>
+const renderButton = (additionalComponents: React.ReactElement[], onEditClick?: () => void) =>
     render(
         <BaseAppContext.Provider value={{ t: (k: string) => k } as any}>
             <AuthContext.Provider value={authStub}>
-                <AuthButton additionalComponents={additionalComponents} />
+                <AuthButton additionalComponents={additionalComponents} onEditClick={onEditClick} />
             </AuthContext.Provider>
         </BaseAppContext.Provider>
     );
@@ -88,5 +88,14 @@ describe('AuthButton tanca el menú en seleccionar una opció', () => {
         fireEvent.click(within(menu).getByText('Darrera connexió'));
         fireEvent.click(within(menu).getByText('Usuari Prova'));
         expect(screen.getByRole('menu')).toBeInTheDocument();
+    });
+
+    it("el llapis d'edició de la capçalera crida onEditClick i tanca el menú", async () => {
+        const onEdit = vi.fn();
+        renderButton([], onEdit);
+        const menu = openMenu();
+        fireEvent.click(within(menu).getByText('edit'));
+        expect(onEdit).toHaveBeenCalled();
+        await expectMenuClosed();
     });
 });

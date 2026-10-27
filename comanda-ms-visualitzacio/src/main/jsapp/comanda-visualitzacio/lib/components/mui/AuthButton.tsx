@@ -124,8 +124,9 @@ const LoggedInUserButton: React.FC<AuthButtonProps> = (props) => {
     };
     // Tanca el menú quan es tria una opció (també les d'un desplegable niat, l'event arriba pel portal), però no
     // quan es clica un element que conté un control (p. ex. un Select que s'ha d'obrir) o un element informatiu
-    // marcat amb l'atribut data-keep-menu-open (capçalera d'usuari, darrera connexió...). Els components
-    // addicionals també poden tancar-lo explícitament amb useAuthButtonContext().apiRef.current?.close().
+    // marcat amb l'atribut data-keep-menu-open (capçalera d'usuari, darrera connexió...). Un element que conté
+    // un control (Switch, Checkbox, Select, input...) no tanca el menú automàticament: si cal, el component
+    // l'ha de tancar explícitament amb useAuthButtonContext().apiRef.current?.close().
     const handleMenuListClick = (event: React.MouseEvent) => {
         const item = (event.target as Element).closest?.('.MuiMenuItem-root');
         if (
@@ -177,7 +178,13 @@ const LoggedInUserButton: React.FC<AuthButtonProps> = (props) => {
                     </ListItemAvatar>
                     <ListItemText primary={userName} secondary={userCode} />
                     {onEditClick && (
-                        <IconButton onClick={onEditClick} size="small" sx={{ ml: 2 }}>
+                        <IconButton
+                            onClick={() => {
+                                onEditClick();
+                                handleMenuClose();
+                            }}
+                            size="small"
+                            sx={{ ml: 2 }}>
                             <Icon fontSize="small">edit</Icon>
                         </IconButton>
                     )}
