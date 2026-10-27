@@ -11,13 +11,11 @@ import { MAPPABLE_ROLES, ROLE_ADMIN, ROLE_CONSULTA, ROLE_USER } from './UserProv
 
 function RoleSelector() {
     const { t } = useTranslation();
-    // const { apiRef: authButtonApiRef } = useAuthButtonContext();
     const { user, currentRole, setCurrentRole } = useUserContext();
     const userRoles = user?.rols as string[] | undefined;
     const [open, setOpen] = React.useState<boolean>(false);
     const handleSelectOnChange = (event: any) => {
         setCurrentRole(event.target.value as string);
-        //authButtonApiRef.current?.close();
     }
     const getRoleTranslation = (role: string) => {
         switch (role) {
