@@ -38,6 +38,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -846,14 +847,23 @@ class SalutServiceImplTest {
     }
 
     @Test
-    @DisplayName("InformeEstatsHistorics: generateData retorna null si params és null o no té entornAppId")
-    void informeEstatsHistorics_generateData_quanParamsInvalids_llavorsRetornaNull() throws ReportGenerationException {
+    @DisplayName("InformeEstatsHistorics: generateData retorna llista buida si params és null o no té entornAppId")
+    void informeEstatsHistorics_generateData_quanParamsInvalids_llavorsRetornaLlistaBuida() throws ReportGenerationException {
         SalutServiceImpl.InformeEstatsHistorics generator = salutService.new InformeEstatsHistorics();
 
-        assertThat(generator.generateData("CODE", new SalutEntity(), null)).isNull();
+        assertThat(generator.generateData("CODE", new SalutEntity(), null)).isEmpty();
 
         SalutInformeHistoricsParams paramsBuit = new SalutInformeHistoricsParams();
-        assertThat(generator.generateData("CODE", new SalutEntity(), paramsBuit)).isNull();
+        assertThat(generator.generateData("CODE", new SalutEntity(), paramsBuit)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("InformeEstatsHistorics: generateFile quan data és null llença ReportGenerationException")
+    void informeEstatsHistorics_generateFile_quanDataNull_llavorsLlencaReportGenerationException() {
+        SalutServiceImpl.InformeEstatsHistorics generator = salutService.new InformeEstatsHistorics();
+        assertThatThrownBy(() -> generator.generateFile("CODE", null, ReportFileType.CSV, mock(java.io.OutputStream.class)))
+                .isInstanceOf(ReportGenerationException.class)
+                .hasMessageContaining("Dades no vàlides per a l'exportació CSV");
     }
 
     @Test
@@ -866,7 +876,7 @@ class SalutServiceImplTest {
             mockedI18n.when(es.caib.comanda.ms.logic.intf.util.I18nUtil::getInstance).thenReturn(mockI18nUtil);
 
             when(mockI18nUtil.getI18nMessage("es.caib.comanda.salut.logic.service.SalutServiceImpl.InformeEstatsHistorics.headers"))
-                .thenReturn("Data d'inici;Data de fi;Estat\n");
+                .thenReturn("Data d'inici;Data de fi;Estat");
             when(mockI18nUtil.getI18nMessage("es.caib.comanda.model.v1.salut.EstatSalutEnum.UP"))
                 .thenReturn("UP");
             when(mockI18nUtil.getI18nMessage("es.caib.comanda.model.v1.salut.EstatSalutEnum.DOWN"))
@@ -891,9 +901,9 @@ class SalutServiceImplTest {
             assertThat(result.getContentType()).isEqualTo("text/csv;charset=UTF-8");
 
             String content = new String(result.getContent(), java.nio.charset.StandardCharsets.UTF_8);
-            assertThat(content).contains("Data d'inici;Data de fi;Estat");
-            assertThat(content).contains("25/10/2023 10:00:00;-;UP");
-            assertThat(content).contains("24/10/2023 10:00:00;25/10/2023 10:00:00;DOWN");
+            assertThat(content).contains("Data d'inici;Data de fi;Estat\n");
+            assertThat(content).contains("25/10/2023 10:00:00;-;UP\n");
+            assertThat(content).contains("24/10/2023 10:00:00;25/10/2023 10:00:00;DOWN\n");
         }
     }
 }

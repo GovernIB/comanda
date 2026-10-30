@@ -1,10 +1,13 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import SalutAppInfo from './SalutAppInfo';
+import SalutAppInfo, { getColorForPercentage } from './SalutAppInfo';
 
 const mocks = vi.hoisted(() => ({
     useIsUserAdminMock: vi.fn(),
+    artifactReportMock: vi.fn(),
+    iniciaDescargaCSVMock: vi.fn(),
+    temporalMessageShowMock: vi.fn(),
 }));
 
 const translations = {
@@ -113,13 +116,13 @@ const translations = {
             },
             historicEstat: {
                 title: "Històric d'estat",
-                noInfo: 'Sense canvis',
-                exportCsv: 'Exportar CSV',
-                exportSuccess: 'Exportació completada',
+                noInfo: "No hi ha canvis d'estat registrats",
+                exportCsv: 'Exportar',
+                exportSuccess: 'Arxiu descarregat correctament',
                 column: {
                     dataInici: 'Data d\'inici',
                     dataFi: 'Data de fi',
-                    appEstat: 'Estat app',
+                    appEstat: 'Estat',
                 },
             },
             memoria: {
@@ -171,18 +174,15 @@ vi.mock('reactlib', () => ({
     timeFormatLocale: (value: string) => `time:${value}`,
     useBaseAppContext: () => ({
         t: (key: string) => key,
-        temporalMessageShow: vi.fn(),
+        temporalMessageShow: mocks.temporalMessageShowMock,
     }),
     useResourceApiService: () => ({
-        artifactReport: vi.fn().mockResolvedValue({
-            name: 'historic_estats.csv',
-            content: [68, 97, 116, 97], // "Data" en bytes ASCII
-        }),
+        artifactReport: mocks.artifactReportMock,
     }),
 }));
 
 vi.mock('../../util/commonsActions.ts', () => ({
-    iniciaDescargaCSV: vi.fn(),
+    iniciaDescargaCSV: mocks.iniciaDescargaCSVMock,
 }));
 
 vi.mock('react-error-boundary', () => ({
@@ -445,6 +445,10 @@ const getOptionByValue = (value: string) => {
 describe('SalutAppInfo', () => {
     beforeEach(() => {
         mocks.useIsUserAdminMock.mockReturnValue(true);
+        mocks.artifactReportMock.mockResolvedValue({
+            name: 'historic_estats.csv',
+            content: [68, 97, 116, 97],
+        });
     });
 
     afterEach(() => {
@@ -522,10 +526,10 @@ describe('SalutAppInfo', () => {
         };
 
         render(
-            <SalutAppInfo 
-                ready 
-                appInfoData={createAppInfoData() as any} 
-                app={mockApp} 
+            <SalutAppInfo
+                ready
+                appInfoData={createAppInfoData() as any}
+                app={mockApp}
             />
         );
 
@@ -699,10 +703,10 @@ describe('SalutAppInfo', () => {
         expect(screen.getByText('format:2026-03-13T09:00:00')).toBeInTheDocument();
         expect(screen.getByText('-')).toBeInTheDocument();
         expect(screen.getByText('DOWN')).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /Exportar CSV/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Exportar/i })).toBeInTheDocument();
         expect(screen.getByText("Data d'inici")).toBeInTheDocument();
         expect(screen.getByText('Data de fi')).toBeInTheDocument();
-        expect(screen.getByText('Estat app')).toBeInTheDocument();
+        expect(screen.getByText('Estat')).toBeInTheDocument();
     });
 
     it("SalutAppInfo_quanEsPitjaExportarCSV_cridaLaApiIDescarrega", async () => {
@@ -710,13 +714,129 @@ describe('SalutAppInfo', () => {
 
         fireEvent.click(screen.getByRole('tab', { name: /Històric d'estat/i }));
 
-        const exportButton = screen.getByRole('button', { name: /Exportar CSV/i });
+        const exportButton = screen.getByRole('button', { name: /Exportar/i });
         expect(exportButton).toBeInTheDocument();
         expect(exportButton).not.toBeDisabled();
 
         fireEvent.click(exportButton);
 
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await waitFor(() => {
+            expect(mocks.artifactReportMock).toHaveBeenCalledWith(null, {
+                code: 'estats_historics',
+                fileType: 'CSV',
+                data: { entornAppId: 7 },
+            });
+            expect(mocks.iniciaDescargaCSVMock).toHaveBeenCalledWith({
+                name: 'historic_estats.csv',
+                content: [68, 97, 116, 97],
+            });
+            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(
+                null,
+                'Arxiu descarregat correctament',
+                'success'
+            );
+        });
+    });
+
+    it("SalutAppInfo_quanExportarCSVFalla_mostraMissatgeDError", async () => {
+        mocks.artifactReportMock.mockRejectedValueOnce(new Error('Error del servidor'));
+        render(<SalutAppInfo ready appInfoData={createAppInfoData() as any} />);
+
+        fireEvent.click(screen.getByRole('tab', { name: /Històric d'estat/i }));
+        const exportButton = screen.getByRole('button', { name: /Exportar/i });
+        fireEvent.click(exportButton);
+
+        await waitFor(() => {
+            expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(
+                null,
+                'Error del servidor',
+                'error'
+            );
+        });
+    });
+
+    it("SalutAppInfo_quanNoHiHaEntornAppId_handleExportCSVNoFaLaCridaApi", () => {
+        const dataSenseEntornAppId = createAppInfoData({
+            salutCurrentApp: {
+                ...createAppInfoData().salutCurrentApp,
+                entornAppId: undefined,
+            },
+        });
+        render(<SalutAppInfo ready appInfoData={dataSenseEntornAppId as any} />);
+
+        fireEvent.click(screen.getByRole('tab', { name: /Històric d'estat/i }));
+        const exportButton = screen.getByRole('button', { name: /Exportar/i });
+        fireEvent.click(exportButton);
+
+        expect(mocks.artifactReportMock).not.toHaveBeenCalled();
+        expect(mocks.temporalMessageShowMock).toHaveBeenCalledWith(null, 'Error', 'error');
+    });
+
+    it("SalutAppInfo_quanCanviaEntornAppId_reiniciaLaPaginacioA0", async () => {
+        const historicsMolts = Array.from({ length: 25 }, (_, i) => ({
+            id: i + 1,
+            data: `2026-03-${String(i + 1).padStart(2, '0')}T10:00:00`,
+            dataSeguent: null,
+            appEstat: 'UP',
+        }));
+
+        const appData1 = createAppInfoData({
+            salutCurrentApp: {
+                ...createAppInfoData().salutCurrentApp,
+                entornAppId: 101,
+                historics: historicsMolts as any,
+            },
+        });
+
+        const { rerender } = render(<SalutAppInfo ready appInfoData={appData1 as any} />);
+
+        fireEvent.click(screen.getByRole('tab', { name: /Històric d'estat/i }));
+
+        // Comprova que som a la primera pàgina
+        expect(screen.getByText('format:2026-03-01T10:00:00')).toBeInTheDocument();
+
+        // Clica el botó de següent pàgina
+        const nextPageButton = screen.getByRole('button', { name: /next page/i });
+        fireEvent.click(nextPageButton);
+
+        // Ara som a la pàgina 2
+        expect(screen.getByText('format:2026-03-21T10:00:00')).toBeInTheDocument();
+        expect(screen.queryByText('format:2026-03-01T10:00:00')).not.toBeInTheDocument();
+
+        // Canvia d'entornAppId
+        const appData2 = createAppInfoData({
+            salutCurrentApp: {
+                ...createAppInfoData().salutCurrentApp,
+                entornAppId: 102,
+                historics: historicsMolts as any,
+            },
+        });
+
+        rerender(<SalutAppInfo ready appInfoData={appData2 as any} />);
+
+        // El canvi d'entornAppId ha de reiniciar la pàgina a 0
+        await waitFor(() => {
+            expect(screen.getByText('format:2026-03-01T10:00:00')).toBeInTheDocument();
+        });
+    });
+
+    it('SalutAppInfo_quanAppTeNomPeroNoDescripcioNiLogo_noMostraTargetaAppLogo', () => {
+        const mockApp = {
+            id: 1,
+            codi: 'APP1',
+            nom: 'Aplicació de Prova',
+        };
+
+        render(
+            <SalutAppInfo
+                ready
+                appInfoData={createAppInfoData() as any}
+                app={mockApp as any}
+            />
+        );
+
+        expect(screen.queryByAltText(/logo/i)).not.toBeInTheDocument();
+        expect(screen.queryByText('Aplicació de Prova')).not.toBeInTheDocument();
     });
 
     it('SalutAppInfo_quanHiHaLogsDisponibles_permetObrirElTabDeLogs', () => {
@@ -1016,5 +1136,33 @@ describe('SalutAppInfo', () => {
         expect(versionChangeChip).toBeInTheDocument();
         const revisionOnlyChip = versionChips[1].closest('.MuiChip-colorDefault');
         expect(revisionOnlyChip).toBeInTheDocument();
+    });
+});
+
+describe('getColorForPercentage', () => {
+    it('hauria de retornar "success" per valors NaN o no finits', () => {
+        expect(getColorForPercentage(NaN)).toBe('success');
+        expect(getColorForPercentage(Infinity)).toBe('success');
+        expect(getColorForPercentage(-Infinity)).toBe('success');
+        expect(getColorForPercentage(undefined as any)).toBe('success');
+        expect(getColorForPercentage('invalid' as any)).toBe('success');
+    });
+
+    it('hauria de retornar "success" per percentatges menors o iguals a 69', () => {
+        expect(getColorForPercentage(0)).toBe('success');
+        expect(getColorForPercentage(50)).toBe('success');
+        expect(getColorForPercentage(69)).toBe('success');
+    });
+
+    it('hauria de retornar "warning" per percentatges entre 70 i 89', () => {
+        expect(getColorForPercentage(70)).toBe('warning');
+        expect(getColorForPercentage(80)).toBe('warning');
+        expect(getColorForPercentage(89)).toBe('warning');
+    });
+
+    it('hauria de retornar "error" per percentatges de 90 o superiors', () => {
+        expect(getColorForPercentage(90)).toBe('error');
+        expect(getColorForPercentage(95)).toBe('error');
+        expect(getColorForPercentage(100)).toBe('error');
     });
 });

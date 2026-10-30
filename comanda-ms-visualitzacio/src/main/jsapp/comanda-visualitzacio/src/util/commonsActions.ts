@@ -26,36 +26,34 @@ export const iniciaDescargaJSON = (result: any) => {
     iniciaDescargaBlob({fileName, blob})
 }
 export const iniciaDescargaCSV = (result: any) => {
-    const fileName = result.name || result.fileName || 'historic_estats.csv';
-    let csvText = "";
-    if (result.content && Array.isArray(result.content)) {
-        csvText = result.content.map((byte: number) => String.fromCharCode(byte)).join('');
+    const rawFileName = (result instanceof Blob ? undefined : (result?.name || result?.fileName)) || 'export.csv';
+    const fileName = rawFileName.replace(/^["']|["']$/g, '');
+    let blob: Blob;
+
+    if (result instanceof Blob || (result && result.constructor?.name === 'Blob') ||
+        result?.blob instanceof Blob || (result?.blob && result.blob.constructor?.name === 'Blob') ||
+        result?.content instanceof Blob || (result?.content && result.content.constructor?.name === 'Blob')) {
+        const blobData = (result instanceof Blob || result?.constructor?.name === 'Blob')
+            ? result
+            : ((result.blob instanceof Blob || result?.blob?.constructor?.name === 'Blob') ? result.blob : result.content);
+        blob = new Blob(['\uFEFF', blobData as Blob], { type: 'text/csv;charset=utf-8;' });
+    } else {
+        let csvText = '';
+        const targetData = result?.content !== undefined ? result.content : result?.blob;
+        if (ArrayBuffer.isView(targetData)) {
+            const bytes = new Uint8Array(targetData.buffer, targetData.byteOffset, targetData.byteLength);
+            csvText = new TextDecoder('utf-8').decode(bytes);
+        } else if (targetData instanceof ArrayBuffer || (targetData && targetData.constructor?.name === 'ArrayBuffer')) {
+            csvText = new TextDecoder('utf-8').decode(new Uint8Array(targetData));
+        } else if (Array.isArray(targetData)) {
+            const bytes = new Uint8Array(targetData.map((b: number) => (b < 0 ? b + 256 : b)));
+            csvText = new TextDecoder('utf-8').decode(bytes);
+        } else if (typeof targetData === 'string') {
+            csvText = targetData;
+        }
+        const textWithBom = csvText.startsWith('\uFEFF') ? csvText : '\uFEFF' + csvText;
+        blob = new Blob([textWithBom], { type: 'text/csv;charset=utf-8;' });
     }
-    else if (result.blob instanceof Blob || result.content instanceof Blob) {
-        const blobData = result.blob || result.content;
-        const url = URL.createObjectURL(blobData);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        return;
-    }
-    else if (typeof result.content === 'string') {
-        csvText = result.content;
-    }
-    else if (result.blob && typeof result.blob === 'string') {
-        csvText = result.blob;
-    }
-    const blob = new Blob(['\uFEFF' + csvText], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+
+    iniciaDescargaBlob({ fileName, blob });
 };

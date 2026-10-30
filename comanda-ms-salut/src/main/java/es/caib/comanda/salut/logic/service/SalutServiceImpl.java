@@ -453,13 +453,13 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
         @Override
         public DownloadableFile generateFile(String code, List<?> data, ReportFileType fileType, OutputStream out) {
             if (data == null) {
-                throw new IllegalArgumentException("Dades no vàlides per a l'exportació CSV");
+                throw new ReportGenerationException(Salut.class, null, code, "Dades no vàlides per a l'exportació CSV");
             }
             I18nUtil i18nUtil = I18nUtil.getInstance();
             @SuppressWarnings("unchecked")
             List<SalutHist> historics = (List<SalutHist>) data;
             StringBuilder csvContent = new StringBuilder();
-            csvContent.append(i18nUtil.getI18nMessage("es.caib.comanda.salut.logic.service.SalutServiceImpl.InformeEstatsHistorics.headers"));
+            csvContent.append(i18nUtil.getI18nMessage("es.caib.comanda.salut.logic.service.SalutServiceImpl.InformeEstatsHistorics.headers")).append("\n");
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
             for (SalutHist historic : historics) {
                 String dataIniciStr = historic.getData() != null ? historic.getData().format(formatter) : "";
@@ -479,7 +479,7 @@ public class SalutServiceImpl extends BaseReadonlyResourceService<Salut, Long, S
         @Override
         public List<SalutHist> generateData(String code, SalutEntity entity, SalutInformeHistoricsParams params) throws ReportGenerationException {
             if (params == null || params.getEntornAppId() == null) {
-                return null;
+                return Collections.emptyList();
             }
             return getValuesPerspectiveHistorics(params.getEntornAppId());
         }

@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { 
-    parseStorageSizeToMB, 
-    calcularPercentatgeUs, 
-    getColorForPercentage 
+import {
+    parseStorageSizeToMB,
+    calcularPercentatgeUs,
+    getColorForPercentage
 } from './recursosUtils';
 
 describe('recursosUtils', () => {
@@ -16,6 +16,11 @@ describe('recursosUtils', () => {
         it('hauria de gestionar comes decimals (format europeu)', () => {
             expect(parseStorageSizeToMB('3,4 GB')).toBe(3481.6);
             expect(parseStorageSizeToMB('1.024,5 MB')).toBe(1024.5);
+        });
+
+        it('hauria de gestionar múltiples comes o punts de milers', () => {
+            expect(parseStorageSizeToMB('1,024,512 KB')).toBe(1000.5);
+            expect(parseStorageSizeToMB('1.024.512 KB')).toBe(1000.5);
         });
 
         it('hauria de retornar 0 si el valor és null, undefined o buit', () => {
@@ -51,6 +56,13 @@ describe('recursosUtils', () => {
     });
 
     describe('getColorForPercentage', () => {
+        it('hauria de retornar "success" per valors NaN o no finits', () => {
+            expect(getColorForPercentage(NaN)).toBe('success');
+            expect(getColorForPercentage(Infinity)).toBe('success');
+            expect(getColorForPercentage(-Infinity)).toBe('success');
+            expect(getColorForPercentage(undefined as any)).toBe('success');
+        });
+
         it('hauria de retornar "success" per percentatges de 0 a 69', () => {
             expect(getColorForPercentage(0)).toBe('success');
             expect(getColorForPercentage(69)).toBe('success');

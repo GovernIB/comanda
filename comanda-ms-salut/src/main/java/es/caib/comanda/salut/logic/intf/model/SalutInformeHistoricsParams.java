@@ -9,7 +9,7 @@ import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 /**
- * Informació per als informes de historics de un entornApp.
+ * Informació per als informes d'històrics d'un entornApp.
  *
  * @author Límit Tecnologies
  */

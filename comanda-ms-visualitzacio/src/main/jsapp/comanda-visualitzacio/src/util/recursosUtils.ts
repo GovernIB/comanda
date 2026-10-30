@@ -3,10 +3,24 @@ export const parseStorageSizeToMB = (valor: string | null | undefined): number =
     let text = valor.trim().toUpperCase();
     const lastCommaIndex = text.lastIndexOf(',');
     const lastDotIndex = text.lastIndexOf('.');
-    if (lastCommaIndex > lastDotIndex) {
-        text = text.replace(/\./g, "").replace(",", ".");
-    } else {
-        text = text.replace(/,/g, "");
+    if (lastCommaIndex !== -1 && lastDotIndex !== -1) {
+        if (lastCommaIndex > lastDotIndex) {
+            text = text.replace(/\./g, "").replace(/,/g, ".");
+        } else {
+            text = text.replace(/,/g, "");
+        }
+    } else if (lastCommaIndex !== -1) {
+        const commaCount = (text.match(/,/g) || []).length;
+        if (commaCount > 1) {
+            text = text.replace(/,/g, "");
+        } else {
+            text = text.replace(/,/g, ".");
+        }
+    } else if (lastDotIndex !== -1) {
+        const dotCount = (text.match(/\./g) || []).length;
+        if (dotCount > 1) {
+            text = text.replace(/\./g, "");
+        }
     }
     const amount = parseFloat(text);
     if (!Number.isFinite(amount)) {
@@ -43,6 +57,9 @@ export const calcularPercentatgeUs = (totalStr: string | undefined, disponibleSt
 };
 
 export const getColorForPercentage = (percentatge: number): 'success' | 'warning' | 'error' => {
+    if (typeof percentatge !== 'number' || isNaN(percentatge) || !isFinite(percentatge)) {
+        return 'success';
+    }
     if (percentatge < 70) {
         return 'success';
     } else if (percentatge < 90) {

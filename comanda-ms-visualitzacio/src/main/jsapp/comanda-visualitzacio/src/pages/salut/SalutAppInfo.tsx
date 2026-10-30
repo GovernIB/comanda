@@ -851,6 +851,8 @@ const Missatges: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp 
 //     );
 // };
 
+export { getColorForPercentage } from '../../util/recursosUtils';
+
 const MemoriaInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp }) => {
     const { t } = useTranslation();
 
@@ -950,7 +952,7 @@ const DetallInfo: React.FC<{ salutCurrentApp: SalutModel }> = ({ salutCurrentApp
 };
 const AppLogo: React.FC<{ app?: AppModel | null; }> = ({ app }) => {
     const { t } = useTranslation();
-    if (!app || (!app.nom && !app.descripcio && !app.logo)) {
+    if (!app || (!app.descripcio && !app.logo)) {
         return null;
     }
     return (
@@ -961,8 +963,8 @@ const AppLogo: React.FC<{ app?: AppModel | null; }> = ({ app }) => {
                         src={`data:image/png;base64,${app.logo}`}
                         alt={t($ => $.page.salut.logoAlt, { nom: app.nom })}
                         style={{
-                            maxHeight: '100%',
-                            maxWidth: '100%',
+                            maxHeight: '48px',
+                            maxWidth: '120px',
                             objectFit: 'contain'
                         }}
                     />
@@ -1168,8 +1170,7 @@ const TabHistoric: React.FC<SalutAppInfoTabProps & { otherProps: TabHistoricOthe
 
 const TabHistoricEstat: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) => {
     const { t } = useTranslation();
-    const { t: tLib } = useBaseAppContext();
-    const { temporalMessageShow } = useBaseAppContext();
+    const { t: tLib, temporalMessageShow } = useBaseAppContext();
     const { user } = useUserContext();
     const { artifactReport: apiReport } = useResourceApiService('salut');
     const historics = salutCurrentApp.historics ?? [];
@@ -1182,6 +1183,19 @@ const TabHistoricEstat: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) =
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(initialRowsPerPage);
     const [exporting, setExporting] = React.useState(false);
+
+    const rowsPerPageOptions = React.useMemo(() => {
+        const baseOptions = [10, 20, 50, 100, 200];
+        if (!baseOptions.includes(initialRowsPerPage)) {
+            return [...baseOptions, initialRowsPerPage].sort((a, b) => a - b);
+        }
+        return baseOptions;
+    }, [initialRowsPerPage]);
+
+    React.useEffect(() => {
+        setPage(0);
+    }, [salutCurrentApp?.entornAppId]);
+
     const handleChangePage = (_event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
         setPage(newPage);
     };
@@ -1194,7 +1208,7 @@ const TabHistoricEstat: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) =
         page * rowsPerPage + rowsPerPage
     );
     const handleExportCSV = () => {
-        if (!salutCurrentApp?.id) {
+        if (!salutCurrentApp?.entornAppId) {
             temporalMessageShow(null, t($ => $.common.error), 'error');
             return;
         }
@@ -1209,7 +1223,7 @@ const TabHistoricEstat: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) =
                 );
             })
             .catch((error: any) => {
-                console.error('Error exportant CSV:', error);
+                console.error('[SalutAppInfo] Error exportant CSV:', error);
                 temporalMessageShow(
                     null,
                     error?.message || (t($ => $.common.error)),
@@ -1277,7 +1291,7 @@ const TabHistoricEstat: React.FC<SalutAppInfoTabProps> = ({ salutCurrentApp }) =
                             </TableBody>
                         </Table>
                         <TablePagination
-                            rowsPerPageOptions={[10, 20, 50, 100]}
+                            rowsPerPageOptions={rowsPerPageOptions}
                             component="div"
                             count={historics.length}
                             rowsPerPage={rowsPerPage}

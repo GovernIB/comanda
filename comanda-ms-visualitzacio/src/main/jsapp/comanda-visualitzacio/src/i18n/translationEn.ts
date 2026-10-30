@@ -288,7 +288,7 @@ const translationEn: translationResourcesType = {
                     data: "Date",
                     dataInici: "Start date",
                     dataFi: "End date",
-                    appEstat: "App state",
+                    appEstat: "State",
                     peticio: "Request",
                 },
                 exportCsv: "Export",
