@@ -2,13 +2,14 @@ import React, { useMemo, useState } from 'react';
 import {
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
     Paper, TableSortLabel, Box, LinearProgress, Typography, IconButton,
-    CircularProgress
+    CircularProgress, TablePagination
 } from '@mui/material';
 import Icon from '@mui/material/Icon';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { SalutModel } from '../../types/salut.model';
 import { EntornAppModel } from '../../types/app.model.tsx';
+import { useUserContext } from '../../components/UserContext';
 import { calcularPercentatgeUs, getColorForPercentage } from '../../util/recursosUtils';
 
 type RecursRowData = {
@@ -25,25 +26,56 @@ type RecursRowData = {
 
 type Order = 'asc' | 'desc';
 
+export interface SalutLastItemForRecursos {
+    entornAppId: number;
+    detalls?: Array<{ codi?: string; valor?: string }>;
+}
+
+export interface SalutGroupForRecursos {
+    entornApps?: Array<Partial<EntornAppModel>>;
+    salutLastItems?: Array<SalutLastItemForRecursos | SalutModel>;
+}
+
 interface RecursosEntornsProps {
-    salutGroups: any[];
+    salutGroups?: SalutGroupForRecursos[];
     loading: boolean;
 }
 
 const RecursosEntorns: React.FC<RecursosEntornsProps> = ({ salutGroups, loading }) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const { user } = useUserContext();
     const [orderBy, setOrderBy] = useState<keyof RecursRowData>('memoriaPercent');
     const [order, setOrder] = useState<Order>('desc');
 
+    const initialRowsPerPage = useMemo(() => {
+        if (user?.numElementsPagina && user.numElementsPagina !== 'AUTOMATIC') {
+            return parseInt(user.numElementsPagina.replace('_', ''), 10);
+        }
+        return 20;
+    }, [user?.numElementsPagina]);
+
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(initialRowsPerPage);
+
+    const rowsPerPageOptions = useMemo(() => {
+        const baseOptions = [10, 20, 50, 100, 200];
+        if (!baseOptions.includes(initialRowsPerPage)) {
+            return [...baseOptions, initialRowsPerPage].sort((a, b) => a - b);
+        }
+        return baseOptions;
+    }, [initialRowsPerPage]);
+
+    const noDisponible = t($ => $.page.salut.recursos.noDisponible, { defaultValue: 'N/D' });
+
     const rows = useMemo<RecursRowData[]>(() => {
         const flattened: RecursRowData[] = [];
-        salutGroups.forEach(group => {
-            const entornAppsMap = new Map<number, EntornAppModel>();
-            group.entornApps?.forEach((ea: EntornAppModel) => {
+        (salutGroups ?? []).forEach(group => {
+            const entornAppsMap = new Map<number, Partial<EntornAppModel>>();
+            group.entornApps?.forEach(ea => {
                 if (ea.id) entornAppsMap.set(ea.id, ea);
             });
-            group.salutLastItems?.forEach((item: SalutModel) => {
+            group.salutLastItems?.forEach(item => {
                 const entornApp = entornAppsMap.get(item.entornAppId);
                 const memTotal = item.detalls?.find(d => d.codi === 'MET')?.valor;
                 const memDisp = item.detalls?.find(d => d.codi === 'MED')?.valor;
@@ -53,17 +85,17 @@ const RecursosEntorns: React.FC<RecursosEntornsProps> = ({ salutGroups, loading 
                     id: String(item.entornAppId),
                     appName: entornApp?.app?.description || String(item.entornAppId),
                     entornName: entornApp?.entorn?.description || '',
-                    memoriaTotal: memTotal || 'N/A',
-                    memoriaDisponible: memDisp || 'N/A',
+                    memoriaTotal: memTotal || noDisponible,
+                    memoriaDisponible: memDisp || noDisponible,
                     memoriaPercent: calcularPercentatgeUs(memTotal, memDisp),
-                    discTotal: discTotal || 'N/A',
-                    discDisponible: discDisp || 'N/A',
+                    discTotal: discTotal || noDisponible,
+                    discDisponible: discDisp || noDisponible,
                     discPercent: calcularPercentatgeUs(discTotal, discDisp),
                 });
             });
         });
         return flattened;
-    }, [salutGroups]);
+    }, [salutGroups, noDisponible]);
 
     const handleRequestSort = (property: keyof RecursRowData) => {
         const isAsc = orderBy === property && order === 'asc';
@@ -71,23 +103,44 @@ const RecursosEntorns: React.FC<RecursosEntornsProps> = ({ salutGroups, loading 
         setOrderBy(property);
     };
 
+    const handleChangePage = (_event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
     const sortedRows = useMemo(() => {
         return [...rows].sort((a, b) => {
-            if (b[orderBy] < a[orderBy]) return order === 'asc' ? 1 : -1;
-            if (b[orderBy] > a[orderBy]) return order === 'asc' ? -1 : 1;
+            const valA = a[orderBy];
+            const valB = b[orderBy];
+            if (typeof valA === 'string' && typeof valB === 'string') {
+                const cmp = valA.localeCompare(valB, undefined, { numeric: true, sensitivity: 'base' });
+                return order === 'asc' ? cmp : -cmp;
+            }
+            if (valB < valA) return order === 'asc' ? 1 : -1;
+            if (valB > valA) return order === 'asc' ? -1 : 1;
             return 0;
         });
     }, [rows, order, orderBy]);
 
+    const visibleRows = useMemo(() => {
+        return sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+    }, [sortedRows, page, rowsPerPage]);
+
     if (loading && rows.length === 0) {
-        return <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%',}}>
+        return (
+            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                 <CircularProgress size={100} />
-            </Box>;
+            </Box>
+        );
     }
 
     return (
         <TableContainer component={Paper}>
-            <Table size="small" aria-label="taula de recursos">
+            <Table size="small" aria-label={t($ => $.page.salut.recursos.ariaTable)}>
                 <TableHead sx={{ backgroundColor: 'action.hover' }}>
                     <TableRow>
                         <TableCell sortDirection={orderBy === 'appName' ? order : false}>
@@ -132,7 +185,7 @@ const RecursosEntorns: React.FC<RecursosEntornsProps> = ({ salutGroups, loading 
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {sortedRows.map((row) => (
+                    {visibleRows.map((row) => (
                         <TableRow key={row.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                             <TableCell component="th" scope="row">
                                 {row.appName}
@@ -199,6 +252,17 @@ const RecursosEntorns: React.FC<RecursosEntornsProps> = ({ salutGroups, loading 
                     )}
                 </TableBody>
             </Table>
+            {sortedRows.length > 0 && (
+                <TablePagination
+                    component="div"
+                    count={sortedRows.length}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                    rowsPerPageOptions={rowsPerPageOptions}
+                />
+            )}
         </TableContainer>
     );
 };
