@@ -227,6 +227,8 @@ const translationEs: translationResourcesType = {
                 title: "Recursos del sistema",
                 subtitle: "Vista del consumo de recursos",
                 empty: "No hay datos de recursos disponibles",
+                noDisponible: "N/D",
+                ariaTable: "Tabla de recursos del sistema",
                 columns: {
                     aplicacio: "Aplicación",
                     entorn: "Entorno",

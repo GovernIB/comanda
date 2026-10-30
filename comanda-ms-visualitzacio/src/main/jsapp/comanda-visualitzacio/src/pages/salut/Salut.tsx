@@ -667,6 +667,11 @@ const Salut: FunctionComponent = () => {
             subtitle: "",
         }
         : null;
+    const recursosGroupingToolbarProps = toolbarState.grouping === GroupingEnum.RECURSOS ?
+        {
+            subtitle: t($ => $.page.salut.recursos.subtitle),
+        }
+        : null;
 
     return (
         <Box
@@ -685,17 +690,24 @@ const Salut: FunctionComponent = () => {
                 groupingActive
                 {...toolbarState}
                 {...versionsEntornGroupingToolbarProps}
+                {...recursosGroupingToolbarProps}
                 {...appInfoToolbarProps}
             />
             <Activity mode={!isAppInfoRouteActive ? 'visible' : 'hidden'}>
                 <Box sx={{ p: 2, flex: 1, overflowY: 'auto', scrollbarGutter: 'stable' }}>
-                    <PageTitle title={t($ => $.page.salut.title)} />
+                    <PageTitle
+                        title={
+                            toolbarState.grouping === GroupingEnum.RECURSOS
+                                ? t($ => $.page.salut.recursos.title)
+                                : t($ => $.page.salut.title)
+                        }
+                    />
                     {toolbarState.grouping === GroupingEnum.VERSIONS_ENTORNS ? (
                        <VersionsEntorns />
                    ) : toolbarState.grouping === GroupingEnum.RECURSOS ? (
                        <RecursosEntorns
-                           salutGroups={salutData.groups} 
-                           loading={salutInitialLoading} 
+                           salutGroups={salutData.groups}
+                           loading={salutInitialLoading}
                        />
                    ) : (
                        <SalutLlistat

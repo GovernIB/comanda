@@ -205,7 +205,7 @@ const translationEn: translationResourcesType = {
                 NONE: "Do not group",
                 titleNoGrouping: "All applications and environments",
                 VERSIONS_ENTORNS: "Versions by environment",
-                RECURSOS: "Environmental resources",
+                RECURSOS: "Environment resources",
             },
             refreshperiod: {
                 title: "Refresh period",
@@ -227,6 +227,8 @@ const translationEn: translationResourcesType = {
                 title: "System Resources",
                 subtitle: "Resource Usage Overview",
                 empty: "No resource data available",
+                noDisponible: "N/A",
+                ariaTable: "System resources table",
                 columns: {
                     aplicacio: "Application",
                     entorn: "Environment",

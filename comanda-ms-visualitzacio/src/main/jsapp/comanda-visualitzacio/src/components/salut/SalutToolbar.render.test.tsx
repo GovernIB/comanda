@@ -47,7 +47,7 @@ vi.mock('react-i18next', () => ({
                                   BY_ENVIRONMENT: 'Per entorn',
                                   NONE: 'Cap',
                                   VERSIONS_ENTORNS: 'Versions per entorn',
-                                  RECURSOS: 'Recursos',
+                                  RECURSOS: "Recursos de l'entorn",
                               },
                           },
                       },
@@ -248,7 +248,7 @@ describe('SalutToolbar render', () => {
         expect(screen.getByTitle('Per entorn')).toBeInTheDocument();
         expect(screen.getByTitle('Cap')).toBeInTheDocument();
         expect(screen.getByTitle('Versions per entorn')).toBeInTheDocument();
-        expect(screen.getByTitle('Recursos')).toBeInTheDocument();
+        expect(screen.getByTitle("Recursos de l'entorn")).toBeInTheDocument();
     });
 
     it('SalutToolbar_quanNoEstaReady_deshabilitaLesAccionsTemporals', () => {
@@ -274,7 +274,7 @@ describe('SalutToolbar render', () => {
         expect(screen.getByTitle('Per entorn')).toBeDisabled();
         expect(screen.getByTitle('Cap')).toBeDisabled();
         expect(screen.getByTitle('Versions per entorn')).toBeDisabled();
-        expect(screen.getByTitle('Recursos')).toBeDisabled();
+        expect(screen.getByTitle("Recursos de l'entorn")).toBeDisabled();
     });
 
     it('SalutToolbar_quanHiHaDataDeRefresh_mostraElResumTemporal', () => {
@@ -336,7 +336,7 @@ describe('SalutToolbar render', () => {
             />
         );
 
-        fireEvent.click(screen.getByTitle('Recursos'));
+        fireEvent.click(screen.getByTitle("Recursos de l'entorn"));
 
         expect(setGroupingMock).toHaveBeenCalledWith(GroupingEnum.RECURSOS);
     });

@@ -227,6 +227,8 @@ const translationCa = {
                 title: "Recursos del sistema",
                 subtitle: "Vista de consum de recursos",
                 empty: "No hi ha dades de recursos disponibles",
+                noDisponible: "N/D",
+                ariaTable: "Taula de recursos del sistema",
                 columns: {
                     aplicacio: "Aplicació",
                     entorn: "Entorn",
@@ -235,7 +237,7 @@ const translationCa = {
                     discPercent: "Disc (Ús %)",
                     discValors: "Disc (Disp / Total)",
                     detalls: "Detalls",
-                    detallsTitle: "Viatjar als detalls",
+                    detallsTitle: "Veure els detalls",
                 },
             },
             tabs: {
