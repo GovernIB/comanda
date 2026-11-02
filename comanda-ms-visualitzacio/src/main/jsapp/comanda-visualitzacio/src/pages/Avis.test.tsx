@@ -7,6 +7,11 @@ let avisFormData = {
 };
 
 const mocks = vi.hoisted(() => ({
+    filterOnDataChange: {} as Record<string, ((data: any) => void) | undefined>,
+    useUserContextMock: vi.fn(() => ({
+        user: { codi: 'u001' },
+        currentRole: 'ADMIN',
+    })),
     setFieldValueMock: vi.fn((field, value) => {
         avisFormData = { ...avisFormData, [field]: value };
     }),
@@ -78,7 +83,10 @@ vi.mock('reactlib', () => ({
             <div data-testid="row-action-hidden">{String(rowAdditionalActions?.[0]?.hidden?.({ url: null }))}</div>
         </section>
     ),
-    MuiFilter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    MuiFilter: ({ children, resourceName, onDataChange }: any) => {
+        mocks.filterOnDataChange[resourceName] = onDataChange;
+        return <div>{children}</div>;
+    },
     FormField: ({ name }: { name: string }) => <div data-testid={`field-${name}`}>{name}</div>,
     springFilterBuilder: {
         and: (...parts: Array<string | undefined | false | null>) => parts.filter(Boolean).join(' && '),
@@ -115,7 +123,7 @@ vi.mock('../util/dateUtils.ts', () => ({
 }));
 
 vi.mock('@mui/x-data-grid-pro', () => ({ useGridApiRef: () => ({ current: {} }) }));
-vi.mock('../components/UserContext', () => ({ useUserContext: () => ({ user: { codi: 'u001' }, currentRole: 'ADMIN' }) }));
+vi.mock('../components/UserContext', () => ({ useUserContext: () => mocks.useUserContextMock() }));
 vi.mock('../components/PageTitle.tsx', () => ({ default: ({ title }: { title: string }) => <div data-testid="page-title">{title}</div> }));
 vi.mock('../components/salut/SalutChip.tsx', () => ({ default: ({ label, tooltip }: { label: string; tooltip?: string }) => <div><span>{label}</span><span>{tooltip}</span></div> }));
 vi.mock('../types/salut.model.tsx', () => ({
@@ -128,6 +136,10 @@ vi.mock('../../lib/components/mui/datacommon/MuiDataCommon.tsx', () => ({}));
 describe('Avis', () => {
     afterEach(() => {
         vi.clearAllMocks();
+        mocks.useUserContextMock.mockReturnValue({
+            user: { codi: 'u001' },
+            currentRole: 'ADMIN',
+        });
         avisFormData = { avisPropi: true };
     });
 
@@ -171,24 +183,151 @@ describe('Avis', () => {
         expect(screen.getByTestId('tipus-cell')).toHaveTextContent('Global');
     });
 
+    it('Avis_quanLusuariEsAdmin_mostraCampFiltreResponsable', () => {
+        render(<Avis />);
+        expect(screen.getByTestId('field-responsable')).toBeInTheDocument();
+    });
+
+    it('Avis_quanLusuariNoEsAdmin_tambeMostraCampFiltreResponsable', () => {
+        mocks.useUserContextMock.mockReturnValue({
+            user: { codi: 'u002' },
+            currentRole: 'USER',
+        });
+        render(<Avis />);
+        expect(screen.getByTestId('field-responsable')).toBeInTheDocument();
+    });
+
     it('avisFilterBuilder_quanHiHaResponsable_aplicaFiltreResponsable', () => {
-        const filter = avisFilterBuilder({ responsable: 'usuari_test', avisPropi: true }, 'admin01', true);
+        const filter = avisFilterBuilder({ responsable: 'usuari_test', avisPropi: true }, 'admin01');
         expect(filter).toContain('responsable~usuari_test');
         expect(filter).not.toContain("responsable='admin01'");
     });
 
     it('avisFilterBuilder_quanResponsableTeEspais_faTrim', () => {
-        const filter = avisFilterBuilder({ responsable: '  usuari_test  ' }, 'admin01', true);
+        const filter = avisFilterBuilder({ responsable: '  usuari_test  ' }, 'admin01');
         expect(filter).toContain('responsable~usuari_test');
     });
 
     it('avisFilterBuilder_quanNoHiHaResponsable_aplicaFallbackUsuariActual', () => {
-        const filter = avisFilterBuilder({ responsable: '', avisPropi: true }, 'user01', false);
+        const filter = avisFilterBuilder({ responsable: '', avisPropi: true }, 'user01');
         expect(filter).toContain("responsable='user01'");
     });
 
     it('avisFilterBuilder_quanNoHiHaResponsableNiUsuariActual_noAfegeixFiltre', () => {
-        const filter = avisFilterBuilder({ responsable: '', avisPropi: false }, null, false);
+        const filter = avisFilterBuilder({ responsable: '', avisPropi: false }, null);
         expect(filter).not.toContain('responsable');
     });
+
+    it('avisFilterBuilder_quanAvisPropiEsFalseISenseResponsable_noAfegeixFiltreResponsableEncaraQueHiHagiUsuariActual', () => {
+        const filter = avisFilterBuilder({ responsable: '', avisPropi: false }, 'user01');
+        expect(filter).not.toContain('responsable');
+    });
+
+    it('avisFilterBuilder_quanHiHaResponsable_aplicaFiltreResponsableIndependentmentdAvisPropi', () => {
+        const filterAmbPropi = avisFilterBuilder({ responsable: 'altre_usuari', avisPropi: true }, 'user01');
+        expect(filterAmbPropi).toContain('responsable~altre_usuari');
+        expect(filterAmbPropi).not.toContain("responsable='user01'");
+
+        const filterSensePropi = avisFilterBuilder({ responsable: 'altre_usuari', avisPropi: false }, 'user01');
+        expect(filterSensePropi).toContain('responsable~altre_usuari');
+    });
+
+    it('Avis_quanEsFiltraPerResponsable_esDesactivaElBotoNomesMeusISincronitzaElFiltre', () => {
+        const { rerender } = render(<Avis />);
+
+        expect(screen.getByTitle('Només meus')).toBeInTheDocument();
+
+        // L'usuari introdueix un responsable
+        mocks.filterOnDataChange['avis']?.({ responsable: 'usuari_altre' });
+        rerender(<Avis />);
+
+        // El botó s'ha de desactivar (mostrar el títol 'Tots els avisos')
+        expect(screen.getByTitle('Tots els avisos')).toBeInTheDocument();
+        expect(screen.getByTestId('filter-value')).toHaveTextContent('responsable~usuari_altre');
+        expect(screen.getByTestId('filter-value')).not.toHaveTextContent("responsable='u001'");
+
+        // Ara l'usuari reactiva el botó "Només meus"
+        fireEvent.click(screen.getByTitle('Tots els avisos'));
+        rerender(<Avis />);
+
+        // El botó torna a estar actiu i s'ha buidat el camp responsable
+        expect(screen.getByTitle('Només meus')).toBeInTheDocument();
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('responsable', '');
+        expect(screen.getByTestId('filter-value')).toHaveTextContent("responsable='u001'");
+        expect(screen.getByTestId('filter-value')).not.toHaveTextContent('responsable~usuari_altre');
+
+        // L'usuari desactiva el botó manualment
+        fireEvent.click(screen.getByTitle('Només meus'));
+        rerender(<Avis />);
+
+        // El filtre no ha d'incloure cap responsable
+        expect(screen.getByTitle('Tots els avisos')).toBeInTheDocument();
+        expect(screen.getByTestId('filter-value')).not.toHaveTextContent('responsable');
+    });
+
+    it('Avis_quanLusuariNoEsAdmin_potFiltrarPerResponsableISincronitzaElBoto', () => {
+        mocks.useUserContextMock.mockReturnValue({
+            user: { codi: 'u002' },
+            currentRole: 'USER',
+        });
+        const { rerender } = render(<Avis />);
+
+        expect(screen.getByTitle('Només meus')).toBeInTheDocument();
+
+        // L'usuari normal introdueix un responsable
+        mocks.filterOnDataChange['avis']?.({ responsable: 'usuari_altre' });
+        rerender(<Avis />);
+
+        // El botó s'ha de desactivar (mostrar el títol 'Tots els avisos')
+        expect(screen.getByTitle('Tots els avisos')).toBeInTheDocument();
+        expect(screen.getByTestId('filter-value')).toHaveTextContent('responsable~usuari_altre');
+        expect(screen.getByTestId('filter-value')).not.toHaveTextContent("responsable='u002'");
+
+        // Ara l'usuari reactiva el botó "Només meus"
+        fireEvent.click(screen.getByTitle('Tots els avisos'));
+        rerender(<Avis />);
+
+        // El botó torna a estar actiu i s'ha buidat el camp responsable
+        expect(screen.getByTitle('Només meus')).toBeInTheDocument();
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('responsable', '');
+        expect(screen.getByTestId('filter-value')).toHaveTextContent("responsable='u002'");
+        expect(screen.getByTestId('filter-value')).not.toHaveTextContent('responsable~usuari_altre');
+    });
+
+    it('Avis_quanEsCanviaAppOEntorn_esConservaAvisPropi', () => {
+        const { rerender } = render(<Avis />);
+
+        // Simula la inicialització dels filtres
+        mocks.filterOnDataChange['entornApp']?.({ avisPropi: true });
+        mocks.filterOnDataChange['avis']?.({ noLlegit: true });
+        rerender(<Avis />);
+
+        expect(screen.getByTitle('Només meus')).toBeInTheDocument();
+        expect(screen.getByTestId('filter-value')).toHaveTextContent("responsable='u001'");
+
+        // El formulari entornApp emet un canvi sense el camp no registrat avisPropi
+        mocks.filterOnDataChange['entornApp']?.({ app: { id: 123 } });
+        rerender(<Avis />);
+
+        expect(screen.getByTitle('Només meus')).toBeInTheDocument();
+        expect(screen.getByTestId('filter-value')).toHaveTextContent("responsable='u001'");
+        expect(screen.getByTestId('filter-value')).toHaveTextContent('appId=123');
+    });
+
+    it('Avis_quanEsPremNetejarDespresDeFiltrarResponsable_restableixBotoIFiltreUsuari', () => {
+        const { rerender } = render(<Avis />);
+
+        mocks.filterOnDataChange['avis']?.({ responsable: 'usuari_altre' });
+        rerender(<Avis />);
+        expect(screen.getByTitle('Tots els avisos')).toBeInTheDocument();
+        expect(screen.getByTestId('filter-value')).toHaveTextContent('responsable~usuari_altre');
+
+        fireEvent.click(screen.getByTitle('Netejar'));
+        rerender(<Avis />);
+
+        expect(screen.getByTitle('Només meus')).toBeInTheDocument();
+        expect(screen.getByTestId('filter-value')).toHaveTextContent("responsable='u001'");
+        expect(screen.getByTestId('filter-value')).not.toHaveTextContent('responsable~usuari_altre');
+    });
 });
+

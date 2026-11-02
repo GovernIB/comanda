@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
     clearAppEntornMock: vi.fn(),
     clearMoreMock: vi.fn(),
     filterApiRefCallMock: vi.fn(),
+    filterOnDataChange: {} as Record<string, ((data: any) => void) | undefined>,
     useUserContextMock: vi.fn(() => ({
         user: { codi: 'u001' },
         currentRole: 'ADMIN',
@@ -139,7 +140,10 @@ vi.mock('reactlib', () => ({
             </section>
         );
     },
-    MuiFilter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    MuiFilter: ({ children, resourceName, onDataChange }: any) => {
+        mocks.filterOnDataChange[resourceName] = onDataChange;
+        return <div>{children}</div>;
+    },
     FormField: ({ name }: { name: string }) => <div data-testid={`field-${name}`}>{name}</div>,
     springFilterBuilder: {
         and: (...parts: Array<string | undefined | false | null>) => parts.filter(Boolean).join(' && '),
@@ -268,7 +272,7 @@ describe('Tasca', () => {
         render(<Tasca />);
         const btnMeves = screen.getByTitle('Només meves');
         const btnFinalitzades = screen.getByTitle('Només no finalitzades');
-        
+
         expect(btnMeves).toBeInTheDocument();
         expect(btnFinalitzades).toBeInTheDocument();
 
@@ -312,13 +316,13 @@ describe('Tasca', () => {
         expect(screen.getByTestId('field-responsable')).toBeInTheDocument();
     });
 
-    it('Tasca_quanLusuariNoEsAdmin_noMostraCampFiltreResponsable', () => {
+    it('Tasca_quanLusuariNoEsAdmin_tambeMostraCampFiltreResponsable', () => {
         mocks.useUserContextMock.mockReturnValue({
             user: { codi: 'u002' },
             currentRole: 'USER',
         });
         render(<Tasca />);
-        expect(screen.queryByTestId('field-responsable')).not.toBeInTheDocument();
+        expect(screen.getByTestId('field-responsable')).toBeInTheDocument();
     });
 
     it('tascaFilterBuilder_quanHiHaResponsable_aplicaFiltreResponsable', () => {
@@ -353,4 +357,134 @@ describe('Tasca', () => {
         );
         expect(filter).not.toContain('responsable');
     });
+
+    it('tascaFilterBuilder_quanTascaPropiaEsFalseISenseResponsable_noAfegeixFiltreResponsableEncaraQueHiHagiUsuariActual', () => {
+        const filter = tascaFilterBuilder(
+            { responsable: '', tascaPropia: false },
+            'user01'
+        );
+        expect(filter).not.toContain('responsable');
+    });
+
+    it('tascaFilterBuilder_quanHiHaResponsable_aplicaFiltreResponsableIndependentmentdTascaPropia', () => {
+        const filterAmbPropia = tascaFilterBuilder(
+            { responsable: 'altre_usuari', tascaPropia: true },
+            'user01'
+        );
+        expect(filterAmbPropia).toContain('responsable~altre_usuari');
+        expect(filterAmbPropia).not.toContain("responsable='user01'");
+
+        const filterSensePropia = tascaFilterBuilder(
+            { responsable: 'altre_usuari', tascaPropia: false },
+            'user01'
+        );
+        expect(filterSensePropia).toContain('responsable~altre_usuari');
+    });
+
+    it('tascaFilterBuilder_dataCaducitat2_utilitzaLte', () => {
+        const filter = tascaFilterBuilder(
+            { dataCaducitat2: '2026-11-02' },
+            'user01'
+        );
+        expect(filter).toContain('dataCaducitat<=');
+        expect(filter).not.toContain('dataCaducitat>=');
+    });
+
+    it('Tasca_quanEsFiltraPerResponsable_esDesactivaElBotoNomesMevesISincronitzaElFiltre', () => {
+        const { rerender } = render(<Tasca />);
+
+        expect(screen.getByTitle('Només meves')).toBeInTheDocument();
+
+        // L'usuari introdueix un responsable
+        mocks.filterOnDataChange['tasca']?.({ responsable: 'usuari_altre' });
+        rerender(<Tasca />);
+
+        // El botó s'ha de desactivar (mostrar el títol 'Totes les tasques')
+        expect(screen.getByTitle('Totes les tasques')).toBeInTheDocument();
+        expect(screen.getByTestId('filter-value')).toHaveTextContent('responsable~usuari_altre');
+        expect(screen.getByTestId('filter-value')).not.toHaveTextContent("responsable='u001'");
+
+        // Ara l'usuari reactiva el botó "Només meves"
+        fireEvent.click(screen.getByTitle('Totes les tasques'));
+        rerender(<Tasca />);
+
+        // El botó torna a estar actiu i s'ha buidat el camp responsable
+        expect(screen.getByTitle('Només meves')).toBeInTheDocument();
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('responsable', '');
+        expect(screen.getByTestId('filter-value')).toHaveTextContent("responsable='u001'");
+        expect(screen.getByTestId('filter-value')).not.toHaveTextContent('responsable~usuari_altre');
+
+        // L'usuari desactiva el botó manualment
+        fireEvent.click(screen.getByTitle('Només meves'));
+        rerender(<Tasca />);
+
+        // El filtre no ha d'incloure cap responsable
+        expect(screen.getByTitle('Totes les tasques')).toBeInTheDocument();
+        expect(screen.getByTestId('filter-value')).not.toHaveTextContent('responsable');
+    });
+
+    it('Tasca_quanLusuariNoEsAdmin_potFiltrarPerResponsableISincronitzaElBoto', () => {
+        mocks.useUserContextMock.mockReturnValue({
+            user: { codi: 'u002' },
+            currentRole: 'USER',
+        });
+        const { rerender } = render(<Tasca />);
+
+        expect(screen.getByTitle('Només meves')).toBeInTheDocument();
+
+        // L'usuari normal introdueix un responsable
+        mocks.filterOnDataChange['tasca']?.({ responsable: 'usuari_altre' });
+        rerender(<Tasca />);
+
+        // El botó s'ha de desactivar i el filtre incloure el responsable introduit
+        expect(screen.getByTitle('Totes les tasques')).toBeInTheDocument();
+        expect(screen.getByTestId('filter-value')).toHaveTextContent('responsable~usuari_altre');
+        expect(screen.getByTestId('filter-value')).not.toHaveTextContent("responsable='u002'");
+
+        // Reactiva el botó "Només meves"
+        fireEvent.click(screen.getByTitle('Totes les tasques'));
+        rerender(<Tasca />);
+
+        expect(screen.getByTitle('Només meves')).toBeInTheDocument();
+        expect(mocks.setFieldValueMock).toHaveBeenCalledWith('responsable', '');
+        expect(screen.getByTestId('filter-value')).toHaveTextContent("responsable='u002'");
+        expect(screen.getByTestId('filter-value')).not.toHaveTextContent('responsable~usuari_altre');
+    });
+
+    it('Tasca_quanEsCanviaAppOEntorn_esConservaTascaPropia', () => {
+        const { rerender } = render(<Tasca />);
+
+        // Simula la inicialització dels filtres
+        mocks.filterOnDataChange['entornApp']?.({ tascaPropia: true, finalitzada: true });
+        mocks.filterOnDataChange['tasca']?.({});
+        rerender(<Tasca />);
+
+        expect(screen.getByTitle('Només meves')).toBeInTheDocument();
+        expect(screen.getByTestId('filter-value')).toHaveTextContent("responsable='u001'");
+
+        // El formulari entornApp emet un canvi sense el camp no registrat tascaPropia
+        mocks.filterOnDataChange['entornApp']?.({ app: { id: 123 } });
+        rerender(<Tasca />);
+
+        expect(screen.getByTitle('Només meves')).toBeInTheDocument();
+        expect(screen.getByTestId('filter-value')).toHaveTextContent("responsable='u001'");
+        expect(screen.getByTestId('filter-value')).toHaveTextContent('appId=123');
+    });
+
+    it('Tasca_quanEsPremNetejarDespresDeFiltrarResponsable_restableixBotoIFiltreUsuari', () => {
+        const { rerender } = render(<Tasca />);
+
+        mocks.filterOnDataChange['tasca']?.({ responsable: 'usuari_altre' });
+        rerender(<Tasca />);
+        expect(screen.getByTitle('Totes les tasques')).toBeInTheDocument();
+        expect(screen.getByTestId('filter-value')).toHaveTextContent('responsable~usuari_altre');
+
+        fireEvent.click(screen.getByTitle('Netejar'));
+        rerender(<Tasca />);
+
+        expect(screen.getByTitle('Només meves')).toBeInTheDocument();
+        expect(screen.getByTestId('filter-value')).toHaveTextContent("responsable='u001'");
+        expect(screen.getByTestId('filter-value')).not.toHaveTextContent('responsable~usuari_altre');
+    });
 });
+

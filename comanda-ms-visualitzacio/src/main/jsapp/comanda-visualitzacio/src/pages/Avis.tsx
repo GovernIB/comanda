@@ -168,8 +168,8 @@ const OwnAvisFilterButton: React.FC<{
     );
 };
 
-export const avisFilterBuilder = (data: any, currentUserCodi: string | null, isAdmin?: boolean) => {
-    const responsableFilter = isAdmin && (data?.responsable as string)?.trim()
+export const avisFilterBuilder = (data: any, currentUserCodi: string | null) => {
+    const responsableFilter = (data?.responsable as string)?.trim()
         ? springFilterBuilder.like('responsable', (data.responsable as string).trim())
         : (data?.avisPropi && currentUserCodi ? springFilterBuilder.eq('responsable', `'${currentUserCodi}'`) : null);
 
@@ -188,47 +188,66 @@ export const avisFilterBuilder = (data: any, currentUserCodi: string | null, isA
 const AvisFilter = (props: {
     onEntornAppFilterDataChange: (data: Record<string, unknown>) => void,
     onExpandedFilterDataChange: (data: Record<string, unknown>) => void,
-    isAdmin?: boolean;
 }) => {
-    const { onEntornAppFilterDataChange, onExpandedFilterDataChange, isAdmin } = props;
+    const { onEntornAppFilterDataChange, onExpandedFilterDataChange } = props;
     const { t } = useTranslation();
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const appEntornFilterApiRef = useFilterApiRef();
     const moreFilterApiRef = useFilterApiRef();
     const [isAvisPropiActive, setIsAvisPropiActive] = React.useState(true);
-    const [isResponsableFilled, setIsResponsableFilled] = React.useState(false);
     const appEntornFilterInitialData = { avisPropi: true };
     const moreFilterInitialData = { noLlegit: true };
+    const entornAppDataRef = React.useRef<Record<string, unknown>>(appEntornFilterInitialData);
+    const expandedDataRef = React.useRef<Record<string, unknown>>(moreFilterInitialData);
 
     const handleToggleAvisPropi = () => {
         const newValue = !isAvisPropiActive;
-        if (newValue && isResponsableFilled) {
-            moreFilterApiRef.current?.setFieldValue('responsable', '');
-        }
+        setIsAvisPropiActive(newValue);
         appEntornFilterApiRef.current?.setFieldValue('avisPropi', newValue);
+
+        if (newValue) {
+            moreFilterApiRef.current?.setFieldValue('responsable', '');
+            if (expandedDataRef.current?.responsable) {
+                expandedDataRef.current = { ...expandedDataRef.current, responsable: '' };
+                onExpandedFilterDataChange(expandedDataRef.current);
+            }
+        }
+
+        entornAppDataRef.current = { ...entornAppDataRef.current, avisPropi: newValue };
+        onEntornAppFilterDataChange(entornAppDataRef.current);
     };
 
     const handleExpandedDataChange = (data: Record<string, unknown>) => {
+        expandedDataRef.current = data;
         const respValue = (data?.responsable as string)?.trim();
         const hasResponsable = !!respValue;
-        setIsResponsableFilled(hasResponsable);
         if (hasResponsable && isAvisPropiActive) {
+            setIsAvisPropiActive(false);
             appEntornFilterApiRef.current?.setFieldValue('avisPropi', false);
+            entornAppDataRef.current = { ...entornAppDataRef.current, avisPropi: false };
+            onEntornAppFilterDataChange(entornAppDataRef.current);
         }
         onExpandedFilterDataChange(data);
     };
 
     const handleEntornAppDataChange = (data: Record<string, unknown>) => {
-        setIsAvisPropiActive(!!data?.avisPropi);
-        onEntornAppFilterDataChange(data);
+        const avisPropi = data?.avisPropi !== undefined ? !!data.avisPropi : isAvisPropiActive;
+        const mergedData = { ...data, avisPropi };
+        entornAppDataRef.current = mergedData;
+        setIsAvisPropiActive(avisPropi);
+        onEntornAppFilterDataChange(mergedData);
     };
 
     const netejar = () => {
         appEntornFilterApiRef?.current?.clear();
         moreFilterApiRef?.current?.clear();
         setIsAvisPropiActive(true);
-        setIsResponsableFilled(false);
-    }
+        appEntornFilterApiRef?.current?.setFieldValue('avisPropi', true);
+        entornAppDataRef.current = { avisPropi: true };
+        expandedDataRef.current = { noLlegit: true };
+        onEntornAppFilterDataChange(entornAppDataRef.current);
+        onExpandedFilterDataChange(expandedDataRef.current);
+    };
 
     return (
         <>
@@ -284,13 +303,9 @@ const AvisFilter = (props: {
                 springFilterBuilder={() => undefined}>
                 <Grid container spacing={1} sx={{ display: moreFields ? undefined : 'none', mt: 1 }}>
                     <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}><FormField name="nom" /></Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 4, lg: isAdmin ? 2 : 4 }}><FormField name="descripcio" /></Grid>
+                    <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}><FormField name="descripcio" /></Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}><FormField name="tipus" autocomplete /></Grid>
-                    {isAdmin && (
-                        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
-                            <FormField name="responsable" />
-                        </Grid>
-                    )}
+                    <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}><FormField name="responsable" /></Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}><FormField name="dataInici1" /></Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}><FormField name="dataInici2" /></Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}><FormField name="noLlegit" type="checkbox" /></Grid>
@@ -341,7 +356,7 @@ const Avis = () => {
     }>({ entornAppFilter: undefined, expandedFilter: undefined });
     const noLlegit = filterData?.expandedFilter?.noLlegit;
     const isFilterDataReady = filterData?.entornAppFilter && filterData?.expandedFilter;
-    const filter = avisFilterBuilder({...filterData?.entornAppFilter, ...filterData?.expandedFilter}, currentUserCodi ?? null, isAdmin);
+    const filter = avisFilterBuilder({...filterData?.entornAppFilter, ...filterData?.expandedFilter}, currentUserCodi ?? null);
     const [apps, setApps] = React.useState<Array<{ id?: string | number; nom?: string; logo?: string }>>();
     const apiRef = useMuiDataGridApiRef();
     const gridApiRef = useGridApiRef();
@@ -431,7 +446,6 @@ const Avis = () => {
     }, [t, tLib, marcarLlegit, marcarNoLlegit, isAdmin, actionIsReady]);
     const filterElement = (
         <AvisFilter
-            isAdmin={isAdmin}
             onEntornAppFilterDataChange={data => setFilterData(prevState => ({ ...prevState, entornAppFilter: data }))}
             onExpandedFilterDataChange={data => setFilterData(prevState => ({ ...prevState, expandedFilter: data }))}
         />

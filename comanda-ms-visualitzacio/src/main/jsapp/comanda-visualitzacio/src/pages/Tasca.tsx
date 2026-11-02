@@ -228,7 +228,7 @@ const UnfinishedOnlyFilterButton: React.FC = () => {
 export const tascaFilterBuilder = (data: any, currentUserCodi: string | null) => {
     const responsableFilter = (data?.responsable as string)?.trim()
         ? springFilterBuilder.like('responsable', (data.responsable as string).trim())
-        : (currentUserCodi ? springFilterBuilder.eq('responsable', `'${currentUserCodi}'`) : null);
+        : (data?.tascaPropia && currentUserCodi ? springFilterBuilder.eq('responsable', `'${currentUserCodi}'`) : null);
     return springFilterBuilder.and(
         springFilterBuilder.eq('appId', data?.app?.id),
         springFilterBuilder.eq('entornId', data?.entorn?.id),
@@ -242,7 +242,7 @@ export const tascaFilterBuilder = (data: any, currentUserCodi: string | null) =>
         data?.dataFi1 && springFilterBuilder.gte('dataFi', `'${formatStartOfDay(data?.dataFi1 as string)}'`),
         data?.dataFi2 && springFilterBuilder.lte('dataFi', `'${formatEndOfDay(data?.dataFi2 as string)}'`),
         data?.dataCaducitat1 && springFilterBuilder.gte('dataCaducitat', `'${formatStartOfDay(data?.dataCaducitat1 as string)}'`),
-        data?.dataCaducitat2 && springFilterBuilder.gte('dataCaducitat', `'${formatEndOfDay(data?.dataCaducitat2 as string)}'`),
+        data?.dataCaducitat2 && springFilterBuilder.lte('dataCaducitat', `'${formatEndOfDay(data?.dataCaducitat2 as string)}'`),
         data?.finalitzada && springFilterBuilder.eq('dataFi', null),
         responsableFilter
     );
@@ -251,46 +251,65 @@ export const tascaFilterBuilder = (data: any, currentUserCodi: string | null) =>
 const TascaFilter = (props: {
     onEntornAppFilterDataChange: (data: Record<string, unknown>) => void;
     onExpandedFilterDataChange: (data: Record<string, unknown>) => void;
-    isAdmin?: boolean;
 }) => {
-    const { onEntornAppFilterDataChange, onExpandedFilterDataChange, isAdmin } = props;
+    const { onEntornAppFilterDataChange, onExpandedFilterDataChange } = props;
     const { t } = useTranslation();
     const [moreFields, setMoreFields] = React.useState<boolean>(false);
     const appEntornFilterApiRef = useFilterApiRef();
     const moreFilterApiRef = useFilterApiRef();
     const [isTascaPropiaActive, setIsTascaPropiaActive] = React.useState(true);
-    const [isResponsableFilled, setIsResponsableFilled] = React.useState(false);
     const appEntornFilterInitialData = { tascaPropia: true, finalitzada: true };
     const moreFilterInitialData = {};
+    const entornAppDataRef = React.useRef<Record<string, unknown>>(appEntornFilterInitialData);
+    const expandedDataRef = React.useRef<Record<string, unknown>>(moreFilterInitialData);
 
     const handleToggleTascaPropia = () => {
         const newValue = !isTascaPropiaActive;
-        if (newValue && isResponsableFilled) {
-            moreFilterApiRef.current?.setFieldValue('responsable', '');
-        }
+        setIsTascaPropiaActive(newValue);
         appEntornFilterApiRef.current?.setFieldValue('tascaPropia', newValue);
+
+        if (newValue) {
+            moreFilterApiRef.current?.setFieldValue('responsable', '');
+            if (expandedDataRef.current?.responsable) {
+                expandedDataRef.current = { ...expandedDataRef.current, responsable: '' };
+                onExpandedFilterDataChange(expandedDataRef.current);
+            }
+        }
+
+        entornAppDataRef.current = { ...entornAppDataRef.current, tascaPropia: newValue };
+        onEntornAppFilterDataChange(entornAppDataRef.current);
     };
 
     const handleExpandedDataChange = (data: Record<string, unknown>) => {
+        expandedDataRef.current = data;
         const respValue = (data?.responsable as string)?.trim();
         const hasResponsable = !!respValue;
-        setIsResponsableFilled(hasResponsable);
         if (hasResponsable && isTascaPropiaActive) {
+            setIsTascaPropiaActive(false);
             appEntornFilterApiRef.current?.setFieldValue('tascaPropia', false);
+            entornAppDataRef.current = { ...entornAppDataRef.current, tascaPropia: false };
+            onEntornAppFilterDataChange(entornAppDataRef.current);
         }
         onExpandedFilterDataChange(data);
     };
 
     const handleEntornAppDataChange = (data: Record<string, unknown>) => {
-        setIsTascaPropiaActive(!!data?.tascaPropia);
-        onEntornAppFilterDataChange(data);
+        const tascaPropia = data?.tascaPropia !== undefined ? !!data.tascaPropia : isTascaPropiaActive;
+        const mergedData = { ...data, tascaPropia };
+        entornAppDataRef.current = mergedData;
+        setIsTascaPropiaActive(tascaPropia);
+        onEntornAppFilterDataChange(mergedData);
     };
 
     const netejar = () => {
         appEntornFilterApiRef?.current?.clear();
         moreFilterApiRef?.current?.clear();
         setIsTascaPropiaActive(true);
-        setIsResponsableFilled(false);
+        appEntornFilterApiRef?.current?.setFieldValue('tascaPropia', true);
+        entornAppDataRef.current = { tascaPropia: true, finalitzada: true };
+        expandedDataRef.current = {};
+        onEntornAppFilterDataChange(entornAppDataRef.current);
+        onExpandedFilterDataChange(expandedDataRef.current);
     };
 
     return <>
@@ -328,12 +347,12 @@ const TascaFilter = (props: {
             springFilterBuilder={() => undefined}
         >
             <Grid container spacing={1} sx={{ display: moreFields ? undefined : 'none', mt: 1 }}>
-                <Grid size={{ xs: 12, sm: isAdmin ? 6 : 12, md: 4, lg: 2 }}><FormField name="nom" /></Grid>
-                <Grid size={{ xs: 12, sm: 6, md: isAdmin ? 4 : 8, lg: isAdmin ? 2 : 4 }}><FormField name="descripcio" /></Grid>
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}><FormField name="nom" /></Grid>
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}><FormField name="descripcio" /></Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}><FormField name="numeroExpedient" /></Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}><FormField name="tipus" /></Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}><FormField name="prioritat" autocomplete /></Grid>
-                {isAdmin && (<Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}><FormField name="responsable" /></Grid>)}
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}><FormField name="responsable" /></Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3, lg: 2 }}><FormField name="dataInici1" /></Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3, lg: 2 }}><FormField name="dataInici2" /></Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3, lg: 2 }}><FormField name="dataFi1" /></Grid>
@@ -544,7 +563,6 @@ const Tasca = () => {
 
     const filterElement = (
         <TascaFilter
-            isAdmin={isAdmin}
             onEntornAppFilterDataChange={data =>
                 setFilterData(prevState => ({ ...prevState, entornAppFilter: data }))
             }
