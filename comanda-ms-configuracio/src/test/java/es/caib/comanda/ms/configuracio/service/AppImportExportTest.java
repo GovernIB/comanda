@@ -370,8 +370,6 @@ public class AppImportExportTest {
         existing.setEntornApps(new ArrayList<>(Collections.singletonList(eae1)));
 
         when(appRepository.findByCodi("APP1")).thenReturn(existing);
-        when(appRepository.saveAndFlush(existing)).thenReturn(existing);
-        doAnswer(inv -> null).when(appRepository).refresh(existing);
 
         when(entornRepository.findByCodi(anyString())).thenReturn(ent1);
         when(entornRepository.findByCodi("E2")).thenReturn(ent2);
@@ -386,6 +384,7 @@ public class AppImportExportTest {
         AppServiceImpl.AppImportResult result = executor.exec(App.APP_IMPORT, null, params);
 
         assertNotNull(result);
+        verify(appRepository, never()).saveAndFlush(any());
         // Only one new save for E2
         verify(entornAppRepository, times(1)).save(argThat(e ->
                 "E2".equals(e.getEntorn().getCodi())
@@ -394,6 +393,31 @@ public class AppImportExportTest {
                         && e.isSalutAuth()));
         // No delete called
         verify(entornAppRepository, never()).delete(any(EntornAppEntity.class));
+    }
+
+    @Test
+    void import_existingApp_combine_doesNotModifyAppFieldsOrGrup() {
+        String json = "{\"codi\":\"APP1\",\"nom\":\"Nom Nou\",\"grup\":{\"nom\":\"Grup Nou\",\"colorClar\":\"#fff\",\"colorFosc\":\"#000\"},\"entornApps\":[]}";
+
+        AppEntity existing = new AppEntity();
+        existing.setId(7L);
+        existing.setCodi("APP1");
+        existing.setNom("Nom Original");
+        existing.setGrup(null);
+
+        when(appRepository.findByCodi("APP1")).thenReturn(existing);
+
+        AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
+        AppImportForm params = new AppImportForm();
+        params.setJsonContent(json);
+        params.setDecision("COMBINE");
+        AppServiceImpl.AppImportResult result = executor.exec(App.APP_IMPORT, null, params);
+
+        assertNotNull(result);
+        assertEquals("Nom Original", existing.getNom());
+        assertNull(existing.getGrup());
+        verify(appGrupRepository, never()).save(any());
+        verify(appRepository, never()).saveAndFlush(any());
     }
 
     @Test

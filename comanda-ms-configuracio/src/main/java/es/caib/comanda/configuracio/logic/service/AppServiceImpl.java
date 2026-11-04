@@ -280,42 +280,44 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
                         appEntity = new AppEntity();
                         appEntity.setCodi(appExport.getCodi());
                     }
-                    // Actualitzar camps bàsics (també en OVERWRITE i COMBINE si cal actualitzar nom/flags)
-                    if (appExport.getNom() != null) appEntity.setNom(appExport.getNom());
-                    if (appExport.getDescripcio() != null) appEntity.setDescripcio(appExport.getDescripcio());
-                    appEntity.setActiva(appExport.isActiva());
-                    if (appExport.getLogo() != null) appEntity.setLogo(appExport.getLogo());
-                    String grupNom = null;
-                    String grupColorClar = null;
-                    String grupColorFosc = null;
-                    if (appExport.getGrup() != null) {
-                        grupNom = appExport.getGrup().getNom();
-                        grupColorClar = appExport.getGrup().getColorClar();
-                        grupColorFosc = appExport.getGrup().getColorFosc();
-                    }
-
-                    if (grupNom != null) {
-                        if (grupNom.trim().isEmpty()) {
-                            appEntity.setGrup(null);
-                        } else {
-                            final String finalGrupNom = grupNom.trim();
-                            final String finalColorClar = grupColorClar != null && !grupColorClar.trim().isEmpty() ? grupColorClar.trim() : null;
-                            final String finalColorFosc = grupColorFosc != null && !grupColorFosc.trim().isEmpty() ? grupColorFosc.trim() : null;
-                            AppGrupEntity grup = appGrupRepository.findByNom(finalGrupNom)
-                                    .orElseGet(() -> {
-                                        AppGrupEntity nouGrup = new AppGrupEntity();
-                                        nouGrup.setNom(finalGrupNom);
-                                        nouGrup.setColorClar(finalColorClar);
-                                        nouGrup.setColorFosc(finalColorFosc);
-                                        nouGrup.setOrdre(appGrupRepository.count());
-                                        return appGrupRepository.save(nouGrup);
-                                    });
-                            appEntity.setGrup(grup);
+                    // Actualitzar camps bàsics i grup només si és una app nova o si la decisió és OVERWRITE
+                    if (!exists || "OVERWRITE".equalsIgnoreCase(decision)) {
+                        if (appExport.getNom() != null) appEntity.setNom(appExport.getNom());
+                        if (appExport.getDescripcio() != null) appEntity.setDescripcio(appExport.getDescripcio());
+                        appEntity.setActiva(appExport.isActiva());
+                        if (appExport.getLogo() != null) appEntity.setLogo(appExport.getLogo());
+                        String grupNom = null;
+                        String grupColorClar = null;
+                        String grupColorFosc = null;
+                        if (appExport.getGrup() != null) {
+                            grupNom = appExport.getGrup().getNom();
+                            grupColorClar = appExport.getGrup().getColorClar();
+                            grupColorFosc = appExport.getGrup().getColorFosc();
                         }
+
+                        if (grupNom != null) {
+                            if (grupNom.trim().isEmpty()) {
+                                appEntity.setGrup(null);
+                            } else {
+                                final String finalGrupNom = grupNom.trim();
+                                final String finalColorClar = grupColorClar != null && !grupColorClar.trim().isEmpty() ? grupColorClar.trim() : null;
+                                final String finalColorFosc = grupColorFosc != null && !grupColorFosc.trim().isEmpty() ? grupColorFosc.trim() : null;
+                                AppGrupEntity grup = appGrupRepository.findByNom(finalGrupNom)
+                                        .orElseGet(() -> {
+                                            AppGrupEntity nouGrup = new AppGrupEntity();
+                                            nouGrup.setNom(finalGrupNom);
+                                            nouGrup.setColorClar(finalColorClar);
+                                            nouGrup.setColorFosc(finalColorFosc);
+                                            nouGrup.setOrdre(appGrupRepository.count());
+                                            return appGrupRepository.save(nouGrup);
+                                        });
+                                appEntity.setGrup(grup);
+                            }
+                        }
+                        // Persist base app before handling entornApps to ensure id exists
+                        appEntity = appRepository.saveAndFlush(appEntity);
+                        appRepository.refresh(appEntity);
                     }
-                    // Persist base app before handling entornApps to ensure id exists
-                    appEntity = appRepository.saveAndFlush(appEntity);
-                    appRepository.refresh(appEntity);
                     // Gestionar entornApps segons decisió
                     if (appExport.getEntornApps() != null) {
                         if (exists) {
