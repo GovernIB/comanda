@@ -30,6 +30,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.util.ReflectionUtils;
 
+import es.caib.comanda.configuracio.logic.intf.model.export.AppGrupExport;
 import es.caib.comanda.configuracio.persist.entity.AppGrupEntity;
 import es.caib.comanda.configuracio.persist.repository.AppGrupRepository;
 
@@ -153,9 +154,20 @@ public class AppImportExportTest {
         AppGrupEntity grup = new AppGrupEntity();
         grup.setId(5L);
         grup.setNom("Grup Transversal");
+        grup.setColorClar("#ffffff");
+        grup.setColorFosc("#000000");
         entity.setGrup(grup);
 
-        AppExport mapped = AppExport.builder().codi("APP1").nom("Aplicacio 1").grupNom("Grup Transversal").build();
+        AppGrupExport grupExport = AppGrupExport.builder()
+                .nom("Grup Transversal")
+                .colorClar("#ffffff")
+                .colorFosc("#000000")
+                .build();
+        AppExport mapped = AppExport.builder()
+                .codi("APP1")
+                .nom("Aplicacio 1")
+                .grup(grupExport)
+                .build();
         when(appExportMapper.toExport(entity)).thenReturn(mapped);
 
         AppServiceImpl.AppExportReportGenerator generator = service.new AppExportReportGenerator();
@@ -163,7 +175,10 @@ public class AppImportExportTest {
 
         assertNotNull(data);
         assertEquals(1, data.size());
-        assertEquals("Grup Transversal", data.get(0).getGrupNom());
+        assertNotNull(data.get(0).getGrup());
+        assertEquals("Grup Transversal", data.get(0).getGrup().getNom());
+        assertEquals("#ffffff", data.get(0).getGrup().getColorClar());
+        assertEquals("#000000", data.get(0).getGrup().getColorFosc());
         verify(appExportMapper, times(1)).toExport(entity);
     }
 
@@ -553,8 +568,8 @@ public class AppImportExportTest {
     }
 
     @Test
-    void import_newApp_withExistingGrupNom_assignsGrup() {
-        String json = "{\"codi\":\"APP_GRP\",\"nom\":\"App With Grup\",\"activa\":true,\"grupNom\":\"Existing Group\",\"entornApps\":[]}";
+    void import_newApp_withExistingGrup_assignsGrup() {
+        String json = "{\"codi\":\"APP_GRP\",\"nom\":\"App With Grup\",\"activa\":true,\"grup\":{\"nom\":\"Existing Group\"},\"entornApps\":[]}";
         AppGrupEntity existingGrup = new AppGrupEntity();
         existingGrup.setId(20L);
         existingGrup.setNom("Existing Group");
@@ -581,8 +596,8 @@ public class AppImportExportTest {
     }
 
     @Test
-    void import_newApp_withNewGrupNom_createsAndAssignsGrup() {
-        String json = "{\"codi\":\"APP_GRP2\",\"nom\":\"App With New Grup\",\"activa\":true,\"grupNom\":\"Brand New Group\",\"entornApps\":[]}";
+    void import_newApp_withNewGrup_createsAndAssignsGrup() {
+        String json = "{\"codi\":\"APP_GRP2\",\"nom\":\"App With New Grup\",\"activa\":true,\"grup\":{\"nom\":\"Brand New Group\"},\"entornApps\":[]}";
         when(appGrupRepository.findByNom("Brand New Group")).thenReturn(Optional.empty());
         when(appGrupRepository.count()).thenReturn(5L);
         AppGrupEntity savedGrup = new AppGrupEntity();
@@ -612,8 +627,8 @@ public class AppImportExportTest {
     }
 
     @Test
-    void import_newApp_withEmptyGrupNom_setsGrupToNull() {
-        String json = "{\"codi\":\"APP_NOGRP\",\"nom\":\"App Without Grup\",\"activa\":true,\"grupNom\":\"   \",\"entornApps\":[]}";
+    void import_newApp_withEmptyGrup_setsGrupToNull() {
+        String json = "{\"codi\":\"APP_NOGRP\",\"nom\":\"App Without Grup\",\"activa\":true,\"grup\":{\"nom\":\"   \"},\"entornApps\":[]}";
         when(appRepository.findByCodi("APP_NOGRP")).thenReturn(null);
         when(appRepository.saveAndFlush(any(AppEntity.class))).thenAnswer(inv -> {
             AppEntity a = inv.getArgument(0);
@@ -632,6 +647,112 @@ public class AppImportExportTest {
         verify(appRepository).saveAndFlush(argThat(app -> app.getGrup() == null));
         verify(appGrupRepository, never()).findByNom(anyString());
         verify(appGrupRepository, never()).save(any(AppGrupEntity.class));
+    }
+
+    @Test
+    void import_newApp_withNewGrupObject_createsAndAssignsGrupWithColors() {
+        String json = "{\"codi\":\"APP_GRP3\",\"nom\":\"App With Grup Object\",\"activa\":true,\"grup\":{\"nom\":\"Colored Group\",\"colorClar\":\"#aabbcc\",\"colorFosc\":\"#112233\"},\"entornApps\":[]}";
+        when(appGrupRepository.findByNom("Colored Group")).thenReturn(Optional.empty());
+        when(appGrupRepository.count()).thenReturn(7L);
+        AppGrupEntity savedGrup = new AppGrupEntity();
+        savedGrup.setId(40L);
+        savedGrup.setNom("Colored Group");
+        savedGrup.setColorClar("#aabbcc");
+        savedGrup.setColorFosc("#112233");
+        savedGrup.setOrdre(7L);
+        when(appGrupRepository.save(any(AppGrupEntity.class))).thenReturn(savedGrup);
+
+        when(appRepository.findByCodi("APP_GRP3")).thenReturn(null);
+        when(appRepository.saveAndFlush(any(AppEntity.class))).thenAnswer(inv -> {
+            AppEntity a = inv.getArgument(0);
+            a.setId(203L);
+            return a;
+        });
+
+        AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
+        AppImportForm params = new AppImportForm();
+        params.setJsonContent(json);
+
+        AppServiceImpl.AppImportResult result = executor.exec(App.APP_IMPORT, null, params);
+
+        assertNotNull(result);
+        assertEquals(1, result.getApps().size());
+        verify(appGrupRepository).save(argThat(g ->
+                "Colored Group".equals(g.getNom()) &&
+                "#aabbcc".equals(g.getColorClar()) &&
+                "#112233".equals(g.getColorFosc()) &&
+                Long.valueOf(7L).equals(g.getOrdre())));
+        verify(appRepository).saveAndFlush(argThat(app ->
+                app.getGrup() != null && "Colored Group".equals(app.getGrup().getNom())));
+    }
+
+    @Test
+    void import_newApp_withExistingGrupObject_doesNotModifyGrupColors() {
+        String json = "{\"codi\":\"APP_GRP4\",\"nom\":\"App With Existing Grup\",\"activa\":true,\"grup\":{\"nom\":\"Existing Group\",\"colorClar\":\"#ffffff\",\"colorFosc\":\"#000000\"},\"entornApps\":[]}";
+        AppGrupEntity existingGrup = new AppGrupEntity();
+        existingGrup.setId(25L);
+        existingGrup.setNom("Existing Group");
+        existingGrup.setColorClar("#111111");
+        existingGrup.setColorFosc("#222222");
+        when(appGrupRepository.findByNom("Existing Group")).thenReturn(Optional.of(existingGrup));
+
+        when(appRepository.findByCodi("APP_GRP4")).thenReturn(null);
+        when(appRepository.saveAndFlush(any(AppEntity.class))).thenAnswer(inv -> {
+            AppEntity a = inv.getArgument(0);
+            a.setId(204L);
+            return a;
+        });
+
+        AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
+        AppImportForm params = new AppImportForm();
+        params.setJsonContent(json);
+
+        AppServiceImpl.AppImportResult result = executor.exec(App.APP_IMPORT, null, params);
+
+        assertNotNull(result);
+        assertEquals(1, result.getApps().size());
+        verify(appRepository).saveAndFlush(argThat(app ->
+                app.getGrup() != null && "Existing Group".equals(app.getGrup().getNom())));
+        verify(appGrupRepository, never()).save(any(AppGrupEntity.class));
+    }
+
+    @Test
+    void onChange_withGrupColorConflict_setsImportedGrupColorsConflictTrue() {
+        String json = "{\"codi\":\"APP_CONFLICT\",\"nom\":\"App Conflict\",\"grup\":{\"nom\":\"Group A\",\"colorClar\":\"#ffffff\",\"colorFosc\":\"#000000\"}}";
+        AppGrupEntity existing = new AppGrupEntity();
+        existing.setId(10L);
+        existing.setNom("Group A");
+        existing.setColorClar("#aaaaaa");
+        existing.setColorFosc("#bbbbbb");
+        when(appGrupRepository.findByNom("Group A")).thenReturn(Optional.of(existing));
+
+        AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
+        AppImportForm target = new AppImportForm();
+        executor.onChange(null, null, AppImportForm.Fields.jsonContent, json, null, null, target);
+
+        assertTrue(target.getImportedGrupColorsConflict());
+        assertNotNull(target.getImportedGrupConflictNames());
+        assertEquals(1, target.getImportedGrupConflictNames().length);
+        assertEquals("Group A", target.getImportedGrupConflictNames()[0]);
+    }
+
+    @Test
+    void onChange_withMatchingGrupColors_setsImportedGrupColorsConflictFalse() {
+        String json = "{\"codi\":\"APP_MATCH\",\"nom\":\"App Match\",\"grup\":{\"nom\":\"Group A\",\"colorClar\":\"#ffffff\",\"colorFosc\":\"#000000\"}}";
+        AppGrupEntity existing = new AppGrupEntity();
+        existing.setId(10L);
+        existing.setNom("Group A");
+        existing.setColorClar("#ffffff");
+        existing.setColorFosc("#000000");
+        when(appGrupRepository.findByNom("Group A")).thenReturn(Optional.of(existing));
+
+        AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
+        AppImportForm target = new AppImportForm();
+        executor.onChange(null, null, AppImportForm.Fields.jsonContent, json, null, null, target);
+
+        assertFalse(target.getImportedGrupColorsConflict());
+        assertNotNull(target.getImportedGrupConflictNames());
+        assertEquals(0, target.getImportedGrupConflictNames().length);
     }
 
     // --- helpers ---

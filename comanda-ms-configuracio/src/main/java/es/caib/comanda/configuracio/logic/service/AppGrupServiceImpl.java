@@ -4,7 +4,6 @@ import es.caib.comanda.configuracio.logic.intf.model.AppGrup;
 import es.caib.comanda.configuracio.logic.intf.service.AppGrupService;
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
 import es.caib.comanda.configuracio.persist.entity.AppGrupEntity;
-import es.caib.comanda.configuracio.persist.repository.AppRepository;
 import es.caib.comanda.ms.logic.helper.CacheHelper;
 import es.caib.comanda.ms.logic.intf.exception.AnswerRequiredException;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
@@ -21,9 +20,6 @@ import java.util.Map;
 @Transactional
 public class AppGrupServiceImpl extends BaseMutableResourceService<AppGrup, Long, AppGrupEntity> implements AppGrupService {
 
-    @Autowired
-    private AppRepository appRepository;
-
     @Autowired(required = false)
     private CacheHelper cacheHelper;
 
@@ -37,9 +33,6 @@ public class AppGrupServiceImpl extends BaseMutableResourceService<AppGrup, Long
                     cacheHelper.evictAppCacheItem(app.getId(), app.getCodi());
                 }
             }
-        }
-        if (entity.getId() != null) {
-            appRepository.unbindGrup(entity.getId());
         }
     }
 }

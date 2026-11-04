@@ -3,10 +3,6 @@ package es.caib.comanda.configuracio.persist.repository;
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
 
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-
 import java.util.List;
 
 /**
@@ -27,9 +23,5 @@ public interface AppRepository extends BaseRepository<AppEntity, Long> {
      * @return L'entitat de l'aplicació o null si no existeix
      */
     AppEntity findByCodi(String codi);
-
-    @Modifying
-    @Query("update AppEntity a set a.grup = null where a.grup.id = :grupId")
-    void unbindGrup(@Param("grupId") Long grupId);
 
 }

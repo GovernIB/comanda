@@ -90,13 +90,12 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
     }
 
     @Override
-    protected App entityToResource(AppEntity entity) {
-        App resource = super.entityToResource(entity);
-        if (entity.getGrup() != null) {
+    protected void afterConversion(AppEntity entity, App resource) {
+        super.afterConversion(entity, resource);
+        if (entity != null && entity.getGrup() != null) {
             resource.setGrupColorClar(entity.getGrup().getColorClar());
             resource.setGrupColorFosc(entity.getGrup().getColorFosc());
         }
-        return resource;
     }
 
     @Override
@@ -279,14 +278,28 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
                     if (appExport.getDescripcio() != null) appEntity.setDescripcio(appExport.getDescripcio());
                     appEntity.setActiva(appExport.isActiva());
                     if (appExport.getLogo() != null) appEntity.setLogo(appExport.getLogo());
-                    if (appExport.getGrupNom() != null) {
-                        if (appExport.getGrupNom().trim().isEmpty()) {
+                    String grupNom = null;
+                    String grupColorClar = null;
+                    String grupColorFosc = null;
+                    if (appExport.getGrup() != null) {
+                        grupNom = appExport.getGrup().getNom();
+                        grupColorClar = appExport.getGrup().getColorClar();
+                        grupColorFosc = appExport.getGrup().getColorFosc();
+                    }
+
+                    if (grupNom != null) {
+                        if (grupNom.trim().isEmpty()) {
                             appEntity.setGrup(null);
                         } else {
-                            AppGrupEntity grup = appGrupRepository.findByNom(appExport.getGrupNom().trim())
+                            final String finalGrupNom = grupNom.trim();
+                            final String finalColorClar = grupColorClar != null && !grupColorClar.trim().isEmpty() ? grupColorClar.trim() : null;
+                            final String finalColorFosc = grupColorFosc != null && !grupColorFosc.trim().isEmpty() ? grupColorFosc.trim() : null;
+                            AppGrupEntity grup = appGrupRepository.findByNom(finalGrupNom)
                                     .orElseGet(() -> {
                                         AppGrupEntity nouGrup = new AppGrupEntity();
-                                        nouGrup.setNom(appExport.getGrupNom().trim());
+                                        nouGrup.setNom(finalGrupNom);
+                                        nouGrup.setColorClar(finalColorClar);
+                                        nouGrup.setColorFosc(finalColorFosc);
                                         nouGrup.setOrdre(appGrupRepository.count());
                                         return appGrupRepository.save(nouGrup);
                                     });
@@ -437,6 +450,38 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
                         if (exists) {
                             target.setDecision("COMBINE");
                         }
+
+                        Set<String> conflictedGroups = new LinkedHashSet<>();
+                        for (AppExport export : exports) {
+                            String gNom = null;
+                            String colorClar = null;
+                            String colorFosc = null;
+                            if (export.getGrup() != null) {
+                                gNom = export.getGrup().getNom();
+                                colorClar = export.getGrup().getColorClar();
+                                colorFosc = export.getGrup().getColorFosc();
+                            }
+
+                            if (gNom != null && !gNom.trim().isEmpty()) {
+                                Optional<AppGrupEntity> existingOpt = appGrupRepository.findByNom(gNom.trim());
+                                if (existingOpt.isPresent()) {
+                                    AppGrupEntity existing = existingOpt.get();
+                                    String expClar = colorClar != null && !colorClar.trim().isEmpty() ? colorClar.trim() : null;
+                                    String expFosc = colorFosc != null && !colorFosc.trim().isEmpty() ? colorFosc.trim() : null;
+                                    String dbClar = existing.getColorClar() != null && !existing.getColorClar().trim().isEmpty() ? existing.getColorClar().trim() : null;
+                                    String dbFosc = existing.getColorFosc() != null && !existing.getColorFosc().trim().isEmpty() ? existing.getColorFosc().trim() : null;
+
+                                    boolean clarDiffers = expClar != null && !Objects.equals(expClar, dbClar);
+                                    boolean foscDiffers = expFosc != null && !Objects.equals(expFosc, dbFosc);
+
+                                    if (clarDiffers || foscDiffers) {
+                                        conflictedGroups.add(existing.getNom());
+                                    }
+                                }
+                            }
+                        }
+                        target.setImportedGrupColorsConflict(!conflictedGroups.isEmpty());
+                        target.setImportedGrupConflictNames(conflictedGroups.toArray(new String[0]));
                     } catch (Exception e) {
                         log.warn("Error parsing JSON content in onChange", e);
                     }

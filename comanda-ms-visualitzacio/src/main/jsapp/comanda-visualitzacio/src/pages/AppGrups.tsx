@@ -56,6 +56,7 @@ const AppGrups: React.FC = () => {
             <MuiDataGrid
                 title={t(($) => $.page.appGrups.title)}
                 resourceName="appGrup"
+                popupEditFormDialogResourceTitle={t(($) => $.page.appGrups.resourceTitle)}
                 columns={columns}
                 toolbarType="upper"
                 paginationActive

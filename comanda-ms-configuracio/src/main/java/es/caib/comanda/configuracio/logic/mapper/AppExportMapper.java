@@ -1,8 +1,10 @@
 package es.caib.comanda.configuracio.logic.mapper;
 
 import es.caib.comanda.configuracio.logic.intf.model.export.AppExport;
+import es.caib.comanda.configuracio.logic.intf.model.export.AppGrupExport;
 import es.caib.comanda.configuracio.logic.intf.model.export.EntornAppExport;
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
+import es.caib.comanda.configuracio.persist.entity.AppGrupEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -21,9 +23,14 @@ public interface AppExportMapper {
      * Els camps amb el mateix nom es mapegen automàticament.
      * La llista d'entornApps es mapeja utilitzant el mètode toEntornAppExport.
      */
-    @Mapping(target = "grupNom", source = "grup.nom")
+    @Mapping(target = "grup", source = "grup")
     public AppExport toExport(AppEntity entity);
     public List<AppExport> toExport(List<AppEntity> entities);
+
+    /**
+     * Converteix una AppGrupEntity a una AppGrupExport.
+     */
+    public AppGrupExport toAppGrupExport(AppGrupEntity entity);
 
     /**
      * Converteix una EntornAppEntity a una EntornAppExport.

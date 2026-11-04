@@ -11,6 +11,7 @@ import es.caib.comanda.configuracio.logic.intf.model.EntornApp;
 import es.caib.comanda.configuracio.logic.mapper.AppExportMapper;
 import es.caib.comanda.configuracio.logic.service.AppServiceImpl;
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
+import es.caib.comanda.configuracio.persist.entity.AppGrupEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornEntity;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
@@ -234,6 +235,38 @@ public class AppServiceImplTest {
         List<AppEntity> result = appService.exposedReorderFindLinesWithParent();
         assertEquals(1, result.size());
         verify(appRepository, times(1)).findAllByOrderByOrdreAsc();
+    }
+
+    @Test
+    @DisplayName("afterConversion: quan entity té grup amb colors els assigna al resource")
+    void afterConversion_quanEntityTeGrupAmbColors_assignaColors() {
+        AppGrupEntity grup = new AppGrupEntity();
+        grup.setId(5L);
+        grup.setColorClar("#112233");
+        grup.setColorFosc("#445566");
+        appEntity.setGrup(grup);
+
+        appService.afterConversion(appEntity, appResource);
+
+        assertEquals("#112233", appResource.getGrupColorClar());
+        assertEquals("#445566", appResource.getGrupColorFosc());
+    }
+
+    @Test
+    @DisplayName("afterConversion: quan entity no té grup deixa colors nulls")
+    void afterConversion_quanEntityNoTeGrup_deixaColorsNull() {
+        appEntity.setGrup(null);
+
+        appService.afterConversion(appEntity, appResource);
+
+        assertNull(appResource.getGrupColorClar());
+        assertNull(appResource.getGrupColorFosc());
+    }
+
+    @Test
+    @DisplayName("afterConversion: quan entity és null no falla")
+    void afterConversion_quanEntityEsNull_noFalla() {
+        assertDoesNotThrow(() -> appService.afterConversion(null, appResource));
     }
 
     @Test

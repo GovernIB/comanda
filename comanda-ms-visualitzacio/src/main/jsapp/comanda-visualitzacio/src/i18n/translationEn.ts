@@ -834,6 +834,7 @@ const translationEn: translationResourcesType = {
                 combine: "Combine environments (add only non-existent)",
                 skip: "Skip",
                 success: "Import executed successfully",
+                grupColorsConflict: "Some application groups to import already exist with different colors. These changes will not be applied; if needed, they must be updated manually in Application groups.",
                 noFile: "No file selected",
                 parseError: "Error when parsing the file",
             },
@@ -844,6 +845,7 @@ const translationEn: translationResourcesType = {
         },
         appGrups: {
             title: "Application groups",
+            resourceTitle: "application group",
             nom: "Name",
             colorClar: "Light color",
             colorFosc: "Dark color",

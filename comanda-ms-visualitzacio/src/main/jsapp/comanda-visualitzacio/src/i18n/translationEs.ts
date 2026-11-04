@@ -834,6 +834,7 @@ const translationEs: translationResourcesType = {
                 combine: "Combinar entornos (añadir sólo los inexistentes)",
                 skip: "Omitir",
                 success: "Importación ejecutada correctamente",
+                grupColorsConflict: "Algunos de los grupos de aplicaciones a importar ya existen con colores diferentes. Estos cambios no se aplicarán; si es necesario, deben actualizarse manualmente desde Grupos de aplicaciones.",
                 noFile: "No se ha seleccionado ningún fichero",
                 parseError: "Error al analizar el fichero",
             },
@@ -844,6 +845,7 @@ const translationEs: translationResourcesType = {
         },
         appGrups: {
             title: "Grupos de aplicaciones",
+            resourceTitle: "grupo de aplicaciones",
             nom: "Nombre",
             colorClar: "Color claro",
             colorFosc: "Color oscuro",

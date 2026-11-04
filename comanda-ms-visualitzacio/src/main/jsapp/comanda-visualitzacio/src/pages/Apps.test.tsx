@@ -90,6 +90,7 @@ const mocks = vi.hoisted(() => ({
                         overwrite: 'Sobreescriure',
                         combine: 'Combinar',
                         skip: 'Ometre',
+                        grupColorsConflict: "Alguns grups tenen colors diferents que no s'aplicaran",
                     },
                     fields: {
                         salutAuthLegend: 'Auth salut',
@@ -1033,6 +1034,34 @@ describe('Apps', () => {
         );
         expect(action).toBeDefined();
         expect(action.hidden()).toBe(true);
+    });
+
+    it('Apps_importForm_quanHiHaConflicteDeColorsDeGrup_mostraAlertaWarning', () => {
+        mocks.useParamsMock.mockReturnValue({ id: undefined });
+        mocks.useFormContextValue.data = {
+            importedAppCodes: ['APP1'],
+            importedGrupColorsConflict: true,
+        };
+
+        render(<Apps />);
+
+        expect(
+            screen.getByText("Alguns grups tenen colors diferents que no s'aplicaran")
+        ).toBeInTheDocument();
+    });
+
+    it('Apps_importForm_quanNoHiHaConflicteDeColorsDeGrup_noMostraAlertaWarning', () => {
+        mocks.useParamsMock.mockReturnValue({ id: undefined });
+        mocks.useFormContextValue.data = {
+            importedAppCodes: ['APP1'],
+            importedGrupColorsConflict: false,
+        };
+
+        render(<Apps />);
+
+        expect(
+            screen.queryByText("Alguns grups tenen colors diferents que no s'aplicaran")
+        ).not.toBeInTheDocument();
     });
 });
 

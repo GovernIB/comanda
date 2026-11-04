@@ -963,6 +963,11 @@ const AppImportFormContent = () => {
                         </RadioGroup>
                     </FormControl>
                 )}
+                {data?.importedGrupColorsConflict && (
+                    <Alert severity="warning" sx={{ mt: 2 }}>
+                        {t($ => $.page.apps.import.grupColorsConflict)}
+                    </Alert>
+                )}
             </>
         )}</>
 }

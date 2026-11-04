@@ -117,6 +117,8 @@ public class App extends BaseResource<Long> {
 		private String decision; // OVERWRITE | COMBINE | SKIP (opcional)
 		private Boolean importedAppExists; // Informa si el contingut del JSON coincideix amb una aplicació ja creada
 		private String[] importedAppCodes; // Informa dels codis detectats al JSON
+		private Boolean importedGrupColorsConflict; // Informa si algun dels grups a importar ja existeix amb colors diferents
+		private String[] importedGrupConflictNames; // Noms dels grups amb conflicte de colors
 	}
 
 	@Getter

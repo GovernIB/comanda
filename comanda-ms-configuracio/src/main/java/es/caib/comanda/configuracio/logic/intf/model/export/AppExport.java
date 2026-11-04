@@ -25,7 +25,7 @@ public class AppExport implements Serializable {
     @Builder.Default
 	private boolean activa = true;
 	private byte[] logo;
-	private String grupNom;
+	private AppGrupExport grup;
 	private List<EntornAppExport> entornApps;
 
 }

@@ -38,12 +38,4 @@ public class AppGrupEntity extends BaseAuditableEntity<AppGrup> {
 	@OneToMany(mappedBy = "grup")
 	private List<AppEntity> apps;
 
-	@PreRemove
-	public void preRemove() {
-		if (apps != null) {
-			for (AppEntity app : apps) {
-				app.setGrup(null);
-			}
-		}
-	}
 }

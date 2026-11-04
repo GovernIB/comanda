@@ -834,6 +834,7 @@ const translationCa = {
                 combine: "Combinar entorns (afegeix només els inexistents)",
                 skip: "Ometre",
                 success: "Importació executada correctament",
+                grupColorsConflict: "Alguns dels grups d'aplicacions a importar ja existeixen amb colors diferents. Aquests canvis no s'aplicaran; si cal, s'han d'actualitzar manualment des de Grups d'aplicacions.",
                 noFile: "No s'ha seleccionat cap fitxer",
                 parseError: "Error en analitzar el fitxer",
             },
@@ -844,6 +845,7 @@ const translationCa = {
         },
         appGrups: {
             title: "Grups d'aplicacions",
+            resourceTitle: "grup d'aplicacions",
             nom: "Nom",
             colorClar: "Color clar",
             colorFosc: "Color fosc",
