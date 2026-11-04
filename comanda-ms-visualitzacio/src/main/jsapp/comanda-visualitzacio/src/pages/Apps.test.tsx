@@ -39,6 +39,7 @@ const mocks = vi.hoisted(() => ({
             page: {
                 apps: {
                     title: 'Aplicacions',
+                    grup: 'Grup',
                     logoAlt: 'Logotip',
                     noLogo: 'Sense logotip',
                     general: 'General',
@@ -465,6 +466,7 @@ describe('AppForm', () => {
         expect(screen.getByRole('heading', { name: 'Crear aplicació' })).toBeInTheDocument();
         expect(screen.getByTestId('field-codi')).toBeInTheDocument();
         expect(screen.getByTestId('field-nom')).toBeInTheDocument();
+        expect(screen.getByTestId('field-grup')).toBeInTheDocument();
         expect(screen.getAllByTestId('field-activa').length).toBeGreaterThan(0);
         expect(screen.getByTestId('logo-logo')).toBeInTheDocument();
     });
@@ -721,6 +723,14 @@ describe('Apps', () => {
         expect(screen.getByRole('button', { name: 'Exportar' })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Importar' })).toBeInTheDocument();
         expect(screen.getByText('Reordenant')).toBeInTheDocument();
+    });
+
+    it('Apps_llistat_conteLaColumnaGrup', () => {
+        mocks.useParamsMock.mockReturnValue({ id: undefined });
+
+        render(<Apps />);
+
+        expect(screen.getByTestId('column-render-grup')).toBeInTheDocument();
     });
 
     it('Apps_quanFinalitzaLaImportacio_refrescaLaGraellaIMostraMissatge', () => {

@@ -16,6 +16,8 @@ import es.caib.comanda.configuracio.logic.mapper.AppExportMapper;
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornAppEntity;
 import es.caib.comanda.configuracio.persist.entity.EntornEntity;
+import es.caib.comanda.configuracio.persist.entity.AppGrupEntity;
+import es.caib.comanda.configuracio.persist.repository.AppGrupRepository;
 import es.caib.comanda.configuracio.persist.repository.AppRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornRepository;
@@ -77,6 +79,7 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
     private final AclServiceClient aclServiceClient;
     private final ApplicationEventPublisher eventPublisher;
     private final JmsTemplate jmsTemplate;
+    private final AppGrupRepository appGrupRepository;
 
     @PostConstruct
     public void init() {
@@ -84,6 +87,16 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
         register(App.APP_EXPORT, new AppExportReportGenerator());
         register(App.APP_IMPORT, new AppImportActionExecutor());
         register(App.ACTION_NETEJA_ESTADISTICA, new NetejaEstadisticaAppActionExecutor(jmsTemplate, authenticationHelper, entornAppRepository));
+    }
+
+    @Override
+    protected App entityToResource(AppEntity entity) {
+        App resource = super.entityToResource(entity);
+        if (entity.getGrup() != null) {
+            resource.setGrupColorClar(entity.getGrup().getColorClar());
+            resource.setGrupColorFosc(entity.getGrup().getColorFosc());
+        }
+        return resource;
     }
 
     @Override
@@ -266,6 +279,20 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
                     if (appExport.getDescripcio() != null) appEntity.setDescripcio(appExport.getDescripcio());
                     appEntity.setActiva(appExport.isActiva());
                     if (appExport.getLogo() != null) appEntity.setLogo(appExport.getLogo());
+                    if (appExport.getGrupNom() != null) {
+                        if (appExport.getGrupNom().trim().isEmpty()) {
+                            appEntity.setGrup(null);
+                        } else {
+                            AppGrupEntity grup = appGrupRepository.findByNom(appExport.getGrupNom().trim())
+                                    .orElseGet(() -> {
+                                        AppGrupEntity nouGrup = new AppGrupEntity();
+                                        nouGrup.setNom(appExport.getGrupNom().trim());
+                                        nouGrup.setOrdre(appGrupRepository.count());
+                                        return appGrupRepository.save(nouGrup);
+                                    });
+                            appEntity.setGrup(grup);
+                        }
+                    }
                     // Persist base app before handling entornApps to ensure id exists
                     appEntity = appRepository.saveAndFlush(appEntity);
                     appRepository.refresh(appEntity);

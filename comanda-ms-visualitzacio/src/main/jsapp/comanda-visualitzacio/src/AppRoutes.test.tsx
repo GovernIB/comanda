@@ -27,6 +27,10 @@ vi.mock('./pages/Apps', () => ({
     AppForm: () => <div>AppForm page</div>,
 }));
 
+vi.mock('./pages/AppGrups', () => ({
+    default: () => <div>AppGrups page</div>,
+}));
+
 vi.mock('./pages/Entorns', () => ({
     default: () => <div>Entorns page</div>,
 }));
@@ -530,5 +534,18 @@ describe('AppRoutes', () => {
         );
 
         expect(await screen.findByText('Salut page')).toBeInTheDocument();
+    });
+
+    it('AppRoutes_quanEsCarregaLaRutaDeAppGrup_mostraLaPaginaCorrespondent', () => {
+        mocks.useUserContextMock.mockReturnValue({ user: { id: 1 } });
+        mocks.useIsUserAdminMock.mockReturnValue(true);
+
+        render(
+            <MemoryRouter initialEntries={['/appGrup']}>
+                <AppRoutes />
+            </MemoryRouter>
+        );
+
+        expect(screen.getByText('AppGrups page')).toBeInTheDocument();
     });
 });

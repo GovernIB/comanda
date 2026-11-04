@@ -33,7 +33,7 @@ import VersionsEntorns from '../../pages/VersionsEntorns';
 import EntornAppHist from '../../pages/EntornsAppHistorics';
 
 export type SalutToolbarProps = {
-    title: string;
+    title: React.ReactNode;
     subtitle?: string;
     state?: React.ReactElement;
     hideFilter?: boolean;

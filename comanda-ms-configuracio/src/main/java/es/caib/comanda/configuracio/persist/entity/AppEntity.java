@@ -41,6 +41,10 @@ public class AppEntity extends BaseAuditableEntity<App> implements ReorderableEn
 	@Column(name = "logo", nullable = true)
 	private byte[] logo;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "grup_id")
+	private AppGrupEntity grup;
+
 	@OneToMany(mappedBy= "app", cascade = CascadeType.ALL)
 	private List<EntornAppEntity> entornApps;
 

@@ -163,6 +163,13 @@ export const useAppEntries = () => {
                 resourceName: 'app',
             },
             {
+                id: 'appGrup',
+                title: t($ => $.menu.appGrup),
+                to: '/appGrup',
+                icon: 'folder',
+                resourceName: 'appGrup',
+            },
+            {
                 id: 'entorn',
                 title: t($ => $.menu.entorn),
                 to: '/entorn',

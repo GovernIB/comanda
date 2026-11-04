@@ -30,6 +30,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.util.ReflectionUtils;
 
+import es.caib.comanda.configuracio.persist.entity.AppGrupEntity;
+import es.caib.comanda.configuracio.persist.repository.AppGrupRepository;
+
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -57,7 +60,8 @@ public class AppImportExportTest {
                                       HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
                                       AclServiceClient aclServiceClient,
                                       ApplicationEventPublisher eventPublisher,
-                                      JmsTemplate jmsTemplate) {
+                                      JmsTemplate jmsTemplate,
+                                      AppGrupRepository appGrupRepository) {
             super(cacheHelper,
                     objectMapper,
                     appExportMapper,
@@ -69,7 +73,8 @@ public class AppImportExportTest {
                     httpAuthorizationHeaderHelper,
                     aclServiceClient,
                     eventPublisher,
-                    jmsTemplate);
+                    jmsTemplate,
+                    appGrupRepository);
         }
         // Simplify mapping to avoid needing ObjectMappingHelper in unit tests
         @Override
@@ -94,6 +99,7 @@ public class AppImportExportTest {
     @Mock private AclServiceClient aclServiceClient;
     @Mock private ApplicationEventPublisher eventPublisher;
     @Mock private JmsTemplate jmsTemplate;
+    @Mock private AppGrupRepository appGrupRepository;
 
     private ObjectMapper realObjectMapper;
     private TestableAppServiceImpl service;
@@ -113,7 +119,8 @@ public class AppImportExportTest {
                 httpAuthorizationHeaderHelper,
                 aclServiceClient,
                 eventPublisher,
-                jmsTemplate);
+                jmsTemplate,
+                appGrupRepository);
     }
 
     // ---------- EXPORT TESTS ----------
@@ -134,6 +141,29 @@ public class AppImportExportTest {
         assertNotNull(data);
         assertEquals(1, data.size());
         assertEquals(mapped, data.get(0));
+        verify(appExportMapper, times(1)).toExport(entity);
+    }
+
+    @Test
+    void export_generateData_withEntityAndGrup_returnsMappedExportWithGrupNom() throws Exception {
+        AppEntity entity = new AppEntity();
+        entity.setId(10L);
+        entity.setCodi("APP1");
+        entity.setNom("Aplicacio 1");
+        AppGrupEntity grup = new AppGrupEntity();
+        grup.setId(5L);
+        grup.setNom("Grup Transversal");
+        entity.setGrup(grup);
+
+        AppExport mapped = AppExport.builder().codi("APP1").nom("Aplicacio 1").grupNom("Grup Transversal").build();
+        when(appExportMapper.toExport(entity)).thenReturn(mapped);
+
+        AppServiceImpl.AppExportReportGenerator generator = service.new AppExportReportGenerator();
+        List<AppExport> data = generator.generateData(App.APP_EXPORT, entity, null);
+
+        assertNotNull(data);
+        assertEquals(1, data.size());
+        assertEquals("Grup Transversal", data.get(0).getGrupNom());
         verify(appExportMapper, times(1)).toExport(entity);
     }
 
@@ -520,6 +550,88 @@ public class AppImportExportTest {
 
         assertNull(target.getImportedAppCodes());
         assertNull(target.getImportedAppExists());
+    }
+
+    @Test
+    void import_newApp_withExistingGrupNom_assignsGrup() {
+        String json = "{\"codi\":\"APP_GRP\",\"nom\":\"App With Grup\",\"activa\":true,\"grupNom\":\"Existing Group\",\"entornApps\":[]}";
+        AppGrupEntity existingGrup = new AppGrupEntity();
+        existingGrup.setId(20L);
+        existingGrup.setNom("Existing Group");
+        when(appGrupRepository.findByNom("Existing Group")).thenReturn(Optional.of(existingGrup));
+
+        when(appRepository.findByCodi("APP_GRP")).thenReturn(null);
+        when(appRepository.saveAndFlush(any(AppEntity.class))).thenAnswer(inv -> {
+            AppEntity a = inv.getArgument(0);
+            a.setId(200L);
+            return a;
+        });
+
+        AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
+        AppImportForm params = new AppImportForm();
+        params.setJsonContent(json);
+
+        AppServiceImpl.AppImportResult result = executor.exec(App.APP_IMPORT, null, params);
+
+        assertNotNull(result);
+        assertEquals(1, result.getApps().size());
+        verify(appRepository).saveAndFlush(argThat(app ->
+                app.getGrup() != null && "Existing Group".equals(app.getGrup().getNom())));
+        verify(appGrupRepository, never()).save(any(AppGrupEntity.class));
+    }
+
+    @Test
+    void import_newApp_withNewGrupNom_createsAndAssignsGrup() {
+        String json = "{\"codi\":\"APP_GRP2\",\"nom\":\"App With New Grup\",\"activa\":true,\"grupNom\":\"Brand New Group\",\"entornApps\":[]}";
+        when(appGrupRepository.findByNom("Brand New Group")).thenReturn(Optional.empty());
+        when(appGrupRepository.count()).thenReturn(5L);
+        AppGrupEntity savedGrup = new AppGrupEntity();
+        savedGrup.setId(30L);
+        savedGrup.setNom("Brand New Group");
+        savedGrup.setOrdre(5L);
+        when(appGrupRepository.save(any(AppGrupEntity.class))).thenReturn(savedGrup);
+
+        when(appRepository.findByCodi("APP_GRP2")).thenReturn(null);
+        when(appRepository.saveAndFlush(any(AppEntity.class))).thenAnswer(inv -> {
+            AppEntity a = inv.getArgument(0);
+            a.setId(201L);
+            return a;
+        });
+
+        AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
+        AppImportForm params = new AppImportForm();
+        params.setJsonContent(json);
+
+        AppServiceImpl.AppImportResult result = executor.exec(App.APP_IMPORT, null, params);
+
+        assertNotNull(result);
+        assertEquals(1, result.getApps().size());
+        verify(appGrupRepository).save(argThat(g -> "Brand New Group".equals(g.getNom())));
+        verify(appRepository).saveAndFlush(argThat(app ->
+                app.getGrup() != null && "Brand New Group".equals(app.getGrup().getNom())));
+    }
+
+    @Test
+    void import_newApp_withEmptyGrupNom_setsGrupToNull() {
+        String json = "{\"codi\":\"APP_NOGRP\",\"nom\":\"App Without Grup\",\"activa\":true,\"grupNom\":\"   \",\"entornApps\":[]}";
+        when(appRepository.findByCodi("APP_NOGRP")).thenReturn(null);
+        when(appRepository.saveAndFlush(any(AppEntity.class))).thenAnswer(inv -> {
+            AppEntity a = inv.getArgument(0);
+            a.setId(202L);
+            return a;
+        });
+
+        AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
+        AppImportForm params = new AppImportForm();
+        params.setJsonContent(json);
+
+        AppServiceImpl.AppImportResult result = executor.exec(App.APP_IMPORT, null, params);
+
+        assertNotNull(result);
+        assertEquals(1, result.getApps().size());
+        verify(appRepository).saveAndFlush(argThat(app -> app.getGrup() == null));
+        verify(appGrupRepository, never()).findByNom(anyString());
+        verify(appGrupRepository, never()).save(any(AppGrupEntity.class));
     }
 
     // --- helpers ---

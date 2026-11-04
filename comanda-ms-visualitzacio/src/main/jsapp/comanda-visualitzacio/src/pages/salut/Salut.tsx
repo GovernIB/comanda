@@ -34,6 +34,7 @@ import { Box } from '@mui/material';
 import PageTitle from '../../components/PageTitle';
 import VersionsEntorns from '../VersionsEntorns.tsx';
 import RecursosEntorns from './RecursosEntorns.tsx';
+import AppGrupChip from '../../components/AppGrupChip.tsx';
 
 // es.caib.comanda.salut.logic.intf.model.SalutInformeEstatItem
 export type SalutInformeEstatItem = {
@@ -637,12 +638,24 @@ const Salut: FunctionComponent = () => {
     }, [sseStatus, refreshAll]);
 
     const isAppInfoRouteActive = id != null;
+    const currentApp = isAppInfoRouteActive ? salutData.apps?.find(app => app.id === appInfoData?.entornApp?.app?.id) : null;
     const appInfoToolbarProps = isAppInfoRouteActive
         ? {
               title:
-                  appInfoData.entornApp != null
-                      ? `${appInfoData.entornApp.app.description} - ${appInfoData.entornApp.entorn.description}`
-                      : '',
+                  appInfoData.entornApp != null ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <span>{`${appInfoData.entornApp.app.description} - ${appInfoData.entornApp.entorn.description}`}</span>
+                          {currentApp?.grup?.description && (
+                              <AppGrupChip
+                                  nom={currentApp.grup.description}
+                                  colorClar={currentApp.grupColorClar}
+                                  colorFosc={currentApp.grupColorFosc}
+                              />
+                          )}
+                      </Box>
+                  ) : (
+                      ''
+                  ),
 
               subtitle: appInfoData.entornApp?.versio
                   ? 'v' + appInfoData.entornApp.versio
@@ -660,7 +673,6 @@ const Salut: FunctionComponent = () => {
             //   hideAppVersioning: true,
           }
         : null;
-    const currentApp = isAppInfoRouteActive ? salutData.apps?.find(app => app.id === appInfoData?.entornApp?.app?.id) : null;
     const versionsEntornGroupingToolbarProps = toolbarState.grouping === GroupingEnum.VERSIONS_ENTORNS ?
         {
             hideFilter: true,

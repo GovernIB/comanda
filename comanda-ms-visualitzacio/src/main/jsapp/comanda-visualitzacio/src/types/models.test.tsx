@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { describe, expect, it, vi } from 'vitest';
-import { AppModel, EntornAppModel } from './app.model';
+import { AppModel, AppGrupModel, EntornAppModel } from './app.model';
 import { EntornModel } from './entorn.model';
 import { LanguageEnum, MenuEstil, NUM_ELEMENT_PAGE_OPTIONS, TemaAplicacio, UsuariModel } from './usuari.model';
 import {
@@ -62,6 +62,16 @@ describe('Models', () => {
             codi: 'APP',
             nom: 'Aplicació',
             activa: true,
+            grup: { id: 10, description: 'Grup 1' },
+            grupColorClar: '#e0e0e0',
+            grupColorFosc: '#333333',
+        });
+        const appGrup = new AppGrupModel({
+            id: 10,
+            nom: 'Grup 1',
+            colorClar: '#e0e0e0',
+            colorFosc: '#333333',
+            ordre: 0,
         });
         const entorn = new EntornModel({
             id: 2,
@@ -93,6 +103,10 @@ describe('Models', () => {
         });
 
         expect(app.nom).toBe('Aplicació');
+        expect(app.grup?.description).toBe('Grup 1');
+        expect(app.grupColorClar).toBe('#e0e0e0');
+        expect(appGrup.nom).toBe('Grup 1');
+        expect(appGrup.colorFosc).toBe('#333333');
         expect(entorn.codi).toBe('PRO');
         expect(entornApp.versio).toBe('1.0.0');
         expect(usuari.email).toBe('test@example.com');

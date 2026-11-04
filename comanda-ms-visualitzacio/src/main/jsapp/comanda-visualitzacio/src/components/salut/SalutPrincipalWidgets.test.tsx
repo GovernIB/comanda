@@ -157,6 +157,23 @@ describe('SalutWidgetTitle', () => {
         expect(screen.getByAltText('Logo Comanda')).toBeInTheDocument();
     });
 
+    it('SalutWidgetTitle_quanRepAppAmbGrup_mostraElGrup', () => {
+        render(
+            <SalutWidgetTitle
+                app={{
+                    nom: 'Comanda',
+                    grup: { id: 1, description: 'Grup Transversal' },
+                    grupColorClar: '#bbdefb',
+                    grupColorFosc: '#0d47a1',
+                } as any}
+                loading={false}
+            />
+        );
+
+        expect(screen.getByText('Comanda')).toBeInTheDocument();
+        expect(screen.getByText('Grup Transversal')).toBeInTheDocument();
+    });
+
     it('SalutWidgetTitle_quanNoHiHaAppNiEntorn_mostraElTextPerDefecte', () => {
         // Verifica que el component usa el títol per defecte quan no hi ha agrupació activa.
         render(<SalutWidgetTitle loading={false} />);

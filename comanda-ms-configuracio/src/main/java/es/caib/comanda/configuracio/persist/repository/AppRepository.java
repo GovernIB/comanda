@@ -3,11 +3,15 @@ package es.caib.comanda.configuracio.persist.repository;
 import es.caib.comanda.configuracio.persist.entity.AppEntity;
 import es.caib.comanda.ms.persist.repository.BaseRepository;
 
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
 import java.util.List;
 
 /**
  * Repositori per a la gestió d'aplicacions.
- * 
+ *
  * @author Límit Tecnologies
  */
 public interface AppRepository extends BaseRepository<AppEntity, Long> {
@@ -15,13 +19,17 @@ public interface AppRepository extends BaseRepository<AppEntity, Long> {
     List<AppEntity> findAllByOrderByOrdreAsc();
 
     List<AppEntity> findByActivaTrue();
-    
+
     /**
      * Cerca una aplicació pel seu codi.
-     * 
+     *
      * @param codi Codi de l'aplicació
      * @return L'entitat de l'aplicació o null si no existeix
      */
     AppEntity findByCodi(String codi);
+
+    @Modifying
+    @Query("update AppEntity a set a.grup = null where a.grup.id = :grupId")
+    void unbindGrup(@Param("grupId") Long grupId);
 
 }

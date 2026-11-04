@@ -8,6 +8,7 @@ import es.caib.comanda.ms.logic.intf.annotation.ResourceConfig.ResourceSort;
 import es.caib.comanda.ms.logic.intf.annotation.ResourceField;
 import es.caib.comanda.ms.logic.intf.model.BaseResource;
 import es.caib.comanda.ms.logic.intf.model.ResourceArtifactType;
+import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.logic.intf.permission.PermissionEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -92,6 +93,13 @@ public class App extends BaseResource<Long> {
 	private boolean activa = true;
 	private byte[] logo;
     private Long ordre;
+
+    private ResourceReference<AppGrup, Long> grup;
+
+    @Transient
+    private String grupColorClar;
+    @Transient
+    private String grupColorFosc;
 
     @Transient
     private int numPermisos;

@@ -1,0 +1,70 @@
+databaseChangeLog:
+  - changeSet:
+      id: con-change-0.1.4-002-1
+      author: limit
+      comment: Afegir taula per a grups d'aplicacions
+      changes:
+        - createTable:
+            tableName: ${db_prefix}app_grup
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+                    primaryKeyName: ${db_prefix}app_grup_pk
+              - column:
+                  name: nom
+                  type: VARCHAR(100 ${varcharUnit})
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: ${db_prefix}app_grup_nom_uk
+              - column:
+                  name: color_clar
+                  type: VARCHAR(16 ${varcharUnit})
+              - column:
+                  name: color_fosc
+                  type: VARCHAR(16 ${varcharUnit})
+              - column:
+                  name: ordre
+                  type: BIGINT
+              - column:
+                  name: created_by
+                  type: VARCHAR(64 ${varcharUnit})
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_date
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lastmod_by
+                  type: VARCHAR(64 ${varcharUnit})
+              - column:
+                  name: lastmod_date
+                  type: TIMESTAMP
+              - column:
+                  name: v
+                  type: BIGINT
+  - changeSet:
+      id: con-change-0.1.4-002-2
+      author: limit
+      comment: Afegir relació de grup a aplicació
+      changes:
+        - addColumn:
+            tableName: ${db_prefix}app
+            columns:
+              - column:
+                  name: grup_id
+                  type: BIGINT
+        - addForeignKeyConstraint:
+            baseTableName: ${db_prefix}app
+            baseColumnNames: grup_id
+            constraintName: ${db_prefix}app_grup_fk
+            referencedTableName: ${db_prefix}app_grup
+            referencedColumnNames: id
+            onDelete: SET NULL

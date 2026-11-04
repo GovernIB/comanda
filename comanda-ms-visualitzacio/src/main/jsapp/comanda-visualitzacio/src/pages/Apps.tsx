@@ -65,6 +65,7 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import {useMemo} from "react";
 import Badge from "@mui/material/Badge";
 import Icon from "@mui/material/Icon";
+import AppGrupChip from '../components/AppGrupChip.tsx';
 
 const PingUrlActionResponse = z.object({
     success: z.boolean(),
@@ -828,6 +829,9 @@ export const AppForm: React.FC = () => {
                                 <FormField name="nom" />
                             </Grid>
                             <Grid size={12}>
+                                <FormField name="grup" />
+                            </Grid>
+                            <Grid size={12}>
                                 <FormField name="descripcio" type="textarea" />
                             </Grid>
                             <Grid size={12}>
@@ -878,7 +882,24 @@ const getAppColumns = (t: TFunction): MuiDataGridColDef[] => [
     },
     {
         field: 'nom',
-        flex: 7,
+        flex: 5,
+    },
+    {
+        field: 'grup',
+        headerName: t($ => $.page.apps.grup),
+        flex: 2,
+        renderCell: (params) => {
+            const row = params.row;
+            const grupNom = row?.grup?.description;
+            if (!grupNom) return null;
+            return (
+                <AppGrupChip
+                    nom={grupNom}
+                    colorClar={row.grupColorClar}
+                    colorFosc={row.grupColorFosc}
+                />
+            );
+        },
     },
     {
         field: 'activa',

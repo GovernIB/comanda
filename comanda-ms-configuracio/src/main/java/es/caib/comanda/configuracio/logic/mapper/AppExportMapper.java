@@ -21,9 +21,10 @@ public interface AppExportMapper {
      * Els camps amb el mateix nom es mapegen automàticament.
      * La llista d'entornApps es mapeja utilitzant el mètode toEntornAppExport.
      */
+    @Mapping(target = "grupNom", source = "grup.nom")
     public AppExport toExport(AppEntity entity);
     public List<AppExport> toExport(List<AppEntity> entities);
-    
+
     /**
      * Converteix una EntornAppEntity a una EntornAppExport.
      * El camp entornCodi es mapeja des del codi de l'entorn.

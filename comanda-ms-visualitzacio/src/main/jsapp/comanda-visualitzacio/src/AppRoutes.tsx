@@ -5,6 +5,7 @@ import { Box, CircularProgress } from '@mui/material';
 import Salut from './pages/salut/Salut';
 import NotFoundPage from './pages/NotFound';
 import Apps, { AppForm } from './pages/Apps';
+import AppGrups from './pages/AppGrups';
 import Entorns from './pages/Entorns';
 import Monitors from './pages/Monitor';
 import Caches from './pages/Caches';
@@ -97,6 +98,7 @@ const UserRoleRouteGuard: React.FC<{ children: React.ReactNode }> = ({ children 
             '/',
             '/appinfo',
             '/app',
+            '/appGrup',
             '/entorn',
             '/versionsEntorn',
             '/entornAppHist',
@@ -154,6 +156,9 @@ const AppRoutes: React.FC = () => {
                         <Route index element={<AppForm />} />
                         <Route path=":id" element={<AppForm />} />
                     </Route>
+                </Route>
+                <Route path="appGrup">
+                    <Route index element={<AppGrups />} />
                 </Route>
                 <Route path="entorn">
                     <Route index element={<Entorns />} />

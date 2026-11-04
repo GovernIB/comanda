@@ -114,6 +114,7 @@ const translationEn: translationResourcesType = {
         configuracio: "Configuration",
         configuracioDescription: "Application's administration options.",
         app: "Applications",
+        appGrup: "Application groups",
         entorn: "Environments",
         versions: "Apps versions",
         versionsDescription: "Versioning of applications and environments",
@@ -252,6 +253,7 @@ const translationEn: translationResourcesType = {
             },
             info: {
                 title: "Information",
+                grup: "Group",
                 versio: "Version",
                 revisio: "Revision",
                 jdk: {
@@ -753,6 +755,7 @@ const translationEn: translationResourcesType = {
         },
         apps: {
             title: "Applications",
+            grup: "Group",
             logoAlt: "Logo",
             noLogo: "No logo",
             create: "Create application",
@@ -838,6 +841,12 @@ const translationEn: translationResourcesType = {
                 validationError: "Response received with validation errors",
                 validationTrace: "Validation errors",
             },
+        },
+        appGrups: {
+            title: "Application groups",
+            nom: "Name",
+            colorClar: "Light color",
+            colorFosc: "Dark color",
         },
         entorns: {
             title: "Environments",

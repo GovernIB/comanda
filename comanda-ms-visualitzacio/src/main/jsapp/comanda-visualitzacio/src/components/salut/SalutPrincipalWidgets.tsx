@@ -38,6 +38,7 @@ import useSizeTracker from '../../hooks/useSizeTracker';
 import {AppModel, EntornAppModel} from "../../types/app.model.tsx";
 import {EntornModel} from "../../types/entorn.model.tsx";
 import useTranslationStringKey from '../../hooks/useTranslationStringKey';
+import AppGrupChip from '../AppGrupChip.tsx';
 import { SalutErrorBoundaryFallback } from './SalutErrorBoundaryFallback';
 import SalutIntegracionsChips from './SalutIntegracionsChips.tsx';
 import SalutSubsistemesChips from './SalutSubsistemesChips.tsx';
@@ -517,6 +518,13 @@ export const SalutWidgetTitle: React.FC<{
                                 />
                             )}
                             <Typography sx={titleEstils}>{titleText}</Typography>
+                            {(app?.grup?.description) && (
+                                <AppGrupChip
+                                    nom={app.grup.description}
+                                    colorClar={app.grupColorClar}
+                                    colorFosc={app.grupColorFosc}
+                                />
+                            )}
                         </Box>
                     }
                 </>

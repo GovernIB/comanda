@@ -26,6 +26,7 @@ import es.caib.comanda.configuracio.persist.repository.AppRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornRepository;
 import es.caib.comanda.configuracio.persist.repository.EntornAppRepository;
 import es.caib.comanda.ms.logic.intf.jms.NetejaAppMessage;
+import es.caib.comanda.configuracio.persist.repository.AppGrupRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -73,13 +74,18 @@ public class AppServiceImplTest {
                                       HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper,
                                       AclServiceClient aclServiceClient,
                                       ApplicationEventPublisher eventPublisher,
-                                      JmsTemplate jmsTemplate) {
+                                      JmsTemplate jmsTemplate,
+                                      AppGrupRepository appGrupRepository) {
             super(cacheHelper, objectMapper, appExportMapper, appRepository, entornRepository, entornAppRepository,
-                entornAppHelper, authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient, eventPublisher, jmsTemplate);
+                entornAppHelper, authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient, eventPublisher, jmsTemplate, appGrupRepository);
         }
 
         public String exposedNamedFilterToSpringFilter(String name) {
             return super.namedFilterToSpringFilter(name);
+        }
+
+        public List<AppEntity> exposedReorderFindLinesWithParent() {
+            return super.reorderFindLinesWithParent(null);
         }
 
         @Override
@@ -145,6 +151,9 @@ public class AppServiceImplTest {
     private JmsTemplate jmsTemplate;
 
     @Mock
+    private AppGrupRepository appGrupRepository;
+
+    @Mock
     private I18nUtil i18nUtil;
 
     @Mock
@@ -177,7 +186,8 @@ public class AppServiceImplTest {
                 httpAuthorizationHeaderHelper,
                 aclServiceClient,
                 eventPublisher,
-                jmsTemplate);
+                jmsTemplate,
+                appGrupRepository);
 
         // Setup test data
         appEntity = new AppEntity();
@@ -216,6 +226,14 @@ public class AppServiceImplTest {
         verify(eventPublisher).publishEvent(captor.capture());
         assertEquals(ComandaSseEventTypes.APP_CHANGED, captor.getValue().getEvent().getType());
         assertEquals(appEntity.getId(), captor.getValue().getEvent().getPayload());
+    }
+
+    @Test
+    void testReorderFindLinesWithParent() {
+        when(appRepository.findAllByOrderByOrdreAsc()).thenReturn(List.of(appEntity));
+        List<AppEntity> result = appService.exposedReorderFindLinesWithParent();
+        assertEquals(1, result.size());
+        verify(appRepository, times(1)).findAllByOrderByOrdreAsc();
     }
 
     @Test

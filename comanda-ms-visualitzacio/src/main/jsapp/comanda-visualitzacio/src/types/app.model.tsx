@@ -28,6 +28,11 @@ export interface IEntornAppModel extends IBaseEntity {
     alarmesEmail?             : string | null;
 }
 
+export interface IAppGrupRef {
+    id?             : number;
+    description?    : string;
+}
+
 export interface IAppRef {
     id?             : number;
     description?    : string;
@@ -121,24 +126,30 @@ export class EntornAppModel extends BaseEntity implements Partial<IEntornAppMode
 }
 
 export interface IAppModel extends IBaseEntity {
-    id          : number;
-    codi        : string;
-    nom         : string;
-    descripcio? : string;
-    activa?     : boolean;
-    logo?       : string;
-    entornApps? : EntornAppModel[];
+    id            : number;
+    codi          : string;
+    nom           : string;
+    descripcio?   : string;
+    activa?       : boolean;
+    logo?         : string;
+    entornApps?   : EntornAppModel[];
+    grup?         : IAppGrupRef;
+    grupColorClar?: string;
+    grupColorFosc?: string;
 }
 
 export class AppModel extends BaseEntity implements Partial<IAppModel> {
 
-    id          : number;
-    codi        : string;
-    nom         : string;
-    descripcio? : string;
-    activa?     : boolean;
-    logo?       : string;
-    entornApps? : EntornAppModel[];
+    id            : number;
+    codi          : string;
+    nom           : string;
+    descripcio?   : string;
+    activa?       : boolean;
+    logo?         : string;
+    entornApps?   : EntornAppModel[];
+    grup?         : IAppGrupRef;
+    grupColorClar?: string;
+    grupColorFosc?: string;
 
     /**
      * Constructor
@@ -149,5 +160,28 @@ export class AppModel extends BaseEntity implements Partial<IAppModel> {
         this.codi = app.codi;
         this.nom = app.nom;
         Object.assign(this, app);
+    }
+}
+
+export interface IAppGrupModel extends IBaseEntity {
+    id?        : number;
+    nom?       : string;
+    colorClar? : string;
+    colorFosc? : string;
+    ordre?     : number;
+}
+
+export class AppGrupModel extends BaseEntity implements Partial<IAppGrupModel> {
+    id?        : number;
+    nom?       : string;
+    colorClar? : string;
+    colorFosc? : string;
+    ordre?     : number;
+
+    constructor(grup?: IAppGrupModel) {
+        super(grup);
+        if (grup) {
+            Object.assign(this, grup);
+        }
     }
 }

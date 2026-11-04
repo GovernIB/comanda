@@ -114,6 +114,7 @@ const translationCa = {
         configuracio: "Configuració",
         configuracioDescription: "Opcions de d'administració de l'aplicació.",
         app: "Aplicacions",
+        appGrup: "Grups d'aplicacions",
         entorn: "Entorns",
         versions: "Versions de les aplicacions",
         versionsDescription: "Versionat de les aplicacions i entorns",
@@ -252,6 +253,7 @@ const translationCa = {
             },
             info: {
                 title: "Informació",
+                grup: "Grup",
                 versio: "Versió",
                 revisio: "Revisió",
                 jdk: {
@@ -753,6 +755,7 @@ const translationCa = {
         },
         apps: {
             title: "Aplicacions",
+            grup: "Grup",
             logoAlt: "Logotip",
             noLogo: "Sense logotip",
             create: "Crear aplicació",
@@ -838,6 +841,12 @@ const translationCa = {
                 validationError: "Resposta rebuda amb errors de validacions",
                 validationTrace: "Errors de validacions",
             },
+        },
+        appGrups: {
+            title: "Grups d'aplicacions",
+            nom: "Nom",
+            colorClar: "Color clar",
+            colorFosc: "Color fosc",
         },
         entorns: {
             title: "Entorns",
