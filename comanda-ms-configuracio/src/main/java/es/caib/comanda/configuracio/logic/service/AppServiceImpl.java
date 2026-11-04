@@ -268,7 +268,14 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
                             "L'aplicació amb codi '" + appExport.getCodi() + "' ja existeix. Què vols fer?",
                             choices);
                     }
-                    if (!exists) {
+                    if (exists) {
+                        if ("SKIP".equalsIgnoreCase(decision)) {
+                            resultResources.add(entityToResource(appEntity));
+                            continue;
+                        } else if (!"OVERWRITE".equalsIgnoreCase(decision) && !"COMBINE".equalsIgnoreCase(decision)) {
+                            throw new IllegalArgumentException("Valor de 'decision' desconegut: " + decision);
+                        }
+                    } else {
                         // Crear nova AppEntity
                         appEntity = new AppEntity();
                         appEntity.setCodi(appExport.getCodi());
@@ -316,14 +323,6 @@ public class AppServiceImpl extends BaseMutableResourceService<App, Long, AppEnt
                                 applyOverwrite(appEntity, appExport);
                             } else if ("COMBINE".equalsIgnoreCase(decision)) {
                                 applyCombine(appEntity, appExport);
-                            } else if ("SKIP".equalsIgnoreCase(decision)) {
-                                // No canviar entornApps
-                            } else if (decision == null || decision.isEmpty()) {
-                                // For new apps, no decision required, treat as overwrite semantics
-                                applyOverwrite(appEntity, appExport);
-                            } else {
-                                // Valor desconegut: error de validació
-                                throw new IllegalArgumentException("Valor de 'decision' desconegut: " + decision);
                             }
                         } else {
                             // Nova app → crear totes les relacions

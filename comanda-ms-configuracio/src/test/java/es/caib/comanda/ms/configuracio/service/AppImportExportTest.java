@@ -406,8 +406,6 @@ public class AppImportExportTest {
         existing.setEntornApps(new ArrayList<>(Collections.singletonList(eae1)));
 
         when(appRepository.findByCodi("APP1")).thenReturn(existing);
-        when(appRepository.saveAndFlush(existing)).thenReturn(existing);
-        doAnswer(inv -> null).when(appRepository).refresh(existing);
 
         AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
         AppImportForm params = new AppImportForm();
@@ -416,12 +414,121 @@ public class AppImportExportTest {
         AppServiceImpl.AppImportResult result = executor.exec(App.APP_IMPORT, null, params);
 
         assertNotNull(result);
-        verify(appRepository).saveAndFlush(existing);
-        verify(appRepository).refresh(existing);
-        verify(cacheHelper).evictAppCacheItem(eq(7L), any());
+        verify(appRepository, never()).saveAndFlush(any());
+        verify(appRepository, never()).refresh(any());
+        verify(cacheHelper, never()).evictAppCacheItem(any(), any());
         verify(entornAppRepository, never()).save(any());
         // Also ensure no delete took place
         verify(entornAppRepository, never()).delete(any());
+    }
+
+    @Test
+    void import_existingApp_skip_withNewGrupInJson_doesNotCreateGrupOrModifyApp() {
+        String json = "{\"codi\":\"APP1\",\"nom\":\"Nou Nom\",\"grup\":{\"nom\":\"Grup Inexistent\",\"colorClar\":\"#fff\",\"colorFosc\":\"#000\"}}";
+
+        AppEntity existing = new AppEntity();
+        existing.setId(7L);
+        existing.setCodi("APP1");
+        existing.setNom("Nom Original");
+
+        when(appRepository.findByCodi("APP1")).thenReturn(existing);
+
+        AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
+        AppImportForm params = new AppImportForm();
+        params.setJsonContent(json);
+        params.setDecision("SKIP");
+        AppServiceImpl.AppImportResult result = executor.exec(App.APP_IMPORT, null, params);
+
+        assertNotNull(result);
+        assertEquals(1, result.getApps().size());
+        verify(appGrupRepository, never()).save(any());
+        verify(appRepository, never()).saveAndFlush(any());
+        assertEquals("Nom Original", existing.getNom());
+        assertNull(existing.getGrup());
+    }
+
+    @Test
+    void import_multipleApps_oneExistingSkippedAndOneNewWithSameGrup_createsGrupOnlyForNewApp() {
+        String json = asJsonArray(
+            "{\"codi\":\"APP1\",\"nom\":\"App 1\",\"grup\":{\"nom\":\"Shared Group\",\"colorClar\":\"#fff\",\"colorFosc\":\"#000\"}}",
+            "{\"codi\":\"APP2\",\"nom\":\"App 2\",\"grup\":{\"nom\":\"Shared Group\",\"colorClar\":\"#fff\",\"colorFosc\":\"#000\"}}"
+        );
+
+        AppEntity existing1 = new AppEntity();
+        existing1.setId(101L);
+        existing1.setCodi("APP1");
+        existing1.setNom("Original App 1");
+        existing1.setGrup(null);
+
+        when(appRepository.findByCodi("APP1")).thenReturn(existing1);
+        when(appRepository.findByCodi("APP2")).thenReturn(null);
+
+        AppGrupEntity createdGrup = new AppGrupEntity();
+        createdGrup.setId(50L);
+        createdGrup.setNom("Shared Group");
+
+        when(appGrupRepository.findByNom("Shared Group")).thenReturn(Optional.empty());
+        when(appGrupRepository.count()).thenReturn(1L);
+        when(appGrupRepository.save(any(AppGrupEntity.class))).thenReturn(createdGrup);
+
+        when(appRepository.saveAndFlush(any(AppEntity.class))).thenAnswer(inv -> {
+            AppEntity a = inv.getArgument(0);
+            if (a.getId() == null) a.setId(102L);
+            return a;
+        });
+        doAnswer(inv -> null).when(appRepository).refresh(any(AppEntity.class));
+
+        AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
+        AppImportForm params = new AppImportForm();
+        params.setJsonContent(json);
+        params.setDecision("SKIP");
+        AppServiceImpl.AppImportResult result = executor.exec(App.APP_IMPORT, null, params);
+
+        assertNotNull(result);
+        assertEquals(2, result.getApps().size());
+        // App 1 is untouched
+        assertEquals("Original App 1", existing1.getNom());
+        assertNull(existing1.getGrup());
+        // Group was created exactly once (for App 2)
+        verify(appGrupRepository, times(1)).save(any(AppGrupEntity.class));
+        // App 1 was never saved, only App 2 was saved
+        verify(appRepository, times(1)).saveAndFlush(any(AppEntity.class));
+        verify(appRepository, never()).saveAndFlush(existing1);
+    }
+
+    @Test
+    void import_multipleNewApps_sharingSameNewGrup_createsGrupOnlyOnceAndAssignsToBoth() {
+        String json = asJsonArray(
+            "{\"codi\":\"APP1\",\"nom\":\"App 1\",\"grup\":{\"nom\":\"New Group\",\"colorClar\":\"#fff\",\"colorFosc\":\"#000\"}}",
+            "{\"codi\":\"APP2\",\"nom\":\"App 2\",\"grup\":{\"nom\":\"New Group\",\"colorClar\":\"#fff\",\"colorFosc\":\"#000\"}}"
+        );
+
+        when(appRepository.findByCodi("APP1")).thenReturn(null);
+        when(appRepository.findByCodi("APP2")).thenReturn(null);
+
+        AppGrupEntity createdGrup = new AppGrupEntity();
+        createdGrup.setId(50L);
+        createdGrup.setNom("New Group");
+
+        // First lookup returns empty, second lookup finds the created grup
+        when(appGrupRepository.findByNom("New Group"))
+            .thenReturn(Optional.empty())
+            .thenReturn(Optional.of(createdGrup));
+
+        when(appGrupRepository.count()).thenReturn(0L);
+        when(appGrupRepository.save(any(AppGrupEntity.class))).thenReturn(createdGrup);
+
+        when(appRepository.saveAndFlush(any(AppEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        doAnswer(inv -> null).when(appRepository).refresh(any(AppEntity.class));
+
+        AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
+        AppImportForm params = new AppImportForm();
+        params.setJsonContent(json);
+        AppServiceImpl.AppImportResult result = executor.exec(App.APP_IMPORT, null, params);
+
+        assertNotNull(result);
+        assertEquals(2, result.getApps().size());
+        verify(appGrupRepository, times(1)).save(any(AppGrupEntity.class));
     }
 
     @Test
@@ -429,8 +536,6 @@ public class AppImportExportTest {
         String json = appJson("APP1", "App 1", entornJson("E1", "E1", "http://i1", "http://h1"));
         AppEntity existing = new AppEntity(); existing.setId(7L); existing.setCodi("APP1");
         when(appRepository.findByCodi("APP1")).thenReturn(existing);
-        when(appRepository.saveAndFlush(existing)).thenReturn(existing);
-        doAnswer(inv -> null).when(appRepository).refresh(existing);
 
         AppServiceImpl.AppImportActionExecutor executor = service.new AppImportActionExecutor();
         AppImportForm params = new AppImportForm();
