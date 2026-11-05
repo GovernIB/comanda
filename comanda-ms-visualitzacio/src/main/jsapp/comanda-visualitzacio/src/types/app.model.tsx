@@ -164,7 +164,6 @@ export class AppModel extends BaseEntity implements Partial<IAppModel> {
 }
 
 export interface IAppGrupModel extends IBaseEntity {
-    id?        : number;
     nom?       : string;
     colorClar? : string;
     colorFosc? : string;
@@ -172,16 +171,13 @@ export interface IAppGrupModel extends IBaseEntity {
 }
 
 export class AppGrupModel extends BaseEntity implements Partial<IAppGrupModel> {
-    id?        : number;
     nom?       : string;
     colorClar? : string;
     colorFosc? : string;
     ordre?     : number;
 
-    constructor(grup?: IAppGrupModel) {
+    constructor(grup: IAppGrupModel) {
         super(grup);
-        if (grup) {
-            Object.assign(this, grup);
-        }
+        Object.assign(this, grup);
     }
 }
