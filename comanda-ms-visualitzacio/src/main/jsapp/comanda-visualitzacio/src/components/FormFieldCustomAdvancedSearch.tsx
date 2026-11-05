@@ -9,7 +9,8 @@ import {
 import { DialogProps, Icon, IconButton } from '@mui/material';
 import React, { useState } from 'react';
 import { FormFieldDataActionType } from '../../lib/components/form/FormContext';
-import { DATA_GRID_DIALOG_DEFAULT_HEIGHT } from '../../lib/components/mui/datagrid/DataGridDialog';
+
+// TODO Pendent revisar si aquest component s'ha de actualitzar o eliminar
 
 type AdvancedSearchWithFiltersParams = {
     advancedSearchDataGridProps?: any;
@@ -100,7 +101,7 @@ const useCustomAdvancedSearch = ({
                 namedQueries={namedQueries}
                 perspectives={perspectives}
                 onRowClick={handleRowClick}
-                height={advancedSearchDialogHeight ?? DATA_GRID_DIALOG_DEFAULT_HEIGHT}
+                height={advancedSearchDialogHeight}
                 {...advancedSearchDataGridProps}
             />
         </MuiDialog>

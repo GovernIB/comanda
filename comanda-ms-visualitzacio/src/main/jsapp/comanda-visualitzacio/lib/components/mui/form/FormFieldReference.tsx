@@ -210,14 +210,14 @@ export const FormFieldReference: React.FC<FormFieldRefProps> = (props) => {
                     const pageArgs = optionsUnpaged
                         ? { page: 'UNPAGED' }
                         : { page: 0, size: optionsPageSize };
-                    const sorts =
+                    const sort =
                         sortModel && sortModel.length
                             ? sortModel.map((sm) => sm.field + ',' + sm.sort)
                             : undefined;
                     const templateData = {
                         quickFilter: q,
                         filter,
-                        sorts,
+                        sort,
                         namedQuery: namedQueries,
                         perspective: perspectives,
                         ...pageArgs,
