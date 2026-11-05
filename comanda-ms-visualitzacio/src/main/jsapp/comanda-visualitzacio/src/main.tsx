@@ -9,7 +9,7 @@ import '@fontsource/noto-sans/400.css';
 import '@fontsource/noto-sans/500.css';
 import '@fontsource/noto-sans/700.css';
 import App from './App.tsx';
-import { KeycloakAuthProvider, ContainerAuthProvider, ResourceApiProvider } from 'reactlib';
+import { OidcAuthProvider, ContainerAuthProvider, ResourceApiProvider } from 'reactlib';
 import SseProvider from './components/SseProvider.tsx';
 import UserProvider from './components/UserProvider';
 import MuiThemeProvider from './components/MuiThemeProvider.tsx';
@@ -22,7 +22,7 @@ dayjs.extend(duration);
 
 LicenseInfo.setLicenseKey('e0bde345c6cb2453171a44e15a0c58f5Tz0xMjQ4NTIsRT0xODAxMDk0Mzk5MDAwLFM9cHJvLExNPXN1YnNjcmlwdGlvbixQVj1pbml0aWFsLEtWPTI=');
 
-const AuthProvider = isAuthUrlPresent() ? KeycloakAuthProvider : ContainerAuthProvider;
+const AuthProvider = isAuthUrlPresent() ? OidcAuthProvider : ContainerAuthProvider;
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
@@ -31,7 +31,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 logoutUrl={import.meta.env.BASE_URL}
                 config={getAuthConfig()}
                 mandatory
-                silentCheckSsoRedirectUri={`${import.meta.env.BASE_URL}silent-check-sso.html`}
+                // TODO silentCheckSsoRedirectUri={`${import.meta.env.BASE_URL}silent-check-sso.html`}
                 // Activat automàticament en dev (npm run dev) perquè a la consola es vegi quin mecanisme exacte
                 // (onTokenExpired, manteniment de sessió periòdic, onAuthRefreshError...) dispara cada renovació
                 // o redirect, útil mentre es depura el refresc espontani de la interfície.
