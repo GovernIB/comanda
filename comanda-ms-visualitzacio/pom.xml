@@ -14,6 +14,8 @@
 	<properties>
 		<node.version>v22.13.1</node.version>
 		<frontend.resources.path>src/main/jsapp/comanda-visualitzacio</frontend.resources.path>
+		<maven.test.skip>false</maven.test.skip>
+		<skipTests>${maven.test.skip}</skipTests>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -78,6 +80,17 @@
 								</goals>
 								<configuration>
 									<arguments>run build-jboss --userconfig=${basedir}/src/main/jsapp/comanda-visualitzacio/.npmrc</arguments>
+								</configuration>
+							</execution>
+							<execution>
+								<id>npm-test</id>
+								<phase>test</phase>
+								<goals>
+									<goal>npm</goal>
+								</goals>
+								<configuration>
+									<skip>${skipTests}</skip>
+									<arguments>run test --userconfig=${basedir}/src/main/jsapp/comanda-visualitzacio/.npmrc</arguments>
 								</configuration>
 							</execution>
 						</executions>
