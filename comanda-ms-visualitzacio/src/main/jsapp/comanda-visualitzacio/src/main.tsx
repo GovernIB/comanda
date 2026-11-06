@@ -28,6 +28,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <HelmetProvider>
             <AuthProvider
+                appBaseUrl={import.meta.env.BASE_URL}
                 logoutUrl={import.meta.env.BASE_URL}
                 config={getAuthConfig()}
                 mandatory
