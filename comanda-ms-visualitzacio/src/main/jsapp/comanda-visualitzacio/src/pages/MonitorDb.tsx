@@ -514,7 +514,9 @@ const MonitorDb: React.FC = () => {
     const [overview, setOverview] = React.useState<DbOverview | null>(null);
     const [overviewError, setOverviewError] = React.useState<string | null>(null);
 
-    const fetchOverview = React.useCallback(async () => {
+    const abortControllerRef = React.useRef<AbortController | null>(null);
+
+    const fetchOverview = React.useCallback(async (signal?: AbortSignal) => {
         setOverviewError(null);
         const token = getToken?.();
         const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
@@ -522,15 +524,34 @@ const MonitorDb: React.FC = () => {
             const resp = await fetch(`${apiUrl}/db-metrics/overview`, {
                 credentials: 'include',
                 headers,
+                signal,
             });
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            setOverview(await resp.json());
-        } catch (err) {
+            const data = await resp.json();
+            if (!signal?.aborted) {
+                setOverview(data);
+            }
+        } catch (err: any) {
+            if (err?.name === 'AbortError' || signal?.aborted) return;
             setOverviewError(String(err));
         }
-    }, [getToken, apiUrl]);
+    }, [apiUrl]);
 
-    React.useEffect(() => { void fetchOverview(); }, [fetchOverview]);
+    const handleRefresh = React.useCallback(() => {
+        abortControllerRef.current?.abort();
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+        void fetchOverview(controller.signal);
+    }, [fetchOverview]);
+
+    React.useEffect(() => {
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+        void fetchOverview(controller.signal);
+        return () => {
+            controller.abort();
+        };
+    }, [fetchOverview]);
 
     const lastUpdate = overview?.ultimaActualitzacio
         ? new Date(overview.ultimaActualitzacio).toLocaleString('ca-ES')
@@ -552,7 +573,7 @@ const MonitorDb: React.FC = () => {
                 )}
                 <Tooltip title={t($ => $.page.monitorDb.refresh)}>
                     <span>
-                        <IconButton onClick={() => void fetchOverview()} size="small">
+                        <IconButton onClick={handleRefresh} size="small">
                             <Icon>refresh</Icon>
                         </IconButton>
                     </span>
