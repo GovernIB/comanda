@@ -1,0 +1,35 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react"],
+  "jsPlugins": ["eslint-plugin-import-zod"],
+  "categories": {
+    "correctness": "error"
+  },
+  "ignorePatterns": ["dist"],
+  "rules": {
+    "typescript/no-explicit-any": "error",
+    "typescript/no-unsafe-function-type": "error",
+    "typescript/ban-ts-comment": "error",
+    "react/rules-of-hooks": "error",
+    "react/only-export-components": ["warn", { "allowConstantExport": true }],
+    "react/set-state-in-effect": "off",
+    "react/jsx-key": "off",
+    "prefer-const": "error",
+    "no-var": "error",
+    "no-empty": "error",
+    "no-case-declarations": "error",
+    "no-prototype-builtins": "error",
+    "import-zod/prefer-zod-namespace": "error",
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "regex": "^@mui/icons-material+$",
+            "message": "Avoid importing from @mui/icons-material directly due to performance concerns. Import individual icons instead (e.g. @mui/icons-material/Add)."
+          }
+        ]
+      }
+    ]
+  }
+}
