@@ -12,12 +12,14 @@ beforeEach(() => {
     mockClose = vi.fn();
     mockAddEventListener = vi.fn();
     mockFetch = vi.fn();
-    MockEventSource = vi.fn().mockImplementation(() => ({
-        close: mockClose,
-        onopen: null as (() => void) | null,
-        onmessage: null as ((event: any) => void) | null,
-        addEventListener: mockAddEventListener,
-    }));
+    MockEventSource = vi.fn().mockImplementation(function () {
+        return {
+            close: mockClose,
+            onopen: null as (() => void) | null,
+            onmessage: null as ((event: any) => void) | null,
+            addEventListener: mockAddEventListener,
+        };
+    });
     vi.stubGlobal('EventSource', MockEventSource);
     vi.stubGlobal('fetch', mockFetch);
     mockFetch.mockResolvedValue({

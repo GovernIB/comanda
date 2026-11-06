@@ -11,11 +11,13 @@ describe('Audio', () => {
         mockPlay = vi.fn().mockResolvedValue(undefined);
         mockPause = vi.fn();
 
-        (global as any).Audio = vi.fn().mockImplementation(() => ({
-            play: mockPlay,
-            pause: mockPause,
-            currentTime: 0,
-        }));
+        (global as any).Audio = vi.fn().mockImplementation(function () {
+            return {
+                play: mockPlay,
+                pause: mockPause,
+                currentTime: 0,
+            };
+        });
     });
 
     afterEach(() => {
@@ -47,7 +49,7 @@ describe('Audio', () => {
         it('useAudio_play_reiniciaElTiempoAntesDeReproducir', () => {
             const { result } = renderHook(() => useAudio('SOUND_00'));
             const mockAudioInstance = { play: mockPlay, pause: mockPause, currentTime: 15 };
-            ((global as any).Audio).mockReturnValue(mockAudioInstance);
+            ((global as any).Audio).mockImplementation(function () { return mockAudioInstance; });
 
             act(() => { result.current.play(); });
             expect(mockAudioInstance.currentTime).toBe(0);

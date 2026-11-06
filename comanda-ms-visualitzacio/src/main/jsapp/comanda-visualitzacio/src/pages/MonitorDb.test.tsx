@@ -34,16 +34,22 @@ vi.mock('react-i18next', () => ({
     }),
 }));
 
-vi.mock('reactlib', () => ({
-    useAuthContext: () => ({ getToken: () => 'mock-token-123' }),
-    useResourceApiContext: () => ({ apiUrl: 'https://api.mock.com' }),
-    useMuiDataGridApiRef: () => ({ current: { refresh: vi.fn() } }),
-    MuiDataGrid: ({ resourceName, rowAdditionalActions }: any) => (
-        <div data-testid={`datagrid-${resourceName}`} data-actions={JSON.stringify(rowAdditionalActions)}>
-            Grid Mock: {resourceName}
-        </div>
-    ),
-}));
+vi.mock('reactlib', () => {
+    // Stable references: MonitorDb's fetch effect depends on getToken/apiUrl, so returning
+    // new objects on every render would re-trigger the fetch and make the tests flaky.
+    const authContext = { getToken: () => 'mock-token-123' };
+    const resourceApiContext = { apiUrl: 'https://api.mock.com' };
+    return {
+        useAuthContext: () => authContext,
+        useResourceApiContext: () => resourceApiContext,
+        useMuiDataGridApiRef: () => ({ current: { refresh: vi.fn() } }),
+        MuiDataGrid: ({ resourceName, rowAdditionalActions }: any) => (
+            <div data-testid={`datagrid-${resourceName}`} data-actions={JSON.stringify(rowAdditionalActions)}>
+                Grid Mock: {resourceName}
+            </div>
+        ),
+    };
+});
 
 vi.mock('../components/PageTitle.tsx', () => ({
     default: ({ title }: any) => <h1 data-testid="page-title">{title}</h1>,
