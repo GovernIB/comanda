@@ -10,8 +10,6 @@ import { DialogProps, Icon, IconButton } from '@mui/material';
 import React, { useState } from 'react';
 import { FormFieldDataActionType } from '../../lib/components/form/FormContext';
 
-// TODO Pendent revisar si aquest component s'ha de actualitzar o eliminar
-
 type AdvancedSearchWithFiltersParams = {
     advancedSearchDataGridProps?: any;
     fieldName: FormFieldProps['name'];
@@ -101,7 +99,7 @@ const useCustomAdvancedSearch = ({
                 namedQueries={namedQueries}
                 perspectives={perspectives}
                 onRowClick={handleRowClick}
-                height={advancedSearchDialogHeight}
+                height={advancedSearchDialogHeight ?? 370}
                 {...advancedSearchDataGridProps}
             />
         </MuiDialog>

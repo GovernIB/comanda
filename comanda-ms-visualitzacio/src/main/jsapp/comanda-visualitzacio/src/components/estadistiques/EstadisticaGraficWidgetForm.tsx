@@ -190,6 +190,7 @@ const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = 
                                         namedQueries={indicadorDimensioNamedQueries}
                                         advancedSearchColumns={columnesIndicador}
                                         advancedSearchDataGridProps={{ rowHeight: 30, }}
+                                        advancedSearchDialogHeight={500}
                                         required
                                     />
                                 </Grid>
@@ -212,6 +213,7 @@ const EstadisticaGraficWidgetForm: React.FC<EstadisticaGraficWidgetFormProps> = 
                                         namedQueries={indicadorDimensioNamedQueries}
                                         advancedSearchColumns={columnesIndicador}
                                         advancedSearchDataGridProps={{ rowHeight: 30, }}
+                                        advancedSearchDialogHeight={500}
                                         required
                                     />
                                 </Grid>

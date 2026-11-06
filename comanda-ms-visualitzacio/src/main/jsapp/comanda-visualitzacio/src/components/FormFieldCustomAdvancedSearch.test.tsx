@@ -97,9 +97,8 @@ describe('FormFieldCustomAdvancedSearch', () => {
         );
     });
 
-    it.skip('FormFieldCustomAdvancedSearch_quanNoEsIndicaAlcada_usaLAlcadaResponsiveIMesGranQueLAntiga', () => {
-        // Regressió: amb 370px fixos la modal només mostrava 4-5 files per pàgina. Per defecte ha d'ocupar
-        // l'alçada disponible de la finestra (amb un mínim de 370px).
+    it('FormFieldCustomAdvancedSearch_quanNoEsIndicaAlcada_usaLAlcadaPerDefecteDe370', () => {
+        // Regressió: quan no s'indica alçada, el diàleg usa l'alçada per defecte de 370px.
         mocks.useBaseAppContextMock.mockReturnValue({ t: vi.fn((key: string) => `tr:${key}`) });
         mocks.useFormContextMock.mockReturnValue({
             resourceName: 'widget',
@@ -120,7 +119,7 @@ describe('FormFieldCustomAdvancedSearch', () => {
         fireEvent.click(screen.getByRole('button'));
 
         expect(mocks.muiDataGridMock).toHaveBeenCalledWith(
-            expect.objectContaining({ height: 'max(370px, calc(100vh - 220px))' })
+            expect.objectContaining({ height: 370 })
         );
     });
 
