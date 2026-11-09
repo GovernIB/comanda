@@ -10,6 +10,7 @@ import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.lang.reflect.*;
 import java.util.Collection;
@@ -19,7 +20,7 @@ import java.util.Set;
 
 /**
  * Utilitats per a obtenir informació dels tipus Java via reflection.
- * 
+ *
  * @author Límit Tecnologies
  */
 public class TypeUtil {
@@ -71,7 +72,7 @@ public class TypeUtil {
 	}
 
 	public static boolean isNotNullField(Field field) {
-		return field.getAnnotation(NotNull.class) != null;
+		return field.getAnnotation(NotNull.class) != null || field.getAnnotation(NotEmpty.class) != null;
 	}
 
 	public static boolean isMultipleFieldType(Field field) {

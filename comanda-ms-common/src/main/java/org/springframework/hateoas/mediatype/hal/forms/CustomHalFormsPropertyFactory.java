@@ -38,8 +38,7 @@ import org.springframework.util.StringUtils;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.time.Duration;
-import java.time.OffsetDateTime;
+import java.time.*;
 import java.util.*;
 import java.util.function.Function;
 
@@ -118,8 +117,10 @@ public class CustomHalFormsPropertyFactory {
 					inputType = "search";
 				} else if (boolean.class.isAssignableFrom(resolvedType) || Boolean.class.isAssignableFrom(resolvedType)) {
 					inputType = "checkbox";
-				} else if (Date.class.isAssignableFrom(resolvedType) || OffsetDateTime.class.isAssignableFrom(resolvedType)) {
+				} else if (Date.class.isAssignableFrom(resolvedType) || LocalDateTime.class.isAssignableFrom(resolvedType) || OffsetDateTime.class.isAssignableFrom(resolvedType)) {
 					inputType = "datetime-local";
+				} else if (LocalTime.class.isAssignableFrom(resolvedType) || OffsetTime.class.isAssignableFrom(resolvedType)) {
+					inputType = "time";
 				} else if (Duration.class.isAssignableFrom(resolvedType)) {
 					inputType = null;
 				} else if (FileReference.class.equals(resolvedType)) {
@@ -162,11 +163,17 @@ public class CustomHalFormsPropertyFactory {
 				}
 			}
 
+			boolean required = metadata.isRequired();
+			if (!required && payload.getType() != null) {
+				Field payloadField = ReflectionUtils.findField(payload.getType(), metadata.getName());
+				required = payloadField != null && TypeUtil.isNotNullField(payloadField);
+			}
+
 			HalFormsOptions options = optionsFactory.getOptions(payload, metadata);
 
 			HalFormsProperty property = new HalFormsProperty()
 					.withName(metadata.getName())
-					.withRequired(metadata.isRequired()) //
+					.withRequired(required) //
 					.withReadOnly(metadata.isReadOnly())
 					.withMin(minValue)
 					.withMax(maxValue)

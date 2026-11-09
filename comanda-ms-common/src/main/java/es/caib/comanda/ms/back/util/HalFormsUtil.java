@@ -73,9 +73,11 @@ public class HalFormsUtil {
 					values.putAll(toMap(newInstance));
 				}
 			} catch (ComponentNotFoundException ex) {
-				try {
-					values.putAll(toMap(resourceClass.getDeclaredConstructor().newInstance()));
-				} catch (InstantiationException | NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
+				if (resourceClass.getModule().isOpen(resourceClass.getPackageName(), HalFormsUtil.class.getModule())) {
+					try {
+						values.putAll(toMap(resourceClass.getDeclaredConstructor().newInstance()));
+					} catch (InstantiationException | NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
+					}
 				}
 			}
 		}
