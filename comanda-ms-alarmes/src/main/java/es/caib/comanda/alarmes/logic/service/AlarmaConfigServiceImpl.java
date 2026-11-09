@@ -2,6 +2,7 @@ package es.caib.comanda.alarmes.logic.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import es.caib.comanda.alarmes.logic.helper.AlarmaClientHelper;
 import es.caib.comanda.alarmes.logic.helper.UserInformationHelper;
 import es.caib.comanda.alarmes.logic.intf.model.*;
 import es.caib.comanda.alarmes.logic.intf.service.AlarmaConfigService;
@@ -12,9 +13,14 @@ import es.caib.comanda.alarmes.persist.repository.AlarmaConfigRepository;
 import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
 import es.caib.comanda.alarmes.persist.repository.AlarmaUsuariRepository;
 import es.caib.comanda.base.config.BaseConfig;
+import es.caib.comanda.client.model.AppIntegracio;
+import es.caib.comanda.client.model.AppSubsistema;
+import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.client.model.IntegracioRef;
 import es.caib.comanda.client.model.Usuari;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
 import es.caib.comanda.ms.logic.intf.exception.*;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.intf.util.ThreadLocalUtil;
@@ -26,12 +32,15 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Implementació del servei de gestió d'alarmes.
@@ -51,6 +60,7 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
     private final ComandaSseEventPublisher comandaSseEventPublisher;
     private final ObjectMapper objectMapper;
     private final UserInformationHelper userInformationHelper;
+    private final AlarmaClientHelper alarmaClientHelper;
 
     @Override
     @Transactional
@@ -100,7 +110,10 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
         AlarmaConfig resource = super.entityToResource(entity);
         AlarmaConfigRegla regla = readRule(entity);
         resource.setRegla(regla);
-        resource.setResumRegla(buildRuleSummary(regla));
+        EntornApp entornApp = entity.getEntornAppId() != null
+                ? alarmaClientHelper.entornAppFindByIdWithIntegracionsSubsistemesContexts(entity.getEntornAppId())
+                : null;
+        resource.setResumRegla(buildRuleSummary(regla, entornApp));
         return resource;
     }
 
@@ -176,7 +189,7 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
         return regla;
     }
 
-    private String buildRuleSummary(AlarmaConfigRegla regla) {
+    private String buildRuleSummary(AlarmaConfigRegla regla, EntornApp entornApp) {
         if (regla == null) {
             return "";
         }
@@ -184,10 +197,19 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
             if (regla.getFills() == null || regla.getFills().isEmpty()) {
                 return "";
             }
+            String operadorText = "";
+            if (regla.getOperador() != null) {
+                String key = "es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.operador." + regla.getOperador().name();
+                operadorText = I18nUtil.getInstance().getI18nMessage(key);
+                if (operadorText == null || operadorText.equals(key)) {
+                    operadorText = regla.getOperador().name();
+                }
+            }
+            String sep = operadorText.isBlank() ? " " : " " + operadorText + " ";
             return regla.getFills().stream()
-                    .map(this::buildRuleSummary)
+                    .map(fill -> buildRuleSummary(fill, entornApp))
                     .filter(text -> text != null && !text.isBlank())
-                    .reduce((left, right) -> left + " " + regla.getOperador() + " " + right)
+                    .reduce((left, right) -> left + sep + right)
                     .orElse("");
         }
 
@@ -195,12 +217,15 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
         if (regla.getAmbit() == AlarmaConfigReglaAmbit.APLICACIO) {
             subject = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.ambit.APLICACIO");
         } else if (regla.getAmbit() == AlarmaConfigReglaAmbit.SUBSISTEMA) {
-            subject = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.ambit.SUBSISTEMA", regla.getCodiObjecte());
+            String nom = resolveSubsystemName(entornApp, regla.getCodiObjecte());
+            subject = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.ambit.SUBSISTEMA", nom);
         } else if (regla.getAmbit() == AlarmaConfigReglaAmbit.INTEGRACIO) {
-            subject = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.ambit.INTEGRACIO", regla.getCodiObjecte());
+            String nom = resolveIntegrationName(entornApp, regla.getCodiObjecte());
+            subject = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.ambit.INTEGRACIO", nom);
         } else if (regla.getAmbit() == AlarmaConfigReglaAmbit.SISTEMA) {
             subject = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.ambit.SISTEMA");
         }
+
         String metric = "";
         if (regla.getMetrica() == AlarmaConfigReglaMetrica.ESTAT) {
             metric = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.metrica.ESTAT");
@@ -213,15 +238,76 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
         } else if (regla.getMetrica() == AlarmaConfigReglaMetrica.ESPAI_DISC_LLIURE) {
             metric = I18nUtil.getInstance().getI18nMessage("es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.metrica.ESPAI_DISC_LLIURE");
         }
+
         String comparador = regla.getComparador() == null ? "" : I18nUtil.getInstance().getI18nMessage("es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.comparador." + regla.getComparador().name());
+
         if (regla.getMetrica() == AlarmaConfigReglaMetrica.ESTAT) {
-            String valorsTranslated = regla.getValorsText().stream()
+            String valorsTranslated = regla.getValorsText() == null ? "" : regla.getValorsText().stream()
+                .filter(v -> v != null && !v.isBlank())
                 .map(v -> I18nUtil.getInstance().getI18nMessage("es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.estat." + v))
                 .collect(Collectors.joining(", "));
-            return subject + " " + metric + " " + comparador + " " + valorsTranslated;
+            return Stream.of(subject, metric, comparador, valorsTranslated)
+                    .filter(s -> s != null && !s.isBlank())
+                    .collect(Collectors.joining(" "));
         }
+
         BigDecimal valor = regla.getValorNumeric();
-        return subject + " " + metric + " " + comparador + " " + (valor != null ? valor.toPlainString() : "");
+        String formattedValue = formatValorNumeric(valor, regla.getMetrica());
+        return Stream.of(subject, metric, comparador, formattedValue)
+                .filter(s -> s != null && !s.isBlank())
+                .collect(Collectors.joining(" "));
+    }
+
+    private String resolveSubsystemName(EntornApp entornApp, String codi) {
+        if (entornApp != null && entornApp.getSubsistemes() != null && codi != null) {
+            return entornApp.getSubsistemes().stream()
+                    .filter(s -> s != null && codi.trim().equalsIgnoreCase(s.getCodi() != null ? s.getCodi().trim() : ""))
+                    .map(AppSubsistema::getNom)
+                    .filter(nom -> nom != null && !nom.isBlank())
+                    .findFirst()
+                    .orElse(codi.trim());
+        }
+        return codi != null ? codi.trim() : "";
+    }
+
+    private String resolveIntegrationName(EntornApp entornApp, String codi) {
+        if (entornApp != null && entornApp.getIntegracions() != null && codi != null) {
+            return entornApp.getIntegracions().stream()
+                    .filter(i -> i != null && codi.trim().equalsIgnoreCase(i.getCodi() != null ? i.getCodi().trim() : ""))
+                    .map(AppIntegracio::getIntegracio)
+                    .filter(Objects::nonNull)
+                    .map(IntegracioRef::getNom)
+                    .filter(nom -> nom != null && !nom.isBlank())
+                    .findFirst()
+                    .orElse(codi.trim());
+        }
+        return codi != null ? codi.trim() : "";
+    }
+
+    private String formatValorNumeric(BigDecimal valor, AlarmaConfigReglaMetrica metrica) {
+        if (valor == null) return "";
+        Locale locale = LocaleContextHolder.getLocale();
+        NumberFormat nf = NumberFormat.getNumberInstance(locale);
+        nf.setGroupingUsed(true);
+        int scale = Math.max(0, valor.stripTrailingZeros().scale());
+        nf.setMinimumFractionDigits(0);
+        nf.setMaximumFractionDigits(scale);
+        String formattedValue = nf.format(valor);
+        String unit = getUnitForMetric(metrica);
+        return unit.isEmpty() ? formattedValue : formattedValue + " " + unit;
+    }
+
+    private String getUnitForMetric(AlarmaConfigReglaMetrica metrica) {
+        if (metrica == AlarmaConfigReglaMetrica.LATENCIA) {
+            String key = "es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.unitat.ms";
+            String unit = I18nUtil.getInstance().getI18nMessage(key);
+            return (unit != null && !unit.equals(key)) ? unit : "ms";
+        } else if (metrica == AlarmaConfigReglaMetrica.MEMORIA_DISPONIBLE || metrica == AlarmaConfigReglaMetrica.ESPAI_DISC_LLIURE) {
+            String key = "es.caib.comanda.alarmes.logic.intf.model.AlarmaConfig.unitat.MB";
+            String unit = I18nUtil.getInstance().getI18nMessage(key);
+            return (unit != null && !unit.equals(key)) ? unit : "MB";
+        }
+        return "";
     }
 
     private class DeleteAlarmaConfigAction implements ActionExecutor<AlarmaConfigEntity, String, AlarmaConfig> {

@@ -17,13 +17,20 @@ import es.caib.comanda.alarmes.persist.repository.AlarmaRepository;
 import es.caib.comanda.alarmes.persist.repository.AlarmaUsuariRepository;
 import es.caib.comanda.base.config.BaseConfig;
 import es.caib.comanda.client.model.Usuari;
+import es.caib.comanda.alarmes.logic.helper.AlarmaClientHelper;
+import es.caib.comanda.client.model.AppIntegracio;
+import es.caib.comanda.client.model.AppSubsistema;
+import es.caib.comanda.client.model.EntornApp;
+import es.caib.comanda.client.model.IntegracioRef;
 import es.caib.comanda.ms.logic.helper.AuthenticationHelper;
+import es.caib.comanda.ms.logic.helper.ResourceEntityMappingHelper;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotCreatedException;
 import es.caib.comanda.ms.logic.intf.exception.ResourceNotUpdatedException;
 import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import es.caib.comanda.ms.logic.intf.util.ThreadLocalUtil;
 import es.caib.comanda.ms.logic.service.BaseMutableResourceService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,6 +42,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
@@ -42,6 +50,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -67,6 +76,8 @@ class AlarmaConfigServiceImplTest {
     @Mock private ComandaSseEventPublisher comandaSseEventPublisher;
     @Mock private ObjectMapper objectMapper;
     @Mock private UserInformationHelper userInformationHelper;
+    @Mock private AlarmaClientHelper alarmaClientHelper;
+    @Mock private ResourceEntityMappingHelper resourceEntityMappingHelper;
     @Mock private I18nUtil i18nUtil;
     @Mock private ApplicationContext applicationContext;
 
@@ -77,9 +88,24 @@ class AlarmaConfigServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        LocaleContextHolder.setLocale(new Locale("ca", "ES"));
         ReflectionTestUtils.setField(I18nUtil.class, "applicationContext", applicationContext);
+        ReflectionTestUtils.setField(alarmaConfigService, "resourceEntityMappingHelper", resourceEntityMappingHelper);
         lenient().when(applicationContext.getBean(I18nUtil.class)).thenReturn(i18nUtil);
-        lenient().when(i18nUtil.getI18nMessage(anyString())).thenReturn("Missatge d'error");
+        lenient().when(resourceEntityMappingHelper.entityToResource(any(), any())).thenAnswer(inv -> new AlarmaConfig());
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(invocation -> {
+            String code = invocation.getArgument(0);
+            if (code.endsWith("unitat.ms")) return "ms";
+            if (code.endsWith("unitat.MB")) return "MB";
+            if (code.endsWith("operador.AND")) return "I";
+            if (code.endsWith("operador.OR")) return "O";
+            return "Missatge d'error";
+        });
+    }
+
+    @AfterEach
+    void tearDown() {
+        LocaleContextHolder.resetLocaleContext();
     }
 
     // ========================================================================
@@ -202,8 +228,8 @@ class AlarmaConfigServiceImplTest {
             }
             if (code.endsWith("ambit.APLICACIO")) return "Aplicacio";
             if (code.endsWith("ambit.SISTEMA")) return "Sistema";
-            if (code.endsWith("ambit.SUBSISTEMA")) return "Subsistema " + arg;
-            if (code.endsWith("ambit.INTEGRACIO")) return "Integracio " + arg;
+            if (code.endsWith("ambit.SUBSISTEMA")) return "Subsistema \"" + arg + "\"";
+            if (code.endsWith("ambit.INTEGRACIO")) return "Integració \"" + arg + "\"";
             if (code.endsWith("metrica.ESTAT")) return "estat";
             if (code.endsWith("comparador.IGUAL")) return "IGUAL";
             if (code.endsWith("comparador.EN")) return "EN";
@@ -226,8 +252,8 @@ class AlarmaConfigServiceImplTest {
     private static Stream<Arguments> provideTextRuleSummaryCases() {
         return Stream.of(
             arguments(AlarmaConfigReglaAmbit.APLICACIO, null, AlarmaConfigReglaMetrica.ESTAT, AlarmaConfigReglaComparador.IGUAL, Arrays.asList("OK", "WARN"), "Aplicacio estat IGUAL OK, WARN"),
-            arguments(AlarmaConfigReglaAmbit.SUBSISTEMA, "SUB1", AlarmaConfigReglaMetrica.ESTAT, AlarmaConfigReglaComparador.EN, Collections.singletonList("ERROR"), "Subsistema SUB1 estat EN ERROR"),
-            arguments(AlarmaConfigReglaAmbit.INTEGRACIO, "INT1", AlarmaConfigReglaMetrica.ESTAT, AlarmaConfigReglaComparador.IGUAL, Collections.singletonList("OK"), "Integracio INT1 estat IGUAL OK"),
+            arguments(AlarmaConfigReglaAmbit.SUBSISTEMA, "SUB1", AlarmaConfigReglaMetrica.ESTAT, AlarmaConfigReglaComparador.EN, Collections.singletonList("ERROR"), "Subsistema \"SUB1\" estat EN ERROR"),
+            arguments(AlarmaConfigReglaAmbit.INTEGRACIO, "INT1", AlarmaConfigReglaMetrica.ESTAT, AlarmaConfigReglaComparador.IGUAL, Collections.singletonList("OK"), "Integració \"INT1\" estat IGUAL OK"),
             arguments(AlarmaConfigReglaAmbit.SISTEMA, null, AlarmaConfigReglaMetrica.ESTAT, AlarmaConfigReglaComparador.IGUAL, Collections.singletonList("OK"), "Sistema estat IGUAL OK")
         );
     }
@@ -253,8 +279,8 @@ class AlarmaConfigServiceImplTest {
             }
             if (code.endsWith("ambit.APLICACIO")) return "Aplicacio";
             if (code.endsWith("ambit.SISTEMA")) return "Sistema";
-            if (code.endsWith("ambit.SUBSISTEMA")) return "Subsistema " + arg;
-            if (code.endsWith("ambit.INTEGRACIO")) return "Integracio " + arg;
+            if (code.endsWith("ambit.SUBSISTEMA")) return "Subsistema \"" + arg + "\"";
+            if (code.endsWith("ambit.INTEGRACIO")) return "Integració \"" + arg + "\"";
             if (code.endsWith("metrica.LATENCIA")) return "latència";
             if (code.endsWith("metrica.CARREGA_MITJANA_SISTEMA")) return "càrrega mitjana";
             if (code.endsWith("metrica.MEMORIA_DISPONIBLE")) return "memòria lliure";
@@ -263,6 +289,8 @@ class AlarmaConfigServiceImplTest {
             if (code.endsWith("comparador.MENOR")) return "MENOR";
             if (code.endsWith("comparador.IGUAL")) return "IGUAL";
             if (code.endsWith("comparador.MAJOR_IGUAL")) return "MAJOR_IGUAL";
+            if (code.endsWith("unitat.ms")) return "ms";
+            if (code.endsWith("unitat.MB")) return "MB";
             return code;
         });
 
@@ -280,10 +308,10 @@ class AlarmaConfigServiceImplTest {
 
     private static Stream<Arguments> provideNumericRuleSummaryCases() {
         return Stream.of(
-            arguments(AlarmaConfigReglaAmbit.SISTEMA, null, AlarmaConfigReglaMetrica.LATENCIA, AlarmaConfigReglaComparador.MAJOR, new BigDecimal("10.5"), "Sistema latència MAJOR 10.5"),
-            arguments(AlarmaConfigReglaAmbit.APLICACIO, null, AlarmaConfigReglaMetrica.CARREGA_MITJANA_SISTEMA, AlarmaConfigReglaComparador.MENOR, new BigDecimal("5.0"), "Aplicacio càrrega mitjana MENOR 5.0"),
-            arguments(AlarmaConfigReglaAmbit.SUBSISTEMA, "SUB2", AlarmaConfigReglaMetrica.MEMORIA_DISPONIBLE, AlarmaConfigReglaComparador.IGUAL, new BigDecimal("1024"), "Subsistema SUB2 memòria lliure IGUAL 1024"),
-            arguments(AlarmaConfigReglaAmbit.INTEGRACIO, "INT2", AlarmaConfigReglaMetrica.ESPAI_DISC_LLIURE, AlarmaConfigReglaComparador.MAJOR_IGUAL, new BigDecimal("50"), "Integracio INT2 disc lliure MAJOR_IGUAL 50")
+            arguments(AlarmaConfigReglaAmbit.SISTEMA, null, AlarmaConfigReglaMetrica.LATENCIA, AlarmaConfigReglaComparador.MAJOR, new BigDecimal("10.5"), "Sistema latència MAJOR 10,5 ms"),
+            arguments(AlarmaConfigReglaAmbit.APLICACIO, null, AlarmaConfigReglaMetrica.CARREGA_MITJANA_SISTEMA, AlarmaConfigReglaComparador.MENOR, new BigDecimal("5.0"), "Aplicacio càrrega mitjana MENOR 5"),
+            arguments(AlarmaConfigReglaAmbit.SUBSISTEMA, "SUB2", AlarmaConfigReglaMetrica.MEMORIA_DISPONIBLE, AlarmaConfigReglaComparador.IGUAL, new BigDecimal("1024"), "Subsistema \"SUB2\" memòria lliure IGUAL 1.024 MB"),
+            arguments(AlarmaConfigReglaAmbit.INTEGRACIO, "INT2", AlarmaConfigReglaMetrica.ESPAI_DISC_LLIURE, AlarmaConfigReglaComparador.MAJOR_IGUAL, new BigDecimal("50"), "Integració \"INT2\" disc lliure MAJOR_IGUAL 50 MB")
         );
     }
 
@@ -472,6 +500,9 @@ class AlarmaConfigServiceImplTest {
             if (code.endsWith("metrica.LATENCIA")) return "latència";
             if (code.endsWith("comparador.IGUAL")) return "IGUAL";
             if (code.endsWith("comparador.MAJOR")) return "MAJOR";
+            if (code.endsWith("operador.OR")) return "O";
+            if (code.endsWith("operador.AND")) return "I";
+            if (code.endsWith("unitat.ms")) return "ms";
             if (code.contains(".estat.")) return code.substring(code.lastIndexOf('.') + 1);
             return code;
         });
@@ -496,7 +527,289 @@ class AlarmaConfigServiceImplTest {
         regla.setFills(Arrays.asList(fill1, fill2));
 
         String result = (String) ReflectionTestUtils.invokeMethod(alarmaConfigService, "buildRuleSummary", regla);
-        assertThat(result).isEqualTo("Sistema estat IGUAL OK OR Aplicacio latència MAJOR 100");
+        assertThat(result).isEqualTo("Sistema estat IGUAL OK O Aplicacio latència MAJOR 100 ms");
+    }
+
+    @Test
+    @DisplayName("buildRuleSummary: resol nom dinàmic quan EntornApp té subsistemes i integracions amb nom")
+    void buildRuleSummary_quanEntornAppTeNoms_llavorsResolNomDinamicAmbCometes() {
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(invocation -> {
+            String code = invocation.getArgument(0);
+            Object arg = invocation.getArguments().length > 1 ? invocation.getArgument(1) : null;
+            if (arg instanceof Object[]) {
+                Object[] arr = (Object[]) arg;
+                arg = arr.length > 0 ? arr[0] : null;
+            }
+            if (code.endsWith("ambit.SUBSISTEMA")) return "Subsistema \"" + arg + "\"";
+            if (code.endsWith("ambit.INTEGRACIO")) return "Integració \"" + arg + "\"";
+            return code;
+        });
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(invocation -> {
+            String code = invocation.getArgument(0);
+            if (code.endsWith("metrica.ESTAT")) return "estat";
+            if (code.endsWith("comparador.EN")) return "EN";
+            if (code.contains(".estat.")) return code.substring(code.lastIndexOf('.') + 1);
+            return code;
+        });
+
+        AppSubsistema subsistema = new AppSubsistema();
+        ReflectionTestUtils.setField(subsistema, "codi", "SUB1");
+        ReflectionTestUtils.setField(subsistema, "nom", "Gestió d'Usuaris");
+
+        IntegracioRef integracioRef = IntegracioRef.builder().id(1L).nom("Plataforma d'Interoperabilitat").build();
+        AppIntegracio appIntegracio = new AppIntegracio();
+        ReflectionTestUtils.setField(appIntegracio, "codi", "PINBAL");
+        ReflectionTestUtils.setField(appIntegracio, "integracio", integracioRef);
+
+        EntornApp entornApp = EntornApp.builder()
+                .id(100L)
+                .subsistemes(Collections.singletonList(subsistema))
+                .integracions(Collections.singletonList(appIntegracio))
+                .build();
+
+        // Test subsistema amb nom
+        AlarmaConfigRegla reglaSub = new AlarmaConfigRegla();
+        reglaSub.setTipusNode(AlarmaConfigReglaTipusNode.CONDICIO);
+        reglaSub.setAmbit(AlarmaConfigReglaAmbit.SUBSISTEMA);
+        reglaSub.setCodiObjecte("SUB1");
+        reglaSub.setMetrica(AlarmaConfigReglaMetrica.ESTAT);
+        reglaSub.setComparador(AlarmaConfigReglaComparador.EN);
+        reglaSub.setValorsText(Collections.singletonList("ERROR"));
+
+        String resultSub = (String) ReflectionTestUtils.invokeMethod(alarmaConfigService, "buildRuleSummary", reglaSub, entornApp);
+        assertThat(resultSub).isEqualTo("Subsistema \"Gestió d'Usuaris\" estat EN ERROR");
+
+        // Test integracio amb nom
+        AlarmaConfigRegla reglaInt = new AlarmaConfigRegla();
+        reglaInt.setTipusNode(AlarmaConfigReglaTipusNode.CONDICIO);
+        reglaInt.setAmbit(AlarmaConfigReglaAmbit.INTEGRACIO);
+        reglaInt.setCodiObjecte("PINBAL");
+        reglaInt.setMetrica(AlarmaConfigReglaMetrica.ESTAT);
+        reglaInt.setComparador(AlarmaConfigReglaComparador.EN);
+        reglaInt.setValorsText(Collections.singletonList("ERROR"));
+
+        String resultInt = (String) ReflectionTestUtils.invokeMethod(alarmaConfigService, "buildRuleSummary", reglaInt, entornApp);
+        assertThat(resultInt).isEqualTo("Integració \"Plataforma d'Interoperabilitat\" estat EN ERROR");
+    }
+
+    @Test
+    @DisplayName("buildRuleSummary: fa fallback a codi quan no hi ha nom o EntornApp és null")
+    void buildRuleSummary_quanNoHiHaNomOEntornAppNull_llavorsFaFallbackACodiAmbCometes() {
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(invocation -> {
+            String code = invocation.getArgument(0);
+            Object arg = invocation.getArguments().length > 1 ? invocation.getArgument(1) : null;
+            if (arg instanceof Object[]) {
+                Object[] arr = (Object[]) arg;
+                arg = arr.length > 0 ? arr[0] : null;
+            }
+            if (code.endsWith("ambit.SUBSISTEMA")) return "Subsistema \"" + arg + "\"";
+            if (code.endsWith("ambit.INTEGRACIO")) return "Integració \"" + arg + "\"";
+            return code;
+        });
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(invocation -> {
+            String code = invocation.getArgument(0);
+            if (code.endsWith("metrica.ESTAT")) return "estat";
+            if (code.endsWith("comparador.EN")) return "EN";
+            if (code.contains(".estat.")) return code.substring(code.lastIndexOf('.') + 1);
+            return code;
+        });
+
+        // EntornApp és null
+        AlarmaConfigRegla reglaSub = new AlarmaConfigRegla();
+        reglaSub.setTipusNode(AlarmaConfigReglaTipusNode.CONDICIO);
+        reglaSub.setAmbit(AlarmaConfigReglaAmbit.SUBSISTEMA);
+        reglaSub.setCodiObjecte("SUB1");
+        reglaSub.setMetrica(AlarmaConfigReglaMetrica.ESTAT);
+        reglaSub.setComparador(AlarmaConfigReglaComparador.EN);
+        reglaSub.setValorsText(Collections.singletonList("ERROR"));
+
+        String resultNull = (String) ReflectionTestUtils.invokeMethod(alarmaConfigService, "buildRuleSummary", reglaSub, (EntornApp) null);
+        assertThat(resultNull).isEqualTo("Subsistema \"SUB1\" estat EN ERROR");
+
+        // EntornApp no conté el codi
+        EntornApp entornAppBuit = EntornApp.builder()
+                .id(100L)
+                .subsistemes(Collections.emptyList())
+                .integracions(Collections.emptyList())
+                .build();
+        String resultBuit = (String) ReflectionTestUtils.invokeMethod(alarmaConfigService, "buildRuleSummary", reglaSub, entornAppBuit);
+        assertThat(resultBuit).isEqualTo("Subsistema \"SUB1\" estat EN ERROR");
+    }
+
+    @Test
+    @DisplayName("entityToResource: recupera EntornApp via AlarmaClientHelper i genera resum amb nom dinàmic")
+    void entityToResource_recuperaEntornAppIGeneraResumAmbNom() throws JsonProcessingException {
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(invocation -> {
+            String code = invocation.getArgument(0);
+            Object arg = invocation.getArguments().length > 1 ? invocation.getArgument(1) : null;
+            if (arg instanceof Object[]) {
+                Object[] arr = (Object[]) arg;
+                arg = arr.length > 0 ? arr[0] : null;
+            }
+            if (code.endsWith("ambit.SUBSISTEMA")) return "Subsistema \"" + arg + "\"";
+            return code;
+        });
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(invocation -> {
+            String code = invocation.getArgument(0);
+            if (code.endsWith("metrica.ESTAT")) return "estat";
+            if (code.endsWith("comparador.EN")) return "EN";
+            if (code.contains(".estat.")) return code.substring(code.lastIndexOf('.') + 1);
+            return code;
+        });
+
+        Long entornAppId = 55L;
+        AlarmaConfigEntity entity = new AlarmaConfigEntity();
+        entity.setEntornAppId(entornAppId);
+        entity.setRuleJson("{\"ambit\":\"SUBSISTEMA\"}");
+
+        AlarmaConfigRegla regla = new AlarmaConfigRegla();
+        regla.setTipusNode(AlarmaConfigReglaTipusNode.CONDICIO);
+        regla.setAmbit(AlarmaConfigReglaAmbit.SUBSISTEMA);
+        regla.setCodiObjecte("SUB_AUTH");
+        regla.setMetrica(AlarmaConfigReglaMetrica.ESTAT);
+        regla.setComparador(AlarmaConfigReglaComparador.EN);
+        regla.setValorsText(Collections.singletonList("DOWN"));
+
+        when(objectMapper.readValue(eq("{\"ambit\":\"SUBSISTEMA\"}"), eq(AlarmaConfigRegla.class))).thenReturn(regla);
+
+        AppSubsistema subsistema = new AppSubsistema();
+        ReflectionTestUtils.setField(subsistema, "codi", "SUB_AUTH");
+        ReflectionTestUtils.setField(subsistema, "nom", "Autenticació Centralitzada");
+        EntornApp entornApp = EntornApp.builder()
+                .id(entornAppId)
+                .subsistemes(Collections.singletonList(subsistema))
+                .build();
+
+        when(alarmaClientHelper.entornAppFindByIdWithIntegracionsSubsistemesContexts(entornAppId)).thenReturn(entornApp);
+
+        AlarmaConfig resource = (AlarmaConfig) ReflectionTestUtils.invokeMethod(alarmaConfigService, "entityToResource", entity);
+        assertThat(resource).isNotNull();
+        assertThat(resource.getResumRegla()).isEqualTo("Subsistema \"Autenticació Centralitzada\" estat EN DOWN");
+        verify(alarmaClientHelper).entornAppFindByIdWithIntegracionsSubsistemesContexts(entornAppId);
+    }
+
+    @Test
+    @DisplayName("entityToResource: retorna null quan l'entitat d'entrada és null")
+    void entityToResource_quanEntityNull_retornaNull() {
+        AlarmaConfig resource = (AlarmaConfig) ReflectionTestUtils.invokeMethod(alarmaConfigService, "entityToResource", (AlarmaConfigEntity) null);
+        assertThat(resource).isNull();
+    }
+
+    @Test
+    @DisplayName("buildRuleSummary: evita espais dobles quan el comparador és null")
+    void buildRuleSummary_quanComparadorNull_evitaDobleEspai() {
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(invocation -> {
+            String code = invocation.getArgument(0);
+            if (code.endsWith("ambit.SISTEMA")) return "Sistema";
+            if (code.endsWith("metrica.LATENCIA")) return "latència";
+            if (code.endsWith("unitat.ms")) return "ms";
+            return code;
+        });
+
+        AlarmaConfigRegla regla = new AlarmaConfigRegla();
+        regla.setTipusNode(AlarmaConfigReglaTipusNode.CONDICIO);
+        regla.setAmbit(AlarmaConfigReglaAmbit.SISTEMA);
+        regla.setMetrica(AlarmaConfigReglaMetrica.LATENCIA);
+        regla.setComparador(null);
+        regla.setValorNumeric(new BigDecimal("100"));
+
+        String result = (String) ReflectionTestUtils.invokeMethod(alarmaConfigService, "buildRuleSummary", regla);
+        assertThat(result).isEqualTo("Sistema latència 100 ms");
+    }
+
+    @Test
+    @DisplayName("buildRuleSummary: grup amb operador null utilitza separador simple sense doble espai")
+    void buildRuleSummary_quanOperadorGrupNull_utilitzaSeparadorSimple() {
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(invocation -> {
+            String code = invocation.getArgument(0);
+            if (code.endsWith("ambit.SISTEMA")) return "Sistema";
+            if (code.endsWith("ambit.APLICACIO")) return "Aplicacio";
+            if (code.endsWith("metrica.LATENCIA")) return "latència";
+            if (code.endsWith("metrica.ESTAT")) return "estat";
+            if (code.endsWith("comparador.IGUAL")) return "IGUAL";
+            if (code.endsWith("unitat.ms")) return "ms";
+            if (code.contains(".estat.")) return code.substring(code.lastIndexOf('.') + 1);
+            return code;
+        });
+
+        AlarmaConfigRegla fill1 = new AlarmaConfigRegla();
+        fill1.setTipusNode(AlarmaConfigReglaTipusNode.CONDICIO);
+        fill1.setAmbit(AlarmaConfigReglaAmbit.SISTEMA);
+        fill1.setMetrica(AlarmaConfigReglaMetrica.ESTAT);
+        fill1.setComparador(AlarmaConfigReglaComparador.IGUAL);
+        fill1.setValorsText(Collections.singletonList("UP"));
+
+        AlarmaConfigRegla fill2 = new AlarmaConfigRegla();
+        fill2.setTipusNode(AlarmaConfigReglaTipusNode.CONDICIO);
+        fill2.setAmbit(AlarmaConfigReglaAmbit.APLICACIO);
+        fill2.setMetrica(AlarmaConfigReglaMetrica.LATENCIA);
+        fill2.setComparador(AlarmaConfigReglaComparador.IGUAL);
+        fill2.setValorNumeric(new BigDecimal("200"));
+
+        AlarmaConfigRegla grup = new AlarmaConfigRegla();
+        grup.setTipusNode(AlarmaConfigReglaTipusNode.GRUP);
+        grup.setOperador(null);
+        grup.setFills(Arrays.asList(fill1, fill2));
+
+        String result = (String) ReflectionTestUtils.invokeMethod(alarmaConfigService, "buildRuleSummary", grup);
+        assertThat(result).isEqualTo("Sistema estat IGUAL UP Aplicacio latència IGUAL 200 ms");
+    }
+
+    @Test
+    @DisplayName("buildRuleSummary: trimeja codiObjecte amb espais dins les cometes")
+    void buildRuleSummary_quanCodiObjecteAmbEspais_trimejaDinsCometes() {
+        lenient().when(i18nUtil.getI18nMessage(anyString(), any())).thenAnswer(invocation -> {
+            String code = invocation.getArgument(0);
+            Object arg = invocation.getArguments().length > 1 ? invocation.getArgument(1) : null;
+            if (arg instanceof Object[]) {
+                Object[] arr = (Object[]) arg;
+                arg = arr.length > 0 ? arr[0] : null;
+            }
+            if (code.endsWith("ambit.SUBSISTEMA")) return "Subsistema \"" + arg + "\"";
+            if (code.endsWith("ambit.INTEGRACIO")) return "Integració \"" + arg + "\"";
+            return code;
+        });
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(invocation -> {
+            String code = invocation.getArgument(0);
+            if (code.endsWith("metrica.ESTAT")) return "estat";
+            if (code.endsWith("comparador.EN")) return "EN";
+            if (code.contains(".estat.")) return code.substring(code.lastIndexOf('.') + 1);
+            return code;
+        });
+
+        AlarmaConfigRegla reglaSub = new AlarmaConfigRegla();
+        reglaSub.setTipusNode(AlarmaConfigReglaTipusNode.CONDICIO);
+        reglaSub.setAmbit(AlarmaConfigReglaAmbit.SUBSISTEMA);
+        reglaSub.setCodiObjecte("  SUB_TRIM  ");
+        reglaSub.setMetrica(AlarmaConfigReglaMetrica.ESTAT);
+        reglaSub.setComparador(AlarmaConfigReglaComparador.EN);
+        reglaSub.setValorsText(Collections.singletonList("ERROR"));
+
+        String result = (String) ReflectionTestUtils.invokeMethod(alarmaConfigService, "buildRuleSummary", reglaSub, (EntornApp) null);
+        assertThat(result).isEqualTo("Subsistema \"SUB_TRIM\" estat EN ERROR");
+    }
+
+    @Test
+    @DisplayName("buildRuleSummary: filtra elements nuls o buits a valorsText per evitar excepcions")
+    void buildRuleSummary_quanValorsTextConteNuls_filtraCorrectament() {
+        lenient().when(i18nUtil.getI18nMessage(anyString())).thenAnswer(invocation -> {
+            String code = invocation.getArgument(0);
+            if (code.endsWith("ambit.SISTEMA")) return "Sistema";
+            if (code.endsWith("metrica.ESTAT")) return "estat";
+            if (code.endsWith("comparador.EN")) return "EN";
+            if (code.contains(".estat.")) return code.substring(code.lastIndexOf('.') + 1);
+            return code;
+        });
+
+        AlarmaConfigRegla regla = new AlarmaConfigRegla();
+        regla.setTipusNode(AlarmaConfigReglaTipusNode.CONDICIO);
+        regla.setAmbit(AlarmaConfigReglaAmbit.SISTEMA);
+        regla.setMetrica(AlarmaConfigReglaMetrica.ESTAT);
+        regla.setComparador(AlarmaConfigReglaComparador.EN);
+        regla.setValorsText(Arrays.asList("UP", null, "  ", "DOWN"));
+
+        String result = (String) ReflectionTestUtils.invokeMethod(alarmaConfigService, "buildRuleSummary", regla);
+        assertThat(result).isEqualTo("Sistema estat EN UP, DOWN");
     }
 
     @Test

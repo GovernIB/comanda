@@ -66,6 +66,27 @@ public class AlarmaClientHelper {
         return null;
     }
 
+    @Cacheable(value = ENTORN_APP_INTEGRACIONS_SUBSISTEMES_CONTEXTS_CACHE, key = "#entornAppId?.toString()")
+    public EntornApp entornAppFindByIdWithIntegracionsSubsistemesContexts(Long entornAppId) {
+        if (entornAppId == null) {
+            return null;
+        }
+        try {
+            EntityModel<EntornApp> entornApp = entornAppServiceClient.getOne(
+                    entornAppId,
+                    new String[]{EntornApp.PERSPECTIVE_INTEGRACIONS_SUBSISTEMES_CONTEXTS},
+                    httpAuthorizationHeaderHelper.getAuthorizationHeader());
+            if (entornApp != null) {
+                return entornApp.getContent();
+            }
+        } catch (FeignException.NotFound e) {
+            return null;
+        } catch (Exception e) {
+            log.warn("Error recuperant entornApp amb integracions/subsistemes per a id {}", entornAppId, e);
+        }
+        return null;
+    }
+
     // Client Entorn
     // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
