@@ -107,7 +107,13 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
 
     @Override
     protected AlarmaConfig entityToResource(AlarmaConfigEntity entity) {
+        if (entity == null) {
+            return null;
+        }
         AlarmaConfig resource = super.entityToResource(entity);
+        if (resource == null) {
+            return null;
+        }
         AlarmaConfigRegla regla = readRule(entity);
         resource.setRegla(regla);
         EntornApp entornApp = entity.getEntornAppId() != null
@@ -187,6 +193,10 @@ public class AlarmaConfigServiceImpl extends BaseMutableResourceService<AlarmaCo
                     : regla.getValorsText().stream().filter(Objects::nonNull).collect(Collectors.toList()));
         }
         return regla;
+    }
+
+    private String buildRuleSummary(AlarmaConfigRegla regla) {
+        return buildRuleSummary(regla, null);
     }
 
     private String buildRuleSummary(AlarmaConfigRegla regla, EntornApp entornApp) {

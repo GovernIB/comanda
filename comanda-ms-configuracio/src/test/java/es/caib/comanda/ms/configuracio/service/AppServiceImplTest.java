@@ -86,7 +86,7 @@ public class AppServiceImplTest {
         }
 
         public List<AppEntity> exposedReorderFindLinesWithParent() {
-            return super.reorderFindLinesWithParent(null);
+            return super.reorderFindLinesWithParentAndSorted(null);
         }
 
         @Override
