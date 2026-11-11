@@ -1,10 +1,10 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Plantilla } from './Plantilla';
-import userEvent from '@testing-library/user-event';
 
 const mocks = vi.hoisted(() => ({
     isUserAdmin: true,
+    renderPopupEditForm: true,
     refreshGridMock: vi.fn(),
     artifactReportMock: vi.fn(),
     iniciaDescargaJSONMock: vi.fn(),
@@ -83,7 +83,7 @@ vi.mock('reactlib', () => ({
                         {item.element}
                     </div>
                 ))}
-                {popupEditFormContent}
+                {mocks.renderPopupEditForm && popupEditFormContent}
                 {rowAdditionalActions?.map((action: any) => (
                     <button
                         key={action.label}
@@ -155,6 +155,9 @@ vi.mock('../components/estadistiques/TaulaWidgetVisualization.tsx', () => ({
 vi.mock('../components/estadistiques/GraficWidgetVisualization.tsx', () => ({
     default: () => <div data-testid="widget-preview" />
 }));
+vi.mock('../components/estadistiques/TitolWidgetVisualization.tsx', () => ({
+    default: () => <div data-testid="titol-widget-preview" />
+}));
 vi.mock('../components/IconAutocompleteSelect.tsx', () => ({
     default: ({ name, label }: any) => <select data-testid={`icon-select-${name}`}><option>{label}</option></select>,
 }));
@@ -183,6 +186,7 @@ describe('Plantilla', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+        mocks.renderPopupEditForm = true;
         mocks.createPaletteMock.mockImplementation(({ data }: any) => Promise.resolve({
             ...data,
             id: 100,
@@ -206,18 +210,16 @@ describe('Plantilla', () => {
     });
 
     it('renderiza el MuiDataGrid con el formulario de edición', () => {
+        mocks.renderPopupEditForm = false;
         render(<Plantilla />);
         expect(screen.getByTestId('mui-data-grid')).toBeInTheDocument();
         expect(screen.getByTestId('grid-toolbar')).toBeInTheDocument();
     });
 
-    it('renderiza los campos principales del formulario (nom y paletas)', async () => {
+    it('renderiza los campos principales del formulario (nom y paletas)', () => {
         render(<Plantilla />);
 
-        await waitFor(() => {
-            expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
-        });
-
+        expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
         expect(screen.getByTestId('palette-group-LIGHT')).toBeInTheDocument();
         expect(screen.getByTestId('palette-group-DARK')).toBeInTheDocument();
     });
@@ -235,7 +237,7 @@ describe('Plantilla', () => {
         });
     });
 
-    it('aplica el tema clar o el tema fosc actual i canvia el tema del formulari en seleccionar-lo', async () => {
+    it('aplica el tema clar o el tema fosc actual i canvia el tema del formulari en seleccionar-lo', () => {
         render(<Plantilla />);
 
         expect(screen.getByTestId('palette-group-LIGHT')).toHaveStyle({ '--plantilla-bg': '#fff' });
@@ -243,70 +245,61 @@ describe('Plantilla', () => {
 
         fireEvent.click(screen.getByTestId('palette-group-DARK'));
 
-        await waitFor(() => {
-            expect(screen.getByTestId('plantilla-form-theme')).toHaveAttribute('data-theme-group', 'DARK');
-            expect(screen.getByTestId('plantilla-form-theme')).toHaveStyle({ '--plantilla-bg': '#282A36' });
-        });
+        expect(screen.getByTestId('plantilla-form-theme')).toHaveAttribute('data-theme-group', 'DARK');
+        expect(screen.getByTestId('plantilla-form-theme')).toHaveStyle({ '--plantilla-bg': '#282A36' });
     });
 
-    it('permet filtrar les paletes pel nom i mostra els colors al desplegable', async () => {
-        const user = userEvent.setup();
+    const getTabs = () => Array.from(document.querySelectorAll('[role="tab"]')) as HTMLElement[];
+
+    it('permet filtrar les paletes pel nom i mostra els colors al desplegable', () => {
         render(<Plantilla />);
 
-        const widgetSelector = screen.getAllByRole('combobox', { name: 'Widget' })[0];
-        await user.click(widgetSelector);
-        await user.clear(widgetSelector);
-        await user.type(widgetSelector, 'fosc destacat');
+        const lightGroup = screen.getByTestId('palette-group-LIGHT');
+        const widgetSelector = lightGroup.querySelector('input[role="combobox"]') as HTMLInputElement;
+        fireEvent.focus(widgetSelector);
+        fireEvent.change(widgetSelector, { target: { value: 'fosc destacat' } });
 
-        const option = await screen.findByRole('option', { name: /Tema fosc destacat - widget/ });
+        const listbox = document.querySelector('[role="listbox"]') as HTMLElement;
+        const option = within(listbox).getByText('Tema fosc destacat - widget').closest('li') as HTMLElement;
         expect(option.querySelector('[data-palette-color="#111827"]')).toBeInTheDocument();
-        expect(screen.queryByRole('option', { name: /Tema clar - widget/ })).not.toBeInTheDocument();
-    }, 30000);
+        expect(within(listbox).queryByText('Tema clar - widget')).not.toBeInTheDocument();
+    });
 
-    it('cambia de pestaña al hacer clic en los tabs', async () => {
-        const user = userEvent.setup();
+    it('cambia de pestaña al hacer clic en los tabs', () => {
         render(<Plantilla />);
 
-        await waitFor(() => {
-            expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
-        });
+        expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
 
-        const tabs = screen.getAllByRole('tab');
+        const tabs = getTabs();
         expect(tabs.length).toBeGreaterThanOrEqual(3);
 
-        await user.click(tabs[1]);
+        fireEvent.click(tabs[1]);
 
-        await waitFor(() => {
-            expect(screen.getByTestId('widget-preview')).toBeInTheDocument();
-        });
+        expect(screen.getByTestId('widget-preview')).toBeInTheDocument();
     });
 
-    it('la pestanya de gràfics mostra pestanyes de tipus de gràfic (no un desplegable) i BAR_CHART per defecte només té les seves propietats', async () => {
-        const user = userEvent.setup();
+    it('la pestanya de gràfics mostra pestanyes de tipus de gràfic (no un desplegable) i BAR_CHART per defecte només té les seves propietats', () => {
         render(<Plantilla />);
 
-        await waitFor(() => {
-            expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
-        });
+        expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
 
-        const mainTabs = screen.getAllByRole('tab');
-        await user.click(mainTabs[2]);
+        const mainTabs = getTabs();
+        fireEvent.click(mainTabs[2]);
 
         // El desplegable de tipus de gràfic ha estat substituït per pestanyes.
         expect(screen.queryByTestId('form-field-tipusGrafic')).not.toBeInTheDocument();
 
         // 5 pestanyes principals + 7 pestanyes de tipus de gràfic (BAR_CHART, LINE_CHART, PIE_CHART,
         // SCATTER_CHART, SPARK_LINE_CHART, GAUGE_CHART, HEATMAP_CHART).
-        const allTabs = screen.getAllByRole('tab');
+        const allTabs = getTabs();
         expect(allTabs).toHaveLength(12);
 
         // BAR_CHART (pestanya per defecte) només té 3 propietats booleanes configurables: mostrarReticula,
         // barStacked i barHorizontal. Si el filtre no s'aplica, se'n mostren 8.
-        expect(screen.getAllByRole('checkbox')).toHaveLength(3);
+        expect(document.querySelectorAll('input[type="checkbox"]')).toHaveLength(3);
     });
 
-    it('canviar de pestanya de tipus de gràfic mostra només les propietats d’aquell tipus', async () => {
-        const user = userEvent.setup();
+    it('canviar de pestanya de tipus de gràfic mostra només les propietats d’aquell tipus', () => {
         // El mock de FormField/setFieldValue no simula el re-render reactiu del formulari real: cal fer-ho
         // explícit aquí, aplicant el canvi sobre les dades i tornant a renderitzar.
         mocks.useFormContextValue.apiRef.current.setFieldValue = vi.fn((field: string, value: unknown) => {
@@ -314,26 +307,21 @@ describe('Plantilla', () => {
         });
         const { rerender } = render(<Plantilla />);
 
-        await waitFor(() => {
-            expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
-        });
+        expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
 
-        const mainTabs = screen.getAllByRole('tab');
-        await user.click(mainTabs[2]);
+        const mainTabs = getTabs();
+        fireEvent.click(mainTabs[2]);
 
-        const chartTypeTabs = screen.getAllByRole('tab').slice(5);
+        const chartTypeTabs = getTabs().slice(5);
         // chartTypesList: ["BAR_CHART", "PIE_CHART", ...] -> índex 1 és PIE_CHART.
         // PIE_CHART: outerRadius, pieDonut, innerRadius, pieShowLabels, labelSize -> 2 booleans, 3 numèrics.
-        await user.click(chartTypeTabs[1]);
+        fireEvent.click(chartTypeTabs[1]);
         rerender(<Plantilla />);
 
-        await waitFor(() => {
-            expect(screen.getAllByRole('checkbox')).toHaveLength(2);
-        });
+        expect(document.querySelectorAll('input[type="checkbox"]')).toHaveLength(2);
     });
 
-    it('un títol amb una fila antiga de vora única (mostrarVora) no la mostra a la graella, ja que ara es configura gràficament', async () => {
-        const user = userEvent.setup();
+    it('un títol amb una fila antiga de vora única (mostrarVora) no la mostra a la graella, ja que ara es configura gràficament', () => {
         mocks.useFormContextValue.data = {
             ...mocks.useFormContextValue.data,
             styleProperties: [
@@ -344,83 +332,69 @@ describe('Plantilla', () => {
         };
         render(<Plantilla />);
 
-        await waitFor(() => {
-            expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
-        });
+        expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
 
-        const tabs = screen.getAllByRole('tab');
-        await user.click(tabs[4]);
+        const tabs = getTabs();
+        fireEvent.click(tabs[4]);
 
-        await waitFor(() => {
-            expect(screen.getByTestId('property-select-TITOL_1-posicioSubtitol')).toBeInTheDocument();
-        });
-        expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+        expect(screen.getByTestId('property-select-TITOL_1-posicioSubtitol')).toBeInTheDocument();
+        expect(document.querySelector('input[type="checkbox"]')).not.toBeInTheDocument();
     });
 
-    it('la pestanya de Títols conté 3 subpestanyes, una per cada títol', async () => {
-        const user = userEvent.setup();
+    it('la pestanya de Títols conté 3 subpestanyes, una per cada títol', () => {
         render(<Plantilla />);
 
-        await waitFor(() => {
-            expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
-        });
+        expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
 
         // Només 5 pestanyes principals (Comuns, Simple, Gràfic, Taula, Títols); les subpestanyes de
         // títol encara no existeixen perquè la pestanya de Títols no està activa.
-        const mainTabs = screen.getAllByRole('tab');
+        const mainTabs = getTabs();
         expect(mainTabs).toHaveLength(5);
 
-        await user.click(mainTabs[4]);
-        await waitFor(() => {
-            expect(screen.getByTestId('property-select-TITOL_1-posicioSubtitol')).toBeInTheDocument();
-        });
+        fireEvent.click(mainTabs[4]);
+        expect(screen.getByTestId('property-select-TITOL_1-posicioSubtitol')).toBeInTheDocument();
         expect(screen.queryByTestId('property-select-TITOL_2-posicioSubtitol')).not.toBeInTheDocument();
         expect(screen.queryByTestId('property-select-TITOL_3-posicioSubtitol')).not.toBeInTheDocument();
 
         // Ara que la pestanya de Títols és activa, apareixen les 3 subpestanyes (Títol 1/2/3) a més
         // de les 5 principals.
-        const allTabsWithSubtabs = screen.getAllByRole('tab');
+        const allTabsWithSubtabs = getTabs();
         expect(allTabsWithSubtabs).toHaveLength(8);
         const titleSubTabs = allTabsWithSubtabs.slice(5);
 
-        await user.click(titleSubTabs[1]);
-        await waitFor(() => {
-            expect(screen.getByTestId('property-select-TITOL_2-posicioSubtitol')).toBeInTheDocument();
-        });
+        fireEvent.click(titleSubTabs[1]);
+        expect(screen.getByTestId('property-select-TITOL_2-posicioSubtitol')).toBeInTheDocument();
         expect(screen.queryByTestId('property-select-TITOL_1-posicioSubtitol')).not.toBeInTheDocument();
 
-        await user.click(screen.getAllByRole('tab').slice(5)[2]);
-        await waitFor(() => {
-            expect(screen.getByTestId('property-select-TITOL_3-posicioSubtitol')).toBeInTheDocument();
-        });
+        fireEvent.click(getTabs().slice(5)[2]);
+        expect(screen.getByTestId('property-select-TITOL_3-posicioSubtitol')).toBeInTheDocument();
         expect(screen.queryByTestId('property-select-TITOL_2-posicioSubtitol')).not.toBeInTheDocument();
     });
 
     it('inicializa los colores por defecto al crear una nueva plantilla', () => {
+        mocks.renderPopupEditForm = false;
         render(<Plantilla />);
         expect(mockSetFieldValue).toBeDefined();
     });
 
-    it('el camp posicioSubtitol de la pestanya de títols es mostra com un desplegable amb SOTA i COSTAT', async () => {
-        const user = userEvent.setup();
+    it('el camp posicioSubtitol de la pestanya de títols es mostra com un desplegable amb SOTA i COSTAT', () => {
         render(<Plantilla />);
 
-        await waitFor(() => {
-            expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
-        });
+        expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
 
-        const tabs = screen.getAllByRole('tab');
-        await user.click(tabs[4]);
+        const tabs = getTabs();
+        fireEvent.click(tabs[4]);
 
-        const select = await screen.findByTestId('property-select-TITOL_1-posicioSubtitol');
+        const select = screen.getByTestId('property-select-TITOL_1-posicioSubtitol');
         const combobox = select.querySelector('[role="combobox"]') as HTMLElement;
-        await user.click(combobox);
+        fireEvent.mouseDown(combobox);
 
-        const options = await screen.findAllByRole('option');
+        const listbox = document.querySelector('[role="listbox"]') as HTMLElement;
+        const options = Array.from(listbox.querySelectorAll('[role="option"]'));
         const optionValues = options.map((option) => option.getAttribute('data-value'));
         expect(optionValues).toEqual(['SOTA', 'COSTAT']);
 
-        await user.click(options[1]);
+        fireEvent.click(options[1]);
 
         expect(mockSetFieldValue).toHaveBeenCalledWith(
             'styleProperties',
@@ -430,46 +404,42 @@ describe('Plantilla', () => {
         );
     });
 
-    it('els colors de fons es poden buidar (opció de buidat al desplegable), els altres colors no', async () => {
-        const user = userEvent.setup();
+    it('els colors de fons es poden buidar (opció de buidat al desplegable), els altres colors no', () => {
         render(<Plantilla />);
 
-        await waitFor(() => {
-            expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
-        });
+        expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
 
         // Pestanya "Comú": conté colorFons (color de fons) i colorText (no és color de fons).
-        const openOptions = async (testId: string) => {
-            const select = await screen.findByTestId(testId);
-            await user.click(select.querySelector('[role="combobox"]') as HTMLElement);
-            const options = await screen.findAllByRole('option');
-            return options.map((option) => option.getAttribute('data-value'));
+        const openOptions = (testId: string) => {
+            const select = screen.getByTestId(testId);
+            fireEvent.mouseDown(select.querySelector('[role="combobox"]') as HTMLElement);
+            const listboxes = document.querySelectorAll('[role="listbox"]');
+            const listbox = listboxes[listboxes.length - 1] as HTMLElement;
+            const options = Array.from(listbox.querySelectorAll('[role="option"]'));
+            const values = options.map((option) => option.getAttribute('data-value'));
+            fireEvent.keyDown(listbox, { key: 'Escape', code: 'Escape' });
+            return values;
         };
 
-        const colorFonsValues = await openOptions('property-select-COMMON-colorFons');
+        const colorFonsValues = openOptions('property-select-COMMON-colorFons');
         expect(colorFonsValues).toContain('');
-        await user.keyboard('{Escape}');
 
-        const colorTextValues = await openOptions('property-select-COMMON-colorText');
+        const colorTextValues = openOptions('property-select-COMMON-colorText');
         expect(colorTextValues).not.toContain('');
-        await user.keyboard('{Escape}');
     });
 
-    it('en seleccionar l\'opció de buidat d\'un color de fons, la propietat queda sense posició de paleta', async () => {
-        const user = userEvent.setup();
+    it('en seleccionar l\'opció de buidat d\'un color de fons, la propietat queda sense posició de paleta', () => {
         render(<Plantilla />);
 
-        await waitFor(() => {
-            expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
-        });
+        expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
 
-        const select = await screen.findByTestId('property-select-COMMON-colorFons');
-        await user.click(select.querySelector('[role="combobox"]') as HTMLElement);
+        const select = screen.getByTestId('property-select-COMMON-colorFons');
+        fireEvent.mouseDown(select.querySelector('[role="combobox"]') as HTMLElement);
 
-        const options = await screen.findAllByRole('option');
-        const emptyOption = options.find((option) => option.getAttribute('data-value') === '') as HTMLElement;
+        const listbox = document.querySelector('[role="listbox"]') as HTMLElement;
+        const emptyOption = listbox.querySelector('[role="option"][data-value=""]') as HTMLElement;
         expect(emptyOption).toBeDefined();
-        await user.click(emptyOption);
+        fireEvent.click(emptyOption);
 
         expect(mockSetFieldValue).toHaveBeenCalledWith(
             'styleProperties',
@@ -479,26 +449,23 @@ describe('Plantilla', () => {
         );
     });
 
-    it('permet configurar gràficament les vores del títol clicant cada costat del rectangle', async () => {
-        const user = userEvent.setup();
+    it('permet configurar gràficament les vores del títol clicant cada costat del rectangle', () => {
         render(<Plantilla />);
 
-        await waitFor(() => {
-            expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
-        });
+        expect(screen.getByTestId('form-field-nom')).toBeInTheDocument();
 
-        const tabs = screen.getAllByRole('tab');
-        await user.click(tabs[4]);
+        const tabs = getTabs();
+        fireEvent.click(tabs[4]);
 
         // Els camps plans (checkbox/color/número) de cada costat NO s'han de mostrar directament a la graella.
-        expect(screen.queryByRole('checkbox', { name: /vora/i })).not.toBeInTheDocument();
+        expect(document.querySelector('input[type="checkbox"]')).not.toBeInTheDocument();
 
-        const topZone = await screen.findByTestId('vora-zone-TITOL_1-Top');
-        await user.click(topZone);
+        const topZone = screen.getByTestId('vora-zone-TITOL_1-Top');
+        fireEvent.click(topZone);
 
-        const dialog = await screen.findByRole('dialog');
-        const checkbox = within(dialog).getByRole('checkbox');
-        await user.click(checkbox);
+        const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
+        const checkbox = dialog.querySelector('input[type="checkbox"]') as HTMLElement;
+        fireEvent.click(checkbox);
 
         expect(mockSetFieldValue).toHaveBeenCalledWith(
             'styleProperties',
@@ -509,6 +476,7 @@ describe('Plantilla', () => {
     });
 
     it('Plantilla_quanUsuariEsAdmin_mostraBotoImportarAlToolbar', () => {
+        mocks.renderPopupEditForm = false;
         mocks.isUserAdmin = true;
         render(<Plantilla />);
         expect(screen.getByTestId('toolbar-2')).toBeInTheDocument();
@@ -516,6 +484,7 @@ describe('Plantilla', () => {
     });
 
     it('Plantilla_quanUsuariNoEsAdmin_noMostraBotoImportar', () => {
+        mocks.renderPopupEditForm = false;
         mocks.isUserAdmin = false;
         render(<Plantilla />);
         expect(screen.queryByTestId('toolbar-2')).not.toBeInTheDocument();
@@ -524,6 +493,7 @@ describe('Plantilla', () => {
     });
 
     it('Plantilla_quanEsPremExportar_cridaArtifactReportIDescarregaJSON', async () => {
+        mocks.renderPopupEditForm = false;
         mocks.artifactReportMock.mockResolvedValueOnce({ fitxer: 'plantilla.json' });
         render(<Plantilla />);
 
@@ -542,6 +512,7 @@ describe('Plantilla', () => {
     });
 
     it('Plantilla_quanEsRenderitza_renderitzaElDialegDImportacioIFormulari', () => {
+        mocks.renderPopupEditForm = false;
         render(<Plantilla />);
         expect(screen.getByTestId('form-action-dialog')).toBeInTheDocument();
         expect(screen.getByTestId('form-field-file')).toBeInTheDocument();

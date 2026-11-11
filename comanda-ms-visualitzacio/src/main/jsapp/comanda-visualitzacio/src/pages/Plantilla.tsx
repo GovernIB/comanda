@@ -1225,7 +1225,7 @@ const PaletteRoleFields = ({
     );
 };
 
-const PaletteGroupsEditor = ({selectedGroup, onSelectGroup}: {
+const PaletteGroupsEditor = React.memo(({selectedGroup, onSelectGroup}: {
     selectedGroup: PaletteGroupType;
     onSelectGroup: (group: PaletteGroupType) => void
 }) => {
@@ -1302,7 +1302,7 @@ const PaletteGroupsEditor = ({selectedGroup, onSelectGroup}: {
             {dialog}
         </>
     );
-};
+});
 
 /** Selector de la paleta de gràfic del grup de tema actualment seleccionat, mostrat a la pestanya de Gràfics. */
 const ChartPaletteSelector = ({selectedGroup}: { selectedGroup: PaletteGroupType }) => {
