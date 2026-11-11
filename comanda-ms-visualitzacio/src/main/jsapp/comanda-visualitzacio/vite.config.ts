@@ -30,10 +30,9 @@ export default defineConfig(({ mode }) => {
             pool: 'forks',
             maxWorkers: env.TEST_MAX_WORKERS || undefined,
             testTimeout: env.LOW_PERFORMANCE_TEST_MODE ? 20000 : 10000,
-            reporters: ['default', 'junit', 'html'],
+            reporters: ['default', 'junit', ['html', { outputDir: './test-reports' }]],
             outputFile: {
                 junit: './test-reports/junit.xml',
-                html: './test-reports/index.html',
             },
             coverage: {
                 provider: 'v8',
