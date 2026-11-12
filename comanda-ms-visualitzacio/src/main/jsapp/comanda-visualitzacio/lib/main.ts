@@ -105,6 +105,8 @@ export type { DataFormDialogApi as MuiFormDialogApi } from './components/mui/dat
 export type { FormSidebarApi as MuiFormSidebarApi } from './components/mui/form/MuiFormSidebar';
 export type { DefaultMuiComponentProps } from './components/mui/MuiBaseAppContext';
 export type {
+    KettingResponseInterceptor,
+    ResourceApiProviderProps,
     ResourceApiRequestArgs,
     ResourceApiGetOneArgs,
     ResourceApiFindArgs,

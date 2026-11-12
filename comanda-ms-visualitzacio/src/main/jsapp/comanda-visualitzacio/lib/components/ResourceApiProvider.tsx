@@ -184,6 +184,16 @@ export type ResourceApiFieldArgs = ResourceApiRequestArgs & {
 
 export type ResourceApiFieldOptionsFindArgs = ResourceApiFieldArgs & ResourceApiFindArgs;
 
+/**
+ * Interceptor per a les respostes HTTP de Ketting abans que siguin processades.
+ * Permet inspeccionar la resposta (per exemple per a detectar codis 401/403 i redirigir al login)
+ * o realitzar efectes secundaris.
+ */
+export type KettingResponseInterceptor = (
+    response: Response,
+    request: Request
+) => Response | void | Promise<Response | void>;
+
 export type ResourceApiProviderProps = React.PropsWithChildren & {
     /** URL base de l'API REST */
     apiUrl: string;
@@ -196,6 +206,8 @@ export type ResourceApiProviderProps = React.PropsWithChildren & {
     debug?: boolean;
     debugRequests?: boolean;
     debugAvailableServices?: boolean;
+    /** Interceptor per a les respostes HTTP de Ketting */
+    kettingResponseInterceptor?: KettingResponseInterceptor;
 };
 
 /**
@@ -1271,6 +1283,7 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
         debug,
         debugRequests,
         debugAvailableServices,
+        kettingResponseInterceptor,
         children,
     } = props;
     const logConsole = useLogConsole(LOG_PREFIX);
@@ -1279,6 +1292,10 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
     const isAuthenticated = authContext?.isAuthenticated;
     const bearerTokenActive = authContext?.bearerTokenActive;
     const getToken = authContext?.getToken;
+    const kettingResponseInterceptorRef = React.useRef(kettingResponseInterceptor);
+    React.useEffect(() => {
+        kettingResponseInterceptorRef.current = kettingResponseInterceptor;
+    }, [kettingResponseInterceptor]);
     const kettingClientRef = React.useRef<Client>(undefined);
     const openAnswerRequiredDialogRef = React.useRef<OpenAnswerRequiredDialogFn>(undefined);
     const [httpHeaders, setHttpHeaders] = React.useState<Record<string, string>[]>();
@@ -1314,7 +1331,16 @@ export const ResourceApiProvider = (props: ResourceApiProviderProps) => {
                     Object.entries(e).forEach(([key, value]) => newRequest.headers.set(key, value));
                 });
             }
-            return next(newRequest);
+            return next(newRequest).then(async (response) => {
+                const interceptor = kettingResponseInterceptorRef.current;
+                if (interceptor) {
+                    const interceptedResponse = await interceptor(response, newRequest);
+                    if (interceptedResponse instanceof Response) {
+                        return interceptedResponse;
+                    }
+                }
+                return response;
+            });
         });
         kettingClientRef.current = kettingClient;
     };

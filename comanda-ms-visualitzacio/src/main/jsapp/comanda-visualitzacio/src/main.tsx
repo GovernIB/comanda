@@ -9,7 +9,7 @@ import '@fontsource/noto-sans/400.css';
 import '@fontsource/noto-sans/500.css';
 import '@fontsource/noto-sans/700.css';
 import App from './App.tsx';
-import { OidcAuthProvider, ContainerAuthProvider, ResourceApiProvider } from 'reactlib';
+import { OidcAuthProvider, ContainerAuthProvider } from 'reactlib';
 import SseProvider from './components/SseProvider.tsx';
 import UserProvider from './components/UserProvider';
 import MuiThemeProvider from './components/MuiThemeProvider.tsx';
@@ -17,6 +17,7 @@ import { HelmetProvider } from '@dr.pogodin/react-helmet';
 import AlarmsProvider from './components/AlarmsProvider.tsx';
 import { getAuthConfig, getEnvApiUrl, isAuthUrlPresent } from './util/envUtils.ts';
 import ParameterProvider from './components/ParameterProvider.tsx';
+import ResourceApiWithInterceptorProvider from './components/ResourceApiWithInterceptorProvider.tsx';
 
 dayjs.extend(duration);
 
@@ -32,13 +33,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 logoutUrl={import.meta.env.BASE_URL}
                 config={getAuthConfig()}
                 mandatory
-                // TODO silentCheckSsoRedirectUri={`${import.meta.env.BASE_URL}silent-check-sso.html`}
-                // Activat automàticament en dev (npm run dev) perquè a la consola es vegi quin mecanisme exacte
-                // (onTokenExpired, manteniment de sessió periòdic, onAuthRefreshError...) dispara cada renovació
-                // o redirect, útil mentre es depura el refresc espontani de la interfície.
                 debug={import.meta.env.DEV ? true : undefined}
             >
-                <ResourceApiProvider apiUrl={getEnvApiUrl()} userSessionActive>
+                <ResourceApiWithInterceptorProvider apiUrl={getEnvApiUrl()} userSessionActive>
                     <ParameterProvider>
                         <UserProvider>
                             <SseProvider>
@@ -53,7 +50,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                             </SseProvider>
                         </UserProvider>
                     </ParameterProvider>
-                </ResourceApiProvider>
+                </ResourceApiWithInterceptorProvider>
             </AuthProvider>
         </HelmetProvider>
     </React.StrictMode>
