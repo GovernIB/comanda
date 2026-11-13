@@ -36,6 +36,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.env.Environment;
@@ -85,6 +86,8 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
     private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
     private final AclServiceClient aclServiceClient;
     private final RestTemplate restTemplate;
+    @Qualifier("longTimeoutRestTemplate")
+    private final RestTemplate longTimeoutRestTemplate;
     private final Validator validator;
     private final ResourceEntityMappingHelper resourceEntityMappingHelper;
     private final Environment environment;
@@ -95,7 +98,7 @@ public class EntornAppServiceImpl extends BaseMutableResourceService<EntornApp, 
         register(EntornApp.ENTORN_APP_ACTION_PING_URL, new PingUrlAction(restTemplate, validator, statsAuthUser, statsAuthPassword, environment));
         register(EntornApp.ENTORN_APP_ACTION_EXISTS_PARAMETER, new ExistsParameterAction(environment));
         register(EntornApp.REPORT_LLISTAR_LOGS, new InformeLlistarLogs(restTemplate, statsAuthUser, statsAuthPassword, environment));
-        register(EntornApp.REPORT_DESCARREGAR_LOG, new InformeDescarregarLog(restTemplate, entornAppRepository, statsAuthUser, statsAuthPassword, environment));
+        register(EntornApp.REPORT_DESCARREGAR_LOG, new InformeDescarregarLog(longTimeoutRestTemplate, entornAppRepository, statsAuthUser, statsAuthPassword, environment));
         register(EntornApp.REPORT_PREVISUALITZAR_LOG, new InformePrevisualitzarLog(restTemplate, statsAuthUser, statsAuthPassword, environment));
         register(EntornApp.ENTORN_APP_TOOGLE_ACTIVA, new ToogleActiva(resourceEntityMappingHelper));
         register(EntornApp.ENTORN_APP_REFRESH_INFO, new RefreshInfo(resourceEntityMappingHelper));

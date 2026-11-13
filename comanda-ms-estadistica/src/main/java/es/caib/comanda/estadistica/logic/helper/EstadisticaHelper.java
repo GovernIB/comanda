@@ -17,6 +17,7 @@ import es.caib.comanda.ms.logic.intf.util.I18nUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
@@ -63,6 +64,7 @@ public class EstadisticaHelper {
     private final TempsRepository tempsRepository;
     private final FetRepository fetRepository;
     private final EstadisticaClientHelper estadisticaClientHelper;
+    @Qualifier("longTimeoutRestTemplate")
     private final RestTemplate restTemplate;
     private final Environment environment;
     private final UnitatsOrganitzativesPluginDir3 unitatsOrganitzativesPluginDir3;

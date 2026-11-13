@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,6 +68,7 @@ public class SalutInfoHelper {
 	private final SalutHistRepository salutHistRepository;
 
 	private final SalutClientHelper salutClientHelper;
+	@Qualifier("shortTimeoutRestTemplate")
 	private final RestTemplate restTemplate;
     private final ApplicationEventPublisher eventPublisher;
     private final MetricsHelper metricsHelper;
@@ -584,7 +586,7 @@ public class SalutInfoHelper {
     public SalutEntity creaAgregatSalut(Long entornAppId, TipusRegistreSalut tipus, SalutEntity salut) {
         if (salut == null) return null;
 
-        
+
         SalutEntity agregat = new SalutEntity();
         agregat.setEntornAppId(entornAppId);
         LocalDateTime data = salut.getData();

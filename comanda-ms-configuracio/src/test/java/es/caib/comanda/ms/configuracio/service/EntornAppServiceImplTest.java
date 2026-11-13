@@ -74,7 +74,7 @@ public class EntornAppServiceImplTest {
                                           JmsTemplate jmsTemplate) {
             super(appIntegracioRepository, subsistemaRepository, contextRepository, entornAppRepository, entornAppHistRepository, appInfoHelper,
                     cacheHeper, entornAppHelper, authenticationHelper, httpAuthorizationHeaderHelper, aclServiceClient,
-                    restTemplate, validator, resourceEntityMappingHelper, environment, jmsTemplate);
+                    restTemplate, restTemplate, validator, resourceEntityMappingHelper, environment, jmsTemplate);
         }
 
         @Override
