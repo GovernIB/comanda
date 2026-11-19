@@ -8,11 +8,13 @@ import org.keycloak.KeycloakPrincipal;
 import org.keycloak.representations.AccessToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.mapping.SimpleAttributes2GrantedAuthoritiesMapper;
 import org.springframework.security.core.authority.mapping.SimpleMappableAttributesRetriever;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedGrantedAuthoritiesWebAuthenticationDetails;
 import org.springframework.security.web.authentication.preauth.j2ee.J2eeBasedPreAuthenticatedWebAuthenticationDetailsSource;
@@ -57,6 +59,8 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 	@Override
 	protected void customHttpSecurityConfiguration(HttpSecurity http) throws Exception {
 		super.customHttpSecurityConfiguration(http);
+		http.exceptionHandling(eh -> eh
+				.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)));
 		http.authorizeHttpRequests().
 				requestMatchers(
 						new RequestMatcher[] {
@@ -71,7 +75,7 @@ public class WebSecurityConfig extends BaseWebSecurityConfig {
 						}
 				).permitAll().
 				requestMatchers(
-						new AntPathRequestMatcher(BaseConfig.API_PATH + "/**/*")
+						new AntPathRequestMatcher(BaseConfig.API_PATH + "/**")
 				).authenticated();
 		if (isJboss()) {
 			// A JBoss l'autenticació la fa l'adaptador Keycloak: cal redirigir el navegador a l'"end_session_endpoint"
