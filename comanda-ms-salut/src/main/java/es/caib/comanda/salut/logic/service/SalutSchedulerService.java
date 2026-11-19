@@ -159,7 +159,7 @@ public class SalutSchedulerService {
                 }
             }
 
-            log.info("[SALUT REPORT] System: cores={}, loadAvg={}, sysCpu={}, procCpu={}, uptime={}, start={}, JVM: used={}, total={}, Phys: used={}, total={}, Disk '/': used={}, total={}, Worker: pool={}/{}, active={}, queue={}",
+            log.info("[SALUT REPORT] System: cores={}, loadAvg={}, sysCpu={}, procCpu={}, uptime={}, start={}, JVM: used={}, total={}, Phys: used={}, total={}, Disk '/': used={}, total={}, Worker: pool={}, active={}, queue={}",
                     cpu != null ? cpu.getCores() : null,
                     cpu != null ? cpu.getFormatedLoadAverage() : null,
                     cpu != null ? cpu.getFormatedSystemCpuLoad() : null,
