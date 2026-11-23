@@ -10,6 +10,7 @@ import es.caib.comanda.model.v1.estadistica.GenericDimensio;
 import es.caib.comanda.model.v1.estadistica.GenericFet;
 import es.caib.comanda.client.ParametreServiceClient;
 import es.caib.comanda.ms.logic.helper.HttpAuthorizationHeaderHelper;
+import es.caib.comanda.ms.logic.helper.ParametreClientHelper;
 import es.caib.comanda.ms.logic.helper.ParametresHelper;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -212,11 +213,13 @@ class RestTemplateConfigTest {
                     CircularDependencyTestConfig.class,
                     RestTemplateConfig.class,
                     HttpAuthorizationHeaderHelper.class,
+                    ParametreClientHelper.class,
                     ParametresHelper.class);
             context.refresh();
 
             RestTemplate restTemplate = context.getBean("restTemplate", RestTemplate.class);
             assertThat(restTemplate).isNotNull();
+            assertThat(context.getBean(ParametreClientHelper.class)).isNotNull();
             assertThat(context.getBean(ParametresHelper.class)).isNotNull();
             assertThat(context.getBean(HttpAuthorizationHeaderHelper.class)).isNotNull();
 

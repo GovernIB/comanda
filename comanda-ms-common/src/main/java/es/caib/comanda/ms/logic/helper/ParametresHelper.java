@@ -1,19 +1,12 @@
 package es.caib.comanda.ms.logic.helper;
 
-import es.caib.comanda.client.ParametreServiceClient;
 import es.caib.comanda.client.model.ParamTipus;
 import es.caib.comanda.client.model.Parametre;
 import es.caib.comanda.ms.logic.intf.exception.ParametreTipusException;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Component;
-
-import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.PARAMETRE_CACHE;
 
 
 @Slf4j
@@ -21,35 +14,13 @@ import static es.caib.comanda.ms.logic.config.HazelCastCacheConfig.PARAMETRE_CAC
 @RequiredArgsConstructor
 public class ParametresHelper {
 
-    private final ParametreServiceClient parametreServiceClient;
-    private final HttpAuthorizationHeaderHelper httpAuthorizationHeaderHelper;
+    private final ParametreClientHelper parametreClientHelper;
 
-    @Lazy
-    private final ParametresHelper self = this;
-
-
-
-    @Cacheable(value = PARAMETRE_CACHE, key = "#codi")
     public Parametre perametreFindByCodi(String codi) { //, String defaultValue) {
-        PagedModel<EntityModel<Parametre>> parametres = parametreServiceClient.find(
-                null,
-                "codi:\'" + codi + "\'",
-                null,
-                null,
-                "UNPAGED",
-                null,
-                httpAuthorizationHeaderHelper.getAuthorizationHeader());
-        if (parametres == null || parametres.getContent().isEmpty()) {
-            return null;
-        }
-        return parametres.getContent().stream()
-                .findFirst()
-                .map(EntityModel::getContent)
-                .orElse(null);
+        return parametreClientHelper.findByCodi(codi);
     }
 
     public Parametre perametreFindByCodi(String codi, String defaultValue) {
-        // Utilitzam self per que passi pel proxy y funcioni la caché
         Parametre parametre = perametreFindByCodiSafe(codi);
         if (parametre == null) {
             return Parametre.builder().codi(codi).valor(defaultValue).build();
@@ -59,7 +30,7 @@ public class ParametresHelper {
 
     private Parametre perametreFindByCodiSafe(String codi) {
         try {
-            return self.perametreFindByCodi(codi);
+            return parametreClientHelper.findByCodi(codi);
         } catch (FeignException e) {
             log.warn("No s'ha pogut llegir el paràmetre '{}' del servei de configuració: {}", codi, e.getMessage());
             return null;

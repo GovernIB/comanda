@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hazelcast.config.Config;
 import com.hazelcast.map.IMap;
 import com.hazelcast.spring.cache.HazelcastCache;
-import es.caib.comanda.client.ParametreServiceClient;
 import es.caib.comanda.client.model.ParamTipus;
 import es.caib.comanda.client.model.Parametre;
 import es.caib.comanda.ms.logic.config.HazelCastCacheConfig;
@@ -19,11 +18,8 @@ import es.caib.comanda.ms.logic.intf.model.ReportFileType;
 import es.caib.comanda.ms.logic.intf.model.ResourceReference;
 import es.caib.comanda.ms.persist.entity.ResourceEntity;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Persistable;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -42,7 +38,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -241,40 +236,33 @@ class MappingAndInfraHelpersTest {
     @Test
     void parametresHelper_conversions_iDefaults() {
         // Verifica conversions de paràmetres, valors per defecte i errors de tipus.
-        ParametreServiceClient client = mock(ParametreServiceClient.class);
-        HttpAuthorizationHeaderHelper auth = mock(HttpAuthorizationHeaderHelper.class);
-        when(auth.getAuthorizationHeader()).thenReturn("Basic x");
-        ParametresHelper helper = new ParametresHelper(client, auth);
-        ParametresHelper spy = Mockito.spy(helper);
-        ReflectionTestUtils.setField(spy, "self", spy);
+        ParametreClientHelper clientHelper = mock(ParametreClientHelper.class);
+        ParametresHelper helper = new ParametresHelper(clientHelper);
 
-        doReturn(Parametre.builder().codi("num").tipus(ParamTipus.NUMERIC).valor("12.5").build()).when(spy).perametreFindByCodi("num");
-        doReturn(Parametre.builder().codi("int").tipus(ParamTipus.NUMERIC).valor("7").build()).when(spy).perametreFindByCodi("int");
-        doReturn(Parametre.builder().codi("bool").tipus(ParamTipus.BOOLEAN).valor("true").build()).when(spy).perametreFindByCodi("bool");
-        doReturn(Parametre.builder().codi("text").tipus(ParamTipus.TEXT).valor(" hello ").build()).when(spy).perametreFindByCodi("text");
-        doReturn(Parametre.builder().codi("badBool").tipus(ParamTipus.BOOLEAN).valor("x").build()).when(spy).perametreFindByCodi("badBool");
-        doReturn(null).when(spy).perametreFindByCodi("missing");
+        when(clientHelper.findByCodi("num")).thenReturn(Parametre.builder().codi("num").tipus(ParamTipus.NUMERIC).valor("12.5").build());
+        when(clientHelper.findByCodi("int")).thenReturn(Parametre.builder().codi("int").tipus(ParamTipus.NUMERIC).valor("7").build());
+        when(clientHelper.findByCodi("bool")).thenReturn(Parametre.builder().codi("bool").tipus(ParamTipus.BOOLEAN).valor("true").build());
+        when(clientHelper.findByCodi("text")).thenReturn(Parametre.builder().codi("text").tipus(ParamTipus.TEXT).valor(" hello ").build());
+        when(clientHelper.findByCodi("badBool")).thenReturn(Parametre.builder().codi("badBool").tipus(ParamTipus.BOOLEAN).valor("x").build());
+        when(clientHelper.findByCodi("missing")).thenReturn(null);
 
-        assertThat(spy.getParametreNumeric("num")).isEqualTo(12.5d);
-        assertThat(spy.getParametreEnter("int")).isEqualTo(7);
-        assertThat(spy.getParametreBoolean("bool")).isTrue();
-        assertThat(spy.getParametreText("text")).isEqualTo("hello");
-        assertThat(spy.getParametreNumeric("missing", 3.0)).isEqualTo(3.0);
-        assertThat(spy.getParametreText("missing", "d")).isEqualTo("d");
-        assertThatThrownBy(() -> spy.getParametreBoolean("badBool")).isInstanceOf(ParametreTipusException.class);
+        assertThat(helper.getParametreNumeric("num")).isEqualTo(12.5d);
+        assertThat(helper.getParametreEnter("int")).isEqualTo(7);
+        assertThat(helper.getParametreBoolean("bool")).isTrue();
+        assertThat(helper.getParametreText("text")).isEqualTo("hello");
+        assertThat(helper.getParametreNumeric("missing", 3.0)).isEqualTo(3.0);
+        assertThat(helper.getParametreText("missing", "d")).isEqualTo("d");
+        assertThatThrownBy(() -> helper.getParametreBoolean("badBool")).isInstanceOf(ParametreTipusException.class);
     }
 
     @Test
     void parametresHelper_perametreFindByCodi_cercaClient() {
-        // Comprova la cerca d'un paràmetre concret a través del client remot.
-        ParametreServiceClient client = mock(ParametreServiceClient.class);
-        HttpAuthorizationHeaderHelper auth = mock(HttpAuthorizationHeaderHelper.class);
-        when(auth.getAuthorizationHeader()).thenReturn("Basic x");
-        ParametresHelper helper = new ParametresHelper(client, auth);
+        // Comprova la delegació de cerca d'un paràmetre concret a ParametreClientHelper.
+        ParametreClientHelper clientHelper = mock(ParametreClientHelper.class);
+        ParametresHelper helper = new ParametresHelper(clientHelper);
 
         Parametre p = Parametre.builder().codi("c1").tipus(ParamTipus.TEXT).valor("v").build();
-        PagedModel<EntityModel<Parametre>> paged = PagedModel.of(List.of(EntityModel.of(p)), new PagedModel.PageMetadata(1, 0, 1));
-        when(client.find(any(), any(), any(), any(), any(), any(), any())).thenReturn(paged);
+        when(clientHelper.findByCodi("c1")).thenReturn(p);
 
         Parametre found = helper.perametreFindByCodi("c1");
         assertThat(found.getCodi()).isEqualTo("c1");
