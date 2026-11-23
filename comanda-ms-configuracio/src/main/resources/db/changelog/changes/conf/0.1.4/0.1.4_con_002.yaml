@@ -1,0 +1,114 @@
+databaseChangeLog:
+  - changeSet:
+      id: con-change-0.1.4-002
+      author: limit
+      comment: Afegir paràmetres per configurar els timeouts HTTP dels clients RestTemplate
+      changes:
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "General"
+              - column:
+                  name: SUBGRUP
+                  value: "HTTP"
+              - column:
+                  name: TIPUS
+                  value: "NUMERIC"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.http.connect.timeout.seconds"
+              - column:
+                  name: NOM
+                  value: "Timeout de connexió HTTP (segons)"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Temps màxim d'espera en segons per establir una connexió HTTP amb serveis externs (per exemple: comprovacions de salut, refresc d'informació, logs, estadístiques o DIR3). Un valor massa baix pot provocar errors falsos en xarxes lentes; un valor massa alt pot mantenir fils ocupats quan un servidor no respon. Un valor menor o igual a 0 desactiva el límit (no recomanat, pot bloquejar el pool de fils indefinidament)."
+              - column:
+                  name: VALOR
+                  value: "5"
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 1
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "General"
+              - column:
+                  name: SUBGRUP
+                  value: "HTTP"
+              - column:
+                  name: TIPUS
+                  value: "NUMERIC"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.http.read.timeout.short.seconds"
+              - column:
+                  name: NOM
+                  value: "Timeout de lectura HTTP curt (segons)"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Temps màxim d'espera de lectura en segons per a peticions HTTP ràpides (per exemple: comprovacions periòdiques de salut). Un valor massa baix pot generar falsos positius d'estat \"Caiguda\"; un valor massa alt pot saturar els fils d'execució i retenir connexions de base de dades si un servei o proxy queda penjat. Un valor menor o igual a 0 desactiva el límit (no recomanat, pot bloquejar el monitoratge de salut)."
+              - column:
+                  name: VALOR
+                  value: "10"
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 1
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "General"
+              - column:
+                  name: SUBGRUP
+                  value: "HTTP"
+              - column:
+                  name: TIPUS
+                  value: "NUMERIC"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.http.read.timeout.medium.seconds"
+              - column:
+                  name: NOM
+                  value: "Timeout de lectura HTTP mitjà (segons)"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Temps màxim d'espera de lectura en segons per a peticions HTTP estàndard (per exemple: comprovació d'URL, refresc d'informació d'aplicacions, llistat i previsualització de logs, DIR3 o autenticació). Un valor massa baix pot interrompre peticions vàlides; un valor massa alt pot mantenir peticions i fils bloquejats davant serveis o proxies caiguts. Un valor menor o igual a 0 desactiva el límit (no recomanat)."
+              - column:
+                  name: VALOR
+                  value: "60"
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 1
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "General"
+              - column:
+                  name: SUBGRUP
+                  value: "HTTP"
+              - column:
+                  name: TIPUS
+                  value: "NUMERIC"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.http.read.timeout.long.seconds"
+              - column:
+                  name: NOM
+                  value: "Timeout de lectura HTTP llarg (segons)"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Temps màxim d'espera de lectura en segons per a peticions HTTP pesades (per exemple: sincronització d'estadístiques o descàrrega de logs). Un valor massa baix pot tallar càrregues o descàrregues llargues; un valor massa alt pot mantenir fils ocupats durant molt de temps si el servei o proxy no respon. Un valor menor o igual a 0 desactiva el límit (utilitzeu-ho amb precaució, pot deixar fils bloquejats indefinidament)."
+              - column:
+                  name: VALOR
+                  value: "600"
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 1

@@ -37,6 +37,10 @@ public class BaseConfig {
 	public static final String PROP_FILES = PROPERTY_PREFIX + "fitxers";
 	public static final String PROP_DEFAULT_AUDITOR = PROPERTY_PREFIX + "default.auditor";
 	public static final String PROP_HTTP_HEADER_ANSWERS = PROPERTY_PREFIX + "http.header.answers";
+	public static final String PROP_HTTP_CONNECT_TIMEOUT_SECONDS = PROPERTY_PREFIX + "http.connect.timeout.seconds";
+	public static final String PROP_HTTP_READ_TIMEOUT_SHORT_SECONDS = PROPERTY_PREFIX + "http.read.timeout.short.seconds";
+	public static final String PROP_HTTP_READ_TIMEOUT_MEDIUM_SECONDS = PROPERTY_PREFIX + "http.read.timeout.medium.seconds";
+	public static final String PROP_HTTP_READ_TIMEOUT_LONG_SECONDS = PROPERTY_PREFIX + "http.read.timeout.long.seconds";
 	public static final String PROP_PERSIST_CONTAINER_TRANSACTIONS_DISABLED = PROPERTY_PREFIX + "persist.container-transactions-disabled";
 	public static final String PROP_PERSIST_TRANSACTION_MANAGER_ENABLED = PROPERTY_PREFIX + "persist.transaction-manager.enabled";
 	public static final String PROP_SCHEDULER_LEADER = PROPERTY_PREFIX + "scheduler.leader";
