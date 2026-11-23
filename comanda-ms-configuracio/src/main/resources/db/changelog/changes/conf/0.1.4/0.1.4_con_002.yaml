@@ -112,3 +112,36 @@ databaseChangeLog:
               - column:
                   name: EDITABLE
                   valueNumeric: 1
+  - changeSet:
+      id: con-change-0.1.4-003
+      author: limit
+      comment: Destacar amb ALERTA els avisos a les descripcions dels paràmetres de timeout HTTP
+      changes:
+        - update:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: DESCRIPCIO
+                  value: "Temps màxim d'espera en segons per establir una connexió HTTP amb serveis externs (per exemple: comprovacions de salut, refresc d'informació, logs, estadístiques o DIR3). ALERTA: Un valor massa baix pot provocar errors falsos en xarxes lentes; un valor massa alt pot mantenir fils ocupats quan un servidor no respon. Un valor menor o igual a 0 desactiva el límit (no recomanat, pot bloquejar el pool de fils indefinidament)."
+            where: CODI = 'es.caib.comanda.http.connect.timeout.seconds'
+        - update:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: DESCRIPCIO
+                  value: "Temps màxim d'espera de lectura en segons per a peticions HTTP ràpides (per exemple: comprovacions periòdiques de salut). ALERTA: Un valor massa baix pot generar falsos positius d'estat \"Caiguda\"; un valor massa alt pot saturar els fils d'execució i retenir connexions de base de dades si un servei o proxy queda penjat. Un valor menor o igual a 0 desactiva el límit (no recomanat, pot bloquejar el monitoratge de salut)."
+            where: CODI = 'es.caib.comanda.http.read.timeout.short.seconds'
+        - update:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: DESCRIPCIO
+                  value: "Temps màxim d'espera de lectura en segons per a peticions HTTP estàndard (per exemple: comprovació d'URL, refresc d'informació d'aplicacions, llistat i previsualització de logs, DIR3 o autenticació). ALERTA: Un valor massa baix pot interrompre peticions vàlides; un valor massa alt pot mantenir peticions i fils bloquejats davant serveis o proxies caiguts. Un valor menor o igual a 0 desactiva el límit (no recomanat)."
+            where: CODI = 'es.caib.comanda.http.read.timeout.medium.seconds'
+        - update:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: DESCRIPCIO
+                  value: "Temps màxim d'espera de lectura en segons per a peticions HTTP pesades (per exemple: sincronització d'estadístiques o descàrrega de logs). ALERTA: Un valor massa baix pot tallar càrregues o descàrregues llargues; un valor massa alt pot mantenir fils ocupats durant molt de temps si el servei o proxy no respon. Un valor menor o igual a 0 desactiva el límit (utilitzeu-ho amb precaució, pot deixar fils bloquejats indefinidament)."
+            where: CODI = 'es.caib.comanda.http.read.timeout.long.seconds'
