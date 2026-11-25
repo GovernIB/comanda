@@ -112,6 +112,12 @@ export const useAppEntries = () => {
                 to: '/monitor-db',
                 icon: 'dns',
             }] : []),
+            ...(isUserAdmin ? [{
+                id: 'monitorRendiment',
+                title: t($ => $.menu.monitorRendiment),
+                to: '/monitor-rendiment',
+                icon: 'speed',
+            }] : []),
             {
                 id: 'cache',
                 title: t($ => $.menu.cache),

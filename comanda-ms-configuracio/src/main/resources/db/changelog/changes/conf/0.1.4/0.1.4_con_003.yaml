@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: con-change-0.1.4-004
+      author: limit
+      comment: Afegir paràmetre per activar o desactivar la recol·lecció en memòria de mètriques de rendiment
+      changes:
+        - insert:
+            tableName: ${db_prefix}PARAMETRE
+            columns:
+              - column:
+                  name: GRUP
+                  value: "Monitor"
+              - column:
+                  name: SUBGRUP
+                  value: "Rendiment"
+              - column:
+                  name: TIPUS
+                  value: "BOOLEAN"
+              - column:
+                  name: CODI
+                  value: "es.caib.comanda.monitor.rendiment.actiu"
+              - column:
+                  name: NOM
+                  value: "Activar recol·lecció de mètriques de rendiment"
+              - column:
+                  name: DESCRIPCIO
+                  value: "Activa el mostreig periòdic en memòria (cada 1 s, fins a 1 h) de les mètriques internes de rendiment (pools de BD, workers i cues JMS). En desactivar-lo s'atura la recol·lecció i s'esborra tot l'històric acumulat en memòria."
+              - column:
+                  name: VALOR
+                  value: "true"
+              - column:
+                  name: EDITABLE
+                  valueNumeric: 1

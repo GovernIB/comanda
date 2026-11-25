@@ -8,7 +8,7 @@
                         <password>sa</password>
                     </security>
                 </datasource>
-                <datasource jndi-name="java:jboss/datasources/comandaDS" pool-name="comandaDB" enabled="true">
+                <datasource jndi-name="java:jboss/datasources/comandaDS" pool-name="comandaDB" enabled="true" statistics-enabled="true">
                     <driver>${env.JBOSS_DB_DRIVER}</driver>
                     <connection-url>${env.JBOSS_DB_URL}</connection-url>
                     <security>

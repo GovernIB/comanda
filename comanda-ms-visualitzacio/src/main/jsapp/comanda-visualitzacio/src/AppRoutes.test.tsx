@@ -35,6 +35,10 @@ vi.mock('./pages/Monitor', () => ({
     default: () => <div>Monitor page</div>,
 }));
 
+vi.mock('./pages/rendiment/Rendiment.tsx', () => ({
+    default: () => <div>Rendiment page</div>,
+}));
+
 vi.mock('./pages/Caches', () => ({
     default: () => <div>Caches page</div>,
 }));
@@ -525,6 +529,36 @@ describe('AppRoutes', () => {
 
         render(
             <MemoryRouter initialEntries={['/calendari']}>
+                <AppRoutes />
+            </MemoryRouter>
+        );
+
+        expect(await screen.findByText('Salut page')).toBeInTheDocument();
+    });
+
+    it('AppRoutes_quanUsuariEsAdmin_potAccedirARendiment', async () => {
+        mocks.useUserContextMock.mockReturnValue({ user: { id: 1 } });
+        mocks.useIsUserAdminMock.mockReturnValue(true);
+        mocks.useIsUserConsultaMock.mockReturnValue(false);
+        mocks.useIsUserUsuariMock.mockReturnValue(false);
+
+        render(
+            <MemoryRouter initialEntries={['/monitor-rendiment']}>
+                <AppRoutes />
+            </MemoryRouter>
+        );
+
+        expect(await screen.findByText('Rendiment page')).toBeInTheDocument();
+    });
+
+    it('AppRoutes_quanUsuariEsConsulta_noPotAccedirARendimentIRedirigeix', async () => {
+        mocks.useUserContextMock.mockReturnValue({ user: { id: 1 } });
+        mocks.useIsUserAdminMock.mockReturnValue(false);
+        mocks.useIsUserConsultaMock.mockReturnValue(true);
+        mocks.useIsUserUsuariMock.mockReturnValue(false);
+
+        render(
+            <MemoryRouter initialEntries={['/monitor-rendiment']}>
                 <AppRoutes />
             </MemoryRouter>
         );

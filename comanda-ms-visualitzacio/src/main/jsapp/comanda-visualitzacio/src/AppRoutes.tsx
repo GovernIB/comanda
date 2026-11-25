@@ -37,6 +37,7 @@ import useHasDashboardAccess from './hooks/useHasDashboardAccess';
 import {Plantilla} from "./pages/Plantilla.tsx";
 import EntornAppHist from './pages/EntornsAppHistorics.tsx';
 import MonitorDb from './pages/MonitorDb.tsx';
+import Rendiment from './pages/rendiment/Rendiment.tsx';
 import Entitats from "./pages/Entitats.tsx";
 
 export const DASHBOARDS_PATH = 'dashboard';
@@ -169,6 +170,9 @@ const AppRoutes: React.FC = () => {
                 </Route>
                 <Route path="monitor-db">
                     <Route index element={<MonitorDb />} />
+                </Route>
+                <Route path="monitor-rendiment">
+                    <Route index element={<Rendiment />} />
                 </Route>
                 <Route path="cache">
                     <Route index element={<Caches />} />

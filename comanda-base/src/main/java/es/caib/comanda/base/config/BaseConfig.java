@@ -129,6 +129,7 @@ public class BaseConfig {
     public static final String PROP_MONITOR_BUIDAT_ACTIU = PROP_MONITOR_PREFIX + "buidat.actiu";
     public static final String PROP_MONITOR_BUIDAT_RETENCIO_DIES = PROP_MONITOR_PREFIX + "buidat.retencio.dies";
     public static final String PROP_MONITOR_BUIDAT_PERIODE_MINUTS = PROP_MONITOR_PREFIX + "buidat.periode.minuts";
+    public static final String PROP_MONITOR_RENDIMENT_ACTIU = PROP_MONITOR_PREFIX + "rendiment.actiu";
 
     // Propietats de DIR3
     public static final String PROP_DIR3_PREFIX = PROPERTY_PREFIX + "plugin.unitats.organitzatives.dir3.";

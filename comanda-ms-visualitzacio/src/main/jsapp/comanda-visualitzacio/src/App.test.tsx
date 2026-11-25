@@ -59,6 +59,8 @@ const mocks = vi.hoisted(() => ({
                 monitoritzacio: 'Monitorització',
                 monitoritzacioDescription: 'Descripció monitorització',
                 monitor: 'Monitor',
+                monitorDb: 'Monitor de BD',
+                monitorRendiment: 'Monitor de rendiment',
                 cache: 'Cache',
                 broker: 'Broker',
                 configuracio: 'Configuració',
@@ -209,6 +211,16 @@ describe('App', () => {
         expect(props.menuEntries[5].children.some((entry: { id: string }) => entry.id === 'parametre')).toBe(true);
         expect(props.menuEntries[4].description).toBe('Descripció monitorització');
         expect(props.menuEntries[5].description).toBe('Descripció configuració');
+        const monitoritzacioChildren = props.menuEntries[4].children;
+        expect(monitoritzacioChildren).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    id: 'monitorRendiment',
+                    title: 'Monitor de rendiment',
+                    to: '/monitor-rendiment',
+                }),
+            ])
+        );
     });
 
     it('App_quanLusuariNoTeRolsFuncionals_mostraElMenuLateralLimitat', async () => {
@@ -302,6 +314,8 @@ describe('App', () => {
         expect(props.menuEntries).toHaveLength(6);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'plantilla')).toBe(false);
         expect(configuracioChildren.some((entry: { id: string }) => entry.id === 'parametre')).toBe(false);
+        const monitoritzacioChildren = props.menuEntries[4].children;
+        expect(monitoritzacioChildren.some((entry: { id: string }) => entry.id === 'monitorRendiment')).toBe(false);
     });
 
     it('App_quanLusuariEsConsultaSensePermisDisseny_amagaDashboardDeConfiguracio', async () => {

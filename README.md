@@ -44,7 +44,7 @@ Modificar la secció `<subsystem xmlns="urn:jboss:domain:datasources:5.0">` del 
 ```
         <subsystem xmlns="urn:jboss:domain:datasources:5.0">
             <datasources>
-                <datasource jndi-name="java:jboss/datasources/comandaDS" pool-name="comandaDB" enabled="true">
+                <datasource jndi-name="java:jboss/datasources/comandaDS" pool-name="comandaDB" enabled="true" statistics-enabled="true">
                     <driver>oracle</driver>
                     <connection-url>JBOSS_DB_URL</connection-url>
                     <security>
@@ -69,6 +69,13 @@ En aquest contingut d'exemple s'han de substituir les següents variables:
 - JBOSS_DB_URL: URL (en el format requerit pel driver JDBC) d'accés a la base de dades.
 - JBOSS_DB_USERNAME: Usuari d'accés a la base de dades.
 - JBOSS_DB_PASSWORD: Contrasenya d'accés a la base de dades.
+
+L'atribut `statistics-enabled="true"` és necessari perquè el **Monitor de rendiment** pugui obtenir les mètriques del pool de connexions en JBoss. En entorns ja desplegats es pot activar mitjançant `jboss-cli`:
+
+```
+/subsystem=datasources/data-source=comandaDB:write-attribute(name=statistics-enabled,value=true)
+:reload
+```
 
 ### Configuració de Keycloak
 Modificar la secció `<subsystem xmlns="urn:jboss:domain:keycloak:1.1">` del fitxer /standalone/configuration/standalone.xml amb el següent contingut:
