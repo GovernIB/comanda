@@ -21,7 +21,9 @@ public class MonitorSchedulerConfig {
 		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
 		scheduler.setPoolSize(10);
 		scheduler.setThreadNamePrefix("monitor-tasques-");
-        scheduler.initialize();
+		// Elimina immediatament de la cua les tasques cancel·lades (p. ex. en reprogramar tasques dinàmiques)
+		scheduler.setRemoveOnCancelPolicy(true);
+		scheduler.initialize();
 		return scheduler;
 	}
 }
