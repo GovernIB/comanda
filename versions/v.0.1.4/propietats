@@ -6,3 +6,8 @@ es.caib.comanda.plugin.unitats.organitzatives.dir3.service.password=DIR3_SERVICE
 # Propietats editables a base de dades
 es.caib.comanda.plugin.unitats.organitzatives.dir3.govern.codi.arrel=A04003003
 es.caib.comanda.monitor.general.max.result.selects=20
+es.caib.comanda.http.connect.timeout.seconds=5
+es.caib.comanda.http.read.timeout.short.seconds=10
+es.caib.comanda.http.read.timeout.medium.seconds=60
+es.caib.comanda.http.read.timeout.long.seconds=600
+es.caib.comanda.monitor.rendiment.actiu=true
