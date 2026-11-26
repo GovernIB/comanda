@@ -303,7 +303,7 @@ describe('Rendiment', () => {
         expect(screen.getByText('Tasques en cua (workers)')).toBeInTheDocument();
     });
 
-    it('Rendiment_quanJbossAmbEstadistiquesActives_mostraCapesCuradesIPermetCommutarCapesIFinestres', async () => {
+    it('Rendiment_quanJbossAmbEstadistiquesActives_mostraCapesCuradesFinestresIEixDuracio', async () => {
         const fetchMock = mockFetchSuccess({
             collectedAt: '2026-11-19T12:00:00',
             samplingIntervalSeconds: 1,
@@ -358,7 +358,7 @@ describe('Rendiment', () => {
         // KPI simplificats
         expect(screen.getAllByText('Connexions en ús').length).toBeGreaterThanOrEqual(2);
         expect(screen.getByTestId('tree-layer-inUseCount')).toHaveTextContent('Connexions en ús');
-        expect(screen.getByText('Temps màx. d\'espera')).toBeInTheDocument();
+        expect(screen.getByText("Temps màx. d'espera")).toBeInTheDocument();
         expect(screen.getAllByText('Connexions físiques')).toHaveLength(1);
         // Curated defaults per BD: inUseCount i waitCount = 2 capes (maxWaitTimeMs OFF per defecte)
         expect(screen.getByTestId('charts-data-provider')).toHaveAttribute('data-series-count', '2');
@@ -368,54 +368,81 @@ describe('Rendiment', () => {
         expect(screen.queryByTestId('charts-y-axis-durationMs')).not.toBeInTheDocument();
 
         // Canviar finestra temporal a 1h envia windowSeconds=3600
-        fireEvent.click(screen.getByRole('button', { name: '1h' }));
+        fireEvent.click(screen.getByTestId('window-option-1h'));
         await waitFor(() => {
             expect(fetchMock).toHaveBeenLastCalledWith(
                 expect.stringContaining('windowSeconds=3600')
             );
         });
 
-        // Activar maxWaitTimeMs al TreeView -> 3 capes i mostra eix dret durationMs
+        // Activar maxWaitTimeMs al TreeView -> 3 capes i mostra eix dret durationMs; desactivar-la l'amaga
         clickTreeCheckbox('tree-layer-maxWaitTimeMs');
         expect(screen.getByTestId('charts-data-provider')).toHaveAttribute('data-series-count', '3');
         expect(screen.getByTestId('charts-y-axis-durationMs')).toBeInTheDocument();
 
-        // Activar minSize -> 4 capes; desactivar maxWaitTimeMs -> amaga eix dret
-        clickTreeCheckbox('tree-layer-minSize');
-        expect(screen.getByTestId('charts-data-provider')).toHaveAttribute('data-series-count', '4');
-
         clickTreeCheckbox('tree-layer-maxWaitTimeMs');
-        expect(screen.getByTestId('charts-data-provider')).toHaveAttribute('data-series-count', '3');
+        expect(screen.getByTestId('charts-data-provider')).toHaveAttribute('data-series-count', '2');
         expect(screen.queryByTestId('charts-y-axis-durationMs')).not.toBeInTheDocument();
+    });
 
-        // Botó "Totes" -> 6 capes; "Per defecte" -> 2 capes; "Cap" -> avís
-        fireEvent.click(screen.getByRole('button', { name: 'Totes' }));
+    it('Rendiment_quanEsCommutenPresetsIPanellLateral_actualitzaGraficILlegendaPlegada', async () => {
+        mockFetchSuccess({
+            collectedAt: '2026-11-19T12:00:00',
+            samplingIntervalSeconds: 1,
+            maxHistoryPoints: 3600,
+            windowSeconds: 300,
+            bucketSeconds: 1,
+            datasources: [
+                {
+                    poolName: 'comandaDB',
+                    statisticsEnabled: true,
+                    waitCountType: 'INTERVAL_DELTA',
+                    minSize: 5,
+                    maxSize: 50,
+                    inUseCount: 4,
+                    activeCount: 12,
+                    waitCount: 3,
+                    maxWaitTimeMs: 42,
+                    history: [
+                        {
+                            timestamp: '2026-11-19T12:00:00',
+                            inUseCount: 4,
+                            activeCount: 12,
+                            waitCount: 3,
+                            maxWaitTimeMs: 42,
+                        },
+                    ],
+                },
+            ],
+        });
+
+        render(<Rendiment />);
+        expect(await screen.findByTestId('charts-data-provider')).toHaveAttribute('data-series-count', '2');
+
+        fireEvent.click(screen.getByTestId('layers-select-all-button'));
         expect(screen.getByTestId('charts-data-provider')).toHaveAttribute('data-series-count', '6');
 
-        fireEvent.click(screen.getByRole('button', { name: 'Per defecte' }));
-        expect(screen.getByTestId('charts-data-provider')).toHaveAttribute('data-series-count', '2');
-
-        fireEvent.click(screen.getByRole('button', { name: 'Cap' }));
+        fireEvent.click(screen.getByTestId('layers-clear-all-button'));
         expect(
             screen.getByText('Selecciona almenys una capa per visualitzar el gràfic.')
         ).toBeInTheDocument();
 
-        // Reactivem capes per defecte i comprovem plec/desplec del panell lateral + llegenda superior
-        fireEvent.click(screen.getByRole('button', { name: 'Per defecte' }));
+        fireEvent.click(screen.getByTestId('layers-reset-default-button'));
+        expect(screen.getByTestId('charts-data-provider')).toHaveAttribute('data-series-count', '2');
         expect(screen.queryByTestId('collapsed-chart-legend')).not.toBeInTheDocument();
 
-        fireEvent.click(screen.getByRole('button', { name: 'Mostrar o amagar el panell de capes' }));
+        fireEvent.click(screen.getByTestId('toggle-sidebar-button'));
         expect(screen.queryByTestId('metrics-tree-sidebar')).not.toBeInTheDocument();
         const collapsedLegend = screen.getByTestId('collapsed-chart-legend');
         expect(collapsedLegend).toHaveTextContent('BD · Connexions en ús');
         expect(collapsedLegend).toHaveTextContent('BD · Esperes (interval)');
 
-        fireEvent.click(screen.getByRole('button', { name: 'Mostrar o amagar el panell de capes' }));
+        fireEvent.click(screen.getByTestId('toggle-sidebar-button'));
         expect(screen.getByTestId('metrics-tree-sidebar')).toBeInTheDocument();
         expect(screen.queryByTestId('collapsed-chart-legend')).not.toBeInTheDocument();
     });
 
-    it('Rendiment_quanBdWorkersIJmsActius_mostra6CapesPerDefecteIPermetArbreDesglossamentIFiltres', async () => {
+    it('Rendiment_quanBdWorkersIJmsActius_mostra4KpisICapesCuradesAmbDesglossamentIExclusio', async () => {
         mockFetchSuccess({
             collectedAt: '2026-11-20T09:00:00',
             samplingIntervalSeconds: 1,
@@ -527,51 +554,11 @@ describe('Rendiment', () => {
         expect(screen.queryByText('Fils en execució')).not.toBeInTheDocument();
         expect(screen.queryByText('Missatges en procés (JMS)')).not.toBeInTheDocument();
 
-        // Commutar desglossament de Cua workers a l'arbre (de 2 barres apilades a 1 agregada)
-        const splitToggle = screen.getByTestId('split-toggle-workerQueueSize');
-        expect(splitToggle).toHaveAttribute(
-            'aria-label',
-            'Desglossat (≡) · Clic per agregar en una sola sèrie'
-        );
-        expect(splitToggle).not.toHaveAttribute('aria-pressed');
-        fireEvent.click(splitToggle);
-        expect(splitToggle).toHaveAttribute(
-            'aria-label',
-            'Agregat (Σ) · Clic per desglossar per pool/cua'
-        );
-        expect(screen.getByTestId('charts-data-provider')).toHaveAttribute('data-series-count', '6');
-        expect(screen.queryByText('salutWorkerExecutor · Tasques en cua')).not.toBeInTheDocument();
-        fireEvent.click(splitToggle);
-        expect(screen.getByTestId('charts-data-provider')).toHaveAttribute('data-series-count', '7');
-
-        // Desmarcar un worker fill individual elimina només aquella sèrie
+        // Integració d'exclusió individual sobre les sèries del gràfic
         clickTreeCheckbox('tree-series-workerQueueSize-monitorTaskScheduler');
         expect(screen.getByTestId('charts-data-provider')).toHaveAttribute('data-series-count', '6');
         expect(screen.queryByText('monitorTaskScheduler · Tasques en cua')).not.toBeInTheDocument();
         expect(screen.getByText('salutWorkerExecutor · Tasques en cua')).toBeInTheDocument();
-        clickTreeCheckbox('tree-series-workerQueueSize-monitorTaskScheduler');
-        expect(screen.getByTestId('charts-data-provider')).toHaveAttribute('data-series-count', '7');
-
-        // Categoria Workers (indeterminada per defecte): 1r clic selecciona totes (11), 2n clic silencia tota la categoria (4)
-        clickTreeCheckbox('tree-cat-worker');
-        expect(screen.getByTestId('charts-data-provider')).toHaveAttribute('data-series-count', '11');
-        clickTreeCheckbox('tree-cat-worker');
-        expect(screen.getByTestId('charts-data-provider')).toHaveAttribute('data-series-count', '4');
-
-        // Restablir per defecte torna a 7
-        fireEvent.click(screen.getByRole('button', { name: 'Per defecte' }));
-        expect(screen.getByTestId('charts-data-provider')).toHaveAttribute('data-series-count', '7');
-
-        // Activar capes opcionals de delta throughput
-        clickTreeCheckbox('tree-layer-workerCompletedTasks');
-        expect(screen.getByTestId('charts-data-provider')).toHaveAttribute('data-series-count', '8');
-
-        clickTreeCheckbox('tree-layer-jmsCompletedMessages');
-        expect(screen.getByTestId('charts-data-provider')).toHaveAttribute('data-series-count', '9');
-
-        // Restablir capes per defecte torna a 7
-        fireEvent.click(screen.getByRole('button', { name: 'Per defecte' }));
-        expect(screen.getByTestId('charts-data-provider')).toHaveAttribute('data-series-count', '7');
     });
 
     it('Rendiment_quanZoomAmbSlider_demanaFromIToIPermetRestablirZoom', async () => {

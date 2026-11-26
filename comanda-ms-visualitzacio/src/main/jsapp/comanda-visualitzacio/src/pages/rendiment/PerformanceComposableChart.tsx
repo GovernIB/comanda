@@ -577,7 +577,11 @@ const PerformanceComposableChart: React.FC<PerformanceComposableChartProps> = ({
                             aria-label={t($ => $.page.rendiment.window.label)}
                         >
                             {TIME_WINDOW_OPTIONS.map(opt => (
-                                <ToggleButton key={opt.seconds} value={opt.seconds}>
+                                <ToggleButton
+                                    key={opt.seconds}
+                                    value={opt.seconds}
+                                    data-testid={`window-option-${opt.label}`}
+                                >
                                     {opt.label}
                                 </ToggleButton>
                             ))}
@@ -587,6 +591,7 @@ const PerformanceComposableChart: React.FC<PerformanceComposableChartProps> = ({
                                 size="small"
                                 aria-label={t($ => $.page.rendiment.chart.toggleSidebar)}
                                 aria-expanded={sidebarOpen}
+                                data-testid="toggle-sidebar-button"
                                 onClick={() => setSidebarOpen(prev => !prev)}
                             >
                                 <Icon>{sidebarOpen ? 'chevron_right' : 'layers'}</Icon>

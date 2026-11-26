@@ -362,13 +362,31 @@ const MetricsTreeSidebar: React.FC<MetricsTreeSidebarProps> = ({
                     {t($ => $.page.rendiment.chart.layersSidebarTitle)}
                 </Typography>
                 <Stack direction="row" spacing={0.25}>
-                    <Button size="small" variant="text" onClick={onResetDefaultLayers} sx={{ minWidth: 'auto', px: 0.75, fontSize: '0.72rem' }}>
+                    <Button
+                        size="small"
+                        variant="text"
+                        onClick={onResetDefaultLayers}
+                        data-testid="layers-reset-default-button"
+                        sx={{ minWidth: 'auto', px: 0.75, fontSize: '0.72rem' }}
+                    >
                         {t($ => $.page.rendiment.chart.resetDefaultLayers)}
                     </Button>
-                    <Button size="small" variant="text" onClick={onSelectAllLayers} sx={{ minWidth: 'auto', px: 0.75, fontSize: '0.72rem' }}>
+                    <Button
+                        size="small"
+                        variant="text"
+                        onClick={onSelectAllLayers}
+                        data-testid="layers-select-all-button"
+                        sx={{ minWidth: 'auto', px: 0.75, fontSize: '0.72rem' }}
+                    >
                         {t($ => $.page.rendiment.chart.selectAllLayers)}
                     </Button>
-                    <Button size="small" variant="text" onClick={onClearAllLayers} sx={{ minWidth: 'auto', px: 0.75, fontSize: '0.72rem' }}>
+                    <Button
+                        size="small"
+                        variant="text"
+                        onClick={onClearAllLayers}
+                        data-testid="layers-clear-all-button"
+                        sx={{ minWidth: 'auto', px: 0.75, fontSize: '0.72rem' }}
+                    >
                         {t($ => $.page.rendiment.chart.clearAllLayers)}
                     </Button>
                 </Stack>
