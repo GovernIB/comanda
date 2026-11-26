@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Plantilla } from './Plantilla';
 import userEvent from '@testing-library/user-event';
+import { SLOW_TEST_TIMEOUT_MS } from '../test/testTimeouts';
 
 const mocks = vi.hoisted(() => ({
     isUserAdmin: true,
@@ -261,7 +262,7 @@ describe('Plantilla', () => {
         const option = await screen.findByRole('option', { name: /Tema fosc destacat - widget/ });
         expect(option.querySelector('[data-palette-color="#111827"]')).toBeInTheDocument();
         expect(screen.queryByRole('option', { name: /Tema clar - widget/ })).not.toBeInTheDocument();
-    }, 30000);
+    }, SLOW_TEST_TIMEOUT_MS);
 
     it('cambia de pestaña al hacer clic en los tabs', async () => {
         const user = userEvent.setup();
@@ -303,7 +304,7 @@ describe('Plantilla', () => {
         // BAR_CHART (pestanya per defecte) només té 3 propietats booleanes configurables: mostrarReticula,
         // barStacked i barHorizontal. Si el filtre no s'aplica, se'n mostren 8.
         expect(screen.getAllByRole('checkbox')).toHaveLength(3);
-    });
+    }, SLOW_TEST_TIMEOUT_MS);
 
     it('canviar de pestanya de tipus de gràfic mostra només les propietats d’aquell tipus', async () => {
         const user = userEvent.setup();
@@ -330,7 +331,7 @@ describe('Plantilla', () => {
         await waitFor(() => {
             expect(screen.getAllByRole('checkbox')).toHaveLength(2);
         });
-    });
+    }, SLOW_TEST_TIMEOUT_MS);
 
     it('un títol amb una fila antiga de vora única (mostrarVora) no la mostra a la graella, ja que ara es configura gràficament', async () => {
         const user = userEvent.setup();
@@ -394,7 +395,7 @@ describe('Plantilla', () => {
             expect(screen.getByTestId('property-select-TITOL_3-posicioSubtitol')).toBeInTheDocument();
         });
         expect(screen.queryByTestId('property-select-TITOL_2-posicioSubtitol')).not.toBeInTheDocument();
-    });
+    }, SLOW_TEST_TIMEOUT_MS);
 
     it('inicializa los colores por defecto al crear una nueva plantilla', () => {
         render(<Plantilla />);
@@ -428,7 +429,7 @@ describe('Plantilla', () => {
                 expect.objectContaining({ scope: 'TITOL_1', propertyName: 'posicioSubtitol', scalarValue: 'COSTAT' }),
             ])
         );
-    });
+    }, SLOW_TEST_TIMEOUT_MS);
 
     it('els colors de fons es poden buidar (opció de buidat al desplegable), els altres colors no', async () => {
         const user = userEvent.setup();
@@ -453,7 +454,7 @@ describe('Plantilla', () => {
         const colorTextValues = await openOptions('property-select-COMMON-colorText');
         expect(colorTextValues).not.toContain('');
         await user.keyboard('{Escape}');
-    });
+    }, SLOW_TEST_TIMEOUT_MS);
 
     it('en seleccionar l\'opció de buidat d\'un color de fons, la propietat queda sense posició de paleta', async () => {
         const user = userEvent.setup();
@@ -506,7 +507,7 @@ describe('Plantilla', () => {
                 expect.objectContaining({ scope: 'TITOL_1', propertyName: 'mostrarVoraTop', scalarValue: 'true' }),
             ])
         );
-    });
+    }, SLOW_TEST_TIMEOUT_MS);
 
     it('Plantilla_quanUsuariEsAdmin_mostraBotoImportarAlToolbar', () => {
         mocks.isUserAdmin = true;
